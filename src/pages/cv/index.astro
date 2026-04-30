@@ -1,0 +1,139 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import {
+  educationAndHonors,
+  experience,
+  researchArtifacts,
+  siteMeta,
+} from "../../data/site";
+
+const researchInterests = [
+  "Physics of AI",
+  "Embodied Intelligence",
+  "Vision-Language Models",
+];
+
+const skills = [
+  { category: "Programming", detail: "Python, PyTorch, C/C++, Shell, MATLAB" },
+  { category: "ML/AI", detail: "RL, SFT, mid-training, evaluation methodology, data quality analysis" },
+  { category: "Physics", detail: "Quantum Mechanics, Quantum Field Theory, Statistical Physics, Computational Physics" },
+  { category: "Languages", detail: "Chinese (native), English (CET-6: 657, GRE: 150+170)" },
+];
+---
+
+<BaseLayout
+  pageTitle="CV Summary"
+  pageDescription="Public-facing CV summary for Shaoyang Guo."
+  pagePath="/cv/"
+>
+  <!-- CV Hero -->
+  <section class="hero cv-hero">
+    <div class="container">
+      <div class="cv-header-layout">
+        <div class="cv-header-content">
+          <p class="section-label">Curriculum Vitae</p>
+          <h1 class="cv-title">{siteMeta.name} <span style="font-weight: 400; font-size: 0.5em; color: var(--text-muted);">郭绍阳</span></h1>
+          <p class="cv-subtitle">
+            Physics undergraduate at Peking University (Class of 2027). Research intern at ByteDance Seed.
+            Working on VLM post-training, STEM reasoning evaluation, and data-centric optimization.
+          </p>
+        </div>
+        <div class="cv-actions">
+          <a class="btn btn-primary" href="/">Home</a>
+          <a class="btn btn-outline" href={`mailto:${siteMeta.email}`}>Request Full CV</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Education -->
+  <section class="section">
+    <div class="container">
+      <div class="section-header reveal">
+        <h2 class="section-title">Education</h2>
+        <p class="section-subtitle">
+          B.S. in Physics, Peking University (expected 2027). Admitted via Excellence Program (CPhO Gold Medal).
+          Top 10% in first-year cohort. 141/149 credits by sophomore year including 3 graduate courses.
+        </p>
+      </div>
+      <div class="edu-grid">
+        {educationAndHonors.map((item, i) => (
+          <article class={`edu-card reveal reveal-delay-${i + 1}`}>
+            <h3 class="edu-title">{item.title}</h3>
+            <p class="edu-detail">{item.detail}</p>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Experience -->
+  <section class="section">
+    <div class="container">
+      <div class="section-header reveal">
+        <h2 class="section-title">Research Experience</h2>
+      </div>
+      <div class="experience-list">
+        {experience.map((item, i) => (
+          <div class={`exp-item reveal reveal-delay-${i + 1}`}>
+            <div class="exp-period">{item.period}</div>
+            <div class="exp-content">
+              <h3 class="exp-role">{item.role}</h3>
+              <p class="exp-org">{item.org}</p>
+              <p class="exp-description">{item.description}</p>
+              <ul class="exp-bullets">
+                {item.bullets.map((bullet) => (
+                  <li>{bullet}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Skills -->
+  <section class="section">
+    <div class="container">
+      <div class="section-header reveal">
+        <h2 class="section-title">Skills</h2>
+      </div>
+      <div class="skills-grid">
+        {skills.map((item, i) => (
+          <article class={`skill-card reveal reveal-delay-${i + 1}`}>
+            <h3>{item.category}</h3>
+            <p style="font-size: 0.88rem; color: var(--text-secondary); line-height: 1.6;">{item.detail}</p>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Research Interests & Publications -->
+  <section class="section">
+    <div class="container">
+      <div class="section-header reveal">
+        <h2 class="section-title">Research Interests & Publications</h2>
+      </div>
+      <div class="skills-grid">
+        <article class="skill-card reveal reveal-delay-1">
+          <h3>Focus Areas</h3>
+          <ul class="skill-list">
+            {researchInterests.map((item) => (
+              <li>{item}</li>
+            ))}
+          </ul>
+        </article>
+        <article class="skill-card reveal reveal-delay-2">
+          <h3>Publications</h3>
+          <ul class="skill-list">
+            {researchArtifacts.map((item) => (
+              <li><a href={item.href} target="_blank" rel="noreferrer">{item.title}</a> — {item.type}</li>
+            ))}
+          </ul>
+        </article>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

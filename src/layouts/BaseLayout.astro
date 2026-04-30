@@ -1,0 +1,70 @@
+---
+import "../styles/global.css";
+import { siteMeta } from "../data/site";
+
+const {
+  pageTitle = siteMeta.name,
+  pageDescription = siteMeta.summary,
+  pagePath = "/",
+} = Astro.props;
+
+const fullTitle =
+  pageTitle === siteMeta.name ? `${siteMeta.name} — Peking University` : `${pageTitle} — ${siteMeta.name}`;
+const canonicalUrl = Astro.site ? new URL(pagePath, Astro.site).toString() : undefined;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={pageDescription} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    {canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
+    <meta name="theme-color" content="#fdfcfa" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container header-inner">
+        <a class="brand" href="/">
+          <span class="brand-name">{siteMeta.name}</span>
+          <span class="brand-cn">{siteMeta.chineseName}</span>
+        </a>
+        <nav class="site-nav" aria-label="Primary">
+          <a href="/#publications">Publications</a>
+          <a href="/#experience">Experience</a>
+          <a href="/#projects">Projects</a>
+          <a href="/#contact">Contact</a>
+          <a href="/cv/">CV</a>
+        </nav>
+      </div>
+    </header>
+
+    <slot />
+
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <p class="footer-text">{siteMeta.name} &middot; {siteMeta.location}</p>
+        <div class="footer-links">
+          <a href={siteMeta.github} target="_blank" rel="noreferrer">GitHub</a>
+          <a href={`mailto:${siteMeta.email}`}>Email</a>
+          <a href="/cv/">CV</a>
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      const revealElements = document.querySelectorAll('.reveal');
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+      revealElements.forEach(el => observer.observe(el));
+    </script>
+  </body>
+</html>
