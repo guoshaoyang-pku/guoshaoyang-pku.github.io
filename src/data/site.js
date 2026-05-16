@@ -35,51 +35,33 @@ export const aboutParagraphs = [
   "I care about rigorous evaluation and data quality — my work on PHYBench and large-scale data curation reflects this focus on making AI systems more reliable in scientific domains.",
 ];
 
-export const projects = [
+export const blogs = [
   {
-    title: "PHYBench",
-    eyebrow: "Benchmark / First Author",
+    title: "What makes a STEM benchmark actually useful?",
+    eyebrow: "Planned Essay",
     image: "/images/project-phybench.svg",
     summary:
-      "A comprehensive physics reasoning benchmark for evaluating LLMs. Co-initiated the project, organized 178 PKU students to construct 500 original physics problems in two weeks, and designed evaluation criteria and failure mode analysis frameworks.",
-    highlights: [
-      "Identified systematic gaps in existing LLM evaluation for physics reasoning; led project from POC to data pipeline design.",
-      "Designed quality control processes and scoring rubrics for open-ended scientific reasoning evaluation.",
-      "Completed main experiments and analysis, systematically evaluating frontier LLMs across physics subdomains.",
-    ],
-    tags: ["Benchmarking", "Physics", "LLM Evaluation", "NeurIPS 2025"],
-    link: "https://arxiv.org/abs/2504.16074",
-    note: "Shi Qiu, Shaoyang Guo, et al. arXiv:2504.16074. Submitted to NeurIPS 2025.",
+      "Notes on building evaluations that reveal real reasoning capability rather than benchmark-specific pattern matching, with lessons from PHYBench.",
+    tags: ["Benchmarking", "Physics", "Evaluation"],
+    link: null,
   },
   {
-    title: "VLM Post-Training for STEM Reasoning",
-    eyebrow: "ByteDance Seed / Internship",
+    title: "Views on large model training",
+    eyebrow: "Writing Plan",
     image: "/images/project-vlm-post-training.svg",
     summary:
-      "Multi-stage training delivery (RL, SFT, mid-training) targeting STEM benchmark performance for vision-language models. Focus on data-centric optimization and scalable quality control.",
-    highlights: [
-      "Investigated BoN sampling dynamics for RL data curation; empirically disproved thermodynamic-equilibrium-based sampling heuristics.",
-      "Developed automated data cleaning pipeline using offline BoN scoring with probabilistic quality models, reducing computational cost significantly.",
-      "Built large-scale exercise extraction pipeline from textbook corpora, producing 100M+ QA pairs with subsequent cleaning.",
-    ],
-    tags: ["RL", "SFT", "Data Quality", "VLM"],
+      "A continuing series for organizing personal views on post-training, data quality, RL/SFT dynamics, and the practical craft of making models better.",
+    tags: ["Post-Training", "Data Quality", "VLM"],
     link: null,
-    note: "Ongoing work at ByteDance Seed.",
   },
   {
-    title: "VLA Models Survey",
-    eyebrow: "Survey / Co-author",
+    title: "From physics olympiad to AI research",
+    eyebrow: "Personal Note",
     image: "/images/project-vla-survey.svg",
     summary:
-      "A survey on Vision-Language-Action models from an action tokenization perspective. Responsible for the Raw Action chapter, reviewing 30+ key papers on end-to-end VLA architectures.",
-    highlights: [
-      "Organized taxonomies for VLA model design focused on action representation.",
-      "Synthesized insights on how action tokenization shapes model interfaces and capabilities.",
-      "Connected multimodal reasoning research to embodied intelligence systems.",
-    ],
-    tags: ["VLA", "Embodied AI", "Survey", "Action Tokenization"],
-    link: "https://github.com/Psi-Robot/Awesome-VLA-Papers",
-    note: "arXiv:2507.01925",
+      "Reflections on how physics training shapes taste in AI research: problem selection, abstraction, experiments, and long-term curiosity.",
+    tags: ["Research", "Physics", "Personal"],
+    link: null,
   },
 ];
 
