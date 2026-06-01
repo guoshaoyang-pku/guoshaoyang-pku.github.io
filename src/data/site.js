@@ -2,22 +2,23 @@ export const siteMeta = {
   name: "Shaoyang Guo",
   chineseName: "郭绍阳",
   title:
-    "Physics undergraduate at PKU, working on VLM post-training and STEM reasoning evaluation.",
+    "Physics undergraduate at PKU, working on LLM/VLM post-training, agents, benchmarking, and Physics of AI.",
   summary:
-    "I am a physics undergraduate at Peking University (Class of 2027). My research sits at the intersection of vision-language model post-training, benchmark design, and data-centric optimization for scientific reasoning.",
+    "I am a physics undergraduate at Peking University (Class of 2027). My work focuses on LLM/VLM post-training, RL/SFT, agentic research systems, benchmarking, and Physics of AI.",
   email: "guoshaoyang@stu.pku.edu.cn",
   github: "https://github.com/guoshaoyang-pku",
+  cvPdf: "/cv/guoshaoyang-pku-cv-v5.pdf",
   location: "Beijing, China",
 };
 
 export const quickFacts = [
   {
     label: "Current",
-    value: "Research Intern at ByteDance Seed, VLM Post-Training",
+    value: "Research Intern at ByteDance Seed, VLM/LLM Post-Training",
   },
   {
     label: "Education",
-    value: "PKU School of Physics, Excellence Program (CPhO Gold)",
+    value: "PKU School of Physics, B.S. expected 2027",
   },
   {
     label: "Publications",
@@ -25,14 +26,14 @@ export const quickFacts = [
   },
   {
     label: "Interests",
-    value: "Physics of AI, Embodied Intelligence, VLM",
+    value: "LLM/VLM, RL/SFT/Agents, Benchmarking, Physics of AI",
   },
 ];
 
 export const aboutParagraphs = [
-  "I entered Peking University through the Excellence Program after winning a Gold Medal at the Chinese Physics Olympiad. My academic background spans quantum mechanics, quantum field theory, statistical physics, and computational methods.",
-  "Since 2025 I have been working as a research intern at ByteDance Seed, contributing to multi-stage post-training pipelines (RL, SFT, mid-training) for vision-language models, with emphasis on improving STEM reasoning capabilities.",
-  "I care about rigorous evaluation and data quality — my work on PHYBench and large-scale data curation reflects this focus on making AI systems more reliable in scientific domains.",
+  "I am a physics undergraduate at Peking University, admitted through the Excellence Program after winning a Chinese Physics Olympiad Gold Medal. My academic record includes a 3.74/4.00 GPA, top 10% standing in the School of Physics, and 141/149 credits completed by sophomore year including 3 graduate courses.",
+  "Since July 2025, I have been a research intern at ByteDance Seed, working on VLM/LLM post-training across RL, SFT, mid-training, rollout pipelines, data systems, and agentic research workflows.",
+  "My research interests center on LLM/VLM, RL/SFT/Agents, benchmarking, and Physics of AI: building stronger models while understanding how to evaluate and improve scientific reasoning.",
 ];
 
 export const blogs = [
@@ -68,52 +69,45 @@ export const blogs = [
 export const researchArtifacts = [
   {
     title: "PHYBench",
-    type: "Paper (NeurIPS 2025 submission)",
+    type: "arXiv:2504.16074, NeurIPS 2025 submission",
     href: "https://arxiv.org/abs/2504.16074",
     description:
-      "Holistic Evaluation of Physical Perception and Reasoning in Large Language Models. 500 original physics problems, 178 contributors.",
+      "Holistic Evaluation of Physical Perception and Reasoning in Large Language Models. Co-initiated the project and helped organize 178 PKU students to create 500 original physics problems.",
   },
   {
     title: "VLA Survey",
-    type: "Survey Paper",
+    type: "arXiv:2507.01925",
     href: "https://arxiv.org/abs/2507.01925",
     description:
-      "A Survey on Vision-Language-Action Models: An Action Tokenization Perspective.",
-  },
-  {
-    title: "Awesome-VLA-Papers",
-    type: "GitHub Repository",
-    href: "https://github.com/Psi-Robot/Awesome-VLA-Papers",
-    description:
-      "Curated paper list for VLA models, organized by action representation methodology.",
+      "A Survey on Vision-Language-Action Models: An Action Tokenization Perspective. Responsible for the Raw Action chapter and 30+ related papers.",
   },
 ];
 
 export const experience = [
   {
-    role: "Research Intern, Seed VLM Post-Training Team",
-    org: "ByteDance",
+    role: "Research Intern, VLM/LLM Post-Training",
+    org: "ByteDance Seed",
     period: "Jul 2025 – Present",
     description:
-      "Working on multi-stage post-training for vision-language models, targeting STEM reasoning capabilities through RL, SFT, and mid-training.",
+      "Working on post-training and research automation for VLM/LLM systems, with emphasis on RL, SFT, mid-training, rollouts, data pipelines, and agent workflows.",
     bullets: [
-      "Responsible for multi-stage delivery across RL, SFT, and mid-training; participated in early mid-training exploration.",
-      "Researched BoN sampling and sample-repeat strategies; disproved equilibrium-based sampling assumptions; established RL–SFT equivalence under repeat conditions.",
-      "Developed large-scale data cleaning pipeline with probabilistic quality models; built textbook exercise extraction system (100M+ QA pairs).",
-      "Exploring TransferRL (combining SFT with RL) and CoT compression methods for efficient reasoning synthesis.",
+      "Contributed to HiPhO-oriented RL, SFT, and mid-training work for Seed 2.0 models, improving reported Lite performance from 72.5 to 83.8.",
+      "Participated in mid-training runs at large compute scale and supported rollout pipelines for model improvement.",
+      "Built data and prompt pipelines for QA pairs, CoT compression, summaries, and SFT-to-RL transfer experiments.",
+      "Explored auto-research agent loops, adversarial pair agents, and agent-based research settings.",
     ],
   },
   {
     role: "Co-initiator & Co-first Author, PHYBench",
-    org: "Peking University (Eureka Lab)",
+    org: "Peking University, Eureka Lab",
     period: "Feb 2025 – Sep 2025",
     description:
-      "Co-initiated and co-led PHYBench, a physics reasoning benchmark for LLMs. Paper submitted to NeurIPS 2025.",
+      "Co-initiated and co-led PHYBench, a physics perception and reasoning benchmark for LLMs.",
     bullets: [
-      "Identified gaps in existing LLM physics evaluation; led project from concept validation to full data pipeline.",
+      "Identified gaps in existing LLM physics evaluation and led the project from concept validation to a full data pipeline.",
       "Organized 178 PKU students to build 500 high-quality original physics problems in 2 weeks.",
-      "Designed evaluation criteria, quality control processes, and failure mode analysis frameworks.",
-      "Completed main experiments and analysis of frontier LLM performance across physics subdomains.",
+      "Designed evaluation criteria and quality-control workflows for LLM physics reasoning.",
+      "Co-authored the arXiv preprint submitted to NeurIPS 2025.",
     ],
   },
   {
@@ -121,10 +115,10 @@ export const experience = [
     org: "PsiRobot Lab, Peking University",
     period: "Mar 2025 – Aug 2025",
     description:
-      "Co-authored a survey on Vision-Language-Action models. Advisor: Prof. Yaodong Yang.",
+      "Co-authored a survey on Vision-Language-Action models from an action-tokenization perspective.",
     bullets: [
       "Responsible for the Raw Action chapter; reviewed 30+ key papers on end-to-end VLA architectures.",
-      "Organized taxonomies for VLA model design from an action tokenization perspective.",
+      "Organized taxonomies for VLA model design and contributed to the arXiv preprint.",
     ],
   },
 ];
@@ -133,7 +127,7 @@ export const educationAndHonors = [
   {
     title: "Peking University, School of Physics",
     detail:
-      "B.S. in Physics (expected 2027). Admitted via Excellence Program (CPhO Gold Medal). Top 10% in first-year physics cohort. Completed 141/149 credits by sophomore year including 3 graduate courses.",
+      "B.S. in Physics, expected Jun 2027. GPA 3.74/4.00, top 10% in the School of Physics; completed 141/149 credits by sophomore year including 3 graduate courses.",
   },
   {
     title: "National Scholarship (2024)",
@@ -179,8 +173,9 @@ export const contactLinks = [
     value: "guoshaoyang@stu.pku.edu.cn",
   },
   {
-    label: "CV Summary",
-    href: "/cv/",
-    value: "View the public-facing CV page",
+    label: "Download CV",
+    href: siteMeta.cvPdf,
+    value: "guoshaoyang-pku-cv-v5.pdf",
+    download: true,
   },
 ];
