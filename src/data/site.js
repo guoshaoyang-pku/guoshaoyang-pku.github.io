@@ -31,7 +31,7 @@ export const quickFacts = [
 ];
 
 export const aboutParagraphs = [
-  "I am a physics undergraduate at Peking University, admitted through the Excellence Program after winning a Chinese Physics Olympiad Gold Medal. My academic record includes a 3.74/4.00 GPA, top 10% standing in the School of Physics, and 141/149 credits completed by sophomore year including 3 graduate courses.",
+  "I am a physics undergraduate at Peking University, admitted through the PKU Excellence Program after winning a Chinese Physics Olympiad Gold Medal. My academic record includes a 3.74/4.00 GPA, top 10% standing in the School of Physics, and 141/149 credits completed by sophomore year including 3 graduate courses.",
   "Since July 2025, I have been a research intern at ByteDance Seed, working on VLM/LLM post-training across RL, SFT, mid-training, rollout pipelines, data systems, and agentic research workflows.",
   "My research interests center on LLM/VLM, RL/SFT/Agents, benchmarking, and Physics of AI: building stronger models while understanding how to evaluate and improve scientific reasoning.",
 ];
@@ -137,7 +137,7 @@ export const educationAndHonors = [
   {
     title: "Chinese Physics Olympiad Gold Medal",
     detail:
-      "National rank #57 (2022). Admitted to PKU Physics via Excellence Program.",
+      "National rank #57 (2022). Admitted to PKU Physics via PKU Excellence Program.",
   },
   {
     title: "NOIP First Prize (2020)",
