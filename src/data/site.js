@@ -38,6 +38,15 @@ export const aboutParagraphs = [
 
 export const blogs = [
   {
+    title: "N-gram Gap 机制指南",
+    eyebrow: "Mechanism Guide",
+    image: "/blogs/ngram-gap-mechanism-guide/fig14_dist_ctx.svg",
+    summary:
+      "A visual guide to the N-gram Gap mechanism, including global N-gram frequency, validation loss, contribution analysis, and the training cliff.",
+    tags: ["N-gram", "Language Models", "Mechanistic Analysis"],
+    link: "/blogs/ngram-gap-mechanism-guide/",
+  },
+  {
     title: "What makes a STEM benchmark actually useful?",
     eyebrow: "Planned Essay",
     image: "/images/project-phybench.svg",
