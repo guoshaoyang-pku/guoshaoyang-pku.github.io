@@ -38,6 +38,15 @@ export const aboutParagraphs = [
 
 export const blogs = [
   {
+    title: "ArchitectureIQ 项目全面 Review",
+    eyebrow: "Project Review",
+    image: "/images/project-vlm-post-training.svg",
+    summary:
+      "A comprehensive review of ArchitectureIQ's question-generation pipeline, significance tests, evaluation protocol, meta-model results, conclusions, and open problems.",
+    tags: ["ArchitectureIQ", "Evaluation", "Meta-Model"],
+    link: "/blogs/architectureiq-project-review/",
+  },
+  {
     title: "N-gram Gap 机制指南",
     eyebrow: "Mechanism Guide",
     image: "/blogs/ngram-gap-mechanism-guide/fig14_dist_ctx.svg",
