@@ -126,17 +126,106 @@
       main { width: min(100vw - 20px, 1140px); }
     }
   </style>
+  <style>
+    .toc {
+      position: fixed;
+      top: 28px;
+      left: max(16px, calc((100vw - 1140px) / 2 - 170px));
+      width: 140px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px 8px;
+      box-shadow: 0 4px 16px rgba(35,36,38,.06);
+      z-index: 10;
+    }
+    .toc-title {
+      margin: 0 0 7px;
+      color: var(--anchor);
+      font-size: 12px;
+      font-weight: 650;
+    }
+    .toc a {
+      display: block;
+      padding: 4px 5px;
+      border-radius: 5px;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.35;
+      text-decoration: none;
+    }
+    .toc a:hover {
+      background: rgba(53,61,121,.08);
+      color: var(--anchor);
+    }
+    @media (min-width: 761px) {
+      main {
+        width: min(1140px, calc(100vw - 200px));
+        margin-left: max(200px, calc((100vw - 1140px) / 2 + 85px));
+        margin-right: 20px;
+      }
+    }
+    @media (max-width: 760px) {
+      .toc { display: none; }
+    }
+  </style>
 </head>
 <body>
+  <!-- Agents: a terse machine-oriented index + experiment log lives at agent-experiment-log.html -->
+  <nav class="toc" aria-label="全文目录">
+    <div class="toc-title">全文目录</div>
+    <a href="agent-experiment-log.html" style="color:#777;font-size:0.9em;">🤖 Agent 实验日志</a>
+    <a href="#chapter-0">术语表</a>
+    <a href="#chapter-1">1. 实验设置</a>
+    <a href="#chapter-2">2. Gap 现象</a>
+    <a href="#chapter-3">3. 因果链</a>
+    <a href="#chapter-4">4. 关键证据</a>
+    <a href="#chapter-5">5. 消融矩阵</a>
+    <a href="#chapter-6">6. 诊断图</a>
+    <a href="#chapter-7">7. Table Norm × Gate</a>
+    <a href="#chapter-7-10" style="padding-left:16px;font-size:0.92em;">7.10 Norm/Loss 时间对齐</a>
+    <a href="#chapter-7-11" style="padding-left:16px;font-size:0.92em;">7.11 冻结消融 / 长训练 / gap-vs-freq</a>
+    <a href="#chapter-8">8. 项目接管指南</a>
+    <a href="#chapter-9">9. Hit Count 与 Divergence 分析</a>
+  </nav>
   <main>
     <header>
       <h1>N-gram Gap 机制指南</h1>
       <p class="subtitle">本文档解释 n-gram gap 实验中的核心概念：什么是 table、gate、shell、optimizer grouping，它们如何组合产生 train/val gap，以及关键实验数据。目标读者是刚接手项目的研究者。</p>
     </header>
 
+    <!-- ==================== 0. 术语表 ==================== -->
+    <section>
+      <h2 id="chapter-0">术语表</h2>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">以下是本文档中频繁出现的核心术语。每个术语首次在正文中出现时用 <strong>加粗</strong> 标记，在此处可快速查阅定义。</p>
+      <div class="note" style="font-size:13px;line-height:1.8;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <tr style="background:var(--panel-2);"><th style="padding:6px 10px;text-align:left;width:25%;">术语</th><th style="padding:6px 10px;text-align:left;">定义</th></tr>
+          <tr><td style="padding:5px 10px;font-weight:600;">n-gram table / VE</td><td style="padding:5px 10px;">一张巨大的查找表（lookup table），用几个连续 token 的 hash 值做 key 来查表。等价于 "value embedding"（VE）。包含 bigram（2-gram）和 trigram（3-gram）两种。</td></tr>
+          <tr><td style="padding:5px 10px;font-weight:600;">gate（门控）</td><td style="padding:5px 10px;">控制 n-gram table 输出注入 attention 强度的机制：<code>2×sigmoid(Linear(x))</code>，输出范围 [0, 2]。gate 初始化为 1.0（中性），训练中模型自主调节。</td></tr>
+          <tr><td style="padding:5px 10px;font-weight:600;">shell（外壳）</td><td style="padding:5px 10px;">指 transformer block 的架构实现。本文档涉及两种：<strong>nanoGPT shell</strong>（经典 nanoGPT 架构）和 <strong>current shell</strong>（从 current/GPT 架构移植，含 x0 residual、resid_lambda、split QKV）。gap 仅在 current shell 下出现。</td></tr>
+          <tr><td style="padding:5px 10px;font-weight:600;">gap / gap onset</td><td style="padding:5px 10px;">train loss 阶梯下降同时 val loss 上升的现象。"gap onset"（也称 "fork"）指 gap 开始出现的具体训练步数。</td></tr>
+          <tr><td style="padding:5px 10px;font-weight:600;">hit / hit count</td><td style="padding:5px 10px;">某个 n-gram context（如 trigram 的 2-token 前缀）在整个训练集中总共出现的次数。是数据的静态属性，不随训练变化。在 §9 中用于按频率分组分析 loss。</td></tr>
+          <tr><td style="padding:5px 10px;font-weight:600;">novel / novel bucket</td><td style="padding:5px 10px;">指 train 中从未出现过的 context（hit count = 0）。在 §9 的 hit count 分析中，novel bucket 是 val 翘起的最大单一来源。</td></tr>
+          <tr><td style="padding:5px 10px;font-weight:600;">B.0 / B.1 / B.2</td><td style="padding:5px 10px;">§7.10 的三个实验 setting：<strong>B.0</strong> = 阴性对照（table AdamW + matrix AdamW，无 gap）；<strong>B.1</strong> = table RMSProp（epoch3 产生 gap onset）；<strong>B.2</strong> = + Muon（epoch2 即产生 delayed gap）。</td></tr>
+          <tr><td style="padding:5px 10px;font-weight:600;">fixv2 / fixv3</td><td style="padding:5px 10px;">实验方法论的两个迭代版本。fixv2 使用 epoch 冻结的在线累积计数器，fixv3 替换为完全离线预计算的频率表。本文档当前所有数据均来自 fixv3（详见 <a href="agent-experiment-log.html">agent-experiment-log.html</a> §Gotchas G7）。</td></tr>
+          <tr><td style="padding:5px 10px;font-weight:600;">obcurves</td><td style="padding:5px 10px;">observable curves 的缩写。训练过程中记录的结构化指标数据（gate norm、table content RMS、hit bucket loss 等），存储在 <code>observable_curves.obcurves.json</code> 中。</td></tr>
+          <tr><td style="padding:5px 10px;font-weight:600;">context / context_hash</td><td style="padding:5px 10px;">n-gram 的条件前缀。如 trigram 的 context = (token[i-2], token[i-1])，bigram 的 context = (token[i-1])。context_hash 是 hash 后的整数标识。</td></tr>
+          <tr><td style="padding:5px 10px;font-weight:600;">gated_value_rms / raw_value_rms</td><td style="padding:5px 10px;"><strong>raw_value_rms</strong> = n-gram table 查出的 value 在 gate 之前的 RMS；<strong>gated_value_rms</strong> = gate × table value 的 RMS，即实际注入 attention value head 的量。</td></tr>
+          <tr><td style="padding:5px 10px;font-weight:600;">optimizer grouping</td><td style="padding:5px 10px;">参数分组与 LR 分配策略。nanoGPT-style grouping 给 n-gram table LR=0.004，current-style grouping 给 LR=0.6（差 150 倍），这是 gap 出现的必要条件。</td></tr>
+          <tr><td style="padding:5px 10px;font-weight:600;">epoch boundary</td><td style="padding:5px 10px;">训练数据遍历完一轮的分界步数。当前数据集：epoch 1→2 在 step 337，epoch 2→3 在 step 686，epoch 3→4（moredata）在 step 1384/2082。</td></tr>
+          <tr><td style="padding:5px 10px;font-weight:600;">warmdown</td><td style="padding:5px 10px;">LR schedule 的衰减阶段。当前实验在 step 750 附近 lrm_adam 从 0.33 降到 0.05，触发 train loss 的同步坍塌（memorize 突变）。</td></tr>
+          <tr><td style="padding:5px 10px;font-weight:600;">RMSProp（table optimizer）</td><td style="padding:5px 10px;">用于 n-gram table 的优化器。无 first moment（momentum），β₂=0.999 使二阶矩 v 能跨 epoch 持久化（半衰期 ~693 步 ≈ 2 个 epoch）。与 AdamW 的关键区别在于写入方向 = 当前梯度，不被历史 momentum 稀释。</td></tr>
+          <tr><td style="padding:5px 10px;font-weight:600;">Muon（matrix optimizer）</td><td style="padding:5px 10px;">用于 transformer 矩阵参数的优化器。在 nanogpt_original shell 下，table RMSProp + matrix Muon 的组合产生 delayed gap（onset 在 epoch2 而非 epoch3）。</td></tr>
+          <tr><td style="padding:5px 10px;font-weight:600;">collision</td><td style="padding:5px 10px;">hash 冲突：不同的 n-gram context 被映射到同一个 table row。实测 batch 内 bigram collision ~20%，trigram ~8%。每层用不同 hash prime 降低有效 collision。</td></tr>
+          <tr><td style="padding:5px 10px;font-weight:600;">per-token loss / total contribution</td><td style="padding:5px 10px;"><strong>per-token loss</strong> = 该 bucket 内每个 token 的平均 loss；<strong>total contribution</strong> = frac × loss（该 bucket 对总 loss 的贡献，考虑了 token 占比）。§9 的交互式图表可切换两种视角。</td></tr>
+        </table>
+      </div>
+    </section>
+
     <!-- ==================== 1. 什么是 n-gram table ==================== -->
     <section>
-      <h2>1. 什么是 n-gram table</h2>
+      <h2 id="chapter-1">1.1 什么是 n-gram table</h2>
       <p>n-gram table 就是一张巨大的查表（lookup table），和 token embedding 没有本质区别。区别在于：token embedding 用 token id 做 key，n-gram table 用<strong>几个连续 token 组成的 context 做 key</strong>。</p>
 
       <div class="diagram">
@@ -195,7 +284,7 @@
 
     <!-- ==================== 2. Hash 机制 ==================== -->
     <section>
-      <h2>2. Hash 机制详解</h2>
+      <h2>1.2 Hash 机制详解</h2>
       <p>hash 的作用是把 n 个 token id 压缩成一个 row 号。具体实现是<strong>乘法 + XOR + 取模</strong>，全部在 GPU 上以 tensor 整数运算完成。</p>
 
       <div class="code-label">train.py:1536-1546 — hash 计算</div>
@@ -224,7 +313,7 @@ row = ((prev2_idx * <span class="num">lp[0]</span>) <span class="kw">^</span> (p
 
     <!-- ==================== 3. Gate 机制 ==================== -->
     <section>
-      <h2>3. Gate 机制：table 如何注入到模型</h2>
+      <h2>1.3 Gate 机制：table 如何注入到模型</h2>
       <p>n-gram table 查出的 value 不会直接加到模型输出上——它经过一个 <strong>input-dependent gate</strong> 控制注入强度。gate 本身是一个小 linear layer + sigmoid。</p>
 
       <div class="diagram">
@@ -309,7 +398,7 @@ row = ((prev2_idx * <span class="num">lp[0]</span>) <span class="kw">^</span> (p
 
     <!-- ==================== 4. Shell 概念 ==================== -->
     <section>
-      <h2>4. Shell 是什么：nanoGPT vs current shell</h2>
+      <h2>1.4 Shell 是什么：nanoGPT vs current shell</h2>
       <p>项目中有两类模型架构，称为 "shell"（外壳）。它们的区别在于 transformer block 的内部结构。</p>
 
       <div class="compare">
@@ -344,7 +433,7 @@ x = x + MLP(x)
 
     <!-- ==================== 5. Optimizer grouping ==================== -->
     <section>
-      <h2>5. Optimizer grouping：两个独立的概念</h2>
+      <h2>1.5 Optimizer grouping：两个独立的概念</h2>
       <p>项目中 "optimizer" 相关的配置有两个独立维度，经常被混淆。这里明确区分。</p>
 
       <h3>维度一：n-gram table 用什么 optimizer</h3>
@@ -399,7 +488,7 @@ update = lr · grad / (√v + ε)
 
     <!-- ==================== 6. 现象 ==================== -->
     <section>
-      <h2>6. Gap 现象：阶梯下降与 val 翘起</h2>
+      <h2 id="chapter-2">2. Gap 现象：阶梯下降与 val 翘起</h2>
       <p>以下为 <code>20260720-bottomup-min-gap</code> 的真实 loss 记录（current shell + current-style grouping + bigram+trigram RMSProp）。</p>
 
       <div class="chart-section">
@@ -464,6 +553,9 @@ update = lr · grad / (√v + ε)
         <span><i class="line-swatch train"></i>train loss</span>
           <span><i class="line-swatch val"></i>val loss</span>
         </div>
+        <div style="padding:0 12px 8px;font-size:10px;color:var(--weak);text-align:center;">
+          📊 数据来源：20260720-bottomup-min-gap (current shell + current-style grouping + bigram+trigram RMSProp, vocab=32768, n_layer=12)
+        </div>
       </div>
 
       <p>三个关键现象在 epoch2 早中段（step 350-500）同时出现。图中曲线直接来自真实训练记录；后续的 hit-count 图不再作为机制证据。</p>
@@ -480,7 +572,7 @@ update = lr · grad / (√v + ε)
 
     <!-- ==================== 7. 因果链 ==================== -->
     <section>
-      <h2>7. 因果链：gap 是如何产生的</h2>
+      <h2 id="chapter-3">3. 因果链：gap 是如何产生的</h2>
       <p>以下因果链基于 <code>20260721-min-bigram-trigram-obth-history10</code> 的 observable 数据。每个环节都有直接测量证据。</p>
 
       <div class="flow">
@@ -531,7 +623,7 @@ update = lr · grad / (√v + ε)
 
     <!-- ==================== 8. 关键证据 ==================== -->
     <section>
-      <h2>8. 关键证据：history ablation 数据</h2>
+      <h2 id="chapter-4">4. 关键证据：history ablation 数据</h2>
       <p>以下数据来自 <code>20260721-min-bigram-trigram-obth-history10</code> 的 <code>history_ablation_loss_increase</code> observable。这个量测量"把 probe 访问到的 n-gram rows 临时置零后 loss 的变化"：<strong>正值</strong> = row 内容在降低 loss，<strong>负值</strong> = row 内容在<strong>增加</strong> loss。</p>
 
       <h3>trigram: train vs val 的分离</h3>
@@ -560,7 +652,7 @@ update = lr · grad / (√v + ε)
 
     <!-- ==================== 9. 消融矩阵 ==================== -->
     <section>
-      <h2>9. 消融矩阵：什么是必要条件</h2>
+      <h2 id="chapter-5">5. 消融矩阵：什么是必要条件</h2>
       <p>下表汇总关键消融实验。所有实验都使用相同的 data split、seed、训练步数。唯一变量是标注的组件。</p>
 
       <table>
@@ -644,7 +736,7 @@ update = lr · grad / (√v + ε)
 
     <!-- ==================== 10. Retained diagnostics ==================== -->
     <section>
-      <h2>10. 诊断图：Gate 与结构性 observable</h2>
+      <h2 id="chapter-6">6. 诊断图：Gate 与结构性 observable</h2>
       <p>本节保留 gate 诊断图。旧的 sampled hit-count 分布以及按 hit count 分组的 loss 图不作为机制证据；完整 n=2/3 exposure 分布将在下一版 observable 中重新采集。</p>
 
       <h3>10.1 Gate 权重演变</h3>
@@ -956,13 +1048,17 @@ renderLayerButtons();
 renderChart();
 </script>
 
+    <div style="padding:0 12px 8px;font-size:10px;color:var(--weak);text-align:center;">
+      📊 数据来源：20260721-min-bigram-trigram-obth-history10 (current shell + Muon + mixed optimizer, vocab=32768, n_layer=12)
+    </div>
+
     </section>
 
 
 
     <!-- ==================== 11. Table Norm x Gate ==================== -->
     <section>
-      <h2>11. Table Norm &times; Gate：动态平衡机制</h2>
+      <h2 id="chapter-7">7. Table Norm &times; Gate：动态平衡机制</h2>
       <p style="color:var(--gap);font-weight:600;font-size:15px;margin-bottom:16px">
         &Delta; 重要修正：之前"gate 下降 = 模型在抑制 n-gram"的推断是<strong>不完整的</strong>。
         Table content 的 norm 在训练中增长了 8~29&times;，gate 的下降只是部分补偿。
@@ -1082,6 +1178,9 @@ renderChart();
         <div style="padding:4px 12px 8px;font-size:11px;color:var(--muted);text-align:center;">
           图 11.3：Layer 7 table param RMS 增长。trigram table 从 0.71 → 21.96（30.9&times;），bigram table 从 0.95 → 19.48（20.5&times;）。
         </div>
+        <div style="padding:0 12px 8px;font-size:10px;color:var(--weak);text-align:center;">
+          📊 数据来源：20260722-ngram-hit-tracking-v2 (current shell, vocab=32768, n_layer=12)
+        </div>
       </div>
 
       <h3>11.4 Raw Value RMS（Gate 之前的 table content）</h3>
@@ -1137,6 +1236,9 @@ renderChart();
         </div>
         <div style="padding:4px 12px 8px;font-size:11px;color:var(--muted);text-align:center;">
           图 11.4：Layer 7 raw value RMS（pre-gate）。unigram 8.3&times;，bigram 19.4&times;，trigram 27.8&times; 增长。
+        </div>
+        <div style="padding:0 12px 8px;font-size:10px;color:var(--weak);text-align:center;">
+          📊 数据来源：20260722-ngram-hit-tracking-v2 (current shell, vocab=32768, n_layer=12)
         </div>
       </div>
 
@@ -1194,6 +1296,9 @@ renderChart();
         <div style="padding:4px 12px 8px;font-size:11px;color:var(--muted);text-align:center;">
           图 11.5：Layer 7 gated value RMS（实际注入）。trigram 从 0.72 → 6.93（9.6&times;），bigram 从 1.01 → 7.95（7.8&times;）。gate 下降只是部分补偿 table 增长。
         </div>
+        <div style="padding:0 12px 8px;font-size:10px;color:var(--weak);text-align:center;">
+          📊 数据来源：20260722-ngram-hit-tracking-v2 (current shell, vocab=32768, n_layer=12)
+        </div>
       </div>
 
       <h3>11.6 贡献分解：gate vs table norm（trigram, L7）</h3>
@@ -1250,6 +1355,9 @@ renderChart();
         <div style="padding:4px 12px 8px;font-size:11px;color:var(--muted);text-align:center;">
           图 11.6：trigram L7 贡献分解。table RMS（红）增长 30.9&times;，gate mean（蓝，&times;10 缩放）下降 73%，但 gated value RMS（绿）仍增长 9.6&times;。gate 是"减速器"不是"刹车"。
         </div>
+        <div style="padding:0 12px 8px;font-size:10px;color:var(--weak);text-align:center;">
+          📊 数据来源：20260722-ngram-hit-tracking-v2 (current shell, vocab=32768, n_layer=12)
+        </div>
       </div>
 
       <h3>11.7 RMSProp Effective LR 与 Update Magnitude</h3>
@@ -1303,6 +1411,9 @@ renderChart();
         <div style="padding:4px 12px 8px;font-size:11px;color:var(--muted);text-align:center;">
           图 11.7a：trigram L7 effective LR mean。初始极高（~2.7e9），随 v 累积快速下降到 ~1e8。注意：这里的 effective LR 是 lr / sqrt(v)，单位与通常不同。
         </div>
+        <div style="padding:0 12px 8px;font-size:10px;color:var(--weak);text-align:center;">
+          📊 数据来源：20260722-ngram-hit-tracking-v2 (current shell, vocab=32768, n_layer=12)
+        </div>
       </div>
       <div class="chart-section">
         <div class="chart-wrap" style="width:100%;position:relative;">
@@ -1352,6 +1463,9 @@ renderChart();
         </div>
         <div style="padding:4px 12px 8px;font-size:11px;color:var(--muted);text-align:center;">
           图 11.7b：trigram L7 delta RMS（每步实际写入量）。整体趋势下降，但在 epoch 边界有波动。
+        </div>
+        <div style="padding:0 12px 8px;font-size:10px;color:var(--weak);text-align:center;">
+          📊 数据来源：20260722-ngram-hit-tracking-v2 (current shell, vocab=32768, n_layer=12)
         </div>
       </div>
 
@@ -1406,6 +1520,9 @@ renderChart();
         <div style="padding:4px 12px 8px;font-size:11px;color:var(--muted);text-align:center;">
           图 11.8a：NGRAM_NORM 实验 train vs val loss。即使 table content 被归一化为 unit RMS，val loss 仍在 epoch 2 翘起。
         </div>
+        <div style="padding:0 12px 8px;font-size:10px;color:var(--weak);text-align:center;">
+          📊 数据来源：20260722-ngram-hit-tracking-v2 (current shell, vocab=32768, n_layer=12)
+        </div>
       </div>
       <div class="chart-section">
         <div class="chart-wrap" style="width:100%;position:relative;">
@@ -1456,6 +1573,9 @@ renderChart();
         <div style="padding:4px 12px 8px;font-size:11px;color:var(--muted);text-align:center;">
           图 11.8b：NGRAM_NORM 实验 val BPB。epoch 1: 1.132 → epoch 2: 1.252（+0.120），gap 比未归一化版本更大。
         </div>
+        <div style="padding:0 12px 8px;font-size:10px;color:var(--weak);text-align:center;">
+          📊 数据来源：20260722-ngram-hit-tracking-v2 (current shell, vocab=32768, n_layer=12)
+        </div>
       </div>
 
       <div class="note anchor-note">
@@ -1490,7 +1610,7 @@ renderChart();
 
     
     <!-- ==================== 11.9 Time-Lag Analysis ==================== -->
-    <h3>11.9 关键发现：Gate 与 Gap 的时间错位</h3>
+    <h3>§7.9 关键发现：Gate 与 Gap 的时间错位</h3>
     <div class="note" style="background:#fbf4f2;border-left:4px solid var(--gap);border-radius:8px;padding:16px;margin:12px 0;">
       <strong style="color:var(--gap);font-size:15px;">核心发现</strong>
       <p style="margin:8px 0 0;font-size:14px;line-height:1.7;">
@@ -1906,9 +2026,230 @@ renderChart();
       </p>
     </div>
 
+<!-- ==================== 11.10 Bottom-up Norm/Loss 时间对齐 ==================== -->
+    <h3 id="chapter-7-10">§7.10 Bottom-up 验证：阴性对照、table RMSProp 与 + Muon 的 Norm/Loss 时间对齐</h3>
+    <div class="note" style="background:#f2f6f5;border-left:4px solid var(--nogap);border-radius:8px;padding:16px;margin:12px 0;">
+      <strong style="color:var(--nogap);font-size:15px;">目的</strong>
+      <p style="margin:8px 0 0;font-size:14px;line-height:1.7;">
+        §7.9 在 current-shell 正例上发现 <strong>gate/table norm 的增长与 gap 的发生基本同步</strong>。
+        这里把同一验证下沉到三个 <code>nanogpt_original</code> 架构 setting（seed 42，1000 step，单 shard tr1）：
+        <strong>B.0 阴性对照</strong>（table AdamW、matrix AdamW，无 target gap）、
+        <strong>B.1 table RMSProp</strong>（table optimizer=RMSProp，matrix=AdamW）、
+        <strong>B.2 + Muon</strong>（table AdamW，matrix=Muon）。（B.0/B.1/B.2 = 阴性对照/table RMSProp/+Muon）
+        对每个 setting 画出 gate norm / table content RMS（raw value RMS）/ gated value RMS（实际注入幅度）随 step 的曲线，
+        叠加 epoch 边界与 gap onset，并按 <strong>n-gram context 命中频次</strong>（bigram-context、trigram-context 各一套 bin，
+        fig14 即 trigram-context）拆分 train/val/gap loss。判据：<strong>norm 增长的时点是否与该 setting 的 gap 时点对齐</strong>；
+        B.0 作为阴性对照，用来检验"没有 target gap 时 norm 增长是否也缺席/不与任何 gap 峰值对齐"。
+      </p>
+    </div>
+
+    <h4 style="margin-top:22px;">B.0 + full n-gram (table AdamW, matrix AdamW, no target gap)</h4>
+    <p style="font-size:13px;color:var(--muted);margin:6px 0;">[fixv3] gap onset（sustained，epoch≥2）：<strong>step 932</strong>（epoch3 末端的小幅、真实的 gap onset——已直接核对 train.log 原始数字，非脚本/分桶伪影，但幅度远小于两个正例）；epoch 边界：step [337, 686]。</p>
+    <p class="chart-title" style="font-size:13px;font-weight:600;margin:10px 0 4px;">n-gram gate / table content / gated 注入 norm</p>
+    <object data="figB1_nofork_norms.svg" type="image/svg+xml" style="width:100%;max-width:880px;height:auto;"></object>
+    <p class="chart-title" style="font-size:13px;font-weight:600;margin:14px 0 4px;">注入 norm 增长 vs gap 的时间对齐（双轴，静态缩略）</p>
+    <object data="figB3_nofork_alignment.svg" type="image/svg+xml" style="width:100%;max-width:880px;height:auto;"></object>
+    <p style="font-size:13px;color:var(--muted);margin:6px 0;">交互版（可切 bigram/trigram × gate_rms/table content RMS/gated value RMS × train/val/gap loss overlay）：</p>
+    <iframe src="figB4_nofork_alignment_interactive.html" style="width:100%;max-width:900px;height:480px;border:1px solid var(--line);border-radius:8px;" title="+ full n-gram (table AdamW, matrix AdamW, no target gap) alignment interactive"></iframe>
+    <p class="chart-title" style="font-size:13px;font-weight:600;margin:14px 0 4px;">trigram-context 命中频次分桶：gap (val-train)</p>
+    <object data="figB2_nofork_freqloss_trigram.svg" type="image/svg+xml" style="width:100%;max-width:880px;height:auto;"></object>
+    <p class="chart-title" style="font-size:13px;font-weight:600;margin:14px 0 4px;">bigram-context 命中频次分桶：gap (val-train)</p>
+    <object data="figB2_nofork_freqloss_bigram.svg" type="image/svg+xml" style="width:100%;max-width:880px;height:auto;"></object>
+    <table style="width:100%;border-collapse:collapse;margin:14px 0;font-size:13px;">
+      <tr style="background:var(--panel-2);">
+        <th style="padding:6px 10px;text-align:left;">指标（每 epoch 变化率）</th>
+        <th style="padding:6px 10px;text-align:left;">Epoch 1</th>
+        <th style="padding:6px 10px;text-align:left;">Epoch 2</th>
+        <th style="padding:6px 10px;text-align:left;">Epoch 3</th>
+      </tr>
+      <tr><td style="padding:6px 10px;">Trigram gate_rms 变化率</td><td style="padding:6px 10px;">3.57e-05/step</td><td style="padding:6px 10px;">9.16e-04/step</td><td style="padding:6px 10px;">8.51e-04/step</td></tr>
+<tr><td style="padding:6px 10px;">Trigram table content RMS 变化率</td><td style="padding:6px 10px;">3.46e-06/step</td><td style="padding:6px 10px;">1.38e-05/step</td><td style="padding:6px 10px;">6.43e-06/step</td></tr>
+<tr><td style="padding:6px 10px;">Trigram gated value RMS 变化率 (注入)</td><td style="padding:6px 10px;">4.88e-06/step</td><td style="padding:6px 10px;">5.55e-05/step</td><td style="padding:6px 10px;">4.78e-05/step</td></tr>
+<tr><td style="padding:6px 10px;">Bigram gated value RMS 变化率 (注入)</td><td style="padding:6px 10px;">3.06e-05/step</td><td style="padding:6px 10px;">1.49e-04/step</td><td style="padding:6px 10px;">2.34e-05/step</td></tr>
+<tr><td style="padding:6px 10px;">该 epoch 内最大 gap (val-train)</td><td style="padding:6px 10px;color:var(--gap);font-weight:600;">0.265</td><td style="padding:6px 10px;color:var(--gap);font-weight:600;">0.239</td><td style="padding:6px 10px;color:var(--gap);font-weight:600;">0.185</td></tr>
+
+    </table>
+    <div class="note" style="background:#faf7f0;border-left:4px solid var(--anchor);border-radius:8px;padding:12px 16px;margin:10px 0;">
+      <strong style="color:var(--anchor);">对齐判断 [fixv3]</strong>
+      <p style="margin:6px 0 0;font-size:13px;line-height:1.7;">阴性对照下 max gap 0.265（onset 检出于 epoch3 末端 step 932，幅度远小于两个正例），norm 增长峰值在 epoch 2，两者不构成有意义的时间对齐比较——没有 optimizer 非对称性时，gap 仍可能有小幅真实波动，但不呈现正例那种"norm 增长驱动持续 gap onset"的模式。</p>
+    </div>
+    <p style="font-size:13px;color:var(--muted);margin:6px 0;">交互面板（可切 train/val/gap × per-token/总贡献，bigram/trigram context）：</p>
+    <iframe src="figB_nofork_interactive.html" style="width:100%;max-width:900px;height:520px;border:1px solid var(--line);border-radius:8px;" title="+ full n-gram (table AdamW, matrix AdamW, no target gap) interactive"></iframe>
+    <div style="padding:0 12px 8px;font-size:10px;color:var(--weak);text-align:center;">
+      📊 数据来源：fixv3 runs — 20260725e_nano_{adamw_adamw_nofork,rmsprop,muon}_fixv3 (nanogpt_original, vocab=32768, n_layer=12)
+    </div>
+
+    <h4 style="margin-top:22px;">B.1 table RMSProp (matrix AdamW)</h4>
+    <p style="font-size:13px;color:var(--muted);margin:6px 0;">[fixv3] gap onset（sustained，epoch≥2）：<strong>step 801</strong>；epoch 边界：step [337, 686]。</p>
+    <p class="chart-title" style="font-size:13px;font-weight:600;margin:10px 0 4px;">n-gram gate / table content / gated 注入 norm</p>
+    <object data="figB1_rmsprop_norms.svg" type="image/svg+xml" style="width:100%;max-width:880px;height:auto;"></object>
+    <p class="chart-title" style="font-size:13px;font-weight:600;margin:14px 0 4px;">注入 norm 增长 vs gap 的时间对齐（双轴，静态缩略）</p>
+    <object data="figB3_rmsprop_alignment.svg" type="image/svg+xml" style="width:100%;max-width:880px;height:auto;"></object>
+    <p style="font-size:13px;color:var(--muted);margin:6px 0;">交互版（可切 bigram/trigram × gate_rms/table content RMS/gated value RMS × train/val/gap loss overlay）：</p>
+    <iframe src="figB4_rmsprop_alignment_interactive.html" style="width:100%;max-width:900px;height:480px;border:1px solid var(--line);border-radius:8px;" title="table RMSProp (matrix AdamW) alignment interactive"></iframe>
+    <p class="chart-title" style="font-size:13px;font-weight:600;margin:14px 0 4px;">trigram-context 命中频次分桶：gap (val-train)</p>
+    <object data="figB2_rmsprop_freqloss_trigram.svg" type="image/svg+xml" style="width:100%;max-width:880px;height:auto;"></object>
+    <p class="chart-title" style="font-size:13px;font-weight:600;margin:14px 0 4px;">bigram-context 命中频次分桶：gap (val-train)</p>
+    <object data="figB2_rmsprop_freqloss_bigram.svg" type="image/svg+xml" style="width:100%;max-width:880px;height:auto;"></object>
+    <table style="width:100%;border-collapse:collapse;margin:14px 0;font-size:13px;">
+      <tr style="background:var(--panel-2);">
+        <th style="padding:6px 10px;text-align:left;">指标（每 epoch 变化率）</th>
+        <th style="padding:6px 10px;text-align:left;">Epoch 1</th>
+        <th style="padding:6px 10px;text-align:left;">Epoch 2</th>
+        <th style="padding:6px 10px;text-align:left;">Epoch 3</th>
+      </tr>
+      <tr><td style="padding:6px 10px;">Trigram gate_rms 变化率</td><td style="padding:6px 10px;">1.64e-04/step</td><td style="padding:6px 10px;">1.31e-04/step</td><td style="padding:6px 10px;">2.03e-03/step</td></tr>
+<tr><td style="padding:6px 10px;">Trigram table content RMS 变化率</td><td style="padding:6px 10px;">1.66e-04/step</td><td style="padding:6px 10px;">2.18e-04/step</td><td style="padding:6px 10px;">1.29e-04/step</td></tr>
+<tr><td style="padding:6px 10px;">Trigram gated value RMS 变化率 (注入)</td><td style="padding:6px 10px;">1.81e-04/step</td><td style="padding:6px 10px;">2.64e-04/step</td><td style="padding:6px 10px;">5.55e-04/step</td></tr>
+<tr><td style="padding:6px 10px;">Bigram gated value RMS 变化率 (注入)</td><td style="padding:6px 10px;">3.23e-04/step</td><td style="padding:6px 10px;">4.80e-04/step</td><td style="padding:6px 10px;">1.32e-04/step</td></tr>
+<tr><td style="padding:6px 10px;">该 epoch 内最大 gap (val-train)</td><td style="padding:6px 10px;color:var(--gap);font-weight:600;">0.415</td><td style="padding:6px 10px;color:var(--gap);font-weight:600;">0.383</td><td style="padding:6px 10px;color:var(--gap);font-weight:600;">0.688</td></tr>
+
+    </table>
+    <div class="note" style="background:#faf7f0;border-left:4px solid var(--anchor);border-radius:8px;padding:12px 16px;margin:10px 0;">
+      <strong style="color:var(--anchor);">对齐判断 [fixv3]</strong>
+      <p style="margin:6px 0 0;font-size:13px;line-height:1.7;">注入 norm (trigram gated RMS) 的增长峰值与最大 gap 同在 epoch 3，<strong>时点对齐</strong>——norm 增长与 gap 发生同步，机理与 §7.9 一致。数值与 fixv2 相比略有变化（0.646→0.688），方向/结论不变。</p>
+    </div>
+    <p style="font-size:13px;color:var(--muted);margin:6px 0;">交互面板（可切 train/val/gap × per-token/总贡献，bigram/trigram context）：</p>
+    <iframe src="figB_rmsprop_interactive.html" style="width:100%;max-width:900px;height:520px;border:1px solid var(--line);border-radius:8px;" title="table RMSProp (matrix AdamW) interactive"></iframe>
+    <div style="padding:0 12px 8px;font-size:10px;color:var(--weak);text-align:center;">
+      📊 数据来源：fixv3 runs — 20260725e_nano_{adamw_adamw_nofork,rmsprop,muon}_fixv3 (nanogpt_original, vocab=32768, n_layer=12)
+    </div>
+
+    <h4 style="margin-top:22px;">B.2 + Muon (table AdamW)</h4>
+    <p style="font-size:13px;color:var(--muted);margin:6px 0;">[fixv3] gap onset（sustained，epoch≥2）：<strong>step 647</strong>；epoch 边界：step [337, 686]。</p>
+    <p class="chart-title" style="font-size:13px;font-weight:600;margin:10px 0 4px;">n-gram gate / table content / gated 注入 norm</p>
+    <object data="figB1_muon_norms.svg" type="image/svg+xml" style="width:100%;max-width:880px;height:auto;"></object>
+    <p class="chart-title" style="font-size:13px;font-weight:600;margin:14px 0 4px;">注入 norm 增长 vs gap 的时间对齐（双轴，静态缩略）</p>
+    <object data="figB3_muon_alignment.svg" type="image/svg+xml" style="width:100%;max-width:880px;height:auto;"></object>
+    <p style="font-size:13px;color:var(--muted);margin:6px 0;">交互版（可切 bigram/trigram × gate_rms/table content RMS/gated value RMS × train/val/gap loss overlay）：</p>
+    <iframe src="figB4_muon_alignment_interactive.html" style="width:100%;max-width:900px;height:480px;border:1px solid var(--line);border-radius:8px;" title="+ Muon (table AdamW) alignment interactive"></iframe>
+    <p class="chart-title" style="font-size:13px;font-weight:600;margin:14px 0 4px;">trigram-context 命中频次分桶：gap (val-train)</p>
+    <object data="figB2_muon_freqloss_trigram.svg" type="image/svg+xml" style="width:100%;max-width:880px;height:auto;"></object>
+    <p class="chart-title" style="font-size:13px;font-weight:600;margin:14px 0 4px;">bigram-context 命中频次分桶：gap (val-train)</p>
+    <object data="figB2_muon_freqloss_bigram.svg" type="image/svg+xml" style="width:100%;max-width:880px;height:auto;"></object>
+    <table style="width:100%;border-collapse:collapse;margin:14px 0;font-size:13px;">
+      <tr style="background:var(--panel-2);">
+        <th style="padding:6px 10px;text-align:left;">指标（每 epoch 变化率）</th>
+        <th style="padding:6px 10px;text-align:left;">Epoch 1</th>
+        <th style="padding:6px 10px;text-align:left;">Epoch 2</th>
+        <th style="padding:6px 10px;text-align:left;">Epoch 3</th>
+      </tr>
+      <tr><td style="padding:6px 10px;">Trigram gate_rms 变化率</td><td style="padding:6px 10px;">1.62e-03/step</td><td style="padding:6px 10px;">1.31e-03/step</td><td style="padding:6px 10px;">-8.25e-05/step</td></tr>
+<tr><td style="padding:6px 10px;">Trigram table content RMS 变化率</td><td style="padding:6px 10px;">5.61e-05/step</td><td style="padding:6px 10px;">4.83e-05/step</td><td style="padding:6px 10px;">8.43e-06/step</td></tr>
+<tr><td style="padding:6px 10px;">Trigram gated value RMS 变化率 (注入)</td><td style="padding:6px 10px;">1.45e-04/step</td><td style="padding:6px 10px;">1.66e-04/step</td><td style="padding:6px 10px;">9.90e-06/step</td></tr>
+<tr><td style="padding:6px 10px;">Bigram gated value RMS 变化率 (注入)</td><td style="padding:6px 10px;">2.60e-04/step</td><td style="padding:6px 10px;">4.78e-05/step</td><td style="padding:6px 10px;">-8.25e-05/step</td></tr>
+<tr><td style="padding:6px 10px;">该 epoch 内最大 gap (val-train)</td><td style="padding:6px 10px;color:var(--gap);font-weight:600;">0.621</td><td style="padding:6px 10px;color:var(--gap);font-weight:600;">1.463</td><td style="padding:6px 10px;color:var(--gap);font-weight:600;">3.355</td></tr>
+
+    </table>
+    <div class="note" style="background:#faf7f0;border-left:4px solid var(--anchor);border-radius:8px;padding:12px 16px;margin:10px 0;">
+      <strong style="color:var(--anchor);">对齐判断 [fixv3]</strong>
+      <p style="margin:6px 0 0;font-size:13px;line-height:1.7;">注入 norm 增长峰值在 epoch 2，早于最大 gap 的 epoch 3：<strong>norm 先建立注入通道、gap 随后爆发</strong>（§7.9 式时间错位）。数值与 fixv2 相比略有变化（3.220→3.355），方向/结论不变。</p>
+    </div>
+    <p style="font-size:13px;color:var(--muted);margin:6px 0;">交互面板（可切 train/val/gap × per-token/总贡献，bigram/trigram context）：</p>
+    <iframe src="figB_muon_interactive.html" style="width:100%;max-width:900px;height:520px;border:1px solid var(--line);border-radius:8px;" title="+ Muon (table AdamW) interactive"></iframe>
+    <div style="padding:0 12px 8px;font-size:10px;color:var(--weak);text-align:center;">
+      📊 数据来源：fixv3 runs — 20260725e_nano_{adamw_adamw_nofork,rmsprop,muon}_fixv3 (nanogpt_original, vocab=32768, n_layer=12)
+    </div>
+
+<!-- ==================== 11.11 冻结消融 / 长训练数据 / epoch3 gap-vs-freq ==================== -->
+    <h3 id="chapter-7-11">§7.11 频率方法论修复后的三个新分析：冻结消融、长训练数据、epoch3 gap-vs-frequency</h3>
+    <div class="note" style="background:#faf7f0;border-left:4px solid var(--anchor);border-radius:8px;padding:16px;margin:12px 0;">
+      <strong style="color:var(--anchor);font-size:15px;">数据与方法论说明</strong>
+      <p style="margin:8px 0 0;font-size:14px;line-height:1.7;">
+        本节所有数据均来自 <strong>fixv3</strong>（完全离线预计算的 <code>NGRAM_HIT_OFFLINE_COUNT</code>），
+        已替代早期 fixv2 的在线累积计数器方案。方法论细节与实验 run 列表见
+        <a href="agent-experiment-log.html">agent-experiment-log.html</a> §Gotchas G5-G7 及 §Runs。
+      </p>
+    </div>
+
+    <h4 style="margin-top:22px;">C.1 冻结消融：epoch1 后冻结 n-gram 表 + gate，gap 是否还发生</h4>
+    <p style="font-size:13px;line-height:1.7;">
+      在 table RMSProp 基线（B.1，无 target gap 的负例是 B.0，正例 B.1 gap onset step 782）上加一个新 run：
+      epoch 1 结束时（step 338）对所有 n-gram value table（<code>value_embeds</code>/<code>bigram_ves</code>/<code>trigram_ves</code>）
+      和注入 gate（<code>ve_gate</code>/<code>bigram_gate</code>/<code>trigram_gate</code>）调用 <code>requires_grad_(False)</code>，
+      之后 optimizer 因为 <code>grad is None</code> 天然跳过这些参数，不需要重建 optimizer/param_groups。
+      train.log 确认：<code>[freeze_ngram_and_gate] step 338: froze 29 tensors (2843740224 params)</code>。
+    </p>
+    <object data="figB6_freeze_ablation_gap.svg" type="image/svg+xml" style="width:100%;max-width:880px;height:auto;"></object>
+    <div style="padding:0 12px 8px;font-size:10px;color:var(--weak);text-align:center;">
+      📊 数据来源：fixv3 runs — 20260725e_nano_rmsprop_fixv3 vs 20260725e_nano_rmsprop_freeze_fixv3 (nanogpt_original, vocab=32768, n_layer=12)
+    </div>
+    <table style="width:100%;border-collapse:collapse;margin:14px 0;font-size:13px;">
+      <tr style="background:var(--panel-2);">
+        <th style="padding:6px 10px;text-align:left;">setting</th>
+        <th style="padding:6px 10px;text-align:left;">Epoch 1 max gap</th>
+        <th style="padding:6px 10px;text-align:left;">Epoch 2 max gap</th>
+        <th style="padding:6px 10px;text-align:left;">Epoch 3 max gap</th>
+        <th style="padding:6px 10px;text-align:left;">最终 step gap</th>
+      </tr>
+      <tr><td style="padding:6px 10px;">rmsprop（不冻结，基线）</td><td style="padding:6px 10px;">0.415</td><td style="padding:6px 10px;">0.383</td><td style="padding:6px 10px;color:var(--gap);font-weight:600;">0.688</td><td style="padding:6px 10px;color:var(--gap);font-weight:600;">0.688</td></tr>
+      <tr><td style="padding:6px 10px;">rmsprop_freeze（epoch1 后冻结）</td><td style="padding:6px 10px;">0.245</td><td style="padding:6px 10px;">0.108</td><td style="padding:6px 10px;color:var(--nogap);font-weight:600;">0.058</td><td style="padding:6px 10px;color:var(--nogap);font-weight:600;">0.039</td></tr>
+    </table>
+    <div class="note nogap-note">
+      <strong>结论</strong>：冻结 n-gram 表 + gate 后，<strong>epoch2/3 的 gap 被压制到基线的约 1/3</strong>（epoch2: 0.108 vs 0.383；epoch3: 0.058 vs 0.688；最终 step: 0.039 vs 0.688）。
+      注意 epoch1 数值本身也有差异（0.245 vs 0.415），冻结发生在 epoch1 结束后 step 338，理论上 epoch1 内两个 run 应完全等价，
+      这里的差异更可能来自随机性/GPU non-determinism。
+      冻结后 gap 不再随 epoch 增长（基线 epoch3 gap 是 epoch1 的 1.7 倍，冻结后 epoch3 反而是 epoch1 的约 1/4）。
+      支持假设：<strong>n-gram 表 + gate 在 epoch2/3 的持续更新是 gap 增长的主要驱动之一</strong>，但冻结并未把 gap 压到零，说明可能还有 matrix 部分（attention/MLP）在多轮 epoch 下的常规过拟合等其他因素共同作用。
+    </div>
+
+    <h4 style="margin-top:22px;">C.2 长训练数据：更多 shard 是否显著缩小 gap</h4>
+    <p style="font-size:13px;line-height:1.7;">
+      在 table RMSProp 基线上加 1 个额外 train shard（<code>data_split.json</code> 的 <code>train</code> 从 <code>[1]</code> 改为 <code>[1,0]</code>，
+      测试集不变），<code>MAX_TRAINING_STEPS</code> 等比例从 1000 拉到 2200 以覆盖到 epoch4（每个 epoch 遍历的文档量翻倍，epoch 边界从
+      [337,686] 变为 [686,1384,2082]）。
+    </p>
+    <object data="figB7_moredata_gap.svg" type="image/svg+xml" style="width:100%;max-width:880px;height:auto;"></object>
+    <div style="padding:0 12px 8px;font-size:10px;color:var(--weak);text-align:center;">
+      📊 数据来源：fixv3 runs — 20260725e_nano_rmsprop_fixv3 vs 20260725e_nano_rmsprop_moredata_fixv3 (nanogpt_original, vocab=32768, n_layer=12)
+    </div>
+    <table style="width:100%;border-collapse:collapse;margin:14px 0;font-size:13px;">
+      <tr style="background:var(--panel-2);">
+        <th style="padding:6px 10px;text-align:left;">setting</th>
+        <th style="padding:6px 10px;text-align:left;">Epoch 1</th>
+        <th style="padding:6px 10px;text-align:left;">Epoch 2</th>
+        <th style="padding:6px 10px;text-align:left;">Epoch 3</th>
+        <th style="padding:6px 10px;text-align:left;">Epoch 4</th>
+      </tr>
+      <tr><td style="padding:6px 10px;">rmsprop（1 shard，1000 step，无 epoch4）</td><td style="padding:6px 10px;">0.415</td><td style="padding:6px 10px;">0.383</td><td style="padding:6px 10px;color:var(--gap);font-weight:600;">0.688</td><td style="padding:6px 10px;color:var(--muted);">—</td></tr>
+      <tr><td style="padding:6px 10px;">rmsprop_moredata（2 shard，2200 step）</td><td style="padding:6px 10px;">0.438</td><td style="padding:6px 10px;">0.445</td><td style="padding:6px 10px;">1.352</td><td style="padding:6px 10px;color:var(--gap);font-weight:600;">1.385</td></tr>
+    </table>
+    <div class="note gap-note">
+      <strong>结论（与假设相反）</strong>：增加训练数据（1→2 shard，等比例延长 step 预算）<strong>没有缩小 gap，反而显著放大了</strong>——
+      moredata 的 4-epoch 内 max gap（1.385）是 1-shard 基线 3-epoch max gap（0.688）的约 2 倍，
+      呈现随 epoch 增长的趋势。需要谨慎解读：这里"更多数据"是同一批文档重复遍历更多 epoch，不是"用一个更大、更多样的语料训练相同 epoch 数"——
+      结果更像是支持"repeated exposure 加深过拟合"的证据，而非"数据量"本身的缓解效应。
+    </div>
+
+    <h4 style="margin-top:22px;">C.3 Epoch 3 平均 gap vs n-gram 上下文命中频率</h4>
+    <p style="font-size:13px;line-height:1.7;">
+      用 <code>ngram_raw_probe_log.jsonl</code> 里 epoch==3 的原始行（trigram context，train/val 分别聚合后按 <code>offline_freq_count</code> 匹配交集，对数间隔 16 桶、token 加权平均），
+      在 B.0（负例）/B.1（rmsprop 正例）/B.2（muon 正例）三个 setting 上画出 gap(val−train) vs 频率的曲线。
+    </p>
+    <object data="figB5_epoch3_gapvsfreq_trigram.svg" type="image/svg+xml" style="width:100%;max-width:880px;height:auto;"></object>
+    <div style="padding:0 12px 8px;font-size:10px;color:var(--weak);text-align:center;">
+      📊 数据来源：fixv3 runs — 20260725e_nano_{adamw_adamw_nofork,rmsprop,muon}_fixv3 (nanogpt_original, vocab=32768, n_layer=12)
+    </div>
+    <table style="width:100%;border-collapse:collapse;margin:14px 0;font-size:13px;">
+      <tr style="background:var(--panel-2);">
+        <th style="padding:6px 10px;text-align:left;">setting</th>
+        <th style="padding:6px 10px;text-align:left;">低频端 (freq≈25)</th>
+        <th style="padding:6px 10px;text-align:left;">峰值</th>
+        <th style="padding:6px 10px;text-align:left;">高频端 (freq≈58k)</th>
+      </tr>
+      <tr><td style="padding:6px 10px;">B.0 负例（table+matrix AdamW）</td><td style="padding:6px 10px;">0.272</td><td style="padding:6px 10px;">0.272 @ freq≈25（单调递减，峰值即低频端）</td><td style="padding:6px 10px;">0.111</td></tr>
+      <tr><td style="padding:6px 10px;">B.1 table RMSProp</td><td style="padding:6px 10px;">1.284</td><td style="padding:6px 10px;color:var(--gap);font-weight:600;">1.309 @ freq≈43</td><td style="padding:6px 10px;">0.400</td></tr>
+      <tr><td style="padding:6px 10px;">B.2 + Muon</td><td style="padding:6px 10px;">3.681</td><td style="padding:6px 10px;color:var(--gap);font-weight:600;">3.779 @ freq≈43</td><td style="padding:6px 10px;">2.429</td></tr>
+    </table>
+    <div class="note anchor-note">
+      <strong>结论</strong>：两个正例（B.1/B.2）的 gap-vs-freq 曲线形状一致——<strong>低到中频区间（freq≈25-45）gap 最大</strong>，
+      随频率升高总体递减，到高频端（freq≈5.8万）gap 收窄到峰值的约 1/3（rmsprop）～2/3（muon），与 §7.10/F4（"gap 由中低频 n-gram context 驱动"）一致。
+      负例 B.0 的曲线整体贴近 0 且单调递减，无正例的"低频→峰值→高频衰减"驼峰形状，印证"没有 target gap 时，频率结构与 loss gap 之间不存在这种系统性关联"。
+    </div>
+
 <!-- ==================== 12. 项目接管指南 ==================== -->
     <section>
-      <h2>12. 项目接管指南</h2>
+      <h2 id="chapter-8">8. 项目接管指南</h2>
       <p style="color:var(--anchor);font-weight:600;font-size:15px;margin-bottom:16px">
         新 agent 只需阅读本文档 + <code>ngram-gap-regime-bridge.html</code> 即可完全接管项目。
       </p>
@@ -2038,15 +2379,17 @@ grep val_bpb_sample train.log</div>
     <!-- ==================== 13. Divergence Analysis v2 ==================== -->
     <section>
       
-      <h2>13. Train-Val Divergence 分析 v2（20260723-divergence）</h2>
-      <p style="color:var(--anchor);font-weight:600;font-size:15px;margin-bottom:16px">
-        新增 observable：bigram/trigram context 覆盖率、共享 context loss 差异、
-        per-token loss 分位数、n-gram 频率重叠。
-        实验：<code>temp_20260723-divergence</code>（NGRAM_DIVERGENCE_TRACKING=1, vocab=8192, n_layer=8）。
+      <h2 id="chapter-9">9. Hit Count 与 Divergence 分析</h2>
+      <div class="note anchor-note">
+        <strong>本章包含两个互补的实验视角</strong>，合并自原 §13（Divergence 分析）和 §14（Hit Count 分析）：
+        <ul style="margin:8px 0 0;padding-left:20px;font-size:14px;line-height:1.7;">
+          <li><strong>§9.1 Divergence 分析</strong>（实验 <code>temp_20260723-divergence</code>，vocab=8192, n_layer=8）：从"全局表示偏移"角度，追踪共享 context 的 train/val loss 差异、hit count 分组、token 分位数。</li>
+          <li><strong>§9.2 Hit Count 分析</strong>（实验 <code>20260722-ngram-hit-tracking-v2</code>，vocab=32768, n_layer=12）：从"按频率分解"角度，用全局静态 hit count 把 loss 分解到不同频率 bucket，定位 gap 的主要贡献来源。</li>
+        </ul>
         <strong>注意：以下曲线均为原始数据点直线连接，无平滑处理。</strong>
-      </p>
+      </div>
 
-      <h3>13.1 共享 context loss 差异（最关键指标）</h3>
+      <h3>9.1.1 共享 context loss 差异（最关键指标）</h3>
       <p>对于同时出现在 train 和 val 中的 trigram context，比较它们各自的 per-token loss。
       这直接衡量"同一个 context 在 train 上预测得比 val 好"的程度：</p>
       <div class="chart-section">
@@ -2097,6 +2440,9 @@ grep val_bpb_sample train.log</div>
         <div style="padding:4px 12px 8px;font-size:11px;color:var(--muted);text-align:center;">
           图 13.1a：共享 trigram context 的 train vs val loss。Train 持续下降，val 在 gap window 后上升。
         </div>
+        <div style="padding:0 12px 8px;font-size:10px;color:var(--weak);text-align:center;">
+          📊 数据来源：temp_20260723-divergence (current shell, NGRAM_DIVERGENCE_TRACKING=1, vocab=8192, n_layer=8)
+        </div>
       </div>
       <div class="chart-section">
         <div class="chart-wrap" style="width:100%;position:relative;">
@@ -2143,6 +2489,9 @@ grep val_bpb_sample train.log</div>
         <div style="padding:4px 12px 8px;font-size:11px;color:var(--muted);text-align:center;">
           图 13.1b：共享 context loss gap（val - train）。从 -0.50 涨到 +3.16。同一个 context 在 val 上比 train 差 3.16。
         </div>
+        <div style="padding:0 12px 8px;font-size:10px;color:var(--weak);text-align:center;">
+          📊 数据来源：temp_20260723-divergence (current shell, NGRAM_DIVERGENCE_TRACKING=1, vocab=8192, n_layer=8)
+        </div>
       </div>
 
       <table style="width:100%;border-collapse:collapse;margin:14px 0;font-size:14px;">
@@ -2168,7 +2517,7 @@ grep val_bpb_sample train.log</div>
         </p>
       </div>
 
-      <h3>13.2 Bigram hit count 统计量</h3>
+      <h3>9.1.2 Bigram hit count 统计量</h3>
       <p>Bigram context (w_{t-1}, w_t) 的命中次数分布。与 trigram 不同，bigram 有足够的重复频率来观察分布形态：</p>
       <div class="chart-section">
         <div class="chart-wrap" style="width:100%;position:relative;">
@@ -2224,6 +2573,9 @@ grep val_bpb_sample train.log</div>
         <div style="padding:4px 12px 8px;font-size:11px;color:var(--muted);text-align:center;">
           图 13.2a：Train bigram hit count 分位数。Mean 到 31，P99 到 1052。极长尾分布。
         </div>
+        <div style="padding:0 12px 8px;font-size:10px;color:var(--weak);text-align:center;">
+          📊 数据来源：temp_20260723-divergence (current shell, NGRAM_DIVERGENCE_TRACKING=1, vocab=8192, n_layer=8)
+        </div>
       </div>
       <div class="chart-section">
         <div class="chart-wrap" style="width:100%;position:relative;">
@@ -2273,6 +2625,9 @@ grep val_bpb_sample train.log</div>
         <div style="padding:4px 12px 8px;font-size:11px;color:var(--muted);text-align:center;">
           图 13.2b：Bigram hit count 均值 train vs val。Val 覆盖率与 train 相当（step 960: 35 vs 39）。
         </div>
+        <div style="padding:0 12px 8px;font-size:10px;color:var(--weak);text-align:center;">
+          📊 数据来源：temp_20260723-divergence (current shell, NGRAM_DIVERGENCE_TRACKING=1, vocab=8192, n_layer=8)
+        </div>
       </div>
 
       <table style="width:100%;border-collapse:collapse;margin:14px 0;font-size:14px;">
@@ -2288,7 +2643,7 @@ grep val_bpb_sample train.log</div>
         Val bigram 覆盖率与 train 相当（mean: 35 vs 39）。<strong>Gap 不是因为 val 看到了陌生的 bigram</strong>。
       </p>
 
-      <h3>13.3 Val n-gram overlap with Train</h3>
+      <h3>9.1.3 Val n-gram overlap with Train</h3>
       <div class="chart-section">
         <div class="chart-wrap" style="width:100%;position:relative;">
 <svg viewBox="0 0 880 400" xmlns="http://www.w3.org/2000/svg" style="font-family:Inter,ui-sans-serif,system-ui,sans-serif;">
@@ -2336,9 +2691,12 @@ grep val_bpb_sample train.log</div>
         <div style="padding:4px 12px 8px;font-size:11px;color:var(--muted);text-align:center;">
           图 13.3：Val n-gram 与 train 的重叠率。Bigram 39.3%，trigram 18.1%（step 960）。
         </div>
+        <div style="padding:0 12px 8px;font-size:10px;color:var(--weak);text-align:center;">
+          📊 数据来源：temp_20260723-divergence (current shell, NGRAM_DIVERGENCE_TRACKING=1, vocab=8192, n_layer=8)
+        </div>
       </div>
 
-      <h3>13.4 所有 hit count 分组的 val loss 都在上升</h3>
+      <h3>9.1.4 所有 hit count 分组的 val loss 都在上升</h3>
       <p>这是最重要的图：<strong>每个</strong> hit count 分组的 val loss 都在上升，包括 hit0（从没见过）：</p>
       <div class="chart-section">
         <div class="chart-wrap" style="width:100%;position:relative;">
@@ -2393,6 +2751,9 @@ grep val_bpb_sample train.log</div>
         </div>
         <div style="padding:4px 12px 8px;font-size:11px;color:var(--muted);text-align:center;">
           图 13.4a：Val loss 按 bigram hit count 分组。所有组都在 gap window 后上升。
+        </div>
+        <div style="padding:0 12px 8px;font-size:10px;color:var(--weak);text-align:center;">
+          📊 数据来源：temp_20260723-divergence (current shell, NGRAM_DIVERGENCE_TRACKING=1, vocab=8192, n_layer=8)
         </div>
       </div>
       <div class="chart-section">
@@ -2449,6 +2810,9 @@ grep val_bpb_sample train.log</div>
         <div style="padding:4px 12px 8px;font-size:11px;color:var(--muted);text-align:center;">
           图 13.4b：Val loss 按 trigram hit count 分组。同样所有组都上升。
         </div>
+        <div style="padding:0 12px 8px;font-size:10px;color:var(--weak);text-align:center;">
+          📊 数据来源：temp_20260723-divergence (current shell, NGRAM_DIVERGENCE_TRACKING=1, vocab=8192, n_layer=8)
+        </div>
       </div>
 
       <div class="note" style="background:#fbf4f2;border-left:4px solid var(--gap);border-radius:8px;padding:16px;margin:12px 0;">
@@ -2460,7 +2824,7 @@ grep val_bpb_sample train.log</div>
         </p>
       </div>
 
-      <h3>13.5 Val per-token loss 分位数</h3>
+      <h3>9.1.5 Val per-token loss 分位数</h3>
       <div class="chart-section">
         <div class="chart-wrap" style="width:100%;position:relative;">
 <svg viewBox="0 0 880 400" xmlns="http://www.w3.org/2000/svg" style="font-family:Inter,ui-sans-serif,system-ui,sans-serif;">
@@ -2515,12 +2879,15 @@ grep val_bpb_sample train.log</div>
         <div style="padding:4px 12px 8px;font-size:11px;color:var(--muted);text-align:center;">
           图 13.5：Val per-token loss 分位数。P50 稳定在 ~4.2，但 P99 从 11.8 涨到 16.9。
         </div>
+        <div style="padding:0 12px 8px;font-size:10px;color:var(--weak);text-align:center;">
+          📊 数据来源：temp_20260723-divergence (current shell, NGRAM_DIVERGENCE_TRACKING=1, vocab=8192, n_layer=8)
+        </div>
       </div>
       <p style="font-size:13px;color:var(--muted);">
         P50 稳定但 P99 剧烈上升——模型对一部分 val token 的预测越来越自信地错误。
       </p>
 
-      <h3>13.6 交叉验证：原始实验的 hit0 loss 差异</h3>
+      <h3>9.1.6 交叉验证：原始实验的 hit0 loss 差异</h3>
       <p>从原始实验（hit-tracking-v2, vocab=32768, n_layer=12）中提取的 train vs val loss 按 trigram hit count 分组：</p>
       <div class="chart-section">
         <div class="chart-wrap" style="width:100%;position:relative;">
@@ -2570,6 +2937,9 @@ grep val_bpb_sample train.log</div>
         <div style="padding:4px 12px 8px;font-size:11px;color:var(--muted);text-align:center;">
           图 13.6a：hit0（trigram 从未见过）的 train vs val loss。即使是全新 context，val loss 也在上升。
         </div>
+        <div style="padding:0 12px 8px;font-size:10px;color:var(--weak);text-align:center;">
+          📊 数据来源：temp_20260723-divergence (current shell, NGRAM_DIVERGENCE_TRACKING=1, vocab=8192, n_layer=8)
+        </div>
       </div>
       <div class="chart-section">
         <div class="chart-wrap" style="width:100%;position:relative;">
@@ -2618,6 +2988,9 @@ grep val_bpb_sample train.log</div>
         </div>
         <div style="padding:4px 12px 8px;font-size:11px;color:var(--muted);text-align:center;">
           图 13.6b：hit3+（见过 3 次以上）的 train vs val loss。即使频繁见过的 context，val loss 也在上升。
+        </div>
+        <div style="padding:0 12px 8px;font-size:10px;color:var(--weak);text-align:center;">
+          📊 数据来源：temp_20260723-divergence (current shell, NGRAM_DIVERGENCE_TRACKING=1, vocab=8192, n_layer=8)
         </div>
       </div>
       <div class="chart-section">
@@ -2674,9 +3047,12 @@ grep val_bpb_sample train.log</div>
         <div style="padding:4px 12px 8px;font-size:11px;color:var(--muted);text-align:center;">
           图 13.6c：Val loss 按 hit count 分组，所有组都上升。
         </div>
+        <div style="padding:0 12px 8px;font-size:10px;color:var(--weak);text-align:center;">
+          📊 数据来源：temp_20260723-divergence (current shell, NGRAM_DIVERGENCE_TRACKING=1, vocab=8192, n_layer=8)
+        </div>
       </div>
 
-      <h3>13.7 结论</h3>
+      <h3>9.1.7 结论</h3>
       <div class="note anchor-note">
         <strong>Gap 成因总结</strong>
         <ol style="margin:8px 0 0;padding-left:20px;font-size:14px;line-height:1.7;">
@@ -2695,18 +3071,25 @@ grep val_bpb_sample train.log</div>
           <li>对比 unigram-only baseline（去掉 bigram/trigram）看 gap 是否消失</li>
         </ul>
       </div>
-    </section>
 
-    <!-- Section 14: Hit Count 分析 -->
-    <section id="section-14">
-      <h2>14. Hit Count 分析：全局 N-gram 频率与 Loss 的关系</h2>
+    <!-- ====== 9.2 Hit Count 分析 ====== -->
+      <h3>9.2 Hit Count 分析：全局 N-gram 频率与 Loss 的关系</h3>
       <p style="color:var(--anchor);font-weight:600;font-size:15px;margin-bottom:16px">
-        本节使用<strong>全局 hit count</strong>（训练前一次性扫描整个训练集得到的每个 trigram context 的总出现次数），
-        而不是"到当前 step 已累计见过的次数"。这是数据的静态属性，分桶稳定，可横向对比 train 与 val。
+        本节使用<strong>全局 hit count</strong>（训练前一次性扫描<strong>整个训练集</strong>得到的每个
+        <strong>trigram context</strong> 的总出现次数）。
+        <strong>唯一口径说明</strong>：这里的 "context" 特指 <strong>n=3 阶（trigram）的 2-token 前缀</strong>——
+        即 <code>(token[i-2], token[i-1])</code> 这个二元组作为条件、预测 <code>token[i]</code> 时命中的次数，
+        和 §9.1"共享 trigram context"分析用的是<strong>同一种 context</strong>（都是 trigram 阶）。
+        <strong>不包含 bigram 阶</strong>（bigram context = 单个 <code>token[i-1]</code> 作为条件）——
+        bigram 覆盖率是 §8 单独统计的另一个指标（train&asymp;val, mean 35 vs 39），与本节 hit count 桶无关，
+        请勿混淆。本节延续 §9.1 已经在用的 trigram context 口径，没有另外单独统计 bigram 阶的 hit count 分布。
+        本节 hit count 也<strong>不是</strong>"到当前 step 已累计见过的次数"，也<strong>不是</strong>"单个 epoch 内被命中的次数"——
+        无论训练跑几个 epoch，同一个 context 的 hit count 都是同一个数（对整个训练集只扫描一次得到的静态计数）。
+        这是数据的静态属性，分桶稳定，可横向对比 train 与 val。
         <strong>所有曲线均为原始数据点直线连接，无平滑处理。</strong>
       </p>
 
-      <h3>14.1 全局 Hit Count 分布：Context-Weighted vs Count-Weighted</h3>
+      <h3>9.2.1 全局 Hit Count 分布：Context-Weighted vs Count-Weighted</h3>
       <p>
         对训练集（63.2M tokens，86k documents，22.77M unique trigram contexts）预扫描，得到两种视角的分布：
       </p>
@@ -2726,9 +3109,38 @@ grep val_bpb_sample train.log</div>
           图 14.1：全局 hit count 分布。蓝条 = ctx-weighted（unique context 占比），红条 = count-weighted（token 占比）。
           低频 context 种类极多但 token 占比小；高频 context 种类少但占据大量 token。这是典型的幂律分布。
         </div>
+        <div style="padding:0 12px 8px;font-size:10px;color:var(--weak);text-align:center;">
+          📊 数据来源：20260722-ngram-hit-tracking-v2 (current shell, vocab=32768, n_layer=12)
+        </div>
       </div>
 
-      <h3>14.2 Count-Weighted 分位数表</h3>
+      <h3>9.2.1b 累积分布：更直观地看"平均每个 token 重复了多少次"</h3>
+      <p>
+        图 9.2.1 的柱状图展示的是"每个 bucket 单独占比"，不容易直接读出"多大比例的 token/context 落在某个频率以下"。
+        下图把两条曲线都改成<strong>从低频到高频累加</strong>的累积占比，横轴仍是 hit count bucket（升序），
+        纵轴是"hit count ≤ 该 bucket 上界"的累积份额：
+      </p>
+      <div class="chart-section">
+        <div class="chart-wrap" style="width:100%;position:relative;">
+          <object data="fig14_dist_cumulative.svg" type="image/svg+xml" style="width:100%;max-width:880px;height:auto;">
+            Hit Count Cumulative Distribution
+          </object>
+        </div>
+        <div style="padding:4px 12px 8px;font-size:11px;color:var(--muted);text-align:center;">
+          图 14.1b：累积分布。蓝线 = ctx-weighted 累积（unique context 视角），红线 = count-weighted 累积（token 视角）。
+          <strong>ctx-weighted 累积极快</strong>：hit=1 的 context 就占了 71.8%，到 hit≤5 已经累积到 93.6%——
+          绝大多数<strong>不同的</strong> context 只出现个位数次。
+          <strong>count-weighted 累积慢得多</strong>：hit≤5 的 token 只占 47.0%，要到 hit≤10 才过半（55.9%），
+          说明<strong>虽然大部分 context 是低频的，但接近一半的 token 来自出现 &ge;6 次的 context</strong>——
+          两条曲线的差距本身就是幂律分布的直接证据：种类（context）集中在低频，
+          而数量（token）被少数高频 context 大量占据。
+        </div>
+        <div style="padding:0 12px 8px;font-size:10px;color:var(--weak);text-align:center;">
+          📊 数据来源：20260722-ngram-hit-tracking-v2 (current shell, vocab=32768, n_layer=12)
+        </div>
+      </div>
+
+      <h3>9.2.2 Count-Weighted 分位数表</h3>
       <p>不同训练阶段的 count-weighted hit count 分位数（每张 token 的 context 全局 hit count 按 count 加权）：</p>
       <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:16px;">
         <thead>
@@ -2765,10 +3177,10 @@ grep val_bpb_sample train.log</div>
       <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">
         注意：本表统计的是"采样到的 batch token 的 context 全局 hit count"的分位数。由于每个 batch 是随机采样，
         且 batch 里大部分 token 来自高频 context（count-weighted 视角），P50 在 ~2000 量级。
-        这与图 14.1 的静态分布不矛盾——图 14.1 是全集分布，本表是采样视角。
+        这与图 9.2.1 的静态分布不矛盾——图 9.2.1 是全集分布，本表是采样视角。
       </p>
 
-      <h3>14.3 Val Loss Contribution by Bucket（每个 bucket 对总 val loss 的贡献 = frac × loss）</h3>
+      <h3>9.2.3 Val Loss Contribution by Bucket（每个 bucket 对总 val loss 的贡献 = frac × loss）</h3>
       <div class="chart-section">
         <div class="chart-wrap" style="width:100%;position:relative;">
           <object data="fig14A_val_contrib.svg" type="image/svg+xml" style="width:100%;max-width:880px;height:auto;">
@@ -2780,9 +3192,12 @@ grep val_bpb_sample train.log</div>
           <strong>最强的信号</strong>：Novel bucket (hit=0) 的贡献（红线）从 epoch 2 开始一路领先，最终贡献 ~1.5 的 val loss（占 29.5%）。
           其次是 21-50、6-10、51-100 这些<strong>低中频</strong> bucket。5k+ 高频 bucket（最底部）贡献几乎为 0。
         </div>
+        <div style="padding:0 12px 8px;font-size:10px;color:var(--weak);text-align:center;">
+          📊 数据来源：20260722-ngram-hit-tracking-v2 (current shell, vocab=32768, n_layer=12)
+        </div>
       </div>
 
-      <h3>14.4 Train Loss Contribution by Bucket</h3>
+      <h3>9.2.4 Train Loss Contribution by Bucket</h3>
       <div class="chart-section">
         <div class="chart-wrap" style="width:100%;position:relative;">
           <object data="fig14A_train_contrib.svg" type="image/svg+xml" style="width:100%;max-width:880px;height:auto;">
@@ -2793,9 +3208,12 @@ grep val_bpb_sample train.log</div>
           图 14.3：Train loss 按 bucket 分解。注意 train 没有 novel bucket（按定义 train 里所有 context 都出现过 ≥1 次）。
           Step 750 之后所有 bucket 的贡献都急剧下降，说明<strong>整体 train loss 在 step 750 附近坍塌</strong>（可能是 LR schedule 切换到 warmdown 阶段）。
         </div>
+        <div style="padding:0 12px 8px;font-size:10px;color:var(--weak);text-align:center;">
+          📊 数据来源：20260722-ngram-hit-tracking-v2 (current shell, vocab=32768, n_layer=12)
+        </div>
       </div>
 
-      <h3>14.5 Val Loss：关键 bucket 对比</h3>
+      <h3>9.2.5 Val Loss：关键 bucket 对比</h3>
       <div class="chart-section">
         <div class="chart-wrap" style="width:100%;position:relative;">
           <object data="fig14B_val_loss_key.svg" type="image/svg+xml" style="width:100%;max-width:880px;height:auto;">
@@ -2808,9 +3226,12 @@ grep val_bpb_sample train.log</div>
           这是因为 5k+ bucket 主要由 QA pattern 构成（`? Answer:`、`Question: What`），后续 token 天然可预测。
           真正 val loss 翘起的是 novel（红）和 eq1-201 这些低中频 bucket。
         </div>
+        <div style="padding:0 12px 8px;font-size:10px;color:var(--weak);text-align:center;">
+          📊 数据来源：20260722-ngram-hit-tracking-v2 (current shell, vocab=32768, n_layer=12)
+        </div>
       </div>
 
-      <h3>14.6 Train Loss：关键 bucket 对比</h3>
+      <h3>9.2.6 Train Loss：关键 bucket 对比</h3>
       <div class="chart-section">
         <div class="chart-wrap" style="width:100%;position:relative;">
           <object data="fig14B_train_loss_key.svg" type="image/svg+xml" style="width:100%;max-width:880px;height:auto;">
@@ -2823,9 +3244,12 @@ grep val_bpb_sample train.log</div>
           直到 step 750 所有 bucket 才同步坍塌。说明：低频 context 反而<strong>最容易 memorize</strong>（因为样例少容易过拟合），
           高频 context 样例多反而学得慢。
         </div>
+        <div style="padding:0 12px 8px;font-size:10px;color:var(--weak);text-align:center;">
+          📊 数据来源：20260722-ngram-hit-tracking-v2 (current shell, vocab=32768, n_layer=12)
+        </div>
       </div>
 
-      <h3>14.7 Val - Train Gap by Bucket</h3>
+      <h3>9.2.7 Val - Train Gap by Bucket</h3>
       <div class="chart-section">
         <div class="chart-wrap" style="width:100%;position:relative;">
           <object data="fig14C_gap.svg" type="image/svg+xml" style="width:100%;max-width:880px;height:auto;">
@@ -2836,9 +3260,12 @@ grep val_bpb_sample train.log</div>
           图 14.6：各 bucket 的 val-train loss 差值。注意<strong>所有 bucket 的 gap 都在 epoch 2-3 爆发</strong>，
           而且相互之间的差距不大（~4-5）。这说明 gap 是<strong>全局性</strong>的，不是某个特定频率 bucket 的问题。
         </div>
+        <div style="padding:0 12px 8px;font-size:10px;color:var(--weak);text-align:center;">
+          📊 数据来源：20260722-ngram-hit-tracking-v2 (current shell, vocab=32768, n_layer=12)
+        </div>
       </div>
 
-      <h3>14.8 Gap Contribution by Bucket（每个 bucket 对总 gap 的贡献）</h3>
+      <h3>9.2.8 Gap Contribution by Bucket（每个 bucket 对总 gap 的贡献）</h3>
       <div class="chart-section">
         <div class="chart-wrap" style="width:100%;position:relative;">
           <object data="fig14D_gap_contrib.svg" type="image/svg+xml" style="width:100%;max-width:880px;height:auto;">
@@ -2849,11 +3276,15 @@ grep val_bpb_sample train.log</div>
           图 14.7：Gap contribution = frac × (val - train)。这是回答"哪个 bucket 对 val 翘起贡献最大"的关键图。
           <strong>Novel bucket（红，粗线）</strong>从 epoch 2 开始就领先，最终贡献 ~1.5。
           之后是 21-50、6-10、51-100 这些低中频 bucket。
-          5k+ 高频 bucket 的 gap contribution 几乎为 0（因为它在 train 和 val 上都拟合得不好）。
+          5k+ 高频 bucket 的 gap contribution 几乎为 0（因为它在 train 和 val 上都拟合得同样差/同样好）。
+          （y 轴已修正：基准线固定在 0，个别 bucket 的负值贡献会向下方超出显示，不再把 0 藏在坐标轴底部。）
+        </div>
+        <div style="padding:0 12px 8px;font-size:10px;color:var(--weak);text-align:center;">
+          📊 数据来源：20260722-ngram-hit-tracking-v2 (current shell, vocab=32768, n_layer=12)
         </div>
       </div>
 
-      <h3>14.9 Final-Step Gap Contribution 排序</h3>
+      <h3>9.2.9 Final-Step Gap Contribution 排序</h3>
       <div class="chart-section">
         <div class="chart-wrap" style="width:100%;position:relative;">
           <object data="fig14E_gap_contrib_bar.svg" type="image/svg+xml" style="width:100%;max-width:880px;height:auto;">
@@ -2867,9 +3298,40 @@ grep val_bpb_sample train.log</div>
           这推翻了"高频 n-gram memorize 导致 val 翘起"的假设——真正的问题是
           <strong>train 中从未见过的 context（30% val token）+ 低中频 context 的全局过拟合</strong>。
         </div>
+        <div style="padding:0 12px 8px;font-size:10px;color:var(--weak);text-align:center;">
+          📊 数据来源：20260722-ngram-hit-tracking-v2 (current shell, vocab=32768, n_layer=12)
+        </div>
       </div>
 
-      <h3>14.10 Train Loss 的 Step-750 Cliff</h3>
+      <h3>9.2.9b 拆解总贡献：是"每个 token 差得多"还是"这类 token 本来就少"？</h3>
+      <p>
+        图 9.2.9 排完序后有个疑点：<strong>1k-5k 和 5k+ 两个高频 bucket 的总贡献都很小</strong>（0.101 和 0.014），
+        但这有两种可能截然不同的原因——(a) 这类 context 的 <em>per-token gap 本身就小</em>（模型在这个频段上确实不过拟合），
+        或者 (b) per-token gap 其实不小，只是<strong>这类 token 在 val 里占比太低</strong>（frac 小），乘出来的总贡献自然小。
+        总贡献 = frac × per-token gap，两种情况在总贡献这一个数字上是无法区分的，必须把两项分开看：
+      </p>
+      <div class="chart-section">
+        <div class="chart-wrap" style="width:100%;position:relative;">
+          <object data="fig14G_pertoken_vs_contrib.svg" type="image/svg+xml" style="width:100%;max-width:880px;height:auto;">
+            Per-token Gap vs Total Contribution
+          </object>
+        </div>
+        <div style="padding:4px 12px 8px;font-size:11px;color:var(--muted);text-align:center;">
+          图 14.9b：蓝色柱 = 总贡献（左轴），红色折线 = per-token gap（右轴），红点大小 &#8733; 该 bucket 的 token 占比（frac）。
+          虚线框标出 1k-5k 和 5k+。
+          <strong>结果是(a)(b)两种机制都存在，且分属不同 bucket</strong>：
+          <strong>1k-5k 的 per-token gap = 4.81</strong>，和 hit=1（4.91）几乎一样大，<strong>并不小</strong>；
+          它总贡献低（0.101）纯粹是因为这个频段的 token 占比只有 ~2.1%（红点很小）——
+          验证了 manual 里"万一是罕见 token 数量小"的猜测：<strong>1k-5k 桶确实是"每个 token 都过拟合得很严重，只是这类 token 少"</strong>。
+          <strong>5k+ 则不同</strong>：per-token gap 只有 2.39，明显低于所有其他 bucket（其余都在 4.0-5.3 之间），
+          且 frac 也最小（~0.6%）——5k+ 是<strong>真正"不过拟合"</strong>的 QA-pattern bucket，双重因素都指向贡献小。
+        </div>
+        <div style="padding:0 12px 8px;font-size:10px;color:var(--weak);text-align:center;">
+          📊 数据来源：20260722-ngram-hit-tracking-v2 (current shell, vocab=32768, n_layer=12)
+        </div>
+      </div>
+
+      <h3>9.2.10 Train Loss 的 Step-750 Cliff</h3>
       <div class="chart-section">
         <div class="chart-wrap" style="width:100%;position:relative;">
           <object data="fig14F_train_cliff.svg" type="image/svg+xml" style="width:100%;max-width:880px;height:auto;">
@@ -2881,9 +3343,33 @@ grep val_bpb_sample train.log</div>
           从 ~2-3 降到 ~0.3-1.5。这是 LR schedule 切换到 warmdown 阶段（lrm_adam 从 0.33 降到 0.05）的反映。
           但 val loss 在此阶段反而上升，说明<strong>模型在 LR 变小时开始 memorize</strong>。
         </div>
+        <div style="padding:0 12px 8px;font-size:10px;color:var(--weak);text-align:center;">
+          📊 数据来源：20260722-ngram-hit-tracking-v2 (current shell, vocab=32768, n_layer=12)
+        </div>
       </div>
 
-      <h3>14.11 关键发现（修正版）</h3>
+      <h3>9.2.10b 交互式对比图：Train / Val / Gap × Per-token / 总贡献</h3>
+      <p>
+        以上 9.2.3-9.2.9 每张图只固定了一种"曲线×指标"组合，来回比较需要在多张静态图之间跳转。
+        下面把 <strong>train loss / val loss / gap</strong> 三条曲线，和 <strong>per-token loss / 总贡献（frac × loss）</strong>
+        两种指标做成同一个交互面板，点击按钮即可切换，数据与上方所有静态图完全一致（同一份提取结果）：
+      </p>
+      <div class="chart-section">
+        <div class="chart-wrap" style="width:100%;position:relative;">
+          <iframe src="fig14_interactive.html" style="width:100%;max-width:900px;height:640px;border:1px solid var(--border);border-radius:8px;" title="Interactive Train/Val/Gap chart"></iframe>
+        </div>
+        <div style="padding:4px 12px 8px;font-size:11px;color:var(--muted);text-align:center;">
+          图 14.9c：交互式面板（也可直接打开 <code>fig14_interactive.html</code> 单独查看/放大）。
+          "per-token" 模式下 train/val 仅展示 6 个关键 bucket（数据来自图 14.5/14.6，与静态图口径一致）；
+          "总贡献"模式下展示全部 hit-count bucket（数据来自图 14.2/14.3/14.7）。
+          gap 曲线在两种模式下都覆盖全部 bucket。切换"曲线"和"指标"两组按钮即可组合出 6 种视图。
+        </div>
+        <div style="padding:0 12px 8px;font-size:10px;color:var(--weak);text-align:center;">
+          📊 数据来源：20260722-ngram-hit-tracking-v2 (current shell, vocab=32768, n_layer=12)
+        </div>
+      </div>
+
+      <h3>9.2.11 关键发现（修正版）</h3>
       <div class="note anchor-note">
         <strong>Hit Count 分析结论 — 之前的"高频 memorize"假设被推翻</strong>
         <ol style="margin:8px 0 0;padding-left:20px;font-size:14px;line-height:1.7;">
@@ -2895,6 +3381,9 @@ grep val_bpb_sample train.log</div>
               gap 贡献第二（+0.31）。</li>
           <li><strong>5k+ 高频 bucket 是 QA pattern</strong>（`? Answer:` 等），train loss 反而高（0.77），
               val loss 反而最低（3.37），对 gap 贡献几乎为 0。</li>
+          <li><strong>1k-5k 桶总贡献小≠不过拟合</strong>（图 9.2.9b）：1k-5k 的 per-token gap 高达 4.81，
+              和最差的低频 bucket 一样严重，只是这个频段的 token 占比仅 ~2.1%，总贡献才被稀释到 0.101。
+              只有 5k+ 才是真正"per-token gap 本身就小"（2.39）——两个高频桶贡献小的<strong>原因并不相同</strong>。</li>
           <li><strong>真正驱动 gap 的是低中频 bucket</strong>（6-10、21-50、51-100、101-200），
               合计贡献 ~1.4 的 gap（占 32%）。</li>
           <li><strong>Step 750 cliff</strong>：所有 bucket 的 train loss 在此同步坍塌，与 LR schedule 切换吻合，
@@ -2923,7 +3412,7 @@ grep val_bpb_sample train.log</div>
         </ol>
       </div>
 
-      <h3>14.12 完整机理：从阶梯下降到 Val 翘起</h3>
+      <h3>9.2.12 完整机理：从阶梯下降到 Val 翘起</h3>
 
       <p style="font-size:14px;line-height:1.8;margin-bottom:12px;">
         现在我们可以把整个 gap 现象的因果链完整串起来。整个过程分三个阶段，每个阶段都有不同的主导机制，
@@ -2940,14 +3429,17 @@ grep val_bpb_sample train.log</div>
           起点：训练集的 trigram context 呈典型幂律分布。71.8% 的 unique context 只出现 1 次，
           但 50% 的 token 来自 hit count ≥ 7 的 context。这决定了模型在不同频率区间面临完全不同的学习任务。
         </div>
+        <div style="padding:0 12px 8px;font-size:10px;color:var(--weak);text-align:center;">
+          📊 数据来源：20260722-ngram-hit-tracking-v2 (current shell, vocab=32768, n_layer=12)
+        </div>
       </div>
 
       <p style="font-size:14px;line-height:1.8;margin:16px 0 12px;">
         <strong>第一个 epoch：通用 pattern 的快速学习。</strong>
         在 LR 较大（warmup 后 lrm≈0.33）的阶段，模型对所有频率区间的 token 都在学习"通用 n-gram pattern"。
-        从图 14.5 看，所有 bucket 的 train loss 都在稳定下降，从初始 ~5 降到 epoch 1 结束时的 ~2.5。
+        从图 9.2.6 看，所有 bucket 的 train loss 都在稳定下降，从初始 ~5 降到 epoch 1 结束时的 ~2.5。
         这个阶段 val loss 也在下降，因为通用 pattern 在 train 和 val 上都适用。
-        图 14.4 显示 epoch 1 结束时 val loss 达到最低点 ~2.4——这是模型的"最佳泛化点"。
+        图 9.2.5 显示 epoch 1 结束时 val loss 达到最低点 ~2.4——这是模型的"最佳泛化点"。
       </p>
 
       <div class="chart-section">
@@ -2959,6 +3451,9 @@ grep val_bpb_sample train.log</div>
         <div style="padding:4px 12px 8px;font-size:11px;color:var(--muted);text-align:center;">
           Train loss 关键 bucket 演化。注意 epoch 1（step 0-337）所有 bucket 平稳下降，
           没有出现频率分化——这是"通用学习"阶段。
+        </div>
+        <div style="padding:0 12px 8px;font-size:10px;color:var(--weak);text-align:center;">
+          📊 数据来源：20260722-ngram-hit-tracking-v2 (current shell, vocab=32768, n_layer=12)
         </div>
       </div>
 
@@ -2982,6 +3477,9 @@ grep val_bpb_sample train.log</div>
           Val loss 按 bucket 分解。Epoch 2（step 337-686）期间，novel bucket（红）和低中频 bucket
           的贡献开始缓慢上升，但被 5k+ 高频 bucket 的贡献下降所抵消——总 val loss 看起来平稳。
         </div>
+        <div style="padding:0 12px 8px;font-size:10px;color:var(--weak);text-align:center;">
+          📊 数据来源：20260722-ngram-hit-tracking-v2 (current shell, vocab=32768, n_layer=12)
+        </div>
       </div>
 
       <p style="font-size:14px;line-height:1.8;margin:16px 0 12px;">
@@ -2992,7 +3490,7 @@ grep val_bpb_sample train.log</div>
       <ol style="font-size:14px;line-height:1.8;margin:0 0 12px 24px;">
         <li><strong>LR schedule 切换到 warmdown</strong>（lrm_adam 从 0.33 降到 0.05）。
             学习率变小意味着模型不再"探索"新的通用 pattern，而是开始"收敛"到当前 batch 的特定样本上。
-            图 14.9 显示所有 bucket 的 train loss 在 step 750 同步坍塌——这是 memorize 的标志，
+            图 9.2.10 显示所有 bucket 的 train loss 在 step 750 同步坍塌——这是 memorize 的标志，
             不是学习的标志。真正的学习是渐进的，memorize 才是突变。</li>
         <li><strong>低中频 bucket 的 memorize 达到临界点</strong>。
             出现 6-200 次的 context，在 epoch 1-2 已经见过几次但还没完全记住，
@@ -3011,10 +3509,13 @@ grep val_bpb_sample train.log</div>
           这不是"学习 breakthrough"，而是 LR 切换引发的 memorize 突变。
           同步性是关键证据——如果是学习，不同频率 bucket 应该有自己的节奏。
         </div>
+        <div style="padding:0 12px 8px;font-size:10px;color:var(--weak);text-align:center;">
+          📊 数据来源：20260722-ngram-hit-tracking-v2 (current shell, vocab=32768, n_layer=12)
+        </div>
       </div>
 
       <p style="font-size:14px;line-height:1.8;margin:16px 0 12px;">
-        为什么 epoch 3 的 val 翘起比 epoch 2 显著得多？答案在图 14.8 的 gap contribution 分解中。
+        为什么 epoch 3 的 val 翘起比 epoch 2 显著得多？答案在图 9.2.8 的 gap contribution 分解中。
         Epoch 2 期间，虽然低中频 bucket 已经开始 memorize（train loss 下降），
         但它们的 train loss 还没降到极低（~1-2），val loss 也只是轻微上升。
         到了 epoch 3，LR 变小触发的 memorize 突变让低中频 bucket 的 train loss 降到 0.5-0.8，
@@ -3032,6 +3533,9 @@ grep val_bpb_sample train.log</div>
         <div style="padding:4px 12px 8px;font-size:11px;color:var(--muted);text-align:center;">
           最终 gap 贡献排序。Novel bucket 占 34%，低中频 bucket（6-10, 21-50, 51-100, 101-200）合计占 32%，
           高频 bucket 几乎不贡献。Val 翘起 = 数据本身的幂律分布（30% novel）+ 低中频 bucket 的全局 memorize。
+        </div>
+        <div style="padding:0 12px 8px;font-size:10px;color:var(--weak);text-align:center;">
+          📊 数据来源：20260722-ngram-hit-tracking-v2 (current shell, vocab=32768, n_layer=12)
         </div>
       </div>
 
