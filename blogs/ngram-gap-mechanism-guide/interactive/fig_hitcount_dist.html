@@ -44,6 +44,11 @@ svg{width:100%;height:auto;display:block}
       <button class="btn active" data-v="train">train</button>
       <button class="btn" data-v="val">val（按 train 频次归类）</button>
     </div></div>
+  <div class="group"><div class="grp-label">纵轴尺度</div>
+    <div class="btns" id="scale-btns">
+      <button class="btn active" data-v="linear">线性</button>
+      <button class="btn" data-v="log">对数（让低频小桶可见）</button>
+    </div></div>
 </div>
 <div class="legend" id="legend"></div>
 <div class="row"><div class="chartcard" id="card-bar"><h3 id="bar-title">分桶占比（柱状）</h3><svg id="bar" viewBox="0 0 460 320"></svg></div>
@@ -52,7 +57,7 @@ svg{width:100%;height:auto;display:block}
 </div>
 <script>
 const DATA = {"branches": {"bigram": {"bins": [{"label": "novel", "color": "#c4493d", "ctx_share": 0.7504191398620605, "tok_share": 0.0, "val_tok_share": 7.62939453125e-05, "train_tok_share": 0.0, "n_contexts": 1573743, "n_tokens": 0}, {"label": "1-5", "color": "#353d79", "ctx_share": 0.01518106460571289, "tok_share": 0.0023152508281301517, "val_tok_share": 0.003814697265625, "train_tok_share": 0.0023244222005208335, "n_contexts": 31837, "n_tokens": 115051}, {"label": "6-10", "color": "#4066b0", "ctx_share": 0.029732704162597656, "tok_share": 0.010123645595068826, "val_tok_share": 0.0127410888671875, "train_tok_share": 0.010266621907552084, "n_contexts": 62354, "n_tokens": 503071}, {"label": "11-20", "color": "#3f8fb0", "ctx_share": 0.053401947021484375, "tok_share": 0.03422605248516321, "val_tok_share": 0.03673553466796875, "train_tok_share": 0.034818013509114586, "n_contexts": 111992, "n_tokens": 1700784}, {"label": "21-50", "color": "#b67524", "ctx_share": 0.07087326049804688, "tok_share": 0.09711115956896019, "val_tok_share": 0.09665679931640625, "train_tok_share": 0.09773000081380208, "n_contexts": 148632, "n_tokens": 4825713}, {"label": "51-100", "color": "#8a5a2b", "ctx_share": 0.035508155822753906, "tok_share": 0.10596184081226302, "val_tok_share": 0.106231689453125, "train_tok_share": 0.10654449462890625, "n_contexts": 74466, "n_tokens": 5265527}, {"label": "101-200", "color": "#6b8f3f", "ctx_share": 0.021900177001953125, "tok_share": 0.13005593661777737, "val_tok_share": 0.12757110595703125, "train_tok_share": 0.1309687296549479, "n_contexts": 45928, "n_tokens": 6462827}, {"label": "201-500", "color": "#9a9636", "ctx_share": 0.015429496765136719, "tok_share": 0.20113285516222593, "val_tok_share": 0.2014617919921875, "train_tok_share": 0.2012354532877604, "n_contexts": 32358, "n_tokens": 9994829}, {"label": "501-1k", "color": "#707070", "ctx_share": 0.005476951599121094, "tok_share": 0.16001834234230752, "val_tok_share": 0.1627349853515625, "train_tok_share": 0.1591974894205729, "n_contexts": 11486, "n_tokens": 7951739}, {"label": "1k-5k", "color": "#a05a90", "ctx_share": 0.0018763542175292969, "tok_share": 0.1442172801655745, "val_tok_share": 0.1430511474609375, "train_tok_share": 0.14333343505859375, "n_contexts": 3935, "n_tokens": 7166542}, {"label": "5k+", "color": "#444444", "ctx_share": 0.00020074844360351562, "tok_share": 0.11483763642252925, "val_tok_share": 0.10892486572265625, "train_tok_share": 0.11358133951822917, "n_contexts": 421, "n_tokens": 5706589}], "total_nonzero_contexts": 523409, "table_size": 2097152}, "trigram": {"bins": [{"label": "novel", "color": "#c4493d", "ctx_share": 0.75, "tok_share": 0.0, "val_tok_share": 0.0, "train_tok_share": 0.0, "n_contexts": 1572864, "n_tokens": 0}, {"label": "1-5", "color": "#353d79", "ctx_share": 0.0, "tok_share": 0.0, "val_tok_share": 0.0, "train_tok_share": 0.0, "n_contexts": 0, "n_tokens": 0}, {"label": "6-10", "color": "#4066b0", "ctx_share": 0.0, "tok_share": 0.0, "val_tok_share": 0.0, "train_tok_share": 0.0, "n_contexts": 0, "n_tokens": 0}, {"label": "11-20", "color": "#3f8fb0", "ctx_share": 1.621246337890625e-05, "tok_share": 1.3181017917490933e-05, "val_tok_share": 3.814697265625e-05, "train_tok_share": 1.2715657552083334e-05, "n_contexts": 34, "n_tokens": 655}, {"label": "21-50", "color": "#b67524", "ctx_share": 0.03491353988647461, "tok_share": 0.06379232334296694, "val_tok_share": 0.0738372802734375, "train_tok_share": 0.06443023681640625, "n_contexts": 73219, "n_tokens": 3170011}, {"label": "51-100", "color": "#8a5a2b", "ctx_share": 0.151641845703125, "tok_share": 0.4595850470668995, "val_tok_share": 0.46112823486328125, "train_tok_share": 0.4635416666666667, "n_contexts": 318016, "n_tokens": 22838009}, {"label": "101-200", "color": "#6b8f3f", "ctx_share": 0.05160379409790039, "tok_share": 0.28612069803773077, "val_tok_share": 0.27867889404296875, "train_tok_share": 0.28635915120442706, "n_contexts": 108221, "n_tokens": 14218102}, {"label": "201-500", "color": "#9a9636", "ctx_share": 0.010244369506835938, "tok_share": 0.12149467430529798, "val_tok_share": 0.12165069580078125, "train_tok_share": 0.1187744140625, "n_contexts": 21484, "n_tokens": 6037395}, {"label": "501-1k", "color": "#707070", "ctx_share": 0.0012192726135253906, "tok_share": 0.03393101904441766, "val_tok_share": 0.034942626953125, "train_tok_share": 0.0334625244140625, "n_contexts": 2557, "n_tokens": 1686123}, {"label": "1k-5k", "color": "#a05a90", "ctx_share": 0.0003428459167480469, "tok_share": 0.024745258214329872, "val_tok_share": 0.0230255126953125, "train_tok_share": 0.024202982584635418, "n_contexts": 719, "n_tokens": 1229658}, {"label": "5k+", "color": "#444444", "ctx_share": 1.811981201171875e-05, "tok_share": 0.010317798970439745, "val_tok_share": 0.0066986083984375, "train_tok_share": 0.00921630859375, "n_contexts": 38, "n_tokens": 512719}], "total_nonzero_contexts": 524288, "table_size": 2097152}}};
-const STATE={branch:'bigram', view:'ctx', split:'train'};
+const STATE={branch:'bigram', view:'ctx', split:'train', scale:'linear'};
 const $=s=>document.querySelector(s);
 function renderBtns(sel,st){document.querySelectorAll(sel+' .btn').forEach(b=>b.classList.toggle('active',b.dataset.v===STATE[st]));}
 const LABELS=["novel","1-5","6-10","11-20","21-50","51-100","101-200","201-500","501-1k","1k-5k","5k+"];
@@ -66,7 +71,6 @@ function value(b){
 function renderBar(){
   const svg=$('#bar'); const W=460,H=320,PL=44,PR=12,PT=24,PB=44;
   const branches = STATE.branch==='both'?['bigram','trigram']:[STATE.branch];
-  // gather all labels present across branches
   const labset=new Set(); branches.forEach(br=>binsFor(br).forEach(b=>labset.add(b.label)));
   const labs=LABELS.filter(l=>labset.has(l));
   const nb=branches.length, nl=labs.length;
@@ -74,32 +78,62 @@ function renderBar(){
   let maxv=0; branches.forEach(br=>binsFor(br).forEach(b=>{maxv=Math.max(maxv,value(b));}));
   if(maxv<=0)maxv=1;
   const sx=i=>PL+i*bw;
-  const sy=v=>PT+(1-v/maxv)*(H-PT-PB);
+  // y mapping: linear or log (floor tiny values to a small epsilon for log)
+  const eps = 1e-6;
+  const isLog = STATE.scale==='log';
+  let ylo = isLog ? eps : 0;
+  const sy=v=>{
+    if(isLog){
+      const vv=Math.max(v,eps);
+      const lo=Math.log10(ylo), hi=Math.log10(maxv);
+      return PT+(1-(Math.log10(vv)-lo)/(hi-lo))*(H-PT-PB);
+    }
+    return PT+(1-v/maxv)*(H-PT-PB);
+  };
   let s=`<rect width="${W}" height="${H}" fill="#fffdf8"/>`;
-  // y grid
-  for(let i=0;i<=4;i++){const v=maxv*i/4;const y=sy(v);
-    s+=`<line x1="${PL}" y1="${y}" x2="${W-PR}" y2="${y}" stroke="#ece5d8"/>`;
-    s+=`<text x="${PL-5}" y="${y+3}" text-anchor="end" font-size="9.5" fill="#686d73">${(v*100).toFixed(0)}%</text>`;}
+  // y grid + ticks
+  if(isLog){
+    const hi=Math.log10(maxv); const lo=Math.log10(ylo);
+    // nice-ish ticks: decades from lo to hi
+    const dec0=Math.floor(lo), dec1=Math.ceil(hi);
+    for(let d=dec0; d<=dec1; d++){
+      const v=Math.pow(10,d); if(v>maxv)continue;
+      const y=sy(v);
+      s+=`<line x1="${PL}" y1="${y}" x2="${W-PR}" y2="${y}" stroke="#ece5d8"/>`;
+      const pct=v*100; const lbl = pct>=1?pct.toFixed(0)+'%':pct>=0.1?pct.toFixed(1)+'%':pct.toFixed(2)+'%';
+      s+=`<text x="${PL-5}" y="${y+3}" text-anchor="end" font-size="9.5" fill="#686d73">${lbl}</text>`;
+    }
+  } else {
+    for(let i=0;i<=4;i++){const v=maxv*i/4;const y=sy(v);
+      s+=`<line x1="${PL}" y1="${y}" x2="${W-PR}" y2="${y}" stroke="#ece5d8"/>`;
+      s+=`<text x="${PL-5}" y="${y+3}" text-anchor="end" font-size="9.5" fill="#686d73">${(v*100).toFixed(0)}%</text>`;}
+  }
   labs.forEach((lab,i)=>{
     branches.forEach((br,j)=>{
       const b=DATA.branches[br].bins.find(x=>x.label===lab);
-      if(!b)return; const v=value(b); if(v<=0&&STATE.view!=='ctx')return;
+      if(!b)return; const v=value(b);
+      // skip truly-empty bins (v==0) on tok view; on ctx view novel=n_ctx from table but tok=0 is meaningful
+      if(v<=0)return;
       const w=bw*0.7/nb; const x=sx(i)+bw*0.15+j*w;
       const col = STATE.branch==='both' ? (br==='bigram'?'#2d6f9f':'#c4493d') : b.color;
-      const h=sy(0)-sy(v);
-      s+=`<rect x="${x}" y="${sy(v)}" width="${w}" height="${Math.max(0,h)}" fill="${col}" opacity="0.88" rx="1.5"/>`;
-      if(v>maxv*0.04) s+=`<text x="${x+w/2}" y="${sy(v)-3}" text-anchor="middle" font-size="8.5" fill="${col}">${(v*100).toFixed(1)}</text>`;
+      const h=sy(0)-sy(v);  // sy(0) under log = top-of-eps baseline
+      s+=`<rect x="${x}" y="${sy(v)}" width="${w}" height="${Math.max(0.8,h)}" fill="${col}" opacity="0.88" rx="1.5"/>`;
+      // label EVERY non-zero bin (was: only v>maxv*0.04). log mode shows all; linear shows all but tiny may overlap.
+      const pct=v*100; const lbl = pct>=1?pct.toFixed(1):pct>=0.01?pct.toFixed(2):pct.toExponential(1);
+      const ty = sy(v)-2;
+      s+=`<text x="${x+w/2}" y="${ty}" text-anchor="middle" font-size="8.5" fill="${col}">${lbl}</text>`;
     });
     s+=`<text x="${sx(i)+bw/2}" y="${H-PB+14}" text-anchor="middle" font-size="9" fill="#686d73">${lab}</text>`;
   });
   s+=`<line x1="${PL}" y1="${sy(0)}" x2="${W-PR}" y2="${sy(0)}" stroke="#c8c1b6"/>`;
   s+=`<line x1="${PL}" y1="${PT}" x2="${PL}" y2="${H-PB}" stroke="#c8c1b6"/>`;
   s+=`<text x="${(PL+W-PR)/2}" y="${H-6}" text-anchor="middle" font-size="10" fill="#686d73">命中频次桶（train 频次）</text>`;
-  s+=`<text x="14" y="${(PT+H-PB)/2}" text-anchor="middle" font-size="10" fill="#686d73" transform="rotate(-90 14 ${(PT+H-PB)/2})">占比</text>`;
+  s+=`<text x="14" y="${(PT+H-PB)/2}" text-anchor="middle" font-size="10" fill="#686d73" transform="rotate(-90 14 ${(PT+H-PB)/2})">占比${isLog?' (对数)':''}</text>`;
   svg.innerHTML=s;
-  $('#bar-title').textContent = STATE.view==='ctx'
+  $('#bar-title').textContent = (STATE.view==='ctx'
     ? 'context 种类占比（每个 unique context 算 1）'
-    : (STATE.split==='train'?'token 占比（train，按出现次数）':'token 占比（val，按 train 频次归类）');
+    : (STATE.split==='train'?'token 占比（train，按出现次数）':'token 占比（val，按 train 频次归类）'))
+    + (isLog?' · 对数轴':'');
 }
 function renderCum(){
   const svg=$('#cum'); const W=460,H=320,PL=44,PR=12,PT=24,PB=44;
@@ -144,12 +178,17 @@ function renderLegend(){
 }
 function render(){
   renderBar(); renderCum(); renderLegend();
-  $('#note').innerHTML = STATE.branch==='trigram'||STATE.branch==='both'
+  const scaleHint = STATE.scale==='log'
+    ? ' <b>对数轴</b>：低频小桶（如 trigram 11-20 的 0.001%）现在可见，可对比各频段的真实分布。'
+    : ' <b>线性轴</b>：低频小桶（如 trigram 11-20）柱太矮看不见，但数值标签已标出；要看清小桶请切到对数轴。';
+  $('#note').innerHTML = (STATE.branch==='trigram'||STATE.branch==='both'
     ? `<b>trigram 结构性下限</b>：trigram 频次以 2M-row hash 表的 row 命中次数定义，碰撞使最低 row 频次约 15，故 1-5/6-10/novel 桶为空。bigram 碰撞足迹更小，含 novel（75% 的 row 从未被命中）。<b>频次定义仅在 train</b>：val 的 token 按"其 context 在 train 中的频次"归类，所以 val 也有 novel 桶（context 在 train 中未出现过）。`
-    : `<b>频次定义仅在 train</b>：每个 context hash 在单个 train epoch 内被命中的次数（离线预扫描）。<b>context 种类占比</b>：每个 unique context 算 1（可见 novel 占 75% 的 row）。<b>token 占比</b>：按出现次数加权（train）或按 train 频次归类（val）。两图共用同一套频次桶。`;
+    : `<b>频次定义仅在 train</b>：每个 context hash 在单个 train epoch 内被命中的次数（离线预扫描）。<b>context 种类占比</b>：每个 unique context 算 1（可见 novel 占 75% 的 row）。<b>token 占比</b>：按出现次数加权（train）或按 train 频次归类（val）。两图共用同一套频次桶。`)
+    + scaleHint;
 }
 document.querySelectorAll('#branch-btns .btn').forEach(b=>b.onclick=()=>{STATE.branch=b.dataset.v;renderBtns('#branch-btns','branch');render();});
 document.querySelectorAll('#view-btns .btn').forEach(b=>b.onclick=()=>{STATE.view=b.dataset.v;renderBtns('#view-btns','view');render();});
 document.querySelectorAll('#split-btns .btn').forEach(b=>b.onclick=()=>{STATE.split=b.dataset.v;renderBtns('#split-btns','split');render();});
+document.querySelectorAll('#scale-btns .btn').forEach(b=>b.onclick=()=>{STATE.scale=b.dataset.v;renderBtns('#scale-btns','scale');render();});
 render();
 </script></body></html>
