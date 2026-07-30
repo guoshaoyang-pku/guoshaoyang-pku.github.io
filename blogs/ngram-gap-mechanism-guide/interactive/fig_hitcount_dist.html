@@ -1,0 +1,155 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>n-gram context 命中频次分布</title>
+<style>
+:root{--bg:#fffdf8;--ink:#232426;--muted:#686d73;--line:#c8c1b6;--grid:#ece5d8;
+--panel:#f0eee7;--anchor:#353d79;--train:#2d6f9f;--val:#c4493d;}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);
+font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;}
+.wrap{max-width:1000px;margin:0 auto;padding:14px 12px 36px}
+h1{font-size:19px;margin:0 0 4px}h2{font-size:14px;color:var(--muted);font-weight:500;margin:0 0 14px}
+.controls{display:flex;flex-wrap:wrap;gap:18px;background:var(--panel);border:1px solid var(--line);
+border-radius:8px;padding:12px 14px;margin:10px 0}
+.group{display:flex;flex-direction:column;gap:6px}
+.grp-label{font-size:11px;color:var(--anchor);font-weight:600}
+.btns{display:flex;flex-wrap:wrap;gap:6px}
+.btn{font-size:12px;padding:5px 11px;border:1px solid var(--line);border-radius:6px;background:#fffdf8;color:var(--muted);cursor:pointer;font-family:inherit}
+.btn:hover{border-color:var(--anchor);color:var(--ink)}
+.btn.active{background:var(--anchor);color:#fff;border-color:var(--anchor)}
+.legend{display:flex;flex-wrap:wrap;gap:10px 18px;margin:10px 2px;font-size:11.5px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:16px;height:11px;border-radius:2px;border:1px solid rgba(0,0,0,.1)}
+.row{display:flex;flex-wrap:wrap;gap:18px;margin:10px 0}
+.chartcard{flex:1;min-width:300px;background:#fffdf8;border:1px solid var(--line);border-radius:8px;padding:10px}
+.chartcard h3{font-size:13px;margin:0 0 6px;color:var(--anchor)}
+svg{width:100%;height:auto;display:block}
+.note{font-size:12px;color:var(--muted);line-height:1.6;background:var(--panel);border-left:3px solid var(--anchor);border-radius:6px;padding:10px 12px;margin:10px 0}
+</style></head><body><div class="wrap">
+<h1>n-gram context 命中频次分布（单 train epoch 内）</h1>
+<h2>实验 20260725e_nano_rmsprop_fixv3 · 频次 = 每个 context hash 在一个 train epoch 内被命中的次数（离线预扫描，定义仅在 train 上）</h2>
+<div class="controls">
+  <div class="group"><div class="grp-label">context</div>
+    <div class="btns" id="branch-btns">
+      <button class="btn active" data-v="bigram">bigram</button>
+      <button class="btn" data-v="trigram">trigram</button>
+      <button class="btn" data-v="both">bigram + trigram</button>
+    </div></div>
+  <div class="group"><div class="grp-label">视图</div>
+    <div class="btns" id="view-btns">
+      <button class="btn active" data-v="ctx">context 种类占比（unique）</button>
+      <button class="btn" data-v="tok">token 占比（按出现次数）</button>
+    </div></div>
+  <div class="group"><div class="grp-label">split</div>
+    <div class="btns" id="split-btns">
+      <button class="btn active" data-v="train">train</button>
+      <button class="btn" data-v="val">val（按 train 频次归类）</button>
+    </div></div>
+</div>
+<div class="legend" id="legend"></div>
+<div class="row"><div class="chartcard" id="card-bar"><h3 id="bar-title">分桶占比（柱状）</h3><svg id="bar" viewBox="0 0 460 320"></svg></div>
+<div class="chartcard" id="card-cum"><h3>累积分布（从低频到高频）</h3><svg id="cum" viewBox="0 0 460 320"></svg></div></div>
+<div class="note" id="note"></div>
+</div>
+<script>
+const DATA = {"branches": {"bigram": {"bins": [{"label": "novel", "color": "#c4493d", "ctx_share": 0.7504191398620605, "tok_share": 0.0, "val_tok_share": 7.62939453125e-05, "train_tok_share": 0.0, "n_contexts": 1573743, "n_tokens": 0}, {"label": "1-5", "color": "#353d79", "ctx_share": 0.01518106460571289, "tok_share": 0.0023152508281301517, "val_tok_share": 0.003814697265625, "train_tok_share": 0.0023244222005208335, "n_contexts": 31837, "n_tokens": 115051}, {"label": "6-10", "color": "#4066b0", "ctx_share": 0.029732704162597656, "tok_share": 0.010123645595068826, "val_tok_share": 0.0127410888671875, "train_tok_share": 0.010266621907552084, "n_contexts": 62354, "n_tokens": 503071}, {"label": "11-20", "color": "#3f8fb0", "ctx_share": 0.053401947021484375, "tok_share": 0.03422605248516321, "val_tok_share": 0.03673553466796875, "train_tok_share": 0.034818013509114586, "n_contexts": 111992, "n_tokens": 1700784}, {"label": "21-50", "color": "#b67524", "ctx_share": 0.07087326049804688, "tok_share": 0.09711115956896019, "val_tok_share": 0.09665679931640625, "train_tok_share": 0.09773000081380208, "n_contexts": 148632, "n_tokens": 4825713}, {"label": "51-100", "color": "#8a5a2b", "ctx_share": 0.035508155822753906, "tok_share": 0.10596184081226302, "val_tok_share": 0.106231689453125, "train_tok_share": 0.10654449462890625, "n_contexts": 74466, "n_tokens": 5265527}, {"label": "101-200", "color": "#6b8f3f", "ctx_share": 0.021900177001953125, "tok_share": 0.13005593661777737, "val_tok_share": 0.12757110595703125, "train_tok_share": 0.1309687296549479, "n_contexts": 45928, "n_tokens": 6462827}, {"label": "201-500", "color": "#9a9636", "ctx_share": 0.015429496765136719, "tok_share": 0.20113285516222593, "val_tok_share": 0.2014617919921875, "train_tok_share": 0.2012354532877604, "n_contexts": 32358, "n_tokens": 9994829}, {"label": "501-1k", "color": "#707070", "ctx_share": 0.005476951599121094, "tok_share": 0.16001834234230752, "val_tok_share": 0.1627349853515625, "train_tok_share": 0.1591974894205729, "n_contexts": 11486, "n_tokens": 7951739}, {"label": "1k-5k", "color": "#a05a90", "ctx_share": 0.0018763542175292969, "tok_share": 0.1442172801655745, "val_tok_share": 0.1430511474609375, "train_tok_share": 0.14333343505859375, "n_contexts": 3935, "n_tokens": 7166542}, {"label": "5k+", "color": "#444444", "ctx_share": 0.00020074844360351562, "tok_share": 0.11483763642252925, "val_tok_share": 0.10892486572265625, "train_tok_share": 0.11358133951822917, "n_contexts": 421, "n_tokens": 5706589}], "total_nonzero_contexts": 523409, "table_size": 2097152}, "trigram": {"bins": [{"label": "novel", "color": "#c4493d", "ctx_share": 0.75, "tok_share": 0.0, "val_tok_share": 0.0, "train_tok_share": 0.0, "n_contexts": 1572864, "n_tokens": 0}, {"label": "1-5", "color": "#353d79", "ctx_share": 0.0, "tok_share": 0.0, "val_tok_share": 0.0, "train_tok_share": 0.0, "n_contexts": 0, "n_tokens": 0}, {"label": "6-10", "color": "#4066b0", "ctx_share": 0.0, "tok_share": 0.0, "val_tok_share": 0.0, "train_tok_share": 0.0, "n_contexts": 0, "n_tokens": 0}, {"label": "11-20", "color": "#3f8fb0", "ctx_share": 1.621246337890625e-05, "tok_share": 1.3181017917490933e-05, "val_tok_share": 3.814697265625e-05, "train_tok_share": 1.2715657552083334e-05, "n_contexts": 34, "n_tokens": 655}, {"label": "21-50", "color": "#b67524", "ctx_share": 0.03491353988647461, "tok_share": 0.06379232334296694, "val_tok_share": 0.0738372802734375, "train_tok_share": 0.06443023681640625, "n_contexts": 73219, "n_tokens": 3170011}, {"label": "51-100", "color": "#8a5a2b", "ctx_share": 0.151641845703125, "tok_share": 0.4595850470668995, "val_tok_share": 0.46112823486328125, "train_tok_share": 0.4635416666666667, "n_contexts": 318016, "n_tokens": 22838009}, {"label": "101-200", "color": "#6b8f3f", "ctx_share": 0.05160379409790039, "tok_share": 0.28612069803773077, "val_tok_share": 0.27867889404296875, "train_tok_share": 0.28635915120442706, "n_contexts": 108221, "n_tokens": 14218102}, {"label": "201-500", "color": "#9a9636", "ctx_share": 0.010244369506835938, "tok_share": 0.12149467430529798, "val_tok_share": 0.12165069580078125, "train_tok_share": 0.1187744140625, "n_contexts": 21484, "n_tokens": 6037395}, {"label": "501-1k", "color": "#707070", "ctx_share": 0.0012192726135253906, "tok_share": 0.03393101904441766, "val_tok_share": 0.034942626953125, "train_tok_share": 0.0334625244140625, "n_contexts": 2557, "n_tokens": 1686123}, {"label": "1k-5k", "color": "#a05a90", "ctx_share": 0.0003428459167480469, "tok_share": 0.024745258214329872, "val_tok_share": 0.0230255126953125, "train_tok_share": 0.024202982584635418, "n_contexts": 719, "n_tokens": 1229658}, {"label": "5k+", "color": "#444444", "ctx_share": 1.811981201171875e-05, "tok_share": 0.010317798970439745, "val_tok_share": 0.0066986083984375, "train_tok_share": 0.00921630859375, "n_contexts": 38, "n_tokens": 512719}], "total_nonzero_contexts": 524288, "table_size": 2097152}}};
+const STATE={branch:'bigram', view:'ctx', split:'train'};
+const $=s=>document.querySelector(s);
+function renderBtns(sel,st){document.querySelectorAll(sel+' .btn').forEach(b=>b.classList.toggle('active',b.dataset.v===STATE[st]));}
+const LABELS=["novel","1-5","6-10","11-20","21-50","51-100","101-200","201-500","501-1k","1k-5k","5k+"];
+function binsFor(br){
+  return DATA.branches[br].bins.filter(b=>true); // keep all, render skips empty
+}
+function value(b){
+  if(STATE.view==='ctx') return b.ctx_share;
+  return STATE.split==='train'? b.tok_share : b.val_tok_share;
+}
+function renderBar(){
+  const svg=$('#bar'); const W=460,H=320,PL=44,PR=12,PT=24,PB=44;
+  const branches = STATE.branch==='both'?['bigram','trigram']:[STATE.branch];
+  // gather all labels present across branches
+  const labset=new Set(); branches.forEach(br=>binsFor(br).forEach(b=>labset.add(b.label)));
+  const labs=LABELS.filter(l=>labset.has(l));
+  const nb=branches.length, nl=labs.length;
+  const bw=(W-PL-PR)/nl;
+  let maxv=0; branches.forEach(br=>binsFor(br).forEach(b=>{maxv=Math.max(maxv,value(b));}));
+  if(maxv<=0)maxv=1;
+  const sx=i=>PL+i*bw;
+  const sy=v=>PT+(1-v/maxv)*(H-PT-PB);
+  let s=`<rect width="${W}" height="${H}" fill="#fffdf8"/>`;
+  // y grid
+  for(let i=0;i<=4;i++){const v=maxv*i/4;const y=sy(v);
+    s+=`<line x1="${PL}" y1="${y}" x2="${W-PR}" y2="${y}" stroke="#ece5d8"/>`;
+    s+=`<text x="${PL-5}" y="${y+3}" text-anchor="end" font-size="9.5" fill="#686d73">${(v*100).toFixed(0)}%</text>`;}
+  labs.forEach((lab,i)=>{
+    branches.forEach((br,j)=>{
+      const b=DATA.branches[br].bins.find(x=>x.label===lab);
+      if(!b)return; const v=value(b); if(v<=0&&STATE.view!=='ctx')return;
+      const w=bw*0.7/nb; const x=sx(i)+bw*0.15+j*w;
+      const col = STATE.branch==='both' ? (br==='bigram'?'#2d6f9f':'#c4493d') : b.color;
+      const h=sy(0)-sy(v);
+      s+=`<rect x="${x}" y="${sy(v)}" width="${w}" height="${Math.max(0,h)}" fill="${col}" opacity="0.88" rx="1.5"/>`;
+      if(v>maxv*0.04) s+=`<text x="${x+w/2}" y="${sy(v)-3}" text-anchor="middle" font-size="8.5" fill="${col}">${(v*100).toFixed(1)}</text>`;
+    });
+    s+=`<text x="${sx(i)+bw/2}" y="${H-PB+14}" text-anchor="middle" font-size="9" fill="#686d73">${lab}</text>`;
+  });
+  s+=`<line x1="${PL}" y1="${sy(0)}" x2="${W-PR}" y2="${sy(0)}" stroke="#c8c1b6"/>`;
+  s+=`<line x1="${PL}" y1="${PT}" x2="${PL}" y2="${H-PB}" stroke="#c8c1b6"/>`;
+  s+=`<text x="${(PL+W-PR)/2}" y="${H-6}" text-anchor="middle" font-size="10" fill="#686d73">命中频次桶（train 频次）</text>`;
+  s+=`<text x="14" y="${(PT+H-PB)/2}" text-anchor="middle" font-size="10" fill="#686d73" transform="rotate(-90 14 ${(PT+H-PB)/2})">占比</text>`;
+  svg.innerHTML=s;
+  $('#bar-title').textContent = STATE.view==='ctx'
+    ? 'context 种类占比（每个 unique context 算 1）'
+    : (STATE.split==='train'?'token 占比（train，按出现次数）':'token 占比（val，按 train 频次归类）');
+}
+function renderCum(){
+  const svg=$('#cum'); const W=460,H=320,PL=44,PR=12,PT=24,PB=44;
+  const branches=STATE.branch==='both'?['bigram','trigram']:[STATE.branch];
+  const labset=new Set(); branches.forEach(br=>binsFor(br).forEach(b=>labset.add(b.label)));
+  const labs=LABELS.filter(l=>labset.has(l));
+  const bw=(W-PL-PR)/Math.max(1,labs.length-1);
+  const sx=i=>PL+i*bw; const sy=v=>PT+(1-v)*(H-PT-PB);
+  let s=`<rect width="${W}" height="${H}" fill="#fffdf8"/>`;
+  for(let i=0;i<=4;i++){const v=i/4;const y=sy(v);
+    s+=`<line x1="${PL}" y1="${y}" x2="${W-PR}" y2="${y}" stroke="#ece5d8"/>`;
+    s+=`<text x="${PL-5}" y="${y+3}" text-anchor="end" font-size="9.5" fill="#686d73">${(v*100).toFixed(0)}%</text>`;}
+  branches.forEach(br=>{
+    const bins=binsFor(br).filter(b=>labset.has(b.label));
+    // cumulative in label order
+    let cum=0; const pts=[];
+    labs.forEach(lab=>{
+      const b=bins.find(x=>x.label===lab); if(!b){pts.push([lab,cum]);return;}
+      cum+=value(b); pts.push([lab,cum]);
+    });
+    const col=STATE.branch==='both'?(br==='bigram'?'#2d6f9f':'#c4493d'):bins[0].color;
+    const dash = br==='trigram' && STATE.branch==='both' ? '5 3':'none';
+    const xy=pts.map((p,i)=>[sx(i),sy(Math.min(1,p[1]))]);
+    if(xy.length>1) s+=`<polyline points="${xy.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ')}" fill="none" stroke="${col}" stroke-width="2" stroke-dasharray="${dash}"/>`;
+    xy.forEach((p,i)=>s+=`<circle cx="${p[0]}" cy="${p[1]}" r="2.5" fill="${col}"/>`);
+  });
+  labs.forEach((lab,i)=>{s+=`<text x="${sx(i)}" y="${H-PB+14}" text-anchor="middle" font-size="8.5" fill="#686d73">${lab}</text>`;});
+  s+=`<line x1="${PL}" y1="${sy(0)}" x2="${W-PR}" y2="${sy(0)}" stroke="#c8c1b6"/>`;
+  s+=`<line x1="${PL}" y1="${PT}" x2="${PL}" y2="${H-PB}" stroke="#c8c1b6"/>`;
+  s+=`<text x="${(PL+W-PR)/2}" y="${H-6}" text-anchor="middle" font-size="10" fill="#686d73">命中频次桶（升序，train 频次）</text>`;
+  s+=`<text x="14" y="${(PT+H-PB)/2}" text-anchor="middle" font-size="10" fill="#686d73" transform="rotate(-90 14 ${(PT+H-PB)/2})">累积占比</text>`;
+  svg.innerHTML=s;
+}
+function renderLegend(){
+  const lg=$('#legend');
+  if(STATE.branch==='both'){
+    lg.innerHTML='<span><i class="sw" style="background:#2d6f9f"></i>bigram</span><span><i class="sw" style="background:#c4493d"></i>trigram</span>';
+  } else {
+    lg.innerHTML='<span><i class="sw" style="background:#353d79"></i>当前 context</span>';
+  }
+  lg.innerHTML+=`<span style="margin-left:6px">视图：${STATE.view==='ctx'?'context 种类':'token 占比'}</span><span>split：${STATE.split}</span>`;
+}
+function render(){
+  renderBar(); renderCum(); renderLegend();
+  $('#note').innerHTML = STATE.branch==='trigram'||STATE.branch==='both'
+    ? `<b>trigram 结构性下限</b>：trigram 频次以 2M-row hash 表的 row 命中次数定义，碰撞使最低 row 频次约 15，故 1-5/6-10/novel 桶为空。bigram 碰撞足迹更小，含 novel（75% 的 row 从未被命中）。<b>频次定义仅在 train</b>：val 的 token 按"其 context 在 train 中的频次"归类，所以 val 也有 novel 桶（context 在 train 中未出现过）。`
+    : `<b>频次定义仅在 train</b>：每个 context hash 在单个 train epoch 内被命中的次数（离线预扫描）。<b>context 种类占比</b>：每个 unique context 算 1（可见 novel 占 75% 的 row）。<b>token 占比</b>：按出现次数加权（train）或按 train 频次归类（val）。两图共用同一套频次桶。`;
+}
+document.querySelectorAll('#branch-btns .btn').forEach(b=>b.onclick=()=>{STATE.branch=b.dataset.v;renderBtns('#branch-btns','branch');render();});
+document.querySelectorAll('#view-btns .btn').forEach(b=>b.onclick=()=>{STATE.view=b.dataset.v;renderBtns('#view-btns','view');render();});
+document.querySelectorAll('#split-btns .btn').forEach(b=>b.onclick=()=>{STATE.split=b.dataset.v;renderBtns('#split-btns','split');render();});
+render();
+</script></body></html>

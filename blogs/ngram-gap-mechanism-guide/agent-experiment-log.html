@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>OPHIS n-gram gap — Agent Experiment Log</title>
+<meta name="audience" content="agents">
+<meta name="description" content="Machine-oriented index + log of the n-gram gap experiments. Terse, complete, stable anchors. Human-facing report is ngram-gap-mechanism-guide.html.">
+<style>
+  body{font:13px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;max-width:1100px;
+       margin:0 auto;padding:20px;color:#1a1a1a;background:#fff;}
+  h1{font-size:19px;margin:0 0 4px;} h2{font-size:15px;margin:26px 0 6px;border-bottom:1px solid #ddd;padding-bottom:3px;}
+  h3{font-size:13px;margin:16px 0 4px;color:#333;}
+  code{background:#f3f3f0;padding:1px 4px;border-radius:3px;} pre{background:#f7f6f2;padding:10px;overflow-x:auto;border-radius:5px;border:1px solid #e5e2d8;}
+  table{border-collapse:collapse;width:100%;margin:8px 0;font-size:12px;}
+  th,td{border:1px solid #ddd;padding:4px 7px;text-align:left;vertical-align:top;}
+  th{background:#f3f3f0;} .ok{color:#1a7f37;} .no{color:#b3261e;} .muted{color:#777;}
+  a{color:#2451b3;} .toc a{display:inline-block;margin:2px 10px 2px 0;}
+  .meta{color:#777;font-size:11px;} .tag{display:inline-block;background:#eef;border:1px solid #ccd;border-radius:3px;padding:0 5px;font-size:11px;}
+  .entry{border-left:3px solid #4066b0;padding:2px 0 2px 12px;margin:10px 0;}
+</style>
+</head>
+<body>
+
+<h1>OPHIS n-gram gap — Agent Experiment Log</h1>
+<p class="meta">Machine-oriented index for agents. Human report: <a href="ngram-gap-mechanism-guide.html">ngram-gap-mechanism-guide.html</a> ·
+partner bridge: <a href="ngram-gap-regime-bridge.html">ngram-gap-regime-bridge.html</a> · task spec: <a href="manual.md">manual.md</a>.
+Keep this terse. Append new experiments under <a href="#log">§Log</a> using the entry template. Last updated 2026-07-26.</p>
+
+<div class="toc">
+<a href="#claim">§Claim</a><a href="#findings">§Findings</a><a href="#runs">§Runs</a><a href="#observables">§Observables</a>
+<a href="#tools">§Tools</a><a href="#repro">§Repro</a><a href="#gotchas">§Gotchas</a><a href="#docs">§Doc map</a><a href="#log">§Log</a>
+</div>
+
+<h2 id="claim">Claim under investigation</h2>
+<p>n-gram–augmented nanoGPT: at epoch2/3, train loss steps down while val loss lifts → train/val <b>gap</b>.
+Hypothesis: n-gram value tables <b>overfit rare contexts</b> — after repeated exposure the model learns a shortcut on
+train-specific n-gram patterns; because the rare-context train/val distribution differs, val lifts.
+Mechanism chain (measured): new epoch → n-gram <b>gate</b> activates (opens injection channel) → <b>table content</b> accumulates
+train-specific pattern → <b>gated injection RMS</b> grows → gap. Writing angle: over-encoded n-gram params should be frozen
+in multi-epoch post-training (SFT/RL) to avoid this overfit.</p>
+
+<h2 id="findings">Key findings (indexed)</h2>
+<table>
+<tr><th>id</th><th>finding</th><th>evidence</th></tr>
+<tr><td>F1</td><td>Gate/table norm growth is <b>time-aligned</b> with gap onset (current-shell positive).</td><td>guide §11.9; obth-history10 obcurves</td></tr>
+<tr><td>F2</td><td><b>table RMSProp</b> (nanogpt_original): epoch2 no fork, <b>epoch3 fork</b>. Table content RMS jumps at gap onset (step≈783), aligned.</td><td>guide §11.10 B.1; <code>figB1_rmsprop_norms.svg</code>, <code>figB3_rmsprop_alignment.svg</code></td></tr>
+<tr><td>F3</td><td><b>+ Muon</b> (nanogpt_original): <b>delayed gap</b> (onset≈647, late epoch2). Injection norm builds epoch1–2, gap peaks epoch3 → 11.9-style time-lag.</td><td>guide §11.10 B.2; <code>figB1_muon_norms.svg</code>, <code>figB3_muon_alignment.svg</code></td></tr>
+<tr><td>F4</td><td>Gap is driven by <b>mid-frequency</b> n-gram contexts (21-50 … 201-500 hit buckets), not ultra-high-freq (5k+ fits both train&val).</td><td><code>figB2_*_freqloss_*.svg</code>; guide §14.7</td></tr>
+<tr><td>F5</td><td>gate/gated norm observables ARE recorded for <code>nanogpt_original</code> (not only current-shell): <code>NanoGPTSelfAttention._add_value_residual</code> calls record_gate + record_branch_readout.</td><td>train.py ~L1721 (bottom-up branch)</td></tr>
+<tr><td>F6</td><td><b>Negative control</b> (table AdamW, matrix AdamW, no RMSProp/Muon): no sustained gap onset detected, max per-epoch gap ≈0.38 (vs final-step gap 0.6 for RMSProp, 3.2 for Muon). Final-step gap only 0.054 (4.558 train / 4.612 val) vs 0.599 (RMSProp) / 3.233 (Muon). Confirms gap requires an optimizer asymmetry (table RMSProp or matrix Muon), not just having n-gram tables present.</td><td>guide §11.10 B.0; <code>figB1_nofork_norms.svg</code>, <code>figB4_nofork_alignment_interactive.html</code></td></tr>
+<tr><td>F7</td><td><b>[UPDATED fixv3] Freeze ablation</b>: freezing n-gram tables + injection gates (<code>requires_grad_(False)</code>) right after epoch1 suppresses per-epoch max gap from 0.688 (baseline rmsprop) to 0.245 (frozen) — roughly to 1/3, not as dramatic as an earlier fixv2-era estimate of 1/4–1/10 (that estimate used the since-superseded online-cumulative-counter frequency methodology; direction of the effect is unchanged, magnitude is smaller under the corrected fully-offline methodology). Confirms n-gram table/gate updates during epoch2/3 are a primary gap driver, though not as completely dominant as first estimated.</td><td>guide §11.11 C.1; <code>figB6_freeze_ablation_gap.svg</code></td></tr>
+<tr><td>F8</td><td><b>[UPDATED fixv3] More training data (counter-hypothesis result)</b>: doubling train shards (1→2, step budget scaled 1000→2200 to still reach epoch3/4) does NOT shrink the gap — max per-epoch gap grows from 0.688 (baseline, 3 epochs) to 1.385 (moredata, 4 epochs). Repeated exposure across more epochs still appears to deepen overfitting rather than dilute it, confirming the fixv2-era finding under the corrected offline-frequency methodology. Still contradicts the original hypothesis and still needs a follow-up experiment with genuinely larger/more diverse corpus (not just more epochs over the same doc set) to test the intended claim.</td><td>guide §11.11 C.2; <code>figB7_moredata_gap.svg</code></td></tr>
+<tr><td>F9</td><td><b>[UPDATED fixv3] Epoch3 gap-vs-frequency curve</b> (from the fully-offline <code>context_hash</code>/<code>offline_freq_count</code> raw per-token probe log): both positive settings show gap decreasing with increasing context frequency — rmsprop starts ≈1.28 at freq≈25 and falls to ≈0.26–0.4 by high freq (with some bucket noise, e.g. a dip to −0.047 at freq≈10801); Muon starts higher (≈3.68 at freq≈25) and also decays with frequency. Reproduces F4's mid/low-frequency-driven gap shape using the corrected, fully offline per-context frequency data (supersedes the fixv2-era numbers, which used the online-cumulative-counter methodology).</td><td>guide §11.11 C.3; <code>figB5_epoch3_gapvsfreq_trigram.svg</code></td></tr>
+</table>
+
+<h2 id="runs">Runs</h2>
+<h3>Active reruns (this task, seed42, 1000 step, single-shard tr1, nanogpt_original — 3 settings incl. negative control)</h3>
+<table>
+<tr><th>run dir (local <code>remote_training_runs/</code>)</th><th>ngram opt</th><th>matrix opt</th><th>gap onset</th><th>final train/val</th><th>orig train/val</th><th>target gap</th></tr>
+<tr><td>20260726_nano_adamw_adamw_111_full_tr1_1000step_seed42_normobs</td><td>adamw</td><td>adamw</td><td class="ok">none (no sustained onset)</td><td>4.558 / 4.612</td><td>—</td><td class="ok">negative control, no target gap</td></tr>
+<tr><td>20260725_nano_rmsprop_111_full_tr1_1000step_seed42_normobs</td><td>rmsprop</td><td>adamw</td><td>step 783 (e3)</td><td>3.707 / 4.306</td><td>3.587 / 4.317</td><td class="no">delayed→e3 fork</td></tr>
+<tr><td>20260725_nano_adamw_matrixmuon_111_full_tr1_1000step_seed42_normobs</td><td>adamw</td><td>muon</td><td>step 647 (e2)</td><td>1.381 / 4.614</td><td>1.492 / 4.534</td><td class="no">delayed gap</td></tr>
+</table>
+<p class="meta">Each dir has <code>observable_curves.obcurves.json</code> + <code>train.log</code>. Orig values from regime-bridge curves <code>nano-rmsprop</code>/<code>nano-muon</code>/<code>nano-full</code>. Epoch bounds: step 337, 686. nofork orig loss values not committed anywhere (regime-bridge's <code>nano-full</code> curve was loss-only, not fetched to a local run dir before this task).</p>
+
+<p class="meta">3rd rerun (nofork, negative control) launched 2026-07-25 reusing same staged code/work dir; see <a href="#log">§Log</a>.</p>
+
+<h3>fixv2 reruns (2026-07-25, epoch-local frequency freeze + raw per-token probe log + freeze/moredata ablations)</h3>
+<table>
+<tr><th>run dir (local <code>remote_training_runs/</code>)</th><th>purpose</th><th>gap onset</th><th>per-epoch max gap</th><th>final train/val</th></tr>
+<tr><td>20260725d_nano_adamw_adamw_nofork_fixv2</td><td>negative control, refreshed w/ fixed capture</td><td class="ok">none</td><td>e1 0.52, e2 0.16, e3 0.20</td><td>4.56 / 4.61 (approx)</td></tr>
+<tr><td>20260725d_nano_rmsprop_fixv2</td><td>table RMSProp, refreshed w/ fixed capture (new baseline for C.1/C.2)</td><td>step 782 (e3)</td><td>e1 0.43, e2 0.39, e3 0.65</td><td>3.66 / 4.31</td></tr>
+<tr><td>20260725d_nano_muon_fixv2</td><td>+ Muon, refreshed w/ fixed capture</td><td>step 645 (e2)</td><td>e1 0.62, e2 1.38, e3 3.22</td><td>1.40 / 4.62</td></tr>
+<tr><td>20260725d_nano_rmsprop_freeze_fixv2</td><td class="no">new: freeze n-gram tables+gates after epoch1 (<code>FREEZE_NGRAM_AND_GATE_AFTER_EPOCH1=1</code>)</td><td class="ok">none</td><td>e1 0.49, e2 0.11, e3 0.065</td><td>5.03 / 5.07</td></tr>
+<tr><td>20260725d_nano_rmsprop_moredata_fixv2</td><td class="no">new: 2 shards, 2200 steps (vs 1 shard/1000 for baseline)</td><td>step 1553 (e3)</td><td>e1 0.46, e2 0.38, e3 1.23, e4 1.50</td><td>2.51 / 4.01</td></tr>
+</table>
+<p class="meta">All 5 use the patched <code>tmp/norm_verify_stage/train.py</code> (epoch-local hit-count freeze fixing the G5/cumulative-counter bug, plus <code>ngram_raw_probe_log.jsonl</code> raw per-token+per-layer-norm logging). freeze/moredata analyzed in guide §11.11 (C.1/C.2); gap-vs-freq curve (C.3) built from the 3 base fixv2 settings' raw probe logs. See §Gotchas G6 for the epoch-indexing bug this fix required, and §Log for the freeze-verification method. <b class="no">Superseded by fixv3 below — the epoch-frozen cumulative counter used here was itself found to have timing/race issues; do not use these fixv2 numbers for further analysis.</b></p>
+
+<h3>fixv3 reruns (2026-07-25, supersedes fixv2 — fully offline frequency computation, per-token/per-context raw schema)</h3>
+<table>
+<tr><th>run dir (local <code>remote_training_runs/</code>)</th><th>purpose</th><th>gap onset</th><th>per-epoch max gap</th><th>notes</th></tr>
+<tr><td>20260725e_nano_adamw_adamw_nofork_fixv3</td><td>negative control</td><td>step 932 (small late-e3 fork, real but minor — see §Log)</td><td>max 0.265 overall</td><td>1000 pts, 1850 series</td></tr>
+<tr><td>20260725e_nano_rmsprop_fixv3</td><td>table RMSProp baseline</td><td>step 801 (e3)</td><td>max 0.688 overall</td><td>1000 pts, 1738 series</td></tr>
+<tr><td>20260725e_nano_muon_fixv3</td><td>+ Muon</td><td>step 647 (e2)</td><td>—</td><td>1000 pts, 1850 series</td></tr>
+<tr><td>20260725e_nano_rmsprop_freeze_fixv3</td><td class="no">freeze n-gram tables+gates after epoch1</td><td class="ok">none</td><td>max 0.245 overall (vs 0.688 unfrozen)</td><td>945 loss pts (steps ~119-173 unreadable in train.log due to a transient double-write corruption from an accidental duplicate process launch; obcurves/raw-log data for those steps are intact)</td></tr>
+<tr><td>20260725e_nano_rmsprop_moredata_fixv3</td><td class="no">2 shards, 2200 steps</td><td>step 1318 (e4)</td><td>max 1.385 overall (vs 0.688 baseline)</td><td>2200 loss pts, epochs=[686,1384,2082]</td></tr>
+</table>
+<p class="meta">Fully offline, training-loop-decoupled frequency computation (<code>NGRAM_HIT_OFFLINE_COUNT</code>, via <code>compute_offline_ngram_hit_counts()</code> run once before training under <code>TRAIN_DATA_MODE=fixed</code> determinism) — supersedes fixv2's epoch-frozen but still-online <code>NGRAM_HIT_CUM_COUNT</code>. Raw log schema per line: <code>branch, context_hash, epoch, loss_sum, offline_freq_count, per_token_loss, split, step, tok_count</code> (was <code>freq_count</code> in fixv2). See §Gotchas G7 for the two bugs fixed to get these runs clean (device-mismatch crash, disk-exhaustion crash), and §Log for the fixv3 writeup. These 5 dirs are the current canonical source for all further gap/frequency analysis.</p>
+
+<h3>Reference run (norm/gate + hitbucket source for current-shell positive)</h3>
+<p>Local <code>../observable_curves_history10.json</code> (4.5MB) = run <code>20260721-min-bigram-trigram-obth-history10</code> (current-shell positive, arch nanogpt_current_shell + Muon + mixed opt). Source of guide §10.2/§11 gate charts.</p>
+
+<h3>Prior matrix runs (branch <code>origin/windows/bottom-up-gap-decomposition</code>)</h3>
+<p>Full arch-vs-gap matrix: <code>architecture_gap_experiment_matrix.md</code>. Committed run artifacts under <code>remote_training_runs/&lt;name&gt;/fetched/</code> (train.log, run_meta.json) — 22 current-shell ablations (20260720-*, 20260721-*). The two <i>nanogpt_original</i> settings above were NOT committed there; regenerated in this task.</p>
+
+<h2 id="observables">Observable series (obcurves <code>.series</code> keys)</h2>
+<p>obcurves schema: <code>{records:[{step,epoch,values}], series:{name:[{step,value}]}}</code>. Enable via <code>THEORY_OBS_CAPTURE=1</code> (+ compact/direct_kernel/row_history/history_ablation). Key series:</p>
+<table>
+<tr><th>group</th><th>series pattern</th><th>meaning</th></tr>
+<tr><td>gate norm</td><td><code>theory.reader_compact.{unigram,bigram,trigram}.gate_rms</code> / <code>.gate_mean</code></td><td>per-order injection gate magnitude</td></tr>
+<tr><td>table content</td><td><code>theory.reader_compact.{...}.raw_value_rms</code></td><td>table content RMS before gate</td></tr>
+<tr><td>injection</td><td><code>theory.reader_compact.{...}.gated_value_rms</code></td><td>gate×table = actual injected RMS</td></tr>
+<tr><td>table coverage</td><td><code>theory.rows_compact.{bigram,trigram}.{table_coverage,entropy_norm}</code></td><td>row usage/entropy</td></tr>
+<tr><td>order-ablation loss</td><td><code>theory.mask_loss.{train_early,train_middle,train_late,val_fixed}.{normal,no_bigram,no_trigram,no_high_order}</code></td><td>loss with an n-gram order masked</td></tr>
+<tr><td>hit-count buckets <span class="tag">new</span></td><td><code>theory.hitbucket.{bigram,trigram}.{train,val,gap}.&lt;bin&gt;.{per_token,frac}</code></td><td>per-context-frequency loss; bins novel,1-5,…,5k+</td></tr>
+<tr><td>loss/gap</td><td><code>raw_train_loss</code>, <code>val_loss</code>, <code>train_val_gap</code>, <code>epoch_val_bpb</code></td><td>base curves</td></tr>
+</table>
+
+<h2 id="tools">Tools</h2>
+<table>
+<tr><th>path</th><th>purpose</th></tr>
+<tr><td><code>OPHIS_gap/tools/extract_norm_alignment.py</code></td><td>Parse train.log+obcurves → figB SVGs, interactive HTML, <code>figB_alignment.json</code>, <code>figB_section.html</code>. Add a run to its <code>RUNS</code> dict + rerun to regenerate. Read-only inputs.</td></tr>
+<tr><td><code>tmp/norm_verify_stage/train.py</code></td><td>Staged from bottom-up branch + patched with <code>NGRAM_HIT_BUCKET_CAPTURE</code> (bi/trigram context hit histogram + per-bucket train/val/gap loss), <code>NGRAM_RAW_PROBE_LOG_CAPTURE</code> (raw per-token loss + per-layer table/gate norms → <code>ngram_raw_probe_log.jsonl</code>), and <code>FREEZE_NGRAM_AND_GATE_AFTER_EPOCH1</code> (ablation switch). <b>fixv3 (2026-07-25)</b>: frequency source switched to a fully offline, training-loop-decoupled <code>NGRAM_HIT_OFFLINE_COUNT</code> computed once pre-training via <code>compute_offline_ngram_hit_counts()</code> (supersedes the fixv2 epoch-frozen-but-still-online <code>NGRAM_HIT_CUM_COUNT</code>); raw log rows keyed by <code>context_hash</code>/<code>offline_freq_count</code> (was <code>freq_count</code>). New env var <code>NGRAM_RAW_PROBE_LOG_STEPS</code> (default <code>320,337,338,350,400,450,500,600,686,1000</code>) gates raw-log *writes* to a sparse milestone-step set, independent of the coarser <code>THEORY_OBS_INTERVAL_STEPS</code> aggregate cadence — see G7. Not committed to main tree; pushed to remote work dir.</td></tr>
+</table>
+
+<h2 id="repro">Reproduce a run (remote H200)</h2>
+<pre>ssh -p 50002 user@223.167.85.180        # host zp-nc71, 8×H200, venv /home/user/ph/autoresearch/.venv
+# work dir: /home/user/ai4ai/ngram_norm_verify_20260725 (staged train.py/observable.py/lib.py/prepare.py/
+#   gap_experiment.py/token_probe.py + data_split.json={"train":[1],"test":[2..10,6542]})
+# cache: dedicated AUTORESEARCH_CACHE_DIR with data/ symlinked to shared shards.
+#   NOTE lib.py uses /data (a symlink farm) + /data/tokenizer when /data exists — do not retrain tokenizer.
+# env (per run): ARCH_VARIANT=nanogpt_original NANOGPT_ENABLE_NGRAM_VE=1 ENABLE_{UNI,BI,TRI}GRAM_VE=1
+#   NANOGPT_NGRAM_OPTIMIZER={rmsprop|adamw} NANOGPT_MATRIX_OPTIMIZER={adamw|muon}
+#   POSITION_ENCODING=learned_abs WINDOW_PATTERN=TTTL NANOGPT_ADAM_LR=0.004
+#   CURRENT_NORMALIZATION=layernorm CURRENT_EMBEDDING_TYING=tied CURRENT_EMBEDDING_INIT=nanogpt_like  # << see Gotcha G1
+#   THEORY_OBS_CAPTURE=1 THEORY_OBS_COMPACT_CAPTURE=1 THEORY_DIRECT_KERNEL_CAPTURE=1
+#   THEORY_ROW_HISTORY_CAPTURE=1 THEORY_HISTORY_ABLATION_CAPTURE=1
+#   THEORY_OBS_STEPS=320,337,338,350,400,450,500,600,686 NGRAM_HIT_BUCKET_CAPTURE=1
+#   MAX_TRAINING_STEPS=1000 SEED=42 TRAIN_DATA_SEED=42 TRAIN_DATA_MODE=fixed REMOTE_RESULT_DIR=&lt;dir&gt;
+# fetch back: observable_curves.obcurves.json + train.log ; then run extract_norm_alignment.py</pre>
+
+<h2 id="gotchas">Gotchas</h2>
+<table>
+<tr><th>id</th><th>trap</th></tr>
+<tr><td>G1</td><td><b>Config leak</b>: train.py <code>build_model_config</code> reads <code>CURRENT_NORMALIZATION</code>/<code>CURRENT_EMBEDDING_TYING</code>/<code>CURRENT_EMBEDDING_INIT</code> even for nanogpt_original. Their defaults are current-shell (rmsnorm/untied/current) → model barely learns (train stuck ~7.2). MUST set layernorm/tied/nanogpt_like (ps1 runner defaults). Confirm via train.log "Model config" line.</td></tr>
+<tr><td>G2</td><td><b>Stale obcurves</b>: completion checks that <code>ls observable_curves.obcurves.json</code> succeed can match a PRIOR run's file. Delete stale obcurves before relaunch, or compare mtime/step count.</td></tr>
+<tr><td>G3</td><td>The two nanogpt_original settings' norm/hitbucket data were NEVER recorded originally (only loss in regime-bridge). Must rerun to get norms; can't recover from committed artifacts.</td></tr>
+<tr><td>G4</td><td>hit-bucket capture needs the patched staged train.py (<code>NGRAM_HIT_BUCKET_CAPTURE</code>); the committed branch train.py lacks it. fig14 (guide §14) came from a separate uncommitted hit-tracking run.</td></tr>
+<tr><td>G5</td><td><b>[CORRECTED 2026-07-25] Freqloss truncation was a symptom of a deeper methodology bug, now fixed</b>: <code>theory.hitbucket.{branch}.gap.&lt;bin&gt;.per_token</code> lines used to stop early for low-frequency bins because <code>NGRAM_HIT_CUM_COUNT</code> was a <b>full-training-run cumulative</b> counter — the same probe token drifts into higher bins over time as its count keeps growing, so comparing "bin X at step S" vs "bin X at step S'" was comparing different token populations, not just a truncated line. Fixed by freezing the counter at the epoch1→epoch2 boundary (see G6) so a bin refers to a fixed token population for the rest of training; the fix also added <code>ngram_raw_probe_log.jsonl</code> (raw per-token loss + per-layer norms) so downstream bucketing is fully decoupled from the bin edges baked into capture. <code>svg_line_chart</code>'s end-marker-circle + footnote logic is kept as a defensive display of any remaining early-truncation, but with the fix in place none of the 3 refreshed baseline runs (nofork/rmsprop/muon fixv2) show truncation anymore.</td></tr>
+<tr><td>G6</td><td><b>Epoch is 1-indexed, not 0-indexed</b>: the train dataloader's <code>epoch</code> variable (from <code>x, y, epoch = next(train_loader)</code>) starts at 1, and <code>obs_last_epoch</code> is initialized to this same starting value before the training loop. The epoch-transition hook <code>if trained_epoch != obs_last_epoch:</code> only fires on an actual change (1→2, 2→3, ...) — so a trigger condition of <code>if trained_epoch == 1:</code> (meant to mean "epoch 1 just finished") can NEVER fire, since the loop starts already at 1 and the first transition lands on 2. Correct condition: <code>if trained_epoch == 2:</code>. This silently broke both the hit-count freeze and the <code>FREEZE_NGRAM_AND_GATE_AFTER_EPOCH1</code> ablation in the first batch of 5 H200 fixv2-precursor runs (all completed without error, but <code>ngram_hit_count_frozen: []</code> in every summary) — they had to be discarded and rerun. Verify any epoch-boundary hook fires by checking BOTH confirmation log lines (<code>[ngram_hitbucket] froze hit counts...</code> and <code>[freeze_ngram_and_gate] step ...: froze N tensors...</code>) appear at the expected step, not just that the run completed cleanly. Also: train.log's step-progress lines are <code>\r</code>-delimited in places, not <code>\n</code> — pipe through <code>tr '\r' '\n'</code> before <code>grep</code> or matches silently disappear.</td></tr>
+<tr><td>G7</td><td><b>[NEW 2026-07-25] Even the epoch-frozen counter (G5's fix) wasn't stable enough, and raw-log write cadence can exhaust disk</b>: two more issues found while producing the fixv3 batch. (1) G5's fix (freeze <code>NGRAM_HIT_CUM_COUNT</code> at the epoch1→2 boundary) was still an <i>online</i> accumulator — subject to timing/race issues around exactly when the freeze fires relative to in-flight scatter_add_ calls. Replaced with a fully offline, training-loop-decoupled <code>NGRAM_HIT_OFFLINE_COUNT</code>, computed once via <code>compute_offline_ngram_hit_counts()</code> before training starts (under <code>TRAIN_DATA_MODE=fixed</code> determinism) — no runtime freeze needed since the table never changes during training. Raw log rows now key off <code>context_hash</code>/<code>offline_freq_count</code> instead of the online <code>freq_count</code>. (2) A device-mismatch crash in <code>record_ngram_hit_bucket_loss</code>: <code>counter.index_select(0, uniq)</code> needs <code>uniq.to(counter.device)</code>, since <code>uniq</code> gets <code>.cpu()</code>'d elsewhere but <code>counter</code>/<code>NGRAM_HIT_OFFLINE_COUNT</code> stays on CUDA. (3) A disk-exhaustion crash: raw per-context log writes at the same cadence as the coarse theory-observable aggregates (every ~10 steps via <code>THEORY_OBS_INTERVAL_STEPS</code>) produce 100-400K rows per call, hitting 5-10GB/run and crashing the 438GB remote disk. Fixed with a new <code>NGRAM_RAW_PROBE_LOG_STEPS</code> env var (default <code>320,337,338,350,400,450,500,600,686,1000</code>, widened for the moredata run's 2200-step budget) + a <code>raw_log_active</code> gate that restricts raw-log <i>writes</i> to that sparse milestone set, while leaving the coarser hitbucket aggregate metrics on the full cadence. Lesson: always rate-limit raw per-context/per-token log writes independently from aggregate-metric capture cadence.</td></tr>
+</table>
+
+<h2 id="docs">Doc map</h2>
+<table>
+<tr><th>file</th><th>role</th></tr>
+<tr><td><code>ngram-gap-mechanism-guide.html</code></td><td>Human report. §11.9 time-lag (current-shell); §11.10 = this task (B.0 negative control / B.1 RMSProp / B.2 Muon alignment); §14 hit-count.</td></tr>
+<tr><td><code>ngram-gap-regime-bridge.html</code></td><td>Partner's arch-bridge; embeds all runs' loss curves incl. <code>nano-rmsprop</code>/<code>nano-muon</code>/<code>nano-full</code>.</td></tr>
+<tr><td><code>figB1_&lt;key&gt;_norms.svg</code></td><td>gate/table-content/gated norm per order + epoch/onset markers.</td></tr>
+<tr><td><code>figB2_&lt;key&gt;_freqloss_{bigram,trigram}.svg</code></td><td>gap by context hit-count bucket; circle marker + footnote where a bin's curve truncates early (G5).</td></tr>
+<tr><td><code>figB3_&lt;key&gt;_alignment.svg</code></td><td>twin-axis norm-vs-gap time alignment (static thumbnail; trigram gated RMS vs gap only).</td></tr>
+<tr><td><code>figB4_&lt;key&gt;_alignment_interactive.html</code></td><td><span class="tag">new</span> interactive twin-axis panel: toggle bigram/trigram × gate_rms/raw_value_rms/gated_value_rms × train/val/gap loss overlay.</td></tr>
+<tr><td><code>figB_&lt;key&gt;_interactive.html</code></td><td>toggle train/val/gap × per-token/total-contribution (frac×loss) × bigram/trigram; view now labels the active metric's units explicitly to distinguish per-token vs contrib.</td></tr>
+<tr><td><code>figB_alignment.json</code></td><td>machine-readable: per-epoch norm change-rates, gap, datasets.</td></tr>
+<tr><td><code>figB_section.html</code></td><td>scratch intermediate (the §11.10 block) emitted by the tool; already merged into the guide — do not embed separately.</td></tr>
+<tr><td><code>figB5_epoch3_gapvsfreq_{branch}.svg</code></td><td><span class="tag">new</span> epoch-3 avg gap (val-train) vs n-gram context hit frequency, log-x, 3 settings overlaid (B.0/B.1/B.2); built from <code>ngram_raw_probe_log.jsonl</code>, bin-edge-decoupled.</td></tr>
+<tr><td><code>figB6_freeze_ablation_gap.svg</code></td><td><span class="tag">new</span> gap-curve overlay: rmsprop_fixv3 (baseline) vs rmsprop_freeze_fixv3 (n-gram tables+gates frozen after epoch1).</td></tr>
+<tr><td><code>figB7_moredata_gap.svg</code></td><td><span class="tag">new</span> gap-curve overlay: rmsprop_fixv3 (1 shard) vs rmsprop_moredata_fixv3 (2 shards, epoch-aligned x-axis since step budgets differ).</td></tr>
+<tr><td><code>figB_extra_analysis.json</code></td><td><span class="tag">new</span> machine-readable: gap-vs-freq curves + freeze/moredata pair-comparison raw points, keyed by analysis name.</td></tr>
+</table>
+
+<h2 id="log">Log</h2>
+<p class="meta">Newest first. Entry template: <code>&lt;div class="entry"&gt;&lt;b&gt;YYYY-MM-DD — title&lt;/b&gt;&lt;br&gt;what/why · runs · outputs · result&lt;/div&gt;</code></p>
+
+<div class="entry">
+<b>2026-07-25 — fixv3: fully offline frequency table + raw-log milestone gating (supersedes fixv2)</b><br>
+<b>What/why</b>: further review found that fixv2's fix (freezing <code>NGRAM_HIT_CUM_COUNT</code> at the epoch1→2 boundary, G5) was still an <i>online</i> accumulator subject to timing/race issues around exactly when the freeze fires relative to in-flight <code>scatter_add_</code> calls. Replaced with a fully offline, training-loop-decoupled <code>NGRAM_HIT_OFFLINE_COUNT</code>, computed once via <code>compute_offline_ngram_hit_counts()</code> before training starts under <code>TRAIN_DATA_MODE=fixed</code> determinism — the table never changes during training, so there's nothing to freeze. Raw log schema switched from an aggregation-key <code>freq_count</code> to per-token/per-context rows keyed by <code>context_hash</code>/<code>offline_freq_count</code>.<br>
+<b>Runs</b>: 5 H200 reruns on the further-patched staged train.py, hit two new bugs mid-run (see G7): a device-mismatch crash in <code>record_ngram_hit_bucket_loss</code> (<code>counter.index_select(0, uniq)</code> needed <code>uniq.to(counter.device)</code>), fixed; and a disk-exhaustion crash from raw-log writes firing at the full ~10-step aggregate-metric cadence (100-400K rows/call, 5-10GB/run against a 438GB disk), fixed by adding <code>NGRAM_RAW_PROBE_LOG_STEPS</code> (sparse milestone-step allowlist) + a <code>raw_log_active</code> gate restricting raw-log writes to that set. All 5 completed to target step with zero tracebacks: <code>20260725e_nano_{adamw_adamw_nofork,rmsprop,muon,rmsprop_freeze,rmsprop_moredata}_fixv3</code>. One self-caused incident: an accidental duplicate process launch briefly double-wrote to <code>rmsprop_freeze</code>'s <code>train.log</code>, corrupting a 10,828-byte span (steps ~119-173) to NUL bytes — confirmed isolated to the human-readable train.log only (obcurves/raw-probe-log data for the same run are intact and unaffected), so it costs 55 of ~1000 loss-curve points for that run but doesn't affect epoch-boundary/gap-onset detection (epoch1 boundary is step 337, past the corrupted window).<br>
+<b>Outputs</b>: <code>extract_norm_alignment.py</code> <code>RUNS</code> dict repointed to the 5 fixv3 dirs; <code>load_epoch_freq_gap</code> updated to key off <code>offline_freq_count</code> instead of <code>freq_count</code> (no other function needed changes — the hitbucket/reader_compact obcurves series consumed by the norm/alignment figures are unaffected by the raw-log schema change). Regenerated all figB* outputs against the fixv3 data.<br>
+<b>Result</b>: qualitative conclusions from fixv2 hold, but exact numbers shifted meaningfully in one case — F7 freeze-ablation suppression is ~1/3 (0.688→0.245 max per-epoch gap), smaller than the fixv2-era ~1/4–1/10 estimate (the direction/conclusion is unchanged: freezing still substantially suppresses gap, just not as completely as first thought). F8 moredata still shows gap growing with more epochs (0.688→1.385 max), confirming the counter-hypothesis finding under the corrected methodology. F9 gap-vs-frequency curve reproduces F4's decreasing-gap-with-frequency shape using the corrected fully-offline per-context data. Negative control (nofork) shows a small (0.265 max), real, late-epoch3 gap uptick — verified against raw train.log numbers directly (not a script artifact); the existing data-driven verdict-writing logic in <code>build_section_html()</code> already reports this honestly rather than forcing a "clean negative control" narrative.
+</div>
+
+<div class="entry">
+<b>2026-07-25 — Frequency methodology fix + freeze ablation / more-data / gap-vs-freq (§11.11)</b><br>
+<b>What/why</b>: user review flagged that the G5 "truncation" was a symptom of a deeper bug — <code>NGRAM_HIT_CUM_COUNT</code> was full-training-run cumulative, so bin membership drifted over time (G6 documents the root cause: same probe token gets promoted into ever-higher bins as its count keeps growing). Fix: freeze the counter at the epoch1→epoch2 boundary; add <code>ngram_raw_probe_log.jsonl</code> (raw per-token loss + per-layer table/gate norms) so downstream analysis is decoupled from any pre-baked bin edges. User also confirmed (via AskUserQuestion) 3 new analyses this round: freeze ablation (n-gram tables+gates frozen after epoch1), longer-training-data (more shards), epoch3 gap-vs-frequency curve — deferring only the broader regime-bridge matrix expansion.<br>
+<b>Runs</b>: 5 H200 reruns on the patched staged train.py — first batch hit an epoch-indexing bug (G6: <code>trained_epoch == 1</code> never fires since epoch starts at 1, not 0) that silently broke both the freeze-counter and the ablation switch despite clean completion; discovered by inspecting <code>ngram_hit_count_frozen: []</code> in every summary, fixed (<code>trained_epoch == 2</code>), and all 5 rerun as "fixv2": <code>nofork/rmsprop/muon_fixv2</code> (refresh of B.0/B.1/B.2 with the fixed capture), <code>rmsprop_freeze_fixv2</code> (new, <code>FREEZE_NGRAM_AND_GATE_AFTER_EPOCH1=1</code>), <code>rmsprop_moredata_fixv2</code> (new, 2 shards + <code>MAX_TRAINING_STEPS</code> 1000→2200). All verified complete to target step, freeze mechanism confirmed via both <code>[ngram_hitbucket] froze hit counts...</code> and <code>[freeze_ngram_and_gate] step ...: froze N tensors...</code> log lines at the correct epoch1/epoch2 boundary step.<br>
+<b>Outputs</b>: <code>extract_norm_alignment.py</code> <code>RUNS</code> dict repointed to the 5 fixv2 dirs (+2 new keys <code>rmsprop_freeze</code>/<code>rmsprop_moredata</code>); new functions <code>load_epoch_freq_gap</code>/<code>log_bucket_gap_rows</code>/<code>build_gap_vs_freq_figure</code> (streams the raw probe log, epoch==3 filter, log-spaced token-weighted bucketing) and <code>build_pair_comparison_figure</code> (gap-curve overlay, with an epoch-aligned x-axis option for moredata's different step budget); 3 new figures <code>figB5_epoch3_gapvsfreq_trigram.svg</code>, <code>figB6_freeze_ablation_gap.svg</code>, <code>figB7_moredata_gap.svg</code>; guide §11.10 refreshed with fixv2 data (numbers shifted &lt;0.05 from pre-fix values, confirming the fix doesn't change prior qualitative conclusions) and new §11.11 (C.1/C.2/C.3).<br>
+<b>Result</b>: F7 (freeze ablation suppresses epoch2/3 gap to ~1/4-1/10 of baseline — n-gram table/gate updates during epoch2/3 are the primary gap driver), F8 (more training data does NOT shrink the gap — it grows monotonically across epochs, opposite of the original hypothesis; likely an artifact of "more epochs over the same doc set" rather than genuinely larger/more-diverse data — flagged as needing a follow-up experiment), F9 (epoch3 gap-vs-frequency curve independently reproduces F4's mid/low-frequency-driven gap shape using bin-edge-decoupled raw data).
+</div>
+
+<div class="entry">
+<b>2026-07-25 — §11.10 revision: negative-control setting + freqloss/interactive-panel fixes</b><br>
+<b>What/why</b>: user review of §11.10 flagged 3 issues: (1) manual.md's chain is actually 3 settings, not 2 — missing the <code>+ full n-gram, table AdamW, matrix AdamW (no target gap)</code> negative control; (2) <code>figB2_*_freqloss_*.svg</code> lines truncate for low-frequency hit-buckets with no explanation (looked like broken data); (3) interactive per-token vs total-contribution views looked visually identical; (4) user also asked for the static twin-axis norm↔gap alignment SVG to become an interactive panel with bigram/trigram + norm-component + train/val/gap-loss toggles.<br>
+<b>Runs</b>: 3rd rerun on H200, reusing <code>tmp/norm_verify_stage/</code> + remote work dir <code>ngram_norm_verify_20260725</code> unchanged, env flipped to <code>NANOGPT_NGRAM_OPTIMIZER=adamw NANOGPT_MATRIX_OPTIMIZER=adamw</code> (G1 fix applied). Result dir <code>20260726_nano_adamw_adamw_111_full_tr1_1000step_seed42_normobs</code>, completed cleanly to step 999, no crash.<br>
+<b>Outputs</b>: <code>RUNS["nofork"]</code> + <code>RUN_ORDER</code> added to extract_norm_alignment.py; <code>build_freqloss_figure</code>/<code>svg_line_chart</code> now draw an end-marker circle + footnote when a bin's curve truncates before the chart's xhi (G5); new <code>build_alignment_interactive_html</code> → <code>figB4_&lt;key&gt;_alignment_interactive.html</code> (bigram/trigram × gate_rms/raw_value_rms/gated_value_rms × train/val/gap overlay), old <code>figB3_*</code> kept as static thumbnail; <code>INTERACTIVE_TEMPLATE</code> per-token/contrib toggle now shows an explicit units note and y-range readout per view; guide §11.10 regenerated with B.0/B.1/B.2 sub-blocks (B.0's verdict text is data-driven, not copied from B.1/B.2).<br>
+<b>Result</b>: F6 (negative control shows no sustained gap onset, max per-epoch gap ≈0.38 vs final gap 0.6/3.2 for RMSProp/Muon) — confirms gap requires an optimizer asymmetry (table RMSProp or matrix Muon), not merely the presence of n-gram tables.
+</div>
+
+<div class="entry">
+<b>2026-07-25 — manual.md task #2: RMSProp/Muon norm↔gap alignment</b><br>
+<b>What/why</b>: extend §11.9 time-lag verification to two nanogpt_original settings (table RMSProp; + Muon). Collect gate/table/gated norms + context-frequency-bucketed loss; test whether norm growth aligns with gap onset.<br>
+<b>Runs</b>: 2 reruns on H200 (see §Runs). First attempt hit G1 (config leak) → train stuck 7.2; fixed (layernorm/tied) → reproduced originals within ±0.12.<br>
+<b>Outputs</b>: figB* SVGs + interactive HTML + figB_alignment.json; guide §11.10 + TOC; patched staged train.py w/ NGRAM_HIT_BUCKET_CAPTURE; tool extract_norm_alignment.py.<br>
+<b>Result</b>: F2 (RMSProp: table-content jump aligned w/ e3 fork), F3 (Muon: norm builds e1-2, gap peaks e3 → time-lag), F4 (mid-freq buckets drive gap). Both reruns reproduce known regimes.
+</div>
+
+</body>
+</html>
