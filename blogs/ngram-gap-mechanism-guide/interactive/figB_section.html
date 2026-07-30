@@ -1,0 +1,98 @@
+<!-- ==================== 11.10 Bottom-up Norm/Loss 时间对齐 ==================== -->
+    <h3 id="section-11-10">11.10 Bottom-up 验证：阴性对照、table RMSProp 与 + Muon 的 Norm/Loss 时间对齐</h3>
+    <div class="note" style="background:#f2f6f5;border-left:4px solid var(--nogap);border-radius:8px;padding:16px;margin:12px 0;">
+      <strong style="color:var(--nogap);font-size:15px;">目的</strong>
+      <p style="margin:8px 0 0;font-size:14px;line-height:1.7;">
+        11.9 在 current-shell 正例上发现 <strong>gate/table norm 的增长与 gap 的发生基本同步</strong>。
+        这里把同一验证下沉到三个 <code>nanogpt_original</code> 架构 setting（seed 42，1000 step，单 shard tr1）：
+        <strong>B.0 阴性对照</strong>（table AdamW、matrix AdamW，无 target gap）、
+        <strong>B.1 table RMSProp</strong>（table optimizer=RMSProp，matrix=AdamW）、
+        <strong>B.2 + Muon</strong>（table AdamW，matrix=Muon）。
+        对每个 setting 画出 gate norm / table content RMS（raw value RMS）/ gated value RMS（实际注入幅度）随 step 的曲线，
+        叠加 epoch 边界与 gap onset，并按 <strong>n-gram context 命中频次</strong>（bigram-context、trigram-context 各一套 bin，
+        fig14 即 trigram-context）拆分 train/val/gap loss。判据：<strong>norm 增长的时点是否与该 setting 的 gap 时点对齐</strong>；
+        B.0 作为阴性对照，用来检验"没有 target gap 时 norm 增长是否也缺席/不与任何 gap 峰值对齐"。
+      </p>
+    </div>
+
+    <h4 style="margin-top:22px;">B.0 + full n-gram (table AdamW, matrix AdamW, no target gap)</h4>
+    <p style="font-size:13px;color:var(--muted);margin:6px 0;">gap onset（sustained，epoch≥2）：<strong>step 932</strong>；epoch 边界：step [337, 686]。</p>
+    <p class="chart-title" style="font-size:13px;font-weight:600;margin:10px 0 4px;">n-gram gate / table content / gated 注入 norm</p>
+    <object data="../figs/figB1_nofork_norms.svg" type="image/svg+xml" style="width:100%;max-width:880px;height:auto;"></object>
+    <p class="chart-title" style="font-size:13px;font-weight:600;margin:14px 0 4px;">注入 norm 增长 vs gap 的时间对齐（双轴，静态缩略）</p>
+    <object data="../figs/figB3_nofork_alignment.svg" type="image/svg+xml" style="width:100%;max-width:880px;height:auto;"></object>
+    <p style="font-size:13px;color:var(--muted);margin:6px 0;">交互版（可切 bigram/trigram × gate_rms/table content RMS/gated value RMS × train/val/gap loss overlay）：</p>
+    <iframe src="figB4_nofork_alignment_interactive.html" style="width:100%;max-width:900px;height:480px;border:1px solid var(--line);border-radius:8px;" title="+ full n-gram (table AdamW, matrix AdamW, no target gap) alignment interactive"></iframe>
+    <p class="chart-title" style="font-size:13px;font-weight:600;margin:14px 0 4px;">trigram-context 命中频次分桶：train loss</p>
+    <object data="../figs/figB2_nofork_freqloss_trigram_train.svg" type="image/svg+xml" style="width:100%;max-width:880px;height:auto;"></object>
+    <p class="chart-title" style="font-size:13px;font-weight:600;margin:14px 0 4px;">trigram-context 命中频次分桶：val loss</p>
+    <object data="../figs/figB2_nofork_freqloss_trigram_val.svg" type="image/svg+xml" style="width:100%;max-width:880px;height:auto;"></object>
+    <p class="chart-title" style="font-size:13px;font-weight:600;margin:14px 0 4px;">trigram-context 命中频次分桶：gap (val-train)</p>
+    <object data="../figs/figB2_nofork_freqloss_trigram_gap.svg" type="image/svg+xml" style="width:100%;max-width:880px;height:auto;"></object>
+    <p class="chart-title" style="font-size:13px;font-weight:600;margin:14px 0 4px;">bigram-context 命中频次分桶：train loss</p>
+    <object data="../figs/figB2_nofork_freqloss_bigram_train.svg" type="image/svg+xml" style="width:100%;max-width:880px;height:auto;"></object>
+    <p class="chart-title" style="font-size:13px;font-weight:600;margin:14px 0 4px;">bigram-context 命中频次分桶：val loss</p>
+    <object data="../figs/figB2_nofork_freqloss_bigram_val.svg" type="image/svg+xml" style="width:100%;max-width:880px;height:auto;"></object>
+    <p class="chart-title" style="font-size:13px;font-weight:600;margin:14px 0 4px;">bigram-context 命中频次分桶：gap (val-train)</p>
+    <object data="../figs/figB2_nofork_freqloss_bigram_gap.svg" type="image/svg+xml" style="width:100%;max-width:880px;height:auto;"></object>
+    <table style="width:100%;border-collapse:collapse;margin:14px 0;font-size:13px;">
+      <tr style="background:var(--panel-2);">
+        <th style="padding:6px 10px;text-align:left;">指标（每 epoch 变化率）</th>
+        <th style="padding:6px 10px;text-align:left;">Epoch 1</th>
+        <th style="padding:6px 10px;text-align:left;">Epoch 2</th>
+        <th style="padding:6px 10px;text-align:left;">Epoch 3</th>
+      </tr>
+      <tr><td style="padding:6px 10px;">Trigram gate_rms 变化率</td><td style="padding:6px 10px;">3.55e-04/step</td><td style="padding:6px 10px;">1.03e-03/step</td><td style="padding:6px 10px;">4.73e-04/step</td></tr>
+<tr><td style="padding:6px 10px;">Trigram table content RMS 变化率</td><td style="padding:6px 10px;">7.23e-06/step</td><td style="padding:6px 10px;">1.53e-05/step</td><td style="padding:6px 10px;">6.05e-06/step</td></tr>
+<tr><td style="padding:6px 10px;">Trigram gated value RMS 变化率 (注入)</td><td style="padding:6px 10px;">2.58e-05/step</td><td style="padding:6px 10px;">6.20e-05/step</td><td style="padding:6px 10px;">3.08e-05/step</td></tr>
+<tr><td style="padding:6px 10px;">Bigram gated value RMS 变化率 (注入)</td><td style="padding:6px 10px;">4.30e-05/step</td><td style="padding:6px 10px;">1.68e-04/step</td><td style="padding:6px 10px;">4.93e-06/step</td></tr>
+<tr><td style="padding:6px 10px;">该 epoch 内最大 gap (val-train)</td><td style="padding:6px 10px;color:var(--gap);font-weight:600;">0.265</td><td style="padding:6px 10px;color:var(--gap);font-weight:600;">0.239</td><td style="padding:6px 10px;color:var(--gap);font-weight:600;">0.185</td></tr>
+
+    </table>
+    <div class="note" style="background:#faf7f0;border-left:4px solid var(--anchor);border-radius:8px;padding:12px 16px;margin:10px 0;">
+      <strong style="color:var(--anchor);">对齐判断</strong>
+      <p style="margin:6px 0 0;font-size:13px;line-height:1.7;">阴性对照下 max gap 0.265（onset step 932），norm 增长峰值在 epoch 2，两者不构成有意义的时间对齐比较（无显著 gap 作为对照目标）。</p>
+    </div>
+    <p style="font-size:13px;color:var(--muted);margin:6px 0;">交互面板（可切 train/val/gap × per-token/总贡献，bigram/trigram context）：</p>
+    <iframe src="figB_nofork_interactive.html" style="width:100%;max-width:900px;height:520px;border:1px solid var(--line);border-radius:8px;" title="+ full n-gram (table AdamW, matrix AdamW, no target gap) interactive"></iframe>
+
+    <h4 style="margin-top:22px;">B.1 table RMSProp (matrix AdamW)</h4>
+    <p style="font-size:13px;color:var(--muted);margin:6px 0;">gap onset（sustained，epoch≥2）：<strong>step 801</strong>；epoch 边界：step [337, 686]。</p>
+    <p class="chart-title" style="font-size:13px;font-weight:600;margin:10px 0 4px;">n-gram gate / table content / gated 注入 norm</p>
+    <object data="../figs/figB1_rmsprop_norms.svg" type="image/svg+xml" style="width:100%;max-width:880px;height:auto;"></object>
+    <p class="chart-title" style="font-size:13px;font-weight:600;margin:14px 0 4px;">注入 norm 增长 vs gap 的时间对齐（双轴，静态缩略）</p>
+    <object data="../figs/figB3_rmsprop_alignment.svg" type="image/svg+xml" style="width:100%;max-width:880px;height:auto;"></object>
+    <p style="font-size:13px;color:var(--muted);margin:6px 0;">交互版（可切 bigram/trigram × gate_rms/table content RMS/gated value RMS × train/val/gap loss overlay）：</p>
+    <iframe src="figB4_rmsprop_alignment_interactive.html" style="width:100%;max-width:900px;height:480px;border:1px solid var(--line);border-radius:8px;" title="table RMSProp (matrix AdamW) alignment interactive"></iframe>
+    <p class="chart-title" style="font-size:13px;font-weight:600;margin:14px 0 4px;">trigram-context 命中频次分桶：train loss</p>
+    <object data="../figs/figB2_rmsprop_freqloss_trigram_train.svg" type="image/svg+xml" style="width:100%;max-width:880px;height:auto;"></object>
+    <p class="chart-title" style="font-size:13px;font-weight:600;margin:14px 0 4px;">trigram-context 命中频次分桶：val loss</p>
+    <object data="../figs/figB2_rmsprop_freqloss_trigram_val.svg" type="image/svg+xml" style="width:100%;max-width:880px;height:auto;"></object>
+    <p class="chart-title" style="font-size:13px;font-weight:600;margin:14px 0 4px;">trigram-context 命中频次分桶：gap (val-train)</p>
+    <object data="../figs/figB2_rmsprop_freqloss_trigram_gap.svg" type="image/svg+xml" style="width:100%;max-width:880px;height:auto;"></object>
+    <p class="chart-title" style="font-size:13px;font-weight:600;margin:14px 0 4px;">bigram-context 命中频次分桶：train loss</p>
+    <object data="../figs/figB2_rmsprop_freqloss_bigram_train.svg" type="image/svg+xml" style="width:100%;max-width:880px;height:auto;"></object>
+    <p class="chart-title" style="font-size:13px;font-weight:600;margin:14px 0 4px;">bigram-context 命中频次分桶：val loss</p>
+    <object data="../figs/figB2_rmsprop_freqloss_bigram_val.svg" type="image/svg+xml" style="width:100%;max-width:880px;height:auto;"></object>
+    <p class="chart-title" style="font-size:13px;font-weight:600;margin:14px 0 4px;">bigram-context 命中频次分桶：gap (val-train)</p>
+    <object data="../figs/figB2_rmsprop_freqloss_bigram_gap.svg" type="image/svg+xml" style="width:100%;max-width:880px;height:auto;"></object>
+    <table style="width:100%;border-collapse:collapse;margin:14px 0;font-size:13px;">
+      <tr style="background:var(--panel-2);">
+        <th style="padding:6px 10px;text-align:left;">指标（每 epoch 变化率）</th>
+        <th style="padding:6px 10px;text-align:left;">Epoch 1</th>
+        <th style="padding:6px 10px;text-align:left;">Epoch 2</th>
+        <th style="padding:6px 10px;text-align:left;">Epoch 3</th>
+      </tr>
+      <tr><td style="padding:6px 10px;">Trigram gate_rms 变化率</td><td style="padding:6px 10px;">1.55e-04/step</td><td style="padding:6px 10px;">1.16e-04/step</td><td style="padding:6px 10px;">1.90e-03/step</td></tr>
+<tr><td style="padding:6px 10px;">Trigram table content RMS 变化率</td><td style="padding:6px 10px;">1.50e-04/step</td><td style="padding:6px 10px;">2.41e-04/step</td><td style="padding:6px 10px;">1.30e-04/step</td></tr>
+<tr><td style="padding:6px 10px;">Trigram gated value RMS 变化率 (注入)</td><td style="padding:6px 10px;">1.63e-04/step</td><td style="padding:6px 10px;">2.91e-04/step</td><td style="padding:6px 10px;">5.39e-04/step</td></tr>
+<tr><td style="padding:6px 10px;">Bigram gated value RMS 变化率 (注入)</td><td style="padding:6px 10px;">2.36e-04/step</td><td style="padding:6px 10px;">5.68e-04/step</td><td style="padding:6px 10px;">9.48e-05/step</td></tr>
+<tr><td style="padding:6px 10px;">该 epoch 内最大 gap (val-train)</td><td style="padding:6px 10px;color:var(--gap);font-weight:600;">0.415</td><td style="padding:6px 10px;color:var(--gap);font-weight:600;">0.383</td><td style="padding:6px 10px;color:var(--gap);font-weight:600;">0.688</td></tr>
+
+    </table>
+    <div class="note" style="background:#faf7f0;border-left:4px solid var(--anchor);border-radius:8px;padding:12px 16px;margin:10px 0;">
+      <strong style="color:var(--anchor);">对齐判断</strong>
+      <p style="margin:6px 0 0;font-size:13px;line-height:1.7;">注入 norm (trigram gated RMS) 的增长峰值与最大 gap 同在 epoch 3，<strong>时点对齐</strong>——norm 增长与 gap 发生同步，机理与 11.9 一致。</p>
+    </div>
+    <p style="font-size:13px;color:var(--muted);margin:6px 0;">交互面板（可切 train/val/gap × per-token/总贡献，bigram/trigram context）：</p>
+    <iframe src="figB_rmsprop_interactive.html" style="width:100%;max-width:900px;height:520px;border:1px solid var(--line);border-radius:8px;" title="table RMSProp (matrix AdamW) interactive"></iframe>
