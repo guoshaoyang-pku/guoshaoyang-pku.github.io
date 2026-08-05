@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>n-gram Gap 机制指南（精简版）</title>
+<title>n-gram Gap 机制指南</title>
 <style>
-  body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; max-width: 880px; margin: 0 auto; padding: 20px; line-height: 1.65; color: #222; }
+  body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; max-width: 920px; margin: 0 auto; padding: 20px; line-height: 1.65; color: #222; }
   h1 { font-size: 1.6em; border-bottom: 2px solid #333; padding-bottom: 8px; }
   h2 { font-size: 1.3em; margin-top: 2em; border-bottom: 1px solid #ddd; padding-bottom: 4px; }
   h3 { font-size: 1.1em; margin-top: 1.5em; }
@@ -19,7 +19,7 @@
   .note { background: #e7f3fe; border-left: 4px solid #2196F3; padding: 12px 16px; margin: 16px 0; border-radius: 0 6px 6px 0; }
   .key-finding { background: #fff8e1; border-left: 4px solid #FF9800; padding: 12px 16px; margin: 16px 0; border-radius: 0 6px 6px 0; }
   .archive-link { background: #f5f5f5; padding: 10px 14px; border-radius: 6px; margin: 16px 0; font-size: 0.9em; }
-  .chart { width: 100%; height: 450px; margin: 20px 0; }
+  .chart-frame { width: 100%; max-width: 900px; height: 520px; border: 1px solid #ddd; border-radius: 8px; margin: 16px 0; }
   .summary-cards { display: flex; gap: 16px; flex-wrap: wrap; margin: 20px 0; }
   .card { background: white; padding: 14px 18px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.12); min-width: 180px; text-align: center; }
   .card .label { font-size: 0.85em; color: #666; margin-bottom: 4px; }
@@ -32,7 +32,7 @@
 
 <h1>n-gram Gap 机制指南</h1>
 
-<p>本文档解释 <strong>n-gram value memory 导致的 replay-specific train/val gap</strong>：在 vanilla nanoGPT 上加一个可训练的 n-gram value table，用小数据集固定顺序多 epoch replay 训练时，为什么 train loss 下降而 val loss 翘起。目标读者是刚接手项目的研究者。</p>
+<p>本文档解释 <strong>n-gram value memory 导致的 replay-specific train/val gap</strong>：在 vanilla nanoGPT 上加一个可训练的 n-gram value table，用小数据集固定顺序多 epoch replay 训练时，为什么 train loss 下降而 val loss 翘起。</p>
 
 <div class="archive-link">
 📦 <strong>历史版本</strong>：本页已于 2026-08-05 简化为注入点消融主线。
@@ -127,63 +127,77 @@ def forward_y(idx):
 
 <p>而 y/input 注入不经过 attention 矩阵乘法，n-gram 信号<strong>纯 per-position</strong>，不泄漏到其他位置。</p>
 
-<h2>3. 实验结果</h2>
+<h2>3. 实验结果：注入点消融</h2>
 
 <p><strong>标准设置</strong>：vanilla nanoGPT (8 layer, 6 head, 768 dim, vocab 8192) + bigram+trigram + RMSProp(table β₂=0.999) / AdamW(backbone lr=0.004) + seed42 + 1000 steps + fixed-order replay。</p>
 
-<div class="summary-cards">
-<div class="card"><div class="label" style="color:#2196F3">v 注入</div><div class="value" style="color:#2196F3">0.60</div><div>gap @ 1000 步</div></div>
-<div class="card"><div class="label" style="color:#F44336">y 注入</div><div class="value" style="color:#F44336">1.82</div><div>gap @ 1000 步</div></div>
-<div class="card"><div class="label" style="color:#4CAF50">input 注入</div><div class="value" style="color:#4CAF50">0.64</div><div>gap @ 1000 步</div></div>
+<div class="summary-cards" id="summary-cards">
+<div class="card"><div class="label" style="color:#2196F3">v 注入</div><div class="value" id="card-v" style="color:#2196F3">—</div><div>gap @ 1000 步</div></div>
+<div class="card"><div class="label" style="color:#F44336">y 注入</div><div class="value" id="card-y" style="color:#F44336">—</div><div>gap @ 1000 步</div></div>
+<div class="card"><div class="label" style="color:#4CAF50">input 注入</div><div class="value" id="card-input" style="color:#4CAF50">—</div><div>gap @ 1000 步</div></div>
 <div class="card"><div class="label" style="color:#999">无 n-gram</div><div class="value" style="color:#999">0.03</div><div>gap @ 1000 步</div></div>
 </div>
 
-<div id="gap_chart" class="chart"></div>
-<div id="loss_chart" class="chart"></div>
-<div id="table_norm_chart" class="chart"></div>
+<p>下图展示 v/y/input 三注入点的 gap 和 loss 曲线。虚线 = epoch 边界（step 337, 686）。</p>
 
-<p><em>注：上图数据来自 ngram-gap-lab 干净复现。如图表未显示，说明训练仍在进行中。</em></p>
+<iframe class="chart-frame" id="iframe-gap-loss" src=""></iframe>
 
 <h3>3.1 关键观察</h3>
 
 <ol>
-<li><strong>y 注入 gap 最大</strong>（1.82）：信号直接到输出，不被 attention 混合，每层独立注入。</li>
-<li><strong>input 注入 gap 中等</strong>（0.64）：over-encoding 主流做法，一次注入所有层 table 求和。</li>
-<li><strong>v 注入 gap 最弱</strong>（0.60）：信号被 V 淹没（norm 仅 6.5%），gap 延迟到 epoch3 才明显。</li>
+<li><strong>y 注入 gap 最大</strong>：信号直接到输出，不被 attention 混合，每层独立注入。</li>
+<li><strong>input 注入 gap 中等</strong>：over-encoding 主流做法，一次注入所有层 table 求和。</li>
+<li><strong>v 注入 gap 最弱</strong>：信号被 V 淹没（norm 仅 6.5%），gap 延迟到 epoch3 才明显。</li>
 <li><strong>无 n-gram 无 gap</strong>（0.03）：gap 完全由 n-gram table 贡献。</li>
 </ol>
 
-<h3>3.2 Table norm × gap</h3>
+<h2>4. Table Norm × Loss 对齐</h2>
 
-<table>
+<p>n-gram table 的 param RMS 随训练增长，与 gap 的出现<strong>时间对齐</strong>。下图展示 input 注入 run 的 table RMS + loss + gap 随时间演化。</p>
+
+<iframe class="chart-frame" id="iframe-loss-norm" src=""></iframe>
+
+<h3>4.1 Table norm × gap 对比</h3>
+
+<table id="norm-table">
 <tr><th>step</th><th>v gap</th><th>y gap</th><th>input gap</th><th>v table_rms</th><th>y table_rms</th><th>input table_rms</th></tr>
-<tr><td>10</td><td>0.00</td><td>0.00</td><td>0.00</td><td>0.037</td><td>0.037</td><td>0.037</td></tr>
-<tr><td>100</td><td>-0.004</td><td>0.011</td><td>0.002</td><td>0.042</td><td>0.083</td><td>0.068</td></tr>
-<tr><td>337 (e2)</td><td>-0.047</td><td>-0.048</td><td>-0.093</td><td>0.121</td><td>0.119</td><td>0.113</td></tr>
-<tr><td>686 (e3)</td><td>-0.077</td><td>-0.790</td><td>-0.342</td><td>0.160</td><td>0.149</td><td>0.150</td></tr>
-<tr><td>999</td><td>-0.542</td><td>-1.900</td><td>-0.672</td><td>—</td><td>—</td><td>—</td></tr>
 </table>
-<p><em>gap = val - train（正值 = gap）。table_rms = bigram table layer_1 table_0 的 param RMS。</em></p>
+<p><em>gap = val - train（正值 = gap）。table_rms = bigram table layer_01 table_0 的 param RMS。数据从训练日志动态填充。</em></p>
 
 <div class="key-finding">
 <strong>Table norm 增长速度不是 gap 的决定因素；注入点（信号能否有效到达输出）才是。</strong>
-y 注入 table rms 增长最慢（0.149）但 gap 最大（1.90）；v 注入 table rms 增长最快（0.160）但 gap 最小（0.54）。
+y 注入 table rms 增长最慢但 gap 最大；v 注入 table rms 增长最快但 gap 最小。
 </div>
 
-<h2>4. 频率 bin 分解</h2>
+<h2>5. 频率 bin 分解</h2>
 
-<p>将 n-gram context 按 train 中的 hit count 分桶，统计每桶的 loss：</p>
+<p>将 n-gram context 按 train 中的 hit count 分桶，统计每桶的 loss。这是定位 gap 来源的关键分析。</p>
+
 <ul>
 <li><strong>novel</strong>（hit=0）：val 翘起的主要来源（trigram novel 占 val ~30%）。</li>
 <li><strong>低频</strong>（1-5 次）：gap 最大的桶——train 中见过几次，模型 memorize 了特定后续 token。</li>
 <li><strong>高频</strong>（5k+）：gap 贡献 ≈ 0——多为 QA pattern，train/val 都能预测。</li>
 </ul>
 
-<div id="freq_chart" class="chart"></div>
+<h3>5.1 频次分桶损失曲线</h3>
 
-<p><em>频率 bin 分解图待 ngram-gap-lab 的 <code>ngram_freq.py</code> 产出数据后填充。</em></p>
+<p>下图可切换 bigram/trigram、per-token loss / 总贡献、train+val / gap 视图。每条线 = 一个频率桶。</p>
 
-<h2>5. 标准 setting（baseline_input）</h2>
+<iframe class="chart-frame" id="iframe-freq-gap" src=""></iframe>
+
+<h3>5.2 命中频次分布</h3>
+
+<p>train vs val 的 n-gram context 频次分布（bar = 占比，虚线 = 累积分布）。trigram val 的 novel 桶（train 中从未出现）占 ~30%，是 val 翘起的主要结构性原因。</p>
+
+<iframe class="chart-frame" id="iframe-hitcount" src=""></iframe>
+
+<div class="key-finding">
+<strong>机制解读</strong>：训练集频次呈幂律分布。低频/novel context 在 train 中被 n-gram table memorize（train loss 坍塌），
+但 val 中即使遇到相同 context，后续 token 也不同，模型"过度自信"反而出错（val loss 翘起）。
+高频 context 多为可预测的 QA pattern，train/val 都能预测，对 gap 贡献最小。
+</div>
+
+<h2>6. 标准 setting（baseline_input）</h2>
 
 <p>后续所有消融实验一律基于此 setting：</p>
 
@@ -203,7 +217,7 @@ y 注入 table rms 增长最慢（0.149）但 gap 最大（1.90）；v 注入 ta
 
 <p>代码：<a href="https://github.com/guoshaoyang-pku/ngram-gap-lab">github.com/guoshaoyang-pku/ngram-gap-lab</a></p>
 
-<h2>6. 结论</h2>
+<h2>7. 结论</h2>
 
 <ol>
 <li><strong>gap 的最小充分条件</strong>：vanilla nanoGPT + bigram/trigram n-gram value table + 固定顺序多 epoch replay + 合适注入点（input 或 y）。</li>
@@ -212,17 +226,62 @@ y 注入 table rms 增长最慢（0.149）但 gap 最大（1.90）；v 注入 ta
 <li><strong>低频 context 主导 gap</strong>：novel + 低频 bucket 是 val 翘起的主要来源；高频 bucket gap 贡献 ≈ 0。</li>
 </ol>
 
-<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
 <script>
-// Charts will be populated when training data is available.
-// For now, show placeholder text.
-function placeholder(id, title) {
-  document.getElementById(id).innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#999;font-size:1.1em;">' + title + '（训练进行中，数据待填充）</div>';
+// Load figure data and populate charts + tables.
+// Figures are generated by ngram-gap-lab/docs/plot_scripts/gen_all_figures.py
+// and stored as interactive HTML in docs/figs/.
+// For the live blog, we embed them via iframe pointing to the repo's GitHub Pages
+// or local copies in the blogs directory.
+
+// Try to load training data JSON for summary cards + norm table
+async function loadData() {
+  try {
+    // Attempt to fetch the ablation data JSON (generated by plot script)
+    const resp = await fetch('injpos_ablation_data.json');
+    if (resp.ok) {
+      const data = await resp.json();
+      populateSummary(data);
+      populateNormTable(data);
+    }
+  } catch(e) {
+    console.log('Data not yet available:', e.message);
+  }
 }
-placeholder('gap_chart', 'Train/Val Gap');
-placeholder('loss_chart', 'Train/Val Loss');
-placeholder('table_norm_chart', 'Table Norm');
-placeholder('freq_chart', '频率 bin 分解');
+
+function populateSummary(data) {
+  for (const key of ['v', 'y', 'input']) {
+    const el = document.getElementById('card-' + key);
+    if (el && data[key] && data[key].final_gap !== undefined) {
+      el.textContent = data[key].final_gap.toFixed(2);
+    }
+  }
+}
+
+function populateNormTable(data) {
+  const table = document.getElementById('norm-table');
+  if (!data.steps) return;
+  for (const s of data.steps) {
+    const row = table.insertRow();
+    row.insertCell(0).textContent = s;
+    for (const key of ['v', 'y', 'input']) {
+      const gap = data[key]?.gaps?.[s];
+      row.insertCell(-1).textContent = gap !== undefined ? gap.toFixed(3) : '—';
+    }
+    for (const key of ['v', 'y', 'input']) {
+      const rms = data[key]?.table_rms?.[s];
+      row.insertCell(-1).textContent = rms !== undefined ? rms.toFixed(3) : '—';
+    }
+  }
+}
+
+// Set iframe sources (figures generated by gen_all_figures.py)
+// These are relative to this index.html in the blogs/ngram-gap-mechanism-guide/ dir
+document.getElementById('iframe-gap-loss').src = 'fig_gap_loss.html';
+document.getElementById('iframe-loss-norm').src = 'fig_loss_norm.html';
+document.getElementById('iframe-freq-gap').src = 'fig_gap_by_freq.html';
+document.getElementById('iframe-hitcount').src = 'fig_hitcount_dist.html';
+
+loadData();
 </script>
 
 </body>
