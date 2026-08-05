@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>命中频次分布</title>
+<style>
+  body { font-family: -apple-system, sans-serif; margin: 12px; background: #fafafa; }
+  h2 { font-size: 1.1em; }
+  .chart { width: 100%; max-width: 900px; height: 480px; margin: 12px 0; }
+  .controls { margin: 8px 0; font-size: 0.9em; }
+  .controls button { padding: 4px 10px; margin: 2px; cursor: pointer; border: 1px solid #ccc; border-radius: 4px; background: #fff; }
+  .controls button.active { background: #333; color: #fff; }
+  .note { font-size: 0.85em; color: #666; margin: 8px 0; }
+</style></head><body>
+<h2>命中频次分布</h2>
+<p class="note">train vs val 的 n-gram context 频次分布（bar = 占比，虚线 = 累积分布）</p>
+<div id="dist_chart" class="chart"></div>
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script>
+    var barData = {"bigram": [{"bucket": "novel", "train_frac": 0.0, "val_frac": 0.04345872667100695}, {"bucket": "1", "train_frac": 0.034779866536458336, "val_frac": 0.022038777669270832}, {"bucket": "2", "train_frac": 0.022118462456597224, "val_frac": 0.015852186414930556}, {"bucket": "3", "train_frac": 0.016364203559027776, "val_frac": 0.012556287977430556}, {"bucket": "4", "train_frac": 0.013070000542534722, "val_frac": 0.010389539930555556}, {"bucket": "5", "train_frac": 0.010986328125, "val_frac": 0.008899264865451388}, {"bucket": "6-10", "train_frac": 0.03966098361545139, "val_frac": 0.03466966417100695}, {"bucket": "11-20", "train_frac": 0.048884073893229164, "val_frac": 0.04535251193576389}, {"bucket": "21-50", "train_frac": 0.08481682671440972, "val_frac": 0.0802341037326389}, {"bucket": "51-100", "train_frac": 0.0829281277126736, "val_frac": 0.08133612738715278}, {"bucket": "101-200", "train_frac": 0.1037631564670139, "val_frac": 0.1033664279513889}, {"bucket": "201-500", "train_frac": 0.16800096299913195, "val_frac": 0.1661919487847222}, {"bucket": "501-1k", "train_frac": 0.1343909369574653, "val_frac": 0.1360965304904514}, {"bucket": "1k-5k", "train_frac": 0.1254814995659722, "val_frac": 0.1252627902560764}, {"bucket": "5k+", "train_frac": 0.11475457085503472, "val_frac": 0.11429511176215278}], "trigram": [{"bucket": "novel", "train_frac": 0.0007408989800347222, "val_frac": 0.3148549397786458}, {"bucket": "1", "train_frac": 0.2756212022569444, "val_frac": 0.083587646484375}, {"bucket": "2", "train_frac": 0.09583028157552083, "val_frac": 0.048348320855034724}, {"bucket": "3", "train_frac": 0.0540313720703125, "val_frac": 0.034615410698784724}, {"bucket": "4", "train_frac": 0.03817409939236111, "val_frac": 0.026304456922743056}, {"bucket": "5", "train_frac": 0.028867933485243056, "val_frac": 0.021940443250868056}, {"bucket": "6-10", "train_frac": 0.09075927734375, "val_frac": 0.07281494140625}, {"bucket": "11-20", "train_frac": 0.08660210503472222, "val_frac": 0.0770450168185764}, {"bucket": "21-50", "train_frac": 0.10488722059461805, "val_frac": 0.09878370496961805}, {"bucket": "51-100", "train_frac": 0.06778971354166667, "val_frac": 0.06520589192708333}, {"bucket": "101-200", "train_frac": 0.053843180338541664, "val_frac": 0.052897135416666664}, {"bucket": "201-500", "train_frac": 0.04951646592881945, "val_frac": 0.050252278645833336}, {"bucket": "501-1k", "train_frac": 0.021440294053819444, "val_frac": 0.021891276041666668}, {"bucket": "1k-5k", "train_frac": 0.021867540147569444, "val_frac": 0.021874321831597224}, {"bucket": "5k+", "train_frac": 0.010028415256076388, "val_frac": 0.009584214952256944}]};
+    var bucketOrder = ["novel", "1", "2", "3", "4", "5", "6-10", "11-20", "21-50", "51-100", "101-200", "201-500", "501-1k", "1k-5k", "5k+"];
+    var bucketColors = {"novel": "#E91E63", "1": "#F44336", "2": "#FF5722", "3": "#FF9800", "4": "#FFC107", "5": "#FFEB3B", "6-10": "#CDDC39", "11-20": "#8BC34A", "21-50": "#4CAF50", "51-100": "#009688", "101-200": "#00BCD4", "201-500": "#03A9F4", "501-1k": "#2196F3", "1k-5k": "#3F51B5", "5k+": "#673AB7"};
+
+    function plotDist(branch) {
+      var d = barData[branch];
+      var trainTrace = {x: d.map(function(x){return x.bucket}), y: d.map(function(x){return x.train_frac}), type: "bar", name: "train", marker: {color: "#2196F3"}};
+      var valTrace = {x: d.map(function(x){return x.bucket}), y: d.map(function(x){return x.val_frac}), type: "bar", name: "val", marker: {color: "#F44336"}};
+      // cumulative
+      var cumTrain = []; var cumVal = []; var s1=0; var s2=0;
+      for (var i=0; i<d.length; i++) { s1 += d[i].train_frac; s2 += d[i].val_frac; cumTrain.push(s1); cumVal.push(s2); }
+      var cumTrainTrace = {x: d.map(function(x){return x.bucket}), y: cumTrain, mode: "lines+markers", name: "train (cumul)", line: {color: "#2196F3", dash: "dot"}, yaxis: "y2"};
+      var cumValTrace = {x: d.map(function(x){return x.bucket}), y: cumVal, mode: "lines+markers", name: "val (cumul)", line: {color: "#F44336", dash: "dot"}, yaxis: "y2"};
+      Plotly.newPlot("dist_chart", [trainTrace, valTrace, cumTrainTrace, cumValTrace], {
+        title: branch + " context 频次分布 (train vs val)", barmode: "group",
+        xaxis: {title: "hit count bucket"}, yaxis: {title: "token fraction"},
+        yaxis2: {title: "cumulative", side: "right", overlaying: "y"},
+        margin: {l:60,r:60,t:50,b:50}, legend: {x: 0.02, y: 0.98}
+      });
+    }
+    plotDist("bigram");
+    </script>
+</body></html>

@@ -132,10 +132,10 @@ def forward_y(idx):
 <p><strong>标准设置</strong>：vanilla nanoGPT (8 layer, 6 head, 768 dim, vocab 8192) + bigram+trigram + RMSProp(table β₂=0.999) / AdamW(backbone lr=0.004) + seed42 + 1000 steps + fixed-order replay。</p>
 
 <div class="summary-cards" id="summary-cards">
-<div class="card"><div class="label" style="color:#2196F3">v 注入</div><div class="value" id="card-v" style="color:#2196F3">—</div><div>gap @ 1000 步</div></div>
-<div class="card"><div class="label" style="color:#F44336">y 注入</div><div class="value" id="card-y" style="color:#F44336">—</div><div>gap @ 1000 步</div></div>
-<div class="card"><div class="label" style="color:#4CAF50">input 注入</div><div class="value" id="card-input" style="color:#4CAF50">—</div><div>gap @ 1000 步</div></div>
-<div class="card"><div class="label" style="color:#999">无 n-gram</div><div class="value" style="color:#999">0.03</div><div>gap @ 1000 步</div></div>
+<div class="card"><div class="label" style="color:#2196F3">v 注入</div><div class="value" id="card-v" style="color:#2196F3">0.33</div><div>gap @ 1000 步</div></div>
+<div class="card"><div class="label" style="color:#F44336">y 注入</div><div class="value" id="card-y" style="color:#F44336">3.50</div><div>gap @ 1000 步</div></div>
+<div class="card"><div class="label" style="color:#4CAF50">input 注入</div><div class="value" id="card-input" style="color:#4CAF50">0.79</div><div>gap @ 1000 步</div></div>
+<div class="card"><div class="label" style="color:#999">无 n-gram</div><div class="value" style="color:#999">0.03</div><div>gap @ 1000 步（旧实验）</div></div>
 </div>
 
 <p>下图展示 v/y/input 三注入点的 gap 和 loss 曲线。虚线 = epoch 边界（step 337, 686）。</p>
@@ -145,10 +145,11 @@ def forward_y(idx):
 <h3>3.1 关键观察</h3>
 
 <ol>
-<li><strong>y 注入 gap 最大</strong>：信号直接到输出，不被 attention 混合，每层独立注入。</li>
-<li><strong>input 注入 gap 中等</strong>：over-encoding 主流做法，一次注入所有层 table 求和。</li>
-<li><strong>v 注入 gap 最弱</strong>：信号被 V 淹没（norm 仅 6.5%），gap 延迟到 epoch3 才明显。</li>
-<li><strong>无 n-gram 无 gap</strong>（0.03）：gap 完全由 n-gram table 贡献。</li>
+<li><strong>y 注入 gap 最大</strong>（3.50）：信号直接到输出，不被 attention 混合，每层独立注入。</li>
+<li><strong>input 注入 gap 中等</strong>（0.79）：over-encoding 主流做法，一次注入所有层 table 求和。</li>
+<li><strong>v 注入 gap 最弱</strong>（0.33）：信号被 V 淹没（norm 仅 6.5%），gap 延迟到 epoch3 才明显。</li>
+<li><strong>无 n-gram 无 gap</strong>（0.03，旧实验）：gap 完全由 n-gram table 贡献。</li>
+<li><strong>相对顺序一致</strong>：y > input > v > 无 n-gram。绝对数值与旧 OPHIS 实验略有差异（LR schedule 不同），但现象完全可复现。</li>
 </ol>
 
 <h2>4. Table Norm × Loss 对齐</h2>
