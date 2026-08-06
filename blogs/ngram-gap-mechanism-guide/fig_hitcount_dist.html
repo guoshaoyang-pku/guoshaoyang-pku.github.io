@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="zh-CN"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>命中频次分布</title>
+<title>各命中频次桶的末态 gap</title>
 <style>
   body { font-family: -apple-system, sans-serif; margin: 12px; background: #fafafa; }
   h2 { font-size: 1.1em; }
@@ -11,8 +11,8 @@
   .controls button.active { background: #333; color: #fff; }
   .note { font-size: 0.85em; color: #666; margin: 8px 0; }
 </style></head><body>
-<h2>命中频次分布</h2>
-<p class="note">train vs val 的 n-gram context 频次分布（bar = 占比，虚线 = 累积分布）</p>
+<h2>各命中频次桶的末态 gap</h2>
+<p class="note">最后一个评估 checkpoint 的 per-bucket gap：val loss − train loss。悬停可查看桶占比和 train/val loss。</p>
 
     <div class="controls">
       <b>context:</b>
@@ -23,9 +23,8 @@
     
 <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
 <script>
-    var barData = {"bigram": [{"bucket": "novel", "train_frac": 0.0, "val_frac": 0.04345872667100695}, {"bucket": "1", "train_frac": 0.034779866536458336, "val_frac": 0.022038777669270832}, {"bucket": "2", "train_frac": 0.022118462456597224, "val_frac": 0.015852186414930556}, {"bucket": "3", "train_frac": 0.016364203559027776, "val_frac": 0.012556287977430556}, {"bucket": "4", "train_frac": 0.013070000542534722, "val_frac": 0.010389539930555556}, {"bucket": "5", "train_frac": 0.010986328125, "val_frac": 0.008899264865451388}, {"bucket": "6-10", "train_frac": 0.03966098361545139, "val_frac": 0.03466966417100695}, {"bucket": "11-20", "train_frac": 0.048884073893229164, "val_frac": 0.04535251193576389}, {"bucket": "21-50", "train_frac": 0.08481682671440972, "val_frac": 0.0802341037326389}, {"bucket": "51-100", "train_frac": 0.0829281277126736, "val_frac": 0.08133612738715278}, {"bucket": "101-200", "train_frac": 0.1037631564670139, "val_frac": 0.1033664279513889}, {"bucket": "201-500", "train_frac": 0.16800096299913195, "val_frac": 0.1661919487847222}, {"bucket": "501-1k", "train_frac": 0.1343909369574653, "val_frac": 0.1360965304904514}, {"bucket": "1k-5k", "train_frac": 0.1254814995659722, "val_frac": 0.1252627902560764}, {"bucket": "5k+", "train_frac": 0.11475457085503472, "val_frac": 0.11429511176215278}], "trigram": [{"bucket": "novel", "train_frac": 0.0007408989800347222, "val_frac": 0.3148549397786458}, {"bucket": "1", "train_frac": 0.2756212022569444, "val_frac": 0.083587646484375}, {"bucket": "2", "train_frac": 0.09583028157552083, "val_frac": 0.048348320855034724}, {"bucket": "3", "train_frac": 0.0540313720703125, "val_frac": 0.034615410698784724}, {"bucket": "4", "train_frac": 0.03817409939236111, "val_frac": 0.026304456922743056}, {"bucket": "5", "train_frac": 0.028867933485243056, "val_frac": 0.021940443250868056}, {"bucket": "6-10", "train_frac": 0.09075927734375, "val_frac": 0.07281494140625}, {"bucket": "11-20", "train_frac": 0.08660210503472222, "val_frac": 0.0770450168185764}, {"bucket": "21-50", "train_frac": 0.10488722059461805, "val_frac": 0.09878370496961805}, {"bucket": "51-100", "train_frac": 0.06778971354166667, "val_frac": 0.06520589192708333}, {"bucket": "101-200", "train_frac": 0.053843180338541664, "val_frac": 0.052897135416666664}, {"bucket": "201-500", "train_frac": 0.04951646592881945, "val_frac": 0.050252278645833336}, {"bucket": "501-1k", "train_frac": 0.021440294053819444, "val_frac": 0.021891276041666668}, {"bucket": "1k-5k", "train_frac": 0.021867540147569444, "val_frac": 0.021874321831597224}, {"bucket": "5k+", "train_frac": 0.010028415256076388, "val_frac": 0.009584214952256944}]};
+    var gapData = {"bigram": [{"bucket": "novel", "gap": 6.058858777805724, "train_loss": 0.0, "val_loss": 6.058858777805724, "train_frac": 0.0, "val_frac": 0.04345872667100695}, {"bucket": "1", "gap": 3.16215872501631, "train_loss": 2.2170071563254368, "val_loss": 5.379165881341747, "train_frac": 0.034779866536458336, "val_frac": 0.022038777669270832}, {"bucket": "2", "gap": 2.8295477534559117, "train_loss": 2.325967265051717, "val_loss": 5.155515018507629, "train_frac": 0.022118462456597224, "val_frac": 0.015852186414930556}, {"bucket": "3", "gap": 2.553466848540316, "train_loss": 2.4318094453820405, "val_loss": 4.9852762939223565, "train_frac": 0.016364203559027776, "val_frac": 0.012556287977430556}, {"bucket": "4", "gap": 2.301307724344059, "train_loss": 2.5561848170913892, "val_loss": 4.857492541435448, "train_frac": 0.013070000542534722, "val_frac": 0.010389539930555556}, {"bucket": "5", "gap": 2.3859155572241395, "train_loss": 2.615034536136692, "val_loss": 5.0009500933608315, "train_frac": 0.010986328125, "val_frac": 0.008899264865451388}, {"bucket": "6-10", "gap": 1.8785025482403888, "train_loss": 2.773904658456868, "val_loss": 4.652407206697257, "train_frac": 0.03966098361545139, "val_frac": 0.03466966417100695}, {"bucket": "11-20", "gap": 1.426801504074818, "train_loss": 3.03771962562355, "val_loss": 4.464521129698368, "train_frac": 0.048884073893229164, "val_frac": 0.04535251193576389}, {"bucket": "21-50", "gap": 1.071793182522923, "train_loss": 3.3127424012384687, "val_loss": 4.384535583761392, "train_frac": 0.08481682671440972, "val_frac": 0.0802341037326389}, {"bucket": "51-100", "gap": 0.8106448707903944, "train_loss": 3.5147893729516753, "val_loss": 4.32543424374207, "train_frac": 0.0829281277126736, "val_frac": 0.08133612738715278}, {"bucket": "101-200", "gap": 0.6917970591315092, "train_loss": 3.593386113103884, "val_loss": 4.285183172235393, "train_frac": 0.1037631564670139, "val_frac": 0.1033664279513889}, {"bucket": "201-500", "gap": 0.5036325170745402, "train_loss": 3.6759771325604698, "val_loss": 4.17960964963501, "train_frac": 0.16800096299913195, "val_frac": 0.1661919487847222}, {"bucket": "501-1k", "gap": 0.3805179675925716, "train_loss": 3.735038902266921, "val_loss": 4.115556869859493, "train_frac": 0.1343909369574653, "val_frac": 0.1360965304904514}, {"bucket": "1k-5k", "gap": 0.2709983131205771, "train_loss": 4.223634719260928, "val_loss": 4.494633032381505, "train_frac": 0.1254814995659722, "val_frac": 0.1252627902560764}, {"bucket": "5k+", "gap": 0.2768564245664784, "train_loss": 4.530321916474579, "val_loss": 4.807178341041057, "train_frac": 0.11475457085503472, "val_frac": 0.11429511176215278}], "trigram": [{"bucket": "novel", "gap": -0.038388119944983146, "train_loss": 5.029306051353295, "val_loss": 4.990917931408312, "train_frac": 0.0007408989800347222, "val_frac": 0.3148549397786458}, {"bucket": "1", "gap": 1.222658261816231, "train_loss": 3.29634605209029, "val_loss": 4.519004313906521, "train_frac": 0.2756212022569444, "val_frac": 0.083587646484375}, {"bucket": "2", "gap": 1.0393123163852067, "train_loss": 3.3703958899664057, "val_loss": 4.409708206351612, "train_frac": 0.09583028157552083, "val_frac": 0.048348320855034724}, {"bucket": "3", "gap": 0.9323900525571451, "train_loss": 3.4642045555787995, "val_loss": 4.396594608135945, "train_frac": 0.0540313720703125, "val_frac": 0.034615410698784724}, {"bucket": "4", "gap": 0.7757835220329987, "train_loss": 3.527833032040511, "val_loss": 4.30361655407351, "train_frac": 0.03817409939236111, "val_frac": 0.026304456922743056}, {"bucket": "5", "gap": 0.788881184302594, "train_loss": 3.5306646180492725, "val_loss": 4.3195458023518665, "train_frac": 0.028867933485243056, "val_frac": 0.021940443250868056}, {"bucket": "6-10", "gap": 0.6753977241509213, "train_loss": 3.6041854010341745, "val_loss": 4.279583125185096, "train_frac": 0.09075927734375, "val_frac": 0.07281494140625}, {"bucket": "11-20", "gap": 0.5265845604983515, "train_loss": 3.701051271177554, "val_loss": 4.227635831675905, "train_frac": 0.08660210503472222, "val_frac": 0.0770450168185764}, {"bucket": "21-50", "gap": 0.3905994291311701, "train_loss": 3.8243808099524785, "val_loss": 4.214980239083649, "train_frac": 0.10488722059461805, "val_frac": 0.09878370496961805}, {"bucket": "51-100", "gap": 0.23319275670056383, "train_loss": 3.9213111994492693, "val_loss": 4.154503956149833, "train_frac": 0.06778971354166667, "val_frac": 0.06520589192708333}, {"bucket": "101-200", "gap": 0.20329214119790517, "train_loss": 3.9501275142922267, "val_loss": 4.153419655490132, "train_frac": 0.053843180338541664, "val_frac": 0.052897135416666664}, {"bucket": "201-500", "gap": 0.157250197616702, "train_loss": 4.015532436985868, "val_loss": 4.17278263460257, "train_frac": 0.04951646592881945, "val_frac": 0.050252278645833336}, {"bucket": "501-1k", "gap": 0.06258049232647434, "train_loss": 4.197669756279289, "val_loss": 4.260250248605764, "train_frac": 0.021440294053819444, "val_frac": 0.021891276041666668}, {"bucket": "1k-5k", "gap": 0.05211435861599867, "train_loss": 4.247740319248017, "val_loss": 4.299854677864015, "train_frac": 0.021867540147569444, "val_frac": 0.021874321831597224}, {"bucket": "5k+", "gap": 0.07517937012317688, "train_loss": 3.5576693493427296, "val_loss": 3.6328487194659065, "train_frac": 0.010028415256076388, "val_frac": 0.009584214952256944}]};
     var bucketOrder = ["novel", "1", "2", "3", "4", "5", "6-10", "11-20", "21-50", "51-100", "101-200", "201-500", "501-1k", "1k-5k", "5k+"];
-    var bucketColors = {"novel": "#E91E63", "1": "#F44336", "2": "#FF5722", "3": "#FF9800", "4": "#FFC107", "5": "#FFEB3B", "6-10": "#CDDC39", "11-20": "#8BC34A", "21-50": "#4CAF50", "51-100": "#009688", "101-200": "#00BCD4", "201-500": "#03A9F4", "501-1k": "#2196F3", "1k-5k": "#3F51B5", "5k+": "#673AB7"};
 
     function plotDist(branch, button) {
       if (button) {
@@ -34,20 +33,23 @@
         });
         button.classList.add('active');
       }
-      var d = barData[branch];
-      var trainTrace = {x: d.map(function(x){return x.bucket}), y: d.map(function(x){return x.train_frac}), type: "bar", name: "train", marker: {color: "#2196F3"}};
-      var valTrace = {x: d.map(function(x){return x.bucket}), y: d.map(function(x){return x.val_frac}), type: "bar", name: "val", marker: {color: "#F44336"}};
-      // cumulative
-      var cumTrain = []; var cumVal = []; var s1=0; var s2=0;
-      for (var i=0; i<d.length; i++) { s1 += d[i].train_frac; s2 += d[i].val_frac; cumTrain.push(s1); cumVal.push(s2); }
-      var cumTrainTrace = {x: d.map(function(x){return x.bucket}), y: cumTrain, mode: "lines+markers", name: "train (cumul)", line: {color: "#2196F3", dash: "dot"}, yaxis: "y2"};
-      var cumValTrace = {x: d.map(function(x){return x.bucket}), y: cumVal, mode: "lines+markers", name: "val (cumul)", line: {color: "#F44336", dash: "dot"}, yaxis: "y2"};
-      Plotly.newPlot("dist_chart", [trainTrace, valTrace, cumTrainTrace, cumValTrace], {
-        title: branch + " context 频次分布 (train vs val)", barmode: "group",
+      var d = gapData[branch];
+      var trace = {
+        x: d.map(function(x){return x.bucket}),
+        y: d.map(function(x){return x.gap}),
+        customdata: d.map(function(x){return [x.train_loss, x.val_loss, x.train_frac, x.val_frac]}),
+        type: "bar",
+        name: branch,
+        marker: {color: branch === "bigram" ? "#353d79" : "#c4493d"},
+        hovertemplate: "bucket=%{x}<br>gap=%{y:.3f}<br>train loss=%{customdata[0]:.3f}<br>val loss=%{customdata[1]:.3f}<br>train fraction=%{customdata[2]:.2%}<br>val fraction=%{customdata[3]:.2%}<extra></extra>"
+      };
+      Plotly.newPlot("dist_chart", [trace], {
+        title: "末态频率桶 gap · " + branch,
         xaxis: {title: "hit count bucket", type: "category", categoryorder: "array",
-                categoryarray: bucketOrder, tickangle: -42}, yaxis: {title: "token fraction"},
-        yaxis2: {title: "cumulative", side: "right", overlaying: "y"},
-        margin: {l:60,r:60,t:50,b:80}, legend: {x: 0.02, y: 0.98}
+                categoryarray: bucketOrder, tickangle: -42},
+        yaxis: {title: "final gap = val loss − train loss", zeroline: true,
+                 zerolinecolor: "#232426", zerolinewidth: 1},
+        margin: {l:70,r:30,t:50,b:80}, showlegend: true
       });
     }
     plotDist("bigram", document.querySelector('.controls button'));
