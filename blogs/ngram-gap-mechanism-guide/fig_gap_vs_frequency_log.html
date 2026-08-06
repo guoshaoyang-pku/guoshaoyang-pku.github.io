@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Log-scale frequency → gap</title>
+<style>
+  body { font-family: -apple-system, sans-serif; margin: 12px; background: #fafafa; }
+  h2 { font-size: 1.1em; }
+  .chart { width: 100%; max-width: 900px; height: 480px; margin: 12px 0; }
+  .controls { margin: 8px 0; font-size: 0.9em; }
+  .controls button { padding: 4px 10px; margin: 2px; cursor: pointer; border: 1px solid #ccc; border-radius: 4px; background: #fff; }
+  .controls button.active { background: #333; color: #fff; }
+  .note { font-size: 0.85em; color: #666; margin: 8px 0; }
+</style></head><body>
+<h2>Log-scale frequency → gap</h2>
+<p class="note">每个点是一个频率桶的末态 gap；横坐标为训练命中次数的对数尺度，误差线表示该 bucket 的频率范围。</p>
+
+    <div class="controls">
+      <b>context:</b>
+      <button class="active" onclick="setVisible('both', this)">both</button>
+      <button onclick="setVisible('bigram', this)">bigram</button>
+      <button onclick="setVisible('trigram', this)">trigram</button>
+    </div>
+    <div id="log_gap_chart" class="chart"></div>
+    
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script>
+    var logData = {"bigram": [{"bucket": "novel", "x": 0.5, "x_low": 0.5, "x_high": 0.5, "gap": 6.058858777805724, "train_frac": 0.0, "val_frac": 0.04345872667100695, "train_loss": 0.0, "val_loss": 6.058858777805724}, {"bucket": "1", "x": 1.0, "x_low": 1, "x_high": 1, "gap": 3.16215872501631, "train_frac": 0.034779866536458336, "val_frac": 0.022038777669270832, "train_loss": 2.2170071563254368, "val_loss": 5.379165881341747}, {"bucket": "2", "x": 2.0, "x_low": 2, "x_high": 2, "gap": 2.8295477534559117, "train_frac": 0.022118462456597224, "val_frac": 0.015852186414930556, "train_loss": 2.325967265051717, "val_loss": 5.155515018507629}, {"bucket": "3", "x": 3.0, "x_low": 3, "x_high": 3, "gap": 2.553466848540316, "train_frac": 0.016364203559027776, "val_frac": 0.012556287977430556, "train_loss": 2.4318094453820405, "val_loss": 4.9852762939223565}, {"bucket": "4", "x": 4.0, "x_low": 4, "x_high": 4, "gap": 2.301307724344059, "train_frac": 0.013070000542534722, "val_frac": 0.010389539930555556, "train_loss": 2.5561848170913892, "val_loss": 4.857492541435448}, {"bucket": "5", "x": 5.0, "x_low": 5, "x_high": 5, "gap": 2.3859155572241395, "train_frac": 0.010986328125, "val_frac": 0.008899264865451388, "train_loss": 2.615034536136692, "val_loss": 5.0009500933608315}, {"bucket": "6-10", "x": 7.745966692414834, "x_low": 6, "x_high": 10, "gap": 1.8785025482403888, "train_frac": 0.03966098361545139, "val_frac": 0.03466966417100695, "train_loss": 2.773904658456868, "val_loss": 4.652407206697257}, {"bucket": "11-20", "x": 14.832396974191326, "x_low": 11, "x_high": 20, "gap": 1.426801504074818, "train_frac": 0.048884073893229164, "val_frac": 0.04535251193576389, "train_loss": 3.03771962562355, "val_loss": 4.464521129698368}, {"bucket": "21-50", "x": 32.4037034920393, "x_low": 21, "x_high": 50, "gap": 1.071793182522923, "train_frac": 0.08481682671440972, "val_frac": 0.0802341037326389, "train_loss": 3.3127424012384687, "val_loss": 4.384535583761392}, {"bucket": "51-100", "x": 71.4142842854285, "x_low": 51, "x_high": 100, "gap": 0.8106448707903944, "train_frac": 0.0829281277126736, "val_frac": 0.08133612738715278, "train_loss": 3.5147893729516753, "val_loss": 4.32543424374207}, {"bucket": "101-200", "x": 142.12670403551894, "x_low": 101, "x_high": 200, "gap": 0.6917970591315092, "train_frac": 0.1037631564670139, "val_frac": 0.1033664279513889, "train_loss": 3.593386113103884, "val_loss": 4.285183172235393}, {"bucket": "201-500", "x": 317.01734968294716, "x_low": 201, "x_high": 500, "gap": 0.5036325170745402, "train_frac": 0.16800096299913195, "val_frac": 0.1661919487847222, "train_loss": 3.6759771325604698, "val_loss": 4.17960964963501}, {"bucket": "501-1k", "x": 707.8135347674555, "x_low": 501, "x_high": 1000, "gap": 0.3805179675925716, "train_frac": 0.1343909369574653, "val_frac": 0.1360965304904514, "train_loss": 3.735038902266921, "val_loss": 4.115556869859493}, {"bucket": "1k-5k", "x": 2236.06797749979, "x_low": 1000, "x_high": 5000, "gap": 0.2709983131205771, "train_frac": 0.1254814995659722, "val_frac": 0.1252627902560764, "train_loss": 4.223634719260928, "val_loss": 4.494633032381505}, {"bucket": "5k+", "x": 7071.067811865475, "x_low": 5000, "x_high": 10000, "gap": 0.2768564245664784, "train_frac": 0.11475457085503472, "val_frac": 0.11429511176215278, "train_loss": 4.530321916474579, "val_loss": 4.807178341041057}], "trigram": [{"bucket": "novel", "x": 0.5, "x_low": 0.5, "x_high": 0.5, "gap": -0.038388119944983146, "train_frac": 0.0007408989800347222, "val_frac": 0.3148549397786458, "train_loss": 5.029306051353295, "val_loss": 4.990917931408312}, {"bucket": "1", "x": 1.0, "x_low": 1, "x_high": 1, "gap": 1.222658261816231, "train_frac": 0.2756212022569444, "val_frac": 0.083587646484375, "train_loss": 3.29634605209029, "val_loss": 4.519004313906521}, {"bucket": "2", "x": 2.0, "x_low": 2, "x_high": 2, "gap": 1.0393123163852067, "train_frac": 0.09583028157552083, "val_frac": 0.048348320855034724, "train_loss": 3.3703958899664057, "val_loss": 4.409708206351612}, {"bucket": "3", "x": 3.0, "x_low": 3, "x_high": 3, "gap": 0.9323900525571451, "train_frac": 0.0540313720703125, "val_frac": 0.034615410698784724, "train_loss": 3.4642045555787995, "val_loss": 4.396594608135945}, {"bucket": "4", "x": 4.0, "x_low": 4, "x_high": 4, "gap": 0.7757835220329987, "train_frac": 0.03817409939236111, "val_frac": 0.026304456922743056, "train_loss": 3.527833032040511, "val_loss": 4.30361655407351}, {"bucket": "5", "x": 5.0, "x_low": 5, "x_high": 5, "gap": 0.788881184302594, "train_frac": 0.028867933485243056, "val_frac": 0.021940443250868056, "train_loss": 3.5306646180492725, "val_loss": 4.3195458023518665}, {"bucket": "6-10", "x": 7.745966692414834, "x_low": 6, "x_high": 10, "gap": 0.6753977241509213, "train_frac": 0.09075927734375, "val_frac": 0.07281494140625, "train_loss": 3.6041854010341745, "val_loss": 4.279583125185096}, {"bucket": "11-20", "x": 14.832396974191326, "x_low": 11, "x_high": 20, "gap": 0.5265845604983515, "train_frac": 0.08660210503472222, "val_frac": 0.0770450168185764, "train_loss": 3.701051271177554, "val_loss": 4.227635831675905}, {"bucket": "21-50", "x": 32.4037034920393, "x_low": 21, "x_high": 50, "gap": 0.3905994291311701, "train_frac": 0.10488722059461805, "val_frac": 0.09878370496961805, "train_loss": 3.8243808099524785, "val_loss": 4.214980239083649}, {"bucket": "51-100", "x": 71.4142842854285, "x_low": 51, "x_high": 100, "gap": 0.23319275670056383, "train_frac": 0.06778971354166667, "val_frac": 0.06520589192708333, "train_loss": 3.9213111994492693, "val_loss": 4.154503956149833}, {"bucket": "101-200", "x": 142.12670403551894, "x_low": 101, "x_high": 200, "gap": 0.20329214119790517, "train_frac": 0.053843180338541664, "val_frac": 0.052897135416666664, "train_loss": 3.9501275142922267, "val_loss": 4.153419655490132}, {"bucket": "201-500", "x": 317.01734968294716, "x_low": 201, "x_high": 500, "gap": 0.157250197616702, "train_frac": 0.04951646592881945, "val_frac": 0.050252278645833336, "train_loss": 4.015532436985868, "val_loss": 4.17278263460257}, {"bucket": "501-1k", "x": 707.8135347674555, "x_low": 501, "x_high": 1000, "gap": 0.06258049232647434, "train_frac": 0.021440294053819444, "val_frac": 0.021891276041666668, "train_loss": 4.197669756279289, "val_loss": 4.260250248605764}, {"bucket": "1k-5k", "x": 2236.06797749979, "x_low": 1000, "x_high": 5000, "gap": 0.05211435861599867, "train_frac": 0.021867540147569444, "val_frac": 0.021874321831597224, "train_loss": 4.247740319248017, "val_loss": 4.299854677864015}, {"bucket": "5k+", "x": 7071.067811865475, "x_low": 5000, "x_high": 10000, "gap": 0.07517937012317688, "train_frac": 0.010028415256076388, "val_frac": 0.009584214952256944, "train_loss": 3.5576693493427296, "val_loss": 3.6328487194659065}]};
+    var colors = {bigram: "#353d79", trigram: "#c4493d"};
+    function makeTrace(branch) {
+      var d = logData[branch];
+      return {
+        x: d.map(function(x){return x.x}),
+        y: d.map(function(x){return x.gap}),
+        customdata: d.map(function(x){return [x.bucket, x.x_low, x.x_high, x.train_frac, x.val_frac, x.train_loss, x.val_loss]}),
+        mode: "lines+markers",
+        name: branch,
+        line: {color: colors[branch], width: 2.5},
+        marker: {color: colors[branch], size: 8},
+        error_x: {
+          type: "data",
+          symmetric: false,
+          array: d.map(function(x){return x.x_high - x.x}),
+          arrayminus: d.map(function(x){return x.x - x.x_low}),
+          color: colors[branch],
+          thickness: 1.2,
+          width: 4
+        },
+        hovertemplate: "bucket=%{customdata[0]}<br>frequency range=%{customdata[1]}–%{customdata[2]}<br>gap=%{y:.3f}<br>train fraction=%{customdata[3]:.2%}<br>val fraction=%{customdata[4]:.2%}<br>train loss=%{customdata[5]:.3f}<br>val loss=%{customdata[6]:.3f}<extra></extra>"
+      };
+    }
+    function setVisible(which, button) {
+      if (button) {
+        document.querySelectorAll('.controls button').forEach(function(b){b.classList.remove('active')});
+        button.classList.add('active');
+      }
+      var visibility = which === "both" ? [true, true] :
+        (which === "bigram" ? [true, "legendonly"] : ["legendonly", true]);
+      Plotly.restyle("log_gap_chart", {visible: visibility});
+    }
+    Plotly.newPlot("log_gap_chart", [makeTrace("bigram"), makeTrace("trigram")], {
+      title: "Final per-bucket gap vs training hit count",
+      xaxis: {title: "training hit count (log scale)", type: "log", dtick: 1},
+      yaxis: {title: "final gap = val loss − train loss", zeroline: true,
+               zerolinecolor: "#232426", zerolinewidth: 1},
+      margin: {l:70,r:30,t:50,b:65}, showlegend: true,
+      legend: {x: 0.02, y: 0.98}
+    });
+    </script>
+</body></html>

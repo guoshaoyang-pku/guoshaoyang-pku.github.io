@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="zh-CN"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>各命中频次桶的末态 gap</title>
+<title>命中频次分布 + 末态 gap</title>
 <style>
   body { font-family: -apple-system, sans-serif; margin: 12px; background: #fafafa; }
   h2 { font-size: 1.1em; }
@@ -11,8 +11,8 @@
   .controls button.active { background: #333; color: #fff; }
   .note { font-size: 0.85em; color: #666; margin: 8px 0; }
 </style></head><body>
-<h2>各命中频次桶的末态 gap</h2>
-<p class="note">最后一个评估 checkpoint 的 per-bucket gap：val loss − train loss。悬停可查看桶占比和 train/val loss。</p>
+<h2>命中频次分布 + 末态 gap</h2>
+<p class="note">柱：train/val token fraction；曲线：最后一个 checkpoint 的 per-bucket gap = val loss − train loss。</p>
 
     <div class="controls">
       <b>context:</b>
@@ -34,22 +34,45 @@
         button.classList.add('active');
       }
       var d = gapData[branch];
-      var trace = {
+      var trainTrace = {
+        x: d.map(function(x){return x.bucket}),
+        y: d.map(function(x){return x.train_frac}),
+        customdata: d.map(function(x){return [x.train_loss, x.val_loss, x.gap]}),
+        type: "bar",
+        name: "train fraction",
+        marker: {color: "#2d6f9f"},
+        hovertemplate: "bucket=%{x}<br>train fraction=%{y:.2%}<br>train loss=%{customdata[0]:.3f}<br>val loss=%{customdata[1]:.3f}<br>gap=%{customdata[2]:.3f}<extra></extra>"
+      };
+      var valTrace = {
+        x: d.map(function(x){return x.bucket}),
+        y: d.map(function(x){return x.val_frac}),
+        customdata: d.map(function(x){return [x.train_loss, x.val_loss, x.gap]}),
+        type: "bar",
+        name: "val fraction",
+        marker: {color: "#c4493d"},
+        hovertemplate: "bucket=%{x}<br>val fraction=%{y:.2%}<br>train loss=%{customdata[0]:.3f}<br>val loss=%{customdata[1]:.3f}<br>gap=%{customdata[2]:.3f}<extra></extra>"
+      };
+      var gapTrace = {
         x: d.map(function(x){return x.bucket}),
         y: d.map(function(x){return x.gap}),
-        customdata: d.map(function(x){return [x.train_loss, x.val_loss, x.train_frac, x.val_frac]}),
-        type: "bar",
-        name: branch,
-        marker: {color: branch === "bigram" ? "#353d79" : "#c4493d"},
-        hovertemplate: "bucket=%{x}<br>gap=%{y:.3f}<br>train loss=%{customdata[0]:.3f}<br>val loss=%{customdata[1]:.3f}<br>train fraction=%{customdata[2]:.2%}<br>val fraction=%{customdata[3]:.2%}<extra></extra>"
+        customdata: d.map(function(x){return [x.train_frac, x.val_frac, x.train_loss, x.val_loss]}),
+        mode: "lines+markers",
+        name: "final gap",
+        line: {color: "#353d79", width: 3},
+        marker: {color: "#353d79", size: 7},
+        yaxis: "y2",
+        hovertemplate: "bucket=%{x}<br>final gap=%{y:.3f}<br>train fraction=%{customdata[0]:.2%}<br>val fraction=%{customdata[1]:.2%}<br>train loss=%{customdata[2]:.3f}<br>val loss=%{customdata[3]:.3f}<extra></extra>"
       };
-      Plotly.newPlot("dist_chart", [trace], {
-        title: "末态频率桶 gap · " + branch,
+      Plotly.newPlot("dist_chart", [trainTrace, valTrace, gapTrace], {
+        title: "命中频次分布 + 末态 gap · " + branch,
+        barmode: "group",
         xaxis: {title: "hit count bucket", type: "category", categoryorder: "array",
                 categoryarray: bucketOrder, tickangle: -42},
-        yaxis: {title: "final gap = val loss − train loss", zeroline: true,
-                 zerolinecolor: "#232426", zerolinewidth: 1},
-        margin: {l:70,r:30,t:50,b:80}, showlegend: true
+        yaxis: {title: "token fraction", rangemode: "tozero"},
+        yaxis2: {title: "final gap = val loss − train loss", side: "right",
+                 overlaying: "y", zeroline: true, zerolinecolor: "#232426",
+                 zerolinewidth: 1},
+        margin: {l:70,r:85,t:50,b:90}, showlegend: true
       });
     }
     plotDist("bigram", document.querySelector('.controls button'));
