@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="zh-CN"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Log–log frequency → gap</title>
+<title>Log-x frequency → gap</title>
 <style>
   body { font-family: -apple-system, sans-serif; margin: 12px; background: #fafafa; }
   h2 { font-size: 1.1em; }
@@ -11,8 +11,8 @@
   .controls button.active { background: #333; color: #fff; }
   .note { font-size: 0.85em; color: #666; margin: 8px 0; }
 </style></head><body>
-<h2>Log–log frequency → gap</h2>
-<p class="note">使用原始 15 个真实频率桶；novel 被排除，因为 train hit count=0 时没有 train token loss，无法定义同桶 gap。x、y 两轴均为对数尺度，仅显示正 gap。</p>
+<h2>Log-x frequency → gap</h2>
+<p class="note">使用原始 15 个真实频率桶；novel 被排除，因为 train hit count=0 时没有 train token loss，无法定义同桶 gap。x 轴为对数尺度，y 轴为线性尺度。</p>
 
     <div class="controls">
       <b>context:</b>
@@ -60,7 +60,7 @@
     Plotly.newPlot("log_gap_chart", [makeTrace("bigram"), makeTrace("trigram")], {
       title: "Final per-bucket gap vs training hit count",
       xaxis: {title: "training hit count (log scale)", type: "log", dtick: 1},
-      yaxis: {title: "final gap = val loss − train loss (log scale)", type: "log"},
+      yaxis: {title: "final gap = val loss − train loss", zeroline: true},
       margin: {l:70,r:30,t:50,b:65}, showlegend: true,
       legend: {x: 0.02, y: 0.98}
     });
