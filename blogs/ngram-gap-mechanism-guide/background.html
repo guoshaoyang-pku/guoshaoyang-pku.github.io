@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>背景与 debug：n-gram Gap</title>
+<style>
+:root{--bg:#f7f5ef;--ink:#232426;--muted:#686d73;--line:#c8c1b6;--panel:#fffdf8;--panel2:#f0eee7;--anchor:#353d79;--gap:#c4493d;--codebg:#1e1e2e;--codefg:#cdd6f4;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink)}main{width:min(980px,calc(100vw - 32px));margin:0 auto;padding:28px 0 56px}h1{margin:0 0 10px;font-size:clamp(26px,4vw,38px);line-height:1.1}h2{margin:30px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--line);font-size:21px;color:var(--anchor)}p,li{font-size:14.5px;line-height:1.7}p{margin:0 0 12px}a{color:var(--anchor)}code{background:var(--panel2);border-radius:4px;padding:1px 5px}.back{margin-bottom:24px;font-size:13px}.lead,.note{padding:15px 17px;background:var(--panel);border:1px solid var(--line);border-radius:10px}.lead{border-left:4px solid var(--anchor)}.note{margin:12px 0}.note.warn{border-left:4px solid var(--gap)}pre{margin:12px 0;padding:15px 17px;overflow-x:auto;color:var(--codefg);background:var(--codebg);border-radius:8px;font:12.5px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace}table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}th{padding:8px 10px;text-align:left;color:var(--anchor);border-bottom:2px solid var(--line)}td{padding:7px 10px;vertical-align:top;border-bottom:1px solid rgba(35,36,38,.1)}.footer{margin-top:32px;color:var(--muted);font-size:12px}
+</style>
+</head>
+<body><main>
+<div class="back"><a href="index.html">← 返回主线结果页</a>　·　<a href="index_archive_20260805.html">查看历史完整版本</a></div>
+<h1>背景与 debug：从 current shell 回到最小 n-gram setting</h1>
+<div class="lead">这是一份可选阅读。主页面只依赖一个干净结论：vanilla nanoGPT 加 bigram / trigram value memory，在固定顺序 replay 下即可出现 gap。本页解释术语、实现路径和曾经排除的错误。</div>
+<h2>1. 术语表：每个东西到底是什么</h2>
+<table><tr><th>术语</th><th>直观含义</th><th>在最小实验中的角色</th></tr><tr><td>n-gram value table / VE</td><td>用连续 token context 查出一个可训练向量。</td><td>真正产生 train-specific memory 的参数。</td></tr><tr><td>bigram / trigram</td><td>分别使用 2 个 / 3 个连续 token 作为 context。</td><td>当前实验的两条 memory 分支。</td></tr><tr><td>gate</td><td>把 table value 乘上一个可学习强度，典型形式是 <code>2×sigmoid(Linear(x))</code>。</td><td>只在 v / y 消融中使用；input baseline 不需要 gate。</td></tr><tr><td>input / over-encoding</td><td>先查表，再把 n-gram value 加到 token embedding。</td><td>最朴素、最适合作为 baseline 的注入点。</td></tr><tr><td>v 注入</td><td>在 attention 前把 value residual 加进 V。</td><td>信号会被 attention matrix 混合。</td></tr><tr><td>y 注入</td><td>attention 完成后，把 residual 加到 y。</td><td>信号直接进入 block 输出，gap 最强。</td></tr><tr><td>current shell</td><td>OPHIS 自己的一整套 GPT forward / optimizer 外壳。</td><td>历史分支，不是 n-gram gap 的必要条件。</td></tr></table>
+<h2>2. 三种注入点的伪代码</h2>
+<p>这里的 <code>ngram_value(idx)</code> 是根据当前 token 的 context 查表得到的向量。它不是一个 scalar，而是与 hidden state 同维度的 trainable vector。</p>
+<pre># input / over-encoding：一次注入，后面是普通 Transformer
+def forward_input(idx):
+    x = wte(idx) + wpe(pos)
+    x = x + ngram_value(idx)       # bigram value + trigram value
+    for block in transformer:
+        x = block(x)
+    return lm_head(ln_f(x))
+
+# v residual：先加到 V，再经过 attention 的加权混合
+def forward_v(idx):
+    x = wte(idx) + wpe(pos)
+    for block in transformer:
+        q, k, v = block.c_attn(block.ln_1(x)).split(3 * dim)
+        v = v + gate(x) * ngram_value(idx)
+        y = attention(q, k, v)
+        x = x + block.c_proj(y)
+        x = x + block.mlp(block.ln_2(x))
+    return lm_head(ln_f(x))
+
+# y residual：attention 完成后直接加到输出
+def forward_y(idx):
+    x = wte(idx) + wpe(pos)
+    for block in transformer:
+        q, k, v = block.c_attn(block.ln_1(x)).split(3 * dim)
+        y = attention(q, k, v)
+        y = y + gate(x) * ngram_value(idx)
+        x = x + block.c_proj(y)
+        x = x + block.mlp(block.ln_2(x))
+    return lm_head(ln_f(x))</pre>
+<h2>3. 为什么 V 与 y/input 的结果不同</h2>
+<p>attention 对 V 的计算是线性的。若 n-gram residual 为 G，attention matrix 为 A，则：</p>
+<div class="note"><strong><code>A · (V + G) = A · V + A · G</code></strong>。只有当 G 对所有被读取位置完全相同，且后续投影也不改变位置关系时，<code>A · G</code> 才可能近似等于 G；一般情况下它会被不同 query 的 attention 权重重新混合。</div>
+<p>因此，v 注入并不是“没有加进去”，而是信号路径更弱。诊断结果显示 gate 初始化正常、n-gram residual 确实非零，但其 norm 约为 V norm 的 6.5%，容易被主干 value 淹没。y / input 则绕开了这一步。</p>
+<h2>4. current shell 到底是什么</h2>
+<p>早期实验从 vanilla nanoGPT 往上逐步加入机制。后来出现的 <code>current shell</code> 不是某一个独立变量，而是 OPHIS 的完整模型实现分支，包含若干成组差异：</p>
+<ul><li>不同的 block forward path 与 n-gram residual 组织方式；</li><li>split q / k / v projection、额外 gate、x0 skip、layer pool 等实现细节；</li><li>Muon / AdamW 的参数分组和更新规则；</li><li>RoPE、RMSNorm-style、untied embedding、特殊初始化等模型外壳。</li></ul>
+<div class="note warn"><strong>实验解释：</strong>current shell 可以改变 gap 的量级和训练动力学，但不能作为“只有 n-gram 才能产生 gap”的最小证据。现在的 ngram-gap-lab 把它全部移除，直接在 vanilla 路径上做注入点消融。</div>
+<h2>5. 频率统计 debug：为什么必须用真实 context key</h2>
+<p>模型内部为了节省表大小，会把完整 context hash 到有限的 table row。这个 hash row 适合查参数，但不适合判断“这个 context 是否在训练集出现过”。不同真实 trigram 可能碰撞到同一 row，导致 novel context 被误报为 seen。</p>
+<pre># 用于频率统计的真实 key（示意）
+bigram_key  = prev_token * vocab_size + current_token
+trigram_key = prev2 * vocab_size**2 + prev * vocab_size + current_token
+
+hit_count = count_train_contexts(real_key)
+bucket = "novel" if hit_count == 0 else frequency_bucket(hit_count)</pre>
+<p>修复后得到 bigram novel 约 4.3%、trigram novel 约 31.2%，与历史离线统计一致。模型仍然可以继续使用 hash table；只有分析模块改用真实 token tuple 编码。</p>
+<h2>6. 优化器为什么 table 用 RMSProp</h2>
+<p>n-gram table 很大而且访问稀疏。当前 setting 对 table 使用 RMSProp（<code>β₁=0, β₂=0.999</code>），对 backbone 使用 AdamW。这样每次访问 table row 时，更新方向更接近当前梯度，不会被 momentum 把多个 context 的历史更新混在一起。</p>
+<p>这是一项让现象稳定、便于复现的训练 setting；gap 的来源仍然是 train-specific n-gram memory 与固定顺序 replay 的组合，而不是 optimizer 名字本身。</p>
+<h2>7. 相关记录</h2>
+<p><a href="https://svbird.github.io/ngram-gap-regime-bridge/">svbird 的 regime-bridge 报告</a>记录了从 vanilla 负例逐步接近 current core 的历史路径。它对理解项目演化有用，但本页的最小复现结论以 <a href="https://github.com/guoshaoyang-pku/ngram-gap-lab">ngram-gap-lab</a> 的 clean setting 为准。</p>
+<p class="footer">返回 <a href="index.html">主线结果页</a>，或查看 <a href="agent-experiment-log.html">完整实验日志</a>。</p>
+</main></body></html>

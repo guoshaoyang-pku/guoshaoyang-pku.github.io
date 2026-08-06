@@ -3,287 +3,43 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>n-gram Gap 机制指南</title>
+<title>n-gram Gap：最小复现与机制证据</title>
 <style>
-  body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; max-width: 920px; margin: 0 auto; padding: 20px; line-height: 1.65; color: #222; }
-  h1 { font-size: 1.6em; border-bottom: 2px solid #333; padding-bottom: 8px; }
-  h2 { font-size: 1.3em; margin-top: 2em; border-bottom: 1px solid #ddd; padding-bottom: 4px; }
-  h3 { font-size: 1.1em; margin-top: 1.5em; }
-  code { background: #f4f4f4; padding: 1px 5px; border-radius: 3px; font-size: 0.9em; }
-  pre { background: #f8f8f8; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.85em; }
-  pre code { background: none; padding: 0; }
-  table { border-collapse: collapse; margin: 15px 0; font-size: 0.92em; }
-  td, th { border: 1px solid #ddd; padding: 6px 12px; text-align: right; }
-  th { background: #f5f5f5; }
-  th:first-child, td:first-child { text-align: left; }
-  .note { background: #e7f3fe; border-left: 4px solid #2196F3; padding: 12px 16px; margin: 16px 0; border-radius: 0 6px 6px 0; }
-  .key-finding { background: #fff8e1; border-left: 4px solid #FF9800; padding: 12px 16px; margin: 16px 0; border-radius: 0 6px 6px 0; }
-  .archive-link { background: #f5f5f5; padding: 10px 14px; border-radius: 6px; margin: 16px 0; font-size: 0.9em; }
-  .chart-frame { width: 100%; max-width: 900px; height: 520px; border: 1px solid #ddd; border-radius: 8px; margin: 16px 0; }
-  .summary-cards { display: flex; gap: 16px; flex-wrap: wrap; margin: 20px 0; }
-  .card { background: white; padding: 14px 18px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.12); min-width: 180px; text-align: center; }
-  .card .label { font-size: 0.85em; color: #666; margin-bottom: 4px; }
-  .card .value { font-size: 1.6em; font-weight: bold; }
-  .term-table td { font-size: 0.9em; }
-  .term-table td:first-child { font-weight: bold; white-space: nowrap; }
+:root{--bg:#f7f5ef;--ink:#232426;--muted:#686d73;--line:#c8c1b6;--panel:#fffdf8;--panel2:#f0eee7;--anchor:#353d79;--train:#2d6f9f;--val:#c4493d;--gap:#c4493d;--nogap:#236b70;--weak:#b67524;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink)}main{width:min(1080px,calc(100vw - 32px));margin:0 auto;padding:28px 0 56px}
+h1{margin:0 0 10px;font-size:clamp(27px,4vw,42px);line-height:1.08;letter-spacing:-.02em}h2{margin:0 0 12px;padding-bottom:8px;border-bottom:1px solid var(--line);font-size:22px;font-weight:650}h3{margin:18px 0 8px;font-size:16px;color:var(--anchor)}
+p{margin:0 0 12px;font-size:14.5px;line-height:1.7}a{color:var(--anchor)}code{background:var(--panel2);border-radius:4px;padding:1px 5px;font-size:.92em}
+.topline{display:flex;flex-wrap:wrap;gap:8px 14px;margin:0 0 20px;color:var(--muted);font-size:12px}.topline a{text-decoration:none}.subtitle{max-width:820px;margin-bottom:20px;color:var(--muted);font-size:16px;line-height:1.65}
+.archive,.note,.chart-card,.setting-card,details{background:var(--panel);border:1px solid var(--line);border-radius:10px}.archive{padding:12px 15px;margin-bottom:28px;border-left:4px solid var(--anchor);font-size:13.5px;line-height:1.65}.archive strong{color:var(--anchor)}
+section{margin:0 0 36px}.lead{display:grid;grid-template-columns:1.15fr .85fr;gap:16px}.note{padding:16px 18px}.note.result{border-left:4px solid var(--gap)}.note.method{border-left:4px solid var(--nogap)}
+.mini-flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:14px;color:var(--muted);font-size:13px}.mini-flow span{padding:6px 9px;border:1px solid var(--line);border-radius:7px;background:var(--panel2);color:var(--ink)}.mini-flow b{color:var(--anchor)}
+.setting-card{padding:16px 18px}.setting-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}.setting-item{min-height:72px;padding:10px 12px;border:1px solid rgba(35,36,38,.12);border-radius:8px;background:var(--panel2)}.setting-item small{display:block;margin-bottom:4px;color:var(--muted);font-size:11px}.setting-item b{font-size:14px}.setting-foot{margin:12px 0 0;color:var(--muted);font-size:13px}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0}.metric{padding:14px 12px;text-align:center;background:var(--panel);border:1px solid var(--line);border-radius:9px}.metric .label{color:var(--muted);font-size:12px}.metric .value{margin:3px 0;font:700 27px ui-monospace,SFMono-Regular,Menlo,monospace}.metric .caption{color:var(--muted);font-size:11px}.metric.v .value{color:var(--weak)}.metric.y .value,.metric.input .value{color:var(--gap)}.metric.base .value{color:var(--nogap)}
+.chart-card{padding:14px;margin:14px 0}.chart-title{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:baseline;margin:0 0 8px}.chart-title strong{color:var(--anchor);font-size:15px}.chart-title span{color:var(--muted);font-size:12px}.chart-frame{display:block;width:100%;height:560px;border:1px solid var(--line);border-radius:7px;background:#fff}.chart-frame.tall{height:700px}.chart-frame.short{height:520px}
+.observations{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}.observation{padding:13px 14px;border-top:3px solid var(--anchor);background:var(--panel);border-radius:8px}.observation strong{display:block;margin-bottom:4px;font-size:14px}.observation p{margin:0;color:var(--muted);font-size:13px;line-height:1.55}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}th{padding:8px 10px;text-align:left;color:var(--anchor);border-bottom:2px solid var(--line);white-space:nowrap}td{padding:7px 10px;vertical-align:top;border-bottom:1px solid rgba(35,36,38,.1)}tr:hover td{background:rgba(53,61,121,.04)}.data-table{overflow-x:auto}.data-table table{min-width:700px}.data-table td:not(:first-child),.data-table th:not(:first-child){text-align:right;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+details{margin:12px 0;padding:0 15px}summary{cursor:pointer;padding:13px 0;color:var(--anchor);font-size:14px;font-weight:650}details>div{padding:0 0 14px}.footer-note{color:var(--muted);font-size:12px}
+.toc{position:fixed;top:28px;left:max(16px,calc((100vw - 1080px)/2 - 160px));width:136px;padding:10px 8px;background:var(--panel);border:1px solid var(--line);border-radius:9px;box-shadow:0 4px 16px rgba(35,36,38,.06)}.toc-title{margin:0 0 7px;color:var(--anchor);font-size:12px;font-weight:650}.toc a{display:block;padding:4px 5px;color:var(--muted);font-size:11px;line-height:1.35;text-decoration:none;border-radius:5px}.toc a:hover{background:rgba(53,61,121,.08);color:var(--anchor)}
+@media(min-width:761px){main{width:min(1080px,calc(100vw - 190px));margin-left:max(180px,calc((100vw - 1080px)/2 + 80px));margin-right:20px}}@media(max-width:760px){.toc{display:none}.lead,.setting-grid{grid-template-columns:1fr}.cards{grid-template-columns:repeat(2,1fr)}.observations{grid-template-columns:1fr}main{width:min(100vw - 20px,1080px)}.chart-frame{height:480px}.chart-frame.tall{height:620px}}
 </style>
 </head>
 <body>
-
-<h1>n-gram Gap 机制指南</h1>
-
-<p>本文档解释 <strong>n-gram value memory 导致的 replay-specific train/val gap</strong>：在 vanilla nanoGPT 上加一个可训练的 n-gram value table，用小数据集固定顺序多 epoch replay 训练时，为什么 train loss 下降而 val loss 翘起。</p>
-
-<div class="archive-link">
-📦 <strong>历史版本</strong>：本页已于 2026-08-05 简化为注入点消融主线。
-旧版（含 current-shell / exp4 / exp5 / toy / P1-P2 等章节）存档于
-<a href="index_archive_20260805.html">index_archive_20260805.html</a>。
-干净复现代码：<a href="https://github.com/guoshaoyang-pku/ngram-gap-lab">ngram-gap-lab</a>。
-</div>
-
-<h2>术语表</h2>
-
-<table class="term-table">
-<tr><th>术语</th><th>定义</th></tr>
-<tr><td>n-gram value table / VE</td><td>一张大型查找表，用几个连续 token 的 hash 做 key 查 value 向量。本文档涉及 bigram（2-gram）和 trigram（3-gram）。</td></tr>
-<tr><td>gate（门控）</td><td>控制 n-gram value 注入强度的机制：<code>2×sigmoid(Linear(x))</code>，范围 [0, 2]。初始化为 1.0（中性）。仅 v/y 注入用到；input 注入无 gate。</td></tr>
-<tr><td>注入点</td><td>n-gram value 加入模型的位置。本文档核心变量：<code>v</code>（attention 之前加到 V）、<code>y</code>（attention 之后加到输出）、<code>input</code>（加到 wte，over-encoding）。</td></tr>
-<tr><td>gap / gap onset</td><td>train loss 下降同时 val loss 上升的现象。"gap onset" 指 gap 开始出现的训练步数。</td></tr>
-<tr><td>hit / hit count</td><td>某个 n-gram context 在整个训练集中出现的次数。是数据的静态属性。</td></tr>
-<tr><td>novel / novel bucket</td><td>train 中从未出现过的 context（hit count = 0）。是 val 翘起的主要来源。</td></tr>
-<tr><td>RMSProp（table optimizer）</td><td>用于 n-gram table 的优化器。无 momentum（β₁=0），β₂=0.999 使二阶矩跨 epoch 持久化。与 AdamW 的关键区别：写入方向 = 当前梯度，不被历史 momentum 稀释。</td></tr>
-<tr><td>over-encoding</td><td>n-gram value 加到 input embedding（wte 输出）的注入方式。是 Engram/SCONE/Over-Tokenized 等主流文献的做法。</td></tr>
-<tr><td>epoch boundary</td><td>训练数据遍历完一轮的分界步数。当前数据集：epoch 1→2 在 step 337，epoch 2→3 在 step 686。</td></tr>
-</table>
-
-<h2>1. 现象定义</h2>
-
-<p>在含可训练 n-gram value table 的 vanilla nanoGPT 中，小训练集（1 shard ≈ 5M tokens）、固定顺序、多 epoch replay 时：</p>
-<ul>
-<li><strong>train loss 阶梯下降</strong>：epoch 边界（step 337, 686）出现 cliff。</li>
-<li><strong>val loss 翘起</strong>：epoch 2-3 开始上升，与 train 分叉。</li>
-<li><strong>gap = val_loss - train_loss</strong> 随 epoch 增大。</li>
-</ul>
-
-<div class="key-finding">
-<strong>核心结论</strong>：gap 仅依赖 n-gram value memory + 固定顺序 replay，<strong>不需要</strong> current shell / Muon / RoPE / RMSNorm / untied embedding。vanilla nanoGPT + bigram+trigram + 合适的注入点即可复现。
-</div>
-
-<h2>2. 三种注入点（核心消融）</h2>
-
-<p>n-gram value table 查出的 value 向量加入模型的位置，是决定 gap 能否产生的<strong>唯一关键变量</strong>。</p>
-
-<h3>2.1 注入点对比</h3>
-
-<table>
-<tr><th>注入点</th><th>技术方案</th><th>公式</th><th>走 attention？</th><th>信号强度</th></tr>
-<tr><td><code>v</code></td><td>ResFormer value residual</td><td><code>V' = V + gate·ngram_ve</code></td><td>✅ 是（被 softmax 混合）</td><td>弱（norm 仅 V 的 6.5%）</td></tr>
-<tr><td><code>y</code></td><td>ResFormer y-variant</td><td><code>y' = attn(Q,K,V) + gate·ngram_ve</code></td><td>❌ 否</td><td>中（每层注入）</td></tr>
-<tr><td><code>input</code></td><td>over-encoding（主流）</td><td><code>x' = wte(idx) + Σ ngram_ve</code></td><td>❌ 否</td><td>中（一次注入，所有层 table 求和）</td></tr>
-</table>
-
-<h3>2.2 伪代码</h3>
-
-<pre><code># === input 注入（over-encoding，主流做法）===
-def forward_input(idx):
-    x = wte(idx) + wpe(pos)
-    # n-gram value 直接加到 input embedding，不走 attention，无 gate
-    x = x + compute_ngram_residual(idx)  # Σ 所有启用层的 bigram/trigram value
-    x = dropout(x)
-    for block in transformer.h:
-        x = block(x)          # 正常 transformer block，无 n-gram 干预
-    return lm_head(ln_f(x))
-
-# === v 注入（ResFormer，加到 V，attention 之前）===
-def forward_v(idx):
-    x = wte(idx) + wpe(pos)
-    for block in transformer.h:
-        q, k, v = c_attn(ln_1(x)).split(3*dim)
-        v_heads = v.view(B, T, n_head, head_dim)
-        # n-gram value 加到 V，经过 gate，然后被 attention 混合
-        v_heads = v_heads + gate * ngram_ve     # ← 注入点
-        y = attention(q, k, v_heads)            # n-gram 信号被 softmax 混合
-        x = x + c_proj(y)
-        x = x + mlp(ln_2(x))
-    return lm_head(ln_f(x))
-
-# === y 注入（ResFormer y-variant，加到 attention 输出之后）===
-def forward_y(idx):
-    x = wte(idx) + wpe(pos)
-    for block in transformer.h:
-        q, k, v = c_attn(ln_1(x)).split(3*dim)
-        y = attention(q, k, v)                  # 正常 attention，不混合 n-gram
-        # n-gram value 加到 attention 输出，经过 gate，不 mixed
-        y = y + gate * ngram_ve                  # ← 注入点
-        x = x + c_proj(y)
-        x = x + mlp(ln_2(x))
-    return lm_head(ln_f(x))</code></pre>
-
-<h3>2.3 为什么 v 注入信号弱？</h3>
-
-<p>n-gram value 加到 V 之后，要经过 <code>y = softmax(QK^T/√d) · V'</code>。attention 对 V 是<strong>线性</strong>的：</p>
-<pre><code>y = A · (V + G) = A·V + A·G    （A = attention matrix, G = gated n-gram value）</code></pre>
-<p>但 <code>A·G ≠ G</code>（A 的行和 = 1 但非对角项 ≠ 0），n-gram 信号被<strong>混合到所有位置</strong>。实测 n-gram value norm 只有 V 的 6.5%，信号被 V 淹没。</p>
-
-<p>而 y/input 注入不经过 attention 矩阵乘法，n-gram 信号<strong>纯 per-position</strong>，不泄漏到其他位置。</p>
-
-<h2>3. 实验结果：注入点消融</h2>
-
-<p><strong>标准设置</strong>：vanilla nanoGPT (8 layer, 6 head, 768 dim, vocab 8192) + bigram+trigram + RMSProp(table β₂=0.999) / AdamW(backbone lr=0.004) + seed42 + 1000 steps + fixed-order replay。</p>
-
-<div class="summary-cards" id="summary-cards">
-<div class="card"><div class="label" style="color:#2196F3">v 注入</div><div class="value" id="card-v" style="color:#2196F3">0.33</div><div>gap @ 1000 步</div></div>
-<div class="card"><div class="label" style="color:#F44336">y 注入</div><div class="value" id="card-y" style="color:#F44336">3.50</div><div>gap @ 1000 步</div></div>
-<div class="card"><div class="label" style="color:#4CAF50">input 注入</div><div class="value" id="card-input" style="color:#4CAF50">0.79</div><div>gap @ 1000 步</div></div>
-<div class="card"><div class="label" style="color:#999">无 n-gram</div><div class="value" style="color:#999">0.03</div><div>gap @ 1000 步（旧实验）</div></div>
-</div>
-
-<p>下图展示 v/y/input 三注入点的 gap 和 loss 曲线。虚线 = epoch 边界（step 337, 686）。</p>
-
-<iframe class="chart-frame" id="iframe-gap-loss" src=""></iframe>
-
-<h3>3.1 关键观察</h3>
-
-<ol>
-<li><strong>y 注入 gap 最大</strong>（3.50）：信号直接到输出，不被 attention 混合，每层独立注入。</li>
-<li><strong>input 注入 gap 中等</strong>（0.79）：over-encoding 主流做法，一次注入所有层 table 求和。</li>
-<li><strong>v 注入 gap 最弱</strong>（0.33）：信号被 V 淹没（norm 仅 6.5%），gap 延迟到 epoch3 才明显。</li>
-<li><strong>无 n-gram 无 gap</strong>（0.03，旧实验）：gap 完全由 n-gram table 贡献。</li>
-<li><strong>相对顺序一致</strong>：y > input > v > 无 n-gram。绝对数值与旧 OPHIS 实验略有差异（LR schedule 不同），但现象完全可复现。</li>
-</ol>
-
-<h2>4. Table Norm × Loss 对齐</h2>
-
-<p>n-gram table 的 param RMS 随训练增长，与 gap 的出现<strong>时间对齐</strong>。下图展示 input 注入 run 的 table RMS + loss + gap 随时间演化。</p>
-
-<iframe class="chart-frame" id="iframe-loss-norm" src=""></iframe>
-
-<h3>4.1 Table norm × gap 对比</h3>
-
-<table id="norm-table">
-<tr><th>step</th><th>v gap</th><th>y gap</th><th>input gap</th><th>v table_rms</th><th>y table_rms</th><th>input table_rms</th></tr>
-</table>
-<p><em>gap = val - train（正值 = gap）。table_rms = bigram table layer_01 table_0 的 param RMS。数据从训练日志动态填充。</em></p>
-
-<div class="key-finding">
-<strong>Table norm 增长速度不是 gap 的决定因素；注入点（信号能否有效到达输出）才是。</strong>
-y 注入 table rms 增长最慢但 gap 最大；v 注入 table rms 增长最快但 gap 最小。
-</div>
-
-<h2>5. 频率 bin 分解</h2>
-
-<p>将 n-gram context 按 train 中的 hit count 分桶，统计每桶的 loss。这是定位 gap 来源的关键分析。</p>
-
-<ul>
-<li><strong>novel</strong>（hit=0）：val 翘起的主要来源（trigram novel 占 val ~30%）。</li>
-<li><strong>低频</strong>（1-5 次）：gap 最大的桶——train 中见过几次，模型 memorize 了特定后续 token。</li>
-<li><strong>高频</strong>（5k+）：gap 贡献 ≈ 0——多为 QA pattern，train/val 都能预测。</li>
-</ul>
-
-<h3>5.1 频次分桶损失曲线</h3>
-
-<p>下图可切换 bigram/trigram、per-token loss / 总贡献、train+val / gap 视图。每条线 = 一个频率桶。</p>
-
-<iframe class="chart-frame" id="iframe-freq-gap" src=""></iframe>
-
-<h3>5.2 命中频次分布</h3>
-
-<p>train vs val 的 n-gram context 频次分布（bar = 占比，虚线 = 累积分布）。trigram val 的 novel 桶（train 中从未出现）占 ~30%，是 val 翘起的主要结构性原因。</p>
-
-<iframe class="chart-frame" id="iframe-hitcount" src=""></iframe>
-
-<div class="key-finding">
-<strong>机制解读</strong>：训练集频次呈幂律分布。低频/novel context 在 train 中被 n-gram table memorize（train loss 坍塌），
-但 val 中即使遇到相同 context，后续 token 也不同，模型"过度自信"反而出错（val loss 翘起）。
-高频 context 多为可预测的 QA pattern，train/val 都能预测，对 gap 贡献最小。
-</div>
-
-<h2>6. 标准 setting（baseline_input）</h2>
-
-<p>后续所有消融实验一律基于此 setting：</p>
-
-<table>
-<tr><th>项</th><th>值</th></tr>
-<tr><td>模型</td><td>vanilla nanoGPT（Karpathy 风格）</td></tr>
-<tr><td>注入点</td><td><code>input</code>（over-encoding）</td></tr>
-<tr><td>n-gram</td><td>bigram + trigram</td></tr>
-<tr><td>优化器</td><td>mixed：table 用 RMSProp(β₁=0, β₂=0.999)，backbone 用 AdamW(lr=0.004)</td></tr>
-<tr><td>position encoding</td><td>learned absolute</td></tr>
-<tr><td>normalization</td><td>LayerNorm</td></tr>
-<tr><td>embedding tying</td><td>tied</td></tr>
-<tr><td>seed</td><td>42</td></tr>
-<tr><td>steps</td><td>1000（延长对照 2000）</td></tr>
-<tr><td>data mode</td><td>fixed（固定顺序 epoch replay）</td></tr>
-</table>
-
-<p>代码：<a href="https://github.com/guoshaoyang-pku/ngram-gap-lab">github.com/guoshaoyang-pku/ngram-gap-lab</a></p>
-
-<h2>7. 结论</h2>
-
-<ol>
-<li><strong>gap 的最小充分条件</strong>：vanilla nanoGPT + bigram/trigram n-gram value table + 固定顺序多 epoch replay + 合适注入点（input 或 y）。</li>
-<li><strong>v 注入无 gap 的原因是数值尺度</strong>：n-gram value norm 仅 V 的 6.5%，信号被淹没——不是"走 attention"本身的机制问题。</li>
-<li><strong>只要 n-gram 信号不走 attention 混合、能有效到达输出，就能产生 gap</strong>。input 注入（over-encoding）是主流文献做法，y 注入 gap 更大但非主流。</li>
-<li><strong>低频 context 主导 gap</strong>：novel + 低频 bucket 是 val 翘起的主要来源；高频 bucket gap 贡献 ≈ 0。</li>
-</ol>
-
+<nav class="toc" aria-label="页面目录"><div class="toc-title">本文目录</div><a href="#setting">1. 最小 setting</a><a href="#result">2. 核心结果</a><a href="#curves">3. 训练曲线</a><a href="#norm">4. Table norm</a><a href="#frequency">5. 频率分解</a><a href="#conclusion">6. 结论</a><a href="#background">背景与 debug</a></nav>
+<main>
+<header><div class="topline"><span>MECHANISTIC REPRODUCTION NOTE</span><span>2026-08-05</span><a href="https://github.com/guoshaoyang-pku/ngram-gap-lab">code: ngram-gap-lab ↗</a></div><h1>n-gram Gap：最小复现与机制证据</h1><p class="subtitle">只问一个问题：在 vanilla nanoGPT 中，仅加入可训练的 bigram / trigram value memory，是否足以让固定顺序 replay 产生 train/val gap？这里把 setting、曲线和频率证据放在主线；术语、伪代码、debug 过程和历史分支放到背景页。</p></header>
+<div class="archive"><strong>历史版本</strong>：本页现在采用干净复现主线。旧版完整分析（含 current-shell、exp4/exp5、toy、P1/P2）仍保留在 <a href="index_archive_20260805.html">index_archive_20260805.html</a>；<a href="background.html">背景与 debug 子文档</a>解释这些概念为何不属于最小 setting。</div>
+<section class="lead"><div class="note result"><strong>一句话结果</strong><p>是的。n-gram table 在训练集上逐渐记住 context-specific value；固定顺序多 epoch replay 后，train loss 继续下降，而 val loss 在 epoch 边界后上升，形成 gap。</p><div class="mini-flow"><span>bigram + trigram</span><b>→</b><span>train-specific memory</span><b>→</b><span>replay gap</span></div></div><div class="note method"><strong>本页的判断标准</strong><p>不把 current shell、Muon、RoPE 或复杂观测系统当作必要条件。用同一份 vanilla 模型，只改变 n-gram 的注入点，观察 gap 强弱是否随信号到达输出的方式变化。</p><p class="footer-note">gap 定义为 <code>val loss − train loss</code>；正值表示验证集更差。</p></div></section>
+<section id="setting"><h2>1. 最小 setting</h2><div class="setting-card"><p>标准主线是 <strong>baseline_input</strong>。它对应最朴素的 over-encoding：先查 n-gram value，再加到 token embedding，后面运行普通 Transformer。</p><div class="setting-grid"><div class="setting-item"><small>模型</small><b>vanilla nanoGPT</b></div><div class="setting-item"><small>memory</small><b>bigram + trigram</b></div><div class="setting-item"><small>注入点</small><b>input / wte</b></div><div class="setting-item"><small>数据顺序</small><b>fixed replay</b></div><div class="setting-item"><small>table optimizer</small><b>RMSProp</b></div><div class="setting-item"><small>backbone optimizer</small><b>AdamW</b></div><div class="setting-item"><small>规模</small><b>8L · 6H · 768D</b></div><div class="setting-item"><small>实验</small><b>seed 42 · 1000 steps</b></div></div><p class="setting-foot">训练 shard 约 337 steps / epoch；图中的竖线对应 epoch 1→2（约 337）和 epoch 2→3（约 686）。三种注入点仅用于消融，不是三个不同的模型家族。</p></div></section>
+<section id="result"><h2>2. 核心结果：注入点改变 gap 强度</h2><p>同一个 n-gram table 放在不同位置，得到不同的信号路径。<code>y</code> 直接绕过 attention 到达 residual stream；<code>input</code> 在最开始加入 embedding；<code>v</code> 则先进入 attention 的 value，再被权重混合。</p><div class="cards" id="summary-cards"><div class="metric v"><div class="label">v 注入</div><div class="value" id="card-v">0.33</div><div class="caption">gap @ 1000 steps</div></div><div class="metric y"><div class="label">y 注入</div><div class="value" id="card-y">3.50</div><div class="caption">gap @ 1000 steps</div></div><div class="metric input"><div class="label">input 注入</div><div class="value" id="card-input">0.79</div><div class="caption">gap @ 1000 steps</div></div><div class="metric base"><div class="label">无 n-gram</div><div class="value">0.03</div><div class="caption">negative control</div></div></div><div class="observations"><div class="observation"><strong>y：最强、最快</strong><p>n-gram 信号在 attention 之后加入，每层都能直接影响后续输出。</p></div><div class="observation"><strong>input：最基础</strong><p>查表结果一次加到 wte；这是后续实验默认采用的最朴素 setting。</p></div><div class="observation"><strong>v：较弱、较晚</strong><p>value residual 会被 attention 混合，且当前 norm 只有 V 的约 6.5%。</p></div></div></section>
+<section id="curves"><h2>3. 训练曲线：epoch replay 后 train / val 分叉</h2><div class="chart-card"><div class="chart-title"><strong>Loss 与 gap 曲线</strong><span>虚线：epoch boundary · 可在图内切换 run / metric</span></div><iframe class="chart-frame" id="iframe-gap-loss" title="n-gram 注入点的 loss 与 gap 曲线"></iframe></div></section>
+<section id="norm"><h2>4. Table norm × gap</h2><p>table 的参数 RMS 是一个直接的 memory growth 指标。它帮助确认 n-gram 确实在被写入，但不能单独决定 gap 的大小：y 的 gap 最大，并不意味着它的 table RMS 增长最快。</p><div class="chart-card"><div class="chart-title"><strong>Loss、gap 与 table RMS 的时间对齐</strong><span>input 主 setting · 数据来自完整训练日志</span></div><iframe class="chart-frame" id="iframe-loss-norm" title="table norm 与 loss 对齐图"></iframe></div><div class="data-table"><table id="norm-table"><tr><th>step</th><th>v gap</th><th>y gap</th><th>input gap</th><th>v table RMS</th><th>y table RMS</th><th>input table RMS</th></tr></table></div></section>
+<section id="frequency"><h2>5. 频率分解：gap 从哪些 context 来？</h2><p>我们用训练集中的<strong>真实 token context</strong>统计 hit count，再把 train / val token 按频率分桶。这里的频率不是 hash table row 的访问次数，因此能正确区分真正的 novel trigram。</p><div class="chart-card"><div class="chart-title"><strong>按 hit count 分桶的 loss / gap</strong><span>可切换 bigram / trigram、per-token loss / total contribution</span></div><iframe class="chart-frame tall" id="iframe-freq-gap" title="按 n-gram 频率分桶的 loss 与 gap"></iframe></div><div class="chart-card"><div class="chart-title"><strong>训练频次分布</strong><span>bar：fraction · line：cumulative fraction</span></div><iframe class="chart-frame short" id="iframe-hitcount" title="n-gram hit count 分布"></iframe></div><div class="note"><strong>读图重点</strong>：trigram validation 中约 31.2% 属于训练集 novel context，bigram novel 约 4.3%。novel 与低频 bucket 是最需要关注的区域；高频 bucket 的 train / val 差异相对小。</div></section>
+<section id="conclusion"><h2>6. 结论</h2><div class="note result"><ol><li><strong>最小充分条件</strong>：vanilla nanoGPT + bigram / trigram value table + fixed-order multi-epoch replay + 能到达输出的注入方式。</li><li><strong>默认 setting</strong>：input / wte 注入。它简单、可解释，也最接近 over-encoding 这类 n-gram memory 用法。</li><li><strong>注入点是强度变量，不是 gap 的来源变量</strong>：v、y、input 都能产生不同程度的现象；差别来自信号路径和尺度。</li><li><strong>低频结构解释现象</strong>：table 在重复看到的 train context 上形成强烈的 train-specific value，而 novel / 低频 context 在 val 上暴露出这种记忆的局限。</li></ol></div><p class="footer-note">完整代码、频率索引实现、训练日志与作图脚本：<a href="https://github.com/guoshaoyang-pku/ngram-gap-lab">guoshaoyang-pku/ngram-gap-lab</a>。</p></section>
+<section id="background"><h2>背景、术语与 debug</h2><details><summary>展开背景说明（已拆到子文档）</summary><div><p>如果你需要理解 gate、V / y / input 的伪代码、current shell 为什么是实验分支而不是必要变量，或早期 hash-row 频率统计为什么会把 novel trigram 错判成 seen，请阅读：</p><p><a href="background.html">打开《背景与 debug：从 current shell 回到最小 n-gram setting》</a></p></div></details><details><summary>展开历史实验记录与旧版完整页面</summary><div><p><a href="agent-experiment-log.html">Agent experiment log</a>保留了旧实验的逐项记录；<a href="index_archive_20260805.html">旧版完整 guide</a>保留了历史章节与原始图表。</p></div></details></section>
+</main>
 <script>
-// Load figure data and populate charts + tables.
-// Figures are generated by ngram-gap-lab/docs/plot_scripts/gen_all_figures.py
-// and stored as interactive HTML in docs/figs/.
-// For the live blog, we embed them via iframe pointing to the repo's GitHub Pages
-// or local copies in the blogs directory.
-
-// Try to load training data JSON for summary cards + norm table
-async function loadData() {
-  try {
-    // Attempt to fetch the ablation data JSON (generated by plot script)
-    const resp = await fetch('injpos_ablation_data.json');
-    if (resp.ok) {
-      const data = await resp.json();
-      populateSummary(data);
-      populateNormTable(data);
-    }
-  } catch(e) {
-    console.log('Data not yet available:', e.message);
-  }
-}
-
-function populateSummary(data) {
-  for (const key of ['v', 'y', 'input']) {
-    const el = document.getElementById('card-' + key);
-    if (el && data[key] && data[key].final_gap !== undefined) {
-      el.textContent = data[key].final_gap.toFixed(2);
-    }
-  }
-}
-
-function populateNormTable(data) {
-  const table = document.getElementById('norm-table');
-  if (!data.steps) return;
-  for (const s of data.steps) {
-    const row = table.insertRow();
-    row.insertCell(0).textContent = s;
-    for (const key of ['v', 'y', 'input']) {
-      const gap = data[key]?.gaps?.[s];
-      row.insertCell(-1).textContent = gap !== undefined ? gap.toFixed(3) : '—';
-    }
-    for (const key of ['v', 'y', 'input']) {
-      const rms = data[key]?.table_rms?.[s];
-      row.insertCell(-1).textContent = rms !== undefined ? rms.toFixed(3) : '—';
-    }
-  }
-}
-
-// Set iframe sources (figures generated by gen_all_figures.py)
-// These are relative to this index.html in the blogs/ngram-gap-mechanism-guide/ dir
-document.getElementById('iframe-gap-loss').src = 'fig_gap_loss.html';
-document.getElementById('iframe-loss-norm').src = 'fig_loss_norm.html';
-document.getElementById('iframe-freq-gap').src = 'fig_gap_by_freq.html';
-document.getElementById('iframe-hitcount').src = 'fig_hitcount_dist.html';
-
-loadData();
+async function loadData(){try{const response=await fetch('injpos_ablation_data.json');if(!response.ok)return;const data=await response.json();for(const key of ['v','y','input']){const card=document.getElementById('card-'+key);if(card&&data[key]&&data[key].final_gap!==undefined)card.textContent=data[key].final_gap.toFixed(2)}const table=document.getElementById('norm-table');if(!data.steps)return;for(const step of data.steps){const row=table.insertRow();row.insertCell(0).textContent=step;for(const key of ['v','y','input']){const gap=data[key]?.gaps?.[step];row.insertCell(-1).textContent=gap===undefined?'—':gap.toFixed(3)}for(const key of ['v','y','input']){const rms=data[key]?.table_rms?.[step];row.insertCell(-1).textContent=rms===undefined?'—':rms.toFixed(3)}}}catch(error){console.log('Training summary is not available:',error.message)}}
+document.getElementById('iframe-gap-loss').src='fig_gap_loss.html';document.getElementById('iframe-loss-norm').src='fig_loss_norm.html';document.getElementById('iframe-freq-gap').src='fig_gap_by_freq.html';document.getElementById('iframe-hitcount').src='fig_hitcount_dist.html';loadData();
 </script>
-
 </body>
 </html>
