@@ -14,9 +14,18 @@
 <h1>在 TinyShakespeare 上观察 Rank Collapse</h1>
 <p class="lead">把论文的 spectral audit 搬到一张标准 CR 画布上：真实文本、可编辑节点、实时 RankMe / alphaReQ 曲线。默认设置已锁定为 lr=0.005 / wd=0.001 / 20k steps。</p>
 <div class="badges"><span class="badge pass">TinyShakespeare 20k · PASS</span><span class="badge pass">d=4 100k continuation · PASS</span><span class="badge info">wd=1e-3 是关键边界</span></div>
+<div class="src-links" style="margin-top:16px;display:flex;flex-wrap:wrap;gap:10px;align-items:center"><span style="color:#c9c3e6;font-size:13px;font-weight:750;letter-spacing:.04em">主要结果（Comfy Research 原始文档）：</span><a class="badge info" href="https://docs.comfy-research.com/en/0.1.0/examples/reproductions/rank-collapse-tinyshakespeare/" target="_blank" rel="noreferrer" style="text-decoration:none">Rank Collapse on Real Text (TinyShakespeare) ↗</a><a class="badge info" href="https://docs.comfy-research.com/en/0.1.0/examples/reproductions/rank-collapse-figure5/" target="_blank" rel="noreferrer" style="text-decoration:none">Rank Collapse in a Linear Bottleneck (Figure 5) ↗</a></div>
 </div></header>
-<nav><div class="wrap"><a href="#phenomenon">现象</a><a href="#settings">设置</a><a href="#result">结果</a><a href="#cr">CR 体验</a><a href="#limits">边界</a></div></nav>
+<nav><div class="wrap"><a href="#source">原始结果</a><a href="#phenomenon">现象</a><a href="#settings">设置</a><a href="#result">结果</a><a href="#cr">CR 体验</a><a href="#limits">边界</a></div></nav>
 <main class="wrap">
+
+<section id="source"><h2>主要结果与原始文档</h2>
+<p>本页是 Comfy Research 复现实验的展示博客。实验配置、可运行的 Template 节点与完整结果以官方文档为准：</p>
+<div class="grid">
+<div class="card"><a href="https://docs.comfy-research.com/en/0.1.0/examples/reproductions/rank-collapse-tinyshakespeare/" target="_blank" rel="noreferrer"><strong>Rank Collapse on Real Text (TinyShakespeare)</strong></a><p style="margin:6px 0 0;font-size:14px">Template <code>repro-rank-collapse-tinyshakespeare-pretraining</code>：真实 TinyShakespeare 文本上 20k 步的 final-hidden RankMe / alphaReQ spectral audit。主结果：warmup → expansion → compression 三段签名；d=2 保持 collapsed，d=4 恢复后缓慢漂移（100k 时 2.040），d=8 无法持续压缩；<code>wd=1e-3</code> 是现象出现的边界条件。</p></div>
+<div class="card"><a href="https://docs.comfy-research.com/en/0.1.0/examples/reproductions/rank-collapse-figure5/" target="_blank" rel="noreferrer"><strong>Rank Collapse in a Linear Bottleneck (Figure 5)</strong></a><p style="margin:6px 0 0;font-size:14px">Template <code>repro-rank-collapse-figure5-linear-ce</code>：六样本线性 toy（d=2 &lt; |V|=4，SGD lr=0.06，seed 25）重建论文 Figure 5D 的 0–300 步三阶段轨迹（warmup → 熵扩张 → 末期压缩，终段斜率 −1.35e-4/step）。仅有限窗口重建，非随机 seed 鲁棒结果。</p></div>
+</div>
+</section>
 
 <section id="phenomenon"><h2>现象：瓶颈宽度决定 RankMe 轨迹</h2>
 <p>在真实 TinyShakespeare 文本上训练一个小因果 Transformer，最终隐藏层的 RankMe 呈现 warmup → expansion → compression 三段轨迹。瓶颈越窄，压缩越明显、越持久；瓶颈太宽则只能看到短暂凹陷后立即恢复。</p>
