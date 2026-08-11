@@ -48,6 +48,7 @@
   <a href="#conclusions">关键结论</a>
   <a href="#limits">边界与失败模式</a>
   <a href="#next">下一步</a>
+  <a href="#repro">复现步骤</a>
   <a href="#artifacts">产物索引</a>
 </div>
 
@@ -237,7 +238,108 @@
   <li><strong>数据规模</strong>：用 ArchitectureIQ 的题目生成器批量生成更多 (setting, GT) 记录，把 train set 做大——之前 MLP 偏弱很可能与“空间太大、train 点太稀疏”有关。</li>
 </ul>
 
-<h2 id="artifacts">8. 产物索引</h2>
+
+<h2 id="repro">8. 复现步骤</h2>
+
+<h3>8.1 仓库与环境</h3>
+<pre>
+git clone git@github.com:renrua52/ArchitectureIQ.git
+git checkout shaoyang/local-agent-dev        # meta-model 工作所在分支
+python3.11 -m venv .venv
+.venv/bin/pip install -e ".[meta-model,dev]"  # 额外安装 scikit-learn + xgboost
+</pre>
+<p class="small">需要 Python ≥ 3.10。训练出的 2,473 个 <code>.joblib</code> 权重（约 4.9GB）在本地 <code>data/meta_model_studies/</code>，被 <code>.gitignore</code> 忽略、不在远程；但 headline 数字的输入（GT 快照）和输出（显著性筛选结果）都作为 JSON 在 git 里，可以核对。</p>
+
+<h3>8.2 快速验证（不重跑训练）</h3>
+<p>冻结快照、bounds、显著性筛选结果都在 git 里（见 <a href="#artifacts">§9 产物索引</a>），先直接核对 headline：</p>
+<pre>
+python -c "import json; s=json.load(open('artifacts/wide_v2_full30_meta_model_final_summary.json')); print(s['best_overall'])"
+# 预期：{approach: regression global shared + ExtraTrees, sig_accuracy: 0.8211, ...}
+</pre>
+<p>再跑 meta-model 单测（特征编码 / 模型容器 / bounds / wide run / 初始矩阵）：</p>
+<pre>
+.venv/bin/python -m pytest -q \
+  tests/test_meta_model_study_features.py \
+  tests/test_meta_model_study_models.py \
+  tests/test_meta_model_study_bounds.py \
+  tests/test_meta_model_study_wide.py \
+  tests/test_meta_model_study_wide_run.py \
+  tests/test_meta_model_study_initial_matrix.py
+</pre>
+
+<h3>8.3 复现训练与评测（需要本地 GT 数据）</h3>
+<p>30 个 environment 的 GT 行与 candidate summary 在 <code>data/meta_model/setting_to_loss_wide_v2*/</code>（gitignored，只有训练机上有）。若有该目录，可完整重跑拟合与显著性评测：</p>
+<pre>
+# 1) bounds（或直接使用 git 里已跟踪的 artifacts/wide_v2_full30_gt_snapshot.json / _bounds.json）
+.venv/bin/python -m tools.meta_model_study.bounds \
+  --snapshot-manifest artifacts/wide_v2_full30_gt_snapshot.json --split validation \
+  &gt; artifacts/wide_v2_full30_gt_snapshot_bounds.json
+
+# 2) 拟合 per-dataset 专家模型 + 全局共享模型（headline 82.11% = global scope + conditioning=id）
+.venv/bin/python -m tools.meta_model_study.wide_run fit-id \
+  --dataset-root data/meta_model/setting_to_loss_wide_v2 \
+  --output-root data/meta_model_studies/wide_v2_full30_global_conditioned_fixed \
+  --scopes environment,dataset,global --include-xgboost
+
+# 3) 显著性重评（gap≥0.05 ∧ win_rate≥0.7 ∧ non_overlap），predictions 用 wide_run 产出的文件
+.venv/bin/python tools/meta_model_study/significant_recheck.py \
+  --gt-base data/meta_model/setting_to_loss_wide_v2 \
+  --predictions data/meta_model_studies/wide_v2_full30_global_conditioned_fixed/id/global/predictions.json \
+  --output artifacts/wide_v2_full30_significant_recheck_global.json
+</pre>
+<p class="small">预期：<code>extra_trees_fixed</code> 的 macro significant three-choice accuracy ≈ 0.8211，与已跟踪的 <code>artifacts/wide_v2_full30_significant_recheck_global.json</code> 一致。跨数据集泛化用 <code>wide_run fit-grouped --protocols dataset,family</code> 复现 LOGO（log R² 0.37–0.47）。</p>
+
+<h3>8.4 完整端到端（从零重跑 GT）</h3>
+<p>从头生成数据最重，按 ArchitectureIQ 主流水线（spec → code → run → GT）执行：</p>
+<pre>
+# 1) 30 environments = 3 families × 10 dataset instances（采样计划 tools/meta_model_dataset/plan_wide_v2.json）
+architecture-iq create-dataset
+architecture-iq generate-candidates            # 每 environment 采样 ~1,000 settings
+# GT：对每个候选执行 write_candidate → train_and_eval() → results/summary.json（5 seeds）
+
+# 2) 汇总 train/validation 行 → 冻结快照 → 拟合 → 显著性重评
+tools/meta_model_dataset/build.py
+tools/meta_model_study/freeze_wide_snapshot.py --output artifacts/wide_v2_full30_gt_snapshot.json
+tools/meta_model_study/wide_run.py fit-id / fit-grouped
+tools/meta_model_study/significant_recheck.py
+tools/meta_model_study/summarize_initial_matrix.py
+</pre>
+<p class="small">成本：30 environments × ~1,000 候选 × 5 seeds 的真实训练。日常复现优先走 §8.2 / §8.3 的冻结快照路径。</p>
+
+<h3>8.5 给 agent 的复现 prompt</h3>
+<p>把下面这段直接发给一个 coding agent，即可让它独立复现本研究：</p>
+<pre>
+你是一个研究复现 agent。目标：在 ArchitectureIQ 仓库里复现 meta-model 研究
+（tabular 基模预测训练 setting 的 log(mean_loss)，只在显著三元组上做三选一；
+headline = global shared ExtraTrees 82.11%，随机基线 33.33%）。
+
+约束：
+1. 只在该 git worktree 内操作，不要读写其他 worktree；先 git rev-parse --show-toplevel 确认根目录。
+2. GT 必须来自执行生成的代码（spec → render .py → import &amp; run → summary.json），
+   不允许硬编码、重算或"修"任何指标。
+3. data/ 是 gitignored 的；若 data/meta_model/setting_to_loss_wide_v2*/ 不存在，
+   说明本地 GT 数据缺失，报告并停在相应步骤，不要伪造数据。
+
+步骤：
+1. git clone git@github.com:renrua52/ArchitectureIQ.git &amp;&amp; git checkout shaoyang/local-agent-dev
+2. python3.11 -m venv .venv &amp;&amp; .venv/bin/pip install -e ".[meta-model,dev]"
+3. 运行 meta-model 单测并确保全部通过：
+   tests/test_meta_model_study_features.py / models / bounds / wide / wide_run / initial_matrix
+4. 核对 git 已跟踪产物：artifacts/wide_v2_full30_gt_snapshot.json、
+   wide_v2_full30_significant_recheck_global.json、wide_v2_full30_meta_model_final_summary.json；
+   确认 final summary 的 best_overall.sig_accuracy == 0.8211。
+5. 若有 data/meta_model/setting_to_loss_wide_v2*/，重跑拟合与评测：
+   python -m tools.meta_model_study.wide_run fit-id \
+     --dataset-root data/meta_model/setting_to_loss_wide_v2 \
+     --output-root data/meta_model_studies/wide_v2_full30_global_conditioned_fixed \
+     --scopes environment,dataset,global --include-xgboost
+   再用 significant_recheck.py（--gap-min 0.05 --win-rate-min 0.7）重算，
+   对比 artifacts/wide_v2_full30_significant_recheck_global.json（预期 ≈82.11%）。
+6. 汇报：每步命令、耗时、与已跟踪产物的 diff；任何不一致必须停下来调查，
+   不允许为了让数字对上而修改代码或数据。
+</pre>
+
+<h2 id="artifacts">9. 产物索引</h2>
 <table>
   <thead><tr><th>产物</th><th>路径</th></tr></thead>
   <tbody>
