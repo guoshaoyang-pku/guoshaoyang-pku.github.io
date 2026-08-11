@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>ArchitectureIQ Meta-Model：预测训练设置结果的基模</title>
+<style>
+  body { font-family: -apple-system, "Helvetica Neue", sans-serif; max-width: 1000px; margin: 0 auto; padding: 32px; color: #1a1a1a; line-height: 1.65; }
+  h1 { font-size: 1.8em; border-bottom: 3px solid #2563eb; padding-bottom: 8px; }
+  h2 { font-size: 1.3em; margin-top: 2em; color: #1e3a5f; border-left: 4px solid #2563eb; padding-left: 10px; }
+  h3 { font-size: 1.05em; margin-top: 1.5em; color: #555; }
+  table { border-collapse: collapse; width: 100%; margin: 10px 0; font-size: 0.92em; }
+  th, td { border: 1px solid #ddd; padding: 5px 9px; text-align: left; }
+  th { background: #f0f4ff; font-weight: 600; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  tr.best { background: #dcfce7; font-weight: 600; }
+  tr.warn { background: #fef3c7; }
+  .alert { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 10px 14px; margin: 10px 0; border-radius: 4px; }
+  .ok { background: #dcfce7; border-left: 4px solid #16a34a; padding: 10px 14px; margin: 10px 0; border-radius: 4px; }
+  .note { background: #eff6ff; border-left: 4px solid #3b82f6; padding: 10px 14px; margin: 10px 0; border-radius: 4px; }
+  .danger { background: #fee2e2; border-left: 4px solid #dc2626; padding: 10px 14px; margin: 10px 0; border-radius: 4px; }
+  code { background: #f4f4f4; padding: 1px 4px; border-radius: 3px; font-size: 0.88em; }
+  pre { background: #f8f9fa; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.85em; line-height: 1.4; }
+  .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 14px 0; }
+  .card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; text-align: center; }
+  .card .label { font-size: 0.78em; color: #64748b; }
+  .card .value { font-size: 1.3em; font-weight: 700; margin: 4px 0; }
+  .card .value.green { color: #16a34a; }
+  .card .value.blue { color: #2563eb; }
+  .card .value.red { color: #dc2626; }
+  .card .detail { font-size: 0.72em; color: #94a3b8; }
+  .toc { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; margin: 14px 0; }
+  .toc a { display: inline-block; margin: 2px 8px; text-decoration: none; color: #2563eb; }
+  .small { font-size: 0.85em; color: #666; }
+  @media (max-width: 768px) { .cards { grid-template-columns: 1fr 1fr; } }
+</style>
+</head>
+<body>
+
+<h1>ArchitectureIQ Meta-Model<br>预测训练设置结果的基模</h1>
+<p><strong>日期</strong>：2026-07-18 · <strong>快照</strong>：30 environments / 3 families / 10,000 rows / 5 seeds · <strong>核心指标</strong>：macro significant three-choice accuracy（随机基线 33.33%）</p>
+
+<div class="toc">
+  <strong>目录</strong>：
+  <a href="#motivation">动机</a>
+  <a href="#task">任务与数据</a>
+  <a href="#methods">建模协议</a>
+  <a href="#results">实验结果</a>
+  <a href="#conclusions">关键结论</a>
+  <a href="#limits">边界与失败模式</a>
+  <a href="#next">下一步</a>
+  <a href="#artifacts">产物索引</a>
+</div>
+
+<h2 id="motivation">1. 动机：AI4AI 需要自己的 world model</h2>
+
+<p>训练一个模型很贵。如果有一个“世界模型”能预测 <em>“给定一个训练 setting → 跑出来的 loss”</em>，那么在真正消耗算力之前，就可以：</p>
+<ul>
+  <li><strong>不训练就排名</strong>：在候选 setting 里选出更优的那个（select best）；</li>
+  <li><strong>指导下一步实验</strong>：预测“改哪个超参会变好”（propose improvement）；</li>
+  <li><strong>作为 agent 的工具</strong>：LLM 提出多种 action，meta-model 预测转移后的 config 与结果，LLM 据此决定下一步。</li>
+</ul>
+
+<p>这对应一个更长期的方向：把科研建模成状态转移 <code>config_t + action → config_{t+1}</code>，meta-model 学习这个转移/结果预测器。本实验是这条路线第一个可量化的闭环——<strong>预测“哪个 setting 更优”</strong>。</p>
+
+<div class="note">
+  <strong>本实验回答的问题</strong>：给定一批真实训练过的 (setting, 实测指标) 记录，一个 tabular 基模能把“三选一选出最优 setting”做到多准？哪些模型/协议有效？
+</div>
+
+<h2 id="task">2. 任务定义与数据</h2>
+
+<h3>2.1 数据来自 ArchitectureIQ 的 GT 记录</h3>
+<p>所有 GT 都来自 <strong>执行生成的候选代码</strong>（spec → render .py → import &amp; run → summary.json），不是并行逻辑重算。冻结快照：</p>
+<table>
+  <thead><tr><th>项</th><th>值</th></tr></thead>
+  <tbody>
+    <tr><td>Environments</td><td>30 = 3 families × 10 dataset instances（univariate/multivariate regression, bigram LM）</td></tr>
+    <tr><td>Rows</td><td>10,000 = 9,000 train + 1,000 locked validation</td></tr>
+    <tr><td>每候选 seeds</td><td>5（目标取 <code>log(mean_loss)</code>，mean 跨 5 seed）</td></tr>
+    <tr><td>每行内容</td><td>一个 JSON-like training setting（model / optimizer / loss / batch_size / budget）+ 实测 log loss</td></tr>
+    <tr><td>特征维度</td><td>122（full setting 展开 + dataset identity）</td></tr>
+  </tbody>
+</table>
+
+<p class="small">目标取 <code>log(mean_loss)</code> 而不是 raw loss：raw loss 跨 family/环境差 10+ 个数量级（multivariate 环境的 regret upper 从 0.44 到 4.1e11），只有 log 尺度可比较。</p>
+
+<h3>2.2 特征编码</h3>
+<p><code>FeatureEncoder</code>（<code>feature_set="full"</code>）把 setting 结构化展开：optimizer type × log10(lr) 交互项、weight_decay / momentum / betas、budget 的 log(total_samples_seen) / log(batch_size)、loss_id、模型架构展开（MLP：depth / log2(width) / 激活函数分布；Transformer：d_model / num_heads / num_layers）、体量特征 <code>derived.log_total_params</code>，以及 dataset identity 条件特征。</p>
+
+<h3>2.3 评测与显著性筛选</h3>
+<p>对每个 environment 内的全部行穷举 C(n,3) 三元组，模型对 3 个候选预测 loss、取 argmin 为预测 winner，与 GT winner 比较。只有通过完整显著性检验的三元组才计分：</p>
+<table>
+  <thead><tr><th>条件</th><th>默认值</th><th>语义</th></tr></thead>
+  <tbody>
+    <tr><td><code>gap_min</code></td><td>0.05</td><td>best 与 second 候选的 mean_metric 绝对差</td></tr>
+    <tr><td><code>win_rate_min</code></td><td>0.7</td><td>5 seed 里 winner 一致率（≥4/5）</td></tr>
+    <tr><td><code>use_non_overlap</code></td><td>True</td><td>winner+std &lt; runner_up−std</td></tr>
+  </tbody>
+</table>
+<div class="alert">
+  <strong>152,592 个穷举三元组中只有 87,837 个（57.6%）通过全部条件。</strong>其余 42.4% 是 GT 跨 seed 分不开的噪声题，不应计入 accuracy。这正是旧报告 63.50% 偏低的原因之一。
+</div>
+
+<h2 id="methods">3. 三种建模协议</h2>
+
+<table>
+  <thead><tr><th>协议</th><th>结构</th><th>说明</th></tr></thead>
+  <tbody>
+    <tr><td>A · per-dataset 专家模型</td><td>15 个回归器</td><td>每个 dataset 各训一个（~600 rows / 模型），不跨 dataset 共享样本</td></tr>
+    <tr><td>B · 全局共享模型</td><td>1 个回归器</td><td>9,000 rows 训一个模型，特征里显式编码 dataset identity（122 维）</td></tr>
+    <tr><td>C · 直接预测 winner</td><td>pairwise 分类 + 投票</td><td>输入两个候选的特征差，输出二分类“A 是否优于 B”；三元组做 3 次 pairwise 投票</td></tr>
+  </tbody>
+</table>
+
+<h2 id="results">4. 实验结果</h2>
+
+<div class="cards">
+  <div class="card">
+    <div class="label">最优 meta-model</div>
+    <div class="value green">82.11%</div>
+    <div class="detail">共享回归 ExtraTrees（9k rows / 1 model）</div>
+  </div>
+  <div class="card">
+    <div class="label">专家模型最优</div>
+    <div class="value blue">78.33%</div>
+    <div class="detail">per-dataset XGBoost</div>
+  </div>
+  <div class="card">
+    <div class="label">直接预测 winner 最优</div>
+    <div class="value blue">74.85%</div>
+    <div class="detail">per-dataset GradientBoosting Clf</div>
+  </div>
+  <div class="card">
+    <div class="label">随机基线</div>
+    <div class="value red">33.33%</div>
+    <div class="detail">三选一随机</div>
+  </div>
+</div>
+
+<h3>4.1 回归方法（预测 log loss → argmin）</h3>
+<table>
+  <thead><tr><th>模型</th><th class="num">专家模型 Expert</th><th class="num">Shared（1 模型）</th><th class="num">差</th></tr></thead>
+  <tbody>
+    <tr><td>Compact Ridge</td><td class="num">45.16%</td><td class="num">43.55%</td><td class="num">−1.6</td></tr>
+    <tr><td>Full Ridge</td><td class="num">53.99%</td><td class="num">55.27%</td><td class="num">+1.3</td></tr>
+    <tr><td>Full OLS</td><td class="num">55.15%</td><td class="num">—</td><td class="num">—</td></tr>
+    <tr><td>Compact Poly Ridge</td><td class="num">60.63%</td><td class="num">—</td><td class="num">—</td></tr>
+    <tr><td>MLP</td><td class="num">52.44%</td><td class="num">60.31%</td><td class="num">+7.9</td></tr>
+    <tr><td>Random Forest</td><td class="num">75.35%</td><td class="num">78.60%</td><td class="num">+3.3</td></tr>
+    <tr class="best"><td>ExtraTrees</td><td class="num">77.78%</td><td class="num"><strong>82.11%</strong></td><td class="num">+4.3</td></tr>
+    <tr><td>XGBoost</td><td class="num"><strong>78.33%</strong></td><td class="num">70.80%</td><td class="num">−7.5</td></tr>
+  </tbody>
+</table>
+<p class="small">Headline 配置：<code>ExtraTreesRegressor(n_estimators=300, max_depth=16, max_features=0.7, min_samples_leaf=5, random_state=20260714)</code>，预测 <code>log(mean_loss)</code>。</p>
+
+<h3>4.2 直接预测 winner（pairwise 分类 + 投票）</h3>
+<table>
+  <thead><tr><th>分类器</th><th class="num">per-dataset</th><th class="num">global shared</th></tr></thead>
+  <tbody>
+    <tr><td>Logistic</td><td class="num">68.22%</td><td class="num">62.98%</td></tr>
+    <tr><td>GradientBoosting Clf</td><td class="num"><strong>74.85%</strong></td><td class="num">64.92%</td></tr>
+    <tr><td>MLP Clf</td><td class="num">71.07%</td><td class="num">72.31%</td></tr>
+    <tr><td>ExtraTrees Clf</td><td class="num"><strong>77.85%</strong></td><td class="num">61.59%</td></tr>
+    <tr><td>RandomForest Clf</td><td class="num">77.00%</td><td class="num">56.62%</td></tr>
+  </tbody>
+</table>
+<p class="small">per-dataset ExtraTrees Clf（77.85%）接近回归 ExtraTrees（77.78%），但未超过共享回归的 82.11%。Global tree 分类器反而很弱（56–62%），pairwise 差值特征可能破坏了树的原生判别能力。</p>
+
+<h3>4.3 Train-val 对比（共享回归）</h3>
+<table>
+  <thead><tr><th>模型</th><th class="num">train sig</th><th class="num">val sig</th><th class="num">gap（过拟合）</th></tr></thead>
+  <tbody>
+    <tr><td>ExtraTrees</td><td class="num">93.75%</td><td class="num">82.80%</td><td class="num">11.0pp</td></tr>
+    <tr><td>Random Forest</td><td class="num">85.64%</td><td class="num">78.16%</td><td class="num">7.5pp</td></tr>
+    <tr><td>XGBoost</td><td class="num">74.49%</td><td class="num">70.77%</td><td class="num">3.7pp</td></tr>
+    <tr><td>MLP</td><td class="num">72.12%</td><td class="num">61.01%</td><td class="num">11.1pp</td></tr>
+    <tr><td>Full Ridge</td><td class="num">55.65%</td><td class="num">54.68%</td><td class="num">1.0pp</td></tr>
+  </tbody>
+</table>
+<p class="small">XGBoost 几乎不过拟合但欠拟合（浅树 depth=3 容量不足）；ExtraTrees 过拟合 11pp 但 val 仍最高。在回归质量上：全局共享 locked val 的 log 预测 RMSE 1.875 / R²=0.718（训练 5 折 CV R²=0.687）。</p>
+
+<h3>4.4 在冻结 60 题上与 LLM 对比</h3>
+<table>
+  <thead><tr><th>方法</th><th class="num">60 题正确率</th><th>说明</th></tr></thead>
+  <tbody>
+    <tr class="best"><td>共享 ExtraTrees（meta-model）</td><td class="num">43/60 = 71.7%</td><td>30 环境宽协议训练，60 题为外部锁定题</td></tr>
+    <tr><td>Claude Opus 4.8 high</td><td class="num">34/60 = 56.7%</td><td>单 prompt 60 题，无工具调用</td></tr>
+    <tr><td>GPT-5.5 high</td><td class="num">27/60 = 45.0%</td><td>同上</td></tr>
+    <tr><td>GPT-5.6-SOL blind</td><td class="num">25/60 = 41.7%</td><td>纯 agent，无 meta-model</td></tr>
+    <tr><td>随机</td><td class="num">20/60 = 33.3%</td><td>—</td></tr>
+  </tbody>
+</table>
+<div class="note">
+  <strong>tabular meta-model 在 60 题上超过了所有被测 LLM。</strong>LLM 在 univariate_regression 上最弱（35–40%，仅略高于随机），说明当前 prompt 信息不足以让 LLM 稳定复现 GT 排名，而树模型能从 9k 条结构化记录中学到更稳定的 setting → loss 映射。
+</div>
+
+<h2 id="conclusions">5. 关键结论</h2>
+
+<div class="ok">
+  <strong>结论 1：树模型主导，线性模型全面偏弱。</strong>OLS/Ridge 只有 45–61%，MLP 52–60%，而树模型 75–82%。setting → loss 的映射是高度非线性的；纯参数量启发式（params_ols）只有 31.14%，远低于完整特征的树模型。
+</div>
+
+<div class="ok">
+  <strong>结论 2：共享模型帮助树模型。</strong>把 9,000 行跨 dataset 池化后，ExtraTrees 从 77.78% 提升到 82.11%（+4.3pp）；XGBoost 反而下降（78.33% → 70.80%），说明共享收益不是普适的，与模型容量/正则有关。
+</div>
+
+<div class="alert">
+  <strong>结论 3：旧数字 63.50% 是错的，修正为 82.11%。</strong>两个原因：(a) 旧 metric 用全部三元组（含 42% 噪声题），低估约 9pp；(b) per-dataset 600 行样本不足，共享后 ExtraTrees 再涨约 4pp。
+</div>
+
+<div class="note">
+  <strong>结论 4：直接预测 winner 方向正确，但当前实现不够好。</strong>per-dataset GradientBoosting 74.85%、ExtraTrees Clf 77.85%，均未超过共享回归 82.11%；但 MLP 分类（72.31%）明显优于 MLP 回归（60.31%），直接预测 winner 对 MLP 更合适。
+</div>
+
+<h2 id="limits">6. 边界与失败模式</h2>
+
+<div class="danger">
+  <strong>82.11% 是 ID-split 下的上限，不代表对全新数据集的泛化。</strong>leave-one-dataset-out（LOGO）跨数据集泛化 log R² 只有 0.37–0.47（vs ID split 0.68–0.73），family 级 LOGO 为负 R²。
+</div>
+
+<div class="danger">
+  <strong>不同协议的 R² 不能直接比较。</strong>60 题单环境设定目标标准差只有 0.04–1.0（近乎内插，R² 0.66–0.98）；9000 题全局池化把 30 个环境的 log loss 硬拼在一起，目标标准差被拉大到 3.53，模型解释约 72% 方差（R²=0.718）。任务难度的分母不同，数字不可横比。
+</div>
+
+<div class="danger">
+  <strong>特征工程是否充分仍未知。</strong>当前特征是 setting 展开 + dataset identity，没有显式交互项（如 lr×depth、budget×model_type），也没有 dataset 统计特征（input_dim、domain_size）。二阶交互的 Compact Polynomial Ridge 60.63% 说明交互有帮助但不够。
+</div>
+
+<h2 id="next">7. 下一步：从“预测结果”到“科研 agent 的 tool”</h2>
+
+<p>当前闭环证明了一个基模能在已知配置空间内<strong>预测哪个 setting 更优</strong>。下一步是把它扩展成科研 agent 可调用的世界模型：</p>
+
+<ul>
+  <li><strong>状态转移 formulation</strong>：训练 <code>config_t + action → config_{t+1}</code> 的预测器作为 LLM 的 tool；LLM 提出多种 action，根据返回的 config_{t+1} 预测结果决定下一步，把“实验设计”变成可搜索的决策过程。</li>
+  <li><strong>action 空间与 latent 化</strong>：复杂问题里手工定义 action 种类可能爆炸。两个候选解法：(1) LLM 直接产出自然语言 action，让语义相近的 action 被 meta-model 学到 latent space 中相近的位置；(2) 用 VQVAE 之类的离散 latent，或仅靠训练让模型自己学出合适的 embedding。</li>
+  <li><strong>LLM 微调 vs 小模型</strong>：直接微调 LLM 预测 config_{t+1} 可能没有想象中好用——主流做法是 agent + domain-specific language 做持续学习；非 LLM（MLP / transformer）在数据充足时可能更容易超过 LLM。LLM 的价值在于先验强、样本效率高。</li>
+  <li><strong>Domain-specific language</strong>：科研领域的 config/action DSL 怎么定义是核心问题。在 DSL 定义好之前，可以用 memory 代替 config、自然语言指令/代码改动代替 action，先验证后半段能力。</li>
+  <li><strong>数据规模</strong>：用 ArchitectureIQ 的题目生成器批量生成更多 (setting, GT) 记录，把 train set 做大——之前 MLP 偏弱很可能与“空间太大、train 点太稀疏”有关。</li>
+</ul>
+
+<h2 id="artifacts">8. 产物索引</h2>
+<table>
+  <thead><tr><th>产物</th><th>路径</th></tr></thead>
+  <tbody>
+    <tr><td>最终结果 JSON</td><td><code>artifacts/wide_v2_full30_meta_model_final_summary.json</code></td></tr>
+    <tr><td>专家模型回归 + 显著性筛选</td><td><code>artifacts/wide_v2_full30_significant_recheck_dataset_pooled.json</code></td></tr>
+    <tr><td>共享回归 + 显著性筛选</td><td><code>artifacts/wide_v2_full30_significant_recheck_global.json</code></td></tr>
+    <tr><td>OLS + 显著性筛选</td><td><code>artifacts/wide_v2_full30_significant_recheck_ols.json</code></td></tr>
+    <tr><td>Winner 分类（per-dataset / global）</td><td><code>data/meta_model_studies/wide_v2_full30_winner_clf_*/</code></td></tr>
+    <tr><td>模型与特征工程</td><td><code>tools/meta_model_study/models.py</code> · <code>features.py</code></td></tr>
+    <tr><td>显著性筛选 / 训练脚本</td><td><code>tools/meta_model_study/significant_recheck.py</code> · <code>run.py</code></td></tr>
+    <tr><td>详细报告</td><td><code>docs/0718_meta_model_final_report.html</code> · <code>docs/meta_model_settings_comparison.md</code> · <code>docs/0718_train_val_comparison.html</code></td></tr>
+  </tbody>
+</table>
+
+<p class="small">冻结快照 SHA256: 2b172e0c…40b38ba · 30 environments / 10,000 rows / 5 seeds · 所有 GT 来自执行候选代码，未重算。复现入口：ArchitectureIQ repo（<code>tools/meta_model_study/</code>）。</p>
+
+</body>
+</html>
