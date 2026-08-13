@@ -387,6 +387,90 @@
       <li>这条链的核心：<b>可编辑范围</b> 定义了 agent 的"干预空间"，<b>多 setting + 多 seed</b> 定义了"泛化验证" —— 这正是闭环里"干预"和"防自欺"的结构化体现。</li>
     </ul>
 
+    <h3>Agent 预算设计（当前官方值）</h3>
+    <div class="card">
+      <p><b>官方默认预算</b>（configs/react.yaml + 论文 4.1）：</p>
+      <ul>
+        <li><b>max_steps = 20</b>（action 上限，整个任务）；Lite 扩展模型 <b>8 actions</b></li>
+        <li><b>max_tests = 3</b>（test 调用上限）；Lite 扩展模型 <b>1 test</b></li>
+        <li><b>5 小时探索预算</b>/任务（timeout_sec=18000，Harbor 渲染路径）</li>
+        <li><b>thinking budget = 10,000 tokens/次调用</b>（Anthropic extended thinking 的每请求参数，非全程累计）</li>
+        <li>web search 默认关闭</li>
+      </ul>
+      <p><b>关键理解</b>：</p>
+      <ul>
+        <li><b>10k thinking tokens 是「每次 LLM 调用」的限制</b>，不是整个任务 —— 20 个 action 全程可用 ~200k thinking tokens。</li>
+        <li><b>1 个 action ≈ 1 次 LLM 调用 + 1 个工具操作</b>（edit/test/submit/undo）。</li>
+        <li>官方 20 actions / 3 tests 是<b>刻意的公平基准</b>，非技术上限 —— 论文 Test-Time Scaling（5.1）证明：<b>更多 compute/action 在简单任务上收益很快饱和，复杂任务上突破不了 Human SOTA</b>。</li>
+        <li>Verifier-Limited 实验（5.2）把预算放宽到 <b>50 actions / 20 tests</b>，性能反而普遍下降 —— 更多探索不一定更好。</li>
+      </ul>
+      <div class="callout warn" style="margin:10px 0">
+        <b>OPHIS 角度</b>：我们后面会<b>增加预算</b>（增大 max_steps/max_tests）。这不会破坏官方可比性（我们本来就不是复现 leaderboard），而是为了：① 给 agent 足够的科学判断空间；② 对比「固定预算下 observables 增强」vs「单纯加预算」哪个更有效（对应 Claim 2/3）。
+      </div>
+    </div>
+
+    <h3>各任务单次 test 的 compute / 时间消耗（实测 config 值）</h3>
+    <div class="card">
+      <p class="muted">以下来自每个任务 <code>config.json</code> 的 <code>test_cmds</code>：<code>compute</code> = 占几张 GPU（&lt;1 表示 CPU/低配可跑），<code>time</code> = 单次 test 上限。hidden=true 表示隐藏 setting（agent 看不到，用于泛化验证）。</p>
+
+      <h4>超轻量（CPU/低配，compute ≤ 0.33）—— 最适合常驻 8×H100 持续跑</h4>
+      <table>
+        <thead><tr><th>任务</th><th>可编辑文件</th><th>每 test 时长</th><th>compute</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td><b>ml-clustering-algorithm</b></td><td><code>custom_clustering.py</code></td><td><b>10–15 分钟</b></td><td>0.25</td><td>blobs/moons/digits，纯 sklearn，最快迭代</td></tr>
+          <tr><td><b>optimization-multi-objective</b></td><td>自定义 ES 算法</td><td><b>60 分钟</b></td><td>0.25</td><td>zdt1/zdt3/dtlz2，进化策略</td></tr>
+          <tr><td><b>causal-discovery-discrete</b></td><td><code>custom_algorithm.py</code></td><td><b>59 分钟</b></td><td>0.25</td><td>Cancer/Child/Alarm，契合 OPHIS 因果主题</td></tr>
+          <tr><td><b>optimization-variance-reduction</b></td><td>方差缩减</td><td><b>59 分钟</b></td><td>0.33</td><td>logistic/mlp</td></tr>
+          <tr><td><b>ts-exogenous-forecast</b></td><td>外生变量预测</td><td><b>59 分钟</b></td><td>0.33</td><td>ETTh1/Weather</td></tr>
+          <tr><td><b>ts-imputation</b></td><td>插补模型</td><td><b>2 小时</b></td><td>0.33</td><td>ETTh1/Weather/ECL</td></tr>
+          <tr><td><b>graph-generation</b></td><td>图生成器</td><td><b>59 分钟</b></td><td>0.33</td><td>community/ego/enzymes</td></tr>
+          <tr><td><b>ai4bio-mutation-effect-prediction</b></td><td><code>custom_mutation_pred.py</code></td><td><b>59 分钟</b></td><td>0.33</td><td>ProteinGym 突变预测</td></tr>
+        </tbody>
+      </table>
+
+      <h4>轻量 GPU 任务（1 张 H100，compute = 1.0）</h4>
+      <table>
+        <thead><tr><th>任务</th><th>可编辑文件</th><th>每 test 时长</th><th>compute</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td><b>llm-ptq-algorithm</b></td><td><code>custom_ptq.py</code></td><td><b>19 分钟</b></td><td>1.0</td><td>7B 模型 PTQ，无需训练，超快</td></tr>
+          <tr><td><b>mlsys-sparse-attention-inference</b></td><td><code>custom_sparse_attn.py</code></td><td><b>59 分钟</b></td><td>1.0</td><td>稀疏 attention，无需训练</td></tr>
+          <tr><td><b>ai4sci-inverse-diffusion-algo</b></td><td><code>algo/custom.py</code></td><td><b>59 分钟</b></td><td>1.0</td><td>扩散逆问题（黑洞成像！），契合 OPHIS</td></tr>
+          <tr><td><b>cv-3dgs-densification</b></td><td><code>custom_strategy.py</code></td><td><b>60 分钟</b></td><td>1.0</td><td>3DGS 致密化，跨场景</td></tr>
+          <tr><td><b>cv-pooling-aggregation</b></td><td><code>custom_pool.py</code></td><td><b>59 分钟</b></td><td>1.0</td><td>resnet56/vgg16bn/mobilenetv2</td></tr>
+          <tr><td><b>dl-activation-function</b></td><td><code>custom_activation.py</code></td><td><b>2 小时</b></td><td>1.0</td><td>resnet20/vgg16bn/mobilenetv2</td></tr>
+          <tr><td><b>llm-qat-algorithm</b></td><td><code>custom_qat.py</code></td><td><b>75 分钟</b></td><td>1.0</td><td>Pythia-1.4B QAT 训练（int4/int3/int2）</td></tr>
+          <tr><td><b>security-membership-inference-defense</b></td><td>隐私损失</td><td><b>59 分钟</b></td><td>1.0</td><td>resnet20/vgg16bn/mobilenetv2</td></tr>
+          <tr><td><b>quant-concept-drift</b></td><td>概念漂移</td><td><b>3 小时</b></td><td>1.0</td><td>股票预测（csi300）</td></tr>
+        </tbody>
+      </table>
+
+      <h4>重任务（多卡/长时，不适合单卡常驻）</h4>
+      <table>
+        <thead><tr><th>任务</th><th>每 test 时长</th><th>compute</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td><b>llm-pretrain-optimizer</b></td><td>12 小时</td><td><b>4.0</b></td><td>GPT-345M 预训练</td></tr>
+          <tr><td><b>llm-rl-importance-sampling</b></td><td>6 小时</td><td><b>2.0</b></td><td>deepmath RL</td></tr>
+          <tr><td><b>cv-dbm-sampler</b></td><td>4 小时</td><td><b>4.0</b></td><td>Diffusion Bridge 采样</td></tr>
+          <tr><td><b>cv-vae-loss</b></td><td>1–4 小时</td><td><b>8.0</b></td><td>CIFAR-10 VAE，8 卡</td></tr>
+          <tr><td><b>jepa-planning</b></td><td>6 小时</td><td>0.33×3</td><td>goal-conditioned planning</td></tr>
+          <tr><td><b>robo-diffusion-guidance</b></td><td>4 小时</td><td>1.0×3</td><td>D4RL MuJoCo</td></tr>
+          <tr><td><b>robo-diffusion-policy</b></td><td>6 小时</td><td>1.0×3</td><td>D4RL MuJoCo</td></tr>
+          <tr><td><b>rl-value-discrete</b></td><td>2 小时</td><td>0.33×3</td><td>cartpole/lunarlander/acrobot</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout">
+        <b>推荐组合（8×H100 常驻，互不冲突）</b>：
+        <ul style="margin-top:6px">
+          <li><b>GPU 1-2</b>：ml-clustering-algorithm（10min/test，最快迭代）</li>
+          <li><b>GPU 3-4</b>：llm-ptq-algorithm（19min/test）</li>
+          <li><b>GPU 5-6</b>：mlsys-sparse-attention（59min/test，无训练）</li>
+          <li><b>GPU 7</b>：ai4sci-inverse-diffusion（59min/test，黑洞成像=逆问题）</li>
+          <li><b>GPU 8</b>：causal-discovery-discrete（59min/test，契合 OPHIS 因果主题）</li>
+        </ul>
+      </div>
+    </div>
+
     <h3>当前结果（MLS-Bench-Lite，15 个模型）</h3>
     <ul>
       <li>即使给 agent 强基线 + 多次迭代机会，<b>前沿 agent 仍远不能稳定匹配人类设计的方法</b>。</li>
