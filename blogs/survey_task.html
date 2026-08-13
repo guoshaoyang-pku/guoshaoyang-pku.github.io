@@ -409,6 +409,40 @@
       </div>
     </div>
 
+    <h3>如何实际运行 MLS-Bench agent（两条路径）</h3>
+    <div class="card">
+      <h4>路径 A：Native runner（论文主实验用，自带 ReAct agent）</h4>
+      <ul>
+        <li>安装：<code>pip install -e ".[agent]"</code>（Python 3.10+）</li>
+        <li>配置 <code>configs/react.yaml</code>：填 provider API key（openai/anthropic/deepseek/qwen/gemini/kimi/glm 均可），设 <code>container_runtime: docker|apptainer|local</code></li>
+        <li>拉取并构建任务包：
+          <pre style="background:var(--code-bg);border:1px solid var(--border);border-radius:6px;padding:10px;font-size:.82rem;overflow-x:auto">mlsbench fetch --name &lt;package&gt;
+mlsbench build &lt;package&gt; --config configs/react.yaml</pre>
+        </li>
+        <li>跑 agent（自带非交互 ReAct 循环，不会停下来问用户）：
+          <pre style="background:var(--code-bg);border:1px solid var(--border);border-radius:6px;padding:10px;font-size:.82rem;overflow-x:auto">mlsbench agent &lt;task&gt; --model &lt;model&gt; --config configs/react.yaml
+mlsbench score task &lt;task&gt;</pre>
+        </li>
+        <li>预算可改：<code>configs/react.yaml</code> 里的 <code>max_steps</code> / <code>max_tests</code>（默认 20/3）</li>
+        <li>agent 类型：<code>InteractiveAgent</code>（ReAct）、<code>OpenEvolveAgent</code>（population 进化搜索）、<code>DiscoverAgent</code>（TTT-Discover）</li>
+      </ul>
+
+      <h4>路径 B：Harbor 数据集（官方 leaderboard 用，兼容任意 agent）</h4>
+      <ul>
+        <li>140 任务预渲染成 Harbor 格式，任何 Harbor 支持 agent（claude-code / codex / openhands / terminus-2 / kimi-code 等）都能跑：</li>
+        <li>
+          <pre style="background:var(--code-bg);border:1px solid var(--border);border-radius:6px;padding:10px;font-size:.82rem;overflow-x:auto">PYTHONPATH=. harbor run -c run.yaml -a claude-code -m anthropic/claude-opus-4-7</pre>
+        </li>
+        <li>每个任务内置 <code>timeout_sec=18000</code>（5h 探索预算）+ task-specific verifier timeout</li>
+        <li>官方 leaderboard 全部在 Harbor + 5h 预算下产生 —— 要可比性必须走这条路</li>
+        <li>注意：Claude Code / Codex 这类交互式 agent <b>默认会在模糊处停下来问用户</b>；要无人值守需加 <code>--dangerously-skip-permissions</code> 等非交互 flag，或改用自带 native agent</li>
+      </ul>
+
+      <div class="callout warn">
+        <b>OPHIS 运行建议</b>：我们要做 observables 增强 + 自定义预算，建议<b>走 Native runner 并改造 agent</b>（工具可扩展：在 edit/test/submit/undo 之外加观测工具）；不用 Harbor（它面向现成交互 agent，且不支持自定义预算的可比性保证）。
+      </div>
+    </div>
+
     <h3>各任务单次 test 的 compute / 时间消耗（实测 config 值）</h3>
     <div class="card">
       <p class="muted">以下来自每个任务 <code>config.json</code> 的 <code>test_cmds</code>：<code>compute</code> = 占几张 GPU（&lt;1 表示 CPU/低配可跑），<code>time</code> = 单次 test 上限。hidden=true 表示隐藏 setting（agent 看不到，用于泛化验证）。</p>
