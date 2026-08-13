@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bench 调研：MLS-Bench / EdgeBench / ARC-AGI-3 / nanoGPT · OPHIS</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #171a21;
+    --panel2: #1d2129;
+    --border: #2a2f3a;
+    --text: #e6e8ec;
+    --muted: #9aa3b2;
+    --accent: #5b9dff;
+    --accent2: #7c5bff;
+    --green: #4cd9a0;
+    --yellow: #ffc857;
+    --red: #ff6b6b;
+    --purple: #c77dff;
+    --code-bg: #10131a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    line-height: 1.7;
+  }
+  .container { max-width: 960px; margin: 0 auto; padding: 32px 24px 80px; }
+
+  /* Hero */
+  .hero {
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: linear-gradient(135deg, #151a26 0%, #1a1f2e 100%);
+    padding: 32px;
+    margin-bottom: 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(600px 200px at 85% -10%, rgba(91,157,255,.15), transparent),
+                radial-gradient(500px 200px at 10% 110%, rgba(124,91,255,.12), transparent);
+    pointer-events: none;
+  }
+  .hero h1 { font-size: 1.9rem; font-weight: 700; letter-spacing: .5px; position: relative; }
+  .hero .sub { color: var(--muted); margin-top: 8px; font-size: 1rem; position: relative; }
+  .hero .meta { margin-top: 16px; display: flex; gap: 12px; flex-wrap: wrap; position: relative; }
+  .badge {
+    font-size: .78rem; padding: 3px 12px; border-radius: 20px;
+    background: rgba(91,157,255,.12); border: 1px solid rgba(91,157,255,.35); color: #bcd5ff;
+  }
+
+  /* Section */
+  section { margin-bottom: 44px; }
+  h2 {
+    font-size: 1.45rem; font-weight: 700;
+    padding-bottom: 10px; margin-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+  }
+  h2 .num {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    font-size: 1.1rem;
+  }
+  h3 { font-size: 1.12rem; margin: 24px 0 12px; color: #fff; }
+  h4 { font-size: .98rem; margin: 18px 0 8px; color: #cdd6e4; }
+  p { margin-bottom: 12px; color: var(--text); }
+  .muted { color: var(--muted); }
+
+  /* Cards */
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 14px;
+  }
+  .card.highlight { border-left: 3px solid var(--accent); }
+
+  /* Table */
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: .9rem; }
+  th, td { padding: 10px 12px; text-align: left; border: 1px solid var(--border); vertical-align: top; }
+  th { background: var(--panel2); font-weight: 600; color: #cbd4e2; white-space: nowrap; }
+  tr:nth-child(even) td { background: rgba(255,255,255,.015); }
+
+  /* Code */
+  code {
+    background: var(--code-bg); border: 1px solid var(--border);
+    padding: 1px 7px; border-radius: 5px; font-size: .86em;
+    font-family: "SF Mono", Menlo, Consolas, monospace; color: #9ecbff;
+  }
+
+  /* Loop diagram */
+  .loop {
+    display: flex; align-items: stretch; justify-content: center;
+    gap: 0; margin: 20px 0 8px; flex-wrap: wrap;
+  }
+  .loop-step {
+    background: var(--panel2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px 18px; text-align: center; min-width: 120px;
+  }
+  .loop-step b { display: block; font-size: .92rem; margin-bottom: 4px; }
+  .loop-step span { font-size: .78rem; color: var(--muted); }
+  .loop-arrow { display: flex; align-items: center; color: var(--accent); font-size: 1.3rem; padding: 0 8px; }
+
+  /* Bars */
+  .bar-row { display: flex; align-items: center; margin: 6px 0; gap: 10px; }
+  .bar-label { width: 190px; font-size: .85rem; color: var(--muted); text-align: right; }
+  .bar-track { flex: 1; background: var(--panel2); border-radius: 5px; height: 22px; overflow: hidden; position: relative; }
+  .bar-fill { height: 100%; border-radius: 5px; display: flex; align-items: center; justify-content: flex-end; padding-right: 8px; font-size: .75rem; color: #fff; }
+  .bar-note { width: 130px; font-size: .8rem; color: var(--muted); }
+
+  /* Learning curve SVG-like */
+  .curve { margin: 14px 0; }
+  .curve svg { width: 100%; height: auto; display: block; border: 1px solid var(--border); border-radius: 10px; background: var(--panel); }
+
+  /* Tags */
+  .tag { display: inline-block; font-size: .75rem; padding: 2px 10px; border-radius: 12px; margin-right: 6px; margin-bottom: 4px; }
+  .tag.blue { background: rgba(91,157,255,.15); color: #9ecbff; }
+  .tag.green { background: rgba(76,217,160,.13); color: #7ce8bb; }
+  .tag.yellow { background: rgba(255,200,87,.13); color: #ffd98a; }
+  .tag.red { background: rgba(255,107,107,.13); color: #ffa3a3; }
+  .tag.purple { background: rgba(199,125,255,.14); color: #e0b3ff; }
+
+  /* Pros/cons */
+  .procon { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+  @media (max-width: 700px) { .procon { grid-template-columns: 1fr; } }
+  .pro, .con { border-radius: 10px; padding: 14px 16px; }
+  .pro { background: rgba(76,217,160,.06); border: 1px solid rgba(76,217,160,.25); }
+  .con { background: rgba(255,107,107,.06); border: 1px solid rgba(255,107,107,.25); }
+  .pro b, .con b { display: block; margin-bottom: 6px; }
+  .pro li, .con li { margin-left: 18px; font-size: .88rem; }
+
+  ul, ol { padding-left: 22px; margin-bottom: 12px; }
+  li { margin-bottom: 6px; }
+
+  /* TOC */
+  .toc { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 18px 22px; margin-bottom: 32px; }
+  .toc a { color: var(--accent); text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+  .toc ol { padding-left: 20px; }
+  .toc li { margin-bottom: 4px; }
+
+  /* Defect blocks */
+  .defect { border-left: 3px solid var(--yellow); background: var(--panel); border-radius: 0 10px 10px 0; padding: 14px 18px; margin-bottom: 14px; }
+  .defect h4 { margin-top: 0; color: var(--yellow); }
+
+  .divider { height: 1px; background: var(--border); margin: 36px 0; }
+  a { color: var(--accent); }
+  .footer { color: var(--muted); font-size: .82rem; text-align: center; margin-top: 40px; }
+  .callout { border: 1px solid rgba(91,157,255,.3); background: rgba(91,157,255,.06); border-radius: 10px; padding: 14px 18px; margin: 14px 0; }
+  .callout.warn { border-color: rgba(255,200,87,.35); background: rgba(255,200,87,.06); }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- HERO -->
+  <div class="hero">
+    <h1>Bench 调研报告</h1>
+    <div class="sub">MLS-Bench · EdgeBench · ARC-AGI-3 · nanoGPT —— 为 OPHIS observable 闭环挑选验证平台</div>
+    <div class="meta">
+      <span class="badge">作者: Shaoyang Guo</span>
+      <span class="badge">2026-08-13</span>
+      <span class="badge">协作文档 · Google Docs</span>
+    </div>
+  </div>
+
+  <!-- TOC -->
+  <div class="toc">
+    <b>目录</b>
+    <ol>
+      <li><a href="#overview">调研总览</a></li>
+      <li><a href="#mlsbench">MLS-Bench：让 agent 发明可泛化、可扩展的 ML 方法</a></li>
+      <li><a href="#edgebench">EdgeBench：真实环境中的长期学习（含 LIGO 引力波）</a></li>
+      <li><a href="#arcagi3">ARC-AGI-3：第一个交互式推理基准</a></li>
+      <li><a href="#nanogpt">nanoGPT：作为 OPHIS 的可控 example</a></li>
+      <li><a href="#closure">Observable 闭环：每个 bench 怎么做 + 缺陷分析</a></li>
+      <li><a href="#next">下一步行动建议</a></li>
+      <li><a href="#ref">参考链接</a></li>
+    </ol>
+  </div>
+
+  <!-- ==================== 1. OVERVIEW ==================== -->
+  <section id="overview">
+    <h2><span class="num">01</span> 调研总览</h2>
+    <table>
+      <thead>
+        <tr><th>Bench</th><th>本质</th><th>任务数</th><th>单任务时长</th><th>关键评估</th><th>与 OPHIS 契合点</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><b>MLS-Bench</b></td>
+          <td>发明可泛化可扩展的 ML 方法（非调参）</td>
+          <td>140（12 领域）<br>Lite 30</td>
+          <td>~1 天 (H100)</td>
+          <td>归一化分数 vs 人类 SOTA</td>
+          <td>每任务 = 可控组件改进实验</td>
+        </tr>
+        <tr>
+          <td><b>EdgeBench</b></td>
+          <td>真实环境长期学习（12h+ 连续交互）</td>
+          <td>134（6 大类）<br>开源 51</td>
+          <td>12–72 小时</td>
+          <td>学习曲线 log-sigmoid 拟合</td>
+          <td>LIGO 引力波任务；多级反馈</td>
+        </tr>
+        <tr>
+          <td><b>ARC-AGI-3</b></td>
+          <td>交互式推理：隐藏环境探索、目标推断、规划</td>
+          <td>135 游戏（多关卡）</td>
+          <td>短交互 turn-based</td>
+          <td>效率加权分数（人类 100%，SOTA AI &lt;6%）</td>
+          <td>每步 frame+元数据 = observable 流</td>
+        </tr>
+        <tr>
+          <td><b>nanoGPT</b></td>
+          <td>经典 LLM 训练（语言建模）</td>
+          <td>1（可细分干预维度）</td>
+          <td>数小时–数天</td>
+          <td>val loss / gap</td>
+          <td>已有 gap 研究基础，最可控 example</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout">
+      <b>核心闭环（来自协作文档）</b> —— 每个 bench 都应能承载这个循环：
+    </div>
+    <div class="loop">
+      <div class="loop-step"><b>Observe</b><span>观察训练</span></div>
+      <div class="loop-arrow">→</div>
+      <div class="loop-step"><b>Diagnose</b><span>诊断</span></div>
+      <div class="loop-arrow">→</div>
+      <div class="loop-step"><b>Intervene</b><span>选择干预</span></div>
+      <div class="loop-arrow">→</div>
+      <div class="loop-step"><b>Rerun</b><span>重跑</span></div>
+      <div class="loop-arrow">→</div>
+      <div class="loop-step"><b>Observe</b><span>再观察</span></div>
+    </div>
+  </section>
+
+  <!-- ==================== 2. MLS-BENCH ==================== -->
+  <section id="mlsbench">
+    <h2><span class="num">02</span> MLS-Bench：让 agent 发明可泛化、可扩展的 ML 方法</h2>
+
+    <div class="card highlight">
+      <b>一句话定义</b>：<b>MLS-Bench（ML Science Bench）</b> 评估 AI 系统能否 <b>发明</b> 可泛化且可扩展的机器学习方法，而不是只会应用已有方法或调参。
+    </div>
+
+    <h3>为什么需要它</h3>
+    <ul>
+      <li>现有 agent benchmark（MLE-bench、Kaggle 比赛）奖励的是 <b>工程能力</b>：改进一个固定实例（数据处理、调参、调试、模型选择）。</li>
+      <li>ML <b>科学</b> 要求 <b>方法级 idea</b>：新架构、目标函数、组件或优化器，且要在产生它的 setting 之外验证有效。</li>
+      <li>核心问题：<b>agent 能否创造方法，而不只是提升某个 leaderboard？</b></li>
+    </ul>
+
+    <h3>规模与结构</h3>
+    <p><b>140 个任务，12 个领域</b>：</p>
+    <p>
+      <span class="tag blue">Language Models · 18</span>
+      <span class="tag blue">Robotics · 12</span>
+      <span class="tag blue">Vision &amp; Generation · 11</span>
+      <span class="tag blue">Reinforcement Learning · 13</span>
+      <span class="tag blue">ML Systems · 10</span>
+      <span class="tag blue">AI for Science · 10</span>
+      <span class="tag blue">Optimization &amp; Theory · 13</span>
+      <span class="tag blue">Classical &amp; Adaptive · 14</span>
+      <span class="tag blue">Deep Learning · 11</span>
+      <span class="tag blue">Time Series · 10</span>
+      <span class="tag blue">Structured &amp; Causal · 10</span>
+      <span class="tag blue">Trustworthy · 8</span>
+    </p>
+    <ul>
+      <li><b>MLS-Bench-Lite</b>：30 任务挑战性子集，覆盖全部 12 领域，方便快速迭代。</li>
+      <li>计算成本：全套 <b>704.7 H100-hours</b>；Lite 仅 <b>99.2 H100-hours</b>（≈4 张 H100 跑 1 天）。</li>
+    </ul>
+
+    <h3>任务结构（每任务 5 要素）</h3>
+    <table>
+      <thead><tr><th>要素</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td>(i) 研究问题</td><td>描述研究问题、背景和目标（可执行形式）</td></tr>
+        <tr><td>(ii) 代码库 + 可编辑范围</td><td>限制 agent 能改哪些区域，防止改评估器/训练协议/加容量作弊</td></tr>
+        <tr><td>(iii) ≥3 个强人类基线</td><td>含社区认可的 SOTA 方法（可复现）</td></tr>
+        <tr><td>(iv) ≥3 个评估 setting</td><td>跨 benchmark、环境或 base-model 规模验证泛化</td></tr>
+        <tr><td>(v) 种子策略</td><td>多 seed 运行，保证非偶然</td></tr>
+      </tbody>
+    </table>
+
+    <h3>具体任务示例（带可视化）</h3>
+    <table>
+      <thead><tr><th>任务</th><th>目标</th><th>评估</th><th>为何适合 OPHIS</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><b>LLM 量化感知训练</b><br><span class="muted">llm-qat-algorithm</span></td>
+          <td>改进量化感知训练算法，量化 LLM 保持精度、降开销</td>
+          <td>跨模型规模 + 数据集，量化后 loss/perplexity 是否接近全精度</td>
+          <td>丰富的 observable（量化误差、梯度噪声、激活分布、loss 曲线）→ 诊断量化引入的 loss 来源再干预</td>
+        </tr>
+        <tr>
+          <td><b>注意力缓存结构压缩</b><br><span class="muted">llm-kv-structural-reduction</span></td>
+          <td>发明 KV cache 的结构性压缩方法</td>
+          <td>长上下文：压缩率 vs 质量保持</td>
+          <td>需观察 cache 中 token 信息冗余（attention 分布、head 贡献）再设计干预</td>
+        </tr>
+        <tr>
+          <td><b>3D 场景致密化策略</b><br><span class="muted">cv-3dgs-densification</span></td>
+          <td>改进 3D Gaussian Splatting 的 densification 策略</td>
+          <td>重建质量 (PSNR) vs 渲染效率，跨场景</td>
+          <td>重建误差的空间分布 = 可观察信号</td>
+        </tr>
+        <tr>
+          <td><b>扩散先验逆问题求解器</b><br><span class="muted">ai4sci-inverse-diffusion-algo</span></td>
+          <td>用扩散模型作先验求解逆问题（超分辨、去模糊）</td>
+          <td>重建质量，跨多个逆问题类型</td>
+          <td>与 LIGO 引力波重建同族（逆问题）</td>
+        </tr>
+        <tr>
+          <td><b>同质-异质图滤波器</b><br><span class="muted">graph-signal-propagation</span></td>
+          <td>发明在同质/异质图上都工作的图滤波器</td>
+          <td>跨多个图数据集 + 同质度</td>
+          <td>信号传播路径 = 可观察的中间状态</td>
+        </tr>
+        <tr>
+          <td><b>梯度压缩</b><br><span class="muted">optimization-gradient-compression</span></td>
+          <td>改进分布式训练的梯度压缩</td>
+          <td>通信开销 vs 收敛质量</td>
+          <td>梯度统计 = 直接 observable</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>当前结果（MLS-Bench-Lite，15 个模型）</h3>
+    <ul>
+      <li>即使给 agent 强基线 + 多次迭代机会，<b>前沿 agent 仍远不能稳定匹配人类设计的方法</b>。</li>
+      <li>agent 更擅长 <b>工程式调参</b>，不擅长提出能在受控验证下存活的新方法。</li>
+      <li>作者关键洞察：瓶颈不在「提出」新方法，而在 <b>科学判断</b> —— 形成假设、选择有信息量的实验、分配有限试验、把反馈转化为可扩展证据。<b>更多搜索 / compute / context 无法消除此瓶颈。</b></li>
+    </ul>
+    <div class="callout">
+      <b>这正是 OPHIS 的切入点：更好的 observables → 更好的科学判断。</b>
+    </div>
+
+    <div class="procon">
+      <div class="pro">
+        <b>契合点</b>
+        <ul>
+          <li>每任务 = 可控闭环（明确干预目标、强基线、跨 setting 验证）</li>
+          <li>有 AI for Science 领域，与 LIGO 同族</li>
+          <li>任务原子化，适合观察→诊断→干预→再观察</li>
+        </ul>
+      </div>
+      <div class="con">
+        <b>注意</b>
+        <ul>
+          <li>计算成本高（Lite 也 ~100 H100-hours）</li>
+          <li>评分归一化到基线，单任务改进幅度可能很小</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 3. EDGEBENCH ==================== -->
+  <section id="edgebench">
+    <h2><span class="num">03</span> EdgeBench：真实环境中的长期学习（含 LIGO 引力波）</h2>
+
+    <div class="card highlight">
+      <b>一句话定义</b>：<b>EdgeBench（ByteDance Seed）</b> —— 134 个真实世界任务，衡量 agent <b>从真实环境中持续学习</b>的能力：不是一次性能力，而是长期交互中的改进轨迹。
+    </div>
+
+    <h3>核心发现（环境学习 Scaling Law）</h3>
+    <ul>
+      <li>分析 ~38,000 小时 agent 环境交互。</li>
+      <li>整体性能遵循 <b>log-sigmoid 缩放律</b>：<code>S(t) = S<sub>max</sub> / (1 + (t<sub>mid</sub>/t)<sup>β</sup>)</code>，拟合 <b>R² = 0.998</b>。</li>
+      <li>agent 学习速度约每 <b>3 个月翻倍</b>（跨模型世代）。</li>
+    </ul>
+
+    <h3>任务设计特点</h3>
+    <table>
+      <thead><tr><th>特点</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td>环境学习导向</td><td>workspace、反馈信号、评估器贴近真实实践；分数反映「如何学习和改进」</td></tr>
+        <tr><td>超长时程</td><td>每任务 ≥12h；部分 &gt;72h；人类专家平均 57.2h/任务，最长 320h</td></tr>
+        <tr><td>六类能力域</td><td>科学问题 &amp; ML、系统 &amp; SE、专业知识工作、组合优化、形式化数学、交互式游戏</td></tr>
+        <tr><td>专家构建</td><td>90%+ 从零构建，非简单包装现有数据集</td></tr>
+      </tbody>
+    </table>
+
+    <h3>LIGO 引力波任务（协作文档重点）</h3>
+    <div class="card highlight">
+      <ul>
+        <li><b>任务</b>：从 LIGO 探测器数据中 <b>重建引力波波形</b>（H1 波形）。</li>
+        <li><b>反馈</b>：多级反馈（分数、误差信息、改进提示）。</li>
+        <li><b>示例运行</b>（GPT-5.5，12 小时）：分数 <b>42.8 → 67.0</b>，共 <b>247 次计分尝试</b>。</li>
+        <li><b>改进轨迹</b>：先让任务可度量 → 分解失败 → 识别瓶颈 → 保留有效部分并修正剩余错误。</li>
+        <li><b>最后阶段</b>：针对 residual / phase / narrow-band 误差定向修正，H1 波形质量提到 67.0。</li>
+      </ul>
+    </div>
+
+    <p><b>同类 Scientific &amp; ML 任务</b>：<code>bipedalwalker_locomotion_rl</code>（机器人运动 RL）、<code>borden_source_inversion</code>（源反演）、<code>dabic_gravity_inversion</code>（重力反演）、<code>graph_node_classification</code>（图节点分类）。</p>
+    <div class="callout">
+      <b>注意</b>：协作文档写「EdgeBench: 通过 LIGO 数据重建引力波」。EdgeBench 的引力波任务正是 <b>waveform reconstruction（信号重建，逆问题）</b>，与 MLS-Bench 的 diffusion-prior inverse solver 同族。
+    </div>
+
+    <h3>可视化：三种典型学习轨迹</h3>
+    <div class="curve">
+      <svg viewBox="0 0 900 260">
+        <defs>
+          <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4cd9a0"/><stop offset="1" stop-color="#2a8f68"/></linearGradient>
+          <linearGradient id="g2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffc857"/><stop offset="1" stop-color="#c9912f"/></linearGradient>
+          <linearGradient id="g3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5b9dff"/><stop offset="1" stop-color="#2f5f9e"/></linearGradient>
+        </defs>
+        <rect width="900" height="260" fill="#171a21" rx="10"/>
+        <g stroke="#2a2f3a" stroke-width="1">
+          <line x1="60" y1="30" x2="60" y2="220"/><line x1="60" y1="220" x2="870" y2="220"/>
+        </g>
+        <!-- steady improvement (green) -->
+        <path d="M60,205 C 220,180 400,130 600,90 C 700,70 820,52 870,46" fill="none" stroke="url(#g1)" stroke-width="3"/>
+        <!-- rapid then plateau (yellow) -->
+        <path d="M60,205 C 180,95 260,60 380,55 C 560,50 740,48 870,47" fill="none" stroke="url(#g2)" stroke-width="3"/>
+        <!-- late breakthrough (blue) -->
+        <path d="M60,208 C 250,205 480,200 560,190 C 620,185 660,90 700,58 C 780,40 840,44 870,46" fill="none" stroke="url(#g3)" stroke-width="3"/>
+        <text x="70" y="252" fill="#9aa3b2" font-size="12">0h</text>
+        <text x="835" y="252" fill="#9aa3b2" font-size="12">12h</text>
+        <text x="75" y="28" fill="#9aa3b2" font-size="12">分数</text>
+        <!-- legend -->
+        <g font-size="12">
+          <line x1="600" y1="90" x2="640" y2="90" stroke="#4cd9a0" stroke-width="3"/><text x="648" y="94" fill="#e6e8ec">steady improvement</text>
+          <line x1="600" y1="112" x2="640" y2="112" stroke="#ffc857" stroke-width="3"/><text x="648" y="116" fill="#e6e8ec">early gains → plateau</text>
+          <line x1="600" y1="134" x2="640" y2="134" stroke="#5b9dff" stroke-width="3"/><text x="648" y="138" fill="#e6e8ec">late breakthrough</text>
+        </g>
+      </svg>
+    </div>
+    <p class="muted">Agent 学习曲线（12h 内）：左=稳定提升，中=早期快后平台，右=长期卡住后突破。好的 observables 应让曲线更快上升。</p>
+
+    <div class="procon">
+      <div class="pro">
+        <b>契合点</b>
+        <ul>
+          <li>多级反馈（分数、错误信息、提示）就是 observable</li>
+          <li>有真实科学任务（LIGO 引力波）</li>
+          <li>学习曲线 = 闭环轨迹，适合衡量「更好 observables → 更快学习」</li>
+        </ul>
+      </div>
+      <div class="con">
+        <b>注意</b>
+        <ul>
+          <li>完整 134 任务需联系 ByteDance（zhongshu@bytedance.com）</li>
+          <li>公开 51 任务 + 完整评估框架</li>
+          <li>12h/任务，评估成本高；3 次独立 run 才有曲线</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 4. ARC-AGI-3 ==================== -->
+  <section id="arcagi3">
+    <h2><span class="num">04</span> ARC-AGI-3：第一个交互式推理基准</h2>
+
+    <div class="card highlight">
+      <b>一句话定义</b>：<b>ARC-AGI-3</b> 衡量 AI agent 在 <b>新颖环境</b> 中探索、即时获取目标、构建可适应世界模型、持续学习的能力。<b>100% 分数 = 像人类一样高效地打赢每个游戏。</b>
+    </div>
+
+    <h3>与 ARC-AGI-1/2 的区别</h3>
+    <table>
+      <thead><tr><th></th><th>ARC-AGI-1/2</th><th>ARC-AGI-3</th></tr></thead>
+      <tbody>
+        <tr><td>格式</td><td>静态推理（输入输出 grid 对）</td><td><b>交互式游戏环境</b></td></tr>
+        <tr><td>反馈</td><td>一次性给定输入输出</td><td>每步 action 返回 frame + 元数据</td></tr>
+        <tr><td>漏洞</td><td>可 test-time compute 暴力采样</td><td>环境只在行动后揭示规则，无法预生成 10000 候选</td></tr>
+        <tr><td>分数</td><td>单次正确率</td><td><b>效率加权</b>（动作越少分越高）</td></tr>
+      </tbody>
+    </table>
+
+    <h3>游戏机制（技术细节）</h3>
+    <ul>
+      <li><b>Turn-based</b>：agent 与 2D grid 环境通过标准化 action 接口交互。</li>
+      <li><b>Grid</b>：最大 64×64；cell 值 0-15（状态/颜色）；坐标 (0,0) 左上。</li>
+      <li><b>7 个标准动作</b>：<code>RESET</code> / <code>ACTION1-4</code>（上下左右）/ <code>ACTION5</code>（交互等）/ <code>ACTION6</code>（带 x,y 坐标）/ <code>ACTION7</code>（Undo）。</li>
+      <li><b>Game State</b>：<code>NOT_FINISHED</code> / <code>WIN</code> / <code>GAME_OVER</code>（达最大动作数等）。</li>
+      <li><b>关键设计</b>：每步收到 1-N 帧 JSON（游戏状态 + 元数据），元数据标明<b>哪些动作当前可用</b>。</li>
+    </ul>
+
+    <h3>具体任务示例：ls20（Agent reasoning）</h3>
+    <div class="card highlight">
+      <ul>
+        <li><b>人类表现</b>：100%（776 次总动作完成游戏）</li>
+        <li><b>关卡数</b>：7 个</li>
+        <li><b>模型表现</b>（2026-06/07）：
+          <ul>
+            <li><code>anthropic-claude-opus-5-high</code>: <b>5.36%</b>（594 actions）</li>
+            <li><code>openai-gpt-5-6-sol-xhigh</code>: <b>3.65%</b>（567 actions）</li>
+            <li><code>anthropic-opus-4-8-high</code>: 2.06%</li>
+            <li><code>openai-gpt-5-6-sol-high</code>: 1.41%</li>
+            <li>大量模型 0%</li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+    <div class="callout warn">
+      <b>重要洞察</b>：<b>动作数多 ≠ 得分低</b>。模型用接近人类（776）的动作数（594-650）却只得 ~5% 分 —— 说明模型在<b>策略分布</b>上与人类完全不同：可能在前几关大量探索，但没真正理解机制。<b>效率加权评分直接惩罚「无效探索」。</b>
+    </div>
+
+    <h3>评估方式（效率加权）</h3>
+    <ul>
+      <li>得分 = 完成游戏的<b>效率</b>（与人类最优动作数比较）。</li>
+      <li>agent <b>不知道</b>自己被如何评分，全程看不到分数 —— 只返回文本 frame 和关卡信息。</li>
+      <li>OpenAI 发现两个设置能显著提分：用 Responses API（保留 reasoning）+ 开启 compaction。说明<b>推理保留 + 上下文管理</b>对交互式推理至关重要。</li>
+    </ul>
+
+    <h3>可视化：ls20 各关卡动作分布</h3>
+    <div class="card">
+      <div class="bar-row">
+        <div class="bar-label">Level 1</div>
+        <div class="bar-track"><div class="bar-fill" style="width:15%; background:linear-gradient(90deg,#5b9dff,#3d6fc2)">15%</div></div>
+        <div class="bar-note">最优通关 · 少量</div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">Level 2</div>
+        <div class="bar-track"><div class="bar-fill" style="width:25%; background:linear-gradient(90deg,#5b9dff,#3d6fc2)">25%</div></div>
+        <div class="bar-note"></div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">Level 3</div>
+        <div class="bar-track"><div class="bar-fill" style="width:35%; background:linear-gradient(90deg,#5b9dff,#3d6fc2)">35%</div></div>
+        <div class="bar-note"></div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">Level 4</div>
+        <div class="bar-track"><div class="bar-fill" style="width:48%; background:linear-gradient(90deg,#7c5bff,#5b3fc2)">48%</div></div>
+        <div class="bar-note"></div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">Level 5</div>
+        <div class="bar-track"><div class="bar-fill" style="width:60%; background:linear-gradient(90deg,#7c5bff,#5b3fc2)">60%</div></div>
+        <div class="bar-note">动作数随关卡递增</div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">Level 6</div>
+        <div class="bar-track"><div class="bar-fill" style="width:75%; background:linear-gradient(90deg,#c77dff,#8f4fc2)">75%</div></div>
+        <div class="bar-note"></div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">Level 7</div>
+        <div class="bar-track"><div class="bar-fill" style="width:92%; background:linear-gradient(90deg,#c77dff,#8f4fc2)">92%</div></div>
+        <div class="bar-note">后期关卡更难，探索消耗最多</div>
+      </div>
+      <p class="muted" style="margin-top:10px">三条参考线：最优通关 / 最佳首跑 / 人类基线。后期关卡动作数显著上升，说明 agent 在后期关卡消耗大量探索。</p>
+    </div>
+
+    <div class="procon">
+      <div class="pro">
+        <b>契合点</b>
+        <ul>
+          <li>每步 frame + 元数据 = 天然 observable 流</li>
+          <li>效率加权评分 = 直接惩罚无效探索</li>
+          <li>隐藏目标/规则 = 需要主动诊断环境</li>
+        </ul>
+      </div>
+      <div class="con">
+        <b>注意</b>
+        <ul>
+          <li>动作接口受限（7 个动作），observable 主要是视觉帧</li>
+          <li>135 环境无指令/无规则/无目标，评分惩罚暴力搜索（人类 10 步 vs AI 100 步 → 得 1% 不是 10%）</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 5. NANOGPT ==================== -->
+  <section id="nanogpt">
+    <h2><span class="num">05</span> nanoGPT：作为 OPHIS 的可控 example</h2>
+
+    <div class="card highlight">
+      <b>为什么是好 example</b>：nanoGPT 是 Karpathy 的最小可训练 GPT 实现 —— <b>完全可控、丰富 observable、已有大量基础、从零可复现</b>。
+    </div>
+
+    <h3>独特优势</h3>
+    <ul>
+      <li><b>完全可控</b>：训练脚本、数据、超参简单，可精确复现。</li>
+      <li><b>丰富的 observable</b>：loss 曲线、梯度范数、激活分布、attention 模式、token 频率分布、gap（训练/验证差异）等。</li>
+      <li><b>已有基础</b>：本项目 <code>OPHIS_gap/</code> 已建立完整 gap 研究体系：
+        <ul>
+          <li>n-gram 记忆导致的 replay-specific generalization gap</li>
+          <li>5-gram 频率可控实验</li>
+          <li>loss-gap-table-RMS alignment 等诊断</li>
+        </ul>
+      </li>
+      <li><b>从零可复现</b>：无需外部 API，纯本地 GPU。</li>
+    </ul>
+
+    <h3>闭环示例（基于本项目已有工作）</h3>
+    <div class="loop">
+      <div class="loop-step"><b>Observe</b><span>loss 曲线、gap、table RMS</span></div>
+      <div class="loop-arrow">→</div>
+      <div class="loop-step"><b>Diagnose</b><span>低频 token 的 gap 大<br>(K-1)/r 定律</span></div>
+      <div class="loop-arrow">→</div>
+      <div class="loop-step"><b>Intervene</b><span>改进采样/词表/记忆机制</span></div>
+      <div class="loop-arrow">→</div>
+      <div class="loop-step"><b>Rerun</b><span>相同 setting</span></div>
+      <div class="loop-arrow">→</div>
+      <div class="loop-step"><b>Observe</b><span>gap 是否缩小？<br>是否引入新问题？</span></div>
+    </div>
+
+    <div class="procon">
+      <div class="pro">
+        <b>契合点</b>
+        <ul>
+          <li>最可控、成本最低的闭环验证平台</li>
+          <li>已有理论体系（gap 形成机制）作「诊断」知识底座</li>
+          <li>适合验证 Claim 4（诊断 → 更好干预决策）</li>
+        </ul>
+      </div>
+      <div class="con">
+        <b>注意</b>
+        <ul>
+          <li>单一任务不够「普遍」，需与 MLS-Bench / EdgeBench 搭配成 3 个闭环</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 6. CLOSURE ==================== -->
+  <section id="closure">
+    <h2><span class="num">06</span> Observable 闭环：每个 bench 怎么做 + 缺陷分析</h2>
+
+    <h3>6.1 总体思路：每个 bench 的闭环怎么做</h3>
+    <div class="card">
+      <table>
+        <thead><tr><th>Bench</th><th>Observable</th><th>Diagnose</th><th>Intervene</th><th>闭环关键</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><b>MLS-Bench</b></td>
+            <td>训练曲线、验证指标、组件相关诊断（量化误差、attention 分布、图信号传播）</td>
+            <td>识别瓶颈子模块（方法问题 vs 实现/超参/种子问题）</td>
+            <td>方法级修改（受限可编辑范围），≥3 setting + 跨规模验证</td>
+            <td>多 setting + 多 seed 防自欺，单点改进不算数</td>
+          </tr>
+          <tr>
+            <td><b>EdgeBench (LIGO)</b></td>
+            <td>多级反馈（分数、错误信息、提示）+ 波形残差可视化</td>
+            <td>把任务可度量 → 分解失败 → 定位瓶颈（residual/phase/narrow-band）</td>
+            <td>针对瓶颈定向修正</td>
+            <td>12h 学习曲线 = 闭环轨迹；好 observable 让曲线更快上升</td>
+          </tr>
+          <tr>
+            <td><b>ARC-AGI-3</b></td>
+            <td>每步 frame（grid 状态）+ 元数据（可用动作）</td>
+            <td>从视觉状态推断世界规则（目标？可交互对象？动作效果？）</td>
+            <td>选择下一个动作（行动即干预）</td>
+            <td>效率加权评分 = 衡量「理解速度」；好 observable 减少达到理解所需动作</td>
+          </tr>
+          <tr>
+            <td><b>nanoGPT</b></td>
+            <td>loss、gap、table RMS、token 频率、梯度统计</td>
+            <td>用已有理论（(K-1)/r 定律、gap ~ U(r) log(r/αK)）定位根源</td>
+            <td>修改训练/数据/架构组件</td>
+            <td>快速迭代，验证诊断→干预因果链</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>6.2 Observable 闭环的缺陷在哪里</h3>
+
+    <div class="defect">
+      <h4>缺陷 1：诊断 → 干预的归因问题（根本性）</h4>
+      <p>闭环里最脆弱的一环是「诊断出的原因」是否真是「干预成功的因果机制」。</p>
+      <ol>
+        <li><b>相关性 ≠ 因果</b>：观察到的 observable（loss 翘起、gap 大）可能是多个机制的共同表现。agent 可能选了一个「看起来对症」的干预，其实碰巧有效/无效。</li>
+        <li><b>缺少反事实</b>：人类科学家用消融实验、控制变量验证因果；但闭环 agent 通常只看到「干预前 vs 干预后」两条曲线，无法区分「这个干预有效」与「任何改变都有效」（seed 运气、隐式超参改变）。</li>
+      </ol>
+    </div>
+
+    <div class="defect">
+      <h4>缺陷 2：observable 的「信息效率」问题（Claim 2/3 核心）</h4>
+      <ol>
+        <li><b>原始 observable 太多</b>：训练日志、曲线、中间状态海量。盲目全给 → 上下文爆炸 → 信息过载 → 性能下降（正是 Claim 2 说的「饱和甚至有害」）。</li>
+        <li><b>可观察 ≠ 可诊断</b>：即使 observable 完整，agent 也可能不知道<b>看哪里</b>。例如关键信号可能是「某频率 bin 的 loss 翘起」，但原始 loss 曲线看不到。</li>
+        <li><b>缺少「实验设计」的 observable</b>：目前 observable 都是「被动观察训练」，缺少「主动实验」观测 —— 比如「如果我干预 A，会发生什么」的反事实观测。这是闭环里最缺的。</li>
+      </ol>
+    </div>
+
+    <div class="defect">
+      <h4>缺陷 3：闭环的「探索-利用」权衡</h4>
+      <ol>
+        <li><b>干预次数有限</b>：每次重跑都花 compute（MLS-Bench ~5-10 H100-hours/任务；EdgeBench 12h）。agent 需在有限预算内决定「深入一个假设」vs「尝试多个假设」。</li>
+        <li><b>缺「下一个实验该做什么」信号</b>：现在的 observable 描述「当前状态」，但闭环最需要「哪个实验最有信息量」——这本身需要元认知。</li>
+      </ol>
+    </div>
+
+    <div class="defect">
+      <h4>缺陷 4：闭环的「自欺」风险（过拟合闭环本身）</h4>
+      <ol>
+        <li><b>对当前任务过拟合</b>：agent 可能学到「这个 observable 对应这个干预」，换任务就失效。这正是 MLS-Bench 设计多 setting 验证的原因。</li>
+        <li><b>对 observables 过拟合</b>：若 agent 发现「loss 曲线形态」与「最终分数」相关，可能直接优化 loss 曲线形态（如刻意降 LR 让曲线平滑），而不解决真正问题 —— 一种 observable 作弊。</li>
+      </ol>
+    </div>
+
+    <div class="defect">
+      <h4>缺陷 5：闭环缺少「人类科学家的隐性知识」</h4>
+      <ol>
+        <li><b>先验知识</b>：人类知道「梯度爆炸通常调 clip」「loss 平台可能是 LR 问题」。LLM 先验覆盖一部分，但不覆盖领域特定知识。</li>
+        <li><b>「直觉」不可编码</b>：很多科学判断（这个实验值得做吗）难以用 observable 形式化。</li>
+      </ol>
+    </div>
+
+    <div class="defect">
+      <h4>缺陷 6：评估闭环本身的指标缺失</h4>
+      <ol>
+        <li><b>没有标准指标衡量「诊断质量」</b>：目前只衡量最终分数（干预好不好），不衡量诊断对不对。</li>
+        <li><b>无法区分「运气好」和「诊断对」</b>：单次闭环成功可能是偶然；需多次重复 + 统计。</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ==================== 7. NEXT ==================== -->
+  <section id="next">
+    <h2><span class="num">07</span> 下一步行动建议</h2>
+    <ol>
+      <li><b>选 3 个闭环</b>（建议组合）：
+        <ul>
+          <li><b>nanoGPT</b> —— 最可控，已有基础，作为 example + 方法论开发地</li>
+          <li><b>MLS-Bench-Lite 的 1-2 个任务</b> —— 如 <code>llm-qat-algorithm</code> 或 <code>ai4sci-inverse-diffusion-algo</code>（AI for Science + 训练闭环）</li>
+          <li><b>EdgeBench 的 LIGO 引力波任务</b> —— 真实科学问题，需联系 ByteDance 获取完整任务；或先用公开 51 任务里的 Scientific &amp; ML 任务</li>
+          <li>ARC-AGI-3 可作为补充/探索（交互式、成本低但评价标准不同）</li>
+        </ul>
+      </li>
+      <li><b>先做一个「最小 observable 闭环」原型</b>：在 nanoGPT 上实现「观察→诊断→干预→再观察」，把闭环的<b>缺陷</b>暴露出来（特别是归因问题）。</li>
+      <li><b>针对 Claim 2/3 做可控实验</b>：同一任务，给 agent 不同数量的 observable（少量精选 vs 海量原始），测量闭环改进效率 —— 直接验证「盲目加 observable 会饱和」和「OPHIS 能提升信息效率」。</li>
+      <li><b>探索「主动实验」observable</b>：让 agent 不只被动看训练，还能主动设计小实验（如 probe 中间状态），这可能解决缺陷 2.3。</li>
+    </ol>
+  </section>
+
+  <!-- ==================== 8. REF ==================== -->
+  <section id="ref">
+    <h2><span class="num">08</span> 参考链接</h2>
+    <table>
+      <thead><tr><th>Bench</th><th>链接</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><b>MLS-Bench</b></td>
+          <td>
+            <a href="https://mls-bench.com/">官网</a> ·
+            <a href="https://arxiv.org/abs/2605.08678">arXiv 2605.08678</a> ·
+            <a href="https://github.com/Imbernoulli/MLS-Bench">GitHub</a> ·
+            <a href="https://huggingface.co/datasets/Bohan22/MLS-Bench-Tasks">HF 数据集</a>
+          </td>
+        </tr>
+        <tr>
+          <td><b>EdgeBench</b></td>
+          <td>
+            <a href="https://edge-bench.org/">官网</a> ·
+            <a href="https://seed.bytedance.com/en/blog/edgebench-measuring-real-world-environment-learning-and-discovering-a-new-scaling-law">Blog</a> ·
+            <a href="https://arxiv.org/abs/2607.05155">arXiv 2607.05155</a> ·
+            <a href="https://github.com/ByteDance-Seed/EdgeBench">GitHub</a> ·
+            <a href="https://huggingface.co/datasets/ByteDance-Seed/EdgeBench">HF 数据集</a>
+          </td>
+        </tr>
+        <tr>
+          <td><b>ARC-AGI-3</b></td>
+          <td>
+            <a href="https://arcprize.org/arc-agi/3">官网</a> ·
+            <a href="https://arcprize.org/media/ARC_AGI_3_Technical_Report.pdf">技术报告</a> ·
+            <a href="https://docs.arcprize.org/">Docs</a> ·
+            <a href="https://arcprize.org/tasks/ls20">ls20 任务</a> ·
+            <a href="https://github.com/arcprize/ARC-AGI-3-Agents">GitHub Agents</a> ·
+            <a href="https://www.kaggle.com/competitions/arc-prize-2026-arc-agi-3">Kaggle</a> ·
+            <a href="https://arxiv.org/abs/2603.24621">arXiv 2603.24621</a>
+          </td>
+        </tr>
+        <tr>
+          <td><b>nanoGPT</b></td>
+          <td><a href="https://github.com/karpathy/nanoGPT">GitHub (Karpathy)</a></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <div class="footer">
+    协作文档：<a href="https://docs.google.com/document/d/1qLSEY2FaVF9uqbyZNLjBCIp8cHN4bC_Q_O3xNBVBFuI/edit?tab=t.0">OPHIS 协作文档 (Google Docs)</a>
+  </div>
+
+</div>
+</body>
+</html>
