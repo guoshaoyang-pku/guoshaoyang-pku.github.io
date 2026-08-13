@@ -169,6 +169,11 @@
       <span class="badge">2026-08-13</span>
       <span class="badge">协作文档 · Google Docs</span>
     </div>
+    <div style="margin-top:14px; font-size:.85rem; color:var(--yellow); border-top:1px solid rgba(255,200,87,.3); padding-top:12px; position:relative;">
+      <b>阅读须知</b>：本文档中 "observable" / "causal" / "闭环" 等概念是 <b>OPHIS 自己的分析框架</b>，<b>并非各 bench 论文原文提出的术语</b>。
+      各 bench 论文原文没有提出这些概念；本文用 OPHIS 的视角去分析这些 bench 如何承载闭环。
+      各节的"为何适合 OPHIS"、"契合点" 是<b>本文作者的解读</b>，不是论文主张，请勿误引。
+    </div>
   </div>
 
   <!-- TOC -->
@@ -191,7 +196,7 @@
     <h2><span class="num">01</span> 调研总览</h2>
     <table>
       <thead>
-        <tr><th>Bench</th><th>本质</th><th>任务数</th><th>单任务时长</th><th>关键评估</th><th>与 OPHIS 契合点</th></tr>
+        <tr><th>Bench</th><th>本质</th><th>任务数</th><th>单任务时长</th><th>关键评估</th><th>与 OPHIS 契合点<br><span style="font-weight:400;font-size:.75rem;color:var(--muted)">（OPHIS 解读）</span></th></tr>
       </thead>
       <tbody>
         <tr>
@@ -336,6 +341,52 @@
       </tbody>
     </table>
 
+    <h3>任务接口细节（raw，来自任务页原文）</h3>
+    <p class="muted">以下内容直接取自 mls-bench.com 任务页，展示 agent 实际面对的可编辑接口 —— 这是理解"observable 从哪来"的关键。</p>
+
+    <h4>示例 A：llm-qat-algorithm —— 可编辑文件 <code>custom_qat.py</code></h4>
+    <div class="card">
+      <p><b>研究问题</b>：设计一个 QAT 算法，最小化全精度 Pythia-1.4B 与 INT4/INT3/INT2 量化后模型的 perplexity gap。必须是<b>训练侧</b>贡献（fake-quant forward、梯度流、可学习参数、优化器调度），且需在 4/3/2-bit 统一有效。</p>
+      <p><b>可编辑范围</b>：只能编辑 <code># EDITABLE REGION START / END</code> 块内的：</p>
+      <ul>
+        <li><code>CONFIG_OVERRIDES</code> dict：<code>learning_rate</code> / <code>num_steps</code> / <code>batch_size</code> / <code>gradient_accumulation_steps</code> / <code>max_grad_norm</code> / <code>warmup_steps</code> / <code>weight_decay</code></li>
+        <li><code>fake_quantize_weight(weight, num_bits, group_size)</code>：可微 fake-quant，梯度须回流到原 weight</li>
+        <li><code>fake_quantize_activation(x, num_bits)</code>：可选（默认 identity，weight-only）</li>
+        <li><code>quantize_dequantize_weight(weight, num_bits, group_size)</code>：<b>no-grad</b> 真实 QDQ，训练后物化整数模型用于评估</li>
+        <li><code>class QATWrapper(nn.Module)</code>：包装 <code>nn.Linear</code>，forward 里做 fake quant；可持额外可学习参数（LSQ per-group scales、StableQAT EMA buffers）；可暴露 <code>aux_loss(step, total_steps)</code></li>
+        <li><code>prepare_qat_model(model, num_bits, group_size)</code>：把每个 <code>nn.Linear</code>（及 HF GPT-2 <code>Conv1D</code>）替换为 <code>QATWrapper</code>；<b>必须把 LM head 恢复为 plain Linear（全精度）</b></li>
+      </ul>
+      <p><b>固定（不可编辑）部分</b>：模型加载（Pythia-1.4B FP32 + 梯度检查点）、WikiText-2 数据采样（block-1024 随机裁剪）、QAT 训练循环（AdamW、cosine LR + warmup、grad-accum、grad-norm clip）、训练后 real-quantization roundtrip、WikiText-2 test perplexity 评估。</p>
+      <p><b>评估</b>：三个 bit-width —— <code>qat-1b-int4</code>（易）/ <code>qat-1b-int3</code>（中，8 级）/ <code>qat-1b-int2</code>（极难，4 级）。主指标 <code>wikitext2_ppl</code>（越低越好），次指标 <code>degradation</code> = <code>ppl - fp16_ppl</code>。</p>
+      <p><b>关键对照基线</b>：<code>finetune_then_ptq</code>（先全精度 finetune 再 RTN 量化）—— 隔离 finetune 信号与 QAT 信号。<b>一个有效的 QAT 方法必须击败它</b>，否则其收益只是 in-domain finetune 的功劳。</p>
+    </div>
+
+    <h4>示例 B：ai4sci-inverse-diffusion-algo —— 可编辑文件 <code>algo/custom.py</code></h4>
+    <div class="card">
+      <p><b>研究问题</b>：用预训练扩散先验 <code>p(x)</code> 解逆问题。给定前向算子 A 和观测 <code>y = A(x) + noise</code>，从后验 <code>p(x|y) ∝ p(y|x)p(x)</code> 采样重建 x。</p>
+      <p><b>可编辑范围</b>：整个 <code>algo/custom.py</code>，需实现 <code>Custom</code> 类：</p>
+      <ul>
+        <li><code>__init__</code>：scheduler、optimizer、超参</li>
+        <li><code>inference(observation, num_samples)</code>：给定观测 y，返回重建 x</li>
+      </ul>
+      <p><b>可用组件（固定）</b>：</p>
+      <ul>
+        <li><code>self.net(x, sigma)</code> → denoised estimate（Tweedie's formula: E[x₀|x_t]）</li>
+        <li><code>self.forward_op.forward(x)</code> → A(x)</li>
+        <li><code>self.forward_op.gradient(x, y, return_loss=True)</code> → (∇ₓ‖A(x)−y‖², loss)</li>
+        <li><code>self.forward_op.loss(x, y)</code> → ‖A(x)−y‖²</li>
+        <li><code>Scheduler(num_steps, schedule, timestep, scaling)</code> → 扩散噪声调度</li>
+        <li><code>DiffusionSampler(scheduler).sample(model, x_start)</code> → 无条件采样</li>
+      </ul>
+      <p><b>评估</b>：三个科学逆问题 —— <b>Inverse Scattering</b>（光学断层，PSNR/SSIM）、<b>Black Hole Imaging</b>（EHT 稀疏干涉观测重建黑洞图像，PSNR/blur-PSNR/closure-phase χ²）、<b>FFHQ256 Inpainting</b>（box mask + σ=0.05 高斯噪声，PSNR/SSIM/LPIPS）。</p>
+    </div>
+
+    <h4>任务 5 要素（结构复述）</h4>
+    <ul>
+      <li>(i) 研究问题 → (ii) 代码库 + 可编辑范围 → (iii) ≥3 强人类基线 → (iv) ≥3 评估 setting → (v) 种子策略（多 seed 保证非偶然）</li>
+      <li>这条链的核心：<b>可编辑范围</b> 定义了 agent 的"干预空间"，<b>多 setting + 多 seed</b> 定义了"泛化验证" —— 这正是闭环里"干预"和"防自欺"的结构化体现。</li>
+    </ul>
+
     <h3>当前结果（MLS-Bench-Lite，15 个模型）</h3>
     <ul>
       <li>即使给 agent 强基线 + 多次迭代机会，<b>前沿 agent 仍远不能稳定匹配人类设计的方法</b>。</li>
@@ -343,12 +394,12 @@
       <li>作者关键洞察：瓶颈不在「提出」新方法，而在 <b>科学判断</b> —— 形成假设、选择有信息量的实验、分配有限试验、把反馈转化为可扩展证据。<b>更多搜索 / compute / context 无法消除此瓶颈。</b></li>
     </ul>
     <div class="callout">
-      <b>这正是 OPHIS 的切入点：更好的 observables → 更好的科学判断。</b>
+      <b>对 OPHIS 的启示（本文作者的连接，非论文原话）</b>：论文指出的瓶颈 —— "scientific judgment needed to form hypotheses, choose informative experiments, allocate limited trials, and turn feedback into evidence" —— 与 OPHIS 的 observable 闭环目标高度吻合。但<b>论文本身没有提出 observable 框架</b>，它只是诊断了 agent 的缺陷。OPHIS 的定位是：用更好的 observables 回应这个"科学判断"瓶颈。
     </div>
 
     <div class="procon">
       <div class="pro">
-        <b>契合点</b>
+        <b>契合点（OPHIS 解读）</b>
         <ul>
           <li>每任务 = 可控闭环（明确干预目标、强基线、跨 setting 验证）</li>
           <li>有 AI for Science 领域，与 LIGO 同族</li>
@@ -407,6 +458,20 @@
       <b>注意</b>：协作文档写「EdgeBench: 通过 LIGO 数据重建引力波」。EdgeBench 的引力波任务正是 <b>waveform reconstruction（信号重建，逆问题）</b>，与 MLS-Bench 的 diffusion-prior inverse solver 同族。
     </div>
 
+    <h3>EdgeBench 任务环境细节（raw）</h3>
+    <div class="card">
+      <ul>
+        <li><b>评估框架</b>：每任务有标准化的 workspace + 评估器（evaluator）；agent 在 sandbox 中持续操作，可反复提交计分。</li>
+        <li><b>多级反馈</b>：agent 收到的不只是最终分数，还有错误信息、改进提示等中间信号（EdgeBench 论文称之为 "rich, multilevel feedback"）。</li>
+        <li><b>学习曲线度量</b>：论文用 log-sigmoid 拟合 <code>S(t) = S_max / (1 + (t_mid/t)^β)</code> 描述 12h+ 内的分数轨迹，R²=0.998。</li>
+        <li><b>分数格式</b>（GitHub leaderboard）：每任务 5 列 = 5 个模型（如 GPT-5.5/4.1/4-o3 等），每列 6 个数 = 随时间切片（如 2h/4h/6h/8h/10h/12h）的分数，例如 <code>42.8→67.0</code> 即 12h 内从 42.8 涨到 67.0。</li>
+      </ul>
+    </div>
+
+    <div class="callout warn">
+      <b>OPHIS 视角（本文作者解读，非 EdgeBench 论文原话）</b>：EdgeBench 论文原文没有使用 "observable" 概念。它强调的是 "rich, multilevel feedback" 和 agent 在环境中的学习曲线。把 "多级反馈" 映射为 OPHIS 的 "observable" 是<b>本文的解读</b>：反馈信号 → 被 agent 观察 → 用于诊断 → 决定干预。但要注意，EdgeBench 的反馈是<b>任务自带的原始信号</b>，不是 OPHIS 提出的增强 observables。
+    </div>
+
     <h3>可视化：三种典型学习轨迹</h3>
     <div class="curve">
       <svg viewBox="0 0 900 260">
@@ -440,9 +505,9 @@
 
     <div class="procon">
       <div class="pro">
-        <b>契合点</b>
+        <b>契合点（OPHIS 解读）</b>
         <ul>
-          <li>多级反馈（分数、错误信息、提示）就是 observable</li>
+          <li>多级反馈（分数、错误信息、提示）可视为 observable</li>
           <li>有真实科学任务（LIGO 引力波）</li>
           <li>学习曲线 = 闭环轨迹，适合衡量「更好 observables → 更快学习」</li>
         </ul>
@@ -489,16 +554,22 @@
     <h3>具体任务示例：ls20（Agent reasoning）</h3>
     <div class="card highlight">
       <ul>
-        <li><b>人类表现</b>：100%（776 次总动作完成游戏）</li>
-        <li><b>关卡数</b>：7 个</li>
-        <li><b>模型表现</b>（2026-06/07）：
-          <ul>
-            <li><code>anthropic-claude-opus-5-high</code>: <b>5.36%</b>（594 actions）</li>
-            <li><code>openai-gpt-5-6-sol-xhigh</code>: <b>3.65%</b>（567 actions）</li>
-            <li><code>anthropic-opus-4-8-high</code>: 2.06%</li>
-            <li><code>openai-gpt-5-6-sol-high</code>: 1.41%</li>
-            <li>大量模型 0%</li>
-          </ul>
+        <li><b>人类表现</b>：100%（776 次总动作完成游戏），7 个关卡。</li>
+        <li><b>环境标识</b>：grid 游戏；agent 通过 7 个标准动作交互；每步返回帧 + 元数据（可用动作）。</li>
+        <li><b>模型表现</b>（2026-04 ~ 07 公开发布，arcprize.org/tasks/ls20 原文数据）：
+          <table style="margin-top:8px">
+            <thead><tr><th>模型</th><th>Score</th><th>Actions</th><th>发布日期</th></tr></thead>
+            <tbody>
+              <tr><td>Humans</td><td><b>100%</b></td><td>776</td><td>—</td></tr>
+              <tr><td>anthropic-claude-opus-5-high</td><td><b>5.36%</b></td><td>594</td><td>Jul 21, 2026</td></tr>
+              <tr><td>openai-gpt-5-6-sol-xhigh</td><td><b>3.65%</b></td><td>567</td><td>Jun 12, 2026</td></tr>
+              <tr><td>openai-gpt-5-6-sol-max</td><td>3.57%</td><td>632</td><td>Jun 13, 2026</td></tr>
+              <tr><td>anthropic-opus-4-8-high</td><td>2.06%</td><td>644</td><td>May 31, 2026</td></tr>
+              <tr><td>openai-gpt-5-6-terra-xhigh</td><td>1.69%</td><td>647</td><td>Jun 20, 2026</td></tr>
+              <tr><td>openai-gpt-5-6-sol-high</td><td>1.41%</td><td>650</td><td>Jun 12, 2026</td></tr>
+              <tr><td>其他模型（luna/terra/sol 低档、grok-4、gemini-3.1、opus-4.6 等）</td><td><b>0%</b></td><td>110</td><td>Apr-Jun 2026</td></tr>
+            </tbody>
+          </table>
         </li>
       </ul>
     </div>
@@ -553,9 +624,13 @@
       <p class="muted" style="margin-top:10px">三条参考线：最优通关 / 最佳首跑 / 人类基线。后期关卡动作数显著上升，说明 agent 在后期关卡消耗大量探索。</p>
     </div>
 
+    <div class="callout warn" style="margin-top:16px">
+      <b>OPHIS 视角（本文作者解读，非 ARC-AGI-3 论文原话）</b>：ARC-AGI-3 论文（技术报告）没有使用 "observable" 或 "闭环" 概念。它描述的是 agent 通过动作与环境交互、每步获得 frame 与元数据。把 "frame + 元数据" 解读为 OPHIS 的 "observable 流" 是<b>本文的映射</b> —— 因为 agent 确实依赖这些观测来推断世界规则、决定下一步动作（即干预）。
+    </div>
+
     <div class="procon">
       <div class="pro">
-        <b>契合点</b>
+        <b>契合点（OPHIS 解读）</b>
         <ul>
           <li>每步 frame + 元数据 = 天然 observable 流</li>
           <li>效率加权评分 = 直接惩罚无效探索</li>
@@ -623,11 +698,35 @@
         </ul>
       </div>
     </div>
+
+    <h3>nanoGPT 具体任务设定（本项目的闭环平台）</h3>
+    <div class="card">
+      <p>nanoGPT 是 Karpathy 的最小可训练 GPT 实现（GitHub: karpathy/nanoGPT）。核心是 <code>train.py</code> 训练脚本 + <code>model.py</code>（GPT-2 风格 decoder-only transformer）。本项目用它作为 OPHIS 的 example，具体 task 设定：</p>
+      <ul>
+        <li><b>训练</b>：自回归语言建模，next-token prediction，cross-entropy loss。</li>
+        <li><b>数据</b>：OpenWebText 或 TinyStories 等；本项目用 n-gram 频率可控的合成数据（5-gram）来精确操控 token 频率分布。</li>
+        <li><b>架构</b>：decoder-only transformer（n_layer/n_head/n_embd 可调），可加/改组件（采样、词表、记忆机制）。</li>
+        <li><b>观测维度（observable）</b>：
+          <ul>
+            <li><code>train/val loss</code> 曲线（按 step 记录）</li>
+            <li><b>gap</b> = train loss − val loss（本项目核心指标，已建立 <code>(K-1)/r</code> 定律：gap 随词表/频率的标度关系）</li>
+            <li><code>table RMS</code>：词表表项统计与 loss 的对齐诊断</li>
+            <li>token 频率分布、梯度范数、激活分布、attention 模式</li>
+          </ul>
+        </li>
+        <li><b>干预空间</b>：改采样分布、改词表、改记忆机制、改训练超参（LR/schedule/batch）、改架构组件。</li>
+      </ul>
+      <p class="muted">注意：这里 "observable" 是本项目自己的分析框架 —— nanoGPT 本身不提供所谓 "observables"，它只是一套可观测的训练日志。如何从这些原始日志中<b>选择/组合/设计</b> observables，正是 OPHIS 要研究的问题。</p>
+    </div>
   </section>
 
   <!-- ==================== 6. CLOSURE ==================== -->
   <section id="closure">
     <h2><span class="num">06</span> Observable 闭环：每个 bench 怎么做 + 缺陷分析</h2>
+
+    <div class="callout warn">
+      <b>本节性质说明</b>：本节<b>完全是 OPHIS 自己的分析框架</b>，不是任何 bench 论文的内容。表格里"Observable / Diagnose / Intervene / 闭环关键"是本文作者为每个 bench 设计的闭环工作流假设 —— 这些 bench 论文都没有提出 observable 闭环方法。<b>本节用于帮助我们思考 OPHIS 如何落地到这些 bench，不代表 bench 本身支持这套框架。</b>
+    </div>
 
     <h3>6.1 总体思路：每个 bench 的闭环怎么做</h3>
     <div class="card">
