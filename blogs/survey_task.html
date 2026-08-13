@@ -182,7 +182,7 @@
     <ol>
       <li><a href="#overview">调研总览</a></li>
       <li><a href="#mlsbench">MLS-Bench：让 agent 发明可泛化、可扩展的 ML 方法</a></li>
-      <li><a href="#edgebench">EdgeBench：真实环境中的长期学习（含 LIGO 引力波）</a></li>
+      <li><a href="#edgebench">EdgeBench：真实环境中的长期学习（含 LIGO 引力波 + 51 开源任务例题）</a></li>
       <li><a href="#arcagi3">ARC-AGI-3：第一个交互式推理基准</a></li>
       <li><a href="#nanogpt">nanoGPT：作为 OPHIS 的可控 example</a></li>
       <li><a href="#closure">Observable 闭环：每个 bench 怎么做 + 缺陷分析</a></li>
@@ -213,7 +213,7 @@
           <td>134（6 大类）<br>开源 51</td>
           <td>12–72 小时</td>
           <td>学习曲线 log-sigmoid 拟合</td>
-          <td>LIGO 引力波任务；多级反馈</td>
+          <td>LIGO 引力波任务（完整集）；51 开源任务；多级反馈</td>
         </tr>
         <tr>
           <td><b>ARC-AGI-3</b></td>
@@ -560,7 +560,7 @@ mlsbench score task &lt;task&gt;</pre>
       </tbody>
     </table>
 
-    <h3>LIGO 引力波任务（协作文档重点）</h3>
+    <h3>LIGO 引力波任务（协作文档重点，属于完整 134 集，不在开源 51 内）</h3>
     <div class="card highlight">
       <ul>
         <li><b>任务</b>：从 LIGO 探测器数据中 <b>重建引力波波形</b>（H1 波形）。</li>
@@ -571,23 +571,153 @@ mlsbench score task &lt;task&gt;</pre>
       </ul>
     </div>
 
-    <p><b>同类 Scientific &amp; ML 任务</b>：<code>bipedalwalker_locomotion_rl</code>（机器人运动 RL）、<code>borden_source_inversion</code>（源反演）、<code>dabic_gravity_inversion</code>（重力反演）、<code>graph_node_classification</code>（图节点分类）。</p>
     <div class="callout">
-      <b>注意</b>：协作文档写「EdgeBench: 通过 LIGO 数据重建引力波」。EdgeBench 的引力波任务正是 <b>waveform reconstruction（信号重建，逆问题）</b>，与 MLS-Bench 的 diffusion-prior inverse solver 同族。
+      <b>注意</b>：协作文档写「EdgeBench: 通过 LIGO 数据重建引力波」。EdgeBench 的引力波任务正是 <b>waveform reconstruction（信号重建，逆问题）</b>，与 MLS-Bench 的 diffusion-prior inverse solver 同族。<b>但它属于完整 134 任务集（需联系 ByteDance 获取），不在公开的 51 个开源任务里</b>。用开源子集跑的话，对应的是下方 Scientific &amp; ML 类任务。
     </div>
 
-    <h3>EdgeBench 任务环境细节（raw）</h3>
+    <h3>具体任务例题（51 个开源任务的 raw 定义，来自 HF 数据集）</h3>
     <div class="card">
-      <ul>
-        <li><b>评估框架</b>：每任务有标准化的 workspace + 评估器（evaluator）；agent 在 sandbox 中持续操作，可反复提交计分。</li>
-        <li><b>多级反馈</b>：agent 收到的不只是最终分数，还有错误信息、改进提示等中间信号（EdgeBench 论文称之为 "rich, multilevel feedback"）。</li>
-        <li><b>学习曲线度量</b>：论文用 log-sigmoid 拟合 <code>S(t) = S_max / (1 + (t_mid/t)^β)</code> 描述 12h+ 内的分数轨迹，R²=0.998。</li>
-        <li><b>分数格式</b>（GitHub leaderboard）：每任务 5 列 = 5 个模型（如 GPT-5.5/4.1/4-o3 等），每列 6 个数 = 随时间切片（如 2h/4h/6h/8h/10h/12h）的分数，例如 <code>42.8→67.0</code> 即 12h 内从 42.8 涨到 67.0。</li>
-      </ul>
+      <p class="muted">以下描述直接取自 HuggingFace 数据集（ByteDance-Seed/EdgeBench）中每个任务的 <code>description</code> 字段。每个任务都是 <b>12h+ 长时程</b>，agent 通过 <code>sforge-submit</code> 反复提交、收到反馈、持续改进。</p>
+
+      <h4>Scientific &amp; ML（4 个，全部开源）</h4>
+      <table>
+        <thead><tr><th>任务 ID</th><th>任务描述（raw）</th><th>指标</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><code>bipedalwalker_locomotion_rl</code></td>
+            <td>Train a CPU-only locomotion policy for BipedalWalker and its Hardcore variant. The judge evaluates only the submitted policy checkpoint, not the training process. Pre-trained policies and external RL libraries are prohibited.</td>
+            <td>score (maximize)</td>
+          </tr>
+          <tr>
+            <td><code>borden_source_inversion</code></td>
+            <td>Infer a finite-duration rectangular contaminant source from sparse, noisy monitoring-well observations in a 3D hydrogeological scene. The agent must implement its own forward model and inversion optimizer from scratch.</td>
+            <td>score (maximize)</td>
+          </tr>
+          <tr>
+            <td><code>dabic_gravity_inversion</code></td>
+            <td>Implement the D-ABIC regularization method for 3D gravity inversion within the SimPEG framework, run on both synthetic and real Vinton salt dome data under L0 and L1 sparse norms, and compare against a Hamiltonian Monte Carlo baseline.</td>
+            <td>score (maximize)</td>
+          </tr>
+          <tr>
+            <td><code>graph_node_classification</code></td>
+            <td>Implement graph neural networks from scratch using only base PyTorch for semi-supervised node classification on an unseen graph under CPU-only constraints.</td>
+            <td>score (maximize)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h4>Systems &amp; SE（部分代表）</h4>
+      <table>
+        <thead><tr><th>任务 ID</th><th>任务描述（raw）</th><th>指标</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><code>exchange_core_throughput</code></td>
+            <td>Maximize peak throughput of a Java financial matching engine built on the LMAX Disruptor by tuning thread topology, wait strategies, ring-buffer sizing, order-book implementation, and JVM configuration.</td>
+            <td>score (maximize)</td>
+          </tr>
+          <tr>
+            <td><code>ffmpeg_swscale_reimplementation</code></td>
+            <td>Reimplement FFmpeg's libswscale pixel-format conversion and scaling library in Rust, handling multiple pixel formats and scaling algorithms. A correctness-passing scaffold is provided; the agent must optimize for speed via SIMD.</td>
+            <td>score (maximize)</td>
+          </tr>
+          <tr>
+            <td><code>git_rewrite_in_zig</code></td>
+            <td>Reimplement git as a drop-in Zig binary producing identical CLI output, exit codes, and repository state as the C reference implementation. The C source is available for reading but cannot be compiled.</td>
+            <td>score (maximize)</td>
+          </tr>
+          <tr>
+            <td><code>integer_compression_codec</code></td>
+            <td>Improve a C++ integer compression codec for better compression ratio and decode throughput on uint32 datasets via techniques such as delta encoding, bit-packing, and SIMD vectorization. Exact round-trip correctness is mandatory.</td>
+            <td>score (maximize)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h4>Combinatorial Optimization（部分代表）</h4>
+      <table>
+        <thead><tr><th>任务 ID</th><th>任务描述（raw）</th><th>指标</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><code>ad_placement_optimization</code></td>
+            <td>Partition a large integer grid into non-overlapping rectangles, each containing a designated anchor point, maximizing total satisfaction from how closely each rectangle's area matches its target.</td>
+            <td>score (maximize)</td>
+          </tr>
+          <tr>
+            <td><code>smt_solver</code></td>
+            <td>Build an SMT solver from scratch for four quantifier-free theories (uninterpreted functions, linear real and integer arithmetic, and their combination). External SMT solvers are forbidden; model witnesses are independently validated.</td>
+            <td>score (maximize)</td>
+          </tr>
+          <tr>
+            <td><code>vehicle_routing_time_windows</code></td>
+            <td>Implement a capacitated vehicle routing solver with time windows for Solomon-style benchmarks. Scored against best-known solutions on vehicle count and total travel distance.</td>
+            <td>score (maximize)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h4>Interactive Games &amp; Simulators（部分代表）</h4>
+      <table>
+        <thead><tr><th>任务 ID</th><th>任务描述（raw）</th><th>指标</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><code>anchorhead_text_adventure</code></td>
+            <td>Play the Lovecraftian interactive fiction game Anchorhead via an HTTP API, sending text commands and receiving prose observations. Scored by peak in-game score, reflecting progression through the multi-day narrative and puzzle chain.</td>
+            <td>game score</td>
+          </tr>
+          <tr>
+            <td><code>nethack_dungeon_agent</code></td>
+            <td>Implement a decision policy for NetHack via the NLE harness, parsing ASCII map observations and stat vectors to navigate, fight, and survive across multiple procedurally generated runs.</td>
+            <td>score (maximize)</td>
+          </tr>
+          <tr>
+            <td><code>dcss_dungeon_ai</code></td>
+            <td>Write a Lua bot for Dungeon Crawl Stone Soup that autonomously explores, fights, and descends dungeon levels as a Minotaur Berserker under a wall-clock time budget. Scored by mean in-game score across multiple runs.</td>
+            <td>score (maximize)</td>
+          </tr>
+          <tr>
+            <td><code>openttd_transport_ai</code></td>
+            <td>Write an AI script for OpenTTD that builds road, rail, and air transport networks to connect towns and industries and grow company value across diverse procedurally generated maps.</td>
+            <td>score (maximize)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h4>Professional Knowledge Work / Formal Math（各 1 例）</h4>
+      <table>
+        <thead><tr><th>任务 ID</th><th>任务描述（raw）</th><th>指标</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><code>k12_math_recommendation</code></td>
+            <td>Build a knowledge-tracing and question-recommendation system from hundreds of thousands of student interaction records, evaluated on prediction accuracy, mastery calibration, learning gain, and pedagogical constraint satisfaction.</td>
+            <td>score (maximize)</td>
+          </tr>
+          <tr>
+            <td><code>carleson_formalization</code></td>
+            <td>Fill proof obligations in the Lean 4 formalization of Carleson's theorem on pointwise convergence of L^2 Fourier series. Transitive axiom checking ensures no dependence on unproved prerequisites.</td>
+            <td>pass rate</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
 
-    <div class="callout warn">
-      <b>OPHIS 视角（本文作者解读，非 EdgeBench 论文原话）</b>：EdgeBench 论文原文没有使用 "observable" 概念。它强调的是 "rich, multilevel feedback" 和 agent 在环境中的学习曲线。把 "多级反馈" 映射为 OPHIS 的 "observable" 是<b>本文的解读</b>：反馈信号 → 被 agent 观察 → 用于诊断 → 决定干预。但要注意，EdgeBench 的反馈是<b>任务自带的原始信号</b>，不是 OPHIS 提出的增强 observables。
+    <h3>EdgeBench 评估 harness：SForge（raw）</h3>
+    <div class="card">
+      <p>EdgeBench 由 <b>SForge</b> 驱动 —— 一个双容器（two-container）长时程评估框架：</p>
+      <ul>
+        <li><b>双容器隔离</b>：每个任务物化为隔离的 <b>work</b> 和 <b>judge</b> Docker 镜像 —— agent 只能看到 work 环境，隐藏测试在一次性 judge 容器里跑，从根源防止评估作弊。</li>
+        <li><b>迭代评估 + 反馈</b>：agent 不是最后提交一次拿一次性分数，而是全程反复提交（<code>sforge-submit</code>），收到细粒度反馈（pass rates、失败测试、分数），持续改进直到超时 —— <b>所有提交中的最佳结果 = 最终分数</b>。</li>
+        <li><b>Stop Hook</b>：阻止 agent 过早退出 —— 当 Claude Code/Codex 认为任务完成想退出时，hook 拦截退出请求并返回阻塞信号要求继续工作，确保 agent 用完分配的时间。</li>
+        <li><b>Auto-Resume</b>：agent 异常退出（API 断连、瞬时错误）时自动用原生 resume 机制重启（<code>claude --continue</code> / <code>codex exec resume --last</code>），最多 100 次重试。</li>
+        <li><b>后台 auto-eval daemon</b>：可选的周期性后台评估，agent 不提交也在跑。</li>
+      </ul>
+      <p><b>Quick start</b>：</p>
+      <pre style="background:var(--code-bg);border:1px solid var(--border);border-radius:6px;padding:10px;font-size:.82rem;overflow-x:auto">pip install sforge
+sforge fetch-tasks edgebench
+sforge pull --task ad_placement_optimization --registry seededge
+sforge serve
+SFORGE_AGENT_API_KEY="sk-xxx" \
+  sforge run --task ad_placement_optimization --agent claude-code \
+    --model "claude-opus-4-8[1m]" --timeout 43200 --run-id edgebench-001</pre>
     </div>
 
     <h3>可视化：三种典型学习轨迹</h3>
