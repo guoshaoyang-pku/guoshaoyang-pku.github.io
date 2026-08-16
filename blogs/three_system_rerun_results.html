@@ -188,16 +188,16 @@
         <tr><td>11</td><td>causal-discovery-discrete</td><td class="status-running">agent 运行中</td><td>4.5h+</td><td>ophis + 360 双机并行</td></tr>
         <tr><td>12</td><td>ml-ensemble-boosting</td><td class="status-failed">⚠️ 评测环境缺陷</td><td>1h14m</td><td>breast_cancer 数据集注册异常；flash 版同样失败，属部署问题</td></tr>
         <tr><td>13</td><td>ml-missing-data-imputation</td><td class="status-failed">⚠️ 评测环境缺陷</td><td>3h52m</td><td>budget_check.py 超时 &gt;120s；flash 版同样失败，属部署问题</td></tr>
-        <tr><td>—</td><td>ai4sci-mol-property-prediction</td><td class="status-failed">无法启动（缺 Uni-Mol 包）</td><td>—</td><td>两机均缺外部包，需补装</td></tr>
-        <tr><td>—</td><td>ml-symbolic-regression</td><td class="status-failed">无法启动（缺 gplearn 包）</td><td>—</td><td>两机均缺外部包，需补装</td></tr>
+        <tr><td>—</td><td>ai4sci-mol-property-prediction</td><td class="status-running">✅ 已启动（ophis）</td><td>—</td><td>Uni-Mol 数据/权重经本地代理补装；评测链路已验证（BBBP 0.696 / BACE 0.808 / Tox21 0.754）</td></tr>
+        <tr><td>—</td><td>ml-symbolic-regression</td><td class="status-running">✅ 已启动（双机）</td><td>—</td><td>gplearn 经本地代理补装，ophis + 360 双机跑</td></tr>
       </tbody>
     </table>
 
     <div class="callout green">
-      <b>小结（17:15）</b>：13 个任务中 <b>9 个已拿到完整官方评测 metrics</b>（其中 2 个因果发现
+      <b>小结（19:50）</b>：13 个任务中 <b>9 个已拿到完整官方评测 metrics</b>（其中 2 个因果发现
       PERFECT 满分），<b>2 个</b>（ensemble / missing-data）评测环境在两机均有缺陷（flash 版同样失败，
-      属部署层问题非模型问题），<b>2 个</b>进行中（nonlinear / discrete 的 agent 在 ophis 和 360
-      双机并行）。极简+pro 模式的 9 个结果均持平或优于前一轮 flash 版。
+      属部署层问题非模型问题），<b>4 个</b> agent 运行中（nonlinear / discrete 双机并行，
+      symbolic / ai4sci-mol 已通过本地代理补装包后启动）。极简+pro 模式的 9 个结果均持平或优于前一轮 flash 版。
     </div>
 
     <h3>运行环境</h3>
@@ -500,9 +500,10 @@
     <h2><span class="num">05</span> 已知限制与待办</h2>
     <h3>待办</h3>
     <ol>
-      <li><b>补装缺包任务</b>：<code>ai4sci-mol-property-prediction</code>（Uni-Mol）、
-        <code>ml-symbolic-regression</code>（gplearn）两机均缺外部包（需从官方 fetch / 手动装），
-        补装后可用极简+pro 补跑。</li>
+      <li><b>补装缺包任务（19:50 进展）</b>：<code>ai4sci-mol-property-prediction</code>（Uni-Mol 数据 3.7GB +
+        权重 190MB）、<code>ml-symbolic-regression</code>（gplearn）已通过本地代理链路补装完成。
+        symbolic 双机已启动；ai4sci-mol 已在 ophis 启动（评测链路已验证，BBBP 0.696 / BACE 0.808 / Tox21 0.754）。
+        360 的 torch 依赖 + 数据仍在下载中，完成后启动 360 备份。</li>
       <li><b>任务完成后结算</b>：读取 <code>results.csv</code> + <code>final_eval.log</code> 的 METRICS，
         填入本文档第 02/03 节。</li>
       <li><b>对比更新</b>：将极简+pro 结果并入三系统对比报告，与 flash 版对比。</li>
@@ -516,7 +517,7 @@
   </section>
 
   <div class="divider"></div>
-  <div class="footer">OPHIS Project · Shaoyang Guo · generated 2026-08-16 · updated 17:15 (sync 9/13 tasks' final metrics) · <a href="three_system_compare_20260815.html">返回主报告</a></div>
+  <div class="footer">OPHIS Project · Shaoyang Guo · generated 2026-08-16 · updated 19:50 (补装 symbolic/ai4sci-mol 包，均已启动) · <a href="three_system_compare_20260815.html">返回主报告</a></div>
 </div>
 </body>
 </html>
