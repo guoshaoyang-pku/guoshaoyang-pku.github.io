@@ -185,7 +185,7 @@
         <tr><td>8</td><td>ml-subgroup-calibration-shift</td><td class="status-done">✅ 完成</td><td>0h30m</td><td>worst_ece 0.129/0.139/0.094</td></tr>
         <tr><td>9</td><td>causal-treatment-effect</td><td class="status-done">✅ 完成</td><td>评测 2h+</td><td>PEHE acic 0.463 / ihdp 0.800 / jobs 370.5</td></tr>
         <tr><td>10</td><td>causal-observational-nonlinear</td><td class="status-done">✅ 完成（360）</td><td>28m</td><td>SF20-GP F1=0.986 / ER20-Gauss 0.957 / ER12 0.973（ophis 评测中）</td></tr>
-        <tr><td>11</td><td>causal-discovery-discrete</td><td class="status-done">✅ 完成（360）</td><td>3h4m</td><td>Total SHD=96，击败所有官方 baseline（ophis 仍在跑）</td></tr>
+        <tr><td>11</td><td>causal-discovery-discrete</td><td class="status-done">✅ 完成（双机）</td><td>ophis 8h15m / 360 3h4m</td><td>ophis Total SHD=90，360 96，均击败官方 BOSS 98</td></tr>
         <tr><td>12</td><td>ml-ensemble-boosting</td><td class="status-failed">⚠️ 评测环境缺陷</td><td>1h14m</td><td>breast_cancer 数据集注册异常；flash 版同样失败，属部署问题</td></tr>
         <tr><td>13</td><td>ml-missing-data-imputation</td><td class="status-failed">⚠️ 评测环境缺陷</td><td>3h52m</td><td>budget_check.py 超时 &gt;120s；flash 版同样失败，属部署问题</td></tr>
         <tr><td>—</td><td>ai4sci-mol-property-prediction</td><td class="status-running">✅ 已启动（ophis）</td><td>—</td><td>Uni-Mol 数据/权重经本地代理补装；评测链路已验证（BBBP 0.696 / BACE 0.808 / Tox21 0.754）</td></tr>
@@ -194,10 +194,10 @@
     </table>
 
     <div class="callout green">
-      <b>小结（20:55）</b>：13 个任务中 <b>12 个已拿到完整官方评测 metrics</b>（其中 2 个因果发现
-      PERFECT 满分；symbolic 三任务 R²≈1.0；nonlinear 三场景 F1≥0.957；discrete Total SHD=96 击败所有官方 baseline），
+      <b>小结（21:00）</b>：13 个任务中 <b>12 个已拿到完整官方评测 metrics</b>（其中 2 个因果发现
+      PERFECT 满分；symbolic 三任务 R²≈1.0；nonlinear 三场景 F1≥0.957；discrete 双机 Total SHD=90/96 均击败官方 BOSS 98），
       <b>2 个</b>（ensemble / missing-data）评测环境在两机均有缺陷（flash 版同样失败，属部署层问题），
-      <b>2 个</b> agent 运行中（ophis 的 discrete + ai4sci-mol）。
+      <b>2 个</b> agent 运行中（ophis nonlinear 评测 + ai4sci-mol）。
       极简+pro 模式的结果均持平或优于前一轮 flash 版。
     </div>
 
@@ -339,14 +339,13 @@
           <td>28m</td>
         </tr>
         <tr>
-          <td><b>causal-discovery-discrete（360）</b></td>
+          <td><b>causal-discovery-discrete（双机）</b></td>
           <td>
-            Cancer SHD=4 / Child SHD=5 / Alarm SHD=5<br>
-            Hailfinder SHD=39 / Win95pts SHD=43<br>
-            <b class="best">Total SHD=96</b>
+            <b class="best">ophis：Cancer 3 / Child 5 / Alarm 4 / Hailfinder 38 / Win95pts 40，Total SHD=90</b><br>
+            360：Cancer 4 / Child 5 / Alarm 5 / Hailfinder 39 / Win95pts 43，Total SHD=96
           </td>
-          <td>击败所有官方 baseline（BOSS 98, GES 101, GRaSP 112, PC 122, HC 212）</td>
-          <td>3h4m</td>
+          <td>双机均击败官方 BOSS 98（ophis 更优）；SHD 越小越好</td>
+          <td>ophis 8h15m / 360 3h4m</td>
         </tr>
       </tbody>
     </table>
@@ -357,8 +356,7 @@
         <tr><th>任务</th><th>状态</th><th>说明</th></tr>
       </thead>
       <tbody>
-        <tr><td>causal-observational-nonlinear（ophis）</td><td class="status-running">ophis 评测中</td><td>360 版已完成（F1 0.986/0.957/0.973）；ophis 的 agent 8h+ 后自然结束，最终评测进行中</td></tr>
-        <tr><td>causal-discovery-discrete（ophis）</td><td class="status-running">agent 仍在跑（8h+）</td><td>360 版已完成（Total SHD=96）；ophis 备份仍在自主开发</td></tr>
+        <tr><td>causal-observational-nonlinear（ophis）</td><td class="status-running">ophis 评测中</td><td>360 版已完成（F1 0.986/0.957/0.973）；ophis agent 8h+ 后自然结束，最终评测进行中</td></tr>
         <tr><td>ml-ensemble-boosting</td><td class="status-failed">评测环境缺陷</td><td>breast_cancer 数据集注册异常（flash 版同样失败，属部署问题）</td></tr>
         <tr><td>ml-missing-data-imputation</td><td class="status-failed">评测环境缺陷</td><td>budget_check.py 超时 &gt;120s（flash 版同样失败，属部署问题）</td></tr>
       </tbody>
@@ -548,7 +546,7 @@
   </section>
 
   <div class="divider"></div>
-  <div class="footer">OPHIS Project · Shaoyang Guo · generated 2026-08-16 · updated 20:55 (12/13 拿到 metrics；nonlinear/discrete 完成) · <a href="three_system_compare_20260815.html">返回主报告</a></div>
+  <div class="footer">OPHIS Project · Shaoyang Guo · generated 2026-08-16 · updated 21:00 (discrete 双机完成，SHD=90/96) · <a href="three_system_compare_20260815.html">返回主报告</a></div>
 </div>
 </body>
 </html>
