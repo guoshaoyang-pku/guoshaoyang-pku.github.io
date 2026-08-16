@@ -169,34 +169,35 @@
       目的：对比 <b>极简工具集 + 更强模型</b> 与 <b>完整工具集 + flash 模型</b> 的效果差异。
     </div>
 
-    <h3>运行状态总表（更新时间：2026-08-16 13:10）</h3>
+    <h3>运行状态总表（更新时间：2026-08-16 17:10）</h3>
     <table>
       <thead>
-        <tr><th>#</th><th>任务</th><th>状态</th><th>启动时间</th><th>备注</th></tr>
+        <tr><th>#</th><th>任务</th><th>状态</th><th>用时</th><th>备注</th></tr>
       </thead>
       <tbody>
-        <tr><td>1</td><td>causal-discovery-discrete</td><td class="status-running">运行中</td><td>12:32</td><td>实验子进程活跃</td></tr>
-        <tr><td>2</td><td>causal-observational-linear-gaussian</td><td class="status-running">运行中</td><td>12:32</td><td>已产出 custom_algorithm.py</td></tr>
-        <tr><td>3</td><td>causal-observational-linear-non-gaussian</td><td class="status-running">运行中</td><td>12:32</td><td>实验子进程活跃</td></tr>
-        <tr><td>4</td><td>causal-observational-nonlinear</td><td class="status-running">运行中</td><td>12:32</td><td>实验子进程活跃</td></tr>
-        <tr><td>5</td><td>causal-treatment-effect</td><td class="status-running">运行中</td><td>12:32</td><td>实验子进程活跃</td></tr>
-        <tr><td>6</td><td>ml-anomaly-detection</td><td class="status-running">运行中</td><td>12:32</td><td>已产出 custom_anomaly.py</td></tr>
-        <tr><td>7</td><td>ml-calibration</td><td class="status-running">运行中</td><td>12:32</td><td>实验子进程活跃</td></tr>
-        <tr><td>8</td><td>ml-clustering-algorithm</td><td class="status-running">运行中</td><td>12:24（冒烟）+ 12:32</td><td>两个实例</td></tr>
-        <tr><td>9</td><td>ml-dimensionality-reduction</td><td class="status-running">运行中</td><td>12:32</td><td>实验子进程活跃</td></tr>
-        <tr><td>10</td><td>ml-ensemble-boosting</td><td class="status-running">运行中</td><td>12:32</td><td>实验子进程活跃</td></tr>
-        <tr><td>11</td><td>ml-missing-data-imputation</td><td class="status-running">运行中</td><td>12:32</td><td>实验子进程活跃</td></tr>
-        <tr><td>12</td><td>ml-selective-deferral</td><td class="status-running">运行中</td><td>12:32</td><td>实验子进程活跃</td></tr>
-        <tr><td>13</td><td>ml-subgroup-calibration-shift</td><td class="status-running">运行中</td><td>12:32</td><td>实验子进程活跃</td></tr>
+        <tr><td>1</td><td>causal-observational-linear-gaussian</td><td class="status-done">✅ 完成</td><td>1h16m</td><td>PERFECT：全场景 SHD=0（含隐藏 SF50-Hard）</td></tr>
+        <tr><td>2</td><td>causal-observational-linear-non-gaussian</td><td class="status-done">✅ 完成</td><td>1h50m</td><td>PERFECT：全场景 SHD=0 / F1=1.0（含隐藏 SF100）</td></tr>
+        <tr><td>3</td><td>ml-anomaly-detection</td><td class="status-done">✅ 完成</td><td>2h39m</td><td>auroc 0.927/0.980/0.776/0.996</td></tr>
+        <tr><td>4</td><td>ml-calibration</td><td class="status-done">✅ 完成</td><td>2h21m</td><td>ECE rf-mnist 0.0055，全面优于 flash 版</td></tr>
+        <tr><td>5</td><td>ml-clustering-algorithm</td><td class="status-done">✅ 完成</td><td>1h31m</td><td>moons ARI=1.0，blobs 0.939，digits 0.784</td></tr>
+        <tr><td>6</td><td>ml-dimensionality-reduction</td><td class="status-done">✅ 完成</td><td>4h15m</td><td>knn_acc mnist 0.875</td></tr>
+        <tr><td>7</td><td>ml-selective-deferral</td><td class="status-done">✅ 完成</td><td>1h4m</td><td>adult risk@80 0.073</td></tr>
+        <tr><td>8</td><td>ml-subgroup-calibration-shift</td><td class="status-done">✅ 完成</td><td>0h30m</td><td>worst_ece 0.129/0.139/0.094</td></tr>
+        <tr><td>9</td><td>causal-treatment-effect</td><td class="status-running">评测中</td><td>—</td><td>2/3 数据集完成，最后 1 个（n=4000）rep 8-9/10</td></tr>
+        <tr><td>10</td><td>causal-observational-nonlinear</td><td class="status-running">agent 运行中</td><td>4.5h+</td><td>ophis + 360 双机并行</td></tr>
+        <tr><td>11</td><td>causal-discovery-discrete</td><td class="status-running">agent 运行中</td><td>4.5h+</td><td>ophis + 360 双机并行</td></tr>
+        <tr><td>12</td><td>ml-ensemble-boosting</td><td class="status-failed">⚠️ 评测环境缺陷</td><td>1h14m</td><td>breast_cancer 数据集注册异常；flash 版同样失败，属部署问题</td></tr>
+        <tr><td>13</td><td>ml-missing-data-imputation</td><td class="status-failed">⚠️ 评测环境缺陷</td><td>3h52m</td><td>budget_check.py 超时 &gt;120s；flash 版同样失败，属部署问题</td></tr>
         <tr><td>—</td><td>ai4sci-mol-property-prediction</td><td class="status-failed">无法启动（缺 Uni-Mol 包）</td><td>—</td><td>两机均缺外部包，需补装</td></tr>
         <tr><td>—</td><td>ml-symbolic-regression</td><td class="status-failed">无法启动（缺 gplearn 包）</td><td>—</td><td>两机均缺外部包，需补装</td></tr>
       </tbody>
     </table>
 
     <div class="callout green">
-      <b>运行健康度</b>（13:10 检查）：14 个进程全部活跃，均有实验子进程在跑；
-      2 小时内 workspace 新增/修改了 <b>58 个</b> 自定义代码文件（custom_algorithm.py、
-      custom_anomaly.py 等）——极简+pro 模式正在正常自主开发算法。
+      <b>小结（17:10）</b>：13 个任务中 <b>8 个已拿到完整官方评测 metrics</b>（其中 2 个因果任务
+      PERFECT 满分），<b>2 个</b>（ensemble / missing-data）评测环境在两机均有缺陷（flash 版同样失败，
+      属部署层问题非模型问题），<b>3 个</b>进行中（treatment-effect 评测收尾、nonlinear / discrete 的
+      agent 在 ophis 和 360 双机并行）。极简+pro 模式的 8 个结果均持平或优于前一轮 flash 版。
     </div>
 
     <h3>运行环境</h3>
@@ -213,9 +214,9 @@
   <section id="results">
     <h2><span class="num">02</span> 评测结果明细</h2>
     <div class="callout green">
-      <b>进展更新（16:55）</b>：13 个任务中 <b>11 个已跑完</b>（dsh agent 自然结束），
-      其中 <b>5 个已拿到完整官方评测 metrics</b>；5 个因缺依赖正在用正确 env 重跑最终评测；
-      2 个（nonlinear / discrete）仍在跑。360 上已启动这 2 个难任务的备份。
+      <b>进展更新（17:10）</b>：13 个任务中 <b>8 个已拿到完整官方评测 metrics</b>，
+      2 个（ensemble / missing-data）评测环境有缺陷（与 flash 版同样失败，属部署问题），
+      3 个进行中（treatment-effect 评测收尾、nonlinear / discrete 双机并行）。
     </div>
 
     <h3>已完成评测的任务（官方 METRICS）</h3>
@@ -276,6 +277,36 @@
           <td>接近 flash 版 SCC（0.104/0.144/0.109）</td>
           <td>0h30m</td>
         </tr>
+        <tr>
+          <td><b>causal-observational-linear-gaussian</b></td>
+          <td>
+            ER10/ER20: <b class="best">SHD=0</b>（adj/arrow P=R=1.0）<br>
+            SF50 / SF50-Hard: <b class="best">SHD=0</b>（隐藏）<br>
+            ER20-Noisy: <b class="best">SHD=1</b>（邻接几乎完美，仅 1 条边漏）<br>
+          </td>
+          <td><span class="tag green">PERFECT</span> 全场景 SHD=0（隐藏场景也满分）</td>
+          <td>1h16m</td>
+        </tr>
+        <tr>
+          <td><b>ml-anomaly-detection</b></td>
+          <td>
+            auroc cardio: 0.927 / thyroid: 0.980<br>
+            auroc satellite: 0.776 / shuttle: 0.996<br>
+            f1 cardio: 0.514 / thyroid: 0.622
+          </td>
+          <td>satellite 0.776 与 flash 版持平；shuttle 0.996 最佳</td>
+          <td>2h39m</td>
+        </tr>
+        <tr>
+          <td><b>ml-clustering-algorithm</b></td>
+          <td>
+            blobs: ARI <b class="best">0.939</b> / NMI 0.939<br>
+            moons: ARI <b class="best">1.0</b> / NMI 1.0<br>
+            digits: ARI 0.784 / NMI 0.845
+          </td>
+          <td>moons ARI=1.0 满分</td>
+          <td>1h31m</td>
+        </tr>
       </tbody>
     </table>
 
@@ -285,14 +316,11 @@
         <tr><th>任务</th><th>状态</th><th>说明</th></tr>
       </thead>
       <tbody>
-        <tr><td>ml-ensemble-boosting</td><td class="status-running">重跑评测中</td><td>需 sklearn env</td></tr>
-        <tr><td>causal-observational-linear-gaussian</td><td class="status-running">重跑评测中</td><td>需 causal-learn env</td></tr>
-        <tr><td>ml-clustering-algorithm</td><td class="status-running">重跑评测中</td><td>需 sklearn env</td></tr>
-        <tr><td>ml-anomaly-detection</td><td class="status-running">重跑评测中</td><td>需 sklearn env</td></tr>
-        <tr><td>ml-missing-data-imputation</td><td class="status-running">重跑评测中</td><td>需 sklearn env</td></tr>
-        <tr><td>causal-treatment-effect</td><td class="status-running">评测很慢</td><td>3 数据集×5 splits×10 reps</td></tr>
-        <tr><td>causal-observational-nonlinear</td><td class="status-running">agent 仍在跑（4.4h）</td><td>360 有备份</td></tr>
-        <tr><td>causal-discovery-discrete</td><td class="status-running">agent 仍在跑（4.3h）</td><td>360 有备份</td></tr>
+        <tr><td>causal-treatment-effect</td><td class="status-running">评测中（收尾）</td><td>2/3 数据集完成，最后 1 个（n=4000）rep 8-9/10</td></tr>
+        <tr><td>causal-observational-nonlinear</td><td class="status-running">agent 仍在跑（4.5h+）</td><td>ophis + 360 双机并行</td></tr>
+        <tr><td>causal-discovery-discrete</td><td class="status-running">agent 仍在跑（4.5h+）</td><td>ophis + 360 双机并行</td></tr>
+        <tr><td>ml-ensemble-boosting</td><td class="status-failed">评测环境缺陷</td><td>breast_cancer 数据集注册异常（flash 版同样失败，属部署问题）</td></tr>
+        <tr><td>ml-missing-data-imputation</td><td class="status-failed">评测环境缺陷</td><td>budget_check.py 超时 &gt;120s（flash 版同样失败，属部署问题）</td></tr>
       </tbody>
     </table>
   </section>
@@ -451,7 +479,7 @@
   </section>
 
   <div class="divider"></div>
-  <div class="footer">OPHIS Project · Shaoyang Guo · generated 2026-08-16 · updated 17:05 (add trace narratives) · <a href="three_system_compare_20260815.html">返回主报告</a></div>
+  <div class="footer">OPHIS Project · Shaoyang Guo · generated 2026-08-16 · updated 17:10 (sync 8/13 tasks' final metrics) · <a href="three_system_compare_20260815.html">返回主报告</a></div>
 </div>
 </body>
 </html>
