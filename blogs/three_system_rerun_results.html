@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>dsh 极简+pro 重跑：评测结果与运行日志 · OPHIS</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #171a21;
+    --panel2: #1d2129;
+    --border: #2a2f3a;
+    --text: #e6e8ec;
+    --muted: #9aa3b2;
+    --accent: #5b9dff;
+    --accent2: #7c5bff;
+    --green: #4cd9a0;
+    --yellow: #ffc857;
+    --red: #ff6b6b;
+    --purple: #c77dff;
+    --code-bg: #10131a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    line-height: 1.7;
+  }
+  .container { max-width: 1000px; margin: 0 auto; padding: 32px 24px 80px; }
+
+  .hero {
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: linear-gradient(135deg, #151a26 0%, #1a1f2e 100%);
+    padding: 32px;
+    margin-bottom: 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(600px 200px at 85% -10%, rgba(91,157,255,.15), transparent),
+                radial-gradient(500px 200px at 10% 110%, rgba(124,91,255,.12), transparent);
+    pointer-events: none;
+  }
+  .hero h1 { font-size: 1.8rem; font-weight: 700; letter-spacing: .5px; position: relative; }
+  .hero .sub { color: var(--muted); margin-top: 8px; font-size: 1rem; position: relative; }
+  .hero .meta { margin-top: 16px; display: flex; gap: 12px; flex-wrap: wrap; position: relative; }
+  .badge {
+    font-size: .78rem; padding: 3px 12px; border-radius: 20px;
+    background: rgba(91,157,255,.12); border: 1px solid rgba(91,157,255,.35); color: #bcd5ff;
+  }
+  .badge.green { background: rgba(76,217,160,.12); border-color: rgba(76,217,160,.35); color: #7ce8bb; }
+  .badge.yellow { background: rgba(255,200,87,.12); border-color: rgba(255,200,87,.35); color: #ffd98a; }
+  .badge.red { background: rgba(255,107,107,.12); border-color: rgba(255,107,107,.35); color: #ffa3a3; }
+
+  section { margin-bottom: 44px; }
+  h2 {
+    font-size: 1.4rem; font-weight: 700;
+    padding-bottom: 10px; margin-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+  }
+  h2 .num {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    font-size: 1.1rem;
+  }
+  h3 { font-size: 1.1rem; margin: 24px 0 12px; color: #fff; }
+  p { margin-bottom: 12px; color: var(--text); }
+  .muted { color: var(--muted); }
+
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: .9rem; }
+  th, td { padding: 10px 12px; text-align: left; border: 1px solid var(--border); vertical-align: top; }
+  th { background: var(--panel2); font-weight: 600; color: #cbd4e2; white-space: nowrap; }
+  tr:nth-child(even) td { background: rgba(255,255,255,.015); }
+  td.best { color: var(--green); font-weight: 700; }
+  td.worst { color: var(--red); }
+
+  code {
+    background: var(--code-bg); border: 1px solid var(--border);
+    padding: 1px 7px; border-radius: 5px; font-size: .86em;
+    font-family: "SF Mono", Menlo, Consolas, monospace; color: #9ecbff;
+  }
+
+  .tag { display: inline-block; font-size: .75rem; padding: 2px 10px; border-radius: 12px; margin-right: 6px; margin-bottom: 4px; }
+  .tag.green { background: rgba(76,217,160,.13); color: #7ce8bb; }
+  .tag.yellow { background: rgba(255,200,87,.13); color: #ffd98a; }
+  .tag.red { background: rgba(255,107,107,.13); color: #ffa3a3; }
+  .tag.purple { background: rgba(199,125,255,.14); color: #e0b3ff; }
+
+  .callout { border: 1px solid rgba(91,157,255,.3); background: rgba(91,157,255,.06); border-radius: 10px; padding: 14px 18px; margin: 14px 0; }
+  .callout.warn { border-color: rgba(255,200,87,.35); background: rgba(255,200,87,.06); }
+  .callout.red { border-color: rgba(255,107,107,.35); background: rgba(255,107,107,.06); }
+  .callout.green { border-color: rgba(76,217,160,.35); background: rgba(76,217,160,.06); }
+
+  .status-running { color: var(--yellow); font-weight: 600; }
+  .status-done { color: var(--green); font-weight: 600; }
+  .status-failed { color: var(--red); font-weight: 600; }
+
+  .log-block {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin: 10px 0;
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: .82rem;
+    color: #b8c4d4;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+
+  .toc { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 18px 22px; margin-bottom: 32px; }
+  .toc a { color: var(--accent); text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+  .toc ol { padding-left: 20px; }
+  .toc li { margin-bottom: 4px; }
+
+  a { color: var(--accent); }
+  .footer { color: var(--muted); font-size: .82rem; text-align: center; margin-top: 40px; }
+  .divider { height: 1px; background: var(--border); margin: 36px 0; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- HERO -->
+  <div class="hero">
+    <h1>dsh 极简模式 + deepseek-v4-pro 重跑：评测结果与运行日志</h1>
+    <div class="sub">13 个 MLS-Bench 任务 · ophis-gpu · 不限时跑至 agent 自然结束</div>
+    <div class="meta">
+      <span class="badge">作者: Shaoyang Guo</span>
+      <span class="badge">2026-08-16 启动</span>
+      <span class="badge">ophis-gpu（8×H200）</span>
+      <span class="badge yellow">运行中</span>
+      <span class="badge">返回主报告：<a href="three_system_compare_20260815.html" style="color:#bcd5ff">三系统对比报告</a></span>
+    </div>
+  </div>
+
+  <!-- TOC -->
+  <div class="toc">
+    <b>目录</b>
+    <ol>
+      <li><a href="#overview">任务总览与运行状态</a></li>
+      <li><a href="#results">评测结果明细</a></li>
+      <li><a href="#logs">运行日志</a></li>
+      <li><a href="#config">极简模式配置</a></li>
+      <li><a href="#notes">已知限制与待办</a></li>
+    </ol>
+  </div>
+
+  <!-- 1. OVERVIEW -->
+  <section id="overview">
+    <h2><span class="num">01</span> 任务总览与运行状态</h2>
+    <div class="callout">
+      <b>本轮行动</b>：用 <b>dsh 极简模式（仅 Bash + 文件编辑器）+ deepseek-v4-pro 模型</b>，
+      重跑之前 dsh 跑过的全部 MLS-Bench 任务，<b>不限时</b>（跑至 agent 自然结束）。
+      目的：对比 <b>极简工具集 + 更强模型</b> 与 <b>完整工具集 + flash 模型</b> 的效果差异。
+    </div>
+
+    <h3>运行状态总表（更新时间：2026-08-16 12:50）</h3>
+    <table>
+      <thead>
+        <tr><th>#</th><th>任务</th><th>状态</th><th>启动时间</th><th>备注</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>1</td><td>causal-discovery-discrete</td><td class="status-running">运行中</td><td>12:32</td><td>实验子进程已出现</td></tr>
+        <tr><td>2</td><td>causal-observational-linear-gaussian</td><td class="status-running">运行中</td><td>12:32</td><td>已产出 custom_algorithm.py</td></tr>
+        <tr><td>3</td><td>causal-observational-linear-non-gaussian</td><td class="status-running">运行中</td><td>12:32</td><td>实验子进程已出现</td></tr>
+        <tr><td>4</td><td>causal-observational-nonlinear</td><td class="status-running">运行中</td><td>12:32</td><td>实验子进程已出现</td></tr>
+        <tr><td>5</td><td>causal-treatment-effect</td><td class="status-running">运行中</td><td>12:32</td><td>实验子进程已出现</td></tr>
+        <tr><td>6</td><td>ml-anomaly-detection</td><td class="status-running">运行中</td><td>12:32</td><td>已产出 custom_anomaly.py</td></tr>
+        <tr><td>7</td><td>ml-calibration</td><td class="status-running">运行中</td><td>12:32</td><td>实验子进程已出现</td></tr>
+        <tr><td>8</td><td>ml-clustering-algorithm</td><td class="status-running">运行中</td><td>12:24（冒烟）+ 12:32</td><td>两个实例</td></tr>
+        <tr><td>9</td><td>ml-dimensionality-reduction</td><td class="status-running">运行中</td><td>12:32</td><td>—</td></tr>
+        <tr><td>10</td><td>ml-ensemble-boosting</td><td class="status-running">运行中</td><td>12:32</td><td>实验子进程已出现</td></tr>
+        <tr><td>11</td><td>ml-missing-data-imputation</td><td class="status-running">运行中</td><td>12:32</td><td>实验子进程已出现</td></tr>
+        <tr><td>12</td><td>ml-selective-deferral</td><td class="status-running">运行中</td><td>12:32</td><td>—</td></tr>
+        <tr><td>13</td><td>ml-subgroup-calibration-shift</td><td class="status-running">运行中</td><td>12:32</td><td>—</td></tr>
+        <tr><td>—</td><td>ai4sci-mol-property-prediction</td><td class="status-failed">未启动（缺 Uni-Mol 包）</td><td>—</td><td>需 360 恢复后补跑</td></tr>
+        <tr><td>—</td><td>ml-symbolic-regression</td><td class="status-failed">未启动（缺 gplearn 包）</td><td>—</td><td>需 360 恢复后补跑</td></tr>
+      </tbody>
+    </table>
+
+    <h3>运行环境</h3>
+    <ul>
+      <li><b>机器</b>：ophis-gpu（10.230.1.x，8×H200 143GB）</li>
+      <li><b>模型</b>：deepseek-v4-pro（reasoningEffort: max），API 确认可用</li>
+      <li><b>dsh 配置</b>：headless profile + minimal patch（禁用 33 个插件）</li>
+      <li><b>预算</b>：不限时，跑至 agent 自然结束</li>
+      <li><b>日志/结果目录</b>：<code>/data3/guoshaoyang/dsh-logs-minimal-pro/</code></li>
+    </ul>
+  </section>
+
+  <!-- 2. RESULTS -->
+  <section id="results">
+    <h2><span class="num">02</span> 评测结果明细</h2>
+    <div class="callout warn">
+      <b>待更新</b>：任务仍在运行，尚无最终评测结果。本区将在任务完成后填入
+      各任务的 <b>METRICS</b>（来自 <code>run_test.py</code> 官方评测）与 <b>RESULT.md</b>。
+    </div>
+    <p class="muted">结果自动写入 <code>results.csv</code>，人工审核后同步到此文档。</p>
+  </section>
+
+  <!-- 3. LOGS -->
+  <section id="logs">
+    <h2><span class="num">03</span> 运行日志</h2>
+    <div class="callout">
+      <b>日志位置</b>（ophis-gpu <code>/data3/guoshaoyang/dsh-logs-minimal-pro/</code>）：
+    </div>
+    <table>
+      <thead>
+        <tr><th>文件</th><th>内容</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>&lt;task&gt;_&lt;exp&gt;.log</code></td><td>dsh agent 完整运行日志（API 调用、思考、工具调用）</td></tr>
+        <tr><td><code>&lt;task&gt;_&lt;exp&gt;.final_eval.log</code></td><td>最终官方评测日志（run_test.py 输出 + METRICS）</td></tr>
+        <tr><td><code>&lt;task&gt;_&lt;exp&gt;.launch.log</code></td><td>任务包装脚本启动日志</td></tr>
+        <tr><td><code>results.csv</code></td><td>结构化结果表（ts, task, exp, seed, wall_secs, dsh_rc, metrics）</td></tr>
+      </tbody>
+    </table>
+
+    <h3>关键日志摘录</h3>
+    <p class="muted">任务完成后，将从 <code>final_eval.log</code> 摘录各任务的 METRICS JSON 到这里。</p>
+  </section>
+
+  <!-- 4. CONFIG -->
+  <section id="config">
+    <h2><span class="num">04</span> 极简模式配置</h2>
+    <h3>禁用的插件（33 个）</h3>
+    <table>
+      <thead>
+        <tr><th>类别</th><th>禁用的插件 id</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>联网搜索</td><td><code>web-search-deepseek</code>, <code>tool-web</code>, <code>web</code></td></tr>
+        <tr><td>Skills</td><td><code>skill</code>, <code>skill-filesystem</code>, <code>skill-badge</code>, <code>tool-skill</code></td></tr>
+        <tr><td>任务规划</td><td><code>plan-mode</code></td></tr>
+        <tr><td>上下文压缩</td><td><code>compaction-basic</code>, <code>command-compact</code></td></tr>
+        <tr><td>子 Agent</td><td><code>subagent</code>, <code>subagent-spawn-in-process</code>, <code>subagent-fork-in-process</code>, <code>tool-subagent-control</code>, <code>tool-subagent-list-agents</code>, <code>tool-subagent</code>, <code>tool-subagent-fork</code>, <code>tool-subagent-report</code></td></tr>
+        <tr><td>目标规划</td><td><code>goal</code>, <code>goal-round-driver</code>, <code>command-goal</code>, <code>tool-goal</code></td></tr>
+        <tr><td>上下文溢出</td><td><code>spill-local</code>, <code>spill-policy</code></td></tr>
+        <tr><td>工作流</td><td><code>workflow-worker-thread</code>, <code>tool-workflow</code></td></tr>
+        <tr><td>其他工具</td><td><code>tool-todo</code>, <code>tool-ralph</code>, <code>tool-result-pruner</code>, <code>session-checkpoint-policy</code>, <code>tool-pwsh</code>, <code>pwsh-sandbox</code></td></tr>
+      </tbody>
+    </table>
+
+    <h3>保留的核心工具</h3>
+    <ul>
+      <li><b>Bash 终端</b>（<code>tool-bash</code>，持久化会话）</li>
+      <li><b>文件编辑器</b>（<code>tool-str-replace-editor</code>）</li>
+      <li><b>文件系统</b>（<code>tool-fs</code>, <code>tool-fs-search</code>）</li>
+    </ul>
+
+    <h3>模型覆盖</h3>
+    <div class="log-block">- id: agent-default-model
+  config:
+    provider: deepseek-official
+    model: deepseek-v4-pro
+    reasoningEffort: max</div>
+  </section>
+
+  <!-- 5. NOTES -->
+  <section id="notes">
+    <h2><span class="num">05</span> 已知限制与待办</h2>
+    <h3>待办</h3>
+    <ol>
+      <li><b>补跑 2 个缺包任务</b>（ai4sci-mol / ml-symbolic-regression）：360-1 已恢复，
+        需在 360 上用极简+pro 配置补跑，或把包拷到 ophis。</li>
+      <li><b>任务完成后结算</b>：读取 <code>results.csv</code> + <code>final_eval.log</code> 的 METRICS，
+        填入本文档第 02/03 节。</li>
+      <li><b>对比更新</b>：将极简+pro 结果并入三系统对比报告，与 flash 版对比。</li>
+    </ol>
+    <h3>已知限制</h3>
+    <ul>
+      <li>13+ 个 dsh 并发调用 deepseek API 限流风险高（dsh 有内置重试但可能变慢）。</li>
+      <li>pro 模型思考慢，日志输出有缓冲延迟（<code>wc -l</code> 显示 0 行不代表卡住）。</li>
+      <li>任务多为 CPU-bound，GPU 占用低，非瓶颈。</li>
+    </ul>
+  </section>
+
+  <div class="divider"></div>
+  <div class="footer">OPHIS Project · Shaoyang Guo · generated 2026-08-16 · <a href="three_system_compare_20260815.html">返回主报告</a></div>
+</div>
+</body>
+</html>
