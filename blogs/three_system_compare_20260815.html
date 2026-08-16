@@ -168,6 +168,7 @@
     <ol>
       <li><a href="#summary">总结论与核心发现</a></li>
       <li><a href="#kpi">关键指标一览</a></li>
+      <li><a href="#glossary">指标字典：每个任务的指标是什么意思</a></li>
       <li><a href="#task-causal">各任务分数对比</a></li>
       <li><a href="#fail">反例：dsh 的失败</a></li>
       <li><a href="#gpu">GPU / 时长分析</a></li>
@@ -235,9 +236,208 @@
     </div>
   </section>
 
-  <!-- ==================== 3. TASK COMPARISON ==================== -->
+  <!-- ==================== 3. GLOSSARY ==================== -->
+  <section id="glossary">
+    <h2><span class="num">03</span> 指标字典：每个任务的指标是什么意思</h2>
+    <div class="callout">
+      <b>怎么读这张表</b>：MLS-Bench 每个任务有若干 <b>评测场景（Label）</b>，每个场景测一组 <b>指标</b>。
+      分数表里的缩写（如 SHD、F1、ECE）都是领域专业术语，下面按任务逐一解释它们的含义与"越大越好 / 越小越好"。
+    </div>
+
+    <h3>通用指标（多个因果任务共用）</h3>
+    <table>
+      <thead>
+        <tr><th>缩写</th><th>全称</th><th>含义</th><th>方向</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>SHD</code></td><td>Structural Hamming Distance</td>
+          <td>你恢复的因果图与真实图之间<b>不一致的边数</b>（漏掉 + 多出 + 方向错的边都算）。<b>0 = 完美还原</b>。</td>
+          <td class="best">↓ 越小越好</td>
+        </tr>
+        <tr>
+          <td><code>F1</code></td><td>F1 score</td>
+          <td>边预测的精确率与召回率的调和平均。要求<b>骨架和方向都正确</b>才算对。<b>1.0 = 完美</b>。</td>
+          <td class="best">↑ 越大越好</td>
+        </tr>
+        <tr>
+          <td><code>Precision / Recall</code></td><td>精确率 / 召回率</td>
+          <td>精确率 = 你预测的边里多少是真的；召回率 = 真实存在的边里你找回了多少。</td>
+          <td class="best">↑ 越大越好</td>
+        </tr>
+        <tr>
+          <td><code>Adj Precision / Recall</code></td><td>邻接（骨架）精确率/召回率</td>
+          <td>只看<b>有没有边</b>（不管方向）的精确率/召回率。</td>
+          <td class="best">↑ 越大越好</td>
+        </tr>
+        <tr>
+          <td><code>Arrow Precision / Recall</code></td><td>箭头（方向）精确率/召回率</td>
+          <td>只看<b>边方向是否正确</b>的精确率/召回率。</td>
+          <td class="best">↑ 越大越好</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>3.0 各任务评测场景 = 什么数据</h3>
+    <table>
+      <thead>
+        <tr><th>任务</th><th>评测场景（Label）</th><th>每个场景测什么</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td rowspan="5"><b>causal-observational-linear-gaussian</b><br>线性高斯因果发现</td>
+          <td><code>ER10 / ER20</code></td>
+          <td>Erdos-Renyi 随机图，10/20 个节点。ER20 更稠密、更难。</td>
+        </tr>
+        <tr><td><code>SF50 / SF50-Hard</code></td><td>Scale-Free（无标度）图，50 节点。Hard 版更稠密（m=3）且样本更少。</td></tr>
+        <tr><td><code>ER20-Noisy</code></td><td>ER20 + 更高噪声（噪声方差 2.5），样本更少（400），<b>隐藏场景</b>（agent 看不到分数）。</td></tr>
+        <tr><td colspan="2" style="color:var(--muted)">指标：SHD、Adj Precision/Recall、Arrow Precision/Recall（见上表）。</td></tr>
+        <tr>
+          <td colspan="2">
+            <span class="tag blue">看点</span> 线性高斯下观测数据只能识别到 CPDAG（等价类），
+            <b>SHD=0 意味着完全还原了真实等价类</b>——dsh_b5 在全部 4 个场景都做到。
+          </td>
+        </tr>
+
+        <tr>
+          <td rowspan="4"><b>causal-observational-linear-non-gaussian</b><br>线性非高斯因果发现（LiNGAM）</td>
+          <td><code>ER30 / ER50</code></td>
+          <td>Erdos-Renyi 图，30/50 节点。</td>
+        </tr>
+        <tr><td><code>SF100</code></td><td>Scale-Free 图，100 节点（最大），<b>隐藏场景</b>。</td></tr>
+        <tr><td colspan="2" style="color:var(--muted)">指标：F1（主）、SHD、Precision、Recall。</td></tr>
+        <tr>
+          <td colspan="2">
+            <span class="tag blue">看点</span> 非高斯噪声让因果方向<b>完全可识别</b>（超越等价类）。
+            dsh 的 SAIL-LiNGAM 和 NG-SCREEN 都做到 <b>F1=1.0 / SHD=0</b>（完美）。
+          </td>
+        </tr>
+
+        <tr>
+          <td rowspan="4"><b>causal-observational-nonlinear</b><br>非线性因果发现（加性噪声模型）</td>
+          <td><code>SF20-GP</code></td>
+          <td>Scale-Free 图 20 节点，高斯过程非线性，指数噪声。</td>
+        </tr>
+        <tr><td><code>ER20-Gauss</code></td><td>ER 图 20 节点，混合非线性，高斯噪声。</td></tr>
+        <tr><td><code>ER12-LowSample</code></td><td>ER 图 12 节点，只有 150 个样本（极少），<b>隐藏场景</b>。</td></tr>
+        <tr>
+          <td colspan="2">
+            <span class="tag blue">看点</span> 这是 5 个因果任务里<b>最难</b>的一个（非线性 + 多样性）。
+            最好的 dsh_b4 达到 F1≈0.94（SF20-GP）；低样本场景 F1≈0.86。
+          </td>
+        </tr>
+
+        <tr>
+          <td rowspan="4"><b>causal-discovery-discrete</b><br>离散因果发现（贝叶斯网络）</td>
+          <td><code>Cancer / Child / Alarm</code></td>
+          <td>经典小规模贝叶斯网络（5/20/37 个变量），结构已知的真实网络。</td>
+        </tr>
+        <tr><td><code>Hailfinder / Win95pts</code></td><td>大规模真实网络（56/76 变量），<b>Win95pts 是隐藏场景</b>。</td></tr>
+        <tr><td colspan="2" style="color:var(--muted)">指标：SHD（越小越好）。</td></tr>
+        <tr>
+          <td colspan="2">
+            <span class="tag blue">看点</span> 恢复真实离散贝叶斯网络的结构。dsh 在小网络上 SHD≤5，但大网络（Hailfinder/Win95pts）还有很大差距（SHD 28-76）。
+          </td>
+        </tr>
+
+        <tr>
+          <td rowspan="3"><b>ml-anomaly-detection</b><br>无监督异常检测</td>
+          <td><code>cardio / thyroid / satellite / shuttle</code></td>
+          <td>4 个真实异常检测数据集（心脏病/甲状腺/卫星/航天飞机传感器）。</td>
+        </tr>
+        <tr><td colspan="2" style="color:var(--muted)">指标：AUROC（异常判定曲线下面积）、F1（异常点检出 F1）。都是越高越好。</td></tr>
+        <tr><td colspan="2"><span class="tag green">dsh 结果</span> gmean≈0.93，超越 baseline Isolation Forest 的 0.782。</td></tr>
+
+        <tr>
+          <td rowspan="3"><b>ml-calibration</b><br>概率校准</td>
+          <td><code>rf-mnist / mlp-fmnist / gbm-madelon / svm-breast</code></td>
+          <td>4 个"模型+数据集"组合：随机森林 MNIST、MLP Fashion-MNIST、GBM Madelon、SVM 乳腺癌。</td>
+        </tr>
+        <tr><td colspan="2" style="color:var(--muted)">指标：ECE（期望校准误差，越小越好）、Brier score（越小越好）、NLL（负对数似然，越小越好）。</td></tr>
+        <tr><td colspan="2"><span class="tag green">dsh 结果</span> 最佳 ECE 0.0065（rf-mnist），全面优于早期版本。</td></tr>
+
+        <tr>
+          <td rowspan="3"><b>ml-clustering-algorithm</b><br>聚类算法</td>
+          <td><code>blobs / moons / digits</code></td>
+          <td>3 个聚类数据集：高斯团、两月牙（非线性可分）、手写数字。</td>
+        </tr>
+        <tr><td colspan="2" style="color:var(--muted)">指标：ARI（调整兰德指数，越高越好）、NMI（归一化互信息，越高越好）、Silhouette（轮廓系数，越高越好）。</td></tr>
+        <tr><td colspan="2"><span class="tag green">dsh 结果</span> DASCC 在 moons 上 ARI=1.0（完美），远超 k-means 的 0.48。</td></tr>
+
+        <tr>
+          <td rowspan="3"><b>ml-dimensionality-reduction</b><br>降维</td>
+          <td><code>mnist / fashion-mnist / newsgroups</code></td>
+          <td>3 个数据集降到低维嵌入。</td>
+        </tr>
+        <tr><td colspan="2" style="color:var(--muted)">指标：kNN 准确率（降维后 kNN 分类，越高越好）、Trustworthiness（可信度）、Continuity（连续性）。</td></tr>
+        <tr><td colspan="2"><span class="tag blue">看点</span> mnist knn_acc 0.859 是评测修复后补录的。</td></tr>
+
+        <tr>
+          <td rowspan="3"><b>ml-subgroup-calibration-shift</b><br>子群校准（分布偏移）</td>
+          <td><code>adult / compas / law_school</code></td>
+          <td>3 个真实数据集，关注<b>最差子群</b>（如按种族/性别分组的少数群）的校准。</td>
+        </tr>
+        <tr><td colspan="2" style="color:var(--muted)">指标：worst_group_ece（最差子群 ECE，越小越好）、Brier、subgroup_auroc、max_subgroup_gap（子群间最大差距，越小越好）。</td></tr>
+        <tr><td colspan="2"><span class="tag green">dsh 结果</span> SCC 算法最差子群 ECE 比 baseline 好 <b>2.9-3.3×</b>。</td></tr>
+
+        <tr>
+          <td rowspan="3"><b>ml-selective-deferral</b><br>选择性延迟（置信度拒绝）</td>
+          <td><code>adult / compas / law_school</code></td>
+          <td>模型可以选择"不预测"（延迟），目标是延迟后保留样本的错误率要低。</td>
+        </tr>
+        <tr><td colspan="2" style="color:var(--muted)">指标：selective_risk_at80（覆盖 80% 样本时的错误率，越小越好）、coverage_at80（越接近 0.8 越好）、worst_group_selective_risk（最差子群错误率）、deferral_rate_gap（延迟率差距）、AUROC。</td></tr>
+        <tr><td colspan="2"><span class="tag blue">看点</span> adult risk@80 0.074，完整分数已记录。</td></tr>
+      </tbody>
+    </table>
+
+    <h3>补充任务指标</h3>
+    <table>
+      <thead>
+        <tr><th>任务</th><th>指标</th><th>含义</th><th>方向</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><b>ml-ensemble-boosting</b><br>集成提升</td>
+          <td><code>test_accuracy</code>（breast_cancer）、<code>test_rmse</code>（diabetes / california_housing）</td>
+          <td>集成模型在 3 个数据集上的测试准确率（分类）或 RMSE（回归）。</td>
+          <td>accuracy ↑ / RMSE ↓</td>
+        </tr>
+        <tr>
+          <td><b>ml-missing-data-imputation</b><br>缺失值填补</td>
+          <td><code>rmse</code>、<code>downstream_score</code>（breast_cancer / wine / california）</td>
+          <td>填补后重建误差 RMSE（越小越好）+ 下游任务分数（越高越好）。</td>
+          <td>rmse ↓ / downstream ↑</td>
+        </tr>
+        <tr>
+          <td><b>ml-symbolic-regression</b><br>符号回归</td>
+          <td><code>test_r2</code>（nguyen7 / nguyen10 / koza3）</td>
+          <td>在经典符号回归基准（Nguyen/Koza 函数族）上的 R²（越大越好，1.0=完美）。</td>
+          <td>↑ 越大越好</td>
+        </tr>
+        <tr>
+          <td><b>ai4sci-mol-property-prediction</b><br>分子性质预测</td>
+          <td><code>rocauc</code>（BBBP / BACE / Tox21）</td>
+          <td>3 个分子性质分类任务的 ROC-AUC（越高越好）。</td>
+          <td>↑ 越大越好</td>
+        </tr>
+        <tr>
+          <td><b>causal-treatment-effect</b><br>因果效应估计</td>
+          <td>（效应估计误差相关指标）</td>
+          <td>估计治疗效应（treatment effect）与真实效应的误差，越小越好。</td>
+          <td>↓ 越小越好</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout warn">
+      <b>为什么有些场景是 hidden（隐藏）</b>：MLS-Bench 会运行 hidden 评测场景但<b>不把分数反馈给 agent</b>（如 ER20-Noisy、SF100、ER12-LowSample、Win95pts）。
+      这防止 agent 在可见场景上过拟合，衡量方法的<b>真实泛化能力</b>。所以分数表里 hidden 场景的数字尤其能说明问题。
+    </div>
+  </section>
+
+  <!-- ==================== 4. TASK COMPARISON ==================== -->
   <section id="task-causal">
-    <h2><span class="num">03</span> 各任务分数对比</h2>
+    <h2><span class="num">04</span> 各任务分数对比</h2>
 
     <!-- 3.1 linear-non-gaussian -->
     <h3>3.1 causal-observational-linear-non-gaussian（LiNGAM）</h3>
@@ -429,7 +629,7 @@
 
   <!-- ==================== 4. FAILURES ==================== -->
   <section id="fail">
-    <h2><span class="num">04</span> 反例：dsh 的失败</h2>
+    <h2><span class="num">05</span> 反例：dsh 的失败</h2>
     <div class="callout red">
       <b>诚实记录</b>：dsh 并非全胜，下面这些失败/反例是同样重要的经验。
     </div>
@@ -456,7 +656,7 @@
 
   <!-- ==================== 5. GPU ==================== -->
   <section id="gpu">
-    <h2><span class="num">05</span> GPU / 时长分析</h2>
+    <h2><span class="num">06</span> GPU / 时长分析</h2>
 
     <div class="callout warn">
       <b>重要限制</b>：两机 8 张卡被多系统共享，<code>nvidia-smi</code> 监控无法精确归因到单个系统
@@ -482,7 +682,7 @@
 
   <!-- ==================== 6. LESSONS ==================== -->
   <section id="lessons">
-    <h2><span class="num">06</span> 关键经验</h2>
+    <h2><span class="num">07</span> 关键经验</h2>
     <ol>
       <li><b>dsh 需要 <code>DSH_PERMISSION_MODE=danger-full-access</code></b> 才能执行 shell（否则 sandbox 拒绝所有 shell 命令）。</li>
       <li><b>codex 无预算控制</b>：会无限探索/调试，限流断连即死，需要外部手动接管写回。</li>
@@ -495,7 +695,7 @@
 
   <!-- ==================== 7. REF ==================== -->
   <section id="ref">
-    <h2><span class="num">07</span> 参考</h2>
+    <h2><span class="num">08</span> 参考</h2>
     <ul>
       <li>MLS-Bench 官方：<a href="https://github.com/mlbench/ml-science-bench" target="_blank" rel="noopener">github.com/mlbench/ml-science-bench</a></li>
       <li>本报告原始 markdown：<a href="https://github.com/guoshaoyang-pku/OPHIS_baiyu" target="_blank" rel="noopener">OPHIS_baiyu docs/three_system_compare_20260815.md</a></li>
