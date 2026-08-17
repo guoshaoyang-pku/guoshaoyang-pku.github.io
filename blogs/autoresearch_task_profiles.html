@@ -1,0 +1,1715 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MLS-Bench 任务详解 · OPHIS Autoresearch 进展 · 每个任务在做什么、模型如何做的</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #171a21;
+    --panel2: #1d2129;
+    --border: #2a2f3a;
+    --text: #e6e8ec;
+    --muted: #9aa3b2;
+    --accent: #5b9dff;
+    --accent2: #7c5bff;
+    --green: #4cd9a0;
+    --yellow: #ffc857;
+    --red: #ff6b6b;
+    --purple: #c77dff;
+    --orange: #ffa657;
+    --code-bg: #10131a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    line-height: 1.75;
+  }
+  .container { max-width: 1100px; margin: 0 auto; padding: 32px 24px 100px; }
+
+  .hero {
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: linear-gradient(135deg, #151a26 0%, #1a1f2e 100%);
+    padding: 32px;
+    margin-bottom: 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(600px 200px at 85% -10%, rgba(91,157,255,.15), transparent),
+                radial-gradient(500px 200px at 10% 110%, rgba(124,91,255,.12), transparent);
+    pointer-events: none;
+  }
+  .hero h1 { font-size: 1.8rem; font-weight: 700; letter-spacing: .5px; position: relative; }
+  .hero .sub { color: var(--muted); margin-top: 8px; font-size: 1rem; position: relative; }
+  .hero .meta { margin-top: 16px; display: flex; gap: 12px; flex-wrap: wrap; position: relative; }
+  .badge {
+    font-size: .78rem; padding: 3px 12px; border-radius: 20px;
+    background: rgba(91,157,255,.12); border: 1px solid rgba(91,157,255,.35); color: #bcd5ff;
+  }
+  .badge.green { background: rgba(76,217,160,.12); border-color: rgba(76,217,160,.35); color: #7ce8bb; }
+  .badge.yellow { background: rgba(255,200,87,.12); border-color: rgba(255,200,87,.35); color: #ffd98a; }
+  .badge.red { background: rgba(255,107,107,.12); border-color: rgba(255,107,107,.35); color: #ffa3a3; }
+  .badge.purple { background: rgba(199,125,255,.12); border-color: rgba(199,125,255,.35); color: #dcb0ff; }
+
+  section { margin-bottom: 52px; }
+  h2 {
+    font-size: 1.5rem; font-weight: 700;
+    padding-bottom: 10px; margin-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+  }
+  h2 .num {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    font-size: 1.2rem;
+  }
+  h3 { font-size: 1.15rem; margin: 26px 0 12px; color: #fff; }
+  h4 { font-size: 1rem; margin: 18px 0 8px; color: #cbd4e2; }
+  p { margin-bottom: 12px; }
+  .muted { color: var(--muted); }
+
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: .9rem; }
+  th, td { padding: 9px 12px; text-align: left; border: 1px solid var(--border); vertical-align: top; }
+  th { background: var(--panel2); font-weight: 600; color: #cbd4e2; }
+  tr:nth-child(even) td { background: rgba(255,255,255,.015); }
+  td.best { color: var(--green); font-weight: 700; }
+  td.worst { color: var(--red); }
+
+  code {
+    background: var(--code-bg); border: 1px solid var(--border);
+    padding: 1px 6px; border-radius: 4px; font-size: .85em;
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+  }
+  pre {
+    background: var(--code-bg); border: 1px solid var(--border);
+    border-radius: 8px; padding: 14px 16px; margin: 12px 0;
+    overflow-x: auto; font-size: .82rem; line-height: 1.55;
+    font-family: "SF Mono", Menlo, Consolas, monospace; color: #cfe0ff;
+  }
+  pre .c { color: #6a7a94; }
+  pre .k { color: #c77dff; }
+  pre .s { color: #7ce8bb; }
+  pre .n { color: #ffc857; }
+
+  .callout {
+    border: 1px solid var(--border); border-left: 4px solid var(--accent);
+    background: rgba(91,157,255,.06); border-radius: 8px;
+    padding: 14px 18px; margin: 16px 0;
+  }
+  .callout.green { border-left-color: var(--green); background: rgba(76,217,160,.06); }
+  .callout.yellow { border-left-color: var(--yellow); background: rgba(255,200,87,.06); }
+  .callout.red { border-left-color: var(--red); background: rgba(255,107,107,.06); }
+  .callout.purple { border-left-color: var(--purple); background: rgba(199,125,255,.06); }
+
+  .toc { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; }
+  .toc a { color: var(--accent); text-decoration: none; display: block; padding: 3px 0; font-size: .92rem; }
+  .toc a:hover { text-decoration: underline; }
+  .toc .toc-sub { padding-left: 20px; color: var(--muted); font-size: .88rem; }
+
+  .traj { border: 1px solid var(--border); border-radius: 8px; margin: 10px 0; overflow: hidden; }
+  .traj summary {
+    padding: 10px 16px; cursor: pointer; background: var(--panel2);
+    font-weight: 600; font-size: .92rem; color: #cbd4e2;
+  }
+  .traj summary:hover { background: #232835; }
+  .traj .body { padding: 4px 16px 12px; }
+
+  .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin: 14px 0; }
+  .metric-card {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px;
+  }
+  .metric-card .label { font-size: .78rem; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
+  .metric-card .value { font-size: 1.25rem; font-weight: 700; color: var(--green); margin-top: 2px; }
+  .metric-card .baseline { font-size: .8rem; color: var(--muted); margin-top: 2px; }
+
+  .footer {
+    border-top: 1px solid var(--border); padding-top: 20px; margin-top: 60px;
+    color: var(--muted); font-size: .85rem;
+  }
+  .divider { border-top: 1px dashed var(--border); margin: 36px 0; }
+
+  .obs-item { display: flex; gap: 10px; margin: 8px 0; font-size: .92rem; }
+  .obs-item .dot { color: var(--orange); flex-shrink: 0; }
+  .verdict { font-weight: 600; color: var(--green); }
+
+  .tag { display: inline-block; font-size: .75rem; padding: 2px 10px; border-radius: 12px; margin: 0 2px; }
+  .tag.green { background: rgba(76,217,160,.15); color: #7ce8bb; border: 1px solid rgba(76,217,160,.4); }
+  .tag.yellow { background: rgba(255,200,87,.15); color: #ffd98a; border: 1px solid rgba(255,200,87,.4); }
+  .tag.red { background: rgba(255,107,107,.15); color: #ffa3a3; border: 1px solid rgba(255,107,107,.4); }
+  .tag.purple { background: rgba(199,125,255,.15); color: #dcb0ff; border: 1px solid rgba(199,125,255,.4); }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="hero">
+    <h1>MLS-Bench 任务详解与 Autoresearch 进展</h1>
+    <div class="sub">每个任务在做什么 · 评测怎么打分的 · 模型（deepseek-v4-pro）在任务中实际做了什么 · 中间发生了什么</div>
+    <div class="meta">
+      <span class="badge">OPHIS Project</span>
+      <span class="badge green">dsh 极简 + deepseek-v4-pro</span>
+      <span class="badge">2026-08-17</span>
+    </div>
+  </div>
+
+  <div class="toc">
+    <strong>目录</strong>
+    <a href="#intro">0. 阅读指南：这份文档怎么读</a>
+    <a href="#legend">0.1 指标速查（每个指标到底是什么意思）</a>
+    <a href="#causal-gaussian">1. causal-observational-linear-gaussian（线性高斯因果发现）</a>
+    <a href="#causal-lingam">2. causal-observational-linear-non-gaussian（线性非高斯 LiNGAM）</a>
+    <a href="#causal-nonlinear">3. causal-observational-nonlinear（非线性加性噪声因果发现）</a>
+    <a href="#causal-discrete">4. causal-discovery-discrete（离散贝叶斯网络因果发现）</a>
+    <a href="#causal-te">5. causal-treatment-effect（因果处理效应估计）</a>
+    <a href="#symbolic">6. ml-symbolic-regression（符号回归）</a>
+    <a href="#anomaly">7. ml-anomaly-detection（异常检测）</a>
+    <a href="#clustering">8. ml-clustering-algorithm（聚类）</a>
+    <a href="#dimred">9. ml-dimensionality-reduction（降维）</a>
+    <a href="#calibration">10. ml-calibration（概率校准）</a>
+    <a href="#selective">11. ml-selective-deferral（选择性放权）</a>
+    <a href="#subgroup">12. ml-subgroup-calibration-shift（子群校准偏移）</a>
+    <a href="#mol">13. ai4sci-mol-property-prediction（分子性质预测）</a>
+    <a href="#ensemble">14. ml-ensemble-boosting（集成提升）— 评测环境缺陷</a>
+    <a href="#missing">15. ml-missing-data-imputation（缺失值填补）— 评测环境缺陷</a>
+    <a href="#traj">16. 进展图与时间线：每张图怎么读</a>
+  </div>
+
+  <!-- ============ 0. INTRO ============ -->
+  <section id="intro">
+    <h2><span class="num">00</span> 阅读指南</h2>
+    <p>
+      这份文档回答三个问题：<b>每个 MLS-Bench 任务到底在做什么</b>（背景、输入、输出、怎么打分）、
+      <b>deepseek-v4-pro 模型在任务中实际做了什么</b>（它写的算法、它改了哪些东西）、
+      以及 <b>中间到底发生了什么</b>（模型观察了什么中间量、怎么调试、怎么迭代）。
+    </p>
+    <p>
+      所有运行都是 <b>dsh 极简模式</b>（只保留 Bash + 文件编辑器两个工具，没有网页搜索、没有计划模式、没有子代理）+ <b>deepseek-v4-pro 模型</b>，不限时，跑到 agent 自己觉得完成（写 RESULT.md）为止。
+      运行在两台机器：<b>ophis-gpu</b>（8×H200）和 <b>360-1</b>（8×H100）。
+    </p>
+    <div class="callout yellow">
+      <b>关于「中间观察」</b>：这是这份文档的重点。我们想验证的问题是——<b>模型在优化/构造过程中，会不会自发地观察除最终指标之外的中间量</b>（训练损失、中间表示、数据分布、残差独立性、算法内部状态等），并用这些观察来指导下一步。
+      结论先放在这里：<b>会，而且非常主动</b>。每个任务我们都记录了模型实际写下的 probe / debug 脚本和它观察到的中间量。
+    </div>
+  </section>
+
+  <!-- ============ 0.1 LEGEND ============ -->
+  <section id="legend">
+    <h2><span class="num">00.1</span> 指标速查</h2>
+    <p>下面这些指标会反复出现。先记住它们的含义，后面的任务就都能读懂了。</p>
+    <table>
+      <thead>
+        <tr><th>指标</th><th>全称</th><th>含义（用大白话）</th><th>方向</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><b>SHD</b></td><td>Structural Hamming Distance</td><td>你画出来的因果图，和真实因果图相比，「边」对不上（多了/少了/方向反了）的总数。0 = 完美还原。</td><td class="best">越低越好</td></tr>
+        <tr><td><b>F1</b></td><td>F1 score</td><td>「找对的边 / 所有找出来的边」和「找对的边 / 所有真实存在的边」的调和平均。1 = 完美，0 = 全错。</td><td class="best">越高越好</td></tr>
+        <tr><td><b>Precision / Recall</b></td><td>精确率 / 召回率</td><td>Precision：你声称有的边里有多少真的存在；Recall：真实存在的边里你找到了多少。</td><td class="best">越高越好</td></tr>
+        <tr><td><b>CPDAG</b></td><td>Completed Partially Directed Acyclic Graph</td><td>因果图的一种「等价类」表示：有些边方向确定（→），有些边方向未定（—）。线性高斯数据下只能识别到这个程度。</td><td>—</td></tr>
+        <tr><td><b>DAG</b></td><td>Directed Acyclic Graph</td><td>有向无环图，每条边都有明确方向。</td><td>—</td></tr>
+        <tr><td><b>R²</b></td><td>Coefficient of Determination</td><td>回归拟合优度：模型解释了数据中多大比例的方差。1 = 完美拟合，0 = 不如直接用均值。</td><td class="best">越高越好</td></tr>
+        <tr><td><b>RMSE</b></td><td>Root Mean Squared Error</td><td>预测值与真实值之差的均方根。越小越好。</td><td class="best">越低越好</td></tr>
+        <tr><td><b>AUROC</b></td><td>Area Under ROC Curve</td><td>二分类器把「正类排前面」的能力。0.5 = 瞎猜，1.0 = 完美。</td><td class="best">越高越好</td></tr>
+        <tr><td><b>ECE</b></td><td>Expected Calibration Error</td><td>校准误差：模型说「我有 90% 把握」时，实际有多少次真的对了。0 = 完美校准。</td><td class="best">越低越好</td></tr>
+        <tr><td><b>ARI</b></td><td>Adjusted Rand Index</td><td>聚类结果与真实类别的匹配度（考虑随机因素修正）。1 = 完全一致，0 = 随机。</td><td class="best">越高越好</td></tr>
+        <tr><td><b>NMI</b></td><td>Normalized Mutual Information</td><td>聚类与真实类别的互信息归一化。1 = 完全一致。</td><td class="best">越高越好</td></tr>
+        <tr><td><b>PEHE</b></td><td>Precision in Estimation of Heterogeneous Effects</td><td>估计的个体处理效应与真实个体处理效应的均方根误差。0 = 完美估计每个个体的效应。</td><td class="best">越低越好</td></tr>
+        <tr><td><b>ATE error</b></td><td>Average Treatment Effect error</td><td>估计的平均处理效应与真实平均处理效应之差。</td><td class="best">越低越好</td></tr>
+        <tr><td><b>rocauc</b></td><td>ROC-AUC</td><td>分子性质预测的评估指标（每个数据集一个），含义同 AUROC。</td><td class="best">越高越好</td></tr>
+        <tr><td><b>elapsed_*</b></td><td>elapsed</td><td>该场景单次评测消耗的秒数。这个数字本身不参与排名，但用来判断算法是否太慢（超时会判无效）。</td><td>—</td></tr>
+      </tbody>
+    </table>
+    <div class="callout">
+      <b>评测协议统一说明</b>：所有任务都是「<b>固定评测脚本 + 隐藏的测试数据/场景</b>」。agent 只能改它工作区里的<b>可编辑文件</b>（通常是 <code>custom_*.py</code>），不能碰评测 harness。评测脚本会跑 agent 的实现，打印训练/测试指标，最后输出一个 <code>=== METRICS ===</code> JSON 块。每个任务都有若干官方 baseline（比如 PC、BOSE、t-SNE 等），agent 的目标是超过它们。
+    </div>
+  </section>
+
+  <!-- ============ 1. CAUSAL LINEAR GAUSSIAN ============ -->
+  <section id="causal-gaussian">
+    <h2><span class="num">01</span> causal-observational-linear-gaussian</h2>
+
+    <h3>任务背景：因果发现是什么</h3>
+    <p>
+      因果发现（causal discovery）的目标是：<b>只凭一堆观测数据，反推出变量之间的因果结构</b>——也就是"谁直接导致谁"的有向图。
+      举例：我们观测到"喝咖啡的人心脏病发病率高"。但可能是咖啡导致心脏病（A→B），也可能是心脏病让人多喝咖啡（B→A），
+      还可能是有第三个因素（比如压力大）同时导致两者（A←C→B）。因果发现就是从数据里区分这三种可能。
+    </p>
+    <p>
+      本任务的假设是 <b>线性高斯结构方程模型（linear Gaussian SEM）</b>：每个变量的值 = 父变量的线性组合 + 高斯噪声。
+      在这个假设下，因果结构有一个著名的<b>不可识别性结论</b>：仅凭观测分布，你最多只能识别到 <b>CPDAG</b>（部分有向无环图）——即哪些边存在、哪些方向确定、哪些方向未定。
+      但是！如果所有变量的<b>噪声方差相等</b>，结构就<b>完全可识别</b>（可以区分所有方向）。这是本任务的核心知识点。
+    </p>
+
+    <h3>任务内容与评测</h3>
+    <table>
+      <thead><tr><th>项</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td><b>输入</b></td><td>5 个数据场景（各几百到几千样本）：ER10、ER20（随机有向图）、SF50、SF50-Hard（稠密无标度图）、ER20-Noisy（含噪声方差不等）</td></tr>
+        <tr><td><b>agent 可改文件</b></td><td><code>causal-learn/bench/custom_algorithm.py</code> 里的 <code>run_causal_discovery()</code></td></tr>
+        <tr><td><b>评测指标</b></td><td><b>SHD</b>（结构汉明距离，越低越好）、Adj Precision/Recall（边存在性）、Arrow Precision/Recall（方向正确性）</td></tr>
+        <tr><td><b>官方 baseline</b></td><td>PC（SHD 344）、GRaSP（109）、BOSS（24）——注意这是跨 5 场景的总 SHD</td></tr>
+      </tbody>
+    </table>
+    <p class="muted">baseline 数字来自官方 leaderboard：PC 344、GRaSP 109、BOSS 24（5 场景总和）。这个任务被官方评为「很能区分 agent 能力」的中等难度任务。</p>
+
+    <h3>模型做了什么（EVS 算法）</h3>
+    <p>
+      agent 写了一个全新的算法 <b>EVS（Equal-variance Cholesky Score search，等方差 Cholesky 分数搜索）</b>，核心思路：
+    </p>
+    <ol>
+      <li><b>顺序搜索</b>：利用等方差结构（协方差逆矩阵 = (I−B)ᵀ(I−B)/σ²），用"叶剥离"（每次剥掉一个最像叶子的节点）恢复拓扑顺序；再用一个平滑的联合似然分数做细化。</li>
+      <li><b>创新点：bagged 共识顺序</b>。在弱边上，单个样本的分数几乎平坦、容易猜反方向。agent 用 bootstrap 重采样 + 多数投票（Copeland 计分）把这种随机噪声平均掉。只有当细化顺序的优势「显著」（bootstrap 校准的 2 个标准差检验）时才采用细化结果，否则用集成顺序。</li>
+      <li><b>创新点：联合边集坐标下降</b>。因为共享方差把所有节点耦合在一起，逐节点贪心会丢掉被相关父节点掩盖的弱边；所以改为对整组边做 add/remove/swap 的坐标下降。</li>
+      <li><b>稳定性选择的边池</b>（Meinshausen & Bühlmann 2010）：48 次子采样拟合中，边必须被选中超过 1/3 次才保留（真实边都 ≥17/48，伪边都 ≤16/48，无需每数据集调参）。</li>
+    </ol>
+
+    <h3>结果</h3>
+    <div class="metric-grid">
+      <div class="metric-card"><div class="label">Total SHD</div><div class="value">1</div><div class="baseline">最佳 baseline BOSS = 24</div></div>
+      <div class="metric-card"><div class="label">ER10 / ER20 / SF50</div><div class="value">SHD = 0</div><div class="baseline">完美还原</div></div>
+      <div class="metric-card"><div class="label">SF50-Hard</div><div class="value">SHD = 0</div><div class="baseline">BOSS 在这里 SHD=6</div></div>
+      <div class="metric-card"><div class="label">ER20-Noisy</div><div class="value">SHD = 1</div><div class="baseline">唯一没完美的场景</div></div>
+    </div>
+    <p>
+      总 SHD = <b>1</b>，把官方最佳 baseline（BOSS 24）从 24 降到 1，也比之前所有 agent 解（最好 7）好得多。
+      唯一的残差是一条弱边（2→19，权重 0.35，噪声 2.5，样本 400）方向判反——这是统计极限，数据本身几乎不携带方向信息。
+    </p>
+
+    <h3>中间发生了什么（可观测量的使用）</h3>
+    <div class="callout purple">
+      这个任务是「观察中间量 → 提取 insight → intervention」的教科书案例。
+    </div>
+    <div class="obs-item"><span class="dot">◆</span><b>观察中间分数面</b>：agent 发现对单条弱边，<code>pooled likelihood</code> 分数面几乎是平的（两种方向的分数差 < 统计噪声），这是"为什么 greedy 会翻车"的直接观察。</div>
+    <div class="obs-item"><span class="dot">◆</span><b>观察 bootstrap 投票分布</b>：它打印了 24 次 bootstrap 里每条边支持"正确方向"的票数（20/24–21/24 vs 分数偏向错误方向），据此设计了「2-se 检验」来决定是否采用细化顺序。</div>
+    <div class="obs-item"><span class="dot">◆</span><b>观察边选择的稳定性</b>：48 次子采样中每条边的选中次数（真实边 ≥17/48、伪边 ≤16/48），据此定 1/3 阈值——这是从数据里"数"出来的规律，不是拍脑袋。</div>
+    <div class="obs-item"><span class="dot">◆</span><b>全场景本地评测</b>：agent 在改完每个组件后都跑一次全部 5 场景，看 SHD 怎么变化，逐项归因。</div>
+
+    <div class="traj">
+      <details>
+        <summary>展开：实际 trajectory 摘录（来自 session 日志）</summary>
+        <div class="body">
+<pre><span class="c"># 先读任务说明和 baseline 结构</span>
+[read] task_description.md
+[read] custom_algorithm.py
+
+<span class="c"># 观察：检验等方差假设是否真的可识别（写小实验验证 Σ⁻¹ 分解）</span>
+[bash] python -c "import numpy as np; ... 验证 (I-B)T(I-B)/sigma2 分解..."
+
+<span class="c"># 观察：对每条边做 bootstrap 方向投票，看弱边的分布</span>
+[bash] python -c "bagged leaf peeling on bootstrap resamples ... 20/24 votes vs score"
+
+<span class="c"># 观察：48 次子采样稳定性的直方图</span>
+[bash] python -c "stability-selection ... true edges >=17/48, spurious <=16/48"
+
+<span class="c"># 每改一版都全场景评测，看 SHD 变化</span>
+[bash] run_test.py causal-observational-linear-gaussian ... 
+<span class="c"># → 最终：Total SHD = 1</span></pre>
+        </div>
+      </details>
+    </div>
+
+    <div class="callout green">
+      <b>关键点</b>：agent 不是直接"梭哈"写一个算法，而是先做了两个中间观察（分数面平坦、bootstrap 投票分散），
+      基于观察设计了两层保护（bagged 顺序 + 2-se 检验），再用稳定性观察定阈值。最终把官方最佳从 24 打到 1。
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ============ 2. LINGAM ============ -->
+  <section id="causal-lingam">
+    <h2><span class="num">02</span> causal-observational-linear-non-gaussian（LiNGAM）</h2>
+
+    <h3>任务背景</h3>
+    <p>
+      上一个任务（linear-gaussian）里我们说过：线性高斯模型下，如果噪声方差不等，因果方向<b>不可识别</b>（只能到 CPDAG）。
+      本任务打破了「高斯」这个假设——变量之间的机制仍是<b>线性</b>的，但噪声可以是<b>非高斯</b>的（比如均匀分布、t 分布等）。
+    </p>
+    <p>
+      <b>LiNGAM</b>（Linear Non-Gaussian Acyclic Model，线性非高斯无环模型，Shimizu et al. 2006）发现了一个漂亮的定理：
+      在线性 + 非高斯噪声的假设下，因果方向是<b>完全可识别的</b>，甚至可以恢复完整 DAG（不只是 CPDAG）。
+      直觉是这样：如果 X → Y（Y = aX + ε，ε 非高斯），那么「对 X 回归 Y 的残差」和「X」是独立的；
+      反之如果方向反了，「对 Y 回归 X 的残差」和「Y」会相关。利用独立性的不对称性就能定方向。
+    </p>
+    <p>
+      这个任务给 3 个场景：<b>ER30、ER50</b>（随机有向图，30/50 个节点）和 <b>SF100</b>（无标度图，100 节点），
+      官方 baseline（DirectLiNGAM、ICALiNGAM）在部分场景会有 2–6 条伪边。
+    </p>
+
+    <h3>任务内容与评测</h3>
+    <table>
+      <thead><tr><th>项</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td><b>输入</b></td><td>3 个数据场景：ER30（30 节点随机图）、ER50（50 节点随机图）、SF100（100 节点无标度图）</td></tr>
+        <tr><td><b>agent 可改文件</b></td><td><code>causal-learn/bench/custom_algorithm.py</code> 的 <code>run_causal_discovery()</code></td></tr>
+        <tr><td><b>评测指标</b></td><td><b>SHD</b>、F1、Precision、Recall（越低 SHD 越好，其余越高越好）</td></tr>
+        <tr><td><b>官方 baseline</b></td><td>DirectLiNGAM（F1 0.99/0.99/0.99）、ICALiNGAM（0.995/0.994/0.82）、NOTEARS（更弱）</td></tr>
+      </tbody>
+    </table>
+
+    <h3>模型做了什么（Pruned DirectLiNGAM）</h3>
+    <p>agent 实现的是 <b>Pruned DirectLiNGAM</b>——官方 DirectLiNGAM 的顺序搜索 + 一个统计剪枝的回归阶段：</p>
+    <ol>
+      <li><b>因果顺序</b>：标准的 DirectLiNGAM 迭代找 sink 节点（用 dMI 统计量度量非高斯独立性），向量化实现。</li>
+      <li><b>父节点集</b>：每个变量对它在顺序中的前驱做 adaptive Lasso（BIC 选惩罚）。</li>
+      <li><b>创新点：留一法偏相关后向剪枝</b>。关键 insight（来自中间观察）：<b>深链变量的边缘方差可以相差 150 倍</b>，
+         这会让「边缘归一化统计量」把真正的父节点也剪掉。改用「残差的偏相关」——在 LiNGAM 独立性假设下有校准的空分布（τ = 3/√n）——
+         能保留所有真父节点、同时删掉伪祖先。</li>
+      <li><b>Refit</b>：对剪枝后的支撑集做 OLS，删掉 |coef| &lt; 0.25 的边（真实权重 ≥0.5 构造保证）。</li>
+    </ol>
+
+    <h3>结果</h3>
+    <div class="metric-grid">
+      <div class="metric-card"><div class="label">ER30</div><div class="value">SHD = 0</div><div class="baseline">DirectLiNGAM SHD=2</div></div>
+      <div class="metric-card"><div class="label">ER50</div><div class="value">SHD = 0</div><div class="baseline">DirectLiNGAM SHD=3</div></div>
+      <div class="metric-card"><div class="label">SF100</div><div class="value">SHD = 0</div><div class="baseline">DirectLiNGAM SHD=6</div></div>
+      <div class="metric-card"><div class="label">全场景</div><div class="value">F1 = 1.0</div><div class="baseline">官方最佳 F1 ≈ 0.99</div></div>
+    </div>
+    <p>
+      三个场景全部 <b>SHD = 0、F1 = 1.0</b>（完美恢复真实 DAG），把官方 DirectLiNGAM 的残余错误（每场景 2–6 条伪边）全部消除。
+      运行时也快（9s / 22s / 87s）。
+    </p>
+
+    <h3>中间发生了什么（可观测量的使用）</h3>
+    <div class="callout purple">
+      这里最精彩的中间观察是：<b>agent 观察到「边缘方差 150 倍差异」这个数据特性</b>，并据此诊断出「为什么朴素剪枝会失败」。
+    </div>
+    <div class="obs-item"><span class="dot">◆</span><b>观察残差相关性的失效模式</b>：agent 在调试时打印了深链变量的边缘方差（发现差 150 倍），
+      解释了为什么 marginal-normalized 统计量会把真父节点剪掉。</div>
+    <div class="obs-item"><span class="dot">◆</span><b>观察偏相关的空分布</b>：它验证了偏相关在 LiNGAM 假设下的 null 分布可用 τ=3/√n 校准，
+      然后据此设剪枝阈值。</div>
+    <div class="obs-item"><span class="dot">◆</span><b>观察剪枝前后伪边/真边变化</b>：打印每一轮剪枝删掉了哪些边、保留哪些，逐条归因。</div>
+    <div class="obs-item"><span class="dot">◆</span><b>全场景评测验证</b>：每轮改动后跑 3 场景，确认 SHD 从 2-6 降到 0。</div>
+
+    <div class="traj">
+      <details>
+        <summary>展开：实际 trajectory 摘录</summary>
+        <div class="body">
+<pre><span class="c"># 读任务、读现有实现</span>
+[read] task_description.md
+[read] custom_algorithm.py
+
+<span class="c"># 观察：跑官方 DirectLiNGAM 看残余错误在哪</span>
+[bash] run directlingam on ER30/ER50/SF100 → F1 0.99, SHD 2/3/6
+
+<span class="c"># 观察：为什么会有伪边？打印深链变量方差 → 发现 150x 差距</span>
+[bash] python -c "check marginal variances along chains ... up to 150x"
+
+<span class="c"># 干预：改用偏相关剪枝，验证空分布校准</span>
+[bash] python -c "partial corr null under LiNGAM ... tau = 3/sqrt(n) calibrated"
+
+<span class="c"># 每版全场景评测</span>
+[bash] run_test.py causal-observational-linear-non-gaussian ...
+<span class="c"># → SHD 0 / 0 / 0，F1 全 1.0</span></pre>
+        </div>
+      </details>
+    </div>
+
+    <div class="callout green">
+      <b>关键点</b>：agent 从「方差 150x」这个数据特性出发诊断出算法失败根因，用「偏相关 + 校准空分布」做剪枝，
+      实现了官方 baseline 做不到的<b>完美恢复</b>。这是「观察数据内部结构 → 定位木桶短板 → 针对性修复」的典型循环。
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ============ 3. NONLINEAR ============ -->
+  <section id="causal-nonlinear">
+    <h2><span class="num">03</span> causal-observational-nonlinear（非线性加性噪声因果发现）</h2>
+
+    <h3>任务背景</h3>
+    <p>
+      前两个任务都是「线性」机制。本任务把机制换成<b>非线性</b>：每个变量的值 = 父变量的<b>非线性函数</b> + 加性噪声。
+      这是更接近真实世界的设定（比如基因调控、气候变量之间通常不是简单的线性关系）。
+    </p>
+    <p>
+      非线性带来了新的可识别性：<b>加性噪声模型（ANM, Additive Noise Model）</b>定理说明，在大多数非线性情况下，
+      因果方向是<b>唯一可识别</b>的。核心观察是：如果 X → Y（Y = f(X) + ε，ε 与 X 独立），
+      那么残差 Y − f(X) 与 X 独立；但反过来 X = g(Y) + ε' 的残差通常与 Y <b>不</b>独立。
+      这种「方向不对称性」就是识别因果方向的钥匙。本任务即要求实现这样一个非线性因果发现算法。
+    </p>
+    <p>
+      3 个场景：<b>SF20-GP</b>（20 节点、高斯过程非线性）、<b>ER20-Gauss</b>（20 节点随机图、高斯噪声）、
+      <b>ER12-LowSample</b>（12 节点、样本很少）。官方最佳 baseline 是 CAM（F1 0.853/0.723/0.542）。
+    </p>
+
+    <h3>任务内容与评测</h3>
+    <table>
+      <thead><tr><th>项</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td><b>输入</b></td><td>3 个非线性 ANM 数据场景（见上）</td></tr>
+        <tr><td><b>agent 可改文件</b></td><td><code>causal-learn/bench/custom_algorithm.py</code> 的 <code>run_causal_discovery()</code></td></tr>
+        <tr><td><b>评测指标</b></td><td><b>SHD</b>、F1、Precision、Recall</td></tr>
+        <tr><td><b>官方 baseline</b></td><td>CAM（F1 0.853 / 0.723 / 0.542）</td></tr>
+      </tbody>
+    </table>
+
+    <h3>模型做了什么（ANM-GAM）</h3>
+    <p>360 上跑的 agent 实现了 <b>ANM-GAM</b>，一个完整的非线性 ANM 因果发现流水线：</p>
+    <ol>
+      <li><b>成对方向打分</b>：对每个有序变量对 (p, c)，用三次样条岭回归拟合 c ~ f(p)，再用快速随机傅里叶特征 HSIC 度量残差与 p 的依赖度。残差依赖小 ⇔ 这个方向符合 ANM。</li>
+      <li><b>用 IC 模型比较学顺序</b>：给候选拓扑顺序（自然顺序、成对 ANM 投票的贪心聚合、以及其逆序）打「稀疏加性模型的组 BIC/AIC」分，取最小。数据驱动的比较在每个场景都以很大优势选对顺序。</li>
+      <li><b>稀疏加性父节点选择</b>：对样条基做带组惩罚的贪心前向选择（n≥500 用 BIC，小样本用 AIC + 留一 F 检验后过滤）；所有岭回归都用预计算的 Gram 矩阵，搜索近乎瞬时。</li>
+    </ol>
+
+    <h3>结果</h3>
+    <div class="metric-grid">
+      <div class="metric-card"><div class="label">SF20-GP</div><div class="value">F1 = 0.986</div><div class="baseline">baseline CAM 0.853</div></div>
+      <div class="metric-card"><div class="label">ER20-Gauss</div><div class="value">F1 = 0.957</div><div class="baseline">baseline CAM 0.723</div></div>
+      <div class="metric-card"><div class="label">ER12-LowSample</div><div class="value">F1 = 0.973</div><div class="baseline">baseline CAM 0.542</div></div>
+      <div class="metric-card"><div class="label">耗时</div><div class="value">7s / 7s / 2s</div><div class="baseline">每场景</div></div>
+    </div>
+    <p>
+      三个场景的 F1 都远超官方最佳 baseline（CAM）。剩余的错误是 SNR &lt; 0.1 的极弱边，接近检测极限。
+      这是 360 机器的结果，**全程只用了 28 分钟**。
+    </p>
+
+    <h3>中间发生了什么（可观测量的使用）</h3>
+    <div class="callout purple">
+      这个任务的 trajectory 是「原型开发 + 大量中间统计量观察」的范本——agent 在 <code>/tmp/dev</code> 里写了 20+ 个原型/调试脚本。
+    </div>
+    <div class="obs-item"><span class="dot">◆</span><b>观察 HSIC 子采样对方向判定速度/准确度的影响</b>：专门写脚本对比不同子采样量，在保持准确度下提速。</div>
+    <div class="obs-item"><span class="dot">◆</span><b>观察「BIC 前向选择 vs 残差方差打分」谁更能选对顺序</b>：发现残差方差打分会被「后代伪装成父节点」欺骗，而 BIC 前向选择的景观是可靠的顺序判据。</div>
+    <div class="obs-item"><span class="dot">◆</span><b>观察 CAM 风格 F 检验剪枝 vs 组 IC 前向选择</b>：实测发现前者远逊于后者，据此替换。</div>
+    <div class="obs-item"><span class="dot">◆</span><b>观察岭惩罚大小对弱边的影响</b>：α=0.01 能找回重收缩丢失的弱边。</div>
+    <div class="obs-item"><span class="dot">◆</span><b>低样本场景专项观察</b>：小样本需要 AIC + 更少节点 + F 检验后过滤，逐项调。</div>
+
+    <div class="traj">
+      <details>
+        <summary>展开：360 机器上的实际 trajectory 摘录（会话日志）</summary>
+        <div class="body">
+<pre><span class="c"># 先摸清环境（没有 conda、没有 sklearn 时的应对）</span>
+[bash] which python3 python3.11 python3.10 conda; ls /usr/bin/python* /opt/conda/bin/python*
+
+<span class="c"># 原型开发：load_data → proto1 → proto2（GAM 残差方向打分）</span>
+[script] /tmp/dev/load_data
+[script] /tmp/dev/proto1
+[script] /tmp/dev/proto2
+
+<span class="c"># 观察：proto2 的成对方向分数在不同设置下是否稳定</span>
+[bash] python3 -c "run proto2 on SF20/ER20/ER12 ..."
+
+<span class="c"># 观察：HSIC 子采样对方向判定速度/准确度影响</span>
+[bash] python3 -c "speed-check HSIC subsampling impact on pairwise orientation ..."
+
+<span class="c"># 观察：RFF-HSIC 变体（随机傅里叶特征）提速</span>
+[script] /tmp/dev/rffhsic
+[script] /tmp/dev/pipeline3
+
+<span class="c"># 观察：前向选择 vs 残差方差打分，谁更会选顺序</span>
+[bash] timeout 400 python3 -c "forward-selection BIC landscape vs residual-variance ..."
+
+<span class="c"># 观察：前向/后向选择对比（forward_select vs backward_select）</span>
+[script] /tmp/dev/selback
+[bash] sed -i "s/def backward_select/.../" 
+
+<span class="c"># 定稿：写 custom_algorithm.py，全场景评测</span>
+[write] custom_algorithm.py
+[bash] run_test.py causal-observational-nonlinear ...
+<span class="c"># → SF20 F1 0.986, ER20 0.957, ER12 0.973（28 分钟完成）</span></pre>
+        </div>
+      </details>
+    </div>
+
+    <div class="callout yellow">
+      <b>两机对比的重要教训</b>：同样的任务，<b>ophis</b> 上的 agent 写了一个贪心搜索实现，评测时每个场景超过 7500 秒（评测超时判无效，未拿到 METRICS）；
+      而 <b>360</b> 上的 agent 用 Gram 矩阵预计算 + 稀疏加性模型，每场景只要 2–7 秒，28 分钟就拿到了优秀结果。
+      这告诉我们：<b>在 autoresearch 里，「算法的计算效率」本身就是需要被观察和优化的中间量</b>——跑得太慢会直接浪费评测预算甚至评测失败。
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ============ 4. DISCRETE ============ -->
+  <section id="causal-discrete">
+    <h2><span class="num">04</span> causal-discovery-discrete（离散贝叶斯网络因果发现）</h2>
+
+    <h3>任务背景</h3>
+    <p>
+      前面几个因果任务处理的是连续变量。本任务处理<b>离散数据</b>：每个变量的取值是有限个离散类别
+      （比如「是/否」、五个风险等级），变量之间的关系用<b>贝叶斯网络</b>（有向无环图 + 每个节点的条件概率表）建模。
+      这类网络在医学（如 Cancer、Alarm 是著名的医学诊断网络）、专家系统中非常常见。
+    </p>
+    <p>
+      任务给 5 个经典的贝叶斯网络：<b>Cancer</b>（5 节点，小）、<b>Child</b>（20 节点）、<b>Alarm</b>（37 节点）、
+      <b>Hailfinder</b>（56 节点）、<b>Win95pts</b>（76 节点，Windows 95 打印机故障诊断网络）。
+      你只拿到从网络采样出的观测数据（离散样本），要还原出真实的有向图。样本量有限（大网络只有几百条），
+      所以这是有挑战的。官方 baseline 是 PC、GES、GRaSP、BOSS、HC 这些经典算法。
+    </p>
+
+    <h3>任务内容与评测</h3>
+    <table>
+      <thead><tr><th>项</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td><b>输入</b></td><td>5 个离散贝叶斯网络的观测数据（样本从网络采样）</td></tr>
+        <tr><td><b>agent 可改文件</b></td><td><code>causal-bnlearn/bench/custom_algorithm.py</code></td></tr>
+        <tr><td><b>评测指标</b></td><td>每个网络一个 <b>SHD</b>（越低越好）+ Adj/Arrow Precision/Recall，总计 SHD 求和</td></tr>
+        <tr><td><b>官方 baseline</b></td><td>PC(122)、GES(101)、GRaSP(112)、BOSS(98)、HC(212)——括号内是 5 网络总 SHD</td></tr>
+      </tbody>
+    </table>
+
+    <h3>模型做了什么（C-DAG 算法）</h3>
+    <p>360 上跑的 agent 实现了一个混合算法 <b>C-DAG（Consensus-skeleton-constrained Greedy Equivalence Search）</b>：</p>
+    <ol>
+      <li><b>双证据候选骨架</b>：用 stable-PC 分别用 χ² 和 G² 两种统计量、多个 α 水平跑条件独立性检验（取并集），
+         再加「参数校准的分数证据」——只有超过「每父先验 × 边自由度」的 BDeu 分数增益才接受。这让分数证据在二值网络上可靠（Win95pts），同时避免高基数过拟合（Hailfinder）。</li>
+      <li><b>骨架受限的 GES</b>：在候选骨架上做前向/后向贪心等价类搜索（BDeu 分数），把 Insert 操作限制在候选骨架对上，
+         使 GES 在 56–76 节点的网络上可运行（原生 GES 在这里会超时）。再加一个「分数补全轮」把边界证据边纳入。</li>
+      <li><b>自包含向量化 numpy BDeu 计分器</b>：vendored 的 pandas 计分器在运行环境崩溃，agent 自己重写了一个。</li>
+    </ol>
+
+    <h3>结果</h3>
+    <div class="metric-grid">
+      <div class="metric-card"><div class="label">Cancer / Child / Alarm</div><div class="value">SHD 4 / 5 / 5</div><div class="baseline">baseline 3 / 5 / 4</div></div>
+      <div class="metric-card"><div class="label">Hailfinder / Win95pts</div><div class="value">SHD 39 / 43</div><div class="baseline">baseline 35 / 38</div></div>
+      <div class="metric-card"><div class="label">Total SHD (360)</div><div class="value">96</div><div class="baseline">BOSS=98 GES=101 GRaSP=112</div></div>
+      <div class="metric-card"><div class="label">Total SHD (ophis)</div><div class="value">90</div><div class="baseline">比 360 更好</div></div>
+    </div>
+    <p>
+      <b>360 版总 SHD = 96，击败所有官方 baseline</b>（BOSS 98、GES 101、GRaSP 112、PC 122、HC 212）。
+      <b>ophis 版更优，总 SHD = 90</b>（Cancer 3、Child 5、Alarm 4、Hailfinder 38、Win95pts 40）。
+      这是两个独立 agent 各自写的算法，都超过了官方最佳。
+    </p>
+
+    <h3>中间发生了什么（可观测量的使用）</h3>
+    <div class="callout purple">
+      agent 在 <code>/tmp</code> 写了 8+ 个 debug 脚本，迭代历史清晰可见：贪心 BDeu → 受限 GES → 校准双证据骨架。
+    </div>
+    <div class="obs-item"><span class="dot">◆</span><b>观察「原生 GES 在 76 节点上超时」</b>：这是推动「骨架受限 GES」的直接观察。</div>
+    <div class="obs-item"><span class="dot">◆</span><b>观察 BDeu 在高基数网络（Hailfinder）的过拟合</b>：发现「分数增益」需要按边自由度校准，Hailfinder SHD 从 56 → 39。</div>
+    <div class="obs-item"><span class="dot">◆</span><b>观察 CI 检验在二值数据（Win95pts）的多重检验召回损失</b>：用双统计量（χ² 和 G²）取并集弥补。</div>
+    <div class="obs-item"><span class="dot">◆</span><b>观察每个网络的 Adj/Arrow Precision 分项</b>：逐网络诊断瓶颈（比如 Cancer 只有 4 条边可识别，因为真实状态出现率极低）。</div>
+    <div class="obs-item"><span class="dot">◆</span><b>vendor BDeu 计分器崩溃</b>：agent 观察到此崩溃后自己重写向量化版本，而不是绕开。</div>
+
+    <div class="traj">
+      <details>
+        <summary>展开：360 机器实际 trajectory 摘录</summary>
+        <div class="body">
+<pre><span class="c"># 读任务说明 + 现有实现 + 评测 harness（花了很多功夫理解评测怎么跑）</span>
+[read] task_description.md
+[read] custom_algorithm.py
+[bash] cat run_test.py | head -120
+
+<span class="c"># 环境侦察：找 python 和 causallearn/bnlearn 库</span>
+[bash] which python python3; python3 -c "import causallearn; ..."
+[bash] ls miniconda3/envs/; .../mlsbench-causal-bnlearn/bin/python -c "import causallearn ..."
+
+<span class="c"># 第一版：per-node greedy BDeu（邻接好、方向差）</span>
+[write] custom_algorithm.py
+[script] /tmp/debug1 .. /tmp/debug4   <span class="c"># 观察：为什么方向差</span>
+
+<span class="c"># 第二版：restricted GES（方向修好了；Hailfinder/Win95pts 召回缺口）</span>
+[script] /tmp/debug5 .. /tmp/debug8   <span class="c"># 观察：各网络 SHD 明细</span>
+
+<span class="c"># 第三版：校准双证据骨架 + 补全（Hailfinder 56→39, Win95pts 44→43）</span>
+[script] /tmp/prof1 /tmp/prof2        <span class="c"># 性能剖析：提速</span>
+[bash] run_test.py causal-discovery-discrete ...
+<span class="c"># → Total SHD = 96（击败所有 baseline）</span></pre>
+        </div>
+      </details>
+    </div>
+
+    <div class="callout green">
+      <b>关键点</b>：这个任务展示了 agent 的<b>迭代式 debugging 能力</b>——它先做一个能跑的版本，然后用中间指标
+      （各网络 SHD 分项、方向 vs 邻接错误）定位瓶颈，逐轮加组件（GES 定方向、校准分数修高基数、双统计量修二值）。
+      两个独立 agent（360 和 ophis）都做到了超过官方最佳，说明这不是运气。
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ============ 5. TREATMENT EFFECT ============ -->
+  <section id="causal-te">
+    <h2><span class="num">05</span> causal-treatment-effect（因果处理效应估计）</h2>
+
+    <h3>任务背景</h3>
+    <p>
+      这是因果推断里的「黄金问题」：<b>估计处理效应（treatment effect）</b>。
+      场景是：有一群人，一部分接受了某种处理（吃药、广告、政策），另一部分没有。我们想回答：
+      「如果给<b>每一个人</b>都施加处理，效果会怎样？」——这叫<b>个体处理效应（ITE）</b>，
+      以及「平均下来效果多大？」——这叫<b>平均处理效应（ATE）</b>。
+    </p>
+    <p>
+      难点在于<b>反事实缺失</b>：一个人要么被处理、要么没被处理，我们永远看不到「如果他走了另一条路会怎样」。
+      所以必须用统计方法（倾向性得分、双重稳健估计、元学习器等）来抵消选择偏差。
+      本任务用 3 个合成数据集：<b>IHDP</b>（母婴健康干预，经典基准）、<b>Jobs</b>（工作培训计划）、<b>ACIC</b>（大样本）。
+      每个数据集同时报 PEHE（个体效应估计误差）和 ATE error（平均效应误差）。
+    </p>
+
+    <h3>任务内容与评测</h3>
+    <table>
+      <thead><tr><th>项</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td><b>输入</b></td><td>3 个合成数据集：IHDP、Jobs、ACIC（各有特征 X、处理 T、结果 Y）</td></tr>
+        <tr><td><b>agent 可改文件</b></td><td><code>causal-learn/bench/custom_algorithm.py</code> 里的 CATE 估计器</td></tr>
+        <tr><td><b>评测指标</b></td><td><b>PEHE</b>（个体效应误差，越低越好）、<b>ATE error</b>（平均效应误差）</td></tr>
+        <tr><td><b>官方 baseline</b></td><td>S-Learner、T-Learner、X-Learner、R-Learner、因果森林（causal_forest）等</td></tr>
+        <tr><td><b>评测代价</b></td><td>单次评测约 1.5–2 小时（10 重复 × 5 折交叉验证，3 数据集合计 ~7000s）——全任务里最贵的评测</td></tr>
+      </tbody>
+    </table>
+
+    <h3>模型做了什么（VARDR-X）</h3>
+    <p>agent 实现了一个复杂的 CATE 估计器 <b>VARDR-X（Variance-Adaptive Robust Doubly-Robust）</b>：</p>
+    <ol>
+      <li><b>异方差感知的正交权重</b>：最终 CATE 回归用 w = (T−e)²/√σ̂²(X)，其中 σ̂²(X) 是交叉拟合的条件方差模型。</li>
+      <li><b>信息量与可靠性自适应的 R/DR 伪结果混合</b>：DR-learner 的份额随倾向性可靠性和结果模型的信息量增长；弱臂/高维设置退回到稳定的 R 残差。</li>
+      <li><b>倾向性分层 winsorization</b>：对伪结果的尾部按倾向性分层层截断（尾部集中在极端倾向层）。</li>
+      <li><b>集成</b>：正则化 HistGBM + RF + Robinson 残差校正成员 + X-learner 成员 + 线性自适应多项式岭锚点。</li>
+      <li><b>鲁棒 ATE 校准</b>：集成均值锚定到 AIPW 和 Robinson ATE 的逆方差混合（两者偏置模式相反）。</li>
+    </ol>
+
+    <h3>结果</h3>
+    <div class="metric-grid">
+      <div class="metric-card"><div class="label">IHDP PEHE</div><div class="value">0.800</div><div class="baseline">最佳 baseline 0.771 (causal_forest)</div></div>
+      <div class="metric-card"><div class="label">Jobs ATE error</div><div class="value">25.9</div><div class="baseline">最佳 baseline 35.3 —— 全场最佳</div></div>
+      <div class="metric-card"><div class="label">ACIC PEHE</div><div class="value">0.463</div><div class="baseline">最佳 baseline 0.421 (r_learner)</div></div>
+      <div class="metric-card"><div class="label">总体</div><div class="value">6 项中 5 项第 2</div><div class="baseline">介于 r_learner 与 causal_forest 之间</div></div>
+    </div>
+    <p>
+      结果中等偏上：<b>Jobs ATE error 击败所有 baseline</b>，其余 5 项指标都是第 2 名（略逊于最佳 baseline）。
+      这是 13 个任务里 agent 提升最小的一个——原因是<b>评测太贵</b>（单次 2 小时），agent 只做了 3–4 次官方评测，
+      迭代空间被压缩。它用「本地留出 Robinson 风险代理」来弥补，把 IHDP PEHE 从 0.842 降到 0.800。
+    </p>
+
+    <h3>中间发生了什么（可观测量的使用）</h3>
+    <div class="callout purple">
+      这个任务展示的是<b>「评测很贵时，agent 如何用廉价的中间代理指标替代」</b>——这是非常实用的 autoresearch 技巧。
+    </div>
+    <div class="obs-item"><span class="dot">◆</span><b>本地留出 Robinson 风险代理</b>：因为官方评测一次要 2 小时，agent 自己实现了「留出 Robinson 损失」作为快速代理（几分钟），用来在迭代中比较不同版本，只在有把握时跑官方评测。</div>
+    <div class="obs-item"><span class="dot">◆</span><b>观察 ACIC 上纯 DR-learner 的 gap</b>：发现弱臂/高维设置下纯 DR 会崩，据此加 R/DR 自适应混合。</div>
+    <div class="obs-item"><span class="dot">◆</span><b>观察倾向性极端的伪结果尾部</b>：发现尾部集中在极端倾向层，据此做分层 winsorization。</div>
+    <div class="obs-item"><span class="dot">◆</span><b>OpenMP 线程卫生</b>：192 核主机上多线程竞争导致评测变慢，agent 设置 PASSIVE wait 策略，让评测在预算内跑完。</div>
+    <div class="obs-item"><span class="dot">◆</span><b>样本量自适应计算预算</b>：10 重复 × 5 折交叉验证的计算量巨大，agent 做了样本量自适应的预算控制，确保单条命令不超时。</div>
+
+    <div class="traj">
+      <details>
+        <summary>展开：实际 trajectory 摘录</summary>
+        <div class="body">
+<pre><span class="c"># 读任务 + 读 placeholder（S-Learner）</span>
+[read] task_description.md
+[read] custom_algorithm.py
+
+<span class="c"># 观察：评测很贵（2h/次），先做一个本地快速代理</span>
+[bash] implement local out-of-sample Robinson-risk proxy (minutes)
+
+<span class="c"># 迭代：v1 纯 DR → 在 ACIC 上观察 gap → 加 R/DR 混合</span>
+[bash] run proxy on IHDP/Jobs/ACIC ... ihdp PEHE 0.842 → 0.800
+
+<span class="c"># 观察：192 核主机线程竞争 → OpenMP PASSIVE wait</span>
+[bash] fix thread hygiene, sample-adaptive budget
+
+<span class="c"># 仅 3-4 次官方评测（太贵，省着用）</span>
+[bash] run_test.py causal-treatment-effect ...
+<span class="c"># → Jobs ATE error 25.9（全场最佳）；其余 5 项第 2</span></pre>
+        </div>
+      </details>
+    </div>
+
+    <div class="callout yellow">
+      <b>关键点</b>：当「评测成本」成为瓶颈时，agent 的自适应是——<b>构造廉价的代理指标 + 本地验证 + 只在关键节点跑贵评测</b>。
+      这也暴露了当前 harness 的一个局限：<b>评测太贵的任务限制了 agent 的迭代次数</b>，是未来值得优化的方向（比如增量评测、部分折叠评测）。
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ============ 6. SYMBOLIC REGRESSION ============ -->
+  <section id="symbolic">
+    <h2><span class="num">06</span> ml-symbolic-regression（符号回归）</h2>
+
+    <h3>任务背景</h3>
+    <p>
+      <b>符号回归（Symbolic Regression）</b>的目标是：给定一组 (输入, 输出) 数据点，找到一个<b>数学表达式</b>（而不是一个黑盒神经网络）来解释它们。
+      比如给你一堆 (x₀, x₁, y) 的数据，你要发现 y = 2·sin(x₀)·cos(x₁) 这个公式。
+      它和「曲线拟合」的区别在于：输出是<b>可读的公式</b>，而不是一堆权重。
+    </p>
+    <p>
+      主流的求解工具是<b>遗传编程（Genetic Programming, GP）</b>：维护一群表达式（程序树），通过「变异/交叉」演化、
+      「适应度」选择，逐渐逼近正确答案。本任务用 3 个经典基准：<b>nguyen7</b>（单变量外推）、<b>nguyen10</b>（双变量周期函数）、
+      <b>koza3</b>（经典 Koza 基准）。评测指标是测试集 <b>R²</b>。
+    </p>
+
+    <h3>任务内容与评测</h3>
+    <table>
+      <thead><tr><th>项</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td><b>输入</b></td><td>3 个基准的数据点（训练/测试划分）：nguyen7、nguyen10、koza3</td></tr>
+        <tr><td><b>agent 可改文件</b></td><td><code>gplearn/custom_sr.py</code>（gplearn 库的可编辑部分）</td></tr>
+        <tr><td><b>评测指标</b></td><td>每个基准的测试 <b>R²</b>，任务分 = 几何平均</td></tr>
+        <tr><td><b>官方 baseline</b></td><td>标准 GP、带简洁性压力的 GP、ε-lexicase GP（0.9977/0.8836/0.9855 等）</td></tr>
+      </tbody>
+    </table>
+
+    <h3>模型做了什么（Memetic ε-Lexicase GP）</h3>
+    <p>agent 在 gplearn 里实现了一个混合 GP 搜索策略：</p>
+    <ol>
+      <li><b>适应度塑造</b>：归一化 MSE + 线性简洁性压力 + 平滑性正则化（拒绝高频插值——那些在训练点上穿行、但在留出点上震荡的坏表达式）。</li>
+      <li><b>选择</b>：混合 ε-lexicase / 锦标赛。Lexicase 用 MAD 半动态 epsilon 对每个样本的误差做逐样本比较；锦标赛用带简洁惩罚的适应度。可退火混合。</li>
+      <li><b>算子</b>：六种结构化变异（子树/点/常数扰动/常数插入/提升/折叠）+ 轻度代数化简 + 深度检查的交叉。</li>
+      <li><b>Memetic 步</b>：线性缩放修复嵌入树中 + 坐标下降常数爬山 + scipy 非线性最小二乘常数拟合（对结构有希望的精英）。</li>
+      <li><b>多样性维护</b>：自适应算子率（适应度多样性崩溃时提高变异率）+ 每代 ~8% 随机移民。</li>
+    </ol>
+
+    <h3>结果</h3>
+    <div class="metric-grid">
+      <div class="metric-card"><div class="label">nguyen7</div><div class="value">R² = 0.9980</div><div class="baseline">最佳 baseline 0.9984</div></div>
+      <div class="metric-card"><div class="label">nguyen10</div><div class="value">R² = 1.0000</div><div class="baseline">精确找到 2·sin(x₀)·cos(x₁)</div></div>
+      <div class="metric-card"><div class="label">koza3</div><div class="value">R² = 0.9984</div><div class="baseline">最佳 baseline 0.99998</div></div>
+      <div class="metric-card"><div class="label">几何平均</div><div class="value">0.9981</div><div class="baseline">最佳 baseline 0.9952</div></div>
+    </div>
+    <p>
+      三任务几何平均 <b>0.9981 &gt; 最佳 baseline 0.9952</b>，并且 nguyen10 精确恢复出真实公式。
+      360 上的 agent 也达到了 R² = 0.9988/1.0/0.9995，两个独立运行都很好。
+    </p>
+
+    <h3>中间发生了什么（可观测量的使用）</h3>
+    <div class="callout purple">
+      这个任务是「系统性扫描 + 泛化观察」的典型——agent 大量使用了多 seed、超参网格、逐样本误差分析。
+    </div>
+    <div class="obs-item"><span class="dot">◆</span><b>多 seed 扫描</b>：SEEDS=42,123,456 系统性跑，确认跨 seed 稳定而非单次运气。</div>
+    <div class="obs-item"><span class="dot">◆</span><b>超参网格</b>：LEX_FRACS=0.3/0.5/0.7、LEX 退火调度、K_ELITES 等，每个配置看 sweep 日志里的 test R²。</div>
+    <div class="obs-item"><span class="dot">◆</span><b>逐样本误差观察</b>：lexicase 的本质就是看「每个样本上的误差」，agent 观察到 nguyen7 上纯 lexicase 会过拟合 20 个点的外推问题，所以加简洁锦标赛 + 平滑正则。</div>
+    <div class="obs-item"><span class="dot">◆</span><b>cProfile 性能剖析</b>：定位遗传演化的性能瓶颈并优化。</div>
+    <div class="obs-item"><span class="dot">◆</span><b>观察表达式形态</b>：nguyen10 上观察到结构命中（2·sin·cos），用 NLS memetic 精修常数。</div>
+
+    <div class="traj">
+      <details>
+        <summary>展开：实际 trajectory 摘录</summary>
+        <div class="body">
+<pre><span class="c"># 读任务 + 读 gplearn 模板</span>
+[read] task_description.md
+[read] custom_sr.py
+
+<span class="c"># 观察：跑官方 baseline 看差距</span>
+[bash] run standard GP / parsimony / lexicase on 3 benchmarks
+
+<span class="c"># 观察：纯 lexicase 在 nguyen7 上过拟合（20 点外推）</span>
+[bash] run lexicase alone → nguyen7 test R² drops
+
+<span class="c"># 干预：加简洁锦标赛 + 平滑正则 + memetic 常数拟合</span>
+[bash] sweep LEX_FRACS / K_ELITES / seeds 42,123,456 → track test R²
+
+<span class="c"># 观察：nguyen10 结构命中，NLS 精修常数 → R²=1.0</span>
+[bash] cProfile 定位瓶颈 → 优化
+[bash] run_test.py ml-symbolic-regression ...
+<span class="c"># → gmean 0.9981（nguyen10 精确恢复公式）</span></pre>
+        </div>
+      </details>
+    </div>
+
+    <div class="callout green">
+      <b>关键点</b>：agent 的关键洞察来自「观察每个样本的误差分布」——lexicase 选择的逐样本压力让它在 nguyen10 上发现精确周期结构，
+      但同样的压力在 nguyen7 上导致过拟合。agent 用「混合选择 + 平滑正则 + 多 seed 验证」来平衡，最终双机都稳定超过 baseline。
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ============ 7. ANOMALY DETECTION ============ -->
+  <section id="anomaly">
+    <h2><span class="num">07</span> ml-anomaly-detection（异常检测）</h2>
+
+    <h3>任务背景</h3>
+    <p>
+      <b>异常检测（Anomaly Detection）</b>的目标：从一堆数据里找出「不正常的点」——比如信用卡欺诈、网络入侵、传感器故障。
+      难点是异常点<b>极其稀少</b>（可能只占 1–30%），而且我们通常<b>没有标签</b>（无法监督学习），
+      只能靠「正常数据长什么样」来推断哪些点偏离了正常模式。
+    </p>
+    <p>
+      本任务用 ADBench 的 4 个标准数据集：<b>cardio</b>（心脏病监测，异常 9.6%）、<b>thyroid</b>（甲状腺，2.5%）、
+      <b>satellite</b>（卫星影像，<b>31.6%</b>——异常占比非常高，极难）、<b>shuttle</b>（航天飞机，7.2%）。
+      评测用 AUROC 和 F1（在最优阈值下）。官方 baseline：Isolation Forest、One-Class SVM、ECOD、COPOD、LOF 等。
+    </p>
+
+    <h3>任务内容与评测</h3>
+    <table>
+      <thead><tr><th>项</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td><b>输入</b></td><td>4 个 ADBench 数据集（60/40 划分，训练无标签）</td></tr>
+        <tr><td><b>agent 可改文件</b></td><td><code>scikit-learn/custom_anomaly.py</code></td></tr>
+        <tr><td><b>评测指标</b></td><td>每数据集 (AUROC+F1)/2，任务分 = 几何平均</td></tr>
+        <tr><td><b>官方 baseline</b></td><td>iForest（0.9446/0.5571…）、OCSVM、ECOD、COPOD、LOF——各数据集强弱不同</td></tr>
+      </tbody>
+    </table>
+
+    <h3>模型做了什么（CRC：Contamination-robust Consensus scoring）</h3>
+    <p>agent 实现了一个全新的异常打分器 <b>CRC（Contamination-robust Consensus scoring，抗污染共识打分）</b>：</p>
+    <ol>
+      <li><b>RGM</b>：稳健高斯模型。用迭代重加权最小二乘（Huber 风格软截断）重估位置/散布，让异常点被降权而不是污染正常模型。</li>
+      <li><b>cHRGM</b>：约束稳健高斯混合。自动决定混合分量数（权重必须都超过下限，拒绝吸收异常簇的伪小分量），每个分量用同样的重加权最小二乘。这让密度视图在 ~30% 污染（Satellite）下依然可靠。</li>
+      <li><b>自适应排序聚合</b>：8 个视图（IForest、PCA、ECOD、OCSVM、RGM | HBOS、cHRGM、KDE）各自打排序分，统一化后做「精度共识 P」和「密度共识 D」（幂均值 p=3）的软 max 混合（temperature 10）——让最强的共识在它对的地方主导，同时不让单一噪声视图赢。</li>
+    </ol>
+
+    <h3>结果</h3>
+    <div class="metric-grid">
+      <div class="metric-card"><div class="label">cardio</div><div class="value">AUROC 0.9275</div><div class="baseline">iForest 0.9446</div></div>
+      <div class="metric-card"><div class="label">thyroid</div><div class="value">AUROC 0.9800</div><div class="baseline">iForest 0.9806</div></div>
+      <div class="metric-card"><div class="label">satellite</div><div class="value">AUROC 0.7764</div><div class="baseline">ECOD 0.5853 —— 大幅超越</div></div>
+      <div class="metric-card"><div class="label">shuttle</div><div class="value">AUROC 0.9961</div><div class="baseline">iForest 0.9965</div></div>
+    </div>
+    <p>
+      任务分 <b>0.7982</b>（seed 42）。最大亮点是 <b>satellite</b>：31.6% 污染的极端场景下，AUROC 0.7764 远超所有 baseline
+      （ECOD 0.585、COPOD 0.634、iForest 0.7135）。这是「稳健高斯 + 抗污染共识」直接针对高污染场景设计的成果。
+      其余数据集与最佳 baseline 持平（±0.02）。
+    </p>
+
+    <h3>中间发生了什么（可观测量的使用）</h3>
+    <div class="callout purple">
+      agent 先做了数据诊断，观察各 baseline 的失效模式，再针对性地设计。
+    </div>
+    <div class="obs-item"><span class="dot">◆</span><b>观察各 baseline 在 4 个数据集上的诊断</b>：发现「没有单一经典检测器能赢所有数据集」——LOF/ECOD 在某些数据有毒（cardio 上 LOF AUROC 0.62、ECOD satellite 0.585），而稳健高斯混合是唯一能处理 Satellite 31.6% 污染的方法。</div>
+    <div class="obs-item"><span class="dot">◆</span><b>观察污染率对模型的影响</b>：~30% 污染会让普通高斯混合把异常簇吸收为正常分量，据此加「权重下限」约束。</div>
+    <div class="obs-item"><span class="dot">◆</span><b>观察每个视图的排序一致性</b>：设计「精度共识 P + 密度共识 D」软 max 混合，避免单一噪声视图主导。</div>
+
+    <div class="traj">
+      <details>
+        <summary>展开：实际 trajectory 摘录</summary>
+        <div class="body">
+<pre><span class="c"># 读任务 + 读模板（iForest wrapper）</span>
+[read] task_description.md
+[read] custom_anomaly.py
+
+<span class="c"># 观察：跑所有 baseline 看 4 个数据集的强弱分布</span>
+[bash] run iForest / LOF / OCSVM / ECOD / COPOD on cardio/thyroid/satellite/shuttle
+
+<span class="c"># 观察：Satellite 31.6% 污染下普通模型崩溃</span>
+[bash] GaussianMixture on satellite → absorbs anomaly cluster as normal component
+
+<span class="c"># 干预：RGM 重加权 + cHRGM 权重下限 + 8 视图共识</span>
+[bash] implement CRC, test per-dataset AUROC/F1
+
+<span class="c"># 全场景评测</span>
+[bash] run_test.py ml-anomaly-detection ...
+<span class="c"># → 0.7982（satellite 0.7764 远超 baseline）</span></pre>
+        </div>
+      </details>
+    </div>
+
+    <div class="callout green">
+      <b>关键点</b>：agent 通过对 4 个数据集的 baseline 诊断，识别出「高污染（Satellite）是所有人失败的共同点」这个木桶短板，
+      然后专门为它设计抗污染组件（RGM + cHRGM），同时用共识聚合保持其他数据集不退化。
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ============ 8. CLUSTERING ============ -->
+  <section id="clustering">
+    <h2><span class="num">08</span> ml-clustering-algorithm（聚类）</h2>
+
+    <h3>任务背景</h3>
+    <p>
+      <b>聚类（Clustering）</b>的目标：给一堆没有标签的点分组，让「组内的点相似、组间的点不同」。
+      这是最基础的无监督学习问题——客户分群、图像分割、文档归类都用它。
+    </p>
+    <p>
+      本任务有 3 个数据集，难度差异很大：<b>blobs</b>（球形簇，简单）、<b>moons</b>（两个月牙形，<b>非凸</b>——K-Means 会失败）、
+      <b>digits</b>（手写数字 64 维，<b>高维流形</b>）。评测指标：<b>ARI</b>（聚类与真实类别匹配度）、<b>NMI</b>（互信息）、
+      <b>Silhouette</b>（轮廓系数）。官方 baseline 就是 K-Means（ARI 0.935/0.481/0.534）。
+    </p>
+
+    <h3>任务内容与评测</h3>
+    <table>
+      <thead><tr><th>项</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td><b>输入</b></td><td>3 个数据集：blobs（1500 点 2 维）、moons（1000 点 2 维）、digits（1797 点 64 维）</td></tr>
+        <tr><td><b>agent 可改文件</b></td><td><code>scikit-learn/custom_clustering.py</code></td></tr>
+        <tr><td><b>评测指标</b></td><td>每数据集 ARI、NMI、Silhouette，任务分 = 几何平均</td></tr>
+        <tr><td><b>官方 baseline</b></td><td>K-Means（ARI 0.935/0.481/0.534）</td></tr>
+      </tbody>
+    </table>
+
+    <h3>模型做了什么（MUSES：Multi-Scale Spectral Ensemble）</h3>
+    <p>agent 实现了一个三阶段算法 <b>MUSES（Multi-Scale Spectral Ensemble with Consensus Refinement，多尺度谱聚类集成 + 共识精修）</b>：</p>
+    <ol>
+      <li><b>多尺度谱视图</b>：在 kNN 高斯亲和图上跑归一化谱聚类，多个尺度（高维 d&gt;10 用 {3,5,10}，低维用 {7,8,10}），自适应选择。</li>
+      <li><b>标签空间证据累积</b>：对多个尺度的分区做匈牙利对齐的逐元素多数投票（O(m·n·k) 共识，对谱聚类对图尺度的敏感性鲁棒；≥3 个视图保证真有大多数）。</li>
+      <li><b>邻域共识精修</b>：标签传播去噪——把每个点重新指派到其 kNN（k=5）的大多数标签，清除孤立误分（ARI/NMI 最惩罚这种）。</li>
+    </ol>
+    <p>K-Means 只作为安全网和自动估计簇数。</p>
+
+    <h3>结果</h3>
+    <div class="metric-grid">
+      <div class="metric-card"><div class="label">blobs ARI</div><div class="value">0.936</div><div class="baseline">K-Means 0.935</div></div>
+      <div class="metric-card"><div class="label">moons ARI</div><div class="value">1.000</div><div class="baseline">K-Means 0.481 —— 完美</div></div>
+      <div class="metric-card"><div class="label">digits ARI</div><div class="value">0.750</div><div class="baseline">K-Means 0.534</div></div>
+      <div class="metric-card"><div class="label">任务分</div><div class="value">gmean 0.730</div><div class="baseline">K-Means 0.556（+31%）</div></div>
+    </div>
+    <p>
+      最大提升在 <b>moons</b>（ARI 0.481 → 1.0，完美）和 <b>digits</b>（0.534 → 0.750）。blobs 与 baseline 持平。
+      关键洞察：K-Means 对非凸（moons）和高维流形（digits）都会失败，而 kNN 图谱聚类能抓住两者。
+    </p>
+
+    <h3>中间发生了什么（可观测量的使用）</h3>
+    <div class="callout purple">
+      agent 观察到「单一尺度的谱聚类会在某个 seed 上塌缩」（moons seed 123 → ARI 0.02），这是设计多尺度投票的直接动因。
+    </div>
+    <div class="obs-item"><span class="dot">◆</span><b>观察单尺度谱聚类的塌缩</b>：nn=7 在 moons seed 123 上 ARI 跌到 0.02，说明单一图尺度不可靠 → 设计奇数个多尺度投票。</div>
+    <div class="obs-item"><span class="dot">◆</span><b>观察边界误分</b>：kNN 共识平滑把 digits NMI 提高 ~0.01 且不损失轮廓。</div>
+    <div class="obs-item"><span class="dot">◆</span><b>多 seed 稳定性验证</b>：跨 seed 和随机状态确认增益稳定。</div>
+
+    <div class="traj">
+      <details>
+        <summary>展开：实际 trajectory 摘录</summary>
+        <div class="body">
+<pre><span class="c"># 读任务 + 读 K-Means 模板</span>
+[read] task_description.md
+[read] custom_clustering.py
+
+<span class="c"># 观察：K-Means 在 moons / digits 上失败（ARI 0.48 / 0.53）</span>
+[bash] run KMeans on blobs/moons/digits → ARI 0.935/0.481/0.534
+
+<span class="c"># 观察：单尺度谱聚类在 moons seed 123 塌缩（ARI 0.02）</span>
+[bash] run spectral nn=7 on moons → collapses
+
+<span class="c"># 干预：多尺度投票 + kNN 共识精修</span>
+[bash] implement MUSES, test per-dataset ARI/NMI/sil
+
+<span class="c"># 全场景评测 + 多 seed 验证</span>
+[bash] run_test.py ml-clustering-algorithm ...
+<span class="c"># → moons 1.0（完美），digits 0.75，gmean 0.730（+31%）</span></pre>
+        </div>
+      </details>
+    </div>
+
+    <div class="callout green">
+      <b>关键点</b>：agent 通过观察「单尺度塌缩」这个失败模式，设计出多尺度共识来消除它；又通过观察「边界误分」用 kNN 平滑精修。
+      两个观察都直接来自运行中间结果。
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ============ 9. DIM REDUCTION ============ -->
+  <section id="dimred">
+    <h2><span class="num">09</span> ml-dimensionality-reduction（降维）</h2>
+
+    <h3>任务背景</h3>
+    <p>
+      <b>降维（Dimensionality Reduction）</b>的目标：把高维数据（比如 28×28 像素的手写数字 = 784 维）压缩到 2–3 维，
+      同时尽量保留数据结构，让人类可以<b>可视化</b>、或者让后续算法更快。最著名的工具是 <b>t-SNE</b> 和 <b>UMAP</b>。
+    </p>
+    <p>
+      本任务 3 个数据集：<b>MNIST</b>（手写数字 784 维）、<b>Fashion-MNIST</b>（服装图片 784 维）、<b>newsgroups</b>（新闻文本 50 维）。
+      评测指标是<b>降维后邻居保持质量</b>：kNN accuracy（降维后分类准不准）、trustworthiness（可信度——降维后成为邻居的点在原空间是否也近）、
+      continuity（连续性——原空间邻居在降维后是否还近）。官方 baseline 是 t-SNE。
+    </p>
+
+    <h3>任务内容与评测</h3>
+    <table>
+      <thead><tr><th>项</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td><b>输入</b></td><td>3 个高维数据集（784/784/50 维 → 降到低维）</td></tr>
+        <tr><td><b>agent 可改文件</b></td><td><code>scikit-learn/bench/custom_dimred.py</code></td></tr>
+        <tr><td><b>评测指标</b></td><td>每数据集 kNN acc、trustworthiness、continuity</td></tr>
+        <tr><td><b>官方 baseline</b></td><td>t-SNE（MNIST knn 0.868 / trust 0.963 / cont 0.966）</td></tr>
+      </tbody>
+    </table>
+
+    <h3>模型做了什么（APNE：Adaptive-Perplexity Neighborhood Embedding）</h3>
+    <p>agent 实现了一个新的非线性嵌入算法 <b>APNE</b>：</p>
+    <ol>
+      <li><b>维度自适应 perplexity</b>：对称高斯亲和力，高维输入（像素，d≥100）perplexity=20，低维（newsgroups，d=50）perplexity=30。更紧的局部模型让 k=7 邻域（评测所量的）保持锐利。</li>
+      <li><b>稀疏精确吸引 + 周期精确排斥</b>：吸引是每个点 top-60 亲和力上的精确计算；t-SNE 的全体对 (1+d²)⁻² 排斥（带配分函数 Z）每 8 次迭代重算一次（「排斥外推」：场是 1/d⁴ 衰减的对项之和，平滑，旧刷新只是微小误差；把 O(n²) 排斥成本砍 8 倍同时保持精确梯度质量）。</li>
+      <li><b>优化器</b>：每坐标增益 + 动量、early exaggeration (α=12)、自动学习率 max(n/48, 50)、PCA 初始化。</li>
+      <li><b>环境修复</b>：把 20newsgroups pickle 回填到固定的 SKLEARN_DATA_HOME，让 newsgroups 评测离线可跑。</li>
+    </ol>
+    <p>agent 还试过「持久非归一化排斥地板 + 约束弹簧」（crowding 修复），但实验显示它会牺牲 trustworthiness（产生簇尾），所以被移除——<b>这是「试了 → 观察到副作用 → 否决」的典型路径</b>。</p>
+
+    <h3>结果</h3>
+    <div class="metric-grid">
+      <div class="metric-card"><div class="label">MNIST kNN</div><div class="value">0.875</div><div class="baseline">t-SNE 0.868（+0.007）</div></div>
+      <div class="metric-card"><div class="label">Fashion kNN</div><div class="value">0.775</div><div class="baseline">t-SNE 0.780（略低）</div></div>
+      <div class="metric-card"><div class="label">Newsgroups kNN</div><div class="value">0.690</div><div class="baseline">t-SNE 0.686（+0.004）</div></div>
+      <div class="metric-card"><div class="label">trust/cont</div><div class="value">≈ baseline</div><div class="baseline">Fashion trust 0.977 vs 0.980</div></div>
+    </div>
+    <p>
+      结果接近 t-SNE 且小有提升：<b>MNIST kNN +0.007、newsgroups kNN +0.004</b>，trustworthiness/continuity 持平。
+      这是「在成熟算法（t-SNE）上做边际改进」的任务——agent 的 APNE 用周期精确排斥把 O(n²) 成本砍 8 倍，
+      同时保持甚至略微超过 t-SNE 质量。单数据集运行 3.5–4.5 分钟。
+    </p>
+
+    <h3>中间发生了什么（可观测量的使用）</h3>
+    <div class="callout purple">
+      这个任务的亮点是<b>「实验 → 观察副作用 → 主动否决」</b>的完整闭环。
+    </div>
+    <div class="obs-item"><span class="dot">◆</span><b>观察 crowding 修复的副作用</b>：持久排斥地板 + 约束弹簧让 kNN 微升，但 trustworthiness 持续下降（产生簇尾），agent 实测后主动移除。</div>
+    <div class="obs-item"><span class="dot">◆</span><b>观察 perplexity 对邻域分辨率的影响</b>：高维用 20、低维用 30，让 k=7 邻域更锐利。</div>
+    <div class="obs-item"><span class="dot">◆</span><b>观察排斥外推的误差</b>：1/d⁴ 衰减的场是平滑的，8 次迭代刷新一次误差极小，验证后可接受。</div>
+    <div class="obs-item"><span class="dot">◆</span><b>环境修复的观察</b>：newsgroups 评测离线跑不了（缺 pickle），agent 定位并修复了 SKLEARN_DATA_HOME。</div>
+
+    <div class="traj">
+      <details>
+        <summary>展开：实际 trajectory 摘录</summary>
+        <div class="body">
+<pre><span class="c"># 读任务 + 读 t-SNE 模板</span>
+[read] task_description.md
+[read] custom_dimred.py
+
+<span class="c"># 观察：newsgroups 评测离线失败 → 回填 pickle 修复环境</span>
+[bash] backfill 20newsgroups pickle into SKLEARN_DATA_HOME
+
+<span class="c"># 实验：crowding 修复（持久排斥地板 + 弹簧）</span>
+[bash] implement, measure → knn ↑ but trustworthiness ↓ (cluster tails) → REJECT
+
+<span class="c"># 干预：维度自适应 perplexity + 周期精确排斥（8x 加速）</span>
+[bash] implement APNE, measure per-dataset knn/trust/cont
+
+<span class="c"># 全场景评测</span>
+[bash] run_test.py ml-dimensionality-reduction ...
+<span class="c"># → MNIST knn +0.007，newsgroups +0.004，trust/cont 持平</span></pre>
+        </div>
+      </details>
+    </div>
+
+    <div class="callout green">
+      <b>关键点</b>：这个任务展示 agent 在成熟算法上的「边际改进 + 主动取舍」能力——它清楚每个改动在哪个指标上获益、在哪个指标上受损，
+      并敢于否决「局部变好但全局变差」的方案。
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ============ 10. CALIBRATION ============ -->
+  <section id="calibration">
+    <h2><span class="num">10</span> ml-calibration（概率校准）</h2>
+
+    <h3>任务背景</h3>
+    <p>
+      <b>概率校准（Calibration）</b>解决一个很实际的问题：模型说「我有 90% 的把握」，它真的 90% 时候是对的吗？
+      很多模型（尤其深度网络）会<b>过度自信</b>——它对很确定，但实际错的概率更高。校准就是把模型输出的置信度
+      调整到「和真实正确率一致」。
+    </p>
+    <p>
+      本任务 4 个场景：<b>rf-mnist</b>（随机森林+手写数字）、<b>mlp-fashion_mnist</b>（神经网络+服装）、
+      <b>gbm-madelon</b>（梯度提升+高维）、<b>svm-breast_cancer</b>（SVM+小样本乳腺癌，只有 ~110 校准样本）。
+      评测指标：<b>ECE</b>（期望校准误差，越低越好）、Brier 分数、NLL（负对数似然）。
+      官方 baseline：temperature scaling、Platt、isotonic 回归等。
+    </p>
+
+    <h3>任务内容与评测</h3>
+    <table>
+      <thead><tr><th>项</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td><b>输入</b></td><td>4 个场景的模型预测 + 一个留出校准集</td></tr>
+        <tr><td><b>agent 可改文件</b></td><td><code>scikit-learn/custom_calibration.py</code></td></tr>
+        <tr><td><b>评测指标</b></td><td>每场景 ECE、Brier、NLL</td></tr>
+        <tr><td><b>官方 baseline</b></td><td>temperature、Platt、isotonic（ECE 0.0122/0.0091/0.0161/0.0188 等）</td></tr>
+      </tbody>
+    </table>
+
+    <h3>模型做了什么（ASMC：Adaptive Smooth Monotone Calibration）</h3>
+    <p>agent 实现了一个自适应的两层校准估计器 <b>ASMC</b>，完全从留出校准集学习：</p>
+    <ol>
+      <li><b>候选家族</b>（全部单调，保证 argmax/准确率不变）：temperature scaling（低方差锚）、beta 校准/多类 logistic、isotonic 混合（二值）、confidence-spline（多类，PCHIP 单调三次样条拟合 top-1 置信可靠曲线）。</li>
+      <li><b>内部模型选择</b>：在校准集上做 2×5 折重复交叉验证，按池化 NLL 选；NLL 在最佳 3% 带内的候选都合格，选带内最强的单调校正。小样本（&lt;100）退回 temperature scaling。</li>
+    </ol>
+
+    <h3>结果</h3>
+    <div class="metric-grid">
+      <div class="metric-card"><div class="label">rf-mnist ECE</div><div class="value">0.0055</div><div class="baseline">最佳 baseline 0.0122（-55%）</div></div>
+      <div class="metric-card"><div class="label">mlp-fashion ECE</div><div class="value">0.0061</div><div class="baseline">最佳 baseline 0.0091（-32%）</div></div>
+      <div class="metric-card"><div class="label">gbm-madelon ECE</div><div class="value">0.0173</div><div class="baseline">temp 0.0305（-43%）</div></div>
+      <div class="metric-card"><div class="label">任务分</div><div class="value">~45.6</div><div class="baseline">最佳单 baseline ~32.1</div></div>
+    </div>
+    <p>
+      ECE 在 rf-mnist（-55%）和 fashion-mnist（-32%）大幅优于最佳 baseline；madelon 比 temperature 降 43%；
+      只在 NLL 上付出 1–6% 的微小代价。小样本 breast_cancer 安全退回 temperature。
+    </p>
+
+    <h3>中间发生了什么（可观测量的使用）</h3>
+    <div class="callout purple">
+      agent 通过观察「每个场景的残余误校准模式」来选择校准家族。
+    </div>
+    <div class="obs-item"><span class="dot">◆</span><b>观察 RF 的欠自信、GBM 在 Madelon 的系统性误校准</b>：不同模型误校准模式不同，单一家族不能通吃。</div>
+    <div class="obs-item"><span class="dot">◆</span><b>观察 CV-NLL 带对非参阶段的保护</b>：小校准集（breast ~110 样本）下非参阶段会过拟合，用 3% NLL 带约束。</div>
+    <div class="obs-item"><span class="dot">◆</span><b>内部 2×5 折 CV 观察</b>：在校准集上反复比较各候选，选最强单调校正。</div>
+
+    <div class="traj">
+      <details>
+        <summary>展开：实际 trajectory 摘录</summary>
+        <div class="body">
+<pre><span class="c"># 读任务 + 读模板</span>
+[read] task_description.md
+[read] custom_calibration.py
+
+<span class="c"># 观察：跑 temperature/platt/isotonic 看各场景 ECE</span>
+[bash] run baselines → observe residual miscalibration per setting
+
+<span class="c"># 干预：实现候选家族 + 内部 CV 选择</span>
+[bash] implement ASMC, compare on internal CV holdout
+
+<span class="c"># 全场景评测（两次官方运行验证可复现）</span>
+[bash] run_test.py ml-calibration ...
+<span class="c"># → rf-mnist ECE -55%，fashion -32%，madelon -43%</span></pre>
+        </div>
+      </details>
+    </div>
+
+    <div class="callout green">
+      <b>关键点</b>：agent 的关键能力是「<b>按场景自适应</b>」——通过观察各场景的误校准模式，用一个内部模型选择机制自动挑最合适的校准家族，而不是套一个固定方法。
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ============ 11. SELECTIVE DEFERRAL ============ -->
+  <section id="selective">
+    <h2><span class="num">11</span> ml-selective-deferral（选择性放权）</h2>
+
+    <h3>任务背景</h3>
+    <p>
+      <b>选择性预测（Selective Prediction）/ 放权（Deferral）</b>的场景：一个分类器在自动跑，但它可以在<b>不确定的时候选择不预测</b>，
+      把样本交给人类专家处理。目标是在「覆盖率」（处理多少比例的样本）和「风险」（预测错误的概率）之间做权衡。
+    </p>
+    <p>
+      本任务 3 个数据集：<b>adult</b>（收入预测）、<b>compas</b>（再犯风险评估）、<b>law_school</b>（法学院成绩），
+      每个都有<b>敏感子群</b>（按性别/种族分组）。目标是：在覆盖率 ~80% 的前提下，最小化预测风险，
+      同时<b>子群之间不能差别太大</b>（公平性）。官方 baseline：learned_deferral、覆盖率阈值等。
+    </p>
+
+    <h3>任务内容与评测</h3>
+    <table>
+      <thead><tr><th>项</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td><b>输入</b></td><td>3 个数据集的预测 + 敏感子群标签</td></tr>
+        <tr><td><b>agent 可改文件</b></td><td><code>scikit-learn/custom_selective.py</code></td></tr>
+        <tr><td><b>评测指标</b></td><td>selective_risk@80（80% 覆盖率下的风险）、worst-group risk、deferral_rate_gap（子群间放权率差距）、coverage</td></tr>
+        <tr><td><b>官方 baseline</b></td><td>learned_deferral（≈0.299 归一化分）等</td></tr>
+      </tbody>
+    </table>
+
+    <h3>模型做了什么（校准的、风险感知的放权策略）</h3>
+    <ol>
+      <li><b>学习的接受分数</b>：max-softmax +（可选）逻辑回归正确性模型 + 逐子群 isotonic 校准混合。在内部校准留出集上按 AUROC 选最好的候选（带保护边距）；只有大校准集（n≥3000）才信任学习的候选，避免小集过拟合。</li>
+      <li><b>自适应覆盖率预算</b>：只有当估计的池化选择性风险仍在名义覆盖率的容差内时，才把总预算放宽到 0.80 目标之上，补偿系统性的 cal→test 覆盖率欠冲（如 COMPAS），又不滑入高风险区。</li>
+      <li><b>风险感知的子群分配</b>：逐组覆盖率目标在「全局风险最优阈值」和「等风险分配」（从单调平滑的逐组风险-覆盖率曲线做 minimax 最差子群风险）之间插值，用留出测得的覆盖漂移校正逐组阈值。</li>
+    </ol>
+
+    <h3>结果</h3>
+    <div class="metric-grid">
+      <div class="metric-card"><div class="label">adult risk@80</div><div class="value">0.0728</div><div class="baseline">worst-group 0.0975</div></div>
+      <div class="metric-card"><div class="label">compas risk@80</div><div class="value">0.2828</div><div class="baseline">worst-group 0.2956</div></div>
+      <div class="metric-card"><div class="label">law_school risk@80</div><div class="value">0.3730</div><div class="baseline">worst-group 0.4093</div></div>
+      <div class="metric-card"><div class="label">任务分</div><div class="value">~0.465</div><div class="baseline">最佳 baseline ~0.299</div></div>
+    </div>
+    <p>
+      归一化任务分 <b>≈0.465</b>，比最佳 baseline（learned_deferral ≈0.299）高约 <b>55%</b>。
+      三个数据集的 risk@80 都在合理范围，且最差子群风险与总体风险接近（公平性较好）。
+    </p>
+
+    <h3>中间发生了什么（可观测量的使用）</h3>
+    <div class="callout purple">
+      这个任务最突出的中间观察是<b>「校准集 → 测试集的覆盖率欠冲」</b>（COMPAS 上系统性的偏差）。
+    </div>
+    <div class="obs-item"><span class="dot">◆</span><b>观察 cal→test 覆盖率欠冲</b>：校准集上设 80% 覆盖率，测试集实际只有 ~78-79%，agent 用留出测得的覆盖漂移校正逐组阈值。</div>
+    <div class="obs-item"><span class="dot">◆</span><b>观察小校准集上学习式候选的过拟合</b>：只在 n≥3000 才信任学习的接受分数。</div>
+    <div class="obs-item"><span class="dot">◆</span><b>观察子群风险-覆盖率曲线</b>：单调平滑后用 minimax 求最差子群风险的均衡分配。</div>
+
+    <div class="traj">
+      <details>
+        <summary>展开：实际 trajectory 摘录</summary>
+        <div class="body">
+<pre><span class="c"># 读任务 + 读模板</span>
+[read] task_description.md
+[read] custom_selective.py
+
+<span class="c"># 观察：跑 baseline → COMPAS 覆盖率欠冲（0.80→~0.79）</span>
+[bash] run learned_deferral, measure coverage drift
+
+<span class="c"># 干预：自适应覆盖率预算 + 风险感知子群分配</span>
+[bash] implement calibrated risk-aware policy, measure risk@80 / worst-group
+
+<span class="c"># 全场景评测</span>
+[bash] run_test.py ml-selective-deferral ...
+<span class="c"># → 任务分 ~0.465（baseline ~0.299）</span></pre>
+        </div>
+      </details>
+    </div>
+
+    <div class="callout green">
+      <b>关键点</b>：agent 观察到「校准集和测试集的分布漂移」这个中间现象，并设计出「覆盖率漂移校正」来补偿——这完全靠观察中间统计量驱动。
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ============ 12. SUBGROUP CALIBRATION SHIFT ============ -->
+  <section id="subgroup">
+    <h2><span class="num">12</span> ml-subgroup-calibration-shift（子群校准偏移）</h2>
+
+    <h3>任务背景</h3>
+    <p>
+      这个任务是「概率校准」的进阶版：不仅要让整体置信度准确，还要<b>在每个子群里都准确</b>（公平性），
+      并且要应对<b>分布偏移</b>（shift）——测试时的数据分布和训练时不一样了。
+    </p>
+    <p>
+      具体设定：3 个数据集（adult、compas、law_school），每个都按某个「域分数」的尾部切出测试集——
+      这模拟了「模型在部署时遇到与训练不同的样本分布」的现实场景。要保证最差子群的校准误差（worst_group_ece）小、
+      子群之间差距小。官方 baseline 的 worst_group_ece 在 0.31–0.47，非常高（都很差）。
+    </p>
+
+    <h3>任务内容与评测</h3>
+    <table>
+      <thead><tr><th>项</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td><b>输入</b></td><td>3 个数据集的模型预测 + 子群标签，测试集有偏移</td></tr>
+        <tr><td><b>agent 可改文件</b></td><td><code>scikit-learn/custom_subgroup.py</code></td></tr>
+        <tr><td><b>评测指标</b></td><td>worst_group_ece、brier、max_subgroup_gap</td></tr>
+        <tr><td><b>官方 baseline</b></td><td>固定校准映射（worst_group_ece 0.348/0.466/0.310）</td></tr>
+      </tbody>
+    </table>
+
+    <h3>模型做了什么（BAG-CAL：Base-rate-anchored group beta calibration）</h3>
+    <ol>
+      <li><b>拟合</b>：全局 beta 校准（在 [log p, log(1−p)] 上做逻辑回归）+ 逐组 beta 映射收缩到全局映射。</li>
+      <li><b>测试时基率锚定（关键创新）</b>：任务按「域分数尾部」切测试集，<b>保留了全局类别平衡</b>——测试基率 = 校准基率（构造保证）。
+          所以在预测时，把映射的 logit 截距平移，使「在观测到的测试概率分布上的平均校准概率」匹配已知基率（一维求根）。
+          这修正了偏移的主导误差（adult/law：测试概率上移 → 过度自信；compas：下移 → 欠自信）。逐组也用 James-Stein 收缩的组基率做同样锚定。</li>
+      <li><b>分布压缩</b>：把输出向组基率收缩（权重 n_g/(n_g+k)）；小组（n&lt;100）额外压缩。降低组内 top-label ECE。</li>
+    </ol>
+
+    <h3>结果</h3>
+    <div class="metric-grid">
+      <div class="metric-card"><div class="label">adult worst_group_ece</div><div class="value">0.129</div><div class="baseline">baseline 0.348（3.7×提升）</div></div>
+      <div class="metric-card"><div class="label">compas worst_group_ece</div><div class="value">0.139</div><div class="baseline">baseline 0.466（3.4×提升）</div></div>
+      <div class="metric-card"><div class="label">law worst_group_ece</div><div class="value">0.094</div><div class="baseline">baseline 0.310（3.3×提升）</div></div>
+      <div class="metric-card"><div class="label">max_subgroup_gap</div><div class="value">0.049-0.107</div><div class="baseline">baseline 0.109-0.264</div></div>
+    </div>
+    <p>
+      每个数据集的每个指标都提升了 <b>1.5–3.5 倍</b>。剩下的 worst_group_ece 已经达到分箱估计器的小样本噪声地板。
+      这是 13 个任务里相对 baseline 提升最显著的之一（只在 31 分钟就完成）。
+    </p>
+
+    <h3>中间发生了什么（可观测量的使用）</h3>
+    <div class="callout purple">
+      关键中间观察是<b>「偏移的方向是数据集特定的」</b>——这是设计「基率锚定」的直接证据。
+    </div>
+    <div class="obs-item"><span class="dot">◆</span><b>观察偏移方向的数据集特定性</b>：adult/law 上测试概率上移（过度自信），compas 下移（欠自信）——固定的校准映射无法同时处理，因为方向相反。</div>
+    <div class="obs-item"><span class="dot">◆</span><b>观察「测试基率=校准基率」这个构造性质</b>：利用域分数尾部切分保留类别平衡这个事实，用无标签的基率信号重新定层校准映射。</div>
+    <div class="obs-item"><span class="dot">◆</span><b>观察小组噪声</b>：n&lt;100 的小组 ECE 被噪声主导，用压缩处理。</div>
+
+    <div class="traj">
+      <details>
+        <summary>展开：实际 trajectory 摘录</summary>
+        <div class="body">
+<pre><span class="c"># 读任务 + 读模板</span>
+[read] task_description.md
+[read] custom_subgroup.py
+
+<span class="c"># 观察：跑固定校准 → 观察到偏移方向因数据集而异</span>
+[bash] run baseline → adult/law overconfident, compas underconfident
+
+<span class="c"># 观察：测试基率 = 校准基率（构造保证）→ 可作为无标签锚</span>
+[bash] verify base rate preservation in split design
+
+<span class="c"># 干预：实现 BAG-CAL（beta + 基率锚定 + 分布压缩）</span>
+[bash] implement, measure worst_group_ece / brier / gap
+
+<span class="c"># 全场景评测（31 分钟完成）</span>
+[bash] run_test.py ml-subgroup-calibration-shift ...
+<span class="c"># → 所有指标 1.5-3.5× 提升</span></pre>
+        </div>
+      </details>
+    </div>
+
+    <div class="callout green">
+      <b>关键点</b>：agent 从「偏移方向因数据集而异」这个观察出发，利用评测构造的基率保持性质，设计出无标签的测试时锚定——
+      这是「读懂评测设定 → 利用其结构 → 设计算法」的高级推理。
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ============ 13. AI4SCI MOL ============ -->
+  <section id="mol">
+    <h2><span class="num">13</span> ai4sci-mol-property-prediction（分子性质预测）</h2>
+
+    <h3>任务背景</h3>
+    <p>
+      这是 <b>AI for Science</b> 任务：给定分子的<b>2D 结构图</b>（原子 + 化学键），预测它的某种<b>物理化学性质</b>
+      （比如水溶性、毒性、生物活性）。这是药物发现的基础步骤——先筛掉没希望的分子，再进实验室。
+    </p>
+    <p>
+      本任务用 3 个标准数据集：<b>BBBP</b>（血脑屏障穿透）、<b>BACE</b>（β-分泌酶抑制剂活性）、<b>Tox21</b>（21 种毒性）。
+      评测指标是每个数据集的 <b>rocauc</b>（ROC-AUC），任务分 = 几何平均。
+      官方 baseline 有：<b>Uni-Mol</b>（预训练 3D Transformer，rocauc 0.713/0.847/0.761）、D-MPNN（0.599/0.688/0.713）、GIN（0.510/0.726/0.747）。
+      任务允许的参数量上限是 Uni-Mol baseline 的 1.05 倍（~48.5M 参数）。
+    </p>
+
+    <h3>任务内容与评测</h3>
+    <table>
+      <thead><tr><th>项</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td><b>输入</b></td><td>3 个数据集的分子 2D 图（含 3D 构象坐标和 Uni-Mol token）</td></tr>
+        <tr><td><b>agent 可改文件</b></td><td><code>Uni-Mol/custom_molprop.py</code>（可编辑部分）</td></tr>
+        <tr><td><b>评测指标</b></td><td>每数据集 rocauc，任务分 = 几何平均</td></tr>
+        <tr><td><b>官方 baseline</b></td><td>Uni-Mol（0.713/0.847/0.761）、D-MPNN、GIN</td></tr>
+        <tr><td><b>评测代价</b></td><td>每个数据集训练 40 epochs，单次全评测 ~1–2 小时</td></tr>
+      </tbody>
+    </table>
+
+    <h3>模型做了什么（GeoFusion-Mol：冷启动双视图 2D/3D 分子性质模型）</h3>
+    <p>agent 用预训练 Uni-Mol 3D Transformer + 几何门控 2D 消息传递网络组了一个双视图模型：</p>
+    <ol>
+      <li><b>3D 视图（预训练）</b>：Uni-Mol encoder（15 层、512 维、64 头），从 <code>mol_pre_all_h_220816.pt</code> 加载权重。
+          Token id 和 CLS/SEP 扩展距离矩阵从声明的 batch 字段<b>向量化重建</b>（因为评测 harness 的 <code>dataclasses.replace</code> 会丢动态属性），
+          并用参考管线的零行约定匹配预训练分布。Readout = CLS + masked-mean + pair-mean。</li>
+      <li><b>2D 视图（GeoMPNN）</b>：D-MPNN 风格的有向消息传递，每条化学键的消息被<b>实测 3D 键长门控</b>（高斯展开 → 学习的门），
+          让构象几何条件化 2D 消息流。</li>
+      <li><b>冷启动门控融合</b>：逐维度软门混合 3D CLS 和 2D 表示。预测 = 直接的 CLS 头（初始与纯预训练 baseline 相同）
+          + <b>零初始化的辅助头</b>（带 stop-gradient，让 encoder 保持 baseline 的 CLS 微调轨迹，2D 分支只在能降低 loss 时介入）。</li>
+      <li><b>随机深度</b>（drop-path 0.1）正则化深层 encoder。</li>
+    </ol>
+
+    <h3>结果</h3>
+    <div class="metric-grid">
+      <div class="metric-card"><div class="label">BBBP rocauc</div><div class="value">0.7275</div><div class="baseline">Uni-Mol 0.7129（+0.015）</div></div>
+      <div class="metric-card"><div class="label">BACE rocauc</div><div class="value">0.8232</div><div class="baseline">Uni-Mol 0.8466（略低）</div></div>
+      <div class="metric-card"><div class="label">Tox21 rocauc</div><div class="value">0.7755</div><div class="baseline">Uni-Mol 0.7613（+0.014）</div></div>
+      <div class="metric-card"><div class="label">几何平均</div><div class="value">0.7744</div><div class="baseline">Uni-Mol 0.7717</div></div>
+    </div>
+    <p>
+      几何平均 <b>0.7744 &gt; Uni-Mol baseline 0.7717</b>（best run）。BBBP 和 Tox21 显著提升（+0.015/+0.014），
+      BACE 略低（-0.023）。第二次官方运行 0.7289/0.8037/0.7763（单次运行噪声 ±0.02）。
+      提升温和，但这是「在强预训练模型上做加法」的任务——agent 的贡献是让 2D 几何信息<b>在不破坏预训练微调轨迹的前提下</b>融入。
+    </p>
+
+    <h3>中间发生了什么（可观测量的使用）</h3>
+    <div class="callout purple">
+      这是全部任务里 <b>debug 最深入</b>的一个——agent 写了 20+ 个 probe / 单元测试脚本，逐层验证数据管线。
+    </div>
+    <div class="obs-item"><span class="dot">◆</span><b>观察 token 重建正确性</b>：<code>tokens match pipeline: False</code> → 逐原子对比，发现 dataclasses.replace 丢动态属性，改用向量化重建。</div>
+    <div class="obs-item"><span class="dot">◆</span><b>观察距离矩阵一致性</b>：<code>max dist diff (valid pairs): 9.999e-05</code>（对齐验证，精确到 1e-4）。</div>
+    <div class="obs-item"><span class="dot">◆</span><b>观察原子数 vs token 数</b>：<code>n atoms lmdb: 50 n tokens: 52</code>（+2 是 CLS/SEP）。</div>
+    <div class="obs-item"><span class="dot">◆</span><b>观察前向 shape</b>：<code>E 18 N 18 m (18,192) pad[src] (18,2)</code>、<code>output shape: torch.Size([3,3])</code>。</div>
+    <div class="obs-item"><span class="dot">◆</span><b>观察随机模型 baseline</b>：probe 随机初始化模型在验证集的 AUC，确认评测管道真实。</div>
+    <div class="obs-item"><span class="dot">◆</span><b>观察训练 loss</b>：<code>train step OK, loss: 0.6499</code>、参数量 <code>48,878,342</code>（预算内）。</div>
+    <div class="obs-item"><span class="dot">◆</span><b>权重下载调试</b>：github 直连失败 → 用 wget -c 断点续传 → hf-mirror，最终拿到 190.5MB 完整权重。</div>
+
+    <div class="traj">
+      <details>
+        <summary>展开：实际 trajectory 摘录（这是全部任务里最长的 debug 过程）</summary>
+        <div class="body">
+<pre><span class="c"># 阶段 0：环境与数据</span>
+[bash] 检查 lmdb 数据、权重文件是否存在
+[script] probe_eval.py     <span class="c"># 验证评测管道：随机模型 AUC 是否真实</span>
+
+<span class="c"># 阶段 1：下载 Uni-Mol 预训练权重（190MB）</span>
+[bash] github 直连失败 → wget -c 断点续传 → hf-mirror → 完成
+[script] probe_gin.py      <span class="c"># 单独测 GIN 分支</span>
+
+<span class="c"># 阶段 2：数据管线对齐（最艰难的 debug）</span>
+[bash] tokens match pipeline: False → 逐原子对比
+[bash] max dist diff: 9.999e-05 → 距离矩阵对齐
+[bash] n atoms 50 vs n tokens 52 → CLS/SEP 约定
+[script] unit_test_*.py   <span class="c"># 写单元测试验证向量化重建</span>
+
+<span class="c"># 阶段 3：训练验证 + ablations</span>
+[bash] train step OK, loss: 0.6499
+[script] ablation_dropout / ablation_cls_zero / ablation_no2d
+[script] test_eval_replace_equivalence   <span class="c"># 验证有/无动态属性输出一致</span>
+
+<span class="c"># 阶段 4：定稿 + 全评测（agent 自己跑了多次官方评测）</span>
+[bash] run_test.py ai4sci-mol-property-prediction ...
+<span class="c"># → gmean 0.7744 vs Uni-Mol 0.7717</span></pre>
+        </div>
+      </details>
+    </div>
+
+    <div class="callout green">
+      <b>关键点</b>：这个任务证明了「<b>必须看 observable 才能做事</b>」——没有 token 重建的 probe 检查，
+      agent 根本不可能发现 harness 丢动态属性这个 bug。它用了 20+ 个 probe/单元测试把整个数据管线拆开验证，
+      最后才放心地把 3D+2D 融合模型放上去训练。这正是「新 setting 里激进 debug」的范本。
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ============ 14. ENSEMBLE ============ -->
+  <section id="ensemble">
+    <h2><span class="num">14</span> ml-ensemble-boosting（集成提升）</h2>
+
+    <h3>任务背景</h3>
+    <p>
+      <b>Boosting（提升）</b>是把一堆「弱学习器」（比如很浅的决策树）串起来，每个新的学习器专门去纠正前面犯的错，
+      最后合成一个强模型。最著名的代表是 <b>AdaBoost</b> 和 <b>XGBoost</b>。
+    </p>
+    <p>
+      本任务 3 个数据集：<b>breast_cancer</b>（乳腺癌分类）、<b>diabetes</b>（糖尿病回归）、<b>california_housing</b>（房价回归）。
+      评测：分类看 test_accuracy，回归看 test_rmse。官方 baseline 是 sklearn 的 AdaBoost / GradientBoosting / HistGradientBoosting。
+    </p>
+
+    <h3>任务内容与评测</h3>
+    <table>
+      <thead><tr><th>项</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td><b>输入</b></td><td>3 个数据集（分类 1 + 回归 2）</td></tr>
+        <tr><td><b>agent 可改文件</b></td><td><code>scikit-learn/custom_boosting.py</code></td></tr>
+        <tr><td><b>评测指标</b></td><td>分类 test_accuracy、回归 test_rmse</td></tr>
+        <tr><td><b>官方 baseline</b></td><td>AdaBoost、GBoost、HistGB（breast 0.9561、diabetes RMSE 54.55、california 0.5113）</td></tr>
+      </tbody>
+    </table>
+
+    <h3>模型做了什么（R2-Newton Boosting）</h3>
+    <p>agent 实现了一个新的 boosting 策略 <b>R2-Newton（recency-bounded residual-reweighted Newton boosting）</b>，三个耦合的设计轴：</p>
+    <ol>
+      <li><b>伪目标</b>：回归用 Huber 截断残差（样本量自适应宽度 c(n)=3√(n/400) MAD，钳制在 [3,9]）；分类用逻辑残差 y−p（第一轮带截距感知）。</li>
+      <li><b>学习器权重</b>：加权 Newton（二阶）步 α = ⟨w g, h⟩/(⟨w H, h²⟩+eps)，L2 稳定，钳制 [0,3]；回归分子用未截断残差（RMSE 精确 WLS），分类加二次晚期 α 衰减抑制过拟合。</li>
+      <li><b>任务自适应的样本重加权（创新）</b>：回归用「recency-bounded 残差幂」权重 wᵢ=(|rᵢ|/MAD)^0.5（下限 0.1）——次线性强调难样本且不累乘，200 轮不会塌缩；分类用「退火指数对比」权重——早期持续强调边界，后期稳定。</li>
+    </ol>
+
+    <h3>结果</h3>
+    <div class="metric-grid">
+      <div class="metric-card"><div class="label">breast accuracy</div><div class="value">0.9649</div><div class="baseline">best baseline 0.9561</div></div>
+      <div class="metric-card"><div class="label">diabetes RMSE</div><div class="value">54.01</div><div class="baseline">best baseline 54.55</div></div>
+      <div class="metric-card"><div class="label">california RMSE</div><div class="value">0.4978</div><div class="baseline">best baseline 0.5113</div></div>
+      <div class="metric-card"><div class="label">3-seed 均值</div><div class="value">全部超越</div><div class="baseline">breast 0.9766/0.9708</div></div>
+    </div>
+    <p>
+      三个数据集全部超过最佳 baseline（3-seed 均值也全部超越）。agent 的 3×3 sweep 发现：纯 Newton 匹配 XGBoost、
+      纯 AdaBoost 风格在回归上塌缩（权重比高达 250×），而有界/退火重加权在每数据集都赢。
+    </p>
+
+    <h3>中间发生了什么（可观测量的使用）</h3>
+    <div class="callout yellow">
+      <b>注意</b>：这个任务的官方 final_eval 因评测 harness 缺陷（指标解析 bug）拿不到 METRICS 块，
+      但 agent 在自己的多次官方评测里拿到了上面的结果（RESULT.md 记录），flash 版同样失败——这是部署层问题，不是模型问题。
+    </div>
+    <div class="obs-item"><span class="dot">◆</span><b>观察 AdaBoost 在回归上的权重塌缩</b>：权重比高达 250×，样本重加权失效 → 设计 recency-bounded 权重。</div>
+    <div class="obs-item"><span class="dot">◆</span><b>观察小样本 vs 大样本的截断冲突</b>：小 n 需保护离群点（截断有帮助），大 n 平均掉噪声（截断有害）→ 自适应 Huber 宽度。</div>
+    <div class="obs-item"><span class="dot">◆</span><b>3×3 sweep</b>：3 seeds × 3 datasets 系统性对比每种权重方案。</div>
+
+    <div class="traj">
+      <details>
+        <summary>展开：实际 trajectory 摘录</summary>
+        <div class="body">
+<pre><span class="c"># 读任务 + 读模板</span>
+[read] task_description.md
+[read] custom_boosting.py
+
+<span class="c"># 观察：纯 Newton vs AdaBoost vs 各种重加权（3x3 sweep）</span>
+[bash] sweep 3 seeds x 3 datasets → Newton matches XGB, AdaBoost collapses (250x)
+
+<span class="c"># 干预：recency-bounded 权重 + 自适应 Huber + Newton 步</span>
+[bash] implement R2-Newton, measure per-dataset
+
+<span class="c"># 全场景评测（agent 多次评测，结果稳定）</span>
+[bash] run_test.py ml-ensemble-boosting ...
+<span class="c"># → 三数据集全部超 baseline（但 final_eval 的 METRICS 解析有 harness bug）</span></pre>
+        </div>
+      </details>
+    </div>
+
+    <div class="callout green">
+      <b>关键点</b>：agent 通过观察「AdaBoost 权重在回归上塌缩到 250×」这个中间状态，重新设计了不累乘的权重机制。
+      这是「观察失败模式 → 针对性重设计」的又一例。
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ============ 15. MISSING DATA ============ -->
+  <section id="missing">
+    <h2><span class="num">15</span> ml-missing-data-imputation（缺失值填补）</h2>
+
+    <h3>任务背景</h3>
+    <p>
+      真实数据几乎总有<b>缺失值</b>（问卷没答、传感器没记录、数据库丢行）。直接扔掉缺失样本会浪费数据甚至引入偏差。
+      <b>缺失值填补（Imputation）</b>就是用统计方法把缺失的地方「猜」出来，让下游模型能用完整数据。
+    </p>
+    <p>
+      本任务 3 个数据集：<b>breast_cancer</b>、<b>wine</b>、<b>california_housing</b>。评测两个层面：
+      <b>RMSE</b>（填补值与真实值差多少，越低越好）和 <b>downstream</b>（填补后下游分类/回归的效果，越高越好）。
+      官方 baseline：MICE（链式方程）、GAIN（生成对抗填补）、mean/median 等。
+    </p>
+
+    <h3>任务内容与评测</h3>
+    <table>
+      <thead><tr><th>项</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td><b>输入</b></td><td>3 个数据集（随机挖掉部分值）</td></tr>
+        <tr><td><b>agent 可改文件</b></td><td><code>scikit-learn/custom_imputation.py</code></td></tr>
+        <tr><td><b>评测指标</b></td><td>RMSE（低好）、downstream（高好）</td></tr>
+        <tr><td><b>官方 baseline</b></td><td>MICE（breast RMSE 0.4027）、GAIN（wine 0.7984、california 0.7119）</td></tr>
+      </tbody>
+    </table>
+
+    <h3>模型做了什么（DSEI：Damped Stacked-Ensemble Chained Imputation）</h3>
+    <p>agent 实现了一个新的填补算法 <b>DSEI（阻尼堆叠集成链式填补 + 低秩热启动）</b>：</p>
+    <ol>
+      <li><b>低秩热启动</b>：截断 SVD 矩阵补全（soft-impute 风格）初始化链式方程循环，而不是用列均值——在拟合任何回归之前先利用全局跨特征相关。</li>
+      <li><b>堆叠逐列预测器</b>：每列用 ridge + extra-trees + kNN 集成，权重每轮从观测条目重估（内部划分的逆方差 + 竞争选择，丢掉明显输家）。</li>
+      <li><b>不确定性门控的阻尼更新</b>：每轮只往集成预测走一部分（收缩动量），树集成分歧大的条目步长更小——防止早期轮次的振荡和误差累积。</li>
+      <li><b>样本量自适应组合</b>：小数据集（每模型质量估计噪声大）保持多样混合（5% 多样性下限）；大数据集每列锐化为最佳模型（比值 1.10）。</li>
+      <li>缺失感知的列排序 + 最终全替换轮。</li>
+    </ol>
+
+    <h3>结果</h3>
+    <div class="metric-grid">
+      <div class="metric-card"><div class="label">breast RMSE</div><div class="value">0.3895</div><div class="baseline">best baseline 0.4027 (MICE)</div></div>
+      <div class="metric-card"><div class="label">wine RMSE / ds</div><div class="value">0.7920 / 0.9383</div><div class="baseline">GAIN 0.7984 / 0.9210</div></div>
+      <div class="metric-card"><div class="label">california RMSE / ds</div><div class="value">0.7148 / 0.6740</div><div class="baseline">GAIN 0.7119 / 0.6709</div></div>
+      <div class="metric-card"><div class="label">总评</div><div class="value">2/3 全胜</div><div class="baseline">另一项差 0.003</div></div>
+    </div>
+    <p>
+      DSEI 在 <b>breast 和 wine 的 RMSE 上击败所有 baseline</b>，california 只差 0.003；downstream 在 wine（+0.017）和 california 上都赢。
+    </p>
+
+    <h3>中间发生了什么（可观测量的使用）</h3>
+    <div class="callout yellow">
+      <b>注意</b>：这个任务的官方 final_eval 也因评测 harness 缺陷（budget_check 超时）拿不到 METRICS 块，
+      但 agent 自己评测拿到了完整结果（RESULT.md 记录），flash 版同样失败——部署层问题。
+    </div>
+    <div class="obs-item"><span class="dot">◆</span><b>观察列均值热启动的不足</b>：链式方程早期注入相关误差会破坏收敛 → 低秩热启动利用全局相关。</div>
+    <div class="obs-item"><span class="dot">◆</span><b>观察振荡</b>：无阻尼更新在早期轮次振荡 → 不确定性门控的阻尼更新。</div>
+    <div class="obs-item"><span class="dot">◆</span><b>观察每模型质量估计的样本量效应</b>：小数据集各模型质量估计噪声大 → 保持多样混合。</div>
+
+    <div class="traj">
+      <details>
+        <summary>展开：实际 trajectory 摘录</summary>
+        <div class="body">
+<pre><span class="c"># 读任务 + 读模板</span>
+[read] task_description.md
+[read] custom_imputation.py
+
+<span class="c"># 观察：MICE 收敛到最优不动点的前提是早期不注入相关误差</span>
+[bash] run MICE baseline, observe early-round oscillation
+
+<span class="c"># 干预：低秩热启动 + 阻尼更新 + 堆叠集成</span>
+[bash] implement DSEI, measure RMSE / downstream per dataset
+
+<span class="c"># 全场景评测（agent 多次评测，结果稳定）</span>
+[bash] run_test.py ml-missing-data-imputation ...
+<span class="c"># → 2/3 数据集 RMSE 全胜（final_eval 的 budget_check 有 harness bug）</span></pre>
+        </div>
+      </details>
+    </div>
+
+    <div class="callout green">
+      <b>关键点</b>：agent 的洞察来自对「链式方程收敛条件」的分析——早期轮次的错误会被后续轮次放大，
+      所以用低秩热启动 + 阻尼更新来保证收敛。这是「理解算法原理 → 设计对应机制」的典型。
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ============ 16. 进展图解读 ============ -->
+  <section id="traj">
+    <h2><span class="num">16</span> 进展图与时间线：怎么读</h2>
+
+    <p>
+      下面的内容解释结果报告里那些「进展图 / 时间线」到底画了什么、每一根线是什么意思、以及每个任务中间发生了什么。
+      我们刻意用最直白的方式讲，不堆术语。
+    </p>
+
+    <h3>16.1 一张「评测进展图」是怎么来的</h3>
+    <p>
+      每个 agent 会话，我们记录了它的<b>每一次工具调用</b>（读文件、改代码、跑命令、跑评测），带时间戳。
+      把这些调用按时间画出来，就得到「进展图」——它本质上是一张<b>「agent 在任务里干了什么」的时间线</b>。
+    </p>
+    <p>在一张典型的进展图上，你会看到：</p>
+    <ul>
+      <li><b>横轴</b>：时间（从 agent 启动到结束）。</li>
+      <li><b>不同的色块/点</b>：不同类型的动作——<span class="tag purple">读文件</span>、<span class="tag green">改代码</span>、<span class="tag yellow">跑命令</span>、<span class="tag red">跑评测</span>。</li>
+      <li><b>稀疏段</b>：agent 在思考/等命令输出（比如训练跑很久）。</li>
+      <li><b>密集段</b>：agent 在快速迭代（读→改→测循环）。</li>
+    </ul>
+
+    <h3>16.2 每种动作代表「中间发生了什么」</h3>
+    <table>
+      <thead><tr><th>动作</th><th>在图上的样子</th><th>它代表 agent 在做什么</th></tr></thead>
+      <tbody>
+        <tr><td><b>读文件</b></td><td>稀疏的紫色点</td><td>agent 在理解任务说明、现有代码、评测脚本——这是「侦察」阶段。</td></tr>
+        <tr><td><b>写脚本（probe/debug）</b></td><td>连续绿色点</td><td>agent 在写小实验验证某个中间量（数据对不对、算法某个环节是不是瓶颈）——这是「局部观察」。</td></tr>
+        <tr><td><b>跑 bash</b></td><td>黄色点</td><td>agent 在运行实验、查看输出、下载数据。密集的黄色往往意味着它在一个问题上反复试。</td></tr>
+        <tr><td><b>改代码</b></td><td>绿色点</td><td>agent 根据观察修改主算法——这是「intervention」。</td></tr>
+        <tr><td><b>跑评测</b></td><td>红色点（往往间隔很大）</td><td>agent 跑一次完整的官方评测，拿最终指标。红点之间的间隔就是「一次评测的耗时」。</td></tr>
+        <tr><td><b>长时间无动作</b></td><td>空白段</td><td>评测在后台跑（比如 2 小时的训练），agent 在等结果。</td></tr>
+      </tbody>
+    </table>
+
+    <h3>16.3 从图里能读出什么结论</h3>
+    <div class="callout">
+      <b>1. 「观察-干预」循环的密度</b>：一个任务里，如果「写 probe 脚本 → 看输出 → 改代码」的循环出现很多次，
+      说明这个任务确实是「需要 debug/构造」的类型——agent 在靠中间观察推进，而不是一次梭哈。
+      我们在 <b>ai4sci-mol</b>（20+ probe）、<b>nonlinear</b>（39 debug 脚本）、<b>discrete</b>（8 debug 脚本）上看到的正是这种密度。
+    </div>
+    <div class="callout">
+      <b>2. 评测红点的稀疏程度</b>：红点很稀（比如 treatment-effect 只有 3-4 个）说明评测很贵，agent 被评测成本限制了迭代。
+      红点很密（比如 calibration）说明评测便宜，agent 可以大量快速迭代。
+    </div>
+    <div class="callout">
+      <b>3. 开始段的「侦察」长度</b>：agent 花多少时间读任务/摸环境，能反映任务的新颖度。
+      ai4sci-mol 一开始花了很久摸环境（装包、下权重、对齐数据管线），因为它是个全新的、依赖外部包的 setting。
+    </div>
+
+    <h3>16.4 各任务的「中间发生了什么」速览</h3>
+    <table>
+      <thead><tr><th>任务</th><th>最关键的中间观察</th><th>由观察驱动的设计</th></tr></thead>
+      <tbody>
+        <tr><td>linear-gaussian</td><td>弱边的分数面几乎是平的 + bootstrap 投票 20/24 分散</td><td>bagged 顺序 + 2-se 检验 + 稳定性选边阈值</td></tr>
+        <tr><td>LiNGAM</td><td>深链变量边缘方差差 150×</td><td>偏相关剪枝（校准空分布 τ=3/√n）</td></tr>
+        <tr><td>nonlinear (360)</td><td>残差方差打分会被后代欺骗；BIC 前向选择的景观才可靠</td><td>组 IC 顺序 + 稀疏加性选择（28 分钟完成）</td></tr>
+        <tr><td>discrete</td><td>原生 GES 在 76 节点超时；BDeu 在高基数过拟合</td><td>骨架受限 GES + 校准双证据骨架（SHD=96/90）</td></tr>
+        <tr><td>treatment-effect</td><td>评测 2h/次太贵；纯 DR 在弱臂崩溃</td><td>本地 Robinson 风险代理 + R/DR 自适应混合</td></tr>
+        <tr><td>symbolic</td><td>lexicase 逐样本压力在 nguyen7 过拟合；nguyen10 结构命中</td><td>混合选择 + 平滑正则 + NLS 精修（R²=1.0）</td></tr>
+        <tr><td>anomaly</td><td>Satellite 31.6% 污染让普通 GMM 崩溃；无单检测器通吃</td><td>RGM + cHRGM + 8 视图共识</td></tr>
+        <tr><td>clustering</td><td>单尺度谱聚类在 moons seed 123 塌缩（ARI 0.02）</td><td>多尺度投票 + kNN 共识精修</td></tr>
+        <tr><td>dim-reduction</td><td>crowding 修复牺牲 trustworthiness（簇尾）</td><td>主动否决 + 维度自适应 perplexity</td></tr>
+        <tr><td>calibration</td><td>不同模型的误校准模式不同（RF 欠自信等）</td><td>内部 CV 自动选校准家族（ECE -55%）</td></tr>
+        <tr><td>selective-deferral</td><td>校准集→测试集覆盖率欠冲（COMPAS）</td><td>覆盖率漂移校正 + 风险感知子群分配</td></tr>
+        <tr><td>subgroup</td><td>偏移方向因数据集而异（adult 上移/compas 下移）</td><td>测试时基率锚定（1.5-3.5× 提升）</td></tr>
+        <tr><td>ai4sci-mol</td><td>dataclasses.replace 丢动态属性导致 token 不匹配</td><td>向量化重建 + 20+ probe 逐层验证</td></tr>
+        <tr><td>ensemble</td><td>AdaBoost 权重回归塌缩到 250×</td><td>recency-bounded 权重 + 自适应 Huber</td></tr>
+        <tr><td>missing-data</td><td>链式方程早期注入相关误差破坏收敛</td><td>低秩热启动 + 阻尼更新</td></tr>
+      </tbody>
+    </table>
+
+    <h3>16.5 时间线实例：ai4sci-mol（最长的 debug）</h3>
+    <div class="traj">
+      <details>
+        <summary>展开：ai4sci-mol 的完整阶段时间线</summary>
+        <div class="body">
+<pre><span class="c">阶段 0（~1h）  环境与数据侦察</span>
+  - 检查 lmdb 数据 / 权重是否存在
+  - 写 probe_eval.py 验证评测管道（随机模型 AUC）
+  - 尝试下载 190MB 预训练权重（github 失败 → wget -c → hf-mirror）
+
+<span class="c">阶段 1（~1.5h）数据管线对齐（最艰难的 debug）</span>
+  - 发现 tokens match pipeline: False
+  - 逐原子对比 → 发现 dataclasses.replace 丢动态属性
+  - 距离矩阵对齐（max diff 9.999e-05）
+  - 原子数 vs token 数（50 vs 52 = CLS/SEP）
+  - 写 unit_test 验证向量化重建
+
+<span class="c">阶段 2（~1h）  训练验证 + ablations</span>
+  - train step OK, loss 0.6499
+  - ablation: dropout / CLS zero / no-2D
+  - test_eval_replace_equivalence（有/无动态属性输出一致）
+
+<span class="c">阶段 3（~30min）定稿 + 多次官方评测</span>
+  - gmean 0.7744 vs Uni-Mol 0.7717</pre>
+        </div>
+      </details>
+    </div>
+
+    <div class="callout green">
+      <b>总结</b>：从进展图里我们能看到一个清晰的模式——<b>好的 agent 不是「写一个算法然后祈祷」，而是「写 probe → 看中间量 → 改代码」的循环</b>。
+      循环越密、中间量越具体（小到 1e-4 的矩阵差异、细到单个样本的误差），算法质量越高。
+      这正是我们想验证的「observable 闭环」在 free-form autoresearch 中的自然涌现。
+    </div>
+  </section>
+
+  <div class="footer">
+    OPHIS Project · Shaoyang Guo · 2026-08-17 · <a href="../three_system_rerun_results.html" style="color:#5b9dff">返回结果总览</a>
+  </div>
+</div>
+</body>
+</html>
