@@ -1376,10 +1376,15 @@
       <div class="metric-card"><div class="label">几何平均</div><div class="value">0.7744</div><div class="baseline">Uni-Mol 0.7717</div></div>
     </div>
     <p>
-      几何平均 <b>0.7744 &gt; Uni-Mol baseline 0.7717</b>（best run）。BBBP 和 Tox21 显著提升（+0.015/+0.014），
-      BACE 略低（-0.023）。第二次官方运行 0.7289/0.8037/0.7763（单次运行噪声 ±0.02）。
-      提升温和，但这是「在强预训练模型上做加法」的任务——agent 的贡献是让 2D 几何信息<b>在不破坏预训练微调轨迹的前提下</b>融入。
+      几何平均 <b>0.7744 &gt; Uni-Mol baseline 0.7717</b>（agent 自己多次评测中的 best run）。BBBP 和 Tox21 显著提升（+0.015/+0.014），
+      BACE 略低（-0.023）。
     </p>
+    <div class="callout yellow">
+      <b>最终官方复测（我们用官方 run_test.py 独立重跑）</b>：BBBP <b>0.7059</b> / BACE <b>0.8273</b> / Tox21 <b>0.7816</b>，
+      几何平均 <b>0.7700</b>（Uni-Mol 0.7717，-0.002，基本打平）。
+      三次运行之间的差异在 ±0.02 以内，属于单次训练噪声范围——这个任务的结论是：agent 的 GeoFusion-Mol 与强预训练 baseline 打平，
+      BBBP/Tox21 的 2D 几何门控带来小幅增益，但优势不跨种子稳定。
+    </div>
 
     <h3>中间发生了什么（可观测量的使用）</h3>
     <div class="callout purple">
@@ -1695,7 +1700,8 @@
   - test_eval_replace_equivalence（有/无动态属性输出一致）
 
 <span class="c">阶段 3（~30min）定稿 + 多次官方评测</span>
-  - gmean 0.7744 vs Uni-Mol 0.7717</pre>
+  - agent 自评 best run：gmean 0.7744 vs Uni-Mol 0.7717
+  - 外部独立复测：0.7059/0.8273/0.7816 → gmean 0.7700（打平）</pre>
         </div>
       </details>
     </div>
