@@ -286,165 +286,113 @@
       这个任务是「观察中间量 → 提取 insight → intervention」的教科书案例。下面每一行都是 agent 实际跑出来的<b>原始输出</b>，不是转述。
     </div>
 
-    <h3>第一步：先摸清评测环境和 baseline（约 20 步）</h3>
     <div class="traj">
       <details open>
-        <summary>展开：环境侦察的真实命令（前 20 个工具调用）</summary>
+        <summary>展开：完整 trajectory（原始命令 + 真实输出，共 7 个阶段）</summary>
         <div class="body">
-<pre><span class="c"># 读任务说明 → 读可编辑文件 → 读评测脚本 → 读 leaderboard，搞清楚"我要交什么、怎么打分"</span>
-[read] task_description.md
-[read] custom_algorithm.py
-[read] run_eval_template.py
-[read] mid_edit.py
-[read] leaderboard.csv
-[read] holdout/dgp.py     <span class="c"># 数据生成器（真实结构长什么样）</span>
-[read] score_spec.py
-[bash] cat scripts/eval_er10.sh eval_er20.sh ...   <span class="c"># 评测怎么调</span>
-[bash] grep custom_algorithm /data3/.../run_test.py <span class="c"># 评测 harness 怎么调用我的代码</span>
+<pre><span class="c">═══════════════════════════════════════════════════════</span>
+<span class="c"># 阶段 0 · 环境侦察（前 20 个工具调用）</span>
+<span class="c"># 目标：搞清楚"我要交什么、怎么打分、数据长什么样"</span>
+<span class="c">═══════════════════════════════════════════════════════</span>
+[read] task_description.md          <span class="c"># 任务说明</span>
+[read] custom_algorithm.py          <span class="c"># 我要改的文件</span>
+[read] run_eval_template.py         <span class="c"># 评测怎么调我的代码</span>
+[read] mid_edit.py / leaderboard.csv / score_spec.py
+[read] holdout/dgp.py               <span class="c"># 数据生成器 = 真实结构长什么样</span>
+[bash] cat scripts/eval_er10.sh ... # 评测脚本
+[bash] grep custom_algorithm .../run_test.py
 
-<span class="c"># 环境排查：系统 python 没有 causallearn，折腾了一轮找对的 conda env</span>
-[bash] python3 -c "import causallearn"  # 失败
+<span class="c"># 环境排查：系统 python 没有 causallearn → 找到对的 conda env</span>
+[bash] python3 -c "import causallearn"   # ❌ 失败
 [bash] which conda; conda env list
-[bash] /data3/.../miniconda3/envs/mlsbench-causal-learn/bin/python -c "import causallearn; print('cl ok')"  # 找到了
-<span class="c"># → 之后所有命令都显式用这个 python 跑</span></pre>
-        </div>
-      </details>
-    </div>
+[bash] .../miniconda3/envs/mlsbench-causal-learn/bin/python -c "import causallearn; print('ok')"  # ✅ 找到了
 
-    <h3>第二步：写第一版 EVS 算法，跑通 → SHD 从 361 降到 19</h3>
-    <div class="traj">
-      <details>
-        <summary>展开：第一版开发与首个本地评测</summary>
-        <div class="body">
-<pre>[write] custom_algorithm.py  <span class="c"># EVS: 叶剥离找顺序 + 联合边集坐标下降</span>
-[bash] cat > _dev_test.py     <span class="c"># 本地评测驱动（在 workspace 里直接跑，不占官方评测次数）</span>
+<span class="c">═══════════════════════════════════════════════════════</span>
+<span class="c"># 阶段 1 · 写第一版 EVS 算法并本地评测 → SHD 从 361 降到 19</span>
+<span class="c"># 观察点：方向全错（ArrowP/R = 0.0）→ 顺序阶段是坏的</span>
+<span class="c">═══════════════════════════════════════════════════════</span>
+[write] custom_algorithm.py         <span class="c"># EVS：叶剥离找顺序 + 联合边集坐标下降</span>
+[bash] cat > _dev_test.py           <span class="c"># 本地评测驱动（不占官方评测次数）</span>
 [bash] python -u _dev_test.py ER10 2>&1 | tail -5
 <span class="c"># 输出：</span>
 ER10         SHD=  19 AdjP=0.4615 AdjR=0.4286 ArrowP=0.0000 ArrowR=0.0000  (1.7s)
 TOTAL SHD = 19
-<span class="c"># 有边找对了（AdjR 0.43）但方向全错（ArrowP/R 0.0）→ 顺序阶段是坏的</span></pre>
-        </div>
-      </details>
-    </div>
 
-    <h3>第三步：关键观察 #1 —— 打印"每个节点加父边前后的分数变化"，定位顺序坏在哪</h3>
-    <div class="traj">
-      <details>
-        <summary>展开：逐节点分数诊断（_dev_debug.py）的真实输出</summary>
-        <div class="body">
-<pre>[bash] cat > _dev_debug.py   <span class="c"># 对每个节点：打印 空模型分数 / 加父边后分数 / 分数增益</span>
+<span class="c">═══════════════════════════════════════════════════════</span>
+<span class="c"># ★ 关键观察 #1 · 逐节点分数诊断（_dev_debug.py）</span>
+<span class="c"># 看到：加对父边分数大幅下降（-200~-900）→ 分数机制有效，问题在"顺序"</span>
+<span class="c">═══════════════════════════════════════════════════════</span>
 [bash] python -u _dev_debug.py 2>&1 | tail -20
-<span class="c"># 输出（截取）：</span>
 node 2 parents [1]: empty=341.910 with=145.360 delta=-196.550
 node 6 parents [2]: empty=379.089 with=138.446 delta=-240.643
 node 9 parents [0,1,3,8]: empty=1009.134 with=137.984 delta=-871.150
-<span class="c"># 看到：加对父边分数大幅下降（-200~-900）→ 分数机制本身有效，问题在顺序</span>
 
-<span class="c"># 于是再深挖：打印候选边的"选中次数"和"分数增益"</span>
-[bash] cat > _dev_freq.py ...
+<span class="c"># 再深挖：候选边"选中次数 + 分数增益"（_dev_freq.py）</span>
 [bash] python -u _dev_freq.py ...
-sse_j empty: [7350.47 7223.36 ...]
-cand (1,2) cnt=48: delta=-8048.741   <span class="c"># 真边：48 次全选中，增益巨大</span>
-cand (2,4) cnt=48: delta=-44600.535  <span class="c"># 真边：48/48</span>
-cand (4,5) cnt=48: delta=-129492.701 <span class="c"># 真边：48/48</span>
-cand (0,1) cnt=8:  delta=30.343      <span class="c"># 伪边：只被 8/48 选中，且增益为正（加了更差）</span>
-<span class="c"># → 观察：真边 48/48 选中、增益巨大；伪边 ≤8/48、增益为正。</span>
-<span class="c">#   这就是"边池稳定性"的原始数据——阈值不是拍脑袋，是数出来的。</span></pre>
-        </div>
-      </details>
-    </div>
+cand (1,2) cnt=48: delta=-8048.741    <span class="c"># 真边：48/48 全选中，增益巨大</span>
+cand (2,4) cnt=48: delta=-44600.535   <span class="c"># 真边：48/48</span>
+cand (4,5) cnt=48: delta=-129492.701  <span class="c"># 真边：48/48</span>
+cand (0,1) cnt=8:  delta=30.343       <span class="c"># 伪边：只 8/48，增益为正（加了更差）</span>
 
-    <h3>第四步：关键观察 #2 —— bootstrap 方向投票，发现"分数面在弱边上几乎平坦"</h3>
-    <div class="traj">
-      <details>
-        <summary>展开：bootstrap 投票的真实输出（这条边就是最后唯一没做对的 2→19）</summary>
-        <div class="body">
-<pre><span class="c"># 对弱边 (4,5) 和 (15,18) 做 24 次 bootstrap 重采样，每次投票"谁在前"</span>
+<span class="c">═══════════════════════════════════════════════════════</span>
+<span class="c"># ★ 关键观察 #2 · bootstrap 方向投票（_dev_boot*.py）</span>
+<span class="c"># 发现：弱边上两个方向的分数差 < 噪声 → "分数面几乎平坦"</span>
+<span class="c"># 这就是 naive greedy 会翻车的原因（也解释了最后那条没做对的 2→19）</span>
+<span class="c">═══════════════════════════════════════════════════════</span>
 [bash] python -u _dev_boot.py er 20 400 0.35 2 2.5 4,5 ER20-Noisy-4-5
 ER20-Noisy-4-5: pair 4,5: P(a before b) = 21/24
-
 [bash] python -u _dev_boot.py sf 50 2000 0.5 2 1.0 15,18 SF50-15-18
-SF50-15-18: pair 15,18: P(a before b) = 7/24   <span class="c"># 只有 7/24 支持正确方向！</span>
+SF50-15-18: pair 15,18: P(a before b) = 7/24    <span class="c"># 只有 7/24 支持正确方向！</span>
 
-<span class="c"># 再看分数：两个方向的分数差到底有多大（相对噪声）</span>
 [bash] python -u _dev_boot3.py er 20 400 0.35 2 2.5 4,5 ER20N
 ER20N: mean(sA-sB)=-1.763 (+ => order A better) | sign votes A better: 12/24
 SF50: mean(sA-sB)=-7.959 | sign votes A better: 17/24
-<span class="c"># → 观察：弱边上两个方向的分数差均值只有 -1.76~-8.0，且符号投票只有 12~17/24，</span>
-<span class="c">#   和 bootstrap 的噪声（se≈10-28）同量级 → "分数面几乎平坦" 是实测出来的，不是猜的</span></pre>
-        </div>
-      </details>
-    </div>
+<span class="c"># 分数差均值只有 -1.76~-8.0，符号投票 12~17/24</span>
+<span class="c"># 和 bootstrap 噪声（se≈10-28）同量级 → 平坦是实测的，不是猜的</span>
 
-    <h3>第五步：基于观察设计干预 —— bagged 共识顺序 + 2-se 检验</h3>
-    <div class="traj">
-      <details>
-        <summary>展开：用 bootstrap 分数分布做"显著检验"的真实输出</summary>
-        <div class="body">
-<pre><span class="c"># 设计：细化顺序只在"分数优势显著"时才采用，否则用 bagged 共识顺序。</span>
-<span class="c"># 检验：对细化顺序 vs 共识顺序，跑 24 次 bootstrap，看分数差的分布</span>
+<span class="c">═══════════════════════════════════════════════════════</span>
+<span class="c"># ★ 干预 · 基于观察设计 bagged 共识顺序 + 2-se 检验（_dev_hybrid.py）</span>
+<span class="c"># 只有当 bootstrap 分数差的均值 > ~2se 才相信细化顺序</span>
+<span class="c">═══════════════════════════════════════════════════════</span>
 [bash] python -u _dev_hybrid.py er 10 500 0.3 2 1.0 ER10
-ER10: score(refined) - score(consensus) = -16.284 (negative => refined better)
-  bootstrap diffs: mean=-2.348 se=10.301   <span class="c"># 优势均值 < 1 个 se → 不显著</span>
-  full-data diff / se = -0.38              <span class="c"># -0.38 < 2 → 采用共识顺序</span>
-
+ER10: score(refined) - score(consensus) = -16.284
+  bootstrap diffs: mean=-2.348 se=10.301   <span class="c"># 优势均值 < 1 se → 不显著</span>
+  full-data diff / se = -0.38              <span class="c"># -0.38 < 2 → 用共识顺序</span>
 [bash] python -u _dev_hybrid.py sf 50 2000 0.5 2 1.0 SF50
 SF50: score(refined) - score(consensus) = -76.347
   bootstrap diffs: mean=-49.130 se=19.503  <span class="c"># 优势均值 > 2.5 se → 显著</span>
-  full-data diff / se = -3.91              <span class="c"># -3.91 < -2 → 采用细化顺序</span>
+  full-data diff / se = -3.91              <span class="c"># -3.91 < -2 → 用细化顺序</span>
 
-<span class="c"># → 观察：ER10 上细化不显著（-0.38）就用共识；SF50 上显著（-3.91）就用细化。</span>
-<span class="c">#   这就是"2-se 检验"：只有当 bootstrap 分数差的均值超过 ~2 个 se 才相信细化顺序。</span></pre>
-        </div>
-      </details>
-    </div>
-
-    <h3>第六步：稳定性阈值扫描 —— 验证 1/3 阈值鲁棒</h3>
-    <div class="traj">
-      <details>
-        <summary>展开：阈值扫描的真实输出（floor=2 到 floor=48 全试一遍）</summary>
-        <div class="body">
-<pre><span class="c"># 对"边池最小选中次数"扫阈值，看 SHD 是否对阈值敏感</span>
+<span class="c">═══════════════════════════════════════════════════════</span>
+<span class="c"># ★ 验证 · 稳定性阈值扫描（_dev_sweep.py）</span>
+<span class="c"># 真边 48/48 vs 伪边 ≤7/48 → 40 次宽的"真空带" → 阈值取 1/3 很稳</span>
+<span class="c">═══════════════════════════════════════════════════════</span>
 [bash] python -u _dev_sweep.py ...
 ER10: pool=15
-   true freqs: [48, 48, 48, 48, 48, ...]   <span class="c"># 所有真边都是 48/48 被选中</span>
-   spur freqs (top 12): [2, 3, 4, 5, 7]    <span class="c"># 伪边最高只到 7/48</span>
+   true freqs: [48, 48, 48, 48, 48, ...]    <span class="c"># 所有真边 48/48 被选中</span>
+   spur freqs (top 12): [2, 3, 4, 5, 7]     <span class="c"># 伪边最高 7/48</span>
 floor=  2 pool= 15 SHD=0
 floor=  4 pool= 14 SHD=0
 ...
-floor= 48 pool= 14 SHD=0                    <span class="c"># 阈值 2~48 结果全是 SHD=0 → 巨大分离带</span>
+floor= 48 pool= 14 SHD=0                     <span class="c"># 阈值 2~48 全 SHD=0</span>
 
-<span class="c"># 真边 48 次全选中、伪边 ≤7 次 → 中间有 40 次宽的"真空带"，</span>
-<span class="c"># 阈值取 1/3（=16）落在真空带正中间，怎么扰动都不影响结果。</span></pre>
-        </div>
-      </details>
-    </div>
-
-    <h3>第七步：每改一版全场景本地评测，逐项归因（SHD 从 19 → 8 → 25 → 1 → 0）</h3>
-    <div class="traj">
-      <details>
-        <summary>展开：本地评测的历史输出（每一步改动都能看到 SHD 变化）</summary>
-        <div class="body">
-<pre><span class="c"># 早期一版（顺序修复后，但边选择还没上稳定性）：</span>
+<span class="c">═══════════════════════════════════════════════════════</span>
+<span class="c"># 迭代 · 每改一版全场景本地评测，逐项归因</span>
+<span class="c"># SHD 轨迹：19 → 8 → 25(回退!) → 4 → 2 → 1（官方提交）</span>
+<span class="c">═══════════════════════════════════════════════════════</span>
 [bash] python -u _dev_test.py
 ER10         SHD=   0 AdjP=1.0000 ... (102.2s)
 ER20-Noisy   SHD=   4 ...
 TOTAL SHD = 8
-
-<span class="c"># 中间一次回退（联合边集 refine 引入回归）：</span>
-[bash] python -u _dev_test.py
+[bash] python -u _dev_test.py     <span class="c"># 一次联合边集 refine 引入回归</span>
 ER20-Noisy   SHD=  14 ...
-TOTAL SHD = 25      <span class="c"># 变差了 → agent 回滚这次改动</span>
-
-<span class="c"># 稳定性边池 + 2-se 检验都上齐后：</span>
-[bash] python -u _dev_test.py
-ER10         SHD=   0 AdjP=1.0000 AdjR=1.0000 ArrowP=1.0000 ArrowR=1.0000  (6.1s)
-ER20-Noisy   SHD=   4 AdjP=0.9853 ...
+TOTAL SHD = 25                    <span class="c"># 变差 → agent 回滚这次改动</span>
+[bash] python -u _dev_test.py     <span class="c"># 稳定性边池 + 2-se 检验上齐</span>
+ER10         SHD=   0 ... ArrowP=1.0000  (6.1s)
+ER20-Noisy   SHD=   4 ...
 TOTAL SHD = 4
-
-<span class="c"># 最后一次 refine（joint edge coordinate descent 调对后）：</span>
-[bash] python -u _dev_test.py
-ER10         SHD=   0 ...  ArrowP=1.0000  (7.0s)
+[bash] python -u _dev_test.py     <span class="c"># joint edge coordinate descent 调对后</span>
+ER10         SHD=   0 ... ArrowP=1.0000  (7.0s)
 ER20-Noisy   SHD=   2 ...
 TOTAL SHD = 2
 
