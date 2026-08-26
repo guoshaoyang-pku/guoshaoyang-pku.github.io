@@ -1,0 +1,1341 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OPHIS 实验登记簿 · Experiment Registry</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #171a21;
+    --panel2: #1d2129;
+    --border: #2a2f3a;
+    --text: #e6e8ec;
+    --muted: #9aa3b2;
+    --accent: #5b9dff;
+    --accent2: #7c5bff;
+    --green: #4cd9a0;
+    --yellow: #ffc857;
+    --red: #ff6b6b;
+    --purple: #c77dff;
+    --code-bg: #10131a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    line-height: 1.7;
+  }
+  .container { max-width: 1100px; margin: 0 auto; padding: 32px 24px 80px; }
+
+  .hero {
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: linear-gradient(135deg, #151a26 0%, #1a1f2e 100%);
+    padding: 32px;
+    margin-bottom: 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(600px 200px at 85% -10%, rgba(91,157,255,.15), transparent),
+                radial-gradient(500px 200px at 10% 110%, rgba(124,91,255,.12), transparent);
+    pointer-events: none;
+  }
+  .hero h1 { font-size: 1.8rem; font-weight: 700; letter-spacing: .5px; position: relative; }
+  .hero .sub { color: var(--muted); margin-top: 8px; font-size: 1rem; position: relative; }
+  .hero .meta { margin-top: 16px; display: flex; gap: 12px; flex-wrap: wrap; position: relative; }
+  .badge {
+    font-size: .78rem; padding: 3px 12px; border-radius: 20px;
+    background: rgba(91,157,255,.12); border: 1px solid rgba(91,157,255,.35); color: #bcd5ff;
+  }
+  .badge.green { background: rgba(76,217,160,.12); border-color: rgba(76,217,160,.35); color: #7ce8bb; }
+  .badge.yellow { background: rgba(255,200,87,.12); border-color: rgba(255,200,87,.35); color: #ffd98a; }
+  .badge.red { background: rgba(255,107,107,.12); border-color: rgba(255,107,107,.35); color: #ffa3a3; }
+  .badge.purple { background: rgba(199,125,255,.14); border-color: rgba(199,125,255,.35); color: #e0b3ff; }
+
+  section { margin-bottom: 44px; }
+  h2 {
+    font-size: 1.4rem; font-weight: 700;
+    padding-bottom: 10px; margin-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+  }
+  h2 .num {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    font-size: 1.1rem;
+  }
+  h3 { font-size: 1.1rem; margin: 24px 0 12px; color: #fff; }
+  h4 { font-size: 1rem; margin: 18px 0 8px; color: #dbe2ee; }
+  p { margin-bottom: 12px; color: var(--text); }
+  .muted { color: var(--muted); }
+
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: .88rem; }
+  th, td { padding: 9px 11px; text-align: left; border: 1px solid var(--border); vertical-align: top; }
+  th { background: var(--panel2); font-weight: 600; color: #cbd4e2; white-space: nowrap; }
+  tr:nth-child(even) td { background: rgba(255,255,255,.015); }
+  td.best { color: var(--green); font-weight: 700; }
+  td.worst { color: var(--red); }
+
+  code {
+    background: var(--code-bg); border: 1px solid var(--border);
+    padding: 1px 7px; border-radius: 5px; font-size: .86em;
+    font-family: "SF Mono", Menlo, Consolas, monospace; color: #9ecbff;
+  }
+  .tag { display: inline-block; font-size: .75rem; padding: 2px 10px; border-radius: 12px; margin-right: 6px; margin-bottom: 4px; }
+  .tag.green { background: rgba(76,217,160,.13); color: #7ce8bb; }
+  .tag.yellow { background: rgba(255,200,87,.13); color: #ffd98a; }
+  .tag.red { background: rgba(255,107,107,.13); color: #ffa3a3; }
+  .tag.purple { background: rgba(199,125,255,.14); color: #e0b3ff; }
+
+  .callout { border: 1px solid rgba(91,157,255,.3); background: rgba(91,157,255,.06); border-radius: 10px; padding: 14px 18px; margin: 14px 0; }
+  .callout.warn { border-color: rgba(255,200,87,.35); background: rgba(255,200,87,.06); }
+  .callout.red { border-color: rgba(255,107,107,.35); background: rgba(255,107,107,.06); }
+  .callout.green { border-color: rgba(76,217,160,.35); background: rgba(76,217,160,.06); }
+
+  .status-done { color: var(--green); font-weight: 600; }
+  .status-running { color: var(--yellow); font-weight: 600; }
+  .status-failed { color: var(--red); font-weight: 600; }
+  .status-partial { color: var(--purple); font-weight: 600; }
+
+  .log-block {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin: 10px 0;
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: .8rem;
+    color: #b8c4d4;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+
+  .toc { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 18px 22px; margin-bottom: 32px; }
+  .toc a { color: var(--accent); text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+  .toc ol { padding-left: 20px; }
+  .toc li { margin-bottom: 4px; }
+
+  a { color: var(--accent); }
+  .footer { color: var(--muted); font-size: .82rem; text-align: center; margin-top: 40px; }
+  .divider { height: 1px; background: var(--border); margin: 36px 0; }
+  .path { font-family: "SF Mono", Menlo, monospace; font-size: .78rem; color: var(--muted); }
+  .arrow { color: var(--green); font-weight: 700; }
+  .viz {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    margin: 16px 0;
+    overflow-x: auto;
+  }
+  .viz-title { color: #dbe2ee; font-weight: 600; margin-bottom: 8px; }
+  .viz-note { color: var(--muted); font-size: .8rem; margin-top: 8px; }
+  .viz svg { display: block; min-width: 650px; max-width: 100%; height: auto; }
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; color: var(--muted); font-size: .8rem; margin: 8px 0; }
+  .legend span::before { content: ''; display: inline-block; width: 12px; height: 3px; border-radius: 2px; background: currentColor; margin: 0 6px 3px 0; }
+  .legend .blue { color: #5b9dff; }
+  .legend .purple { color: #c77dff; }
+  .legend .green { color: #4cd9a0; }
+  .legend .red { color: #ff6b6b; }
+  .legend .orange { color: #ffb86b; }
+  .small { font-size: .82rem; }
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 14px 0; }
+  .stat { background: var(--panel2); border: 1px solid var(--border); border-radius: 9px; padding: 11px 13px; }
+  .stat .value { font-size: 1.35rem; font-weight: 700; color: #fff; }
+  .stat .label { color: var(--muted); font-size: .78rem; }
+  details { background: var(--panel); border: 1px solid var(--border); border-radius: 9px; padding: 10px 14px; margin: 12px 0; }
+  details summary { cursor: pointer; color: #cbdcff; font-weight: 600; }
+  details[open] summary { margin-bottom: 10px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- HERO -->
+  <div class="hero">
+    <h1>OPHIS 实验登记簿</h1>
+    <div class="sub">所有实验结果与可视化的统一登记处（rolling registry）。新增实验在此追加登记。</div>
+    <div class="meta">
+      <span class="badge">作者: Shaoyang Guo</span>
+      <span class="badge">2026-08-26 建立</span>
+      <span class="badge green">滚动更新中</span>
+      <span class="badge">关联: <a href="three_system_compare_20260815.html" style="color:#bcd5ff">三系统对比</a></span>
+      <span class="badge purple">关联: <a href="three_system_rerun_results.html" style="color:#e0b3ff">dsh 极简+pro 重跑</a></span>
+    </div>
+  </div>
+
+  <!-- TOC -->
+  <div class="toc">
+    <b>目录</b>
+    <ol>
+      <li><a href="#overview">总览：实验分组与状态</a></li>
+      <li><a href="#metrics">指标词典</a></li>
+      <li><a href="#llm-pretrain">LLM Pretraining 优化（llm-pretrain-loss / optimizer / kernel）</a></li>
+      <li><a href="#inversebench">逆问题 Diffusion（InverseBench / ai4sci-inverse-diffusion-algo）</a></li>
+      <li><a href="#molprop">分子性质预测（Uni-Mol molprop）</a></li>
+      <li><a href="#causal">因果发现 5 任务（causal-discovery / observational）</a></li>
+      <li><a href="#dsh-minpro">dsh 极简+pro 重跑（13 任务）</a></li>
+      <li><a href="#ngram-gap">ngram-gap 实验（注入点 / 优化器 / 表 / 因果消融）</a></li>
+      <li><a href="#dsh-scan">数学扫描（dsh_scan 全空间逼近）</a></li>
+      <li><a href="#autoresearch">本地 autoresearch 树探索与判断题</a></li>
+      <li><a href="#logs">原始日志与数据源索引</a></li>
+    </ol>
+  </div>
+
+  <!-- 1. OVERVIEW -->
+  <section id="overview">
+    <h2><span class="num">01</span> 总览：实验分组与状态</h2>
+    <div class="callout">
+      <b>本登记簿的用途</b>：把散落在多台集群、多个专题报告中的实验结果统一登记，每个实验含最终指标、
+      关键中间观察（observable）与完整 trajectory 链接，方便追溯"agent 是怎么一步步把分数做上去的"。
+      后续新增实验按此格式追加。当前状态核对时间：<b>2026-08-26</b>；ophis-gpu 上 mlsbench
+      队列为空、三个 llm-pretrain agent 已结束；Uni-Mol 仍有训练进程，尚未结算最终分数。
+    </div>
+    <div class="callout warn">
+      <b>数据口径</b>：同一实验组内的表格可以比较；不同任务的指标、不同数据版本和不同题池不能直接拼成一个总 leaderboard。
+      <code>tree.db</code> 是 autoresearch 树的当前权威状态；<code>run_report.json</code>、<code>progress_*.json</code>
+      和旧日报是历史快照。本页把“已核验最终结果”“链路验证结果”“仍需访问远程机器才能回填”的三类信息明确分开。
+    </div>
+    <div class="stat-grid">
+      <div class="stat"><div class="value">9</div><div class="label">主要实验组</div></div>
+      <div class="stat"><div class="value">9,010</div><div class="label">autoresearch 树节点（DB 当前值）</div></div>
+      <div class="stat"><div class="value">3</div><div class="label">已提交 LLM 训练 agent</div></div>
+      <div class="stat"><div class="value">2</div><div class="label">仍需回填/结算的实验组</div></div>
+    </div>
+    <table>
+      <thead>
+        <tr><th>分组</th><th>实验</th><th>机器</th><th>状态</th><th>核心结果</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><b>LLM 训练优化</b></td>
+          <td>llm-pretrain-loss（loss 函数）</td>
+          <td>ophis-gpu</td>
+          <td class="status-done">✅ 完成并提交</td>
+          <td><b>val_loss 1.889</b>（baseline 2.27 ↓0.38）</td>
+        </tr>
+        <tr>
+          <td><b>LLM 训练优化</b></td>
+          <td>llm-pretrain-optimizer（优化器）</td>
+          <td>ophis-gpu</td>
+          <td class="status-done">✅ 完成并提交</td>
+          <td><b>val_loss 2.1903</b>（baseline 2.20 ↓0.01）</td>
+        </tr>
+        <tr>
+          <td><b>LLM 训练优化</b></td>
+          <td>llm-pretrain-kernel（GPU kernel）</td>
+          <td>ophis-gpu</td>
+          <td class="status-done">✅ 完成并提交</td>
+          <td><b>val_loss 2.2751</b>，lambada_ppl 48.33（baseline 67.05 ↓28%）</td>
+        </tr>
+        <tr>
+          <td><b>逆问题 Diffusion</b></td>
+          <td>ai4sci-inverse-diffusion-algo（3 子任务）</td>
+          <td>ophis-gpu / 360-1</td>
+          <td class="status-partial">🔶 部分</td>
+          <td>dps baseline 已记录；agent 结果未在 ophis leaderboard 体现（360 侧完成）</td>
+        </tr>
+        <tr>
+          <td><b>分子性质</b></td>
+          <td>ai4sci-mol-property-prediction（Uni-Mol）</td>
+          <td>ophis-gpu</td>
+          <td class="status-running">🔄 有进程，未结算</td>
+          <td>链路验证：BBBP 0.696 / BACE 0.808 / Tox21 0.754；最终结果尚未写入 leaderboard</td>
+        </tr>
+        <tr>
+          <td><b>因果发现</b></td>
+          <td>causal 5 任务</td>
+          <td>ophis-gpu / 360-1</td>
+          <td class="status-done">✅ 完成</td>
+          <td>non-gaussian PERFECT（SHD=0）；discrete 击败官方 BOSS</td>
+        </tr>
+        <tr>
+          <td><b>三系统对比</b></td>
+          <td>dsh 极简+pro 重跑（13 任务）</td>
+          <td>ophis-gpu</td>
+          <td class="status-done">✅ 完成</td>
+          <td>12 任务拿全 metrics，2 因果 PERFECT</td>
+        </tr>
+        <tr>
+          <td><b>ngram-gap</b></td>
+          <td>注入点 / 优化器 / 表尺寸 / 因果消融</td>
+          <td>ophis-gpu</td>
+          <td class="status-running">🔄 部分 running</td>
+          <td>input 注入 gap 0.858；因果 e2 回滚 gap ↓94%</td>
+        </tr>
+        <tr>
+          <td><b>数学扫描</b></td>
+          <td>dsh_scan 全空间逼近（k=49, ε=1/25）</td>
+          <td>ophis-gpu</td>
+          <td class="status-running">🔄 仍在计算</td>
+          <td>D=29 收敛 3.9887；当前观察到 D=21 全空间扫描进程，D=31/33 结果待回填</td>
+        </tr>
+        <tr>
+          <td><b>Setting 探索</b></td>
+          <td>autoresearch nanogpt_short 树 + judge</td>
+          <td>本地 DB / 多集群 worker</td>
+          <td class="status-done">✅ 树已收敛；judge 分批完成</td>
+          <td><b>9010 节点</b>：8866 done / 144 failed；另有 360 题主汇总与 sibling pilot</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="viz">
+      <div class="viz-title">登记簿总览：哪些结果已经可比较，哪些仍需回填</div>
+      <svg viewBox="0 0 900 190" role="img" aria-label="实验状态总览">
+        <line x1="170" y1="28" x2="850" y2="28" stroke="#2a2f3a"/>
+        <line x1="170" y1="88" x2="850" y2="88" stroke="#2a2f3a"/>
+        <line x1="170" y1="148" x2="850" y2="148" stroke="#2a2f3a"/>
+        <text x="10" y="34" fill="#cbd4e2" font-size="14">已提交/可比较</text>
+        <rect x="180" y="15" width="580" height="24" rx="5" fill="#4cd9a0"/>
+        <text x="775" y="33" fill="#7ce8bb" font-size="13">LLM ×3 · causal · dsh</text>
+        <text x="10" y="94" fill="#cbd4e2" font-size="14">有结果但需区分版本</text>
+        <rect x="180" y="75" width="310" height="24" rx="5" fill="#c77dff"/>
+        <text x="505" y="93" fill="#e0b3ff" font-size="13">ngram-gap · tree judge</text>
+        <text x="10" y="154" fill="#cbd4e2" font-size="14">仍在运行/待回填</text>
+        <rect x="180" y="135" width="190" height="24" rx="5" fill="#ffc857"/>
+        <text x="385" y="153" fill="#ffd98a" font-size="13">Uni-Mol · InverseBench</text>
+      </svg>
+      <div class="viz-note">这张图表达“登记状态”，不是把不同任务的指标放到同一坐标轴比较。</div>
+    </div>
+  </section>
+
+  <!-- METRIC GLOSSARY -->
+  <section id="metrics">
+    <h2><span class="num">00</span> 指标词典：如何读下面的表</h2>
+    <div class="callout">
+      表格中的箭头是优化方向：<b>↑ 越大越好，↓ 越小越好</b>。不同实验的指标没有统一量纲，
+      不能把例如 val_loss、SHD、PSNR 排在一张总榜里。下面只解释每个实验组内部的指标含义。
+    </div>
+    <table>
+      <thead><tr><th>实验组</th><th>指标</th><th>含义</th><th>方向</th></tr></thead>
+      <tbody>
+        <tr><td rowspan="7">LLM pretraining</td><td>val_loss</td><td>固定 validation token 上的平均交叉熵；衡量模型对未参与更新的文本的预测误差。</td><td>↓</td></tr>
+        <tr><td>wikitext2_ppl / lambada_ppl</td><td>困惑度（perplexity），约等于 exp(平均 token loss)；越低表示下一 token 预测越好。</td><td>↓</td></tr>
+        <tr><td>arc_easy</td><td>ARC-Easy 四选一科学常识题准确率。</td><td>↑</td></tr>
+        <tr><td>hellaswag</td><td>情境续写选择题准确率，测试常识性的情境完成能力。</td><td>↑</td></tr>
+        <tr><td>piqa</td><td>物理常识/日常目标导向选择题准确率。</td><td>↑</td></tr>
+        <tr><td>winogrande</td><td>代词指代消歧准确率，测试语境中的常识推断。</td><td>↑</td></tr>
+        <tr><td>TRAIN_METRICS</td><td>训练步数、train_loss、val_loss、学习率等过程量；不是额外 leaderboard 分数，而是用来诊断训练过程。</td><td>按量解释</td></tr>
+        <tr><td rowspan="3">InverseBench</td><td>PSNR</td><td>重建图像与真值之间的峰值信噪比，误差越小通常越高。</td><td>↑</td></tr>
+        <tr><td>SSIM</td><td>结构相似度，比较亮度、对比度和局部结构，通常范围接近 0–1。</td><td>↑</td></tr>
+        <tr><td>LPIPS / closure-phase χ²</td><td>LPIPS 衡量感知特征距离；closure-phase χ² 衡量黑洞干涉观测拟合残差。</td><td>↓</td></tr>
+        <tr><td>Uni-Mol</td><td>ROC-AUC</td><td>二分类排序指标：随机抽取一个正例和一个负例时，模型把正例排在前面的概率。</td><td>↑</td></tr>
+        <tr><td rowspan="4">Causal / MLS</td><td>SHD</td><td>结构汉明距离：预测 DAG 与真实 DAG 在边增、边删、边方向错误上的差异总数；0 是完美。</td><td>↓</td></tr>
+        <tr><td>F1</td><td>预测因果边的 precision 与 recall 的调和平均。</td><td>↑</td></tr>
+        <tr><td>PEHE</td><td>个体处理效应估计误差的均方根，用于 treatment-effect 任务。</td><td>↓</td></tr>
+        <tr><td>ECE / AUROC / ARI / R²</td><td>分别是校准误差、异常排序能力、聚类一致性和回归解释度；ECE 下降，其余三个上升更好。</td><td>混合</td></tr>
+        <tr><td>ngram-gap</td><td>gap = validation loss − training loss（或登记表明确标出的 gap 变体）；因果消融比较 intervention 前后的 gap 变化。</td><td>通常 ↓</td></tr>
+        <tr><td>autoresearch judge</td><td>raw = 排序正确率；norm = (raw − 0.5)/0.5。norm=0 约等于随机排序，正值优于随机。</td><td>↑</td></tr>
+        <tr><td>dsh_scan</td><td>M</td><td>给定 D 的全空间 sup 数值逼近；这里关心的是它是否严格低于阈值 4。</td><td>与 4 比较</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 2. LLM PRETRAIN -->
+  <section id="llm-pretrain">
+    <h2><span class="num">02</span> LLM Pretraining 优化</h2>
+
+    <div class="callout">
+      <b>任务设计</b>：GPT-2 Medium（355M），FineWeb 10B 数据，13,535 iter 固定流水线。
+      agent 只能改 <code>custom_pretrain.py</code> 里的一个函数（loss → <code>compute_loss</code>，
+      optimizer → 优化器配置，kernel → <code>fused_mlp_forward</code>）。
+      每个 agent 有 10 次 test 预算，每次 test = 完整 5-8h 训练 + 4 个下游评测。
+      官方 baseline 是手写论文技巧（label_smoothing / softcap_ce / relu_sq_torch 等）跑完整流程。
+      <b>关键</b>：baseline 只动单个技巧；agent 是"10 轮 observe→调参→组合"的迭代搜索。
+    </div>
+    <div class="viz">
+      <div class="viz-title">图 2-A：loss / optimizer agent 逐 test 真实 val_loss 轨迹（精确映射，越低越好）</div>
+      <div class="legend"><span class="blue">loss</span><span class="purple">optimizer</span><span class="red">官方 baseline：loss 组 softcap_ce</span><span class="orange">官方 baseline：optimizer 组 muon</span></div>
+      <svg viewBox="0 0 900 340" role="img" aria-label="loss 与 optimizer agent 的逐 test val_loss 精确轨迹">
+        <line x1="72" y1="280" x2="860" y2="280" stroke="#7a8494"/>
+        <line x1="72" y1="35" x2="72" y2="280" stroke="#7a8494"/>
+        <line x1="72" y1="253" x2="860" y2="253" stroke="#2a2f3a"/>
+        <line x1="72" y1="187" x2="860" y2="187" stroke="#2a2f3a"/>
+        <line x1="72" y1="120" x2="860" y2="120" stroke="#2a2f3a"/>
+        <line x1="72" y1="53" x2="860" y2="53" stroke="#2a2f3a"/>
+        <text x="16" y="40" fill="#9aa3b2" font-size="12">val_loss</text>
+        <text x="40" y="57" fill="#9aa3b2" font-size="11">3.5</text>
+        <text x="40" y="124" fill="#9aa3b2" font-size="11">3.0</text>
+        <text x="40" y="191" fill="#9aa3b2" font-size="11">2.5</text>
+        <text x="40" y="257" fill="#9aa3b2" font-size="11">2.0</text>
+        <text x="40" y="284" fill="#9aa3b2" font-size="11">1.8</text>
+        <line x1="72" y1="217" x2="860" y2="217" stroke="#ff6b6b" stroke-width="1.5" stroke-dasharray="8 5"/>
+        <text x="560" y="212" fill="#ffa3a3" font-size="11">loss 组最强官方 baseline softcap_ce = 2.2701</text>
+        <line x1="72" y1="227" x2="860" y2="227" stroke="#ffb86b" stroke-width="2" stroke-dasharray="8 5"/>
+        <text x="84" y="244" fill="#ffd9a3" font-size="11">optimizer 组最强官方 baseline muon = 2.1995</text>
+        <polyline points="110,215 190,55 270,215 350,224 430,244" fill="none" stroke="#5b9dff" stroke-width="3"/>
+        <polyline points="590,244 670,268 750,268 830,268" fill="none" stroke="#5b9dff" stroke-width="3"/>
+        <g fill="#5b9dff"><circle cx="110" cy="215" r="4"/><circle cx="190" cy="55" r="4"/><circle cx="270" cy="215" r="4"/><circle cx="350" cy="224" r="4"/><circle cx="430" cy="244" r="4"/><circle cx="590" cy="244" r="4"/><circle cx="670" cy="268" r="4"/><circle cx="750" cy="268" r="4"/><circle cx="830" cy="268" r="4"/></g>
+        <circle cx="190" cy="55" r="8" fill="none" stroke="#ff6b6b" stroke-width="2"/>
+        <text x="206" y="50" fill="#ffa3a3" font-size="11">#2 发散 3.4857</text>
+        <line x1="510" y1="210" x2="510" y2="262" stroke="#7a8494" stroke-dasharray="4 4"/>
+        <text x="440" y="200" fill="#9aa3b2" font-size="11">#6 失败（无最终值）</text>
+        <circle cx="670" cy="268" r="8" fill="none" stroke="#4cd9a0" stroke-width="2"/>
+        <text x="688" y="258" fill="#7ce8bb" font-size="11">#8 提交 1.889</text>
+        <polyline points="110,224 190,227 270,227 350,227 430,227 510,227 590,227 670,227 750,227 830,228" fill="none" stroke="#c77dff" stroke-width="3"/>
+        <g fill="#c77dff"><circle cx="110" cy="224" r="4"/><circle cx="190" cy="227" r="4"/><circle cx="270" cy="227" r="4"/><circle cx="350" cy="227" r="4"/><circle cx="430" cy="227" r="4"/><circle cx="510" cy="227" r="4"/><circle cx="590" cy="227" r="4"/><circle cx="670" cy="227" r="4"/><circle cx="750" cy="227" r="4"/><circle cx="830" cy="228" r="4"/></g>
+        <text x="140" y="178" fill="#e0b3ff" font-size="11">optimizer：2.2215 → 2.1903（平台期）</text>
+        <text x="300" y="90" fill="#bcd5ff" font-size="11">loss：2.2886 → 1.889（三阶段跳变）</text>
+        <g fill="#9aa3b2" font-size="11"><text x="106" y="300">1</text><text x="186" y="300">2</text><text x="266" y="300">3</text><text x="346" y="300">4</text><text x="426" y="300">5</text><text x="506" y="300">6</text><text x="586" y="300">7</text><text x="666" y="300">8</text><text x="746" y="300">9</text><text x="822" y="300">10</text></g>
+        <text x="770" y="322" fill="#9aa3b2" font-size="11">test 编号</text>
+      </svg>
+      <div class="viz-note">数据来源：§2.1 / §2.2 轨迹表与 raw log，纵轴 1.8–3.6 线性精确映射，每个点对应一次 test 的真实 val_loss。
+      loss Test #2=3.4857 为发散点（红圈）、Test #6 无最终值（虚线断开处理，不用插值伪造）；
+      optimizer 全程处于 2.19 平台期，最终 2.1903 仅比官方 muon baseline（2.1995）低约 0.009。</div>
+    </div>
+    <div class="viz">
+      <div class="viz-title">图 2-B：llm-pretrain-kernel 第二轮逐 test val_loss 轨迹（放大刻度 2.272–2.286）</div>
+      <div class="legend"><span class="green">kernel 第二轮</span><span class="red">官方 baseline relu_sq_torch</span><span class="purple">第一轮提交参考</span></div>
+      <svg viewBox="0 0 900 330" role="img" aria-label="kernel 第二轮逐 test val_loss 放大刻度轨迹">
+        <line x1="100" y1="280" x2="860" y2="280" stroke="#7a8494"/>
+        <line x1="100" y1="35" x2="100" y2="280" stroke="#7a8494"/>
+        <line x1="100" y1="246" x2="860" y2="246" stroke="#2a2f3a"/>
+        <line x1="100" y1="211" x2="860" y2="211" stroke="#2a2f3a"/>
+        <line x1="100" y1="177" x2="860" y2="177" stroke="#2a2f3a"/>
+        <line x1="100" y1="143" x2="860" y2="143" stroke="#2a2f3a"/>
+        <line x1="100" y1="109" x2="860" y2="109" stroke="#2a2f3a"/>
+        <line x1="100" y1="74" x2="860" y2="74" stroke="#2a2f3a"/>
+        <text x="16" y="40" fill="#9aa3b2" font-size="12">val_loss（放大）</text>
+        <text x="56" y="250" fill="#9aa3b2" font-size="11">2.274</text>
+        <text x="56" y="215" fill="#9aa3b2" font-size="11">2.276</text>
+        <text x="56" y="181" fill="#9aa3b2" font-size="11">2.278</text>
+        <text x="56" y="147" fill="#9aa3b2" font-size="11">2.280</text>
+        <text x="56" y="113" fill="#9aa3b2" font-size="11">2.282</text>
+        <text x="56" y="78" fill="#9aa3b2" font-size="11">2.284</text>
+        <line x1="100" y1="91" x2="860" y2="91" stroke="#c77dff" stroke-width="1.5" stroke-dasharray="6 5"/>
+        <text x="108" y="86" fill="#e0b3ff" font-size="11">第一轮提交 2.283</text>
+        <line x1="100" y1="253" x2="860" y2="253" stroke="#ff6b6b" stroke-width="1.5" stroke-dasharray="8 5"/>
+        <text x="108" y="248" fill="#ffa3a3" font-size="11">官方 relu_sq_torch 2.2736</text>
+        <circle cx="130" cy="60" r="5" fill="none" stroke="#4cd9a0" stroke-width="2" stroke-dasharray="3 3"/>
+        <circle cx="225" cy="60" r="5" fill="none" stroke="#4cd9a0" stroke-width="2" stroke-dasharray="3 3"/>
+        <text x="250" y="64" fill="#9aa3b2" font-size="11">Test #1–#2 小规模验证（无全规模 val_loss，不入线）</text>
+        <polyline points="320,204 415,204 510,78 605,217 700,205 795,227" fill="none" stroke="#4cd9a0" stroke-width="3"/>
+        <g fill="#4cd9a0"><circle cx="320" cy="204" r="4"/><circle cx="415" cy="204" r="4"/><circle cx="510" cy="78" r="4"/><circle cx="605" cy="217" r="4"/><circle cx="700" cy="205" r="4"/><circle cx="795" cy="227" r="4"/></g>
+        <text x="298" y="194" fill="#7ce8bb" font-size="10">2.2765</text>
+        <text x="398" y="194" fill="#7ce8bb" font-size="10">2.2766</text>
+        <circle cx="510" cy="78" r="8" fill="none" stroke="#ff6b6b" stroke-width="2"/>
+        <text x="524" y="74" fill="#ffa3a3" font-size="10">2.2838 回退</text>
+        <text x="615" y="233" fill="#7ce8bb" font-size="10">2.2757</text>
+        <text x="708" y="196" fill="#7ce8bb" font-size="10">2.2764</text>
+        <circle cx="795" cy="227" r="8" fill="none" stroke="#4cd9a0" stroke-width="2"/>
+        <text x="640" y="166" fill="#7ce8bb" font-size="11">↘ #8 提交 2.2751（最佳）</text>
+        <g fill="#9aa3b2" font-size="11"><text x="126" y="300">1</text><text x="221" y="300">2</text><text x="316" y="300">3</text><text x="411" y="300">4</text><text x="506" y="300">5</text><text x="601" y="300">6</text><text x="696" y="300">7</text><text x="787" y="300">8</text></g>
+        <text x="770" y="322" fill="#9aa3b2" font-size="11">test 编号</text>
+      </svg>
+      <div class="viz-note">纵轴仅覆盖 0.014（2.272–2.286），所有点位按 §2.3 表格数值线性精确映射；kernel 类实验的差异在这个量级，
+      与图 2-A 共轴会被压成一条直线所以单独放大。第二轮提交 2.2751 仍高于官方 relu_sq_torch 2.2736（差 0.0015），
+      但 lambada_ppl 48.33 vs 67.05 的大幅优势是另一维度，且该优势因 score_spec 以 val_loss 为主导权重而未在总分上体现（详见 §2.3 表）。
+      </div>
+    </div>
+    <!-- loss -->
+    <h3>2.1 llm-pretrain-loss — Loss 函数优化</h3>
+    <div class="meta">
+      <span class="badge green">完成并提交</span>
+      <span class="badge">模型: deepseek-chat</span>
+      <span class="badge">run: deepseek-chat_20260818_091638</span>
+    </div>
+    <p class="path">raw 日志：<a href="experiment_registry_assets/raw_logs/llm-pretrain-loss.log">本地归档</a> · 原始远程：<code>/data4/guoshaoyang/nanogpt_agent_logs/llm-pretrain-loss.log</code></p>
+
+    <h4>最终结果 vs 官方 baseline</h4>
+    <table>
+      <thead><tr><th>方法</th><th>val_loss ↓</th><th>wikitext2_ppl ↓</th><th>lambada_ppl ↓</th><th>arc_easy ↑</th><th>hellaswag ↑</th><th>piqa ↑</th><th>winogrande ↑</th><th>is_final</th></tr></thead>
+      <tbody>
+        <tr><td>baseline: label_smoothing</td><td>2.3377</td><td>47.13</td><td>71.8</td><td>54.04</td><td>33.63</td><td>63.71</td><td>51.78</td><td>✅</td></tr>
+        <tr><td>baseline: softcap_ce</td><td>2.2701</td><td>43.46</td><td>67.1</td><td>56.48</td><td>31.82</td><td>64.25</td><td>50.43</td><td>✅</td></tr>
+        <tr><td>baseline: z_loss</td><td>2.2926</td><td>44.09</td><td>68.25</td><td>54.55</td><td>33.85</td><td>63.0</td><td>51.14</td><td>✅</td></tr>
+        <tr><td><b>agent（提交 Test #8）</b></td><td class="best">1.889</td><td class="best">30.5</td><td class="best">31.88</td><td>56.19</td><td>31.43</td><td>63.93</td><td>51.07</td><td>✅</td></tr>
+      </tbody>
+    </table>
+
+    <h4>10 次 test 的完整改进轨迹（中间 observable）</h4>
+    <table>
+      <thead><tr><th>Test</th><th>val_loss</th><th>wikitext2_ppl</th><th>lambada_ppl</th><th>关键中间量（step=13000 处）</th></tr></thead>
+      <tbody>
+        <tr><td>#1</td><td>2.2886</td><td>44.18</td><td>49.33</td><td>train_loss 2.5624 → val 2.2949</td></tr>
+        <tr><td>#2</td><td class="worst">3.4857</td><td>125.81</td><td>131.27</td><td>train 3.7248 → val 3.4919（发散，回退）</td></tr>
+        <tr><td>#3</td><td>2.2886</td><td>44.10</td><td>49.06</td><td>≈ #1（softcap 改动无效，回退）</td></tr>
+        <tr><td>#4</td><td>2.2185</td><td>41.62</td><td>45.09</td><td>train 2.4885 → val 2.2244（首次下降）</td></tr>
+        <tr><td>#5</td><td>2.0720</td><td>36.81</td><td>38.59</td><td>train 2.3393 → val 2.0792（显著下降）</td></tr>
+        <tr><td>#6</td><td class="worst">—</td><td>—</td><td>—</td><td>train 2.6444 → val 2.3675（测试失败/回退）</td></tr>
+        <tr><td>#7</td><td>2.0711</td><td>36.40</td><td>38.27</td><td>train 2.3392 → val 2.0773</td></tr>
+        <tr><td><b>#8</b></td><td class="best">1.889</td><td>30.5</td><td>31.88</td><td>train 2.1584 → val 1.8958（突破）</td></tr>
+        <tr><td>#9</td><td>1.8899</td><td>30.73</td><td>32.29</td><td>train 2.1582 → val 1.8972</td></tr>
+        <tr><td>#10</td><td>1.8911</td><td>30.33</td><td>32.23</td><td>—</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout green">
+      <b>observe→insight→intervention 闭环（教科书案例）</b>：每轮 agent 读 <code>TRAIN_METRICS</code>
+      （step/train_loss/val_loss 中间量），基于前一轮结果做决策。
+      Test #5→#8 的跳变来自 <b>softcap + centered log-Z 正则组合</b>：
+      Test #5 验证 softcap 有效（2.07），Test #8 叠加 tuned log-Z（softcap=30, c≈9.0）后突破到 1.889。
+      3 阶段：2.29 → 2.07 → 1.89。
+      ⚠️ 注意：任务描述警告"不要通过扭曲概率降 loss"，最终 lm-eval 分数与 baseline 持平略优（arc 56.19），
+      未见明显作弊，但 log-Z 属可能打擦边球的点。
+    </div>
+    <details>
+      <summary>展开：loss agent trajectory 与原始日志入口</summary>
+      <p class="small">原始日志包含模型输出、edit/test/submit 动作、TRAIN_METRICS、最终 lm-eval 指标。登记簿只提取关键节点，完整原文不手工改写。</p>
+      <div class="log-block">SSH source: ophis-gpu
+/data4/guoshaoyang/nanogpt_agent_logs/llm-pretrain-loss.log
+
+关键动作序列：
+Step 1–3 edit → edit → test #1
+Test #2 失败/回退（val_loss 3.4857）
+Test #4 首次下降（2.2185）
+Test #5 softcap 路线下降（2.0720）
+Test #7 保留有效组合（2.0711）
+Test #8 叠加 tuned centered log-Z，val_loss 1.8890，提交为 FINAL
+Test #9 1.8899；Test #10 1.8911；agent 仍提交 Test #8
+
+TRAIN_METRICS 关键观察：
+step 9000:  train_loss=2.2401, val_loss=1.9695
+step 10000: train_loss=2.2157, val_loss=1.9367
+step 11000: train_loss=2.1957, val_loss=1.9259
+step 12000: train_loss=2.1749, val_loss=1.9078
+step 13000: train_loss=2.1584, val_loss=1.8958
+Final: val_loss=1.8890, wikitext2_ppl=30.50, lambada_ppl=31.88
+Final lm-eval: arc_easy=56.19, hellaswag=31.43, piqa=63.93, winogrande=51.07</div>
+    </details>
+
+    <!-- optimizer -->
+    <h3>2.2 llm-pretrain-optimizer — 优化器优化</h3>
+    <div class="meta">
+      <span class="badge green">完成并提交</span>
+      <span class="badge">模型: deepseek-chat</span>
+      <span class="badge">run: deepseek-chat_20260818_091638</span>
+    </div>
+    <p class="path">raw 日志：<a href="experiment_registry_assets/raw_logs/llm-pretrain-optimizer.log">本地归档</a> · 原始远程：<code>/data4/guoshaoyang/nanogpt_agent_logs/llm-pretrain-optimizer.log</code></p>
+
+    <h4>最终结果 vs 官方 baseline</h4>
+    <table>
+      <thead><tr><th>方法</th><th>val_loss ↓</th><th>wikitext2_ppl ↓</th><th>lambada_ppl ↓</th><th>arc_easy ↑</th><th>hellaswag ↑</th><th>piqa ↑</th><th>winogrande ↑</th><th>is_final</th></tr></thead>
+      <tbody>
+        <tr><td>baseline: adamw_nesterov</td><td>2.3231</td><td>46.96</td><td>71.82</td><td>55.18</td><td>32.75</td><td>63.98</td><td>51.38</td><td>✅</td></tr>
+        <tr><td>baseline: lion</td><td>2.2028</td><td>38.96</td><td>60.05</td><td>58.21</td><td>35.64</td><td>65.45</td><td>51.62</td><td>✅</td></tr>
+        <tr><td>baseline: muon</td><td>2.1995</td><td>37.98</td><td>60.08</td><td>60.19</td><td>36.85</td><td>64.15</td><td>52.17</td><td>✅</td></tr>
+        <tr><td><b>agent（提交 Test #10）</b></td><td class="best">2.1903</td><td class="best">37.69</td><td class="best">45.01</td><td class="best">60.65</td><td>37.46</td><td class="best">65.83</td><td class="best">54.06</td><td>✅</td></tr>
+      </tbody>
+    </table>
+
+    <h4>10 次 test 完整轨迹</h4>
+    <table>
+      <thead><tr><th>Test</th><th>val_loss</th><th>wikitext2_ppl</th><th>lambada_ppl</th><th>arc_easy</th><th>winogrande</th></tr></thead>
+      <tbody>
+        <tr><td>#1</td><td>2.2215</td><td>39.33</td><td>45.83</td><td>60.02</td><td>51.07</td></tr>
+        <tr><td>#2</td><td>2.195</td><td>37.89</td><td>44.48</td><td>58.38</td><td>50.51</td></tr>
+        <tr><td>#3</td><td>2.1939</td><td>37.97</td><td>44.86</td><td>61.15</td><td>50.99</td></tr>
+        <tr><td>#4</td><td>2.1941</td><td>37.83</td><td>45.08</td><td>61.28</td><td>51.7</td></tr>
+        <tr><td>#5</td><td>2.1968</td><td>37.94</td><td>44.72</td><td>60.31</td><td>52.33</td></tr>
+        <tr><td>#6</td><td>2.1961</td><td>38.5</td><td>44.69</td><td>60.69</td><td>52.57</td></tr>
+        <tr><td>#7</td><td>2.1939</td><td>37.74</td><td>45.01</td><td>59.68</td><td>52.41</td></tr>
+        <tr><td>#8</td><td>2.1941</td><td>37.83</td><td>45.08</td><td>61.28</td><td>51.7</td></tr>
+        <tr><td>#9</td><td>2.1939</td><td>37.74</td><td>45.01</td><td>59.68</td><td>52.41</td></tr>
+        <tr><td><b>#10（提交）</b></td><td class="best">2.1903</td><td>37.69</td><td>45.01</td><td>60.65</td><td class="best">54.06</td></tr>
+      </tbody>
+    </table>
+    <div class="callout">
+      <b>特点</b>：optimizer 从 Test #2 就进入 2.19 平台期，后续多次微调只在小范围波动。
+      最终提交的 #10 是 val_loss 最低（2.1903）且下游 winogrande 最高（54.06）的折中。
+      相比 loss 的三阶段跳变，optimizer 的搜索更"渐进收敛"。
+    </div>
+    <details>
+      <summary>展开：optimizer agent trajectory 与原始日志入口</summary>
+      <p class="small">完整模型输出仍以远程 raw log 为准；这里登记每个 test 的可比较结果以及 agent 的结算选择。</p>
+      <div class="log-block">SSH source: ophis-gpu
+/data4/guoshaoyang/nanogpt_agent_logs/llm-pretrain-optimizer.log
+
+Test #1 → #2：val_loss 2.2215 → 2.1950，快速改善
+Test #3–#9：2.1939–2.1968，小范围波动；agent 持续观察下游指标
+Test #10：val_loss=2.1903，wikitext2_ppl=37.69，lambada_ppl=45.01
+Final lm-eval: arc_easy=60.65, hellaswag=37.46, piqa=65.83, winogrande=54.06
+Submit: test #10 as FINAL（0 tests remaining）</div>
+    </details>
+
+    <!-- kernel -->
+    <h3>2.3 llm-pretrain-kernel — GPU Kernel 优化</h3>
+    <div class="meta">
+      <span class="badge green">完成并提交（第二轮）</span>
+      <span class="badge">模型: deepseek-chat</span>
+      <span class="badge">run: deepseek-chat_20260819_175443（2nd）</span>
+    </div>
+    <p class="path">raw 日志：<a href="experiment_registry_assets/raw_logs/llm-pretrain-kernel.log">第一轮本地归档</a> · <a href="experiment_registry_assets/raw_logs/llm-pretrain-kernel-2nd.log">第二轮本地归档</a> · 原始远程：<code>/data4/guoshaoyang/nanogpt_agent_logs/llm-pretrain-kernel-2nd.log</code></p>
+
+    <h4>最终结果 vs 官方 baseline</h4>
+    <table>
+      <thead><tr><th>方法</th><th>val_loss ↓</th><th>wikitext2_ppl ↓</th><th>lambada_ppl ↓</th><th>arc_easy ↑</th><th>hellaswag ↑</th><th>piqa ↑</th><th>winogrande ↑</th><th>is_final</th></tr></thead>
+      <tbody>
+        <tr><td>baseline: relu_sq_torch</td><td>2.2736</td><td>42.81</td><td>67.05</td><td>55.43</td><td>33.84</td><td>63.98</td><td>50.59</td><td>✅</td></tr>
+        <tr><td>baseline: triton_gelu</td><td>2.2868</td><td>43.94</td><td>68.2</td><td>54.67</td><td>33.61</td><td>63.44</td><td>51.7</td><td>✅</td></tr>
+        <tr><td>baseline: triton_relu_sq_fused</td><td>2.2749</td><td>43.52</td><td>66.88</td><td>54.8</td><td>33.77</td><td>63.49</td><td>48.46</td><td>✅</td></tr>
+        <tr><td><b>agent 第 1 轮（提交 Test #1）</b></td><td>2.283</td><td>43.99</td><td class="best">49.02</td><td>56.19</td><td>33.67</td><td>63.49</td><td>50.75</td><td>✅</td></tr>
+        <tr><td><b>agent 第 2 轮（提交 Test #8）</b></td><td class="best">2.2751</td><td>42.91</td><td class="best">48.33</td><td>54.88</td><td>33.64</td><td>63.76</td><td>50.36</td><td>✅</td></tr>
+      </tbody>
+    </table>
+
+    <h4>第二轮 8 次 test 轨迹（小规模快速验证 + 全规模训练交替）</h4>
+    <table>
+      <thead><tr><th>Test</th><th>val_loss</th><th>lambada_ppl</th><th>备注</th></tr></thead>
+      <tbody>
+        <tr><td>#1</td><td>—</td><td>—</td><td>小规模验证</td></tr>
+        <tr><td>#2</td><td>—</td><td>—</td><td>小规模验证</td></tr>
+        <tr><td>#3</td><td>2.2765</td><td>48.55</td><td>首次全规模</td></tr>
+        <tr><td>#4</td><td>2.2766</td><td>48.78</td><td>全规模</td></tr>
+        <tr><td>#5</td><td>2.2838</td><td>49.2</td><td>回退</td></tr>
+        <tr><td>#6</td><td>2.2757</td><td>48.29</td><td>改进</td></tr>
+        <tr><td>#7</td><td>2.2764</td><td>48.49</td><td>全规模</td></tr>
+        <tr><td><b>#8（提交）</b></td><td class="best">2.2751</td><td class="best">48.33</td><td>最佳</td></tr>
+      </tbody>
+    </table>
+    <div class="callout warn">
+      <b>说明</b>：kernel 第二轮的 val_loss（2.2751）未能突破官方 relu_sq_torch（2.2736），
+      但 <b>lambada_ppl 48.33 大幅优于 baseline 67.05</b>（↓28%）。
+      这说明 agent 找到的 kernel 变体建模能力更强，只是 val_loss 单指标被 score_spec 的
+      2.0 权重主导，未在总分上体现。第一轮（第 5 步就提交，过早）v_loss 2.283 但 lambada 49.02。
+    </div>
+    <details>
+      <summary>展开：kernel 两轮 trajectory 与原始日志入口</summary>
+      <p class="small">第二轮日志保留了 agent 在小规模验证和全规模训练之间切换的过程；第一轮过早提交，第二轮用 8 个 test 后提交。</p>
+      <div class="log-block">SSH source: ophis-gpu
+/data4/guoshaoyang/nanogpt_agent_logs/llm-pretrain-kernel.log
+/data4/guoshaoyang/nanogpt_agent_logs/llm-pretrain-kernel-2nd.log
+
+第一轮：Step 1–4 edit/edit/test；很早提交，val_loss=2.283，lambada_ppl=49.02
+第二轮：Test #1–#2 小规模验证；#3–#8 全规模/验证交替
+Test #3 2.2765 / 48.55
+Test #4 2.2766 / 48.78
+Test #5 2.2838 / 49.20（回退）
+Test #6 2.2757 / 48.29
+Test #7 2.2764 / 48.49
+Test #8 2.2751 / 48.33，提交为 FINAL
+Final lm-eval: arc_easy=54.88, hellaswag=33.64, piqa=63.76, winogrande=50.36</div>
+    </details>
+  </section>
+
+  <!-- 3. INVERSE BENCH -->
+  <section id="inversebench">
+    <h2><span class="num">03</span> 逆问题 Diffusion（InverseBench）</h2>
+    <div class="meta">
+      <span class="badge yellow">部分完成</span>
+      <span class="badge">任务: ai4sci-inverse-diffusion-algo</span>
+      <span class="badge">机器: ophis-gpu / 360-1</span>
+    </div>
+
+    <div class="callout">
+      <b>任务设计</b>：三个逆问题评估（diffusion 逆向），全部基于官方 InverseBench 包：
+      <ul>
+        <li><b>Inverse Scattering</b>（光学断层，恢复介电常数）→ PSNR, SSIM</li>
+        <li><b>Black Hole Imaging</b>（EHT 稀疏干涉观测重建黑洞图像）→ PSNR, blur-PSNR (f=15), closure-phase χ²</li>
+        <li><b>FFHQ256 Inpainting</b>（box mask + σ=0.05 高斯噪声）→ PSNR, SSIM, LPIPS</li>
+      </ul>
+      测试时数据集会提供给模型；评测集 held-out 私有图。此任务是"必须看 observable"的典型
+      （需观察每步去噪重建质量、A(x)-y 残差判断 guidance 是否发散）。
+    </div>
+
+    <div class="viz">
+      <div class="viz-title">图 3-A：InverseBench 三任务官方 baseline PSNR 对比（柱越高越好）</div>
+      <div class="legend"><span class="blue">dps</span><span class="green">reddiff</span><span class="purple">lgd</span><span style="color:#ffb84c">◆ 我们复现的 dps</span></div>
+      <svg viewBox="0 0 900 360" role="img" aria-label="InverseBench 三个逆问题任务的官方 baseline PSNR 分组柱状图">
+        <line x1="72" y1="300" x2="860" y2="300" stroke="#7a8494"/>
+        <line x1="72" y1="40" x2="72" y2="300" stroke="#7a8494"/>
+        <line x1="72" y1="248" x2="860" y2="248" stroke="#2a2f3a"/>
+        <line x1="72" y1="196" x2="860" y2="196" stroke="#2a2f3a"/>
+        <line x1="72" y1="144" x2="860" y2="144" stroke="#2a2f3a"/>
+        <line x1="72" y1="92" x2="860" y2="92" stroke="#2a2f3a"/>
+        <line x1="72" y1="40" x2="860" y2="40" stroke="#2a2f3a"/>
+        <text x="16" y="36" fill="#9aa3b2" font-size="12">PSNR ↑</text>
+        <text x="42" y="252" fill="#9aa3b2" font-size="11">20</text>
+        <text x="42" y="200" fill="#9aa3b2" font-size="11">25</text>
+        <text x="42" y="148" fill="#9aa3b2" font-size="11">30</text>
+        <text x="42" y="96" fill="#9aa3b2" font-size="11">35</text>
+        <text x="42" y="44" fill="#9aa3b2" font-size="11">40</text>
+        <!-- inv-scatter 组 -->
+        <rect x="132" y="193.9" width="44" height="106.1" fill="#5b9dff"/>
+        <rect x="188" y="58.2" width="44" height="241.8" fill="#4cd9a0"/>
+        <rect x="244" y="141.9" width="44" height="158.1" fill="#c77dff"/>
+        <text x="154" y="187" fill="#bcd5ff" font-size="10" text-anchor="middle">25.20</text>
+        <text x="210" y="52" fill="#7ce8bb" font-size="10" text-anchor="middle">38.25</text>
+        <text x="266" y="135" fill="#e0b3ff" font-size="10" text-anchor="middle">30.20</text>
+        <!-- blackhole 组 -->
+        <rect x="382" y="189.8" width="44" height="110.2" fill="#5b9dff"/>
+        <rect x="438" y="228.7" width="44" height="71.3" fill="#4cd9a0"/>
+        <rect x="494" y="232.4" width="44" height="67.6" fill="#c77dff"/>
+        <text x="404" y="183" fill="#bcd5ff" font-size="10" text-anchor="middle">25.60</text>
+        <text x="460" y="222" fill="#7ce8bb" font-size="10" text-anchor="middle">21.86</text>
+        <text x="516" y="226" fill="#e0b3ff" font-size="10" text-anchor="middle">21.50</text>
+        <!-- inpainting 组 -->
+        <rect x="632" y="263.8" width="44" height="36.2" fill="#5b9dff"/>
+        <rect x="688" y="232" width="44" height="68" fill="#4cd9a0"/>
+        <rect x="744" y="242.8" width="44" height="57.2" fill="#c77dff"/>
+        <text x="654" y="257" fill="#bcd5ff" font-size="10" text-anchor="middle">18.48</text>
+        <text x="710" y="225" fill="#7ce8bb" font-size="10" text-anchor="middle">21.54</text>
+        <text x="766" y="236" fill="#e0b3ff" font-size="10" text-anchor="middle">20.50</text>
+        <!-- 我们的复现 -->
+        <path d="M 154 188 l 7 7 l -7 7 l -7 -7 Z" fill="none" stroke="#ffb84c" stroke-width="2"/>
+        <path d="M 654 258 l 7 7 l -7 7 l -7 -7 Z" fill="none" stroke="#ffb84c" stroke-width="2"/>
+        <text x="168" y="172" fill="#ffcf85" font-size="10">复现 25.21（一致）</text>
+        <text x="600" y="285" fill="#ffcf85" font-size="10">复现 25.26*</text>
+        <g fill="#9aa3b2" font-size="12" text-anchor="middle"><text x="210" y="326">inv-scatter</text><text x="460" y="326">blackhole</text><text x="710" y="326">inpainting</text></g>
+        <text x="800" y="346" fill="#9aa3b2" font-size="11">任务分组</text>
+      </svg>
+      <div class="viz-note">数据来源：§3 官方 baseline 表，纵轴 PSNR 15–40 线性精确映射。
+      * 复现 25.26 用的是我们自补的 10 张 FFHQ 图而非官方私有 held-out 集，与官方 18.48 不可直接对比（故用空心菱形区分）；
+      inv-scatter 复现 25.21 与官方 25.20 吻合，验证链路正确。blackhole 因 ehtim/numpy 环境问题未复现。
+      blackhole 的 χ² 指标（↓）不在本图：dps 5.89/4.11、reddiff 3.01/3.22、lgd 17.58/11.46。</div>
+    </div>
+
+    <h4>官方 baseline（dps / reddiff / lgd）</h4>
+    <table>
+      <thead><tr><th>方法</th><th>PSNR inv-scatter ↑</th><th>SSIM inv-scatter ↑</th><th>χ² blackhole ↓</th><th>PSNR blackhole ↑</th><th>PSNR inpainting ↑</th><th>SSIM inpainting ↑</th><th>LPIPS inpainting ↓</th></tr></thead>
+      <tbody>
+        <tr><td>dps</td><td>25.20</td><td>0.828</td><td>5.89/4.11</td><td>25.60</td><td>18.48</td><td>0.729</td><td>0.220</td></tr>
+        <tr><td>reddiff</td><td class="best">38.25</td><td class="best">0.982</td><td class="best">3.01/3.22</td><td>21.86</td><td class="best">21.54</td><td>0.744</td><td class="best">0.168</td></tr>
+        <tr><td>lgd</td><td>30.20</td><td>0.897</td><td>17.58/11.46</td><td class="best">21.50</td><td>20.50</td><td>0.718</td><td>0.246</td></tr>
+      </tbody>
+    </table>
+
+    <details>
+      <summary>展开：部署与 baseline 复现进度记录</summary>
+      <h4>进度记录</h4>
+    <table>
+      <thead><tr><th>项</th><th>状态</th><th>备注</th></tr></thead>
+      <tbody>
+        <tr><td>InverseBench 包部署</td><td class="status-done">✅</td><td>torch 2.5.1+cu121 在 H200 可用；修复 MLS-Bench 路径翻译 bug</td></tr>
+        <tr><td>dps baseline（inv-scatter）</td><td class="status-done">✅</td><td>PSNR=25.21, SSIM=0.828（已写 leaderboard）</td></tr>
+        <tr><td>dps baseline（inpainting）</td><td class="status-done">✅</td><td>PSNR=25.26, SSIM=0.848, LPIPS=0.0996（用补充 FFHQ 图，非官方私有图）</td></tr>
+        <tr><td>dps baseline（blackhole）</td><td class="status-partial">🔶 卡点</td><td>ehtim 1.2.4 用已移除的 interp2d；升级 1.2.10 + pynfft 后 numpy 损坏待修</td></tr>
+        <tr><td>agent 结果</td><td class="status-partial">🔶 部分</td><td>360-1 侧完成；ophis leaderboard 记录不完整</td></tr>
+      </tbody>
+    </table>
+    <p class="muted">⚠️ 360-1 网络暂不可达（8/24 起），完整结果待恢复后回填。</p>
+    </details>
+  </section>
+
+  <!-- 4. MOLPROP -->
+  <section id="molprop">
+    <h2><span class="num">04</span> 分子性质预测（Uni-Mol molprop）</h2>
+    <div class="meta">
+      <span class="badge running">🔄 运行中</span>
+      <span class="badge">任务: ai4sci-mol-property-prediction</span>
+      <span class="badge">机器: ophis-gpu</span>
+    </div>
+    <div class="callout">
+      <b>任务设计</b>：3 个分子性质数据集（BBBP / BACE / Tox21）二分类 ROC-AUC。
+      agent 修改 <code>custom_molprop.py</code>（模型/训练超参）。之前因缺 Uni-Mol 包无法启动，
+      已通过本地代理补装。<b>2026-08-26 核对时仍观察到多条 custom_molprop.py 进程</b>，
+      但没有可确认的最终 leaderboard 条目，因此这里把链路验证结果和最终实验结果分开登记。
+    </div>
+    <h4>官方 baseline</h4>
+    <table>
+      <thead><tr><th>方法</th><th>rocauc_BBBP ↑</th><th>rocauc_BACE ↑</th><th>rocauc_Tox21 ↑</th></tr></thead>
+      <tbody>
+        <tr><td>dmpnn</td><td>0.599</td><td>0.688</td><td>0.713</td></tr>
+        <tr><td>unimol</td><td class="best">0.713</td><td class="best">0.847</td><td class="best">0.761</td></tr>
+        <tr><td>gin</td><td>0.510</td><td>0.726</td><td>0.747</td></tr>
+      </tbody>
+    </table>
+
+    <div class="viz">
+      <div class="viz-title">图 4-A：Uni-Mol 链路验证 ROC-AUC vs 官方 baseline（柱越高越好）</div>
+      <div class="legend"><span class="blue">dmpnn</span><span class="green">unimol（官方）</span><span class="purple">gin</span><span style="color:#ffb84c">◆ 我们链路验证</span></div>
+      <svg viewBox="0 0 900 360" role="img" aria-label="molprop 三数据集 ROC-AUC：官方 baseline 与我们链路验证对比">
+        <line x1="72" y1="300" x2="860" y2="300" stroke="#7a8494"/>
+        <line x1="72" y1="40" x2="72" y2="300" stroke="#7a8494"/>
+        <line x1="72" y1="235" x2="860" y2="235" stroke="#2a2f3a"/>
+        <line x1="72" y1="170" x2="860" y2="170" stroke="#2a2f3a"/>
+        <line x1="72" y1="105" x2="860" y2="105" stroke="#2a2f3a"/>
+        <line x1="72" y1="40" x2="860" y2="40" stroke="#2a2f3a"/>
+        <text x="16" y="36" fill="#9aa3b2" font-size="12">ROC-AUC ↑</text>
+        <text x="42" y="239" fill="#9aa3b2" font-size="11">0.6</text>
+        <text x="42" y="174" fill="#9aa3b2" font-size="11">0.7</text>
+        <text x="42" y="109" fill="#9aa3b2" font-size="11">0.8</text>
+        <text x="42" y="44" fill="#9aa3b2" font-size="11">0.9</text>
+        <!-- BBBP 组 -->
+        <rect x="132" y="212.5" width="44" height="87.5" fill="#5b9dff"/>
+        <rect x="188" y="169.5" width="44" height="130.5" fill="#4cd9a0"/>
+        <rect x="244" y="277.5" width="44" height="22.5" fill="#c77dff"/>
+        <path d="M 210 176.9 l 7 7 l -7 7 l -7 -7 Z" fill="none" stroke="#ffb84c" stroke-width="2"/>
+        <text x="154" y="206" fill="#bcd5ff" font-size="10" text-anchor="middle">0.599</text>
+        <text x="210" y="163" fill="#7ce8bb" font-size="10" text-anchor="middle">0.713</text>
+        <text x="266" y="271" fill="#e0b3ff" font-size="10" text-anchor="middle">0.510</text>
+        <text x="228" y="160" fill="#ffcf85" font-size="10">验证 0.696</text>
+        <!-- BACE 组 -->
+        <rect x="382" y="252.8" width="44" height="47.2" fill="#5b9dff"/>
+        <rect x="438" y="149.5" width="44" height="150.5" fill="#4cd9a0"/>
+        <rect x="494" y="193.5" width="44" height="106.5" fill="#c77dff"/>
+        <path d="M 460 199.9 l 7 7 l -7 7 l -7 -7 Z" fill="none" stroke="#ffb84c" stroke-width="2"/>
+        <text x="404" y="246" fill="#bcd5ff" font-size="10" text-anchor="middle">0.688</text>
+        <text x="460" y="143" fill="#7ce8bb" font-size="10" text-anchor="middle">0.847</text>
+        <text x="516" y="187" fill="#e0b3ff" font-size="10" text-anchor="middle">0.726</text>
+        <text x="478" y="188" fill="#ffcf85" font-size="10">验证 0.808</text>
+        <!-- Tox21 组 -->
+        <rect x="632" y="186.5" width="44" height="113.5" fill="#5b9dff"/>
+        <rect x="688" y="159.5" width="44" height="140.5" fill="#4cd9a0"/>
+        <rect x="744" y="168.5" width="44" height="131.5" fill="#c77dff"/>
+        <path d="M 710 182.9 l 7 7 l -7 7 l -7 -7 Z" fill="none" stroke="#ffb84c" stroke-width="2"/>
+        <text x="654" y="180" fill="#bcd5ff" font-size="10" text-anchor="middle">0.713</text>
+        <text x="710" y="153" fill="#7ce8bb" font-size="10" text-anchor="middle">0.761</text>
+        <text x="766" y="162" fill="#e0b3ff" font-size="10" text-anchor="middle">0.747</text>
+        <text x="728" y="198" fill="#ffcf85" font-size="10">验证 0.754</text>
+        <g fill="#9aa3b2" font-size="12" text-anchor="middle"><text x="210" y="326">BBBP</text><text x="460" y="326">BACE</text><text x="710" y="326">Tox21</text></g>
+        <text x="800" y="346" fill="#9aa3b2" font-size="11">数据集分组</text>
+      </svg>
+      <div class="viz-note">纵轴 ROC-AUC 0.55–0.95 线性精确映射。橙色菱形 = 我们用 unimol 模型跑通的链路验证分数
+      （BBBP 0.696 / BACE 0.808 / Tox21 0.754），均低于官方 unimol baseline 但同一量级，说明评测链路正确。
+      注意：这是<b>部署验证</b>而非 agent 最终成绩——agent 训练截至 2026-08-26 未结算，
+      custom_molprop.py 进程仍在跑，最终结果待回填。</div>
+    </div>
+
+    <h4>当前进度</h4>
+    <table>
+      <thead><tr><th>项</th><th>状态</th><th>备注</th></tr></thead>
+      <tbody>
+        <tr><td>依赖补装</td><td class="status-done">✅</td><td>Uni-Mol 数据 3.7GB + 权重 190MB 经本地代理</td></tr>
+        <tr><td>评测链路验证</td><td class="status-done">✅</td><td>BBBP 0.696 / BACE 0.808 / Tox21 0.754（接近 unimol baseline）</td></tr>
+        <tr><td>agent 训练</td><td class="status-running">🔄 未结算</td><td>2026-08-26 仍有 custom_molprop.py 进程；需读取各输出目录并去重后才能宣布最终结果</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 5. CAUSAL -->
+  <section id="causal">
+    <h2><span class="num">05</span> 因果发现 5 任务</h2>
+    <div class="meta">
+      <span class="badge green">完成</span>
+      <span class="badge">机器: ophis-gpu / 360-1</span>
+    </div>
+    <div class="callout">
+      <b>核心结论</b>：causal-observational-linear-non-gaussian 达到 <b>PERFECT（全场景 SHD=0, F1=1.0）</b>，
+      由 agent 提出 SAIL-LiNGAM（Significance-Augmented Iterative LiNGAM）+ order polish + two-stage sparse pruning。
+      causal-discovery-discrete 双机 Total SHD=90/96，均击败官方 BOSS（98）。
+      详细 trajectory 见 <a href="three_system_compare_20260815.html">三系统对比报告</a> 与
+      <a href="three_system_rerun_results.html">极简+pro 重跑报告</a>。
+    </div>
+    <table>
+      <thead><tr><th>任务</th><th>场景</th><th>最佳结果</th><th>对比 baseline</th></tr></thead>
+      <tbody>
+        <tr><td rowspan="3"><b>causal-observational-linear-non-gaussian</b></td><td>ER30</td><td class="best">SHD=0, F1=1.0</td><td>icalingam SHD=1</td></tr>
+        <tr><td>ER50</td><td class="best">SHD=0, F1=1.0</td><td>icalingam SHD=3</td></tr>
+        <tr><td>SF100（隐藏）</td><td class="best">SHD=0, F1=1.0</td><td>icalingam SHD=107</td></tr>
+        <tr><td><b>causal-observational-linear-gaussian</b></td><td>ER10/ER20/SF50/SF50-Hard/ER20-Noisy</td><td class="best">全 SHD=0</td><td>grasp/boss SHD=0-58</td></tr>
+        <tr><td><b>causal-observational-nonlinear</b></td><td>SF20-GP/ER20-Gauss/ER12-LowSample</td><td class="best">F1≥0.957</td><td>cam 0.853 / grandag 0.395</td></tr>
+        <tr><td><b>causal-discovery-discrete</b></td><td>Cancer..Win95pts 5 场景</td><td class="best">Total SHD=90（ophis）/96（360）</td><td>BOSS 98 / PC 122</td></tr>
+        <tr><td><b>causal-treatment-effect</b></td><td>ihdp/jobs/acic</td><td>PEHE 0.463/0.800/370.5</td><td>r_learner 0.421/0.813/440.8</td></tr>
+      </tbody>
+    </table>
+
+    <div class="viz">
+      <div class="viz-title">图 5-A：linear-non-gaussian 三场景 SHD——SAIL-LiNGAM（我们）vs 官方 icalingam（柱越低越好）</div>
+      <div class="legend"><span class="blue">icalingam（官方 baseline）</span><span style="color:#ffb84c">◆ 我们 SAIL-LiNGAM（全部 SHD=0）</span></div>
+      <svg viewBox="0 0 900 360" role="img" aria-label="non-gaussian 三场景 SHD：我们全 0，icalingam 在 SF100 上 SHD=107">
+        <line x1="72" y1="300" x2="860" y2="300" stroke="#7a8494"/>
+        <line x1="72" y1="40" x2="72" y2="300" stroke="#7a8494"/>
+        <line x1="72" y1="235" x2="860" y2="235" stroke="#2a2f3a"/>
+        <line x1="72" y1="170" x2="860" y2="170" stroke="#2a2f3a"/>
+        <line x1="72" y1="105" x2="860" y2="105" stroke="#2a2f3a"/>
+        <line x1="72" y1="40" x2="860" y2="40" stroke="#2a2f3a"/>
+        <text x="16" y="36" fill="#9aa3b2" font-size="12">SHD ↓</text>
+        <text x="42" y="304" fill="#9aa3b2" font-size="11">0</text>
+        <text x="42" y="239" fill="#9aa3b2" font-size="11">30</text>
+        <text x="42" y="174" fill="#9aa3b2" font-size="11">60</text>
+        <text x="42" y="109" fill="#9aa3b2" font-size="11">90</text>
+        <text x="36" y="44" fill="#9aa3b2" font-size="11">120</text>
+        <!-- ER30 -->
+        <rect x="188" y="297.8" width="44" height="2.2" fill="#5b9dff"/>
+        <path d="M 210 290 l 7 7 l -7 7 l -7 -7 Z" fill="none" stroke="#ffb84c" stroke-width="2"/>
+        <text x="210" y="292" fill="#bcd5ff" font-size="10" text-anchor="middle">1</text>
+        <text x="228" y="284" fill="#ffcf85" font-size="10">0</text>
+        <!-- ER50 -->
+        <rect x="438" y="293.5" width="44" height="6.5" fill="#5b9dff"/>
+        <path d="M 460 290 l 7 7 l -7 7 l -7 -7 Z" fill="none" stroke="#ffb84c" stroke-width="2"/>
+        <text x="460" y="288" fill="#bcd5ff" font-size="10" text-anchor="middle">3</text>
+        <text x="478" y="284" fill="#ffcf85" font-size="10">0</text>
+        <!-- SF100 hidden -->
+        <rect x="688" y="68.2" width="44" height="231.8" fill="#5b9dff"/>
+        <path d="M 710 290 l 7 7 l -7 7 l -7 -7 Z" fill="none" stroke="#ffb84c" stroke-width="2"/>
+        <text x="710" y="62" fill="#bcd5ff" font-size="10" text-anchor="middle">107</text>
+        <text x="728" y="284" fill="#ffcf85" font-size="10">0</text>
+        <g fill="#9aa3b2" font-size="12" text-anchor="middle"><text x="210" y="326">ER30</text><text x="460" y="326">ER50</text><text x="710" y="326">SF100（隐藏）</text></g>
+        <text x="800" y="346" fill="#9aa3b2" font-size="11">场景</text>
+      </svg>
+      <div class="viz-note">纵轴 SHD 0–120 线性精确映射。三个场景我们均为 SHD=0 且 F1=1.0（PERFECT 满分，
+      含评测时才揭晓的隐藏场景 SF100）；官方 icalingam 在 SF100 上 SHD=107。
+      ER=Erdős–Rényi 随机图，SF=scale-free 无标度图；数字为节点数。</div>
+    </div>
+
+    <div class="viz">
+      <div class="viz-title">图 5-B：discrete 五网络 Total SHD——双机重跑 vs 官方 baseline（柱越低越好）</div>
+      <div class="legend"><span class="green">我们（ophis-gpu / 360-1）</span><span class="blue">BOSS（官方）</span><span class="purple">PC（官方）</span></div>
+      <svg viewBox="0 0 900 360" role="img" aria-label="discrete Total SHD：ophis 90 / 360 96，均低于 BOSS 98 与 PC 122">
+        <line x1="72" y1="300" x2="860" y2="300" stroke="#7a8494"/>
+        <line x1="72" y1="40" x2="72" y2="300" stroke="#7a8494"/>
+        <line x1="72" y1="248" x2="860" y2="248" stroke="#2a2f3a"/>
+        <line x1="72" y1="196" x2="860" y2="196" stroke="#2a2f3a"/>
+        <line x1="72" y1="144" x2="860" y2="144" stroke="#2a2f3a"/>
+        <line x1="72" y1="92" x2="860" y2="92" stroke="#2a2f3a"/>
+        <line x1="72" y1="40" x2="860" y2="40" stroke="#2a2f3a"/>
+        <text x="16" y="36" fill="#9aa3b2" font-size="12">Total SHD ↓</text>
+        <text x="36" y="304" fill="#9aa3b2" font-size="11">80</text>
+        <text x="36" y="252" fill="#9aa3b2" font-size="11">90</text>
+        <text x="36" y="200" fill="#9aa3b2" font-size="11">100</text>
+        <text x="36" y="148" fill="#9aa3b2" font-size="11">110</text>
+        <text x="36" y="96" fill="#9aa3b2" font-size="11">120</text>
+        <text x="36" y="44" fill="#9aa3b2" font-size="11">130</text>
+        <rect x="188" y="248" width="44" height="52" fill="#4cd9a0"/>
+        <rect x="358" y="216.8" width="44" height="83.2" fill="#4cd9a0"/>
+        <rect x="528" y="206.4" width="44" height="93.6" fill="#5b9dff"/>
+        <rect x="698" y="81.6" width="44" height="218.4" fill="#c77dff"/>
+        <text x="210" y="242" fill="#7ce8bb" font-size="11" text-anchor="middle">90</text>
+        <text x="380" y="211" fill="#7ce8bb" font-size="11" text-anchor="middle">96</text>
+        <text x="550" y="200" fill="#bcd5ff" font-size="11" text-anchor="middle">98</text>
+        <text x="720" y="76" fill="#e0b3ff" font-size="11" text-anchor="middle">122</text>
+        <g fill="#9aa3b2" font-size="12" text-anchor="middle"><text x="210" y="326">ophis-gpu</text><text x="380" y="326">360-1</text><text x="550" y="326">BOSS</text><text x="720" y="326">PC</text></g>
+        <text x="800" y="346" fill="#9aa3b2" font-size="11">系统</text>
+      </svg>
+      <div class="viz-note">纵轴 SHD 80–130 线性精确映射（截断零点以放大差异）。五网络 = Cancer / Child /
+      Alarm / Hailfinder / Win95pts，Total SHD 为五场景之和。逐网络：ophis 3/5/4/38/40，
+      360-1 为 4/5/5/39/43。双机均击败官方 BOSS(98) 与 PC(122)；两机差异来自 agent 运行随机性。</div>
+    </div>
+
+    <div class="callout green">
+      <b>observe 行为证据（non-gaussian）</b>：agent 观察中间量做决策的完整案例——
+      ①观察 pooled likelihood 分数面对单条弱边近似平坦（两种方向分数差 &lt; 噪声）；
+      ②打印 24 次 bootstrap 中每条边支持"正确方向"的票数（20/24-21/24 vs 分数偏向错误方向），据此设计 2-se 检验；
+      ③数 48 次子采样中每条边被选中次数（真实边 ≥17/48、伪边 ≤16/48）定 1/3 阈值；
+      ④改完每个组件后跑全部 5 场景看 SHD 逐项归因。
+    </div>
+  </section>
+
+  <!-- 6. DSH MINPRO -->
+  <section id="dsh-minpro">
+    <h2><span class="num">06</span> dsh 极简+pro 重跑（13 任务）</h2>
+    <div class="meta">
+      <span class="badge green">完成</span>
+      <span class="badge">机器: ophis-gpu（8×H200）</span>
+      <span class="badge">模型: deepseek-v4-pro</span>
+    </div>
+    <div class="callout">
+      <b>实验设计</b>：用 dsh 极简模式（仅 Bash + 文件编辑器，禁用 33 个插件）+ deepseek-v4-pro
+      重跑之前 dsh 跑过的全部 MLS-Bench 任务，不限时跑至 agent 自然结束。
+      目的：对比"极简工具集 + 更强模型" vs "完整工具集 + flash 模型"。
+      完整报告见 <a href="three_system_rerun_results.html">three_system_rerun_results.html</a>。
+    </div>
+    <table>
+      <thead><tr><th>#</th><th>任务</th><th>状态</th><th>用时</th><th>核心结果</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>causal-observational-linear-gaussian</td><td class="status-done">✅</td><td>1h16m</td><td class="best">PERFECT 全场景 SHD=0</td></tr>
+        <tr><td>2</td><td>causal-observational-linear-non-gaussian</td><td class="status-done">✅</td><td>1h50m</td><td class="best">PERFECT 全 SHD=0 F1=1.0</td></tr>
+        <tr><td>3</td><td>ml-anomaly-detection</td><td class="status-done">✅</td><td>2h39m</td><td>auroc 0.927/0.980/0.776/0.996</td></tr>
+        <tr><td>4</td><td>ml-calibration</td><td class="status-done">✅</td><td>2h21m</td><td>ECE rf-mnist 0.0055</td></tr>
+        <tr><td>5</td><td>ml-clustering-algorithm</td><td class="status-done">✅</td><td>1h31m</td><td>moons ARI=1.0</td></tr>
+        <tr><td>6</td><td>ml-dimensionality-reduction</td><td class="status-done">✅</td><td>4h15m</td><td>knn_acc mnist 0.875</td></tr>
+        <tr><td>7</td><td>ml-selective-deferral</td><td class="status-done">✅</td><td>1h4m</td><td>adult risk@80 0.073</td></tr>
+        <tr><td>8</td><td>ml-subgroup-calibration-shift</td><td class="status-done">✅</td><td>0h30m</td><td>worst_ece 0.129/0.139/0.094</td></tr>
+        <tr><td>9</td><td>causal-treatment-effect</td><td class="status-done">✅</td><td>评测 2h+</td><td>PEHE acic 0.463 / ihdp 0.800 / jobs 370.5</td></tr>
+        <tr><td>10</td><td>causal-observational-nonlinear</td><td class="status-done">✅</td><td>28m</td><td>SF20-GP F1=0.986</td></tr>
+        <tr><td>11</td><td>causal-discovery-discrete</td><td class="status-done">✅</td><td>8h15m</td><td class="best">Total SHD=90 击败 BOSS 98</td></tr>
+        <tr><td>12</td><td>ml-ensemble-boosting</td><td class="status-failed">⚠️ 环境缺陷</td><td>1h14m</td><td>数据集注册异常（部署问题）</td></tr>
+        <tr><td>13</td><td>ml-missing-data-imputation</td><td class="status-failed">⚠️ 环境缺陷</td><td>3h52m</td><td>budget_check 超时（部署问题）</td></tr>
+        <tr><td>—</td><td>ml-symbolic-regression</td><td class="status-done">✅</td><td>2h21m</td><td>nguyen7 R²=0.998 / nguyen10 R²=1.0 / koza3 R²=0.998</td></tr>
+      </tbody>
+    </table>
+
+    <div class="viz">
+      <div class="viz-title">图 6-A：符号回归三基准 R²——dsh 极简+pro vs 任务内置 gplearn baseline（柱越高越好）</div>
+      <div class="legend"><span class="blue">gplearn baseline（任务内置）</span><span class="green">我们（极简工具集 + deepseek-v4-pro）</span></div>
+      <svg viewBox="0 0 900 360" role="img" aria-label="符号回归 R²：nguyen7 我们 0.998 vs baseline 0.687，nguyen10 1.0 vs 0.103，koza3 0.998 vs 0.395">
+        <line x1="72" y1="300" x2="860" y2="300" stroke="#7a8494"/>
+        <line x1="72" y1="40" x2="72" y2="300" stroke="#7a8494"/>
+        <line x1="72" y1="235" x2="860" y2="235" stroke="#2a2f3a"/>
+        <line x1="72" y1="170" x2="860" y2="170" stroke="#2a2f3a"/>
+        <line x1="72" y1="105" x2="860" y2="105" stroke="#2a2f3a"/>
+        <line x1="72" y1="40" x2="860" y2="40" stroke="#2a2f3a"/>
+        <text x="16" y="36" fill="#9aa3b2" font-size="12">R² ↑</text>
+        <text x="42" y="304" fill="#9aa3b2" font-size="11">0</text>
+        <text x="36" y="239" fill="#9aa3b2" font-size="11">0.25</text>
+        <text x="36" y="174" fill="#9aa3b2" font-size="11">0.50</text>
+        <text x="36" y="109" fill="#9aa3b2" font-size="11">0.75</text>
+        <text x="30" y="44" fill="#9aa3b2" font-size="11">1.00</text>
+        <!-- nguyen7 -->
+        <rect x="162" y="121.4" width="44" height="178.6" fill="#5b9dff"/>
+        <rect x="214" y="40.5" width="44" height="259.5" fill="#4cd9a0"/>
+        <text x="184" y="115" fill="#bcd5ff" font-size="11" text-anchor="middle">0.687</text>
+        <text x="236" y="34" fill="#7ce8bb" font-size="11" text-anchor="middle">0.998</text>
+        <!-- nguyen10 -->
+        <rect x="412" y="273.2" width="44" height="26.8" fill="#5b9dff"/>
+        <rect x="464" y="40" width="44" height="260" fill="#4cd9a0"/>
+        <text x="434" y="267" fill="#bcd5ff" font-size="11" text-anchor="middle">0.103</text>
+        <text x="486" y="34" fill="#7ce8bb" font-size="11" text-anchor="middle">1.000</text>
+        <!-- koza3 -->
+        <rect x="662" y="197.3" width="44" height="102.7" fill="#5b9dff"/>
+        <rect x="714" y="40.5" width="44" height="259.5" fill="#4cd9a0"/>
+        <text x="684" y="191" fill="#bcd5ff" font-size="11" text-anchor="middle">0.395</text>
+        <text x="736" y="34" fill="#7ce8bb" font-size="11" text-anchor="middle">0.998</text>
+        <g fill="#9aa3b2" font-size="12" text-anchor="middle"><text x="210" y="326">nguyen-7</text><text x="460" y="326">nguyen-10</text><text x="710" y="326">koza-3</text></g>
+        <text x="800" y="346" fill="#9aa3b2" font-size="11">基准</text>
+      </svg>
+      <div class="viz-note">纵轴 R² 0–1 线性精确映射（完整零点）。R² 越接近 1 表示恢复的目标函数越精确。
+      三个符号回归经典基准上 agent 均达到 R²≥0.998，其中 nguyen-10 从 baseline 的 0.103 提升到 1.0；
+      baseline 为任务内置 gplearn 默认配置的官方分数。数据来源：ml-symbolic-regression（ophis-gpu，用时 2h21m）。</div>
+    </div>
+  </section>
+
+  <!-- 7. NGRAM GAP -->
+  <section id="ngram-gap">
+    <h2><span class="num">07</span> ngram-gap 实验</h2>
+    <div class="meta">
+      <span class="badge yellow">部分 running</span>
+      <span class="badge">机器: ophis-gpu</span>
+      <span class="badge">SSOT: /data4/guoshaoyang/ngram-gap-lab/docs/experiment-log.md</span>
+    </div>
+    <div class="callout">
+      <b>实验线索引</b>：<code>experiment-lines.md</code>（图在哪/结论可不可信）；
+      数值登记在 <code>experiment-log.md</code>（60+ 实验，本页只摘核心）。
+      ⚠️ 注意：<code>experiment-log.md</code> 数值仍是 pre-fix 版本（两个 bug 已修复：
+      freq-bin 迭代器复用 + table_betas[1] 被静默覆盖），<code>runs_fixed/</code> 才是权威数据。
+    </div>
+
+    <h4>权威修正表（pre-fix vs _fixed）</h4>
+    <table>
+      <thead><tr><th>run</th><th>pre-fix</th><th>_fixed</th><th>变化</th></tr></thead>
+      <tbody>
+        <tr><td>nglab1x_v10_input</td><td>1.931</td><td>1.867</td><td>−3%</td></tr>
+        <tr><td>nglab1x_v10_y</td><td>5.049</td><td>5.804</td><td>+15%</td></tr>
+        <tr><td>nglab1x_v10_v</td><td>5.041</td><td>5.450</td><td>+8%</td></tr>
+        <tr><td>nglab0_25x_input_fv</td><td>12.99</td><td>9.69</td><td>−25%</td></tr>
+        <tr><td>nglab1x_opt_rmsprop_2x</td><td>2.376</td><td class="worst">4.674</td><td class="worst">+97%</td></tr>
+        <tr><td>nglab1x_opt_sgd_09</td><td>−0.002</td><td>+0.073</td><td>符号翻转</td></tr>
+      </tbody>
+    </table>
+
+    <h4>核心结论摘要</h4>
+    <table>
+      <thead><tr><th>run_id</th><th>实验</th><th>状态</th><th>关键值</th></tr></thead>
+      <tbody>
+        <tr><td>vanilla_input_1000_seed42</td><td>干净 vanilla 复现 · input 注入</td><td class="status-done">done</td><td class="best">+0.858 @1000</td></tr>
+        <tr><td>vanilla_nogram_1000_seed42</td><td>无 n-gram 对照</td><td class="status-done">done</td><td>+0.038 @1000</td></tr>
+        <tr><td>nglab1x_input_reset_e2</td><td>P1 因果 · e2 边界全 table 回滚</td><td class="status-done">done</td><td class="best">+0.054（−94%）</td></tr>
+        <tr><td>nglab1x_input_reset_e1</td><td>P1 因果 · e1 边界全 table 回滚</td><td class="status-done">done</td><td>+0.351（−59%）</td></tr>
+        <tr><td>nglab1x_input_mask_e1</td><td>P2 因果 · e1 屏蔽 readout</td><td class="status-done">done</td><td class="best">+0.058（−93%）</td></tr>
+        <tr><td>nglab1x_input_freeze_table_e1</td><td>P2 因果 · e1 冻结 table</td><td class="status-done">done</td><td>+0.601（−30%）</td></tr>
+        <tr><td>nglab1x_input_freeze_backbone_e1</td><td>P2 因果 · e1 冻结 backbone</td><td class="status-done">done</td><td>+0.780（−9%）</td></tr>
+        <tr><td>nglab1x_v10_input</td><td>标准 1x · input 注入</td><td class="status-done">done</td><td>1.867 @2000</td></tr>
+        <tr><td>nglab1x_opt_rmsprop_2x</td><td>table 优化器消融 · RMSProp lr×2</td><td class="status-done">done</td><td>4.674 @2000</td></tr>
+        <tr><td>nglab1x_opt_adamw_090999</td><td>table 优化器 · AdamW(0.9,0.999)</td><td class="status-done">done</td><td>0.912 @1000</td></tr>
+        <tr><td>t5z_zipf_s42/s43/s44</td><td>toy 严格 Zipf · per-bucket gap</td><td class="status-done">done</td><td>7.01/7.96/7.56 @2000</td></tr>
+        <tr><td>ngram5_order5_trigram_fixed</td><td>自然语言 5gram · +trigram 注入</td><td class="status-done">done</td><td class="best">−0.0067 @2000</td></tr>
+        <tr><td>ngram5_order5_puretransformer_fixed</td><td>纯 transformer 对照</td><td class="status-done">done</td><td>+0.0054 @2000</td></tr>
+        <tr><td>l6_counttable_freq_exact_v1</td><td>二元计数表 · 频率扫描</td><td class="status-done">done</td><td>slope −1.0000（f≥512）</td></tr>
+      </tbody>
+    </table>
+
+    <h4>可视化</h4>
+    <p class="muted">图集位于 <code>/data4/guoshaoyang/ngram-gap-lab/docs/figs/</code> 与
+      <code>docs/figs_epoch_scale/</code>、<code>docs/figs/main/</code>（本地未同步，远程查看）。</p>
+    <div class="viz">
+      <div class="viz-title">图 7-A：ngram-gap 核心结果与因果干预</div>
+      <div class="legend"><span class="blue">观察到的 gap</span><span class="green">干预后的 gap</span></div>
+      <svg viewBox="0 0 900 340" role="img" aria-label="ngram gap 核心结果">
+        <line x1="250" y1="42" x2="250" y2="285" stroke="#7a8494"/>
+        <line x1="250" y1="285" x2="860" y2="285" stroke="#7a8494"/>
+        <line x1="250" y1="224" x2="860" y2="224" stroke="#2a2f3a"/>
+        <line x1="250" y1="163" x2="860" y2="163" stroke="#2a2f3a"/>
+        <line x1="250" y1="102" x2="860" y2="102" stroke="#2a2f3a"/>
+        <text x="18" y="48" fill="#9aa3b2" font-size="12">指标值 / gap</text>
+        <text x="210" y="289" fill="#9aa3b2" font-size="11">0</text>
+        <text x="210" y="228" fill="#9aa3b2" font-size="11">0.25</text>
+        <text x="210" y="167" fill="#9aa3b2" font-size="11">0.50</text>
+        <text x="210" y="106" fill="#9aa3b2" font-size="11">0.75</text>
+        <text x="210" y="45" fill="#9aa3b2" font-size="11">1.00</text>
+        <text x="255" y="312" fill="#9aa3b2" font-size="11">vanilla</text>
+        <text x="370" y="312" fill="#9aa3b2" font-size="11">input</text>
+        <text x="485" y="312" fill="#9aa3b2" font-size="11">reset e2</text>
+        <text x="600" y="312" fill="#9aa3b2" font-size="11">mask e1</text>
+        <text x="715" y="312" fill="#9aa3b2" font-size="11">freeze table</text>
+        <rect x="275" y="276" width="34" height="9" fill="#5b9dff" rx="3"/><text x="270" y="268" fill="#bcd5ff" font-size="11">.038</text>
+        <rect x="390" y="76" width="34" height="209" fill="#5b9dff" rx="3"/><text x="381" y="68" fill="#bcd5ff" font-size="11">.858</text>
+        <rect x="505" y="272" width="34" height="13" fill="#5b9dff" rx="3"/><text x="501" y="264" fill="#bcd5ff" font-size="11">.351</text>
+        <rect x="620" y="271" width="34" height="14" fill="#5b9dff" rx="3"/><text x="616" y="263" fill="#bcd5ff" font-size="11">.058</text>
+        <rect x="735" y="138" width="34" height="147" fill="#5b9dff" rx="3"/><text x="728" y="130" fill="#bcd5ff" font-size="11">.601</text>
+        <rect x="785" y="282" width="34" height="3" fill="#4cd9a0" rx="3"/><text x="779" y="274" fill="#7ce8bb" font-size="11">.054</text>
+        <text x="275" y="336" fill="#9aa3b2" font-size="11">蓝柱：原始/未干预；绿柱仅对 reset e2 的回滚后结果作示意。</text>
+      </svg>
+      <div class="viz-note">核心含义：input 注入产生大的 gap，但在边界 e2 做全 table 回滚后降到 +0.054（约减少 94%）；这是干预有效性的登记图，不是所有 60+ run 的完整曲线。</div>
+    </div>
+  </section>
+
+  <!-- 8. DSH SCAN -->
+  <section id="dsh-scan">
+    <h2><span class="num">08</span> 数学扫描（dsh_scan 全空间逼近）</h2>
+    <div class="meta">
+      <span class="badge running">🔄 运行中</span>
+      <span class="badge">机器: ophis-gpu</span>
+      <span class="badge">进展: /data4/guoshaoyang/dsh_scan2/fullspace_progress.md</span>
+    </div>
+    <div class="callout">
+      <b>问题</b>：论文 k=49, ε=1/25 开放问题的全空间 sup 数值逼近（偶数对称多项式族，精确矩阵 + mpfr 收敛）。
+      目标判断 M_{49,1/25} 是否 &lt; 4。
+    </div>
+    <table>
+      <thead><tr><th>D</th><th>n</th><th>M（收敛值）</th><th>增量（per 2D）</th></tr></thead>
+      <tbody>
+        <tr><td>19</td><td>568</td><td>3.9617</td><td>—</td></tr>
+        <tr><td>25</td><td>1780</td><td>3.9843</td><td>+0.02263</td></tr>
+        <tr><td>27</td><td>2526</td><td>3.9871</td><td>+0.00274</td></tr>
+        <tr><td>29</td><td>3542</td><td class="best">3.9887309107</td><td>+0.00165</td></tr>
+        <tr><td>31</td><td>4910</td><td>计算中</td><td>~+0.0010?</td></tr>
+        <tr><td>33</td><td>6740</td><td>计算中</td><td>~+0.0006?</td></tr>
+      </tbody>
+    </table>
+    <div class="callout green">
+      <b>当前判定</b>：增量衰减率 r≈0.60，几何外推极限 ≈3.9912，Aitken Δ² ≈3.99125，
+      距 4 缺口 ~0.0088。D=29 精确 Rayleigh 验证 k·num−4·den = −4.5e-43 &lt; 0（M&lt;4 符号确定）。
+      <b>强烈支持 M_{49,1/25} &lt; 4</b>。
+      ⚠️ 08-24 更新：偶划分基非无损，parts≥2 混合基才是全空间基；
+      若 δ(∞)→0 则真值≈3.9907，若 δ(∞)~0.001 则≈3.9917，均 &lt; 4。
+    </div>
+    <div class="viz">
+      <div class="viz-title">图 8-A：dsh_scan 的 D–M 收敛轨迹与 4 的判定线</div>
+      <div class="legend"><span class="purple">数值逼近 M</span><span class="red">目标阈值 4</span></div>
+      <svg viewBox="0 0 900 300" role="img" aria-label="dsh scan D M convergence">
+        <line x1="80" y1="245" x2="850" y2="245" stroke="#7a8494"/>
+        <line x1="80" y1="35" x2="80" y2="245" stroke="#7a8494"/>
+        <line x1="80" y1="65" x2="850" y2="65" stroke="#ff6b6b" stroke-width="2" stroke-dasharray="8 5"/>
+        <line x1="80" y1="175" x2="850" y2="175" stroke="#2a2f3a"/>
+        <line x1="80" y1="120" x2="850" y2="120" stroke="#2a2f3a"/>
+        <text x="18" y="40" fill="#9aa3b2" font-size="12">M</text>
+        <text x="40" y="249" fill="#9aa3b2" font-size="11">3.94</text>
+        <text x="40" y="179" fill="#9aa3b2" font-size="11">3.96</text>
+        <text x="40" y="124" fill="#9aa3b2" font-size="11">3.98</text>
+        <text x="40" y="69" fill="#ffa3a3" font-size="11">4.00</text>
+        <text x="715" y="59" fill="#ffa3a3" font-size="11">threshold 4</text>
+        <polyline points="150,226 310,164 470,126 630,101" fill="none" stroke="#c77dff" stroke-width="3"/>
+        <circle cx="150" cy="226" r="5" fill="#c77dff"/><circle cx="310" cy="164" r="5" fill="#c77dff"/><circle cx="470" cy="126" r="5" fill="#c77dff"/><circle cx="630" cy="101" r="5" fill="#c77dff"/>
+        <text x="133" y="267" fill="#9aa3b2" font-size="11">D=19</text>
+        <text x="293" y="267" fill="#9aa3b2" font-size="11">D=25</text>
+        <text x="453" y="267" fill="#9aa3b2" font-size="11">D=27</text>
+        <text x="613" y="267" fill="#9aa3b2" font-size="11">D=29</text>
+        <text x="122" y="216" fill="#e0b3ff" font-size="11">3.9617</text>
+        <text x="282" y="154" fill="#e0b3ff" font-size="11">3.9843</text>
+        <text x="442" y="116" fill="#e0b3ff" font-size="11">3.9871</text>
+        <text x="602" y="91" fill="#e0b3ff" font-size="11">3.98873</text>
+        <text x="685" y="292" fill="#9aa3b2" font-size="11">外推 ≈ 3.9912，仍低于 4</text>
+      </svg>
+      <div class="viz-note">这是 D=19–29 的已记录数值和外推，不把 D=31/33 的“计算中”写成已完成结果；parts≥2 混合基的后续结果需要单独回填。</div>
+    </div>
+  </section>
+
+  <!-- 9. AUTORESEARCH TREE -->
+  <section id="autoresearch">
+    <h2><span class="num">09</span> 本地 autoresearch：树探索与判断题</h2>
+    <div class="meta">
+      <span class="badge green">树数据库已收敛</span>
+      <span class="badge">任务: nanogpt_short</span>
+      <span class="badge">多集群 worker：360-1 / 360-2 / ophis-gpu</span>
+    </div>
+    <div class="callout">
+      <b>这不是 MLS-Bench 的三个长训 agent</b>，而是另一条独立实验线：每个节点是一个显式
+      nanoGPT 短训 setting，worker 实测最终 <code>val_loss</code>，master/perturb/researcher
+      再从已有节点生成新的 setting，最后从树中构造排序判断题。所有节点和结果仍保留在
+      <code>autoresearch/tree.db</code> 与 <code>autoresearch/results/</code>。
+    </div>
+
+    <h4>9.1 当前权威树统计（直接读取 tree.db，2026-08-26）</h4>
+    <div class="stat-grid">
+      <div class="stat"><div class="value">9,010</div><div class="label">唯一节点</div></div>
+      <div class="stat"><div class="value">8,866</div><div class="label">done（有 metrics）</div></div>
+      <div class="stat"><div class="value">144</div><div class="label">failed</div></div>
+      <div class="stat"><div class="value">4.1279–9.5402</div><div class="label">val_loss 范围</div></div>
+      <div class="stat"><div class="value">5.8237</div><div class="label">val_loss 中位数</div></div>
+      <div class="stat"><div class="value">5.6280</div><div class="label">val_loss 均值</div></div>
+    </div>
+    <table>
+      <thead><tr><th>字段</th><th>tree.db 当前值</th><th>解释</th></tr></thead>
+      <tbody>
+        <tr><td>status</td><td>done 8866 / failed 144；pending 0 / running 0</td><td>树探索本身已经没有未处理节点</td></tr>
+        <tr><td>created_by</td><td>perturb 4317；expansion 4227；researcher 391；manual 75</td><td>确定性近邻、LLM 扩展、研究员提案、人工 seed 的来源分解</td></tr>
+        <tr><td>task</td><td>全部为 <code>nanogpt_short</code></td><td>不是多个 benchmark 混在同一张树里</td></tr>
+        <tr><td>setting axes</td><td>model / optimizer / schedule / budget / seed</td><td>每个节点保存完整 setting_json，不只保存一个 loss 数字</td></tr>
+      </tbody>
+    </table>
+
+    <div class="viz">
+      <div class="viz-title">图 9-A：树节点的 val_loss 分布</div>
+      <svg viewBox="0 0 900 310" role="img" aria-label="autoresearch 树节点 val_loss 直方图">
+        <line x1="70" y1="250" x2="860" y2="250" stroke="#7a8494"/>
+        <line x1="70" y1="30" x2="70" y2="250" stroke="#7a8494"/>
+        <text x="16" y="36" fill="#9aa3b2" font-size="12">节点数</text>
+        <text x="760" y="286" fill="#9aa3b2" font-size="12">val_loss</text>
+        <line x1="70" y1="180" x2="860" y2="180" stroke="#2a2f3a"/>
+        <line x1="70" y1="110" x2="860" y2="110" stroke="#2a2f3a"/>
+        <text x="38" y="254" fill="#9aa3b2" font-size="11">0</text>
+        <text x="24" y="184" fill="#9aa3b2" font-size="11">1000</text>
+        <text x="24" y="114" fill="#9aa3b2" font-size="11">2000</text>
+        <text x="24" y="44" fill="#9aa3b2" font-size="11">3000</text>
+        <rect x="88"  y="159" width="55" height="91" fill="#5b9dff" rx="3"/><text x="99" y="153" fill="#bcd5ff" font-size="11">1301</text>
+        <rect x="158" y="230" width="55" height="20" fill="#5b9dff" rx="3"/><text x="171" y="224" fill="#bcd5ff" font-size="11">293</text>
+        <rect x="228" y="140" width="55" height="110" fill="#5b9dff" rx="3"/><text x="239" y="134" fill="#bcd5ff" font-size="11">1575</text>
+        <rect x="298" y="88" width="55" height="162" fill="#7c5bff" rx="3"/><text x="309" y="82" fill="#e0b3ff" font-size="11">2308</text>
+        <rect x="368" y="36" width="55" height="214" fill="#7c5bff" rx="3"/><text x="379" y="30" fill="#e0b3ff" font-size="11">3053</text>
+        <rect x="438" y="227" width="55" height="23" fill="#5b9dff" rx="3"/><text x="451" y="221" fill="#bcd5ff" font-size="11">335</text>
+        <rect x="508" y="249" width="55" height="1" fill="#ff6b6b" rx="3"/><text x="530" y="241" fill="#ffa3a3" font-size="11">1</text>
+        <text x="86" y="269" fill="#9aa3b2" font-size="10">4.0–4.5</text>
+        <text x="226" y="269" fill="#9aa3b2" font-size="10">5.0–5.5</text>
+        <text x="365" y="269" fill="#9aa3b2" font-size="10">6.0–6.5</text>
+        <text x="505" y="269" fill="#9aa3b2" font-size="10">7.0–7.5</text>
+        <text x="645" y="269" fill="#9aa3b2" font-size="10">8.0–8.5</text>
+        <text x="785" y="269" fill="#9aa3b2" font-size="10">9.0–9.5</text>
+        <text x="88" y="300" fill="#9aa3b2" font-size="11">每个柱对应 0.5 loss 区间；7.0–9.5 区间几乎没有节点，9.5402 是单个极端节点。</text>
+      </svg>
+      <div class="viz-note">由 tree.db 中 8866 个有 metrics 的节点按 val_loss 分箱得到；这张图是树的分布，不是训练曲线。</div>
+    </div>
+
+    <h4>9.2 树探索的中间产物与观测闭环</h4>
+    <div class="flow">
+      <span class="step">显式 setting</span><span class="arrow">→</span>
+      <span class="step">短训 worker</span><span class="arrow">→</span>
+      <span class="step">val_loss + loss curve</span><span class="arrow">→</span>
+      <span class="step">researcher / expansion / perturb</span><span class="arrow">→</span>
+      <span class="step">新节点</span>
+    </div>
+    <p>
+      一个节点不只是“模型猜了一个分数”：<code>setting_json</code> 记录模型深度/宽度、学习率、
+      beta、weight decay、warmup、batch size、steps 等；<code>metrics_json</code> 记录短训的实测
+      loss；<code>result_dir</code> 指向该次运行目录。这样后面的候选生成和 judge 题目都能沿
+      parent 链回看实际探索历史。
+    </p>
+    <details>
+      <summary>展开：不要把三个 autoresearch 汇总文件混为同一个快照</summary>
+      <table>
+        <thead><tr><th>文件</th><th>统计</th><th>登记含义</th></tr></thead>
+        <tbody>
+          <tr><td><code>results/run_report.json</code></td><td>done 2446 / failed 58 / pending 256 / running 36；这是早期运行快照</td><td>只能作为历史进度，不能覆盖当前 DB</td></tr>
+          <tr><td><code>results/progress_1786770302.json</code></td><td>total 2655；done 2297；同样是 8/15 快照</td><td>保留用于追踪树如何扩大</td></tr>
+          <tr><td><code>results/final_report.json</code></td><td>360 道题：phase_cd 210 + calibration 150</td><td>对应这份 final judge 汇总，不等于 sibling pilot</td></tr>
+          <tr><td><code>experiments/tree_sibling_judge/results/summary.json</code></td><td>5 个模型 × type1 50 + type2 50；同一批 sibling 题</td><td>独立的树状兄弟节点题实验</td></tr>
+        </tbody>
+      </table>
+    </details>
+
+    <h4>9.3 判断题结果：按数据源分别登记</h4>
+    <p class="muted">
+      分数定义：<code>raw = 1 - inversions / C(n,2)</code>；<code>norm = (raw - 0.5) / 0.5</code>。
+      因为题池、候选 spread、模型集合不同，下面几张表不能横向拼成一个 leaderboard。
+    </p>
+    <table>
+      <thead><tr><th>数据源/题池</th><th>模型</th><th>n</th><th>type1</th><th>type2</th><th>ALL</th></tr></thead>
+      <tbody>
+        <tr><td rowspan="2"><code>results/final_report.json</code><br>phase_cd 210 + calibration 150</td><td>deepseek-v4-flash</td><td>50</td><td>0.519</td><td>0.517</td><td>0.518</td></tr>
+        <tr><td>gemini-3.6-flash</td><td>310</td><td>0.590</td><td>0.609</td><td>0.598</td></tr>
+        <tr><td rowspan="5"><code>tree_sibling_judge/results/summary.json</code><br>同一批 sibling 题</td><td>gpt-5.6-sol</td><td>50</td><td class="best">+0.184</td><td>+0.120</td><td>—</td></tr>
+        <tr><td>gpt-5.5</td><td>50</td><td>+0.100</td><td>+0.080</td><td>—</td></tr>
+        <tr><td>gemini-3.6-flash</td><td>50</td><td>+0.032</td><td>+0.012</td><td>—</td></tr>
+        <tr><td>qwen3.7-max</td><td>50</td><td>+0.008</td><td>−0.008</td><td>—</td></tr>
+        <tr><td>claude-opus-5</td><td>50</td><td>−0.092</td><td>−0.048</td><td>—</td></tr>
+      </tbody>
+    </table>
+
+    <div class="viz">
+      <div class="viz-title">图 9-B：sibling 题 pilot 的 norm 分数（type1 / type2）</div>
+      <svg viewBox="0 0 900 300" role="img" aria-label="sibling judge pilot model scores">
+        <line x1="225" y1="35" x2="225" y2="245" stroke="#7a8494"/>
+        <line x1="225" y1="245" x2="860" y2="245" stroke="#7a8494"/>
+        <line x1="225" y1="193" x2="860" y2="193" stroke="#2a2f3a"/>
+        <line x1="225" y1="140" x2="860" y2="140" stroke="#2a2f3a"/>
+        <line x1="225" y1="87" x2="860" y2="87" stroke="#2a2f3a"/>
+        <text x="15" y="40" fill="#9aa3b2" font-size="12">norm</text>
+        <text x="185" y="249" fill="#9aa3b2" font-size="11">−0.10</text>
+        <text x="198" y="197" fill="#9aa3b2" font-size="11">0</text>
+        <text x="190" y="144" fill="#9aa3b2" font-size="11">0.10</text>
+        <text x="190" y="91" fill="#9aa3b2" font-size="11">0.20</text>
+        <text x="190" y="39" fill="#9aa3b2" font-size="11">0.30</text>
+        <text x="235" y="275" fill="#9aa3b2" font-size="11">gpt-sol</text>
+        <text x="360" y="275" fill="#9aa3b2" font-size="11">gpt-5.5</text>
+        <text x="485" y="275" fill="#9aa3b2" font-size="11">gemini</text>
+        <text x="610" y="275" fill="#9aa3b2" font-size="11">qwen</text>
+        <text x="735" y="275" fill="#9aa3b2" font-size="11">claude</text>
+        <rect x="245" y="97" width="32" height="148" fill="#5b9dff" rx="3"/><text x="247" y="90" fill="#bcd5ff" font-size="11">.184</text>
+        <rect x="282" y="182" width="32" height="63" fill="#7c5bff" rx="3"/><text x="285" y="175" fill="#e0b3ff" font-size="11">.120</text>
+        <rect x="370" y="140" width="32" height="105" fill="#5b9dff" rx="3"/><text x="371" y="133" fill="#bcd5ff" font-size="11">.100</text>
+        <rect x="407" y="161" width="32" height="84" fill="#7c5bff" rx="3"/><text x="409" y="154" fill="#e0b3ff" font-size="11">.080</text>
+        <rect x="495" y="176" width="32" height="69" fill="#5b9dff" rx="3"/><text x="497" y="169" fill="#bcd5ff" font-size="11">.032</text>
+        <rect x="532" y="182" width="32" height="63" fill="#7c5bff" rx="3"/><text x="534" y="175" fill="#e0b3ff" font-size="11">.012</text>
+        <rect x="620" y="189" width="32" height="56" fill="#5b9dff" rx="3"/><text x="622" y="182" fill="#bcd5ff" font-size="11">.008</text>
+        <rect x="657" y="197" width="32" height="48" fill="#7c5bff" rx="3"/><text x="659" y="190" fill="#e0b3ff" font-size="11">−.008</text>
+        <rect x="745" y="245" width="32" height="48" fill="#5b9dff" rx="3" transform="translate(0,-48)"/><text x="744" y="238" fill="#bcd5ff" font-size="11">−.092</text>
+        <rect x="782" y="245" width="32" height="25" fill="#7c5bff" rx="3" transform="translate(0,-25)"/><text x="782" y="263" fill="#e0b3ff" font-size="11">−.048</text>
+        <rect x="790" y="45" width="11" height="11" fill="#5b9dff" rx="2"/><text x="807" y="55" fill="#9aa3b2" font-size="11">type1</text>
+        <rect x="790" y="65" width="11" height="11" fill="#7c5bff" rx="2"/><text x="807" y="75" fill="#9aa3b2" font-size="11">type2</text>
+      </svg>
+      <div class="viz-note">柱高按报告中的 norm 值绘制；这组 sibling 题的 spread 中位数为 0.0484，不能与其他题池的结果直接比较。</div>
+    </div>
+
+    <h4>9.4 “observable” 变量在这里到底是什么</h4>
+    <div class="callout green">
+      <b>Type1</b> 给 anchor 的 setting + 实测最终 val_loss + 候选 setting；
+      <b>Type2</b> 在此基础上再给 anchor 的 24 点 validation loss curve。
+      因此 Type2 的增量不是“多给一个最终答案”，而是多给训练过程中的轨迹。
+      另外，pilot 还测试了把 3 层祖先的 setting + val_loss 加进 prompt；这是
+      <b>exploration history observable</b>，与 loss curve 是两种不同的中间信息。
+    </div>
+    <details>
+      <summary>展开：sibling pilot 的 context / shuffled / both 结果（原始 summary.json）</summary>
+      <table>
+        <thead><tr><th>模型</th><th>base</th><th>shuffled</th><th>context</th><th>both</th></tr></thead>
+        <tbody>
+          <tr><td>gpt-5.6-sol</td><td>+0.184</td><td>+0.144</td><td>+0.264</td><td>+0.276</td></tr>
+          <tr><td>gpt-5.5</td><td>+0.100</td><td>+0.120</td><td>+0.248</td><td>+0.220</td></tr>
+          <tr><td>gemini-3.6-flash</td><td>+0.032</td><td>+0.036</td><td>+0.144</td><td>+0.148</td></tr>
+          <tr><td>qwen3.7-max</td><td>+0.008</td><td>+0.120</td><td>+0.164</td><td>+0.092</td></tr>
+          <tr><td>claude-opus-5</td><td>−0.092</td><td>−0.040</td><td>+0.112</td><td>+0.088</td></tr>
+        </tbody>
+      </table>
+      <p class="muted">解释：base 没有祖先上下文；shuffled 只打乱选项顺序；context 加 3 层祖先；both 同时做两件事。每格 n=50。</p>
+    </details>
+  </section>
+
+  <!-- 10. LOGS INDEX -->
+  <section id="logs">
+    <h2><span class="num">10</span> 原始日志与数据源索引</h2>
+    <table>
+      <thead><tr><th>数据源</th><th>路径</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td>llm-pretrain-loss agent 日志</td><td class="path"><a href="experiment_registry_assets/raw_logs/llm-pretrain-loss.log">本地 raw log</a><br>/data4/guoshaoyang/nanogpt_agent_logs/llm-pretrain-loss.log</td><td>含 TRAIN_METRICS 中间量</td></tr>
+        <tr><td>llm-pretrain-optimizer agent 日志</td><td class="path"><a href="experiment_registry_assets/raw_logs/llm-pretrain-optimizer.log">本地 raw log</a><br>/data4/guoshaoyang/nanogpt_agent_logs/llm-pretrain-optimizer.log</td><td>—</td></tr>
+        <tr><td>llm-pretrain-kernel 日志（2 轮）</td><td class="path"><a href="experiment_registry_assets/raw_logs/llm-pretrain-kernel.log">第一轮</a> · <a href="experiment_registry_assets/raw_logs/llm-pretrain-kernel-2nd.log">第二轮</a></td><td>—</td></tr>
+        <tr><td>llm-pretrain leaderboard ×3</td><td class="path">/data3/guoshaoyang/mlsbench/tasks/llm-pretrain-{loss,optimizer,kernel}/leaderboard.csv</td><td>完整 CSV</td></tr>
+        <tr><td>训练输出</td><td class="path">/data3/guoshaoyang/mlsbench/logs/llm-pretrain-*/&lt;exp&gt;/&lt;ts&gt;/group_1/gpt-345m_s42.out</td><td>每轮训练 raw</td></tr>
+        <tr><td>InverseBench leaderboard</td><td class="path">/data3/guoshaoyang/mlsbench/tasks/ai4sci-inverse-diffusion-algo/leaderboard.csv</td><td>harbor meta 有 baseline</td></tr>
+        <tr><td>molprop leaderboard</td><td class="path">/data3/guoshaoyang/mlsbench/tasks/ai4sci-mol-property-prediction/leaderboard.csv</td><td>baseline 已有</td></tr>
+        <tr><td>causal ×5 leaderboard</td><td class="path">/data3/guoshaoyang/mlsbench/tasks/causal-*/leaderboard.csv</td><td>—</td></tr>
+        <tr><td>ngram-gap 登记簿</td><td class="path">/data4/guoshaoyang/ngram-gap-lab/docs/experiment-log.md</td><td>SSOT（pre-fix 数值）</td></tr>
+        <tr><td>ngram-gap 实验线索引</td><td class="path">/data4/guoshaoyang/ngram-gap-lab/docs/experiment-lines.md</td><td>图/结论可信任</td></tr>
+        <tr><td>ngram-gap 权威数据</td><td class="path">/data4/guoshaoyang/ngram-gap-lab/data/runs_fixed/</td><td>唯一权威（_fixed 后缀）</td></tr>
+        <tr><td>dsh_scan 进展</td><td class="path">/data4/guoshaoyang/dsh_scan2/fullspace_progress.md</td><td>数学扫描</td></tr>
+        <tr><td>autoresearch 树数据库</td><td class="path">autoresearch/tree.db</td><td>9010 节点；当前树统计以此为准</td></tr>
+        <tr><td>autoresearch judge 汇总</td><td class="path">autoresearch/results/final_report.json</td><td>360 题的 phase_cd + calibration 汇总</td></tr>
+        <tr><td>sibling judge 汇总</td><td class="path">autoresearch/experiments/tree_sibling_judge/results/summary.json</td><td>5 模型 × type1/type2，各 50 题</td></tr>
+        <tr><td>autoresearch 原始题目/作答</td><td class="path">autoresearch/results/quiz/；autoresearch/results/quiz_calib/</td><td>题面 JSON、judge JSON、summary</td></tr>
+        <tr><td>sibling 原始题目/作答</td><td class="path">autoresearch/experiments/tree_sibling_judge/data/quiz_tree/</td><td>base / shuffled / context / both</td></tr>
+        <tr><td>mlsbench 使用说明</td><td class="path">docs/mlsbench_autoresearch_usage.md</td><td>本地文档</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <div class="divider"></div>
+  <div class="footer">
+    OPHIS Project · Shaoyang Guo · experiment_registry.html · 建立 2026-08-26 ·
+    <a href="three_system_compare_20260815.html">三系统对比</a> ·
+    <a href="three_system_rerun_results.html">dsh 极简+pro 重跑</a> ·
+    <a href="task_profiles/autoresearch_task_profiles.html">任务详解</a>
+  </div>
+</div>
+</body>
+</html>
