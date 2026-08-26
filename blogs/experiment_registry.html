@@ -198,6 +198,7 @@
       <li><a href="#ngram-gap">ngram-gap 实验（注入点 / 优化器 / 表 / 因果消融）</a></li>
       <li><a href="#dsh-scan">数学扫描（dsh_scan 全空间逼近）</a></li>
       <li><a href="#autoresearch">本地 autoresearch 树探索与判断题</a></li>
+      <li><a href="#eb-jepa">Robotics / JEPA 四任务（eb_jepa + CleanDiffuser）</a></li>
       <li><a href="#logs">原始日志与数据源索引</a></li>
     </ol>
   </div>
@@ -355,6 +356,9 @@
         <tr><td>F1</td><td>预测因果边的 precision 与 recall 的调和平均。</td><td>↑</td></tr>
         <tr><td>PEHE</td><td>个体处理效应估计误差的均方根，用于 treatment-effect 任务。</td><td>↓</td></tr>
         <tr><td>ECE / AUROC / ARI / R²</td><td>分别是校准误差、异常排序能力、聚类一致性和回归解释度；ECE 下降，其余三个上升更好。</td><td>混合</td></tr>
+        <tr><td rowspan="3">JEPA / Robotics</td><td>success_rate</td><td>jepa-planning：规划轨迹在限定步数内到达目标的回合比例（Two Rooms，horizon 30/60/90）。</td><td>↑</td></tr>
+        <tr><td>mean_dist / mean_steps</td><td>jepa-planning：每条轨迹终点到目标的平均距离 / 平均消耗步数。</td><td>↓</td></tr>
+        <tr><td>AP / val_acc / normalized_score</td><td>prediction-loss 的 Moving MNIST 检测平均精度（AP）；regularizer 的 ResNet 线性探针验证准确率（%）；diffusion-guidance 的 D4RL 归一化分（0≈随机策略，100≈专家）。</td><td>↑</td></tr>
         <tr><td>ngram-gap</td><td>gap = validation loss − training loss（或登记表明确标出的 gap 变体）；因果消融比较 intervention 前后的 gap 变化。</td><td>通常 ↓</td></tr>
         <tr><td>autoresearch judge</td><td>raw = 排序正确率；norm = (raw − 0.5)/0.5。norm=0 约等于随机排序，正值优于随机。</td><td>↑</td></tr>
         <tr><td>dsh_scan</td><td>M</td><td>给定 D 的全空间 sup 数值逼近；这里关心的是它是否严格低于阈值 4。</td><td>与 4 比较</td></tr>
@@ -368,6 +372,29 @@
   <!-- 2. LLM PRETRAIN -->
   <section id="llm-pretrain">
     <h2><span class="num">02</span> LLM Pretraining 优化</h2>
+
+    <details class="instr">
+      <summary>🎛️ 模型的动作空间（Action Space）— agent 能改什么、不能改什么</summary>
+      <div class="instr-body">
+        <p class="md-p"><b>载体</b>：三个题目（loss / optimizer / kernel）是同一个 439 行模板文件
+        <code>custom_template.py</code>（工作区实例化为 <code>custom_pretrain.py</code>）的三个独立任务实例。
+        每个任务用<b>行号区间</b>锁死写入窗口：<b>读权限是全量的</b>（整个文件 + <code>model.py</code> 都可见），
+        但<b>写权限</b>只开放两个窗口，且 <code>allow_create: false</code>——不能新建文件。</p>
+        <ul class="md-ul">
+          <li><b>loss 题</b>：可写 L188–191 的 <code>compute_loss()</code> 整个函数。</li>
+          <li><b>optimizer 题</b>：可写 L171–189 的 <code>configure_optimizers()</code> 整个方法。</li>
+          <li><b>kernel 题</b>：可写 L33–48 的 <code>fused_mlp_forward()</code> 整个函数。</li>
+          <li><b>三题共有的第二编辑点</b>：<code>CONFIG_OVERRIDES = {}</code>，允许键只有
+            <code>learning_rate / weight_decay / warmup_iters / min_lr / grad_clip</code>——
+            这意味着存在部分"越题"能力（如 optimizer 题里也能调 lr schedule）。</li>
+        </ul>
+        <p class="md-p"><b>边界要点</b>：① 窗口内可以整块替换成任意多行代码（官方 baseline 的 .edit.py 就是对这些窗口做 diff）；
+        ② GPT-2 架构本体 <code>model.py</code> 对所有任务只读——"模型架构"不可改，kernel 题只能换 MLP 内部实现；
+        ③ <code>CONFIG_OVERRIDES</code> 是三题共有的第二编辑点，意味着存在部分"越题"能力（如 optimizer 题里也能调 lr schedule）；
+        ④ 参数量硬检查仍在：改动不得使参数量超过最强 reference baseline；
+        ⑤ 单次运行内不能跨题协同（独立 workspace、独立 leaderboard），跨题组合只能由我们在实验设计层面手动完成。</p>
+      </div>
+    </details>
 
     <div class="callout">
       <b>任务设计</b>：GPT-2 Medium（355M），FineWeb 10B 数据，13,535 iter 固定流水线。
