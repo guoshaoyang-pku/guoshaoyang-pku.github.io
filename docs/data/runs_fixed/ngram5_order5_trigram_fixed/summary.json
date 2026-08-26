@@ -1,0 +1,169 @@
+{
+  "control": "ngram5_freq_gap",
+  "num_params": 1278819840,
+  "num_steps": 2000,
+  "peak_vram_mb": 51063.46533203125,
+  "run_contract": {
+    "control": "ngram5_freq_gap",
+    "dataset": {
+      "alpha": 0.0,
+      "block_alignment_version": 2,
+      "block_len": 7,
+      "context_len": 5,
+      "doc_len": 2048,
+      "frequency_definition": "exact_train_epoch_context_count",
+      "frequency_key_type": "exact_context",
+      "frequency_source_split": "train",
+      "hash_bucket_occupancy_diagnostic": false,
+      "loader_row_stride": 2044,
+      "loader_rows_train": 170264,
+      "loader_rows_val": 1675858,
+      "n_nonempty_buckets": 43039820,
+      "order": 5,
+      "resampling": "none",
+      "schema_version": 1,
+      "sep_token": 8191,
+      "source": "code/make_ngram_blocks.py (sliding window, one copy per event)",
+      "stream_padding": "global_block_aligned_row_stride",
+      "train_shards": [
+        1
+      ],
+      "train_tokens": 348019616,
+      "val_shards": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        6542
+      ],
+      "val_tokens": 3425453752,
+      "vocab": 8192
+    },
+    "experiment": {
+      "bucket_edges": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        11,
+        21,
+        51,
+        101,
+        201,
+        501,
+        1001,
+        5001
+      ],
+      "cpu_smoke": false,
+      "device_batch_size": 72,
+      "frequency_definition": "exact_train_epoch_context_count",
+      "frequency_index_scope": "complete upstream train epoch before controlled block resampling",
+      "frequency_key_type": "exact_context",
+      "frequency_probe_batches": 2,
+      "frequency_source_split": "train",
+      "hash_bucket_occupancy_used_for_gap": false,
+      "injection_norm_components": [
+        "bigram",
+        "trigram",
+        "total"
+      ],
+      "injection_norm_definition": "sqrt(mean(hidden_state.float() ** 2))",
+      "max_training_steps": 2000,
+      "model_class": "GPT",
+      "probe_detail_files": "probe_details/{step}_{split}.npz",
+      "probe_detail_format": "npz_v1",
+      "probe_detail_scope": "fixed_probe_batches",
+      "probe_frequency_mode": "exact_context",
+      "probe_steps": [
+        100,
+        200,
+        300,
+        400,
+        500,
+        600,
+        700,
+        800,
+        900,
+        1000,
+        1200,
+        1400,
+        1600,
+        1800,
+        2000
+      ],
+      "seed": 42,
+      "sequence_len": 2048,
+      "torch_compile": false,
+      "total_batch_tokens": 147456,
+      "trace_all_batches": false,
+      "trace_compression": true,
+      "trace_manifest": "trace_manifest.jsonl",
+      "trace_root": "/data4/guoshaoyang/ngram-gap-lab/data/runs_fixed/ngram5_order5_trigram_fixed/batch_trace",
+      "trace_schema": "batch_trace_npz_v1",
+      "trace_validation_mode": "fixed_validation_batches_every_step",
+      "train_probe_batch_hashes": [
+        "7a5f4f2df1f40dd8bf9a39ea8c4a42b557825fa46336ca1ce5b33d7fc1c23a17",
+        "36ade48f85b944d3efa80dc290a0fd4615be4ddf78b5929e40c54cbc62e54876"
+      ],
+      "trunk": "transformer",
+      "val_probe_batch_hashes": [
+        "d8b5e09aeaf988ddc7d5418b53d283387154c9b0dc16d7f21d5a7e51d3662046",
+        "fa4b4dcaf5ceaa462caa5823317a91603a525ba071a968246c2ed25e2c93f8f9"
+      ],
+      "validation_batch_hashes": [
+        "d8b5e09aeaf988ddc7d5418b53d283387154c9b0dc16d7f21d5a7e51d3662046",
+        "fa4b4dcaf5ceaa462caa5823317a91603a525ba071a968246c2ed25e2c93f8f9",
+        "12406ce72a4635f24651be75771fd1d5b1b307926b69a345b8457a4a0c72a037",
+        "3f8670597b92bd02825502bab9db085a174539be36ec0f9953d171a1d72841ba"
+      ],
+      "validation_batches": 4,
+      "validation_interval_steps": 10
+    },
+    "model_provenance": {
+      "note": "loaded from the repository model definition",
+      "source": "/data4/guoshaoyang/ngram-gap-lab/code/train.py",
+      "source_description": "repository NanoGPT with n-gram injection tables",
+      "trunk": "transformer"
+    },
+    "optimizer": {
+      "adam_betas": [
+        0.8,
+        0.95
+      ],
+      "class": "MixedOptimizer",
+      "grouping": "nanogpt",
+      "learning_rate": 0.004,
+      "matrix_optimizer": "adamw",
+      "ngram_optimizer": "mixed",
+      "ngram_ve_betas": [
+        0.0,
+        0.99
+      ],
+      "ngram_ve_lr_scale": 2.0,
+      "weight_decay": 0.1
+    },
+    "parameter_counts": {
+      "total": 1278819840
+    },
+    "schedule": {
+      "adam_warmdown_ratio": 0.65,
+      "final_lr_fraction": 0.05,
+      "ngram_lr_schedule": "constant",
+      "warmup_ratio": 0.0
+    },
+    "schema_version": 1
+  },
+  "schema_version": 1,
+  "status": "complete",
+  "total_seconds": 534.3421177864075,
+  "total_tokens": 294912000,
+  "training_seconds": 453.317990064621
+}

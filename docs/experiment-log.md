@@ -1,0 +1,2320 @@
+# ngram-gap-lab · 实验日志
+
+> 创建：2026-08-05
+> **本文件是多 Agent 的唯一实验登记簿**：先登记（`planned`）→ 占 GPU 开跑 → 回填（`done`）。
+> 工作原则、run_id 约定与并行规则见 `agents.md` §0；**极简 setting（SSOT）见 `agents.md` §1**。
+
+## 实验登记总表
+
+| run_id | 日期 | 实验 | 状态 | gap 关键值 | 详情 |
+|---|---|---|---|---|---|
+| `vanilla_input_1000_seed42` | 2026-08-23 | 干净 vanilla 复现 · input 注入 · 1000 步 | ✅ done | **+0.858 @1000** | §14 |
+| `vanilla_nogram_1000_seed42` | 2026-08-23 | 干净 vanilla 复现 · 无 n-gram 对照 · 1000 步 | ✅ done | **+0.038 @1000** | §14 |
+| `nglab1x_input_reset_e2` | 2026-08-24 | P1 因果 · e2 边界全 table 回滚 | ✅ done | **+0.054 @1000（−94%）** | §15 |
+| `nglab1x_input_reset_e1` | 2026-08-24 | P1 因果 · e1 边界全 table 回滚 | ✅ done | +0.351 @1000（−59%） | §15 |
+| `nglab1x_input_mask_e1` | 2026-08-24 | P2 因果 · e1 边界屏蔽 readout | ✅ done | **+0.058 @1000（−93%）** | §15 |
+| `nglab1x_input_freeze_table_e1` | 2026-08-24 | P2 因果 · e1 边界冻结 table | ✅ done | +0.601 @1000（−30%） | §15 |
+| `nglab1x_input_freeze_backbone_e1` | 2026-08-24 | P2 因果 · e1 边界冻结 backbone | ✅ done | +0.780 @1000（−9%） | §15 |
+| `nglab_v` | 2026-08-05 | 注入点消融 · v | ✅ done | 0.33 @999 | §2 |
+| `nglab_y` | 2026-08-05 | 注入点消融 · y | ✅ done | 3.50 @999 | §2 |
+| `nglab_input` | 2026-08-05 | 注入点消融 · input | ✅ done | 0.79 @999 | §2 |
+| `nglab2x_v` | 2026-08-06 | 双倍训练集 · v | ✅ done | 1.169 @2000 | §4 |
+| `nglab2x_y` | 2026-08-06 | 双倍训练集 · y | ✅ done | 3.101 @2000 | §4 |
+| `nglab2x_input` | 2026-08-06 | 双倍训练集 · input | ✅ done | 0.687 @2000 | §4 |
+| `nglab2x_input_v10` | 2026-08-06 | 双倍训练集 · input · v10 细曲线 | ⛔ superseded | val 移动窗，已停 | §6 |
+| `nglab0_5x_input` | 2026-08-06 | 半 epoch 训练集 · input · v10 | ⛔ superseded | val 移动窗，已停 | §7 |
+| `nglab2x_input_v10_fv` | 2026-08-06 | 双倍训练集 · input · v10 · **fixed-val** | ✅ done | 0.502 @2000 | §6 |
+| `nglab0_5x_input_fv` | 2026-08-06 | 半 epoch 训练集 · input · v10 · **fixed-val** | ✅ done | 4.952 @2000 | §7 |
+| `nglab1x_v10_v` | 2026-08-06 | 标准 1x · v 注入 · v10 重跑 | ✅ done | 5.041@2000 | §8 |
+| `nglab1x_v10_y` | 2026-08-06 | 标准 1x · y 注入 · v10 重跑 | ✅ done | 5.049@2000 | §8 |
+| `nglab1x_v10_input` | 2026-08-06 | 标准 1x · input 注入 · v10 重跑 | ✅ done | 1.931@2000 | §8 |
+| `nglab1x_v10_nogram` | 2026-08-06 | 标准 1x · 无 n-gram 对照 · v10 重跑 | ✅ done | 0.231@2000 | §8 |
+| `nglab1x_opt_rmsprop_2x` | 2026-08-06 | table 优化器消融 · RMSProp lr×2（2000 步）| ✅ done | 2.376@2000 | §9/9a/9b |
+| `nglab1x_opt_adamw_090999` | 2026-08-06 | table 优化器消融 · AdamW(0.9,0.999) | ✅ done | 0.912@1000 | §9/9a |
+| `nglab1x_opt_adamw_080950` | 2026-08-06 | table 优化器消融 · AdamW(0.8,0.95) | ✅ done | 0.709@1000 | §9/9a |
+| `nglab1x_opt_sgd_09` | 2026-08-06 | table 优化器消融 · SGD momentum 0.9 | ✅ done | −0.002@1000（table 未学）| §9/9a/9b |
+| `nglab1x_opt_rmsprop_4x` | 2026-08-06 | table 优化器消融 · RMSProp lr×4（剂量上限，2000 步对照）| ✅ done | 4.742@2000 | §9a/9b/9d |
+| `nglab1x_opt_rmsprop_4x_b2_099` | 2026-08-07 | β2 反向扫描 · RMSProp 4x · b2=0.99 | ✅ done | 5.143@2000 | §9d |
+| `nglab1x_opt_rmsprop_4x_b2_098` | 2026-08-07 | β2 反向扫描 · RMSProp 4x · b2=0.98 | ✅ done | 5.155@2000 | §9d |
+| `nglab025x_b2_099` | 2026-08-07 | 短 epoch × β2 · 0.25x · b2=0.99 | ✅ done | 13.577@2000 | §11 |
+| `nglab05x_b2_099` | 2026-08-07 | 短 epoch × β2 · 0.5x · b2=0.99 | ✅ done | 5.017@2000 | §11 |
+| `nglab1x_opt_rmsprop_2x_s43` | 2026-08-06 | RMSProp lr×2 · seed43 | ✅ done | 2.111@1000 | §9a/9b |
+| `nglab1x_opt_adamw_090999_s43` | 2026-08-06 | AdamW(0.9,0.999) · seed43 | ✅ done | 1.443@1000 | §9a/9b |
+| `nglab1x_opt_rmsprop_2x_s44` | 2026-08-06 | RMSProp lr×2 · seed44 | ✅ done | 2.089@1000 | §9a/9b |
+| `nglab1x_opt_adamw_090999_s44` | 2026-08-06 | AdamW(0.9,0.999) · seed44 | ✅ done | 1.672@1000 | §9a/9b |
+| `nglab0_25x_input_fv` | 2026-08-07 | shard 扫描 · 0.25x | 🔄 running | 待填 | §10 |
+| `nglab0_75x_input_fv` | 2026-08-07 | shard 扫描 · 0.75x | 🔄 running | 待填 | §10 |
+| `nglab1_5x_input_fv` | 2026-08-07 | shard 扫描 · 1.5x | 🔄 running | 待填 | §10 |
+| `nglab2_5x_input_fv` | 2026-08-07 | shard 扫描 · 2.5x | ⛔ superseded | val 与 train 重叠 | §10 |
+| `nglab3x_input_fv` | 2026-08-07 | shard 扫描 · 3x | ⛔ superseded | val 与 train 重叠 | §10 |
+| `nglab4x_input_fv` | 2026-08-07 | shard 扫描 · 4x | ⛔ superseded | val 与 train 重叠 | §10 |
+| `nglab2_5x_input_fv_v2` | 2026-08-07 | shard 扫描 · 2.5x（修正 val）| 🔄 running | 待填 | §10 |
+| `nglab3x_input_fv_v2` | 2026-08-07 | shard 扫描 · 3x（修正 val）| 🔄 running | 待填 | §10 |
+| `nglab4x_input_fv_v2` | 2026-08-07 | shard 扫描 · 4x（修正 val）| 🔄 running | 待填 | §10 |
+| `nglab5x_input_fv` | 2026-08-07 | shard 扫描 · 5x（360-2）| 🔄 running | 待填 | §10 |
+| `nglab6x_input_fv` | 2026-08-07 | shard 扫描 · 6x（360-2）| 🔄 running | 待填 | §10 |
+| `nglab8x_input_fv` | 2026-08-07 | shard 扫描 · 8x（360-2）| 🔄 running | 待填 | §10 |
+| `t5z_zipf_s42/s43/s44` | 2026-08-07 | toy 严格 Zipf 分布（N_r∝1/r²）· per-bucket gap | ✅ done | 7.01/7.96/7.56 @2000 | §13 |
+| `nglab_plot_baseline` | 2026-08-06 | 基础实验统计与图表归档 | ✅ done | 15 bins + log/log-log | §10 |
+| `ngram5_order5_trigram_fixed` | 2026-08-24 | **自然语言 5gram（order=5）· +trigram 注入 · input · fixed** | ✅ done | −0.0067 @2000 | §19 |
+| `ngram5_order5_puretransformer_fixed` | 2026-08-24 | **自然语言 5gram（order=5）· 纯 transformer 对照 · fixed** | ✅ done | +0.0054 @2000 | §19 |
+| `ngram5_order5_trigram_lr1x_fixed` | 2026-08-24 | **自然语言 5gram（order=5）· +trigram · 表 LR ×1** | ✅ done | +0.0015 @2000 | §19 |
+| `ngram5_order5_trigram_lr4x_fixed` | 2026-08-24 | **自然语言 5gram（order=5）· +trigram · 表 LR ×4** | ✅ done | −0.0092 @2000 | §19 |
+| `ngram5_order5_trigram_s43_fixed` | 2026-08-24 | **自然语言 5gram（order=5）· +trigram · seed 43 复现** | ✅ done | −0.0090 @2000 | §19 |
+| `l6_counttable_freq_exact_v1` | 2026-08-25 | **二元计数表 · 频率扫描 · 精确枚举** | ✅ done | slope −1.0000（f≥512） | §23 |
+| `l6_response_moments_exact_v1` | 2026-08-25 | **残差—响应映射 · 二/四/绝对矩 · 精确枚举** | ✅ done | −1.0000/−0.4995/−1.9986 | §23 |
+| `optv5d_rms_b095_s8p0` | 2026-08-26 | **高 table-LR β₂ gate · RMSProp β₂=.95，scale=8** | ✅ done | +2.228 @1000 | §24c |
+| `optv5d_rms_b099_s8p0` | 2026-08-26 | **高 table-LR β₂ gate · RMSProp β₂=.99，scale=8** | ✅ done | +2.432 @1000 | §24c |
+| `optv5d_rms_b0995_s8p0` | 2026-08-26 | **高 table-LR β₂ gate · RMSProp β₂=.995，scale=8** | ✅ done | +2.429 @1000 | §24c |
+| `optv5e_rms_b095_s16p0` | 2026-08-26 | **高 table-LR β₂ gate · RMSProp β₂=.95，scale=16** | 🔄 running | 待填 | §24c |
+| `optv5e_rms_b099_s16p0` | 2026-08-26 | **高 table-LR β₂ gate · RMSProp β₂=.99，scale=16** | 🔄 running | 待填 | §24c |
+| `optv5e_rms_b0995_s16p0` | 2026-08-26 | **高 table-LR β₂ gate · RMSProp β₂=.995，scale=16** | ⚠️ failed | GPU3 CUDA peer-memory hardware error @800 | §24c |
+| `optv5e_rms_b0995_s16p0_r1` | 2026-08-26 | **高 table-LR β₂ gate retry · RMSProp β₂=.995，scale=16** | 🔄 running | GPU1 retry；不覆盖 failed partial | §24c |
+| `ngram5_order5_sample285_v5_transformer_s42` | 2026-08-26 | **5-gram condition · sample285 受控样本量 · Transformer · v5** | planned | 待填 | §26 |
+
+状态约定：`planned` 已登记未开跑 / `running` 运行中 / `done` 已回填 / `stalled` 超期未回填。
+新实验流程：总表加一行拿到唯一 `run_id` → 正文新建 section 按 `agents.md` §3 / `docs/plan.md` 模板填写
+→ 占 GPU 开跑 → 结果回填并改状态。
+
+---
+
+## 1. 注入点消融（2026-08-05，OPHIS 旧 run 迁移）
+
+以下数据来自旧代码库的历史 run（`injpos_*_freq2`），
+作为新 repo 的历史对照基线。新 repo 的 `train.py` 精简重写后需复现这些数值。
+
+### 1.1 1000 步消融
+
+| run | 注入点 | n-gram | optimizer | steps | seed | gap@999 | norm 诊断 |
+|---|---|---|---|---|---|---|---|
+| `injpos_v_freq2` | v | bi+tri | mixed rmsprop | 1000 | 42 | 0.60 | n-gram residual = V 的 6.5% |
+| `injpos_y_freq2` | y | bi+tri | mixed rmsprop | 1000 | 42 | 1.82 | — |
+| `injpos_input_freq2` | input | bi+tri | mixed rmsprop | 1000 | 42 | 0.64 | n-gram residual = wte 的 4.77x |
+| `injpos_baseline_no_ngram` | — | none | mixed rmsprop | 1000 | 42 | 0.03 | — |
+
+### 1.2 2000 步延长
+
+| run | 注入点 | gap@999 | gap@1999 |
+|---|---|---|---|
+| `injpos_v_long2000` | v | 0.60 | 4.70 |
+| `injpos_y_long2000` | y | 2.10 | 4.65 |
+| `injpos_input_long2000` | input | 0.75 | 2.98 |
+
+### 1.3 Table norm × gap（theory obs，103 个点）
+
+| step | v gap | y gap | input gap | v bg_rms | y bg_rms | input bg_rms |
+|---|---|---|---|---|---|---|
+| 10 | 0.00 | 0.00 | 0.00 | 0.037 | 0.037 | 0.037 |
+| 100 | -0.004 | 0.011 | 0.002 | 0.042 | 0.083 | 0.068 |
+| 337(e2) | -0.047 | -0.048 | -0.093 | 0.121 | 0.119 | 0.113 |
+| 686(e3) | -0.077 | -0.790 | -0.342 | 0.160 | 0.149 | 0.150 |
+| 999 | -0.542 | -1.900 | -0.672 | — | — | — |
+
+注：gap = val - train（正值=gap）。bg_rms = bigram table layer_1 table_0 的 param rms。
+
+### 1.4 关键结论
+
+1. **v 注入无 gap 的原因是数值尺度问题**：n-gram value norm 只有 V 的 6.5%，信号被 V 淹没。
+2. **y/input 注入都能产生 gap**：只要 n-gram 信号不走 attention 混合、能有效到达输出。
+3. **gap 仅依赖 n-gram memory**：不需要 current shell / Muon / RoPE / RMSNorm。
+4. **Table norm 增长速度不是 gap 的决定因素；注入点（信号能否到达输出）才是。**
+
+## 2. 新 repo 复现验证（2026-08-05 完成）
+
+用 `code/train.py`（精简版）重跑 v/y/input 三注入点，核对 gap 数值是否与 §1 一致。
+
+| run | 注入点 | steps | gap@999（目标）| gap@999（实测）| 状态 |
+|---|---|---|---|---|---|
+| `nglab_v` | v | 1000 | 0.60 | 0.33 | ✅ |
+| `nglab_y` | y | 1000 | 1.82 | 3.50 | ✅ |
+| `nglab_input` | input | 1000 | 0.64 | 0.79 | ✅ |
+
+**相对顺序一致**：y > input > v。绝对数值与旧实验有差异（LR schedule 不同），但现象完全可复现。
+
+### 2.1 频率 bin 分解验证
+
+- bigram novel frac: 4.3%（旧实验 ~4%）✅
+- trigram novel frac: 31.2%（旧实验 ~30%）✅
+- novel + 低频 bucket 主导 gap（详见 `fig_gap_by_freq.html`）
+
+## 3. 频率 bin 分解（2026-08-05 完成）
+
+用 `code/ngram_freq.py` 构建频率索引，统计 per-bin 的 mean loss 与 total contribution。
+
+结果：novel + 低频 bucket（1-5）主导 gap；高频 bucket（5k+）gap 贡献 ≈ 0。与旧实验一致。
+
+## 4. 双倍 training size 延长实验（2026-08-06，ophis-gpu）
+
+目的：把 fixed replay 的 train 数据从 shard 1 扩大到 shard 1+2，观察更长的 epoch 平台是否能让 replay gap 更清楚。三种注入点使用完全相同的 setting，并行跑到 2000 steps。
+
+### 4.1 Setting
+
+| 项目 | setting |
+|---|---|
+| train shards | `1,2`（约 2x，约 600 steps / epoch） |
+| validation shards | `3,4,5,6,7,8,9,10,6542` |
+| model | vanilla nanoGPT, 8L / 6H / 768D |
+| n-gram | trainable bigram + trigram |
+| optimizer | backbone AdamW + table RMSProp (`beta1=0`, `beta2=0.999`) |
+| learning rate | `0.004`，沿用原 warmup / warmdown schedule |
+| seed | `42` |
+| steps | `2000` |
+| validation / freq eval | 每 50 steps，4 batches |
+| table norm | 每 10 steps |
+| runs | `nglab2x_v`, `nglab2x_y`, `nglab2x_input` |
+
+双倍训练集对应的 exact-context frequency index 为 `data/freq_index_train2x.npz`。每个 run 均保留 `train_log.jsonl`、`table_norm.jsonl`、`freq_bin_loss.jsonl`、`summary.json` 和原始 `train.log`；本地备用归档为 `data/nglab2x_runs.tar.gz`。
+
+### 4.2 Gap 结果
+
+| run | 注入点 | gap@1000 | gap@1200 | gap@1500 | gap@2000 |
+|---|---:|---:|---:|---:|---:|
+| `nglab2x_v` | v | 0.001 | 0.068 | 0.482 | **1.169** |
+| `nglab2x_y` | y | 0.220 | 0.752 | 2.174 | **3.101** |
+| `nglab2x_input` | input | 0.152 | 0.213 | 0.460 | **0.687** |
+
+### 4.3 Epoch 平台统计
+
+| run | epoch | step range | gap mean | gap min–max | final gap |
+|---|---:|---:|---:|---:|---:|
+| v | 1 | 50–600 | -0.005 | -0.053–0.069 | 0.003 |
+| v | 2 | 650–1200 | 0.032 | -0.015–0.068 | 0.068 |
+| v | 3 | 1250–1800 | 0.434 | 0.199–0.654 | 0.614 |
+| v | 4 | 1850–2000 | 0.950 | 0.787–1.169 | 1.169 |
+| y | 1 | 50–600 | 0.001 | -0.044–0.053 | -0.009 |
+| y | 2 | 650–1200 | 0.394 | 0.018–0.752 | 0.752 |
+| y | 3 | 1250–1800 | 1.872 | 0.993–2.345 | 2.308 |
+| y | 4 | 1850–2000 | 2.903 | 2.603–3.101 | 3.101 |
+| input | 1 | 50–600 | -0.008 | -0.045–0.021 | 0.006 |
+| input | 2 | 650–1200 | 0.140 | -0.015–0.220 | 0.213 |
+| input | 3 | 1250–1800 | 0.416 | 0.255–0.582 | 0.507 |
+| input | 4 | 1850–2000 | 0.618 | 0.538–0.687 | 0.687 |
+
+Epoch boundaries occur around steps 600, 1200, 1800. The platform effect is substantially clearer than in the original one-shard run: y shows a stepwise progression `~0 → 0.75 → 2.3 → 3.1`, input shows `~0 → 0.21 → 0.51 → 0.69`, and v only becomes visibly positive after the third replay.
+
+### 4.4 Final table norm and frequency coverage
+
+Final table RMS:
+
+| run | representative bigram RMS | representative trigram RMS | all norm rows |
+|---|---:|---:|---:|
+| v | 0.1202 (`layer_01`) | 0.1371 (`layer_01`) | 200 |
+| y | 0.1449 (`layer_01`) | 0.1611 (`layer_01`) | 200 |
+| input | 0.0860 (`layer_01`) | 0.0876 (`layer_01`) | 200 |
+
+At step 2000, every frequency file has 40 checkpoints and every checkpoint covers all 15 buckets for both bigram and trigram. Bucket fractions sum to exactly 1.0 for train and validation, with 589,824 evaluated tokens per split.
+
+| branch | train novel | val novel | train hit=1 | val hit=1 |
+|---|---:|---:|---:|---:|
+| bigram | 0.0% | 2.85% | 2.34% | 1.61% |
+| trigram | 0.07% | 25.58% | 22.38% | 7.57% |
+
+The novel fractions decrease relative to the one-shard index because the doubled training set covers more contexts, while the low-frequency trigram mass remains substantial. The full raw outputs are retained for future plots and alternative optimizer comparisons.
+
+## 10. 基础实验统计与图表归档（2026-08-06）
+
+目的：把已经完成并确认口径的基础实验，连同完整统计和图表生成方法登记为
+可复用的干净基线。该 section 不启动新训练，不覆盖其他 Agent 的 running
+实验。
+
+> 口径说明：早期 `nglab_v/y/input` 是 validation/freq eval 每 50 步的历史
+> 基线；后续 canonical 主线统一为每 10 步（v10），以获得更密集、更清晰的
+> epoch replay 曲线。代码默认值、`run_injpos.sh` 和 `docs/plan.md` 均采用 v10。
+
+### 数据与统计口径
+
+基础图表使用 `nglab_v`、`nglab_y`、`nglab_input` 的完整日志：
+
+| 统计层级 | 产物 | 内容 |
+|---|---|---|
+| global step | `train_log.jsonl` | train loss、fixed validation loss、global gap、epoch |
+| table memory | `table_norm.jsonl` | 每个 table 的 RMS/norm 随 step 变化 |
+| frequency bucket | `freq_bin_loss.jsonl` | bigram/trigram、train/val、15 个真实 bucket 的 token count、fraction、mean token loss、total contribution |
+| summary | `summary.json` | run 的最终摘要 |
+
+frequency loss 使用 unreduced per-token cross-entropy：先得到每个 token 的
+loss，再按照真实 context 的 training hit-count bucket 聚合。运行文件保存
+每个 bucket 的聚合统计，而不是保存全部逐 token loss 数组。
+
+`novel` 是 training hit count 为 0 的 context。它可以有 validation loss，
+但 train 侧没有对应 token，因此没有 train mean loss，不能定义标准的
+`val loss - train loss`。因此 novel 保留在 raw/fraction 图中，并从 gap
+和 log/log-log 图中排除。
+
+### 图表思想
+
+| 图表 | 目的 |
+|---|---|
+| global loss/gap | 显示 fixed-order replay 后 train 与 validation 的分叉，以及 epoch boundary |
+| table norm × loss | 确认 n-gram table 确实被写入，并对齐 memory growth 与 gap |
+| frequency-bin timeline | 观察每个频率 bucket 的 per-token loss、gap 和 total contribution 如何随 replay 演化 |
+| frequency histogram + final gap | 柱表示 train/val token fraction，曲线表示末态 per-bin gap；同时看“占多少”和“差多少” |
+| log-x / log-log frequency-to-gap | 用 bucket 命中次数的几何中点定量观察频率与末态 gap 的关系；横向误差线表示 bucket 范围 |
+
+### 代码与产物
+
+- canonical generator：`docs/plot_scripts/gen_all_figures.py`
+- 作图目录说明：`docs/plot_scripts/README.md`
+- summary/norm JSON builder：`docs/plot_scripts/build_injpos_data_json.py`
+- epoch-length comparison：`docs/plot_scripts/gen_epoch_scale_figs.py`
+- 早期 provenance generator：`docs/plot_scripts/gen_injpos_plot.py`
+- 输出目录：`docs/figs/`
+- public guide mirror：
+  `guoshaoyang-pku.github.io/blogs/ngram-gap-mechanism-guide/`
+- 运行数据：历史结果目录（未修正版，不作为当前权威数据）
+
+本次归档的图表生成 commit：
+
+- plotting pipeline：`10cb1b0`
+- public guide log/log-log view：`d59111c`
+
+
+---
+
+## 6. 双倍训练集 v10 细曲线（2026-08-06，input）
+
+目的：§4 的 nglab2x 批是 v50（每 50 步），无法与 v10 标准曲线对齐；本 run 用 v10 重跑 input 注入，保证 epoch 平台与 gap 曲线可与标准 1x（v10）逐点比较。
+
+### Setting
+
+| 项 | 值 |
+|---|---|
+| train shards | `1,2`（约 2x，~674 steps/epoch）|
+| validation shards | `3,4,5,6,7,8,9,10,6542`（与 §4 一致）|
+| steps / seed | 2000 / 42 |
+| validation / freq eval | **每 10 steps**（v10）|
+| freq index | `data/freq_index_train2x_fine.npz` |
+| run | `nglab2x_input_v10`（首跑）→ **`nglab2x_input_v10_fv`**（fixed-val 重跑，当前） |
+
+> **val-fix（2026-08-06 20:3x）**：首跑时 `evaluate_val` 从 `val_iter` 顺序取批，
+> v10 下 200 次 eval × 4 批会让 val 曲线在 val 集上滑动（移动窗），
+> 不满足「val 数据始终同一套」。已在 `code/train.py` 修复：启动时一次性捕获
+> `fixed_val_batches`（val loss）与 `fixed_freq_val_batches`（val 侧 freq-bin），
+> 每次 eval 复用同一批 val 数据；train 仍是唯一移动队列。首跑（移动窗）已停，
+> 首轮数据为历史未修正版结果，正式结果以 `_fixed` run 为准。
+
+### 结果
+
+| run | final train | final val | gap@2000 | 观测 epoch 长（边界步）|
+|---|---|---|---|---|
+| `nglab2x_input_v10_fv` | 3.041 | 3.543 | **+0.502** | ~450（460, 900, 1350, 1800）|
+
+- v10 细曲线 200 个点（每 10 步），fixed-val：val loss 每次都测同一批 val 数据。
+- 关键现象：2x 下 2000 步只走 ~4.4 个 epoch，train 下降但 gap 到 2000 步仍只有 +0.5
+  （对照 0.5x 同预算走 18 个 epoch，gap +4.95；见 §7）。
+
+## 7. 半 epoch 训练集（2026-08-06，input）
+
+目的：把 fixed replay 的 epoch 长度减半，与 1x（337 steps/epoch）和 2x（674 steps/epoch）在相同 2000 步预算下对比「epoch 平台长度 → replay gap」的剂量关系。
+
+### Setting
+
+| 项 | 值 |
+|---|---|
+| train shards | `60`（shard_00060 = shard_00001 前 12132 行，~168 steps/epoch）|
+| validation shards | `2,3,4,5,6,7,8,9,10,6542`（与标准一致）|
+| steps / seed | 2000 / 42 |
+| validation / freq eval | 每 10 steps |
+| freq index | `data/freq_index_train0_5x.npz` |
+| run | `nglab0_5x_input`（首跑）→ **`nglab0_5x_input_fv`**（fixed-val 重跑，当前） |
+
+> **val-fix（2026-08-06 20:3x）**：同上 §6——首跑 val 为移动窗，已停；
+> 正式结果以 `_fv` run 为准（train 侧行为完全一致，仅 val 改为固定批次）。
+
+### 结果
+
+| run | final train | final val | gap@2000 | 观测 epoch 长（边界步）|
+|---|---|---|---|---|
+| `nglab0_5x_input_fv` | 1.776 | 6.728 | **+4.952** | ~110–120（120, 230, 350, …）|
+
+- v10 细曲线 200 个点，fixed-val。
+- 关键现象：epoch 减半后，train 塌到 1.78 而 val 升到 6.73，gap 几乎是 2x（+0.50）的 **10 倍**；
+  gap 从 epoch 2（~step 120）就开始转正，符合「epoch 平台越短 → replay 越早、越猛」的剂量关系。
+- 与 1x（`nglab1x_v10_input`，parallel agent，fixed-val，观测 ~230 steps/epoch）对照见
+  `docs/figs/epoch_scale/epoch_scale_train_val_gap.png`（3 条曲线，均已 2000 步完成）。
+
+### 剂量关系汇总（gap@2000，input 注入，v10，fixed-val，seed 42）
+
+| epoch 长 | run | 观测 steps/epoch | train@2000 | val@2000 | gap@2000 |
+|---|---|---|---|---|---|
+| 0.5x | `nglab0_5x_input_fv` | ~110–120 | 1.776 | 6.728 | **+4.95** |
+| 1x | `nglab1x_v10_input` | ~230 | 2.707 | 4.669 | **+1.96** |
+| 2x | `nglab2x_input_v10_fv` | ~450 | 3.041 | 3.544 | **+0.50** |
+
+结论：epoch 平台越短，train 塌缩越深、val 翘起越早越强；2000 步预算内
+0.5x 的 gap 是 2x 的 ~10 倍。
+
+## 8. 标准 1x v10 重跑（2026-08-06，blog 克隆任务）
+
+目的：博客 `ngram-gap-mechanism-guide` 主线的 v/y/input 消融原为 1000 步、
+validation 每 50 步；本批用 **v10 标准（validation + freq eval 每 10 步）重跑到 2000 步**，
+重做 v/y/input 三注入点 + 无 n-gram 对照，产出更细的 loss/gap 曲线，
+并克隆一份博客文档。
+
+### Setting
+
+| 项 | 值 |
+|---|---|
+| train shards | `1`（标准 1x，约 250–316 steps/epoch，含 freq eval 消耗）|
+| validation shards | `2,3,4,5,6,7,8,9,10,6542`（与标准一致）|
+| steps / seed | 2000 / 42 |
+| validation / freq eval | **每 10 steps**（v10）|
+| table norm | 每 10 steps |
+| freq index | `data/freq_index.npz` |
+| runs | `nglab1x_v10_v` / `nglab1x_v10_y` / `nglab1x_v10_input` / `nglab1x_v10_nogram` |
+
+### 结果（ophis-gpu 首波 · 23 桶 freq 统计，已 done；360-1 15 桶重跑进行中）
+
+- ophis-gpu 首波（2026-08-06 21:41–22:41 CST，run_id 同上，使用当时 23 桶版 `ngram_freq.py`）：
+  - `nglab1x_v10_v`：final_gap **4.9497**（train 1.3536 / val 6.3033）
+  - `nglab1x_v10_y`：final_gap **5.0552**（train 1.3601 / val 6.4153）
+  - `nglab1x_v10_input`：final_gap **1.9615**（train 2.7072 / val 4.6687）
+  - `nglab1x_v10_nogram`：final_gap **0.2253**（train 3.0167 / val 3.2420）
+  - freq bin 统计为 23 桶（另一 agent 的未提交改动在开跑前已同步到 ophis），train/val gap 与桶数无关。
+- 360-1 重跑（2026-08-06 22:33–23:51 CST，15 桶提交版 `ngram_freq.py`，4 卡并行；与博客口径一致，作为克隆文档的权威数据）：
+  - `nglab1x_v10_v`：final_gap **5.0406**（train 1.2377 / val 6.2783）
+  - `nglab1x_v10_y`：final_gap **5.0493**（train 1.3698 / val 6.4191）
+  - `nglab1x_v10_input`：final_gap **1.9308**（train 2.7082 / val 4.6390）
+  - `nglab1x_v10_nogram`：final_gap **0.2312**（train 3.0033 / val 3.2345）
+  - epoch 边界（每 10 步 val 记录）：230 / 460 / 680 / 910 / 1130 / 1360 / 1580 / 1810（约 226 steps/epoch，freq eval 每 10 步消耗 4 个 train batch）。
+  - 与 ophis 首波交叉验证：四 run gap 差 < 0.09（桶数不影响 train/val loss）。
+- 产物：图 `docs/figs/main/`；数据 `data/injpos_ablation_data.json`；克隆博客 `guoshaoyang-pku.github.io/blogs/ngram-gap-mechanism-guide-v10/`（validation 每 10 步 · 2000 steps）。
+
+
+## 9. Table 优化器消融（2026-08-06，input，计划）
+
+目的：记录历史实验中 n-gram table 使用 RMSProp（β=(0.0,0.999)，无一阶矩）的行为；当前标准已切换为 β₂=0.99、表学习率 ×2。
+怀疑「table 学得慢/滞后」；本批测试替代优化器是否让 table 更快写入、以及 gap 曲线如何变化。
+
+### Setting
+
+| 项 | 值 |
+|---|---|
+| injection | `input`（blog 主线默认）|
+| train shards / val | `1` / `2,3,4,5,6,7,8,9,10,6542`（与标准一致）|
+| steps / seed | 1000 / 42 |
+| val / freq / norm | 每 10 steps（v10，与 `nglab1x_v10_*` 对齐）|
+| 只变 | table optimizer（backbone 恒为 AdamW lr=0.004）|
+
+| arm | table optimizer | table betas | table lr |
+|---|---|---|---|
+| `rmsprop_2x` | RMSProp | (0.0, 0.999) | 0.008（lr×2）|
+| `adamw_090999` | AdamW | (0.9, 0.999) | 0.004 |
+| `adamw_080950` | AdamW | (0.8, 0.95) | 0.004 |
+| `sgd_09` | SGD+momentum | momentum=0.9 | 0.004 |
+
+launcher：`code/cluster/run_table_opt.sh <arm> <gpu>`。
+代码：`code/train.py` 新增 `--table_optimizer / --table_lr_scale / --table_betas`（默认不变）。
+对照基线：`nglab1x_v10_input`（同 flags，v10/2000）与 `nglab_input`（v50/1000）。
+
+### 结果（ophis-gpu 首波 · 23 桶 freq 统计，已 done；360-1 15 桶重跑进行中）
+
+- ophis-gpu 首波（2026-08-06 21:41–22:41 CST，run_id 同上，使用当时 23 桶版 `ngram_freq.py`）：
+  - `nglab1x_v10_v`：final_gap **4.9497**（train 1.3536 / val 6.3033）
+  - `nglab1x_v10_y`：final_gap **5.0552**（train 1.3601 / val 6.4153）
+  - `nglab1x_v10_input`：final_gap **1.9615**（train 2.7072 / val 4.6687）
+  - `nglab1x_v10_nogram`：final_gap **0.2253**（train 3.0167 / val 3.2420）
+  - freq bin 统计为 23 桶（另一 agent 的未提交改动在开跑前已同步到 ophis），train/val gap 与桶数无关。
+- 360-1 重跑（2026-08-06 22:33–23:51 CST，15 桶提交版 `ngram_freq.py`，4 卡并行；与博客口径一致，作为克隆文档的权威数据）：
+  - `nglab1x_v10_v`：final_gap **5.0406**（train 1.2377 / val 6.2783）
+  - `nglab1x_v10_y`：final_gap **5.0493**（train 1.3698 / val 6.4191）
+  - `nglab1x_v10_input`：final_gap **1.9308**（train 2.7082 / val 4.6390）
+  - `nglab1x_v10_nogram`：final_gap **0.2312**（train 3.0033 / val 3.2345）
+  - epoch 边界（每 10 步 val 记录）：230 / 460 / 680 / 910 / 1130 / 1360 / 1580 / 1810（约 226 steps/epoch，freq eval 每 10 步消耗 4 个 train batch）。
+  - 与 ophis 首波交叉验证：四 run gap 差 < 0.09（桶数不影响 train/val loss）。
+- 产物：图 `docs/figs/main/`；数据 `data/injpos_ablation_data.json`；克隆博客 `guoshaoyang-pku.github.io/blogs/ngram-gap-mechanism-guide-v10/`（validation 每 10 步 · 2000 steps）。
+
+### 9a. Table 优化器消融（郭绍阳，wave1 done / wave2 running）
+
+> 与 §9 的 v10 主线重跑并行进行；只换 table optimizer，backbone 恒为 AdamW lr=0.004，input 注入、1x shard、seed42、v10。
+
+**Wave1 结果（1000 步，2026-08-06 20:41–22:05，ophis）**
+
+| arm | gap@1000 | norm@1000 | norm_growth(10→1000) |
+|---|---:|---:|---:|
+| RMSProp 1x（`nglab1x_v10_input`）| +0.953 | 0.0840 | +133% |
+| RMSProp 2x（`rmsprop_2x`）| +0.939 | **0.1335** | **+270%** |
+| AdamW (0.9,0.999) | +0.912 | 0.0720 | +99% |
+| AdamW (0.8,0.95) | +0.709 | 0.0623 | +73% |
+| RMSProp v50 基线（`nglab_input`）| +0.785 | 0.0781 | +117% |
+
+- 结论：**加速 table 写入最直接有效的是把 RMSProp lr 提到 2×**（norm@1000 +59%）；AdamW 一阶矩对「每 epoch 只被读一次」的稀疏行帮助有限，norm 反而更小、gap 更小（0.8/0.95 时 0.709）。norm 增速 ↑ ↔ gap 大小 ↑ 的对应仍成立。
+- 图：`docs/figs/table_opt/fig_table_opt.{svg,png}`；脚本 `docs/plot_scripts/analyze_table_opt.py`。
+
+**Wave2（2026-08-06 23:53 启动，多机并行）**
+
+- ophis GPU6 `sgd_09`(1000)、GPU7 `rmsprop_2x`(2000，验证更快写表→epoch3/4 更大 gap)
+- 360-1 GPU4/5/6：`rmsprop_2x_s43`、`adamw_090999_s43`、`rmsprop_4x`(1000)
+- 360-2 GPU0/1：`rmsprop_2x_s44`、`adamw_090999_s44`
+- 分析：跑完自动 rsync + `analyze_table_opt.py` 汇总。
+
+### 9b. Wave2：多 seed × LR 剂量 × SGD 机制验证（2026-08-07 回填）
+
+> 承接 §9a wave1；wave2 目标：(i) 用 s43/s44 重复 RMSProp2x / AdamW(0.9,0.999)，估计 seed 方差；(ii) RMSProp 2x 延到 2000 步验证「更快写表 → epoch3/4 gap 更大」；(iii) 新增 RMSProp 4x 验证 LR 剂量效应；(iv) SGD+momentum 验证「无自适应归一化时 table 是否学得动」。
+
+**Wave2 结果（360-1 / 360-2 / ophis，2026-08-06 23:53–08-07 ~10:20）**
+
+| arm | seed | steps | gap@1000 | final_gap | norm@1000 | norm_growth(10→1000) |
+|---|---:|---:|---:|---:|---:|---:|
+| RMSProp 1x（`nglab1x_v10_input`）| 42 | 2000 | +0.953 | +1.931 | 0.0838 | +132% |
+| RMSProp 2x | 42 | 2000 | +1.145 | +2.376 | 0.1544 | +328% |
+| RMSProp 2x | 43 | 1000 | +2.111 | +2.111 | 0.1343 | +272% |
+| RMSProp 2x | 44 | 1000 | +2.089 | +2.089 | 0.1350 | +274% |
+| RMSProp 4x | 42 | 1000 | +2.182 | +2.182 | 0.2502 | +591% |
+| AdamW (0.9,0.999) | 42 | 1000 | +0.912 | +0.912 | 0.0720 | +99% |
+| AdamW (0.9,0.999) | 43 | 1000 | +1.443 | +1.443 | 0.0713 | +98% |
+| AdamW (0.9,0.999) | 44 | 1000 | +1.672 | +1.672 | 0.0712 | +97% |
+| SGD mom0.9 | 42 | 1000 | **−0.002** | −0.002 | **0.0361** | **~0%** |
+
+**多 seed 汇总（mean ± std）**：RMSProp 2x norm@1000 = 0.1413 ± 0.0093（n=3）；AdamW(0.9,0.999) norm@1000 = 0.0715 ± 0.0003（n=3）。
+
+**关键结论**
+
+1. **SGD 无 gap 的机制 = table 根本没学**：SGD mom0.9 下全部 7 张 table（4 bigram + 3 trigram 层）的 param RMS 在 1000 步内纹丝不动（0.03608，精确到 1e-5 无变化），gap≈0 是「table 从未写入」而非「table 学好了但无过拟合」。原因：SGD 的更新量正比于梯度幅值，而 table 行是稀疏命中（每 epoch 每行只被读几次）+ 147k token batch 平均，单步梯度 ~1e-5 量级，×lr=0.004 → 每步有效更新 ~4e-8，1000 步积累不可见。RMSProp/AdamW 用 per-param `g/√EMA(g²)` 把有效步长固定到 ≈lr（与梯度幅值无关），所以 table 才学得动。**这反证了：标准 RMSProp 的每参数自适应归一化是 table 学习的必要条件。**
+2. **LR 剂量效应（超线性）**：RMSProp 1x→2x：norm@1000 0.084→0.144（+71%），gap@1000 +0.95→+1.78（s42/s43/s44 均值 1.782±0.451）；2x→4x：norm@1000→0.250（再 +73%），gap@1000→+2.18。即 table LR 每翻倍，norm@1000 约再 +70%，gap 相应放大。2000 步口径：RMSProp 2x gap +2.376 vs 1x +1.931（+23%），norm@2000 0.179 vs 0.097（+85%）——更快写表 → epoch 3/4 的 gap 显著更大，直接回应「table 学得慢/滞后」。
+3. **AdamW 一阶矩对稀疏行帮助有限**：AdamW(0.9,0.999) norm@1000 0.072 反而 ≤ RMSProp 1x 的 0.084（多 seed 稳定），gap@1000 1.34±0.32 略高但受 norm 上限约束；(0.8,0.95) 更慢（0.062 / +0.709）。动量在「每 epoch 只被读一次」的稀疏行上累积价值低。
+4. **norm 先行、gap 滞后**：RMSProp 4x 在 step500 norm 已达 0.22（≥2x@1000）但 gap 仍 +0.01，到 step1000 才跳到 +2.18——table 写入先完成、train/val 分化随后显现，与 wave1 的 norm↔gap 对应关系一致。
+
+**产物**：图 `docs/figs/table_opt/fig_table_opt.{svg,png}`（含 s43/s44 多 seed mean±std）；脚本 `docs/plot_scripts/analyze_table_opt.py`（自动发现 `nglab1x_opt_*`，seed 42/43/44）。日志：`data/runs/nglab1x_opt_{rmsprop_2x_s43,rmsprop_4x,adamw_090999_s43,adamw_090999_s44,rmsprop_2x_s44,sgd_09}/`。
+
+**历史 setting 说明**：本节结果使用 β₂=0.999 的历史配置；当前标准 table 使用 RMSProp（β=(0.0,0.99)，无 momentum，无 WD，表学习率 ×2），backbone 使用 AdamW（β=(0.8,0.95)，WD=0.1，lr=0.004）。
+
+### 9c. Table 优化器消融 × 2x epoch（郭绍阳，2026-08-07 done）
+
+> 承接 §9b（1x epoch）。用户假设：2x epoch（train shards 1,2，~450 步/epoch）下 2000 步
+> 只走 ~4.4 epoch，之前 norm 曲线到 2000 步仍未平台，怀疑 beta2=0.999 不够合理。
+> 本批在 2x epoch 下扫 table LR（1x/2x/4x）+ beta2（0.999 / 0.9999 / 0.99999），
+> 并在后续补跑 beta2=0.99/0.98（见 §9d）。
+
+**2x epoch · 2000 步 · seed42 · input · fixed-val（360-1/360-2，2026-08-07 12:03–13:30）**
+
+| arm | table LR | beta2 | gap@2000 | norm@2000 | norm@1000→2000 增量 |
+|---|---:|---:|---:|---:|---:|
+| `rmsprop_1x`（§6 `nglab2x_input_v10_fv`）| 0.004 | 0.999 | +0.502 | 0.0851 | +0.012 |
+| `rmsprop_2x` | 0.008 | 0.999 | +0.595 | 0.1576 | +0.024 |
+| `rmsprop_4x` | 0.016 | 0.999 | **+2.071** | 0.3172 | +0.046 |
+| `rmsprop_1x_b2_09999` | 0.004 | 0.9999 | +0.497 | 0.0850 | +0.011 |
+| `rmsprop_2x_b2_09999` | 0.008 | 0.9999 | +0.608 | 0.1589 | +0.023 |
+| `rmsprop_4x_b2_09999` | 0.016 | 0.9999 | **+2.110** | 0.3136 | +0.043 |
+| `rmsprop_2x_b2_099999` | 0.008 | 0.99999 | +0.634 | 0.1593 | +0.024 |
+
+**关键结论**
+
+1. **beta2 往 1 方向（0.9999/0.99999）无效**：norm@2000 与 0.999 差 <0.004，gap 差 <0.04，
+   曲线几乎重合。平台问题不是「beta2 不够接近 1」。
+2. **LR 剂量效应在 2x epoch 下更强**：norm@2000 0.085→0.158→0.317（≈线性翻倍）；
+   gap@2000 0.50→0.60→2.07。4x LR 在 2x epoch 下 gap 已追平 1x epoch 的 RMSProp 2x（+2.38）。
+3. **平台仍未达，但增速放缓**：1500→2000 步 norm 只涨 +0.002~0.005（相对 ~1-3%/500 步）。
+   按此斜率，平台可能需 4000–6000 步；加 LR 比调 beta2 有效得多。
+4. 2000 步下 2x epoch 只走 ~4.4 epoch（1x 是 ~8.7），所以同臂同 norm 时 gap 普遍小于 1x：
+   数据重放次数减半，记忆-过拟合路径没走完。
+
+**产物**：图 `docs/figs/table_opt/fig_table_opt_2x.{svg,png}`、`fig_table_opt_1x_vs_2x.{svg,png}`；
+脚本 `docs/plot_scripts/analyze_table_opt_2x.py`、`analyze_table_opt_1x_vs_2x.py`；
+launcher `code/cluster/run_table_opt_2x.sh`（train shards 1,2 / val 3..10,6542 / 2000 步）。
+
+### 9d. β2 反向扫描（0.99/0.98）+ 1x·RMS4x·b2=0.999@2000 对照（2026-08-07 done）
+
+> 承接 §9c：beta2 往 1 方向（0.9999/0.99999）无效。用户问「b2 合理的值难道不是 0.99 吗」，
+> 本批补跑 β2=0.99/0.98（1x·RMS4x + 1x·RMS2x），并补 1x·RMS4x·b2=0.999 的 2000 步对照
+> （§9b 只有 1000 步值 +2.18）。360-2 GPU0 跑 `nglab1x_opt_rmsprop_4x`（b2=.999，2000 步）。
+
+**1x epoch · 2000 步 · seed42 · input · fixed-val（360-2，2026-08-07 15:17–16:52）**
+
+| arm | table LR | beta2 | gap@1000 | gap@2000 | norm@2000 |
+|---|---:|---:|---:|---:|---:|
+| `rmsprop_4x`（§9b 对照补跑）| 0.016 | 0.999 | +2.360 | **+4.742** | 0.4180 |
+| `rmsprop_4x_b2_099` | 0.016 | 0.99 | +2.389 | **+5.143** | 0.4357 |
+| `rmsprop_4x_b2_098` | 0.016 | 0.98 | +2.568 | **+5.155** | 0.4345 |
+| `rmsprop_2x_b2_099` | 0.008 | 0.99 | — | +2.349 | — |
+| `rmsprop_2x_b2_098` | 0.008 | 0.98 | — | +2.309 | — |
+
+**结论**
+
+1. **β2=0.99/0.98 在 1x·RMS4x 下确实有正效应**：gap@2000 +4.74 → +5.14/+5.16
+   （+0.40~+0.41，约 +8.5%），norm@2000 0.418 → 0.434~0.436（+4%）。与「β2 越接近 1
+   越无效」一致的反向方向：**降低 β2（更激进地除方差）让 table 写得更快**。
+2. **但 1x·RMS2x 下 β2 影响很小**：0.99→+2.349 / 0.98→+2.309 vs 0.999 的 +2.376（§9a）
+   —— LR 剂量低时 β2 的差异被 LR 上限掩盖。β2 只在 table LR 拉满（4x）时才显现。
+3. 结合 §9c：β2 在 [0.98, 0.99999] 全区间内，对 gap@2000 的总影响 ≤ ±0.4，
+   远小于 table LR 翻倍的效果（+0.10→+2.07）。**用户若想让 table 学更快，
+   首选 table_lr_scale=2–4；β2=0.99 可作次级叠加（约 +8%）**。
+
+**产物**：数据 `data/runs/nglab1x_opt_rmsprop_4x{,_b2_099,_b2_098}/`（已同步本地）；
+launcher `code/cluster/run_table_opt_2x.sh` 风格。
+
+## 10. shard 大小扫描（epoch 长度剂量，2026-08-07，彻夜批）
+
+目的：用户假设「epoch 的 shard 越大，gap 越小」。§6/§7 已有 0.5x/1x/2x 三个点
+（gap@2000 = 4.95 / 1.96 / 0.50），本批**连续采样 shard 大小**补 9 个点，
+共 12 点（0.25x → 8x），横轴按 shard 大小（log）与「epoch 数」双尺度分析。
+
+### Setting
+
+| 项 | 值 |
+|---|---|
+| 注入点 / seed / steps | input / 42 / 2000（2.5x=3200、3x=3800、4x=5000 以便同跑 ~5.5 epoch）|
+| validation / freq eval | v10，fixed-val（`fixed_val_batches`）|
+| freq index | 每个 train set 单独建（`data/freq_index_train{0_25x,...,8x}.npz`）|
+| 集群 | ophis-gpu GPU0-5（6 个）+ 360-2 GPU0-2（5x/6x/8x）|
+
+| size | train shards（rows）| val shards | steps |
+|---|---|---|---|
+| 0.25x | 62（6066）| 2..10,6542 | 2000 |
+| 0.5x ✅ §7 | 60（12132）| 2..10,6542 | 2000 |
+| 0.75x | 63（18198）| 2..10,6542 | 2000 |
+| 1x ✅ §8 | 1（24264）| 2..10,6542 | 2000 |
+| 1.5x | 1,61（36396）| 3..10,6542 | 2000 |
+| 2x ✅ §4/§6 | 1,2（48240）| 3..10,6542 | 2000 |
+| 2.5x | 1,2,64（60372）| **4..10,6542** | 3200 |
+| 3x | 1,2,3（72000）| **4..10,6542** | 3800 |
+| 4x | 1,2,3,4（95760）| **5..10,6542** | 5000 |
+| 5x | 1..5（119808）| 6..10,6542 | 2000 |
+| 6x | 1..6（143568）| 7..10,6542 | 2000 |
+| 8x | 1..8（191016）| 9,10,6542 | 2000 |
+
+> 注：train 含 shard2 的 run（≥1.5x）val 用 3..10,6542 避免 val 与 train 重叠（与 §4 的 2x 一致）。
+> **v1 bug（01:40 发现并修正）**：2.5x/3x/4x 首跑 val 仍用 3..10,6542，但它们的 train
+> 已含 shard 3 → fixed val 前几批与 train 重叠（val 被剧透），gap 偏负
+> （2.5x=−0.80 / 3x=−0.71 / 4x=−0.27 @2000）。已停，改 `_v2`（val 从最后一个 train shard 之后开始）。
+
+### 结果（gap@2000，首批 9 点已回填；2.5x/3x/4x 为 v2 重跑，待补）
+
+| size | run | gap@2000 | epoch@2000 |
+|---|---|---|---|
+| 0.25x | `nglab0_25x_input_fv` | **+12.99** | 36 |
+| 0.5x | `nglab0_5x_input_fv` | **+4.95** | 18 |
+| 0.75x | `nglab0_75x_input_fv` | **+2.12** | 12 |
+| 1x | `nglab1x_v10_input` | **+1.96** | 9 |
+| 1.5x | `nglab1_5x_input_fv` | **+0.87** | 6 |
+| 2x | `nglab2x_input_v10_fv` | **+0.50** | 5 |
+| 5x | `nglab5x_input_fv` | −0.05 | 2 |
+| 6x | `nglab6x_input_fv` | −0.11 | 2 |
+| 8x | `nglab8x_input_fv` | +0.03 | 2 |
+
+**结论（用户假设成立）**：epoch shard 越大，gap@2000 单调变小——
+0.25x→8x：+13 → +5 → +2 → +0.5 → ~0（≥5x 在 2000 步内只走 ~2 个 epoch，gap 尚未形成）。
+0.25–2x 段呈近似幂律（log-log 斜率约 −1.5~−2）。
+
+图：`docs/figs/epoch_scale/dose_response_gap2000.png`（gap@2000 vs shard size，log-x）、
+`gap_vs_epochs.png`（gap vs 已过 epoch 数，横轴按 epoch 缩放）、`sweep_train_val_gap.png`。
+脚本：`docs/plot_scripts/gen_shard_sweep_figs.py`。
+
+### 结果（12 点全部完成，2026-08-07 凌晨→早上；2.5x/3x/4x 为 v2 重跑）
+
+| size | run | gap@2000 | epoch@2000 | final gap（步数 / epoch）|
+|---|---|---|---|---|
+| 0.25x | `nglab0_25x_input_fv` | **+12.99** | 36 | +12.99（2000 / 36）|
+| 0.5x | `nglab0_5x_input_fv` | **+4.95** | 18 | +4.95（2000 / 18）|
+| 0.75x | `nglab0_75x_input_fv` | **+2.12** | 12 | +2.12（2000 / 12）|
+| 1x | `nglab1x_v10_input` | **+1.96** | 9 | +1.96（2000 / 9）|
+| 1.5x | `nglab1_5x_input_fv` | **+0.87** | 6 | +0.87（2000 / 6）|
+| 2x | `nglab2x_input_v10_fv` | **+0.50** | 5 | +0.50（2000 / 5）|
+| 2.5x | `nglab2_5x_input_fv_v2` | −0.03 | 4 | +0.69（3200 / 6）⚠️ |
+| 3x | `nglab3x_input_fv_v2` | +0.11 | 3 | +1.94（3800 / 6）|
+| 4x | `nglab4x_input_fv_v2` | −0.03 | 2-3 | +1.55（5000 / 6.2）|
+| 5x | `nglab5x_input_fv` | −0.05 | 2 | −0.05（2000 / 2）|
+| 6x | `nglab6x_input_fv` | −0.11 | 2 | −0.11（2000 / 2）|
+| 8x | `nglab8x_input_fv` | +0.03 | 2 | +0.03（2000 / 2）|
+
+**结论（用户假设成立）**：epoch shard 越大，gap@2000 单调变小——
+0.25x→8x：+13 → +5 → +2 → +1.96 → +0.87 → +0.50 → ~0（≥2.5x 在 2000 步内
+gap≈0，≥5x 只走 ~2 个 epoch、gap 尚未形成）。0.25–2x 段近似幂律
+（log-log 斜率约 −1.5~−2）。横轴双尺度：`gap_vs_epochs.png` 按「已过 epoch 数」
+缩放后可见 3x/4x 在 epoch 5-6 的 gap 反而高于 1.5x/2x → 大 shard 只是**延迟**了
+gap 的出现（步数维度），并未消除（epoch 维度），支持「重播轮数 × 数据大小共同决定」。
+
+**观测到的 epoch 边界**（fixed-val + freq-bin eval 每 10 步额外消耗 4 个 train batch，
+故步数/epoch < 纯 rows/72）：0.5x≈120、1x≈240、2x≈450、2.5x=570/1130/1690/2240/2800、
+3x=670/1340/2010/2670/3340、4x=890/1780/2670/3550/4440（步数/epoch ≈ 120/240/450/560/670/890，
+比例 1:2:3.7:4.7:5.6:7.4 与 rows 比例 1:2:4:5:6:8 基本一致）。
+
+### ⚠️ 2.5x 的 train 停滞（待 v3/s43 确认）
+
+- `nglab2_5x_input_fv_v2`（train=1+2+64，3200 步）train loss 在 steps ~1200–2700
+  （epoch 3-5）卡在 ~3.7–3.9 不动，直到 epoch 6（steps 2800–3200、lr→0.05）才掉到
+  3.31；val（fixed shards 4..）同步回升 3.70→4.01。同规模的 3x/4x 同 epoch 处
+  train 已到 2.0–2.3。
+- 排除项：val 重叠（v1 同停滞）；table 爆炸（trigram RMS 0.134 @3200 vs 3x 0.135
+  @3800 vs 4x 0.144 @5000，曲线平滑）。
+- **最可能原因 = LR 调度混杂**：`get_lr_multiplier` 以 `progress=(step+1)/max_steps`
+  计算，2.5x/3x/4x 是延长 run（3200/3800/5000），LR 升温/衰减都被拉长 →
+  step 2000 时 lr_mult = 0.598/0.742/0.927，而 ≤2x 的 run 在 step 2000 已衰减到
+  0.05。2.5x 的 warmdown 从 1120 开始，停滞区正好落在它的中高 LR 段；当 LR 衰减
+  到 <0.3 后 train 才开始快速下降。因此 v2 的「final gap @~6 epoch」三组之间
+  不可直接比，`gap@2000` 对 2.5x/3x/4x 也测在不同 LR 工作点上。
+- 次要因素：2.5x 的 epoch = 1+2+shard3 前半（shard 64），与 3x 共享前 2 个 shard，
+  数据构成差异待验证。
+
+### 验证批（10:16 启动；v3 已于 11:35 完成，s43 运行中）
+
+- `nglab2_5x_input_fv_v3` / `nglab3x_input_fv_v3` / `nglab4x_input_fv_v3`：
+  同 v2 的 train/val 配置但 **max_steps=2000**（与主 sweep 完全相同的 LR 调度），
+  得到公平的 gap@2000 —— **结果：+0.04 / +0.03 / −0.04**（train 3.49/3.29/3.30，
+  val 3.53/3.32/3.26，epoch 4/3/3）≈ 0，与 v2 延长 run 的 ≈0 一致 → **主剂量曲线
+  对 LR 调度稳健**（2.5x/3x/4x 在 2000 步内 gap 确实≈0，不是 LR 假象）。
+  注：同 LR 调度下 2.5x train@2000 = 3.49（v2 是 3.80）——延长 run 的 LR 拉伸确实
+  拖慢了 2.5x 的 train 下降，但 val 同步下降，gap 仍≈0。
+- `nglab2_5x_input_fv_s43`：2.5x @3200、seed 43，检验停滞是否 seed/数据相关
+  —— **结果（12:20 完成）：与 seed42 v2 几乎逐点重合**，epoch 2-5 train 同样停滞
+  ~3.8–3.9（s43: 4.39/3.94/3.80/3.95 vs s42: 4.41/3.91/3.78/3.92），epoch 6 才掉到
+  3.33，final gap **+0.74 @3200**（s42 +0.69）→ **停滞是「3200 步 LR 拉伸 × 2.5x 数据」
+  的确定性现象，跨 seed 复现**；不是 val 重叠、不是 table 爆炸、不是 seed 噪声。
+  结合 v3（同 LR 调度下 train@2000 = 3.49、无停滞），可归因于延长 run 的 warmdown
+  拉伸（2.5x 从 step 1120 开始衰减、停滞区正好落在中高 LR 段），而 2000 步预算内
+  （主剂量曲线）2.5x 无异常。
+- 脚本：`code/cluster/run_verify_v3.sh`（⚠️ 该脚本未随迁移带入，仅在 ophis-gpu 远端存在；nohup，日志 `verify_v3.log`）。
+
+### 图（已用 v2 数据重跑，10:11 同步回本地）
+`docs/figs/epoch_scale/dose_response_gap2000.png`（gap@2000 vs shard size，log-x）、
+`gap_vs_epochs.png`（gap vs 已过 epoch 数，横轴按 epoch 缩放）、`sweep_train_val_gap.png`。
+脚本：`docs/plot_scripts/gen_shard_sweep_figs.py`。
+
+### 结果（12 点全部完成，2026-08-07 凌晨→早上；2.5x/3x/4x 为 v2 重跑）
+
+| size | run | gap@2000 | epoch@2000 | final gap（步数 / epoch）|
+|---|---|---|---|---|
+| 0.25x | `nglab0_25x_input_fv` | **+12.99** | 36 | +12.99（2000 / 36）|
+| 0.5x | `nglab0_5x_input_fv` | **+4.95** | 18 | +4.95（2000 / 18）|
+| 0.75x | `nglab0_75x_input_fv` | **+2.12** | 12 | +2.12（2000 / 12）|
+| 1x | `nglab1x_v10_input` | **+1.96** | 9 | +1.96（2000 / 9）|
+| 1.5x | `nglab1_5x_input_fv` | **+0.87** | 6 | +0.87（2000 / 6）|
+| 2x | `nglab2x_input_v10_fv` | **+0.50** | 5 | +0.50（2000 / 5）|
+| 2.5x | `nglab2_5x_input_fv_v2` | −0.03 | 4 | +0.69（3200 / 6）⚠️ |
+| 3x | `nglab3x_input_fv_v2` | +0.11 | 3 | +1.94（3800 / 6）|
+| 4x | `nglab4x_input_fv_v2` | −0.03 | 2-3 | +1.55（5000 / 6.2）|
+| 5x | `nglab5x_input_fv` | −0.05 | 2 | −0.05（2000 / 2）|
+| 6x | `nglab6x_input_fv` | −0.11 | 2 | −0.11（2000 / 2）|
+| 8x | `nglab8x_input_fv` | +0.03 | 2 | +0.03（2000 / 2）|
+
+**结论（用户假设成立）**：epoch shard 越大，gap@2000 单调变小——
+0.25x→8x：+13 → +5 → +2 → +1.96 → +0.87 → +0.50 → ~0（≥2.5x 在 2000 步内
+gap≈0，≥5x 只走 ~2 个 epoch、gap 尚未形成）。0.25–2x 段近似幂律
+（log-log 斜率约 −1.5~−2）。横轴双尺度：`gap_vs_epochs.png` 按「已过 epoch 数」
+缩放后可见 3x/4x 在 epoch 5-6 的 gap 反而高于 1.5x/2x → 大 shard 只是**延迟**了
+gap 的出现（步数维度），并未消除（epoch 维度），支持「重播轮数 × 数据大小共同决定」。
+
+**观测到的 epoch 边界**（fixed-val + freq-bin eval 每 10 步额外消耗 4 个 train batch，
+故步数/epoch < 纯 rows/72）：0.5x≈120、1x≈240、2x≈450、2.5x=570/1130/1690/2240/2800、
+3x=670/1340/2010/2670/3340、4x=890/1780/2670/3550/4440（步数/epoch ≈ 120/240/450/560/670/890，
+比例 1:2:3.7:4.7:5.6:7.4 与 rows 比例 1:2:4:5:6:8 基本一致）。
+
+### ⚠️ 2.5x 的 train 停滞（待 v3/s43 确认）
+
+- `nglab2_5x_input_fv_v2`（train=1+2+64，3200 步）train loss 在 steps ~1200–2700
+  （epoch 3-5）卡在 ~3.7–3.9 不动，直到 epoch 6（steps 2800–3200、lr→0.05）才掉到
+  3.31；val（fixed shards 4..）同步回升 3.70→4.01。同规模的 3x/4x 同 epoch 处
+  train 已到 2.0–2.3。
+- 排除项：val 重叠（v1 同停滞）；table 爆炸（trigram RMS 0.134 @3200 vs 3x 0.135
+  @3800 vs 4x 0.144 @5000，曲线平滑）。
+- **最可能原因 = LR 调度混杂**：`get_lr_multiplier` 以 `progress=(step+1)/max_steps`
+  计算，2.5x/3x/4x 是延长 run（3200/3800/5000），LR 升温/衰减都被拉长 →
+  step 2000 时 lr_mult = 0.598/0.742/0.927，而 ≤2x 的 run 在 step 2000 已衰减到
+  0.05。2.5x 的 warmdown 从 1120 开始，停滞区正好落在它的中高 LR 段；当 LR 衰减
+  到 <0.3 后 train 才开始快速下降。因此 v2 的「final gap @~6 epoch」三组之间
+  不可直接比，`gap@2000` 对 2.5x/3x/4x 也测在不同 LR 工作点上。
+- 次要因素：2.5x 的 epoch = 1+2+shard3 前半（shard 64），与 3x 共享前 2 个 shard，
+  数据构成差异待验证。
+
+### 验证批（10:16 启动；v3 已于 11:35 完成，s43 运行中）
+
+- `nglab2_5x_input_fv_v3` / `nglab3x_input_fv_v3` / `nglab4x_input_fv_v3`：
+  同 v2 的 train/val 配置但 **max_steps=2000**（与主 sweep 完全相同的 LR 调度），
+  得到公平的 gap@2000 —— **结果：+0.04 / +0.03 / −0.04**（train 3.49/3.29/3.30，
+  val 3.53/3.32/3.26，epoch 4/3/3）≈ 0，与 v2 延长 run 的 ≈0 一致 → **主剂量曲线
+  对 LR 调度稳健**（2.5x/3x/4x 在 2000 步内 gap 确实≈0，不是 LR 假象）。
+  注：同 LR 调度下 2.5x train@2000 = 3.49（v2 是 3.80）——延长 run 的 LR 拉伸确实
+  拖慢了 2.5x 的 train 下降，但 val 同步下降，gap 仍≈0。
+- `nglab2_5x_input_fv_s43`：2.5x @3200、seed 43，检验停滞是否 seed/数据相关
+  —— **结果（12:20 完成）：与 seed42 v2 几乎逐点重合**，epoch 2-5 train 同样停滞
+  ~3.8–3.9（s43: 4.39/3.94/3.80/3.95 vs s42: 4.41/3.91/3.78/3.92），epoch 6 才掉到
+  3.33，final gap **+0.74 @3200**（s42 +0.69）→ **停滞是「3200 步 LR 拉伸 × 2.5x 数据」
+  的确定性现象，跨 seed 复现**；不是 val 重叠、不是 table 爆炸、不是 seed 噪声。
+  结合 v3（同 LR 调度下 train@2000 = 3.49、无停滞），可归因于延长 run 的 warmdown
+  拉伸（2.5x 从 step 1120 开始衰减、停滞区正好落在中高 LR 段），而 2000 步预算内
+  （主剂量曲线）2.5x 无异常。
+- 脚本：`code/cluster/run_verify_v3.sh`（⚠️ 该脚本未随迁移带入，仅在 ophis-gpu 远端存在；nohup，日志 `verify_v3.log`）。
+
+### 图（已用 v2 数据重跑，10:11 同步回本地）
+## 11. toy-model 台阶清晰度溯源（2026-08-07，郭绍阳 + 2 workers）
+
+> 背景：主实验（1x/2x epoch）gap 曲线「不够清晰」（无 toy 那种每 epoch 台阶）；
+> beta2 扫描（0.999/0.9999/0.99999/0.99/0.98）影响很小。toy5/t5 的 table beta
+> 与主实验同为 `NGRAM_TABLE_BETAS=0.0,0.999`，但其台阶状极清晰——差异主因是
+> **epoch 长度**（toy5 low: 2000 步 ≈ 29 epoch，~70 步/epoch；主实验 1x ~225、
+> 2x ~450 步/epoch）。假设：台阶清晰度 ∝ 重放频率（epoch 越短越清晰），beta 影响次要。
+> 两个 worker 并行验证：(A) toy 侧扫 `NGRAM_TABLE_BETAS` 看台阶是否随 beta 变化；
+> (B) 真实模型侧扫「0.25x/0.5x epoch × beta2」网格，量化台阶清晰度。
+
+### Setting（worker A：toy 侧 beta 扫描）
+| 项 | 值 |
+|---|---|
+| 脚本 | 已迁入 `tasks/` 的 toy 数据生成脚本与 launcher（历史 toy 工作区）|
+| 变体 | `NGRAM_TABLE_BETAS` = 0.0,0.999（基准）/ 0.0,0.99 / 0.0,0.9999 / 0.9,0.999 / 0.9,0.9999 |
+| steps | 2000（low cache，~29 epoch）|
+| 输出 | 每 epoch `headline_gap`（台阶）、`seen_gap` |
+
+### Setting（worker B：真实模型短 epoch × beta2）
+| 项 | 值 |
+|---|---|
+| 脚本 | `ngram-gap-lab/code/train.py` + `code/cluster/run_epoch_scale_v10.sh` 风格 |
+| 变体 | epoch 0.25x/0.5x × beta2 {0.999, 0.99}（=4 run，2000 步，input 注入，seed42）|
+| 对照 | §7 `nglab0_5x_input_fv`（0.5x·beta2=0.999 已有）|
+| 输出 | train_log.jsonl（每 10 步 gap）+ table_norm.jsonl |
+
+### 结果（Worker A：toy 侧 beta 扫描，已完成 2026-08-07 16:10，360-2）
+
+- 5 个变体（0.0,0.999 基准 / 0.0,0.99 / 0.0,0.9999 / 0.9,0.999 / 0.9,0.9999），
+  seed 42、low cache、2000 步（~29 epoch），全部 rc=0。
+- 分析脚本：集群 `toy_analyze.py`（已同步本地新版 `tasks/` 分析脚本 +
+  `toy_model.py` 相对路径 patch），exact-context headline_gap per-epoch。
+- **结论：β 不改变 toy 的台阶形状** —— 5 条 per-epoch 曲线几乎重合，最终 gap
+  7.43–7.89（基准 7.89），200/400/800 步处差异 ≤0.3 nats，无系统性顺序
+  （0.9999 反而略低）。台阶清晰度由重放频率（epoch 长度）决定，与 table β 无关。
+
+| betas | gap@200 | gap@400 | gap@800 | gap@1200 | gap@1600 | gap@2000 |
+|---|---|---|---|---|---|---|
+| 0.0,0.999（基准）| 0.407 | 1.965 | 6.123 | 7.950 | 7.884 | 7.894 |
+| 0.0,0.99 | 0.424 | 2.391 | 5.149 | 7.659 | 7.849 | 7.737 |
+| 0.0,0.9999 | 0.406 | 1.400 | 4.822 | 7.310 | 7.199 | 7.434 |
+| 0.9,0.999 | 0.422 | 2.621 | 5.366 | 7.755 | 7.949 | 7.631 |
+| 0.9,0.9999 | 0.436 | 2.251 | 5.287 | 7.538 | 7.893 | 7.705 |
+
+> 注：绝对值与历史 ophis-gpu 值（t5_on_low final 6.79）不同，因新 `toy_analyze.py`
+> 用 exact-context counts 重新量化 r，同一脚本内 5 个变体可比。step 级曲线显示
+> toy 的 gap 在 epoch 内平滑增长（每 epoch 段内 drift +0.2~+1.3），台阶来自
+> per-epoch 采样点（200/400/800...），与主实验的差异是 epoch 密度而非 β。
+
+### 结果（Worker B：真实模型短 epoch × beta2，已完成 2026-08-07 17:35，360-2 GPU3/4）
+
+- 2 个新 run（0.25x·b2=0.99、0.5x·b2=0.99）对照 §10 的 b2=0.999 参考（2000 步、
+  input 注入、seed42、fixed-val），全部 rc=0，md5 核对通过。
+- 数据：`data/runs/nglab025x_b2_099` / `nglab05x_b2_099`（已同步本地）。
+
+| arm | b2 | gap@2000 | train@2000 | val@2000 | epochs | 台阶清晰度比（boundary/within）|
+|---|---:|---:|---:|---:|---:|---:|
+| 0.25x | 0.999（§10）| +12.991 | 0.376 | 13.367 | 36 | 7.57 |
+| 0.25x | 0.99（新）| **+13.577** | 0.280 | 13.857 | 36 | 6.38 |
+| 0.5x | 0.999（§10）| +4.952 | 1.776 | 6.728 | 18 | 4.12 |
+| 0.5x | 0.99（新）| **+5.017** | 1.789 | 6.806 | 18 | 5.64 |
+
+**结论（Worker B）**
+
+1. **β2=0.99 在短 epoch 下仍只有微弱正效应**：0.25x +0.59（+4.5%）、0.5x +0.07（+1.4%），
+   与 §9d 的 1x·RMS4x 结论（β2=0.99 +0.40，+8.5%）同方向但量级更小。
+2. **β2 不改变台阶清晰度**：清晰度比在 0.25x 下 7.57→6.38、0.5x 下 4.12→5.64，
+   方向不一致且幅度小（±1.5 以内）；而 epoch 长度本身的效应大得多
+   （0.25x 清晰度比 6.4~7.6 vs 0.5x 4.1~5.6 vs 1x 5.5 vs 2x 6.6 混杂）。
+   曲线仍以 epoch 内平滑上升为主（within/step 0.008~0.012），没有出现 toy 那种
+   每 epoch 边界跳变——真实模型的台阶感弱，本质是「每 epoch 段内的连续过拟合」，
+   与 β 无关。
+3. **两 worker 合并结论：台阶清晰度 ∝ 重放频率（epoch 密度），table β（1 阶/2 阶）
+   不改变台阶形态**。想让曲线更「台阶化」，只能缩短 epoch（0.25x 已是 36 epoch，
+   gap@2000 最大 +13.6）；想让台阶变模糊，则拉长 epoch（1x/2x 已模糊）。
+
+### 产物
+- `docs/figs/theory/figs_v11_toy_beta_scan_per_epoch.svg` / `_step_level.svg`
+  （同框 5 变体，per-epoch + step 级）
+- `docs/figs/short_epoch_b2/short_epoch_b2_gap_v11.{svg,png}`（4 条 gap-step 曲线同框 +
+  per-epoch mean gap 台阶视图）、`docs/figs/short_epoch_b2/staircase_shape_comparison.{svg,png}`
+  （toy vs 真实模型归一化台阶形状）
+- 脚本：`docs/plot_scripts/gen_short_epoch_b2_figs.py`；launcher：
+  `code/cluster/run_epoch_short_b2.sh`（Worker B）、`tasks/` 中的 beta-scan launcher（Worker A）
+
+
+
+`docs/figs/epoch_scale/dose_response_gap2000.png`（gap@2000 vs shard size，log-x +
+幂律拟合）、`gap_vs_epochs.png`（gap vs 已过 epoch 数）、`sweep_train_val_gap.png`
+（12 条全曲线）。脚本：`docs/plot_scripts/gen_shard_sweep_figs.py`（SWEEP 映射指向
+v2；本地 `data/runs/<run_id>/train_log.jsonl` 已补齐 12 个 run）。
+
+
+
+## 12. epoch 对齐批（同 epoch 数 × 同 LR-per-epoch 轨迹，2026-08-07 进行中）
+
+> ⚠️ **勘误（2026-08-24）**：本节的**原版设计**是用 `--lr_schedule_epochs 6` 把 LR
+> 锚定到 epoch（下表 Setting 的原始记录）。但**实际落盘的 `_fixed` 批**（
+> `data/runs_fixed/nglab*_e6_fixed`）**并未使用 LR 锚定**——全部 `lr_schedule_epochs=0`、
+> warmdown 0.65（与 §14 控制臂 / plan-4 统一口径一致）。且 `_fixed` 批实际只跑了
+> **5 个 epoch**（非 6），steps = 5 × 每-epoch 步数（如 1x=1685=5×337）。
+> 后续以 `_fixed` 批为准；下方表格保留原版 6.1-epoch 规划值作为历史记录。
+
+> 背景：§10 的 step 对齐 sweep（gap@2000）显示「shard 越大 gap 越小」，
+> 但大 shard 在 2000 步内只走了更少的 epoch（8x 仅 ~2 epoch），
+> 「少重播」与「大 shard」混杂。用户提出：**对齐 epoch 数量**再看。
+> 本批：所有 shard 大小都训到 ~6 个 epoch，且用 `--lr_schedule_epochs 6`
+> 把 LR 锚定到 epoch（所有 run 共享同一条 LR-vs-epoch 轨迹，
+> 排除 §10 ⚠️ 里发现的 LR 拉伸混杂）。
+
+### Setting
+
+| 项 | 值 |
+|---|---|
+| 注入点 / seed | input / 42（与 §10 主 sweep 完全一致）|
+| LR | `--lr_schedule_epochs 6`（progress = epoch/6，warmdown 0.65；epoch 6→7 边界 lr=0.05）|
+| steps | 每 run 跑到 ~6.1 epoch（epoch 7 开始后 ~60-130 步）|
+| val / freq eval | v10，fixed-val |
+| 集群 | 0.25x–1.5x：360-2（14:26–15:47）；2x–3x：360-1（16:17–17:12，360-2 首跑 OOM 后重跑）；4x–8x：ophis-gpu（13:50 启动，进行中）|
+
+| size | run | train shards | val shards | steps（目标 ~6.1 ep）|
+|---|---|---|---|---|
+| 0.25x | `nglab0_25x_e6` | 62 | 2..10,6542 | 420 |
+| 0.5x | `nglab0_5x_e6` | 60 | 2..10,6542 | 780 |
+| 0.75x | `nglab0_75x_e6` | 63 | 2..10,6542 | 1080 |
+| 1x | `nglab1x_e6` | 1 | 2..10,6542 | 1440 |
+| 1.5x | `nglab1_5x_e6` | 1,61 | 3..10,6542 | 2100 |
+| 2x | `nglab2x_e6` | 1,2 | 3..10,6542 | 2800 |
+| 2.5x | `nglab2_5x_e6` | 1,2,64 | 4..10,6542 | 3500 |
+| 3x | `nglab3x_e6` | 1,2,3 | 4..10,6542 | 4200 |
+| 4x | `nglab4x_e6` | 1..4 | 5..10,6542 | 5490 |
+| 5x | `nglab5x_e6` | 1..5 | 6..10,6542 | 6900 |
+| 6x | `nglab6x_e6` | 1..6 | 7..10,6542 | 8260 |
+| 8x | `nglab8x_e6` | 1..8 | 9,10,6542 | 10960 |
+
+### 结果（0.25x–3x 已完成；4x–8x 进行中）
+
+gap 在「6 个完整 pass 后」（epoch 7 首个 eval，lr=0.05）与「pass 6 内 mean/peak」：
+
+| size | gap@6pass (bnd) | pass6 mean | pass6 peak | 到达步数 | gap@2000（§10 对照）|
+|---|---:|---:|---:|---:|---:|
+| 0.25x | **+1.094** | +1.083 | +1.206 | 350 | +12.991 |
+| 0.5x | **+1.419** | +1.566 | +1.616 | 680 | +4.952 |
+| 0.75x | **+0.845** | +0.732 | +0.841 | 1020 | +2.123 |
+| 1x | **+1.911** | +1.918 | +2.147 | 1360 | +1.961 |
+| 1.5x | **+0.914** | +0.848 | +0.977 | 2030 | +0.870 |
+| 2x | **+0.800** | +0.711 | +0.894 | 2690 | +0.502 |
+| 2.5x | **+0.925** | +0.557 | +0.927 | 3360 | −0.027 |
+| 3x | **+2.141** | +1.712 | +2.117 | 4010 | +0.113 |
+| 4x | 进行中（step 4580/5490，epoch 6，gap +1.10 @17:16）| | | | −0.031 |
+| 5x | 进行中（step 4350/6900，epoch 4，gap −0.04）| | | | −0.047 |
+| 6x | 进行中（step 4370/8260，epoch 4，gap −0.12）| | | | −0.110 |
+| 8x | 进行中（step 4340/10960，epoch 3，gap −0.02）| | | | +0.027 |
+
+**初步结论（待 4x–8x 补全）**：对齐 epoch 数后，§10 的「shard 越大 gap 越小」
+**单调关系消失**——0.25x→3x 的 gap@6pass 在 +0.80~+2.14 之间非单调波动
+（1x=+1.91、3x=+2.14 偏高，0.75x/2x 偏低 ~0.8），不再随 shard 大小单调下降。
+step 对齐下的单调递减主要来自**大 shard 看到的重播轮数更少**（8x 在 2000 步内
+只有 ~2 epoch），而非 shard 大小本身；在「同重播轮数 + 同 LR-per-epoch」下，
+每个 epoch 的重放 gap 大致相当（0.8–2.1），与数据量 0.25x–3x 无系统关系。
+> 注意：0.25x 在 6 pass 时 gap 只有 +1.1（vs 2000 步 36 pass 时的 +13.0），
+> 说明小 shard 的巨额 gap 是「重播次数」累积出来的，而非单次重播更强。
+
+图：`docs/figs/epoch_scale/gap_vs_shard_size_epoch_aligned.png`
+（epoch 对齐 vs step 对齐双曲线）、`gap_vs_epoch_curves.png`（gap vs epoch 数，
+各 shard 轨迹）、`epoch_aligned_train_val_gap.png`。
+脚本：`docs/plot_scripts/gen_epoch_aligned_figs.py`。
+
+
+---
+
+## 13. toy 严格 Zipf 分布 · per-bucket gap 双对数（2026-08-07，planned）
+
+> 背景：真实语料近似 Zipf，per-bin gap–frequency 双对数拟合已较好（bigram R²≈0.96、
+> trigram R²≈0.81，见 `docs/figs/theory/fig_zipf_gap_analysis.png`）；toy 当前的频次分布是
+> **anti-Zipf 设计**（N_r∝1/r，每桶 token 数相等，a≈−0.93，R²=0.99）。
+> 用户提出：把 toy 的 ngram 分布筛选成**严格 Zipf**（N_r∝1/r²，经典 rank 指数 1），
+> 再看 gap–ngram 双对数线性是否变好。
+> 理论预判（原历史理论笔记，⚠️ 该文件已不存在；相关推导见 `docs/notes/theory/`）：
+> per-bucket gap g(r) 由训练动力学+val 协议决定，**与总体分布 N_r 可分离**——
+> 严格 Zipf 只改权重/累计曲线，不改 g(r) 形状。本批跑 3 个 seed 做经验验证。
+
+### Setting（与 t5_low 完全一致，仅频次分布不同）
+
+| 项 | 值 |
+|---|---|
+| 分布 | `mode=zipf`：N_r = round(C/r²)，r=1..199，Σ=32768 keys，整数精确计数（counts_exact）|
+| 协议 | coincidental r<16 / shared r≥16（同 low）|
+| 训练 | 2000 步 · input 注入 · seed 42/43/44 · β=(0.0,0.999) · RMSProp(table)+AdamW(backbone) |
+| 数据 | `toy5_data_gen.py --mode zipf` + `toy_prep.py --vocab 2048` → cache `t5_zipf` |
+| 评估 | exact-context per-r gap（r=1,2,4,8,16,...）· val 每 10 步 |
+| 集群 | 待定（360-2 当前不可达；ophis-gpu 需先同步 toy5 代码+建 cache）|
+
+### 预期结果
+
+1. per-bucket g(r) 与 t5_low 重合（可分离性验证）：双对数 R² 仍 ~0.2–0.4，拐点在 r=16。
+2. 严格 Zipf 加权后的累计/每 token 贡献曲线 → 干净幂律（重加权分析已示：
+   token 加权贡献 slope≈−1.09，R²≈0.97）。
+3. 高频桶（r≥32）样本少（N_32≈20, N_64≈5）→ per-bucket 统计在高频端变噪，
+   与理论「纯 Zipf 下高 r 桶统计崩掉」一致。
+
+### 结果（已完成 2026-08-07，360-2 GPU1/2/5）
+
+| run | final gap@2000 | rho_logr | log-log slope | log-log R² | per-r gap (1,2,4,16,64) |
+|---|---:|---:|---:|---:|---|
+| `t5z_zipf_s42` | +7.012 | −0.879 | −0.154 | 0.784 | 8.56 / 9.40 / 8.93 / 5.27 / 5.32 |
+| `t5z_zipf_s43` | +7.956 | −0.861 | −0.131 | 0.765 | 8.97 / 9.91 / 9.73 / 6.12 / 6.00 |
+| `t5z_zipf_s44` | +7.558 | −0.851 | −0.123 | 0.754 | 8.24 / 9.24 / 9.04 / 5.88 / 5.67 |
+| `t5b_beta_000_999_low`（anti-Zipf 对照）| +7.894 | −0.364 | −0.099（全 6 点）/ −0.112（去 r=8 离群）| 0.235 / 0.821 | 8.80 / 9.54 / 9.05 /(8:14.30)/ 6.43 / 6.15 |
+
+**关键观察 / 结论**
+
+1. **严格 Zipf 构建成功**：`mode=zipf` 生成 N_r≈C/r²（r=1:19921, r=2:4980, r=4:1245,
+   r=8:311, r=16:78，比值 4:1），Σ=32768 keys，`counts_exact=True`；3 seeds（42/43/44）
+   全部 rc=0，cache `t5_zipf` 在 360-2 构建（548k tokens/epoch，2000 步 ≈ 34 epoch）。
+2. **per-bucket g(r) 与分布可分离（经验验证成立）**：严格 Zipf 的 per-r gap
+   （8.59/9.52/9.23/5.76/5.66）与 anti-Zipf 的 t5b（8.80/9.54/9.05/6.43/6.15）
+   几乎重合（r=1..4 差 <0.3，r=16/64 差 ~0.5–0.7），同协议下换分布 g(r) 不变。
+3. **双对数线性没有变好**：zipf R²≈0.75–0.78 vs t5b 去 r=8 离群后 R²≈0.82，
+   斜率都只有 ≈ −0.12~−0.15（不是干净幂律 −1）；t5b 全点 R²=0.24 的“坏”主要是
+   r=8 离群（14.30，疑似 low-cache probe 噪声），不是分布问题。
+4. 旧 kink 设计（t5_on_low）的陡斜率 −1.9 / R²=0.80 来自 r≥16 shared key gap→0 的
+   硬拐点，与 Zipf 无关。
+5. 与真实模型对照：真实语料（近似 Zipf）per-bin 双对数 R²=0.81–0.96，已较好；
+   toy 的偏差来自协议（r≥16 拐点 + 低频段 g 微升），分布不是原因。
+
+### 产物
+
+- 代码：已迁入 `tasks/` 的 toy 数据生成脚本（`mode=zipf`）；launcher：
+  `tasks/` 中的 zipf launcher。
+- 数据：历史 `t5z_zipf_s{42,43,44}` run 的 metadata 已纳入本实验记录。
+- 图：`docs/figs/theory/fig_zipf_experiment.{png,svg}`（左：per-bucket g(r) 重合；
+  右：N_r 分布 −1 vs −2）；`docs/figs/theory/fig_zipf_gap_analysis.{png,svg}`（重加权分析）。
+- 脚本：`docs/plot_scripts/gen_zipf_experiment_figs.py`、`analyze_zipf_gap.py`。
+
+## 14. 干净 vanilla 复现（2026-08-23，input 主臂 + nogram 对照）
+
+### Setting
+极简 SSOT（agents.md §1）标准配置，无任何偏离：
+
+| 项 | 值 |
+|---|---|
+| backbone | vanilla nanoGPT 8L·6H·768D，vocab 8192，seq 2048 |
+| n-gram | bigram+trigram，`input` 注入，table 1M（默认未动） |
+| 优化器 | table RMSProp(0.0,0.99)，backbone AdamW(0.8,0.95) lr 0.004 wd 0.1 |
+| 数据 | shard 1 train（24264 rows ≈ 337 steps/epoch），shard 2 val，fixed 顺序 |
+| 步数 / 评测 | 1000 步（≈3 epoch），seed 42，val 每 10 步 fixed batches（v10 口径） |
+
+### 目的
+在 `code/train.py` 干净复现上重跑标准极简设置，确认 gap 现象可复现
+（历史参考：`nglab1x_v10_input` 1.931@2000，`nglab1x_v10_nogram` 0.231@2000）。
+
+### 结果（已完成 2026-08-23）
+
+| run | gap@999 | gap@1000 | train@1000 | val@1000 | 说明 |
+|---|---:|---:|---:|---:|---|
+| `vanilla_input_1000_seed42` | +0.803 | **+0.858** | 3.608 | 4.466 | input 注入主臂，epoch 2 起 fork |
+| `vanilla_nogram_1000_seed42` | +0.022 | **+0.038** | 5.305 | 5.342 | 无 n-gram 对照，全程无 fork |
+
+**关键观察 / 结论**
+
+1. **gap 现象在干净 vanilla 上成功复现**：input 臂 gap 从 epoch 2（step 337 边界）起单调 fork，
+   step 430 时 +0.07 → step 1000 时 +0.86；nogram 对照全程 ±0.04 内波动。
+2. **gap 的来源确认为 n-gram 表**：input 臂 train 压到 3.61（表记住训练 token 的 over-encoding），
+   val 只降到 4.47；nogram 臂 train/val 同步停在 5.3 附近（纯 backbone 泛化）。
+3. 与历史口径一致（`nglab1x_v10_input` 1.931@2000 / `nglab1x_v10_nogram` 0.231@2000），
+   1000 步的 fork 幅度约为 2000 步的一半，趋势吻合。
+
+### 产物
+- `data/runs_fixed/vanilla_input_1000_seed42_fixed/`（train_log.jsonl + summary.json）
+- `data/runs_fixed/vanilla_nogram_1000_seed42_fixed/`
+- 训练代码 `code/train.py`（未改动），数据生成 `code/prepare_data.py`（shard 1/2 现生成）
+
+## 15. P1/P2 因果干预 · 极简 setting 重跑（2026-08-24）
+
+### 目的
+复现 `agents.md` §6.3「废弃结论，保留问题」队列的四条因果结论（原 current-shell 数字），
+在极简 setting（vanilla nanoGPT + input 注入 + table 1M + RMSProp 无动量）下重跑。
+旧结论（DEPRECATED SETTING，见 `docs/_archive/docs/p12-causal-results.md`）：
+table 回滚 −89% / readout 屏蔽 −89% / 冻结 table −49% / 冻结 backbone −54%。
+
+### Setting
+
+| 项 | 值 |
+|---|---|
+| backbone / n-gram | 同 §14（8L·6H·768D，bigram+trigram input 注入，table 1M） |
+| 优化器 / 数据 / 步数 | 同 §14（RMSProp+AdamW，shard1 train / shard2 val，1000 步，seed42，v10 fixed-val） |
+| 干预触发点 | epoch 边界（`--intervention_epoch`，0-indexed：1 = e1→e2 边界 ~step337，2 = e2→e3 边界 ~step674） |
+| 控制臂 | 复用 `vanilla_input_1000_seed42`（+0.858 @1000），不重跑 |
+
+### 干预臂矩阵
+
+| 臂 | 干预 | 触发 | 复现旧结论 |
+|---|---|---|---|
+| `nglab1x_input_reset_e2` | 全 table 行回滚 init | e2 边界 | p1_reset_all_e2（−89%）|
+| `nglab1x_input_reset_e1` | 全 table 行回滚 init | e1 边界 | p1_reset_all_e1（−13%，对照）|
+| `nglab1x_input_mask_e1` | 屏蔽 bigram/trigram readout | e1 边界 | p2_readout_mask_e1（−89%）|
+| `nglab1x_input_freeze_table_e1` | 冻结 table（保留 e1 内容）| e1 边界 | p2_freeze_table_e1（−49%）|
+| `nglab1x_input_freeze_backbone_e1` | 冻结 backbone（仅 table 更新）| e1 边界 | p2_table_gate_only_e1（−54%）|
+
+### 状态（已完成 2026-08-24）
+
+| 臂 | 状态 | final gap@1000 | train@1000 | val@1000 | vs 控制 |
+|---|---|---|---:|---:|---:|---|
+| 控制 `vanilla_input_1000_seed42` | ✅ done | +0.858 | 3.608 | 4.466 | — |
+| `nglab1x_input_reset_e2` | ✅ done | **+0.054** | 4.014 | 4.068 | **−94%** |
+| `nglab1x_input_reset_e1` | ✅ done | +0.351 | 4.004 | 4.355 | −59% |
+| `nglab1x_input_mask_e1` | ✅ done | **+0.058** | 4.269 | 4.327 | **−93%** |
+| `nglab1x_input_freeze_table_e1` | ✅ done | +0.601 | 3.851 | 4.453 | −30% |
+| `nglab1x_input_freeze_backbone_e1` | ✅ done | +0.780 | 4.159 | 4.939 | −9% |
+
+**关键观察 / 结论**
+
+1. **两个 −89% 级关键干预在极简 setting 上复现**：
+   - e2 边界全 table 回滚（`reset_e2`）：gap 0.858 → 0.054（**−94%**，旧 −89%）。
+     e1/e2 两 epoch 累积的行内容是 e3 大 gap 的必要条件。
+   - e1 边界屏蔽 readout（`mask_e1`）：gap 0.858 → 0.058（**−93%**，旧 −89%）。
+     n-gram readout 通道是 gap 的必要传导口。
+2. **回滚时机剂量**：e1 回滚（−59%）比 e2 回滚（−94%）弱——e1 擦掉后 e2 还能重写，
+   到 e3 时行历史部分恢复；e2 擦掉后只剩 e3 一个 epoch 重写，恢复不了。与旧的
+   「e1 −13% / e2 −89%」方向一致（本批 e1 干预更大，因极简 setting 的 e1 行写入更强）。
+3. **table write vs backbone 各贡献一半的旧结论未完全复现**：本批 freeze_table −30%、
+   freeze_backbone −9%，backbone 冻结影响远小于旧的 −54%。即极简 setting 下 gap 更依赖
+   table 持续写入 + backbone 放大，backbone 本身的训练动态贡献较小（旧 current-shell 有
+   gate/reader 等额外可训练放大器，占一半）。
+4. 与 §14 控制臂串起来：**gap 的产生与传导完全依赖 n-gram 表**（回滚/屏蔽 → 塌缩到
+   nogram 对照量级 0.04~0.06），主干结论稳定跨 backbone 架构。
+
+### 产物
+- 干预实现：`code/train.py`（新增 `--intervention` / `--intervention_epoch` / `--table_mult`）
+- launcher：`code/cluster/run_causal_minimal.sh`
+- 集群数据：`data/runs_fixed/nglab1x_input_{reset_e2,reset_e1,mask_e1,freeze_table_e1,freeze_backbone_e1}_fixed/`
+
+## 16. bf16 精度验证 + 提速（2026-08-24）
+
+### 目的
+确认把全 fp32 前向切到 bf16（`torch.autocast`，权重/优化器仍 fp32）不会改变 gap 现象，
+同时量化提速幅度，作为后续实验的默认计算精度。
+
+### 测速（H200，batch 72×2048，28.8B 全模型，单卡空闲）
+
+| 配置 | train step | 相对 fp32 |
+|---|---:|---:|
+| fp32 | ~2.76 s | 1.0x |
+| bf16（autocast） | ~0.48–0.53 s | **~5.3x** |
+| bf16 + torch.compile | ~0.50 s（GPU 共租下） | ~5.5x |
+
+- fp8 不可行：`torch.autocast(dtype=float8_e4m3fn)` 在 `nn.Linear` addmm 上不支持，
+  需专门 `_scaled_mm` 工程，未采用。
+- `--dtype {fp32,bf16,fp8}` + `--compile` 开关已加入 `code/train.py`；
+  标准 launcher `run_causal_minimal.sh` 默认 `bf16` + `--compile`（可通过
+  `NGLAB_DTYPE` / `NGLAB_COMPILE` 覆盖），并为每臂隔离 `TORCHINDUCTOR_CACHE_DIR`。
+
+### 同超参精度对照（关键）
+
+| 项 | fp32 `vanilla_input_1000_seed42` | bf16 `..._bf16_samehp` |
+|---|---:|---:|
+| 表优化器 | RMSProp β₂=0.999, lr_scale=1.0 | 同左（完全一致） |
+| train@1000 | 3.608 | 3.580 |
+| val@1000 | 4.466 | 4.405 |
+| **gap@1000** | **+0.858** | **+0.825** |
+| gap 曲线 | 见下 | 逐点重合（10/340/670/1000: +0.009/+0.021/+0.361/+0.858 ↔ +0.008/+0.049/+0.374/+0.825）|
+
+**结论：bf16 在相同超参下逐点复现 fp32 曲线（loss 差 <0.1，final gap 0.858 vs 0.825），
+且提速 ~5.3x。后续正式实验默认 bf16。**
+
+> 注意：先前 `vanilla_input_1000_seed42_bf16`（gap +1.661）用了不同超参
+> （β₂=0.99, lr_scale=2.0），非精度差异，勿与其对比。
+
+### 产物
+- 图：`docs/figs/fig_fp32_vs_bf16_samehp.png`
+- 代码：`code/train.py`（`--dtype` / `--compile`）、`code/cluster/run_causal_minimal.sh`（默认 bf16+compile）
+- 集群数据：`data/runs/vanilla_input_1000_seed42_bf16_samehp/`（+0.825）
+
+## 17. S1 三轴 scaling 验证（2026-08-24，plan-5）
+
+### 目的
+在唯一极简 setting 下正式验证三条 scaling 曲线：epoch 长度 L、exact context
+frequency f、table size（1M 逻辑地址只向下）。计划：
+`docs/plans/plan-5-s1-three-axis-handoff.md`。
+
+### 登记（planned → running → done；seed 42 首轮）
+
+| run_id 前缀 | 轴 | setting | 状态 |
+|---|---|---|---|
+| `basic_*` | 基础 QC 锚点（7 run，seed 42） | 25 步 cadence + bf16（历史 run 含 compile） | 🟡 历史 QC；不属于当前标准证据 |
+| `bb_safety_L1_nogram_5000` | backbone safety（L1 no-ngram 5000 步） | **旧 cadence**（50 步 + fp32 无 compile） | ✅ done（360-2 GPU7，**final fixed gap +16.66 @5000**） |
+| `ep_{L}_{arm}_fs` | epoch · fixed-step | L1-L4 × 4 arms × 1000 步，step-anchored LR，10 步 cadence，历史 bf16+compile | 🟡 历史 16/16；当前 no-compile 待重跑 |
+| `ep_{L}_{arm}_fe` | epoch · fixed-epoch | 6 完整 epoch（L1=252/L2=504/L3=1008/L4=2022 步），epoch-anchored LR，历史 bf16+compile | 🟡 历史 16/16；当前 no-compile 待重跑 |
+| `tbl_{TM}_{arm}` | table · L4 | 23 measured sizes；原始 21 个 dense run 每 10 步，另 48 个 sparse 加密 run 只在最终步监测；1000 步，历史 bf16+compile | 🟡 历史 69/69；当前 no-compile 待重跑 |
+| `freq_{arm}_{fs/fe}` | frequency 轴专用 | L4 + 1M table × 4 arms，exact-freq 跟随 validation 步点 | 🟡 历史 8/8；当前 no-compile 待重跑 |
+
+### 关键口径决策（用户 2026-08-24 拍板）
+
+1. **L4 = 337 batches/epoch** = 完整 shard 1（24,264 chunks / 72）。L1/L2/L3 为
+   嵌套前缀 42/84/168。此前 plan/launcher 用 L4=336（42 的整数倍），已废弃。
+2. **普通网格不计算 exact-frequency / freq-bin 诊断**（不传 `--freq_index`），
+   只算在线 train/val loss + online gap。fixed train probe 仅作为显式诊断；
+   频率轴单独跑一小批
+   run（L4 + 1M table × 4 module 臂，exact-freq 跟随 validation 步点）。
+3. **no-ngram baseline 重跑当前标准**（10 步 cadence + bf16 不 compile，每个 L
+   一个）。`bb_safety_L1_nogram_5000`（50 步 + fp32）只能作长训 backbone gap
+   量级参考，不能作为正式 grid 的 no-ngram baseline。
+4. 当前标准完整曲线的 validation/table norm/frequency 每 10 步；只需曲线
+   可用每 50 步；只需末端结果使用 `--val_steps 1000`，frequency 观测严格
+   跟随这些 validation 步点；table 加密取点使用 sparse 模式，只在最终 step
+   1000 监测。
+
+### seed 42 正式网格回填（2026-08-24）
+
+ - 结果目录：`data/runs_scaling/<run_id>_fixed/`，共 **109/109** 个正式 run；
+- 所有历史 run 的 `summary.json` 均满足当时 contract：bf16、`torch_compile=true`、
+  RMSProp `(0.0,0.99)`、`table_lr_scale=2.0`；dense run 为 10 步
+  validation/probe cadence，48 个 sparse table run 只在最终 step 1000 触发；
+- 109 个正式 fixed train probe SHA256 全部为 `38d1254a827759d6`；该 probe
+  现只作为 exposure-contaminated 诊断，主 gap 不再读取它；
+- JSON/JSONL 产物无 NaN、坏行或缺失；table run 均有
+  `table_occupancy.json`；
+- 三轴图和摘要位于 `docs/appendices/s1_scaling_three_axis/figs/`；
+- frequency 轴的探索性两因素拟合和逐项排除 manifest 位于
+  `figs/fit_manifest.json`；
+- **尚未完成**：seed 43/44 复现、跨 seed uncertainty、frequency 的
+  epoch-dependent fit，因此不把 seed 42 结果写成已确认的 scaling 定律。
+
+### 17.2 三 seed 复现与 H1–H4 检验（2026-08-25 回填）
+
+历史 compile 波次已完成 seed 43/44 三 seed 复现；这些结果仅作探索性数学审计：
+
+| 批次 | run_id 后缀 | run 数 | launcher | 状态 |
+|---|---|---:|---|---|
+| epoch fs/fe | `_s43` / `_s44` | 32×2 | `run_scaling_epoch_full.sh`（`SEED=43/44`，dense 10 步） | ✅ done |
+| table 加密 | `_s43` / `_s44` | 36×2（12 mult × 3 module） | `run_scaling_table_full.sh`（sparse 仅最终步） | ✅ done |
+| frequency fs/fe | `_s43` / `_s44` | 8×2 | `run_scaling_frequency_axis.sh`（exact-freq 每 10 步） | ✅ done |
+
+- 历史波次合计 **261 个 `_fixed`**（s42:109，s43/s44 各 76），通过当时
+  contract / NaN / probe-hash QC，但不满足当前 no-compile 标准；
+- 修复了 `train.py` 中 exact-freq 与 `--fixed_train_probe 0` 的解耦问题
+  （有 `freq_index` 时始终建 `exact_freq_log`，train 侧用独立诊断迭代器抓
+  4 个固定 batch，不消费训练流），历史 frequency 轴生成了
+  `exact_freq_loss.jsonl`；其中 seed 42 及部分复现 run 的 exact-frequency
+  cadence 为 100 步，部分后续复现 run 为 10 步，不能把它们统一写成当前
+  10 步标准；
+- 代码已 md5 核对同步到 360-2（train.py `5beca0cd…`）；集群单测 14/14 通过。
+
+**H1–H4 判定**（全部 online gap 主口径，详见附录报告 §7）：
+
+| 猜想 | 判定 |
+|---|---|
+| H1 两因素频率律 | β seed-stable（四组 cv 4–13%）；A/c/γ identifiability-limited（cv 33–141%），不报告绝对值 |
+| H2 epoch 对齐律 | ΔG 方向 seed-stable（24/24 同号为正）；幅度 fixed-step seed-sensitive（L1_both cv>50%）、fixed-epoch 稳（L4_trigram 5.90/5.72/5.56，cv≈2%） |
+| H3 table saturation | 有限窗口内总体上升；未解析稳定饱和平台，也不能写成全区间幂律；扩展 table 轴需在 no-compile 标准下重跑 |
+| H4 模块交互 | I 显著非零且 seed-sensitive（fs 下变号，fe L4 强负；table mult≥48 剧烈变号），**不允许 bigram+trigram 合并单公式**，both 仅作对照 |
+
+产物：`figs/epoch_final_gap.csv`（96 行）、`epoch_deltaG_fs_multiseed.png`、
+`table_summary.csv`（141 行）、`fit_manifest.json`（12 个三 seed 拟合）。
+
+### bb_safety 最终结果（2026-08-24 回填）
+
+`bb_safety_L1_nogram_5000`（L1=42 b/ep，5000 步，no-ngram，seed 42）已完成：
+
+| 量 | 值 |
+|---|---:|
+| 最终 fixed train loss | 0.0065 |
+| 最终 fixed val loss | 16.666 |
+| **最终 fixed gap** | **+16.66** |
+
+- **含义**：长训（5000 步）no-ngram backbone 自身就会产生巨大 gap（train 接近
+  0 而 val 16.7）—— 1000 步时 gap ≈ 0 不代表 5000 步仍为 0。这与
+  `bb_safety` 的早先快照趋势一致（4000 步 +13.24）。
+- **口径警告**：该 run 为旧 cadence（50 步）+ fp32 无 compile，仅作量级参考。
+  正式 full grid 的 no-ngram baseline 使用 10 步 cadence + bf16、不 compile；
+  S1 主 gap 统一读取 online train/val，fixed probe 只作诊断。
+- **影响**：no-ngram 对照必须在每个 L、每个对齐下重跑，不能假设 backbone
+  gap 恒为零；`ΔG = G_module − G_no-ngram` 的修正口径因此仍然必要。
+
+### 说明
+- 数据源：`data/runs_scaling/<run_id>_fixed/`（新 namespace）。
+- 代码：`tasks/s1_scaling_three_axis/`（train.py / ngram_freq.py /
+  table_occupancy.py / launchers / analysis）。
+- 每个 run 的 summary.json 含 `table_betas=[0.0,0.99]`、`table_lr_scale`、
+  `compute_dtype`、`torch_compile`、`fixed_train_probe_sha256`、`epoch_batches`、
+  `exact_freq_eval_interval`。S1 正式 run 的
+  `fixed_train_probe_batches=4`；scaling 分析直接读取 `train_log.jsonl` 的
+  online gap。
+
+### 17.1 口径修订（2026-08-24）
+
+- **主 gap**：`train_log.jsonl` 的 `val_loss − train_loss`，其中 train loss
+  是当前在线训练 batch，val 是同一步的 fixed validation。
+- **fixed train probe**：只用于 exposure/训练进度诊断，不作为 scaling gap、
+  epoch-1 gap 或模块比较的证据；`uniform` 采样也不能替代 online loss。
+- 已同步：`agents.md` §1.6、S1 README、epoch/table/frequency 分析脚本，以及
+  标准 scaling launcher 的 `--fixed_train_probe 0` 和 no-compile contract。
+
+## 18. 训练提速工程：freq-bin eval 瓶颈 + `--val_steps`（2026-08-24）
+
+### 目的
+用户报告"以前 7 分钟 1000 步，现在一次实验常要 20+ 分钟"。逐项量化
+fp32→bf16、torch.compile、freq-bin eval 三类因素的耗时贡献，并引入
+`--val_steps` 允许只测特定步的 gap，作为 §1.4 纪律的补充手段。
+
+### 决定性对照（H200，batch 72×2048，28.8B 全模型，单卡空闲）
+
+| 配置 | train step | 说明 |
+|---|---:|---|
+| fp32（无 freq） | ~1.91 s | 旧 baseline |
+| bf16（无 freq） | **0.32–0.37 s** | ~5.4x，bf16 提速真实有效 |
+| bf16 + torch.compile | **1.20 s** | **负优化，慢 3.5x**（见下） |
+| bf16 + freq eval（每 10 步） | ~2.09 s | freq eval 是最大瓶颈 |
+| bf16 + `--val_steps`（30 步内 2 次完整 eval） | ~0.58 s | 只测末端时很快 |
+
+结论：bf16 本身加速 ~5.4x 有效；当前"跑一次 20+ 分钟"的主因是
+**freq-bin eval**（每 10 步一次，每次 ~13s = 8 次完整 forward + 全量 CE，
+logits 72×2048×8192 ≈ 12 亿元素），不是 bf16 没生效。
+
+### torch.compile 负优化结论
+- bf16 + compile 反变慢 3.5x（0.34s → 1.2s/步）。
+- 疑似原因：`NanoGPT` 的 `bigram_ves` / `trigram_ves` 字典 + 索引逻辑导致大量
+  graph break，inductor 生成低效代码且 32 个 compile worker 占用资源。
+- **决定：默认不 `torch.compile`**。已从所有 launcher 移除 `--compile`，
+  agents.md §1.4 更新为"bf16 不 compile"。
+
+### `--val_steps` 功能
+- 新增 CLI：`--val_steps "1000"` —— 只在指定步做 val + freq eval；若显式启用
+  fixed train probe，则 probe 也跟随该步点，
+  训练全程不打断（val 步点由 `NGRAM5_PROBE_STEPS` 语义自动对齐）。
+- summary.json 记录 `val_steps` 字段；freq eval 跟随 val_steps 对齐。
+- smoke 验证：30 步 val_steps=10,30 → 0.58s/步，freq 自动对齐。
+- 用途：只关心末端 gap 的实验（如因果干预、bf16 对照）用 `--val_steps 1000`
+  可大幅省时；关心曲线的实验仍用默认 interval 10。
+- agents.md §1.4 纪律已更新：允许按实验需要调整 eval 步点。
+
+### freq 相关优化
+- `hit_count_tensor` 从 `np.vectorize` + dict 逐元素查改成 `np.searchsorted`
+  （预排序 keys）：速度 0.381s → 0.235s，正确性验证 bigram/trigram max diff = 0。
+- 注意：该优化只解决 lookup 部分；freq eval 慢的主因是 8 次 forward + 大 CE，
+  真正杠杆是降 freq 频率或 `--val_steps`。
+
+### 产物
+- 代码：`code/train.py`、`tasks/s1_scaling_three_axis/code/train.py`（`--val_steps`）、
+  `code/ngram_freq.py`（searchsorted）
+- 图：`docs/figs/fig_bf16_vs_fp32_accel.png`（如有）
+- 纪律：`agents.md` §1.4（bf16 不 compile；允许调整 eval 步点）
+
+---
+
+## 19. 自然语言 5gram（order=5）· 极简 setting 重跑（2026-08-24）
+
+### 背景
+历史上 `ngram5_freq_gap` 包实际只跑过 trigram（`--order 3`），order=5 的自然语言
+5gram 从未用极简 setting 执行过。OPHIS 旧库只有 order=5 的 smoke（`run_contract_20260806-115854.json`：
+`"order": 5`，但 `loader_selection.smoke: true`，train_docs=200，25600 tokens）。本次
+用 `code/make_ngram_blocks.py` + `ngram5_freq_gap/trainer.py` 在极简 setting 下重跑。
+
+### 数据（`data/ngram5_minimal_order5/`，新生成）
+| 项 | 值 |
+|---|---|
+| 来源 | `data/tokenized/shard_00001.bin`（train shard 1，全局语料，49.7M tokens）|
+| train shards | 1 |
+| val shards | 2,3,4,5,6,7,8,9,10,6542（与 train 不重叠）|
+| order | 5（5-gram context）|
+| block_len | 7（`[c0..c4, next, SEP]`）|
+| train_blocks | 49,716,931 |
+| val_blocks | 489,350,326 |
+| distinct 5-gram contexts | **43,039,820**（train epoch 全量）|
+| 生成器 | `code/make_ngram_blocks.py`（滑窗，每事件一份）|
+
+### Setting（全部对齐 agents.md §1 极简基线）
+- 模型：vanilla nanoGPT 8L·6H·768D，vocab 8192，seq 2048，learned abs，LayerNorm，tied
+- 表：1M hash table（524,288 行 × 2 hash），RMSProp，`NGRAM_VE_BETAS=(0.0, 0.99)`（trainer 硬编码）
+- 骨干：AdamW `(0.8, 0.95)`，lr 0.004，weight_decay 0.1
+- table LR scale = **2.0**（表实际 lr 0.008），与主线极简 setting 一致
+- 注入：input（wte），`NANOGPT_NGRAM_INJECTION_POSITION=input`
+- batch 72 × 2048 = 147,456 tokens；2000 步；seed 42；bf16，**不 compile**（§18 结论）
+- val：fixed batches，interval 10；freq probe：exact_context，edges `0,1,2,3,4,5,6,11,21,51,101,201,501,1001,5001`
+- `NGRAM5_TRACE_ALL_BATCHES=0`（避免 OPHIS 1.7GB trace 事故）
+
+### 臂
+| run_id | 臂 | 说明 |
+|---|---|---|
+| `ngram5_order5_trigram_fixed` | +trigram 注入 | 5gram context 通过 trigram 表注入（input 位），主臂 |
+| `ngram5_order5_puretransformer_fixed` | 纯 transformer | 无 n-gram 表（negative control）|
+| `ngram5_order5_trigram_s43_fixed` | +trigram 注入 · seed 43 | 与 N1 完全相同 setting，仅 seed=43，跨 seed 复现 |
+
+### 状态
+- seed 42 的四个 run 与 seed 43 主臂复现均已完成；最终值以各 run 的
+  `training_loss.jsonl` / `validation_loss.jsonl` 为准。
+- seed 43 主臂使用与 seed 42 相同的数据、fixed probe 和评测口径，仅训练 seed 改为 43。
+
+### 结果（2026-08-24 回填，全部 2000 步；数值按最终 JSONL 校正）
+
+| run_id | 臂 | 表 LR | train@2000 | val@2000 | global gap |
+|---|---|---|---|---|---|
+| `ngram5_order5_trigram_fixed` | +trigram 注入 | ×2 (0.008) | 0.7165 | 0.7098 | **−0.0067** |
+| `ngram5_order5_trigram_lr1x_fixed` | +trigram · LR×1 | ×1 (0.004) | 0.7736 | 0.7751 | +0.0015 |
+| `ngram5_order5_trigram_lr4x_fixed` | +trigram · LR×4 | ×4 (0.016) | 0.7118 | 0.7026 | **−0.0092** |
+| `ngram5_order5_puretransformer_fixed` | 无表对照 | — | 0.8311 | 0.8364 | +0.0054 |
+| `ngram5_order5_trigram_s43_fixed` | +trigram 注入 · seed 43 | ×2 (0.008) | 0.6946 | 0.6856 | **−0.0090** |
+
+主臂两 seed 汇总：global gap 均值 **−0.0078**，样本标准差 **0.0016**
+（seed 42/43；仅两个 seed，不作更强的 uncertainty 声明）。
+
+**关键发现（自然语言 5gram vs 合成 markov）**：
+1. **表有效降低 train loss**：LR×2/×4（0.70）< LR×1（0.77）< 无表（0.83）。表在学 5gram context。
+2. **全局 gap 极小（−0.0092 到 +0.0054）**：43M distinct 5gram contexts 挤在 1M 行表，collision 可能稀释 coincidental gap。与合成 markov（gap 可达 2+）完全不同；其中主臂的 −0.0067（seed 42）与 −0.0090（seed 43）方向一致，但目前仍只有两个 seed。
+3. **表 LR 消融**：×2 与 ×4 的 train/val loss 较低（0.7165/0.7098 与 0.7118/0.7026），×1 稍差（0.7736/0.7751）；LR 消融目前只有 seed 42。
+4. **per-bucket gap 峰在中频段**（trigram 主臂，step 2000）：
+   - `[21,51)`: **+1.00**
+   - `[101,201)`: +0.55
+   - `[501,1001)`: **+1.82**
+   - `[1,50)`: ~0 甚至负（表学不过来，43M 挤 1M）
+   - `>5000`: ~0（样本足够，val 稳定）
+   - **暂观察到 gap 峰在中高频而非低频**，但这些桶的 token fraction 很小、可配对频次类较少；seed 43 的主臂图形相近，但仍需 seed 44 和更多配对频次统计后再判断是否是自然语言长尾分布下的稳健现象。
+
+### 待办
+- [x] 回填两臂 final gap @2000
+- [x] 学习率消融（table LR scale ×1 / ×2 / ×4）
+- [x] 频次分解图（gap-vs-frequency，seed 42/43 探索性版本）
+- [ ] bigram 注入臂（是否需要）
+- [x] seed 43 主臂复现（与 seed 42 同一 data/probe hash，gap −0.0090）
+- [ ] seed 44 复现；LR 消融的多 seed 复现
+
+## 20. bigram 大表 + 免碰撞（perfect-map）极限臂（2026-08-25）⚠️ **历史 4 层框架**
+
+> **2026-08-25 补充**：本节所有 run 均基于**旧 4 层求和 + 2-hash 拼接架构**。
+> 用户同日拍板改为 **clean 单表**重扫（`docs/notes/method/clean-table-rework.md`），
+> 本节结果（mult=128/256 离群、perfect 2.17 倍等）属于历史框架，引用时须标注
+> `[HISTORICAL 4-LAYER FRAMEWORK]`。
+
+### 目的（superposition/localization 相图，郭绍阳提议）
+
+检验 gap Δ 与 hash table 大小 K 的定量关系。粗糙模型 Δ ~ min(N, K) 预言
+K<<N 时 log-log 斜率 1；实测 23 点网格斜率仅 0.49（bigram），且现有网格
+K/N 最大 0.30（bigram N=3.54M distinct contexts），从未触及 K~N 的
+jamming 区。本实验把 bigram 推到 jamming 点并加零碰撞极限锚点。
+
+### 偏离极简基线的登记（P1 要求）
+
+- `tbl_128/256_bigram_fixed`：仅改 `table_mult`（128/256），其余全对齐 §1。
+- `tbl_perfect_bigram_l1_fixed`：bigram hash → **预计算 packed-context→row
+  静态映射（零碰撞，N+1 行含 UNK）**，且 bigram 表**仅开第 1 个 ngram 层**
+  （fp32 显存约束：4 层 × 3.54M × 768 × 12B > 单卡 H200）。OOV（train 未见）
+  context → 共享 UNK 行，val OOV 率由 map 构建脚本记账。
+- `tbl_64_bigram_l1_fixed`：mult=64 + `--bigram_single_layer`，作为 perfect
+  臂的同层数对照（二者 Δ 只在单层口径内直接可比；与 4 层主网格的折算另记）。
+- train.py 变更：`--bigram_perfect_map` / `--bigram_single_layer` /
+  `--save_final_model`（自 tasks 副本合并回归）+ exact_freq probe=0 兜底修复。
+  全部新参数默认关闭，**不影响任何已有 run 的口径**。
+
+### 登记（planned）
+
+| run_id | mult | K/N_bi | 监测 | 角色 |
+|---|---|---|---|---|
+| `tbl_128_bigram_fixed` | 128 | 0.59 | sparse（末端） | 过渡段加密 |
+| `tbl_256_bigram_fixed` | 256 | 1.19 | sparse（末端） | jamming 点 |
+| `tbl_64_bigram_l1_fixed` | 64 单层 | 0.30 | freq=50 曲线 | 单层对照 |
+| `tbl_perfect_bigram_l1_fixed` | 零碰撞单层 | ∞ | freq=50 曲线 | Δ∞ 锚点 + forking 上限 |
+
+数据/优化器/步数全部对齐正式网格（shard 1，val 2-10+6542，epoch 337，
+β=(0,0.99)，lr 0.004×2，bf16，1000 步，seed 42）。launcher:
+`tasks/s1_scaling_three_axis/launchers/run_bigram_large_perfect.sh`；
+map 构建: `code/tools/make_bigram_perfect_map.py`。
+
+### 结果（2026-08-25 回填，seed 42，1000 步，online final gap）
+
+| run_id | K/N_bi | collision | singleton | final gap |
+|---|---|---|---|---|
+| `tbl_128_bigram_fixed` | 0.59 | 0.714 | 0.060 | **+0.5773** |
+| `tbl_256_bigram_fixed` | 1.19 | 0.518 | 0.190 | **+1.2042** |
+| `tbl_64_bigram_l1_fixed`（单层碰撞对照） | 0.30 | 0.852 | 0.005 | **+0.2604** |
+| `tbl_perfect_bigram_l1_fixed`（单层零碰撞） | ∞ | 0 | 1.0 | **+0.5651** |
+
+参照：4 层 mult=64（正式网格）= +0.9985。perfect map：distinct = 3,538,293
+（与 table_occupancy 完全一致），val OOV token 率 **4.30%**（shards 2,3）。
+
+**发现**：
+1. **单层裁决：零碰撞 gap 是碰撞版的 2.17 倍**（0.565 vs 0.260，同层数同预算，
+   唯一差异是碰撞）→ 碰撞本身抑制 gap，直接支持「碰撞削弱表记忆」机制。
+   层数折算 0.999/0.260 ≈ 3.8（4 层近似线性累加）。
+2. **4 层 64→128→256 非单调**（0.999 → 0.577 → 1.204）：mult=128 显著离群。
+   单 seed 无法区分两种解释：(a) 用户猜测的 jamming 区临界涨落；(b) hash 实现
+   伪影（乘法 hash mod 2^k，R=2^19/2^20/2^21 的低位结构差异；occupancy 早已
+   显示 hash 远非均匀：mult=64 singleton 0.47% vs Poisson 预言 ~11.5%）。
+   **需 seed 43/44 仲裁**。
+3. **forking 两种定义分离**（freq=50，epoch 边界 337/674）：
+   - 边界瞬时 train 跳变：碰撞版更大（@337 −0.112 vs perfect −0.041）——
+     碰撞行在 epoch 边界反复争抢重写，震荡大；
+   - epoch 级 gap 增速：perfect 更陡且持续（epoch 2 起每 epoch 增量 ~+0.2 vs
+     对照 ~+0.13）——零碰撞行无干扰，记忆净积累快。
+   - 「K>N 时 forking 剧烈」的预言按定义 (a) 方向相反、按定义 (b) 方向成立；
+     剧烈的是争抢震荡，不是净记忆积累。
+4. **row-level（32/16/8/4/2 五档，fixed probe）**：同档内 row gap 对行的
+   distinct-context 负载基本不敏感（曲线平），档间整体平移（token 加权均值
+   0.05 → 0.28，log 线性）→ 与 winner-take-all 记忆一致：碰撞行里主导高频
+   context 吃掉大部分梯度，负载本身边际效应弱；容量（K/N）才是主变量。
+
+产物：`figs/fig_gap_vs_KN.png`（相图）、`figs/fig_l1_forking.png`（forking 对比）、
+`figs/fig_row_level_multi.png`（row-level 三面板）；
+`tasks/s1_scaling_three_axis/analysis/plot_gap_vs_KN.py` / `plot_l1_forking.py`。
+
+### 后续（待拍板）
+- [ ] mult=128/256 的 seed 43/44（仲裁 128 离群：临界涨落 vs hash 伪影）
+- [ ] 可选：mult=128 换一组 primes 重跑（直接检验 hash mod 2^20 结构假说）
+- [ ] 可选：4 层 perfect（bf16 表存储，~87GB）验证 4× 单层折算 ≈ 2.26
+
+### 追加：非 2 幂加密取点（dense-fill，2026-08-25 下午）
+
+用户要求脱离 2/4/8/16 采样，验证 gap vs log K 的连续性。补 9 点
+（bigram-only，sparse 末端，同 §20 口径）：
+
+| mult | 44 | 52 | 60 | 80 | 96 | 112 | 160 | 192 | 224 |
+|---|---|---|---|---|---|---|---|---|---|
+| gap | 0.414 | 0.624 | **1.122** | 0.494 | 0.581 | **1.181** | 0.586 | 0.602 | 0.998 |
+
+**发现 5（修正发现 2）**：mult=128 不是孤点——加密后 **K/N ≈ 0.15–1.2 整个区间
+都是锯齿**，峰谷交替（…0.41→1.12→0.49→1.18→0.58→0.60→1.00→1.20），振幅 ±0.3–0.4
+与趋势本身同量级。关键证据：mult=60 的峰（1.122）与 mult=112（1.181）的 R 都不是
+2 的幂（491520 / 917504）→ **峰不绑定 2 的幂 mod 结构，hash mod 2^k 伪影解释减弱，
+jamming 临界涨落解释增强**（但仍需 seed 43/44 排除「每 mult 一个 hash 实例」的
+实例噪声）。包络仍随 log K 上升（0.09 → 0.6–1.2），log K 解释趋势、不解释涨落。
+
+产物：`figs/fig_gap_vs_KN.png`（34 点折线版）；
+launcher `tasks/s1_scaling_three_axis/launchers/run_bigram_dense_fill.sh`。
+
+### 后续（待拍板）
+- [ ] jamming 区若干点的 seed 43/44（仲裁锯齿：临界涨落 vs 单 hash 实例噪声）
+- [ ] 可选：4 层 perfect（bf16 表存储，~87GB）验证 4× 单层折算 ≈ 2.26
+
+## 21. v3 波次：freq-bin train 侧改为当前 batch（online，零额外 forward）（2026-08-25）
+
+### 目的
+
+v2 波次 freq-bin 的 train 侧是「每次评估从独立诊断迭代器新取 4 个 train batch」
+的窗口（agents.md 新口径 §1.6 之前的历史做法）。用户 2026-08-25 拍板：
+**前 4 个 batch 是错误做法**，train 侧应直接看当前训练 batch 的 per-token loss
+（与 online train_loss 同一 batch、同一 forward），且省掉 4 batch 的重复 forward。
+
+### 口径变更（P2 登记：影响口径，新起 run_id）
+
+- `code/train.py`：训练循环最后一个 micro-batch 的 forward 改为
+  `return_token_losses=True`，缓存 `(inp, ptl)`；freq-bin eval 的 train 侧用
+  `accumulate_freq_bins(...)` 直接复用该 per-token loss，不再 `next(freq_train_iter)`。
+- 因此 v3 的 `freq_bin_loss.jsonl.train` 与 `train_log.jsonl.train_loss` 完全同 batch
+  同 forward（train_loss = 该 batch 非 pad 均值；per-bin 加权均值应等于它，可用作校验）。
+- val 侧、exact_freq、fixed probe 全部不变（仍为 fixed / 诊断口径）。
+- launcher 复用 `run_rerun_v2.sh`（bf16、不 compile、β₂=0.99、×2），run_id 后缀 `_v3`。
+- `exact_freq_loss.jsonl` 的 train 参考仍取 4 个固定 batch（它是 exact-f 的固定参考，
+  属诊断口径，不进主图）；如用户后续要求也改当前 batch，另起 run_id。
+
+### 登记（planned → running）
+
+| run_id | 内容 | steps | 机器 |
+|---|---|---|---|
+| `nglab_smoke_v3` | 冒烟 100 步（回填时跳过） | 100 | 360-2 GPU0 |
+| `nglab1x_input_v3` … 全量 15 run（injpos 4 + dose 11） | 主线重刷 | 2000 | 三机队列 |
+
+### 校验（smoke 必过）
+
+- [ ] `freq_bin_loss.jsonl` 每 eval 的 train token_count = 147456（单 batch）
+- [ ] per-bin 加权均值 ≈ 同 step `train_log.train_loss`（相对差 < 1e-3）
+
+## 22. clean 单表 bigram R 网格（新 SSOT 框架首扫，2026-08-25）
+
+### 目的
+
+按 `docs/notes/method/clean-table-rework.md`（用户 2026-08-25 拍板的新 SSOT）
+重扫 table-size 轴：`--bigram_clean_table R`（单 `nn.Embedding(R, 768)`、单层、
+单 hash、R 任意）。§20 的 34 点网格为 [HISTORICAL 4-LAYER FRAMEWORK]，本节
+是新框架的第一张相图，与旧框架并列对照。
+
+### 实现（train.py）
+
+- `--bigram_clean_table R`：bigram 分支强制单层 `{ngram_layers[0]}` + `bigram_K=1`
+  （单全宽 embedding，`torch.cat` 单张量恒等，lookup 路径零侵入）。
+- 与 `--bigram_perfect_map` 组合 = 零碰撞锚点（K=1 单表 + map 行号，
+  R = n_distinct+1，不再需要 single_layer 开关）。
+- 默认 0（关闭），旧 4 层路径与已有 run 口径不变；四路径本地冒烟通过。
+- `table_occupancy.py --bigram_clean_table R --trigram_clean_table R`：clean
+  模式 occupancy（每个 branch 均为 layer-1 primes 的第一组 hash、R 行）。
+- run_id namespace `ctbl_*`，产物仍入 `data/runs_scaling/`（与旧框架并列）。
+- launcher `tasks/s1_scaling_three_axis/launchers/run_clean_table_grid.sh`
+  （wave 调度；rolling-slot 曾把 786K/65K 发到被 perfect/1M 占用的卡上 OOM，
+  已修为按波次 wait）。
+
+### 结果（seed 42，1000 步，online final gap，N=3,538,293）
+
+| R | K/N | gap | | R | K/N | gap |
+|---|---|---|---|---|---|---|
+| 64K | 0.019 | +0.097 | | 1.5M | 0.444 | +0.306 |
+| 128K | 0.037 | +0.146 | | 2M | 0.593 | +0.305 |
+| 256K | 0.074 | +0.159 | | 2.5M | 0.741 | +0.370 |
+| 384K | 0.111 | +0.190 | | 3M | 0.889 | +0.393 |
+| 512K | 0.148 | +0.218 | | 4M | 1.185 | +0.466 |
+| 768K | 0.222 | +0.281 | | **perfect** | **1.0 零碰撞** | **+0.561** |
+| 1M | 0.296 | +0.265 | | | | |
+
+**发现**：
+1. **clean 单表的 gap-R 曲线光滑近似单调**（仅 768K→1M 微降 0.016、
+   1.5M≈2M 平台），与旧 4 层框架 ±0.3–0.4 的剧烈锯齿形成决定性对比。
+   **旧框架的"jamming 锯齿"主要是 4 层 × 2-hash 拼接的架构干涉伪影
+   （8 组 hash 相互作用），不是 jamming 物理**——§20 发现 5 的临界涨落
+   解释在新框架下被否证。这是 clean 重做的第一个实质科学收益。
+2. **碰撞抑制 gap 跨框架复现**：clean perfect（0.561）vs clean R=1M 碰撞
+   （0.265）= **2.12 倍**（旧框架单层对为 2.17 倍）；且 R=4M（K/N=1.19）
+   的 hash 点（0.466，collision=0.325）仍显著低于 perfect——**R>N 时 hash
+   伪碰撞继续压制 gap，零碰撞的价值不随容量增大消失**。
+3. **旧 4 层 gap 大部分是参数量/求和结构的功劳**：同 R=512K 附近，旧 4 层
+   mult=64 gap=0.999 vs clean 0.218（4.6 倍）；旧单层 mult=64（K=2 拼接）
+   0.260 vs clean 0.218——2-hash 拼接贡献 ~19%，4 层求和贡献 ~3.8 倍。
+   回答 SSOT §4 问题 3：主要是参数量（4× 行数）+ 求和平均的方差缩减，
+   不是"表记忆容量"本身的增益。
+4. **forking（clean，同架构唯一差异=碰撞）**：epoch 边界 train 跳变
+   perfect 更大（@337 −0.136 vs −0.115；@674 −0.085 vs −0.070），gap 增速
+   也更快更持续（epoch 2 起每 epoch +0.15–0.2 vs +0.05–0.1）——clean 框架下
+   零碰撞同时赢得瞬时跳变与净积累，旧框架"碰撞版瞬时跳变更大"的干涉
+   模式消失，进一步支持锯齿=架构伪影。
+5. min(N,K) 模型（图中虚线，归一化到 perfect）在 K/N<0.3 段仍高估斜率
+   （实测 log 斜率 ~0.35–0.5）：频率加权修正依然必要。
+
+产物：`figs/fig_clean_gap_vs_KN.png`、`figs/fig_clean_forking.png`；
+`tasks/s1_scaling_three_axis/analysis/plot_clean_figures.py`。
+
+### §22b · wave-2 加密网格 + trigram 首扫（2026-08-25）
+
+用户拍板：table size 自由加密（小 R 区重点）、双对数视图、forking 只画
+小表/大表/零碰撞三条。launcher `run_clean_table_dense2.sh`（25 run，360-2
+GPU 1-7，wave 调度）。bigram 累计 29 点（新增 16K/32K/96K/160K/192K/320K/
+448K/640K/896K/1.25M/1.75M/2.25M/3.5M/5M/6M + 64K/4M 的 freq=50 `_curve`
+补跑），trigram 首扫 6 点（R=64K…8M，K/N 0.0034–0.44；trigram N=18,989,467，
+无零碰撞锚点——R=N 需 19M 行放不下单卡）。
+
+**发现**：
+1. **大 R 区（K/N>1）涨落回归**：5M 回落到 0.407（低于 4M 的 0.466），
+   **6M 跳到 0.751，超过 perfect 锚点 0.561**。"零碰撞是所有 hash 表的
+   上界"在 K/N>1.5 区不再成立（该论断在 K/N≤1.19 区全部成立）。
+   单 seed 无法区分 hash 实例噪声与真实过饱和行为——**待 seed 43/44 仲裁**。
+2. **低 R 饱和**：16K/32K 均 ~0.08，与 64K 0.097 接近——小表端 gap 由
+   backbone 自身过拟合地板主导，表贡献趋零。
+3. **trigram 远陡于 bigram**：同 K/N 下 gap 3–5 倍；log-log 低 K 段斜率
+   tri ≈ 0.67 vs bi ≈ 0.33。min(N,K) 模型预言低 K 斜率 1，两者均不满足
+   （bigram 0.33–0.49、trigram 0.67），频率加权 × 采样律修正仍必要。
+4. **双对数视图**（`fig_clean_gap_vs_KN_loglog.png`）：bigram 主体近似
+   幂律但大 R 断点清晰；trigram 全段更接近直线幂律。
+5. **forking 三曲线**（64K / 4M / perfect）：64K gap 轨迹平（<0.1）但
+   瞬时跳变幅度与其他曲线相当（@337 −0.107）；4M 与 perfect 前 2 epoch
+   重合，epoch 3 perfect 拉开——零碰撞优势主要在 replay 后期的积累阶段。
+
+产物：`figs/fig_clean_gap_vs_KN.png`（semilog 29+6 点）、
+`figs/fig_clean_gap_vs_KN_loglog.png`、`figs/fig_clean_forking.png`；
+launcher `run_clean_table_dense2.sh`。
+
+### 后续（待拍板）
+- [ ] clean 网格 seed 43/44（**仲裁 6M>perfect 是否 hash 实例噪声**；同时
+  确认光滑性与 perfect 倍率的跨 seed 稳健性）
+- [ ] clean 版 trigram 加密 + both module（SSOT §3.2 要求三 module）
+- [ ] clean 版 row-level（--save_final_model + probe，复用 §20 管线）
+- [ ] jamming 区更密取点（R 1M-3M 间插 6-8 点）刻画 1.5M≈2M 平台结构
+- [x] trigram clean occupancy 模式已实现；18 点 v5 双表产物的 occupancy
+  回填待执行，见 §24b。
+
+---
+
+## §21 · V4 波次（uniform LR 基线 · 2026-08-25）
+
+**背景**：v2/v3 全程含 warmdown（`get_lr_multiplier`，前 35% 步线性升、后 65% 步线性降）。
+对可解释性实验，lr 的时间结构会与「n-gram 记忆 vs 泛化」动力学混淆，违反 P1 极简原则。
+**用户 2026-08-25 拍板**：改为 **uniform LR（constant schedule）**，作为 v4 新基线。
+生产 cosine 流行是为 maximize performance，不是为 mechanism isolation——所以选 uniform 而非 cosine。
+
+**代码改动**（commit `0da5ad0`）：
+- `code/train.py`：新增 `--lr_schedule warmdown|constant`（默认 warmdown 保持兼容）；
+  `constant` 时 `get_lr_multiplier` 恒返 1.0。
+- `code/cluster/run_rerun_v4.sh`：新 v4 launcher，显式传 `--lr_schedule constant`。
+
+**口径影响**：lr schedule 全程变化 → 影响所有已有 run 的 gap 曲线形状。
+按 P2 必须新起 run_id，故开 **v4 波次**（后缀 `_v4_fixed`）。v2/v3 降级为「含 warmdown 的历史口径」。
+
+**当前队列**（360-2，GPU3-6 并行，2000 步，seed 42）：
+- `nglab1x_input_v4` / `nglab1x_y_v4` / `nglab1x_v_v4` / `nglab1x_nogram_v4`
+
+| run_id | 日期 | 实验 | 状态 | gap 关键值 | 详情 |
+|---|---|---|---|---|---|
+| `nglab1x_input_v4` | 2026-08-25 | 注入点消融 · input · uniform LR | 🔄 running | 待填 | §21 |
+| `nglab1x_y_v4` | 2026-08-25 | 注入点消融 · y · uniform LR | 🔄 running | 待填 | §21 |
+| `nglab1x_v_v4` | 2026-08-25 | 注入点消融 · v · uniform LR | 🔄 running | 待填 | §21 |
+| `nglab1x_nogram_v4` | 2026-08-25 | 注入点消融 · nogram 对照 · uniform LR | 🔄 running | 待填 | §21 |
+
+---
+
+## §21a · Clean-table backbone LR 快速扫描（warmup 后恒定 · 2026-08-25）
+
+**科学问题**：在当前 clean 单表、online train loss、固定 validation 的极简契约下，
+将 backbone base LR 从 `0.004` 降至 vanilla nanoGPT 量级的 `0.0006` 或
+`0.0004`，是否改变 input 注入的训练/验证分叉形态？这是一组筛选实验，不替代
+多 seed 主结论。
+
+**唯一变量**：`--lr`。三个臂均保留 `--table_lr_scale 2.0`，因此 table 的实际
+LR 分别为 `0.008`、`0.0012`、`0.0008`；不能把比较解释为“固定 table LR”的实验。
+其余坐标严格一致：vanilla nanoGPT 8L/6H/768D、input 注入、clean bigram/trigram
+单表 `R=2^20`、RMSProp `(0.0,0.99)`、bf16、不 compile、fixed replay、seed 42、
+train shard `1`、非重叠 validation shards `2,3,4,5,6,7,8,9,10,6542`、每 10 step
+fixed val + current-batch frequency bins，`warmup_constant`（100 steps）。
+
+**可证伪预期**：若 `0.004` 的异常形态主要由绝对步长过大造成，低 LR 臂应在相同
+1000 steps 内呈现更稳定的 train/val 曲线；若只是学习更慢，则低 LR 臂会整体滞后，
+而非仅消除异常。验收条件：每臂存在 `summary.json`、100 个 logged `train_log.jsonl`
+点、100 个 `freq_bin_loss.jsonl` 点，且 summary 记录 clean-table R、bf16、未 compile、
+`warmup_constant` 与本臂 LR。
+
+| run_id | 日期 | 实验 | 状态 | gap 关键值 | 详情 |
+|---|---|---|---|---|---|
+| `lrscan_input_lr0p004_wc` | 2026-08-25 | clean-table input · backbone LR 0.004 | ✅ done | +0.060@1000 | §21a |
+| `lrscan_input_lr0p0006_wc` | 2026-08-25 | clean-table input · backbone LR 0.0006 | ✅ done | +1.534@1000 | §21a |
+| `lrscan_input_lr0p0004_wc` | 2026-08-25 | clean-table input · backbone LR 0.0004 | ✅ done | +1.187@1000 | §21a |
+| `lrscan_y_lr0p0006_wc` | 2026-08-25 | clean-table y · backbone LR 0.0006 | ✅ done | +1.008@1000 | §21a |
+| `lrscan_v_lr0p0006_wc` | 2026-08-25 | clean-table v · backbone LR 0.0006 | ✅ done | +0.209@1000 | §21a |
+| `lrscan_nogram_lr0p0006_wc` | 2026-08-25 | no-gram 对照 · backbone LR 0.0006 | ✅ done | +0.025@1000 | §21a |
+
+**执行位置与命令**：360-1（GPU0/1/2），仓库
+`/data/home/guoshaoyang/ngram-gap-lab`，解释器 `python3`；命令唯一地由
+`code/train.py` 与下列显式 flags 确定：
+
+```bash
+CUDA_VISIBLE_DEVICES=<gpu> python3 -u code/train.py \
+  --run_id <run_id>_fixed --out_dir data/runs_fixed --data_dir data/tokenized \
+  --train_shards 1 --val_shards 2,3,4,5,6,7,8,9,10,6542 --seed 42 --steps 1000 \
+  --dtype bf16 --injection_position input --enable_unigram 0 --enable_bigram 1 \
+  --enable_trigram 1 --bigram_clean_table 1048576 --trigram_clean_table 1048576 \
+  --n_layer 8 --n_head 6 --n_embd 768 --vocab_size 8192 --sequence_len 2048 \
+  --device_batch_size 72 --total_batch_size 147456 --lr <0.004|0.0006|0.0004> \
+  --lr_schedule warmup_constant --warmup_steps 100 --table_optimizer rmsprop \
+  --table_betas 0.0,0.99 --table_lr_scale 2.0 --val_interval 10 --val_batches 4 \
+  --freq_index data/freq_index.npz --freq_eval_interval 10 --freq_eval_batches 4 \
+  --exact_freq_eval_interval 10 --table_norm_interval 10 --fixed_train_probe 0
+```
+
+**回填结果（seed 42，step 1000）**：`0.004` 的 online train / fixed val 为
+`6.174 / 6.234`，gap `+0.060`；`0.0006` 为 `2.899 / 4.433`，gap
+`+1.534`；`0.0004` 为 `3.121 / 4.309`，gap `+1.187`。三臂各有 100 个
+`train_log.jsonl`、`freq_bin_loss.jsonl`、`table_norm.jsonl` 记录；summary
+已核验为 clean `R_bigram=R_trigram=1,048,576`、`bf16`、`torch_compile=false`、
+`lr_schedule=warmup_constant`。现象图：
+`docs/figs/main/fig_lrscan_clean_input.png`，其原始数据仅来自这三条 run 的
+`train_log.jsonl`。该单 seed 快速筛选支持优先推进 `6e-4`；是否把它升级为
+SSOT 仍需完整注入点臂与多 seed 确认。
+
+**注入点快速对照（已登记）**：在同一 `0.0006` 基线补 `y`、`v` 与 no-gram
+负对照，各 1000 steps。相对 `lrscan_input_lr0p0006_wc`，每条只改 injection
+coordinate（no-gram 则关闭 bigram/trigram，作为既定负对照）；其余完整命令、数据、
+clean R、评估节奏与验收条件完全相同。**回填（seed 42，step 1000）**：input
+`+1.534`、y `+1.008`、v `+0.209`、no-gram `+0.025`。因此 input 的强 gap
+不是低 LR 下纯 backbone 的共同现象；y 也有分叉但低于 input，v 更弱。该结果只作为
+1000-step 单 seed gate，完整 2000-step 四臂仍由 §25 的 `nglab1x_*_v5` 重刷确认。
+
+---
+
+## §24 · V5 优化器与学习率定标（clean-table 主线 gate，2026-08-25）
+
+**固定 v5 基线**：vanilla nanoGPT 8L/6H/768D；input 注入（optimizer
+对照唯一例外见下）；bigram + trigram clean 单表，均为 `R=1,048,576`；
+fixed replay train shard `1`、非重叠 val `2,3,4,5,6,7,8,9,10,6542`；
+seed 42、bf16、无 compile；backbone AdamW `(0.8,0.95)`、wd `0.1`、
+`lr=0.0006`；`warmup_constant --warmup_steps 100`；online train loss 与
+fixed validation loss 的同 logged-step gap。table 主基线为 RMSProp 无动量
+`(0.0,0.99)`、`table_lr_scale=2.0`（实际 `0.0012`）。
+
+**目的与判定**：先锁定 table 优化器的健康区，而不是挑选最大 gap。一个臂若出现
+NaN/Inf、末端 train loss 不低于 no-gram 对照、或 table RMS 失控，判为不健康，不得
+升级为主线。末端筛选臂显式使用 `--val_steps 1000`，只在 step 1000 计算固定 val、
+online gap 与频率统计；关键曲线臂每 10 step 记录完整轨迹。最终主线必须同时满足：
+训练稳定、input/nogram 分离、表 scale=`2` 的局部稳健性、β₂=`0.99` 的局部稳健性，
+并由 seed 43/44 复现。
+
+| run_id | 变量（其余严格为 v5 基线） | 预算 / 测量 | 状态 | 详情 |
+|---|---|---|---|---|
+| `optv5_rms_b099_s0p5` | table scale **0.5** | 1000，末端 | ✅ done | gap +0.490 |
+| `optv5_rms_b099_s1p0` | table scale **1.0** | 1000，末端 | ✅ done | gap +0.861 |
+| `lrscan_input_lr0p0006_wc` | table scale 2.0、β₂ 0.99 | 1000，完整曲线 | ✅ done | v5 参照，gap +1.534 |
+| `optv5_rms_b099_s3p0` | table scale **3.0** | 1000，末端 | ✅ done | gap +1.904 |
+| `optv5_rms_b099_s4p0` | table scale **4.0** | 1000，末端 | ✅ done | gap +2.083 |
+| `optv5_rms_b095_s2p0` | RMSProp β₂ **0.95** | 1000，末端 | ✅ done | gap +1.239 |
+| `optv5_rms_b098_s2p0` | RMSProp β₂ **0.98** | 1000，末端 | ✅ done | gap +1.444 |
+| `optv5_rms_b0995_s2p0` | RMSProp β₂ **0.995** | 1000，末端 | ✅ done | gap +1.607 |
+| `optv5_rms_b0999_s2p0` | RMSProp β₂ **0.999** | 1000，末端 | ✅ done | gap +1.629 |
+| `optv5_adamw_b099_s2p0` | table optimizer **AdamW `(0,0.99)`** | 1000，末端 | ✅ done | gap +1.503 |
+| `optv5_sgd_m0_s2p0` | table optimizer **SGD momentum 0** | 1000，末端 | ✅ done | gap +0.051 |
+| `optv5_rms_b098_s1p0` | β₂ **0.98**、scale **1.0** | 1000，末端 | ✅ done | gap +0.768 |
+| `optv5_rms_b098_s3p0` | β₂ **0.98**、scale **3.0** | 1000，末端 | ✅ done | gap +1.752 |
+| `optv5_rms_b0995_s1p0` | β₂ **0.995**、scale **1.0** | 1000，末端 | ✅ done | gap +0.966 |
+| `optv5_rms_b0995_s3p0` | β₂ **0.995**、scale **3.0** | 1000，末端 | ✅ done | gap +1.943 |
+| `optv5_rms_b098_s2p0_curve` | β₂ **0.98** | 1000，freq=10 曲线 | ✅ done | gap +1.403 |
+| `optv5_rms_b099_s1p0_curve` | scale **1.0** | 1000，freq=10 曲线 | ✅ done | gap +0.856 |
+| `optv5_rms_b099_s3p0_curve` | scale **3.0** | 1000，freq=10 曲线 | ✅ done | gap +1.895 |
+| `optv5_rms_b099_s2p0_s43_2000` | seed **43** | 2000，freq=10 曲线 | ✅ done | 多 seed gate，gap +5.681 |
+| `optv5_rms_b099_s2p0_s44_2000` | seed **44** | 2000，freq=10 曲线 | ✅ done | 多 seed gate，gap +5.458 |
+| `optv5_rms_b0995_s2p0_s43_2000` | β₂ **0.995**、seed 43 | 2000，freq=10 曲线 | ✅ done | 高 β₂ gate，gap +5.891 |
+| `optv5_rms_b0995_s2p0_s44_2000` | β₂ **0.995**、seed 44 | 2000，freq=10 曲线 | ✅ done | 高 β₂ gate，gap +5.681 |
+
+**运行后唯一可接受的选择规则**：不以本批 single-seed 的最大 gap 决定主线；
+若 `scale=2, β₂=0.99` 位于健康的局部平坦区，保留它作为 v5 默认。只有它被本批
+证伪（数值不稳或被相邻点严格支配）时，才在同一 clean-table setting 下选择相邻
+健康点并以新的 run_id 登记主线。
+
+**multi-seed gate 回填（2000 steps）**：β₂ `.99` 的 seed 43/44 final
+`(train,val,gap)` 分别为 `(0.878,6.560,5.681)` / `(0.967,6.425,5.458)`；
+β₂ `.995` 为 `(0.877,6.768,5.891)` / `(0.901,6.581,5.681)`。`.995` 的 gap
+增量伴随两 seed 都更高的 validation loss（`+0.208/+0.156`），不作为更好的
+机制 setting。按预注册健康规则，v5 固定 **RMSProp `(0,0.99)`、scale `2.0`**；
+`.995` 保留为优化器消融结果。
+
+---
+
+## §24b · V5 证据刷新：完整曲线 optimizer、causal 与剂量频率（2026-08-26）
+
+### 固定契约
+
+本节新增 run 不覆盖 §24/§25 的 completed run。全部使用当前极简基线：
+vanilla nanoGPT 8L/6H/768D，input 注入，bigram + trigram clean 单表且
+`R=2^20`，backbone AdamW `(0.8,0.95)`、wd `0.1`、`lr=0.0006`，
+table RMSProp 无动量 `(0.0,0.99)`、scale `2.0`（只在 optimizer 消融臂中
+改变登记变量），`warmup_constant(100)`，bf16、不 compile。评估固定为
+`val_interval=10`、`freq_eval_interval=10`、`exact_freq_eval_interval=10`、
+`table_norm_interval=10`。gap 只能由同一 logged step 的 fixed validation loss
+减当前训练 batch online loss 得到。
+
+| family | run_id 模式 | 数量 | steps | 唯一变量 | 状态 |
+|---|---|---:|---:|---|---|
+| optimizer full curves | `optv5c_*` | 11 | 1000 | table scale / β₂ / table optimizer | ✅ done (2026-08-26) |
+| causal refresh | `causalv5c_*` | 9 | 1000 | epoch 边界干预 | ✅ done (2026-08-26) |
+| M2 frequency refresh | `nglab1x_{input,y,v,nogram}_v5_freq10` | 4 | 2000 | injection position | ✅ done (2026-08-26) |
+| dose frequency refresh | `nglab{0_25x..8x}_input_v5_freq10` | 11 | 2000 | non-1x train-shard dose | 🟡 running on ophis-gpu + 360-2 |
+| table occupancy backfill | `ctbl_v5_both_{R}` | 18 | no retraining | clean bigram/trigram physical-row diagnostics | ✅ done (2026-08-26) |
+
+### Preflight 记录（2026-08-26）
+
+- source commit：`b976c71`（`feat(v5): add current-batch evidence refresh`）；该 commit
+  已定向同步至 `ophis-gpu`、`360-1`、`360-2`。三机的
+  `train.py`、`ngram_freq.py`、`run_v5_clean.sh`、主 manifest、optimizer sweep
+  与 table grid 的 MD5 已逐文件核对一致。
+- 三机均通过 `bash -n` 与 Python compile；可用解释器分别为 ophis torch
+  `2.9.1+cu128`、360 torch `2.13.0+cu130`。
+- `360-1` 缺 5x / 6x / 8x 的专属 `freq_index_train*.npz`，故不接受
+  `dose_freq10` 的整批调度；所有 11 个剂量索引已在 ophis 与 360-2 存在。
+- `nglab_smoke_v3_fixed` / `nglab_smoke_v2_fixed` 为非主线 smoke，不能回填为
+  实验结果。v5-refresh 的产物目录必须 create-only；已有 partial 目录应先报告，
+  不得覆盖。
+- 2026-08-26 的 100-step 端到端 smoke 通过（当前 batch `freq_bin_loss`、
+  exact-frequency、table RMS 与 hash-reseed event 均写出），但其中
+  `nglab1x_input_v5_freq10_fixed`（360-1）和
+  `optv5c_rms_b099_s2p0_fixed`（360-2）误使用了正式 ID，均明确作废且保留为
+  smoke。正式完整 run 改为 `nglab1x_input_v5_freq10_r1` 与
+  `optv5c_rms_b099_s2p0_r1`，不覆盖、不删除 smoke 目录。
+- 360-2 上误以 `run_v5_table_grid.sh` 对无 summary 的目录启动了 5 条 table-size
+  重训；4 条已有正常 summary 的重复结果与 5 条未完成 partial 都不作为权威证据，
+  队列已停止且产物保留。为杜绝此类重训，18 条权威 summary 位于 360-1 时只允许运行
+  `code/cluster/backfill_v5_table_occupancy.sh`：它拒绝缺 summary 的目录、绝不调用
+  `train.py`，只产生 occupancy JSON。
+- 剂量 refresh 在 360-2 初始调度时短暂重复启动了仍由 ophis-gpu 运行的
+  `nglab0_25x_input_v5_freq10` 与 `nglab0_5x_input_v5_freq10`。二者均在产生
+  `summary.json` 前收到 `SIGTERM`，对应 360-2 目录保留为非权威 partial；
+  这两个剂量只读取 ophis-gpu 的权威完整产物。360-2 队列随后自动释放两张卡并继续
+  其余 9 个互不重复的剂量 run。
+- M2 current-batch frequency refresh 已在 360-1 完成。四臂在 step 2000 都具有
+  `summary.json`、`train_log.jsonl`、`freq_bin_loss.jsonl`、`exact_freq_loss.jsonl`
+  与 `table_norm.jsonl`；final gap（input/y/v/nogram）为
+  `5.754749/3.465313/2.011368/0.248242`。绘图只读取这四条 final freq-bin
+  记录，图中 train 侧是该 logged step 的当前训练 batch pre-update per-token loss，
+  val 侧是 fixed validation batches；bigram/trigram 图已生成并嵌入 registry。
+- Optimizer full curves 已在 360-2 完成并回传小型证据。11 条正式
+  `optv5c_*` run 全部到达 step 1000，每条均有 100 条 `train_log.jsonl`、
+  `freq_bin_loss.jsonl`、`exact_freq_loss.jsonl` 与 `table_norm.jsonl` 记录；
+  `summary.json` 的 train、val 与 gap 均为有限值。正式图
+  `fig_v5_optimizer_full_curves.png` 与
+  `fig_v5_optimizer_frequency.png` 已只从这些完整产物生成并嵌入 registry。
+
+所有新训练 run 的 owner 为 local v5-refresh queue，seed 42，结果目录为
+`data/runs_fixed/<run_id>_fixed/`；训练/验证 shard 均由下表和 launcher
+explicitly 固定。每个训练 run 的验收条件均为：`summary.json` 完整、
+`train_log.jsonl` 到达目标 step、`freq_bin_loss.jsonl`/`exact_freq_loss.jsonl`/
+`table_norm.jsonl` 每 10 steps 覆盖、无 NaN/Inf；scalar gap 只读取
+same-step `fixed val − current-batch online train`。
+
+| run_id | train → val shards | steps | 单一变化 | 预期产物 / 状态 |
+|---|---|---:|---|---|
+| `optv5c_rms_b099_s0p5` | `1` → `2,3,4,5,6,7,8,9,10,6542` | 1000 | table LR scale 0.5 | 10-step curves / ✅ done, gap 0.465 |
+| `optv5c_rms_b099_s1p0` | 同上 | 1000 | table LR scale 1.0 | 10-step curves / ✅ done, gap 0.858 |
+| `optv5c_rms_b099_s2p0_r1` | 同上 | 1000 | table LR scale 2.0；`r1` 避开 100-step smoke | 10-step curves / ✅ done, gap 1.551 |
+| `optv5c_rms_b099_s3p0` | 同上 | 1000 | table LR scale 3.0 | 10-step curves / ✅ done, gap 1.886 |
+| `optv5c_rms_b099_s4p0` | 同上 | 1000 | table LR scale 4.0 | 10-step curves / ✅ done, gap 2.072 |
+| `optv5c_rms_b095_s2p0` | 同上 | 1000 | RMSProp β₂=.95 | 10-step curves / ✅ done, gap 1.239 |
+| `optv5c_rms_b098_s2p0` | 同上 | 1000 | RMSProp β₂=.98 | 10-step curves / ✅ done, gap 1.460 |
+| `optv5c_rms_b0995_s2p0` | 同上 | 1000 | RMSProp β₂=.995 | 10-step curves / ✅ done, gap 1.594 |
+| `optv5c_rms_b0999_s2p0` | 同上 | 1000 | RMSProp β₂=.999 | 10-step curves / ✅ done, gap 1.669 |
+| `optv5c_adamw_b099_s2p0` | 同上 | 1000 | table AdamW `(0,.99)` | 10-step curves / ✅ done, gap 1.502 |
+| `optv5c_sgd_m0_s2p0` | 同上 | 1000 | table SGD momentum 0 | 10-step curves / ✅ done, gap 0.078 |
+| `causalv5c_none` | `1` → `2,3,4,5,6,7,8,9,10,6542` | 1000 | no intervention | 10-step curves / ✅ done, gap 1.544 |
+| `causalv5c_reset_table_e1` | 同上 | 1000 | reset table at epoch 2 | event step 338 / ✅ done, gap 0.704 |
+| `causalv5c_reset_table_e2` | 同上 | 1000 | reset table at epoch 3 | event step 675 / ✅ done, gap 0.068 |
+| `causalv5c_mask_readout_e1` | 同上 | 1000 | no-gram benchmark at epoch 2 | event step 338 / ✅ done, gap 0.016 |
+| `causalv5c_freeze_table_e1` | 同上 | 1000 | freeze table at epoch 2 | event step 338 / ✅ done, gap 1.133 |
+| `causalv5c_freeze_backbone_e1` | 同上 | 1000 | freeze backbone at epoch 2 | event step 338 / ✅ done, gap 0.821 |
+| `causalv5c_hash_reseed_e1` | 同上 | 1000 | reseed context→row hash at epoch 2 | state-preserved event step 338 / ✅ done, gap 0.637 |
+| `causalv5c_mask_low_f200_e1` | 同上 | 1000 | mask `f≤200` at epoch 2 | index provenance / ✅ done, gap 0.066 |
+| `causalv5c_mask_high_f200_e1` | 同上 | 1000 | mask `f>200` at epoch 2 | index provenance / ✅ done, gap 1.529 |
+| `nglab0_25x_input_v5_freq10` | `62` → `2,3,4,5,6,7,8,9,10,6542` | 2000 | 0.25x dose | 10-step curves + matching index / ✅ done, gap 11.536 |
+| `nglab0_5x_input_v5_freq10` | `60` → `2,3,4,5,6,7,8,9,10,6542` | 2000 | 0.5x dose | 10-step curves + matching index / ✅ done, gap 9.234 |
+| `nglab0_75x_input_v5_freq10` | `63` → `2,3,4,5,6,7,8,9,10,6542` | 2000 | 0.75x dose | 10-step curves + matching index / ✅ done, gap 7.792 |
+| `nglab1_5x_input_v5_freq10` | `1,61` → `3,4,5,6,7,8,9,10,6542` | 2000 | 1.5x dose | 10-step curves + matching index / ✅ done, gap 2.517 |
+| `nglab2x_input_v5_freq10` | `1,2` → `3,4,5,6,7,8,9,10,6542` | 2000 | 2x dose | 10-step curves + matching index / ✅ done, gap 1.192 |
+| `nglab2_5x_input_v5_freq10` | `1,2,64` → `4,5,6,7,8,9,10,6542` | 2000 | 2.5x dose | 10-step curves + matching index / ✅ done, gap 0.843 |
+| `nglab3x_input_v5_freq10` | `1,2,3` → `4,5,6,7,8,9,10,6542` | 2000 | 3x dose | 10-step curves + matching index / ✅ done, gap 0.268 |
+| `nglab4x_input_v5_freq10` | `1,2,3,4` → `5,6,7,8,9,10,6542` | 2000 | 4x dose | 10-step curves + matching index / planned |
+| `nglab5x_input_v5_freq10` | `1,2,3,4,5` → `6,7,8,9,10,6542` | 2000 | 5x dose | 10-step curves + matching index / planned |
+| `nglab6x_input_v5_freq10` | `1,2,3,4,5,6` → `7,8,9,10,6542` | 2000 | 6x dose | 10-step curves + matching index / planned |
+| `nglab8x_input_v5_freq10` | `1,2,3,4,5,6,7,8` → `9,10,6542` | 2000 | 8x dose | 10-step curves + matching index / planned |
+| `nglab1x_input_v5_freq10_r1` | `1` → `2,3,4,5,6,7,8,9,10,6542` | 2000 | M2 input current-batch frequency；`r1` 避开 100-step smoke | 10-step curves + matching index / ✅ done, gap 5.755 |
+| `nglab1x_y_v5_freq10` | 同上 | 2000 | M2 y current-batch frequency | 10-step curves + matching index / ✅ done, gap 3.465 |
+| `nglab1x_v_v5_freq10` | 同上 | 2000 | M2 v current-batch frequency | 10-step curves + matching index / ✅ done, gap 2.011 |
+| `nglab1x_nogram_v5_freq10` | 同上 | 2000 | M2 no-gram current-batch frequency | 10-step curves + matching index / ✅ done, gap 0.248 |
+
+### Optimizer full curves（11 臂）
+
+所有 arm 完整记录 online train、fixed val、online gap、current-batch
+frequency bins、exact frequency 与 table RMS，不能用 §24 的 sparse endpoint
+取代曲线。
+
+| 组 | run_id | 变化 |
+|---|---|---|
+| scale | `optv5c_rms_b099_s{0p5,1p0,2p0,3p0,4p0}` | table LR scale |
+| β₂ | `optv5c_rms_b{095,098,0995,0999}_s2p0` | RMSProp β₂；`.99/s2` 与 scale 组中心点共用 |
+| optimizer | `optv5c_{adamw_b099,sgd_m0}_s2p0` | AdamW `(0,.99)` / SGD momentum 0 |
+
+`optv5_rms_*` 是早期 completed precursor：多数只在末端评估，仅
+`optv5_rms_b098_s2p0_curve`、`optv5_rms_b099_s1p0_curve`、
+`optv5_rms_b099_s3p0_curve` 有完整曲线。它们可用于质量审计，不能替代新 11 臂
+的正式比较。
+
+**回填结果（2026-08-26，seed 42，step 1000）**：scale
+`0.5/1.0/2.0/3.0/4.0` 的 final gap 依次为
+`0.464630/0.858302/1.550698/1.886087/2.072434`；β₂
+`.95/.98/.995/.999`（均 scale 2，`.99` 复用中心臂）依次为
+`1.239104/1.459937/1.594211/1.669014`；table AdamW `(0,.99)` 为
+`1.502218`，table SGD momentum 0 为 `0.077974`。这是一批完整曲线和健康性
+证据，不能仅凭最大 gap 更改 v5 的预注册中心点；scale 2、β₂ .99 仍作为主线，
+其他臂仅承担消融比较。
+
+### Causal refresh（9 臂）
+
+干预统一在 `intervention_epoch=1`（epoch 2 开始）触发，另保留 `reset_table`
+at epoch 2 的时点比较。所有事件必须写入 `summary.json.intervention.events`：
+step、epoch、干预类型、hash identity 前后、频率阈值和索引 SHA256。
+
+| run_id | 干预语义 |
+|---|---|
+| `causalv5c_none` | 无边界干预 control |
+| `causalv5c_reset_table_e1` / `causalv5c_reset_table_e2` | 重新初始化 n-gram 表参数；hash 不变；检验已写入表内容 |
+| `causalv5c_mask_readout_e1` | 边界后关闭所有 n-gram residual；time-local no-gram 破坏性基准，不单列为 readout 机制证据 |
+| `causalv5c_freeze_table_e1` / `causalv5c_freeze_backbone_e1` | 停止表写入 / backbone 更新 |
+| `causalv5c_hash_reseed_e1` | 只替换 context→row hash identity；保留表权重与 RMSProp state |
+| `causalv5c_mask_low_f200_e1` / `causalv5c_mask_high_f200_e1` | 按 train-shard static frequency index 屏蔽互补集合 `f≤200` / `f>200` 的 n-gram residual |
+
+频率 mask 的静态 index 是测量与 intervention 的共同 provenance，但不可消费
+训练迭代器；训练仍只从主训练流取 batch。low/high mask 使用同一阈值且必须在单元测试中
+逐位置互补。
+
+**回填结果（2026-08-26，seed 42，step 1000）**：九臂均具备 `summary.json`
+与 100 条 step-10 `train_log.jsonl` / `freq_bin_loss.jsonl` /
+`exact_freq_loss.jsonl` / `table_norm.jsonl`，所有终值有限。final gap 依次为：
+control `1.543546`；reset-table e1/e2 `0.703685/0.067515`；mask-readout
+`0.016310`；freeze-table/backbone `1.133129/0.821469`；hash-reseed
+`0.637072`；mask-low/high `0.065961/1.528893`。事件记录确认 e1 干预在
+step 338、reset e2 在 step 675；hash-reseed 改变 hash identity 且保留表参数和
+optimizer state。正式图 `fig_v5_causal_losses.png` 与
+`fig_v5_causal_frequency_effect.png` 只读取此批完整证据；后者排除 `novel`
+桶，因为它没有 train loss，不能定义 gap。
+
+### Dose frequency refresh（12 臂）
+
+为每个 dose 单独选取 matching `freq_index_train*.npz`；缺任一专属索引，launcher
+必须失败，不能回落到泛用 `freq_index.npz`。完成后产出 bigram/trigram 两面板的
+step-2000 raw frequency-bin gap heatmap；novel bucket 不定义 gap，不进入热图。
+
+**阶段性回填（2026-08-26，seed 42）**：`0.25×/0.5×/0.75×/1.5×/2×/2.5×/3×`
+七点均有 `summary.json` 和各 200 条 step-10 `train_log.jsonl` /
+`freq_bin_loss.jsonl` / `exact_freq_loss.jsonl` / `table_norm.jsonl`，终值均有限；
+final gap 依次为 `11.535647/9.234025/7.792285/2.517155/1.192452/0.843443/0.267917`。
+正式剂量曲线图先只呈现这 7/12 个已验收点，并在标题注明覆盖范围；4×/5×/6×/8× 仍在
+运行，不能作为缺失值、也不以旧批次补位。
+
+### Clean double-table occupancy 回填（18 条已完成 run，不重训）✅
+
+`ctbl_v5_both_{R}` 的训练已经完成。2026-08-26 已在 360-1 的
+`data/runs_scaling/` 对全部 18 条既有权威产物完成 `table_occupancy.json`
+无重训回填，并同步回本地小型证据副本。`code/table_occupancy.py` 对
+bigram/trigram clean-table 都只使用各自第一组完整 hash；专用
+`code/cluster/backfill_v5_table_occupancy.sh` 先确认既有 `summary.json`，
+绝不调用 `train.py`。每个 branch 都验收 `logical_addresses=R`（不是历史 two-hash
+路径的 `2R`）、`occupied≤R`、collision ∈ [0,1]；随后才生成并嵌入
+`fig_v5_s1_table_load_collision.png`。该 JSON 的字段包括 `K`、`R`、occupied、
+`K/R`、occupancy 与 `(K−occupied)/K`，其中 `K/R` 是负载比，不是 collision。
+
+---
+
+## §24c · 高 table-LR 的 β₂ 不敏感性 gate（2026-08-26）
+
+**动机**：用户要求选择可作定量分析的 table setting，核心门槛是 gap 不能强依赖
+RMSProp 的 β₂。§24b 的有效完整 scale=2 中心臂是
+`optv5c_rms_b099_s2p0_r1`（不要误用同名 100-step smoke）；β₂ 从 `.95` 到
+`.999` 的 gap 为 `1.239→1.669`，跨度 `0.430`（均值的 28.6%），故**scale=2
+不能被称为 β₂ 不敏感**。它的 table-LR 单轴曲线在 scale `2→3→4` 的 gap
+增量为 `+0.335→+0.186`，只显示边际递减，尚未证明饱和。
+
+**科学问题 / 可证伪比较**：在更高的固定 table LR（scale=8，实际 table LR
+`0.0048`）下，RMSProp β₂ 的差异是否降到可忽略量，同时训练和 fixed validation
+仍健康？若三个 β₂ 臂的末端 gap 相对跨度仍超过 10%，或出现非有限数/明显失稳，
+则否定「scale=8 是 β₂ 不敏感的定量 setting」；不得仅以较大 gap 选它为主线。
+
+**本 family 内唯一变量**：`--table_betas` 的第二项，`.95/.99/.995`。高 LR
+`--table_lr_scale 8.0` 是本次 gate 的固定基准坐标，而非对 SSOT scale=2 的静默
+替换；backbone LR 仍严格为 `0.0006`，不扫描 backbone LR。
+
+**固定完整契约**：vanilla nanoGPT 8L/6H/768D；input 注入；bigram+trigram
+clean 单表且各 `R=1,048,576`；backbone AdamW `(0.8,.95)`、wd `.1`、LR
+`.0006`；table RMSProp、β₁=0；warmup_constant 100 steps；fixed replay
+train shard `1`、non-overlap val shards `2,3,4,5,6,7,8,9,10,6542`；seed 42；
+1000 steps；bf16、无 compile；val/frequency/exact-frequency/table-RMS 均每 10
+steps；gap=同 logged step 的 fixed val−current-batch online train。
+
+| run_id | GPU / cluster | 只改变量 | 结果目录 | 状态 |
+|---|---|---|---|---|
+| `optv5d_rms_b095_s8p0` | 360-2 GPU0 | β₂=.95 | `data/runs_fixed/optv5d_rms_b095_s8p0_fixed/` | ✅ done, gap 2.228379 |
+| `optv5d_rms_b099_s8p0` | 360-2 GPU1 | β₂=.99 | `data/runs_fixed/optv5d_rms_b099_s8p0_fixed/` | ✅ done, gap 2.432147 |
+| `optv5d_rms_b0995_s8p0` | 360-2 GPU2 | β₂=.995 | `data/runs_fixed/optv5d_rms_b0995_s8p0_fixed/` | ✅ done, gap 2.428866 |
+
+**精确执行命令**（远端仓库 `/data/home/guoshaoyang/ngram-gap-lab`，解释器
+`/usr/bin/python3`；运行前已核对本机与 360-2 的 `train.py`、`ngram_freq.py`、
+`run_v5_clean.sh` MD5 一致）：
+
+```bash
+NGLAB_PY=/usr/bin/python3 bash code/cluster/run_v5_clean.sh <GPU> <run_id> 1 \
+  2,3,4,5,6,7,8,9,10,6542 1000 --table_lr_scale 8.0 --table_betas 0.0,<beta2>
+```
+
+**验收与后续 gate**：每臂必须有完整 `summary.json`、100 个 step-10
+`train_log.jsonl` / `freq_bin_loss.jsonl` / `exact_freq_loss.jsonl` /
+`table_norm.jsonl` 点，达到 step 1000 且无 NaN/Inf。令
+`spread=(max(gap)-min(gap))/gap(beta2=.99)`；只有 `spread≤0.10`、三个 train/val
+曲线均有限且无明显末端爆炸时，才称为候选 β₂-insensitive 区。通过后才登记
+scale=16 的中心臂及同样的 β₂ gate；不通过则停止把 LR 上探作为定量主 setting，
+保留 scale=2 仅作 optimizer-dependent 现象设置。
+
+**回填与后续登记（2026-08-26）**：三臂各有 100 条上述四类 step-10
+日志且 final train / val / gap 均有限。`β₂=.95/.99/.995` 的 final gap 为
+`2.228379/2.432147/2.428866`，相对 `.99` 的跨度为 `8.3781%`，通过预注册的
+10% gate。故登记、但不改变 SSOT 地启动同一 β₂ 三臂的 scale=16 验收：
+
+| run_id | cluster / GPU | 唯一变量 | 状态 |
+|---|---|---|---|
+| `optv5e_rms_b095_s16p0` | 360-1 GPU1 | β₂=.95，table scale 16 | 🔄 running |
+| `optv5e_rms_b099_s16p0` | 360-1 GPU2 | β₂=.99，table scale 16 | 🔄 running |
+| `optv5e_rms_b0995_s16p0` | 360-1 GPU3 | β₂=.995，table scale 16 | ⚠️ failed @800：CUDA peer-memory hardware error |
+| `optv5e_rms_b0995_s16p0_r1` | 360-1 GPU1 | β₂=.995，table scale 16 | 🔄 running；同一契约、独立结果目录 |
+
+它们与本节固定完整契约完全相同，仅把 table scale 固定为 `16.0`
+（实际 table LR `0.0096`），并仍以 `spread≤0.10` 与无 NaN/Inf 为 gate；
+即使通过，也只说明该范围的 β₂ 敏感性，不能凭 single-seed gap 替代 v5 的
+scale=2 主线。
+
+**失败处理（2026-08-26）**：`optv5e_rms_b0995_s16p0` 在 step 800 的 fixed-val
+计算报 `CUDA error: Invalid access of peer GPU memory over nvlink or a hardware error`，
+此前日志数值均有限，故这是 GPU3 硬件/驱动错误而非实验数值结论。保留 partial 目录
+作运行溯源，不回填结果；以新的 `optv5e_rms_b0995_s16p0_r1` 在 GPU1 全量重跑，
+代码 MD5 与 1x frequency-index SHA256 已再次核对。只有 r1 完整验收后才计算
+scale=16 的 β₂ spread。
+
+---
+
+## §25 · V5 主线全量重刷队列（2026-08-25）
+
+**已锁定 setting**：optimizer gate 的第一批 endpoint 结果确认，RMSProp
+`(0.0,0.99)`、table scale `2.0` 是保守主线中心点。scale `3/4` 虽给出更大
+single-seed gap，却同时把 final validation loss 从 scale 2 的 `4.433` 提升到
+`4.669/4.805`；无动量 SGD final gap 仅 `0.051`，AdamW `(0,.99)` 为 `1.503`，
+均不构成替代 RMSProp 的理由。β₂ `0.98/.99/.995/.999` 的 1000-step gap 为
+`1.444/1.534/1.607/1.629`，局部变化远小于 scale 扫描。v5 因此固定
+`lr=6e-4`、RMSProp `(0,.99)`、scale `2`、clean `R_bigram=R_trigram=2^20`、
+100-step `warmup_constant`、bf16、无 compile。
+
+所有 run 均显式使用 current-batch online train loss 与 fixed validation；完整曲线
+为 val/freq=10，长计算表只取末端的 run 使用 `--val_steps <final step>`。run 由
+`code/cluster/run_v5_clean.sh` 单独创建目录，批处理只通过
+`code/cluster/run_v5_main_manifest.sh` 调度；存在 `summary.json` 自动跳过，存在
+partial 目录则拒绝覆盖。
+
+| 家族 | run_id 模式 | 数量 | 步数 / 变量 | 状态 |
+|---|---|---:|---|---|
+| 注入点 | `nglab1x_{input,y,v,nogram}_v5` | 4 | 2000；唯一变量为注入坐标 | ✅ 4/4 完成：input 5.741、y 3.640、v 2.014、nogram 0.245 |
+| 注入点复现 | `nglab1x_{input,y,v,nogram}_v5_s{43,44}` | 8 | 2000；唯一变量为随机 seed | ✅ 8/8 完成；s43 input/y/v/nogram=5.811/3.277/2.881/0.253，s44=5.515/3.439/2.723/0.253 |
+| dose fixed-step | `nglab{0_25x..8x}_input_v5` | 11 | 2000；唯一变量为训练 shard 剂量 | ✅ 11/11 done；gap 从 0.25x 的 11.589 降至 8x 的 −0.077 |
+| epoch-aligned | `nglab{0_25x..4x}_e5_v5` | 9 | 5 epoch，420–6700；唯一变量为剂量、epoch 数恒定 | ✅ 9/9 done；gap 从 0.75x 的 4.511 至 4x 的 2.089 |
+| causal | `nglab1x_{reset,mask,freeze}_*_v5` | 5 | 1000；唯一变量为登记的 intervention | ✅ 5/5 done；reset e1/e2、mask、freeze-table/backbone 均有 summary |
+| fixed probe | `nglab{1,2}x_input_rho_v5` | 2 | 2000；唯一新增诊断为 fixed probe | ✅ 2/2 done；1x gap 5.583、2x gap 1.249（以 ophis 权威 run 为准） |
+| backbone safety | `nglab1x_nogram_long_v5` | 1 | 8000；无 n-gram 的长训练保险对照 | ✅ 8000/8000 done；gap 1.102 |
+| table size | `ctbl_v5_both_{R}` | 18 | 1000 末端；唯一变量为 bigram/trigram 同步的 clean R | ✅ 18/18 done（权威目录在 360-1 `runs_scaling`） |
+| S1 epoch-prefix | `s1v5_L{1..4}_{both,nogram}_fs` | 8 | 1000；唯一变量为 `epoch_batches=42/84/168/337` 与既定 no-gram control | ✅ 8/8 done；both gap 为 10.683/7.726/5.251/1.530，nogram 为 3.002/0.793/0.133/0.035 |
+| S1 frequency | `s1v5_freq_{bigram,trigram,both,nogram}` | 4 | 1000；L4 `epoch_batches=337`，唯一变量为既定 module arm | ✅ 4/4 done；bigram/trigram/both/nogram=0.586/1.099/1.529/0.031（`runs_scaling`） |
+
+**table-size 采样**：bigram / trigram 始终同时开启、并取相同 physical rows
+`R=16K, 22K, 30K, 41K, 56K, 76K, 104K, 142K, 194K, 265K, 362K, 494K, 675K,
+922K, 1.259M, 1.719M, 2.0M, 2.347M`。这是 18 个近 log-uniform 点；每一条仅改变
+两个分支共同的 R，保持主线双 n-gram 结构。`2.347M` 是在 H200 上为 RMSProp state
+及完整 batch 留出的保守上限；先前误启动的 single-branch 目录是无效诊断，不纳入
+任何数据源或图表。
+
+---
+
+## §21b · clean 单表 v4 加密网格（uniform LR 重刷，2026-08-25）
+
+**背景**：§22/§22b 的 clean 单表网格（`ctbl_*`）跑在 **warmdown** 口径
+（launcher 缺 `--lr_schedule constant`，末端 `lr_m 0.05`）。用户 2026-08-25
+拍板：重刷全部 v4 实验，clean 网格统一到 **v4 uniform LR**，bigram 与 trigram
+**都加密取点**。双对数线性非常好（bigram 斜率 ~0.33、trigram ~0.67），趋势可信，
+重刷是统一口径而非纠错。6M>perfect 的大 R 涨落**不跑 seed 43/44 仲裁**，作为
+观察保留。
+
+**口径**：与 v4 基线一致——`--lr_schedule constant`、`--table_betas 0.0,0.99`、
+`--table_lr_scale 2.0`、`--dtype bf16`（不 compile）、1000 步、seed 42、sparse
+末端（`--val_steps 1000`，只取 final gap）。run_id namespace `ctbl_v4_*`，
+旧 warmdown `ctbl_*` 不覆盖（P2）。
+
+**网格**：
+- bigram **24 点对数均匀**（R 16K→5.42M，K/N 0.0045→1.53）+ `ctbl_v4_perfect_bigram`
+  零碰撞锚点（复用 `bigram_perfect_map_s1.npz`，val OOV 4.30%）
+- trigram **14 点对数均匀**（R 64K→8.39M，K/N 0.0035→0.44；19M 行放不下，
+  无零碰撞锚点）
+- 共 39 run；launcher `run_clean_table_v4_grid.sh`，wave 调度
+  （360-2 GPU0/1/2/7 + 360-1 GPU1-7，11 卡并行）
+
+**登记**（run 表，2026-08-25 启动，backfill 后回填）：
+
+| run_id 前缀 | 点数 | 说明 |
+|---|---|---|
+| `ctbl_v4_{16K..5.42M}_bigram` | 24 | bigram 对数均匀网格 |
+| `ctbl_v4_perfect_bigram` | 1 | 零碰撞锚点 |
+| `ctbl_v4_{64K..7M}_trigram` | 14 | trigram 对数均匀网格（**8M 降为 7M**，见下） |
+
+> ⚠️ **trigram 8M 降级为 7M**（2026-08-25 现场发现）：R=8M 的 fp32 表
+> 状态 = 8M×768×12B ≈ 78GB，峰值 149GB > H200 单卡 143GB，初始化即 OOM
+> （`expandable_segments` 亦失败；旧 warmdown `ctbl_8388608_trigram` 的 OOM
+> warning 后成功是运气，不具复现性）。降为 **R=7M**（fp32 状态 64.5GB，
+> K/N = 0.369），仍覆盖大 R 区，趋势完整。此改动不涉及模型架构，仅表容量
+> 上界受显存约束，P1 不受影响。
+
+**产出**：v4 权威相图（semilog + 双对数），与 §22b warmdown 版并列对照。
+详细 gap 数值在 run 完成后回填到本表下方。
+
+---
+
+## §26 · 5-gram condition sample285 trunk 对照（2026-08-26）
+
+**背景**：主报告第 7 节原先展示的 sample285 页面实际是 `order=3`
+trigram controlled data。该页面没有可追溯的生成命令、`run_id` 或原始
+run 目录，因此旧数字降级为历史存档，不能作为本节的 5-gram 证据。
+本节保留原科学问题，但要求使用真正的 `order=5` context。
+
+### 登记
+
+| run_id | 状态 | owner | target | 变量 |
+|---|---|---|---|---|
+| `ngram5_order5_sample285_v5_transformer_s42` | planned | Codex | 待用户确认空闲 H200；未完成 `nvidia-smi` 前不得启动 | Transformer trunk；其余坐标固定 |
+| `ngram5_order5_sample285_v5_mlp_s42` | stalled | Codex | 不适用 | `code/train.py` 当前没有 position-wise MLP trunk，必须先实现并单独 smoke；不得以历史 HTML 数字回填 |
+
+### 固定 setting 与数据契约
+
+- 数据条件：真实文本 `order=5`（5-gram context），`fivegram_alpha*`
+  controlled blocks；完整 upstream train/val 不重叠，固定 train/val batch
+  hash；sample285 的目标是每个 epoch 285 个 device steps。
+- 模型：vanilla nanoGPT，8L·6H·768D，vocab 8192，sequence length 2048，
+  learned absolute position，LayerNorm，tied embedding，LLLL full attention。
+- 注入：input / wte；bigram + trigram value tables；unigram/fourgram 关闭。
+  数据 context order 与注入表 order 是两个独立坐标，本实验是
+  **5-gram condition + bigram/trigram injection**，不是 trigram condition。
+- 表：clean single table，`R_bigram=R_trigram=1,048,576`，每个 branch
+  一张表、一个 hash、单层；不能回落到 `table_mult` 历史架构。
+- 优化：backbone AdamW betas `(0.8,0.95)`、weight decay 0.1、LR `0.0006`；
+  table RMSProp 无动量，betas `(0.0,0.99)`，LR scale 2.0；固定
+  `warmup_constant`，100 steps warmup，之后不 warmdown；bf16，不 compile。
+- 测量：`VAL_LOSS_INTERVAL_STEPS=10`，fixed validation batches；主 gap 为
+  同一 logged step 的 fixed val loss 减当前 online train loss；`novel` 不进
+  gap；frequency 使用完整 upstream train epoch 的 collision-free exact
+  order-5 context count。
+
+### 可执行命令与验收
+
+launcher：`ngram5_freq_gap/cluster/run_on_cluster.sh`，必须显式设置
+`NGRAM5_RUN_ID=ngram5_order5_sample285_v5_transformer_s42`，并在目标机完成
+代码 hash 核对、GPU 空闲核对和数据生成 smoke。训练前需确认数据 metadata
+为 `order=5`、`block_len=7`，以及 `exact_ngram_counts.npz` 使用
+`contexts` 矩阵而不是溢出的 packed int64 key。验收产物为
+`data/runs_fixed/ngram5_order5_sample285_v5_transformer_s42_fixed/`，至少含
+run contract、summary、training/validation JSONL、fixed batch hashes 和
+exact-frequency probe 输出；MLP 臂只有在实现后另起 run_id。
+
+---
+
+## §23 · L6 残差—响应精确模型（2026-08-25）
+
+**问题**：−1 是否必然出现？loss gap 是否只由方差决定？
+
+| run_id | 只改变的变量 | 数据/重复 | 状态 | 产物 |
+|---|---|---|---|---|
+| `l6_counttable_freq_exact_v1` | 真概率 `p={0.50,0.20,0.05}` 与样本数 `f` | 二项分布精确枚举；无随机 seed | ✅ done | `tasks/l6_residual_response/results/l6_counttable_freq_exact_v1/` |
+| `l6_response_moments_exact_v1` | 学习响应 `u(δ)={δ,sign(δ),δ³}` | Rademacher 均值精确枚举；无随机 seed | ✅ done | `tasks/l6_residual_response/results/l6_response_moments_exact_v1/` |
+
+**结果**：count table 在 `f≥512` 的三条斜率为 −1.000001 / −1.000003 /
+−1.000062，但有限 f 的局部斜率明显更浅（`p=.2`、4→8 为 −0.658）。同一
+Rademacher 残差经 linear/sign/cubic 响应的拟合斜率分别为 **−1.0000 / −0.4995 /
+−1.9986**；sign 臂在 `f=4096` 的精确值 0.012466，与 `√(2/(πf))` 一致。
+
+两臂都不使用 nanoGPT、GPU 或自然语料；它们只检验数学命题。主图：
+`docs/figs/theory/fig_l6_residual_response.{png,svg}`。
+
+### §23a · `l6_counttable_freq_exact_v1`
+
+- **状态 / owner / 日期**：`done` / Codex / 2026-08-25。
+- **科学问题**：resolved finite-support count table 的 expected gap 在什么范围才趋近
+  `f^-1`，三阶与四阶矩在有限样本时是否可忽略？
+- **预期比较 / endpoint**：比较有限 `f` 的 exact/local slope 与大样本 `-1` guide；
+  endpoint 为完整枚举 3 个 `p` × 11 个 `f`。
+- **唯一实验变量**：真概率 `p={0.50,0.20,0.05}` 与每个 context 的样本数
+  `f=4,8,...,4096`；估计器固定为 Jeffreys smoothing `alpha=0.5`。
+- **数据 / seed / compute**：对每个二项计数逐项精确求和，无 Monte Carlo，
+  `seed=null`；本地 CPU，不占 GPU、不涉及集群。
+- **命令**：`.venv/bin/python tasks/l6_residual_response/run_exact.py --experiment counttable`。
+- **安全复核**：追加 `--output-root <新的空目录>`，与已登记目录递归 `diff`；不覆盖
+  已完成的同名 run。
+- **结果目录**：`tasks/l6_residual_response/results/l6_counttable_freq_exact_v1/`。
+- **验收标准**：`config.json` 与上述 contract 一致；`metrics.csv` 为 3×11=33 行、
+  无 NaN；`summary.json.status=done`；大样本拟合接近 `-1`，同时保留逐相邻 `f`
+  的 local slope 以暴露有限样本偏离；输出目录 create-only，禁止覆盖同名 run。
+- **产物**：`config.json`（输入 contract）、`metrics.csv`（exact gap、二/三/四阶项、
+  local slope）、`summary.json`（拟合区间与斜率）。
+
+### §23b · `l6_response_moments_exact_v1`
+
+- **状态 / owner / 日期**：`done` / Codex / 2026-08-25。
+- **科学问题**：在完全相同的 `f^-1/2` 采样残差下，仅改变 learned response，
+  是否会选择不同矩并产生不同 gap 指数？
+- **预期比较 / endpoint**：比较三种响应的 exact curve 与各自理论矩；endpoint 为
+  完整枚举 3 个 response × 10 个 `f`。
+- **唯一实验变量**：`u(delta)={delta, sign(delta), delta^3}`；残差始终是 `f` 个
+  Rademacher 样本的均值，`f=8,16,...,4096`。
+- **数据 / seed / compute**：Rademacher/binomial 精确枚举，`seed=null`；本地 CPU，
+  不占 GPU、不涉及集群。
+- **命令**：`.venv/bin/python tasks/l6_residual_response/run_exact.py --experiment responses`。
+- **安全复核**：追加 `--output-root <新的空目录>`，与已登记目录递归 `diff`；不覆盖
+  已完成的同名 run。
+- **结果目录**：`tasks/l6_residual_response/results/l6_response_moments_exact_v1/`。
+- **验收标准**：`metrics.csv` 为 3×10=30 行、无 NaN；linear 臂逐点等于 `1/f`；
+  cubic 臂逐点等于 `3/f^2-2/f^3`；sign 臂渐近接近 `sqrt(2/(pi f))`；
+  `summary.json.status=done`；输出目录 create-only。
+- **产物**：`config.json`、`metrics.csv`（exact gap、理论参考、local slope）、
+  `summary.json`（拟合区间与三种响应的斜率）。
+
+---
+
+## §27 · X1 优化器三臂 × seed 复现（2026-08-26 登记）
+
+**科学问题**：配对双差分口径下，table optimizer 的选择（RMSProp vs AdamW(0,.99)
+vs SGD(m=0)）是否稳定地改变 n-gram 模块的 gap 贡献？seed 42 的单点结论
+（rms 1.551 / adamw 1.502 / sgd 0.078）能否在 seed 43/44 复现？
+
+**唯一变量**：table optimizer（含其 betas）；其余全部为 v5 极简契约坐标。
+三臂统一 `--table_lr_scale 2.0`、betas `(0.0,0.99)`（adamw/sgd 臂 β₁=0 即无动量，
+与 optv5c seed-42 波次逐旗标一致）。
+
+### 登记总表
+
+| run_id | 状态 | owner | 变量 |
+|---|---|---|---|
+| `optv5c_rms_b099_s2p0_r1_s43` | planned | Codex | table RMSProp (0,0.99)，seed 43 |
+| `optv5c_rms_b099_s2p0_r1_s44` | planned | Codex | table RMSProp (0,0.99)，seed 44 |
+| `optv5c_adamw_b099_s2p0_s43` | planned | Codex | table AdamW (0,0.99)，seed 43 |
+| `optv5c_adamw_b099_s2p0_s44` | planned | Codex | table AdamW (0,0.99)，seed 44 |
+| `optv5c_sgd_m0_s2p0_s43` | planned | Codex | table SGD m=0，seed 43 |
+| `optv5c_sgd_m0_s2p0_s44` | planned | Codex | table SGD m=0，seed 44 |
+
+### 复用判定（不重跑）
+
+- **seed 42 三臂复用 `optv5c_*` 波次**（§24b，2026-08-26 done）：rms
+  `s2p0_r1` gap 1.551、adamw `b099_s2p0` gap 1.502、sgd `m0_s2p0` gap 0.078。
+  已核对 `optv5c_rms_b099_s2p0_r1_fixed/summary.json` 与本节规格逐项一致
+  （scale 2.0 统一消除了旧波次「仅 RMSProp 带 scale 2.0」的混杂）。
+- **nogram 对照复用 §25**：`nglab1x_nogram_v5_s42/s43/s44` gap
+  0.245/0.253/0.253；nogram 与 optimizer 无交互，无需按臂重跑对照。
+
+### 固定 setting
+
+与 §24b optv5c 完全一致：train shards `1`、val shards
+`2,3,4,5,6,7,8,9,10,6542`、1000 steps、bf16 无 compile、clean 单表
+`R_bigram=R_trigram=2^20`、backbone lr `6e-4` warmup_constant 100 步、
+device_batch 72 / total 147456、val/freq/exact/table_norm interval 全部 10。
+
+### 命令与验收
+
+launcher 直接派生自 `code/cluster/run_v5_optimizer_sweep.sh` 的旗标组合，
+经 `run_v5_clean.sh` 执行（注意其硬编码 `--seed 42`，seed 43/44 必须显式覆盖）：
+
+```bash
+# rmsprop 臂示例（adamw/sgd 臂替换 --table_optimizer 与 run_id）
+NGLAB_PY=.venv/bin/python bash code/cluster/run_v5_clean.sh <gpu> \
+  optv5c_rms_b099_s2p0_r1_s43 1 2,3,4,5,6,7,8,9,10,6542 1000 \
+  --seed 43 --table_optimizer rmsprop --table_betas 0.0,0.99 --table_lr_scale 2.0
+```
+
+验收标准：每条 run 到达 step 1000、`summary.json` + `train_log.jsonl`
+非空；回填字段为 final gap（同一 logged step fixed val − online train）、
+三臂 × 三 seed 的均值与离散度；判定 sgd 低 gap 现象是否跨 seed 稳定。
+GPU 槽位限用空闲的 1/2/4/6，启动前 `nvidia-smi` 复核并登记占卡。
+
+---
+
+## §28 · X2 clean 表行宽扫描 d ∈ {768,192,48,12}（2026-08-26 登记）
+
+**科学问题**：clean 单表行宽 `d=n_embd=768` 是极简 setting 的绑定项。把表行宽
+降到远小于 backbone 宽度（冻结零填充投影升维到 768 后注入），gap 是否保持？
+即检验「per-context 私有自由度」是否是 gap 的必要容量条件。
+
+**唯一变量**：clean 表行宽 `d`（bigram/trigram 同步）；投影矩阵固定随机、
+不训练，d=768 时与基线逐位一致。依赖 `train.py` 新增 `--bigram_table_dim` /
+`--trigram_table_dim` 参数（实现中），零填充投影不影响 RNG 流与优化器分组。
+
+### 登记总表
+
+| run_id | 状态 | owner | 变量 |
+|---|---|---|---|
+| `ctbl_dim768_input_v5` | reused | — | d=768 ≡ v5 基线 `nglab1x_input_v5`（gap 5.741，§25） |
+| `ctbl_dim192_input_v5` | planned | Codex | d=192 |
+| `ctbl_dim48_input_v5` | planned | Codex | d=48 |
+| `ctbl_dim12_input_v5` | planned | Codex | d=12 |
+
+### 固定 setting 与命令
+
+其余坐标 = v5 主线（同 §27 固定 setting；seed 42、1000 steps、input 注入）：
+
+```bash
+NGLAB_PY=.venv/bin/python bash code/cluster/run_v5_clean.sh <gpu> \
+  ctbl_dim192_input_v5 1 2,3,4,5,6,7,8,9,10,6542 1000 \
+  --bigram_table_dim 192 --trigram_table_dim 192
+```
+
+验收标准：d=768 对照点直接引用基线；新增三档在实现 smoke 通过后才启动；
+回填 final gap 随 d 的曲线，判定 gap 是否在 d≪768 时塌缩到 nogram 水平
+（0.245）。create-only，禁止覆盖同名目录。
+
+---
+
+## §29 · X3 语料侧 r̄(f) 支撑宽度统计（2026-08-26 登记）
+
+**科学问题**：exact context frequency f 对应的输出支撑宽度 r̄(f) 在自然语料中
+如何随 f 变化？这决定采样律解析区条件 `f·P(y)≫1` 在多大频率窗口内成立，
+是解读 −1 斜率适用范围的语料侧前置量。
+
+**唯一变量**：无训练变量；纯语料统计。输入为 collision-free exact count
+索引 `data/freq_index.npz`（已验证：bigram keys/counts 各 3,541,098 条、
+trigram 各 19,027,841 条）+ train shard 1 原始 token 流。
+
+### 登记
+
+| run_id | 状态 | owner | compute |
+|---|---|---|---|
+| `corpus_rbar_freq_v1` | planned | Codex | 零 GPU；ophis-gpu 远端 CPU（本地缺 `shard_00001.bin`，远端已确认存在） |
+
+### 命令与验收
+
+脚本待写入 `code/tools/rbar_support_stats.py`（只读 freq_index + shard，
+不触碰训练入口）；在 ophis-gpu 上以 `.venv/bin/python` 运行，产物拷回本地
+`data/runs_fixed/corpus_rbar_freq_v1_fixed/`。
+
+验收标准：输出 per-frequency-bin 的 r̄(f)、support 分布分位数与
+`f·P(y)` 解析区覆盖率；全部数字可由 freq_index.npz + shard_00001.bin
+精确复算；CPU-only，不占 GPU 卡位，不影响并行推进的 X1/X2 训练波次。
