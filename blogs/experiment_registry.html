@@ -166,9 +166,125 @@
   .instr-body code { background: #1a2030; padding: 1px 5px; border-radius: 4px; font-size: .84em; }
   .instr-body pre.codeblock { background: #0b0e14; border: 1px solid var(--border); border-radius: 7px; padding: 10px 12px; overflow-x: auto; margin: 8px 0; }
   .instr-body pre.codeblock code { background: none; padding: 0; white-space: pre; }
+
+  /* ===== 侧栏目录 (sidebar TOC) ===== */
+  .sidebar {
+    position: fixed;
+    top: 0; left: 0;
+    width: 248px;
+    height: 100vh;
+    overflow-y: auto;
+    background: #0d0f14;
+    border-right: 1px solid var(--border);
+    padding: 20px 14px 40px;
+    z-index: 100;
+    font-size: .8rem;
+    scrollbar-width: thin;
+  }
+  .sidebar .side-title { font-weight: 700; color: #fff; font-size: .9rem; margin-bottom: 4px; }
+  .sidebar .side-sub { color: var(--muted); font-size: .72rem; margin-bottom: 14px; }
+  .side-actions { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+  .side-actions button {
+    background: var(--panel2); color: #bcd5ff; border: 1px solid var(--border);
+    border-radius: 7px; padding: 4px 10px; font-size: .74rem; cursor: pointer;
+  }
+  .side-actions button:hover { border-color: var(--accent); color: #fff; }
+  .sidebar ol { list-style: none; padding: 0; }
+  .sidebar li { margin: 1px 0; }
+  .sidebar a {
+    display: block; color: var(--muted); text-decoration: none;
+    padding: 4px 8px; border-radius: 6px; border-left: 2px solid transparent;
+    line-height: 1.4;
+  }
+  .sidebar a:hover { color: #fff; background: rgba(91,157,255,.08); }
+  .sidebar a.active { color: #fff; background: rgba(91,157,255,.12); border-left-color: var(--accent); }
+  .sidebar a.lvl2 { padding-left: 20px; font-size: .76rem; }
+  .sidebar a.lvl2::before { content: '└ '; color: var(--muted); }
+  .side-backtop {
+    position: sticky; bottom: 8px; margin-top: 12px; text-align: center;
+  }
+  .side-backtop a {
+    display: inline-block; padding: 4px 14px; border-radius: 20px;
+    background: var(--panel2); border: 1px solid var(--border); color: var(--muted);
+  }
+  /* 宽屏时主容器右移，给侧栏让位 */
+  @media (min-width: 1500px) {
+    .container { max-width: 1180px; margin-left: 300px; }
+  }
+  /* 窄屏隐藏侧栏（顶部 toc 仍然可用） */
+  @media (max-width: 1499px) {
+    .sidebar { display: none; }
+  }
+  .backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 90; display: none; }
+  .side-toggle {
+    position: fixed; top: 14px; left: 14px; z-index: 95;
+    background: var(--panel2); color: #bcd5ff; border: 1px solid var(--border);
+    border-radius: 8px; padding: 5px 11px; font-size: .8rem; cursor: pointer;
+    display: none;
+  }
+  @media (max-width: 1499px) {
+    .side-toggle { display: block; }
+    .sidebar.open { display: block; }
+  }
+
+  /* ===== 执行过程 interpreter 样式 ===== */
+  details.interp { background: #0f1620; border-left: 3px solid #c77dff; }
+  details.interp > summary { color: #e0b3ff; }
+  .interp-phase {
+    border: 1px solid var(--border); border-radius: 8px;
+    background: #121826; padding: 12px 14px; margin: 10px 0;
+  }
+  .interp-phase .ph-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
+  .interp-phase .ph-tag { font-size: .72rem; padding: 2px 9px; border-radius: 12px; font-weight: 600; }
+  .ph-tag.good { background: rgba(76,217,160,.13); color: #7ce8bb; }
+  .ph-tag.bad { background: rgba(255,107,107,.13); color: #ffa3a3; }
+  .ph-tag.neutral { background: rgba(91,157,255,.13); color: #bcd5ff; }
+  .ph-tag.key { background: rgba(255,200,87,.13); color: #ffd98a; }
+  .interp-phase .ph-title { font-weight: 700; color: #fff; }
+  .interp-phase .ph-body { color: #d6dce8; font-size: .86rem; }
+  .interp-phase .ph-body p { margin: 6px 0; }
+  .interp-phase .ph-body .obs { color: #9ecbff; font-size: .8rem; font-family: "SF Mono", Menlo, monospace; }
+  .interp-phase .ph-body .verbatim {
+    display: block; background: #0b0e14; border: 1px solid var(--border); border-radius: 6px;
+    padding: 8px 10px; margin: 6px 0; color: #b8c4d4;
+    font-family: "SF Mono", Menlo, monospace; font-size: .76rem; white-space: pre-wrap; word-break: break-word;
+  }
+  .interp-phase .ph-body .verbatim::before { content: '▸ 模型原文'; display: block; color: var(--purple); font-family: -apple-system, "PingFang SC", sans-serif; font-size: .72rem; margin-bottom: 4px; }
+  .interp-phase .ph-note { color: #ffd98a; font-size: .82rem; margin-top: 6px; }
+  .interp-phase .ph-note::before { content: '💡 点评：'; color: var(--yellow); }
 </style>
 </head>
 <body>
+<button class="side-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open');document.querySelector('.backdrop').style.display='block';">☰ 目录</button>
+<div class="backdrop" onclick="document.querySelector('.sidebar').classList.remove('open');this.style.display='none';"></div>
+<div class="sidebar" id="sideToc">
+  <div class="side-title">实验登记簿 · 目录</div>
+  <div class="side-sub">12 大节 · 3 个 llm-pretrain 任务轨迹</div>
+  <div class="side-actions">
+    <button onclick="document.querySelectorAll('details').forEach(d=>d.setAttribute('open',''));">全部展开</button>
+    <button onclick="document.querySelectorAll('details').forEach(d=>d.removeAttribute('open'));">全部折叠</button>
+  </div>
+  <ol>
+    <li><a href="#overview">01 总览：实验分组与状态</a></li>
+    <li><a href="#metrics">02 指标词典</a></li>
+    <li><a href="#llm-pretrain">03 LLM Pretraining 优化</a>
+      <a class="lvl2" href="#sec-loss">2.1 llm-pretrain-loss（Loss 函数）</a>
+      <a class="lvl2" href="#sec-optimizer">2.2 llm-pretrain-optimizer（优化器）</a>
+      <a class="lvl2" href="#sec-kernel">2.3 llm-pretrain-kernel（Kernel）</a>
+      <a class="lvl2" href="#sec-compare">2.4 三 task setting 对比与可迁移技巧</a>
+    </li>
+    <li><a href="#inversebench">04 逆问题 Diffusion（InverseBench）</a></li>
+    <li><a href="#molprop">05 分子性质预测（molprop）</a></li>
+    <li><a href="#causal">06 因果发现 5 任务</a></li>
+    <li><a href="#dsh-minpro">07 dsh 极简+pro 重跑（13 任务）</a></li>
+    <li><a href="#ngram-gap">08 ngram-gap 实验</a></li>
+    <li><a href="#dsh-scan">09 数学扫描（dsh_scan）</a></li>
+    <li><a href="#autoresearch">10 本地 autoresearch 树</a></li>
+    <li><a href="#eb-jepa">11 Robotics / JEPA 四任务</a></li>
+    <li><a href="#logs">12 原始日志与数据源索引</a></li>
+  </ol>
+  <div class="side-backtop"><a href="#sideToc">↑ 回到目录</a></div>
+</div>
 <div class="container">
 
   <!-- HERO -->
@@ -209,8 +325,9 @@
     <div class="callout">
       <b>本登记簿的用途</b>：把散落在多台集群、多个专题报告中的实验结果统一登记，每个实验含最终指标、
       关键中间观察（observable）与完整 trajectory 链接，方便追溯"agent 是怎么一步步把分数做上去的"。
-      后续新增实验按此格式追加。当前状态核对时间：<b>2026-08-26</b>；ophis-gpu 上 mlsbench
-      队列为空、三个 llm-pretrain agent 已结束；Uni-Mol 仍有训练进程，尚未结算最终分数。
+      后续新增实验按此格式追加。当前状态核对时间：<b>2026-08-27</b>；ophis-gpu 上 mlsbench
+      队列为空、三个 llm-pretrain agent 已结束、jepa-planning 3 实例已提交；Uni-Mol agent
+      训练进程已确认卡死（9 天 0% CPU），按无最终结果登记。
     </div>
     <div class="callout warn">
       <b>数据口径</b>：同一实验组内的表格可以比较；不同任务的指标、不同数据版本和不同题池不能直接拼成一个总 leaderboard。
@@ -264,8 +381,8 @@
           <td><b>分子性质</b></td>
           <td>ai4sci-mol-property-prediction（Uni-Mol）</td>
           <td>ophis-gpu</td>
-          <td class="status-running">🔄 有进程，未结算</td>
-          <td>链路验证：BBBP 0.696 / BACE 0.808 / Tox21 0.754；最终结果尚未写入 leaderboard</td>
+          <td class="status-partial">❌ 进程卡死，无最终结果</td>
+          <td>链路验证：BBBP 0.696 / BACE 0.808 / Tox21 0.754；agent 训练进程 8/16 启动后卡死（9 天 0% CPU），未写入任何分数</td>
         </tr>
         <tr>
           <td><b>因果发现</b></td>
@@ -301,6 +418,13 @@
           <td>本地 DB / 多集群 worker</td>
           <td class="status-done">✅ 树已收敛；judge 分批完成</td>
           <td><b>9010 节点</b>：8866 done / 144 failed；另有 360 题主汇总与 sibling pilot</td>
+        </tr>
+        <tr>
+          <td><b>Robotics / JEPA</b></td>
+          <td>jepa-planning（latent world-model planner）</td>
+          <td>ophis-gpu</td>
+          <td class="status-done">✅ 完成（3 实例）</td>
+          <td><b>SR .75/.95/.95</b>（h30/h60/h90），h60/h90 追平最强 baseline MPPI；其余三任务仅链路验证（详见 §11）</td>
         </tr>
       </tbody>
     </table>
@@ -489,7 +613,7 @@
       </div>
     </div>
     <!-- loss -->
-    <h3>2.1 llm-pretrain-loss — Loss 函数优化</h3>
+    <h3 id="sec-loss">2.1 llm-pretrain-loss — Loss 函数优化</h3>
 
     
     <details class="instr">
@@ -1754,6 +1878,8 @@ Lines 254–256:
       <span class="badge green">完成并提交</span>
       <span class="badge">模型: deepseek-chat</span>
       <span class="badge">run: deepseek-chat_20260818_091638</span>
+      <span class="badge">Harness: MLS-Bench InteractiveAgent (mlsbench agent)</span>
+      <span class="badge">内核: nanogpt (GPT-2 small, 124M)</span>
     </div>
     <p class="path">raw 日志：<a href="experiment_registry_assets/raw_logs/llm-pretrain-loss.log">本地归档</a> · 原始远程：<code>/data4/guoshaoyang/nanogpt_agent_logs/llm-pretrain-loss.log</code></p>
 
@@ -1833,8 +1959,131 @@ Final: val_loss=1.8890, wikitext2_ppl=30.50, lambada_ppl=31.88
 Final lm-eval: arc_easy=56.19, hellaswag=31.43, piqa=63.93, winogrande=51.07</div>
     </details>
 
+    <details class="interp" open>
+      <summary>🧭 §2.1 执行过程 interpreter：loss agent 每一步在做什么（逐区间解读）</summary>
+      <div class="instr-body">
+        <p class="md-p"><b>总览</b>：这是「观察中间量 → 提取 insight → intervention」的教科书案例。
+        共 23 步 / 10 次 test / 378k tokens。模型每次都从 <code>TRAIN_METRICS</code>（step/train_loss/val_loss）
+        和 final metrics 里读中间量，再决定下一次改什么。三次关键跳变：2.29 → 2.07（L1 log-Z）→ 1.89（centered log-Z）。</p>
+
+        <div class="interp-phase">
+          <div class="ph-head"><span class="ph-tag neutral">区间 A · Step 1–2</span><span class="ph-title">Test #1 — 组合拳首试：softcap + z_loss + entropy bonus</span></div>
+          <div class="ph-body">
+            <p>第一版直接上三个已知技巧的组合：Gemma-2 式 tanh softcap(30) 限制 logit 幅度 + z-loss(1e-4) 压 log-partition + entropy bonus。</p>
+            <span class="obs">观察到：val_loss=2.2886，与 CE 基线几乎持平；但 lambada_ppl=49.33 明显好于官方 softcap_ce(67.1)。</span>
+            <span class="verbatim">"""Cross-entropy with logit soft-cap + z-loss regularization + entropy bonus."""
+    softcap = 30.0
+    capped = softcap * torch.tanh(flat_logits / softcap)
+    # Z-loss on capped logits to keep log-partition small (Palm/ST-MoE).</span>
+            <p class="ph-note">多技巧组合是合理的起点，但没有做消融，无法知道谁贡献了什么——这是接下来 9 次 test 要解决的。</p>
+          </div>
+        </div>
+
+        <div class="interp-phase">
+          <div class="ph-head"><span class="ph-tag bad">区间 B · Step 3–4</span><span class="ph-title">Test #2 — 加 label smoothing → 灾难性发散 3.4857</span></div>
+          <div class="ph-body">
+            <p>在组合上叠加 label smoothing=0.1。val_loss 直接崩到 <b>3.4857</b>（正常应在 2.3 附近），wikitext2_ppl=125.81。</p>
+            <span class="obs">观察到：step=13000 处 train_loss=3.7248 / val_loss=3.4919，全程发散无收敛迹象。</span>
+            <span class="verbatim">"""Cross-entropy with soft-cap + z-loss; eval uses raw CE for comparability.
+Label smoothing hurt validation loss badly (the eval uses raw CE so there's a
+train-eval mismatch and the model under-fits actual targets). Revert smoothing,
+keep the complementary softcap + z-loss combination from test #1."""</span>
+            <p class="ph-note">这是高质量的可观测推理：模型立刻识别出<b>评测用的是 raw CE 而训练用了 smoothing → train-eval 分布失配</b>，果断回退。失败不是白费——它确认了"不要动标签分布"这个边界。</p>
+          </div>
+        </div>
+
+        <div class="interp-phase">
+          <div class="ph-head"><span class="ph-tag neutral">区间 C · Step 5–6</span><span class="ph-title">Test #3 — 回退复现 #1（对照实验）</span></div>
+          <div class="ph-body">
+            <p>回到 softcap+z_loss 配置。val_loss=2.2886，与 Test #1 完全一致。</p>
+            <span class="obs">观察到：2.2886 ≈ 2.2886，环境稳定、复现可靠。</span>
+            <p class="ph-note">先确认基线可复现，再开始改——这是被大多数 agent 忽略的严谨步骤。</p>
+          </div>
+        </div>
+
+        <div class="interp-phase">
+          <div class="ph-head"><span class="ph-tag good">区间 D · Step 7–8</span><span class="ph-title">Test #4 — 引入 L1 linear log-partition（首次下降 2.22）</span></div>
+          <div class="ph-body">
+            <p>关键转折：模型提出一个<b>自己的概念</b>——用 <code>E[logZ]</code> 的线性（L1）形式替代 z-loss 的平方形式，系数 1e-2。</p>
+            <span class="obs">观察到：val_loss=2.2185，首次低于所有官方 baseline（softcap_ce 2.2701）。</span>
+            <span class="verbatim">"""...As a novel addition, we add a *loss-scale-aware* penalty that pulls
+down logsumexp (a smoother variant of the normal log-partition penalty that
+avoids the quadratic blowup of z-loss^2). Experiment: vary coefficients."""</span>
+            <p class="ph-note">不是照抄 baseline，而是基于对 z-loss 缺陷（平方爆炸）的理解提出新形式。系数从 1e-4 → 1e-2 是有意的实验设计。</p>
+          </div>
+        </div>
+
+        <div class="interp-phase">
+          <div class="ph-head"><span class="ph-tag key">区间 E · Step 9–10</span><span class="ph-title">Test #5 — 纯 L1、系数翻倍 → 大跳变 2.07</span></div>
+          <div class="ph-body">
+            <p>去掉 z_loss² 只留 L1，系数升到 2e-2。val_loss 从 2.22 跳到 <b>2.0720</b>——L1 明显优于 L2。</p>
+            <span class="obs">观察到：step=13000 处 train_loss=2.3393 / val_loss=2.0792，全程平滑下降。</span>
+            <span class="verbatim">"""Cross-entropy with soft-cap + linear log-partition (L1 log-Z) control.
+The linear (L1) log-partition penalty on capped logits is the key novelty:
+unlike z-loss (which minimizes E[logZ^2]) ... the L1 log-partition term
+gently regularizes the overall logit scale toward a constant."""</span>
+            <p class="ph-note">这是整个轨迹最重要的 insight：<b>L1（软 margin）比 L2（平方）对 log-partition 的约束更好</b>。这个结论无法靠猜，必须靠对比实验。</p>
+          </div>
+        </div>
+
+        <div class="interp-phase">
+          <div class="ph-head"><span class="ph-tag bad">区间 F · Step 11–12</span><span class="ph-title">Test #6 — asymmetric hinge 设计失败（exit=137）</span></div>
+          <div class="ph-body">
+            <p>模型想更进一步：把 L1 改造成「围绕 floor 的非对称 hinge」（上界罚 5e-2、下界轻奖 1e-2），同时保留软 margin。</p>
+            <span class="obs">观察到：<code>[STATUS: FAILED exit=137]</code>——进程被 OOM 或系统杀掉，且训练曲线明显更差。</span>
+            <span class="verbatim">"""The novelty: instead of z-loss's E[logZ^2], we use a *hinge-style* linear
+log-partition penalty that (a) penalizes logZ above a floor target and (b)
+mildly rewards below floor. ... Tune coefficients."""</span>
+            <p class="ph-note">有想法的设计也会失败。模型没有执着于调 hinge 参数，而是果断回退到已验证的 L1——在有限预算下这是正确的止损决策。</p>
+          </div>
+        </div>
+
+        <div class="interp-phase">
+          <div class="ph-head"><span class="ph-tag neutral">区间 G · Step 13–16</span><span class="ph-title">Test #7 — 回归 L1 基线并小幅试探</span></div>
+          <div class="ph-body">
+            <p>回退到 L1(2e-2)，中间尝试了 grad_clip=1.0（Step 14）又放弃（Step 15）。val_loss=2.0711，复现 #5。</p>
+            <span class="obs">观察到：2.0711 ≈ 2.0720，确认 L1 结果稳定。</span>
+          </div>
+        </div>
+
+        <div class="interp-phase">
+          <div class="ph-head"><span class="ph-tag key">区间 H · Step 17–18</span><span class="ph-title">Test #8 — centered log-Z（E[logZ − 9.0]）→ 突破 1.889</span></div>
+          <div class="ph-body">
+            <p>最终突破：把 L1 目标从「压到 0」改为「压到参考值 c=9.0」——即 <code>E[logZ - c]</code>。val_loss 直接跳到 <b>1.8890</b>，比官方最强 baseline 低 0.38。</p>
+            <span class="obs">观察到：step=13000 处 train_loss=2.1584 / val_loss=1.8958；lambada_ppl 从 67→31.88。</span>
+            <span class="verbatim">"""Cross-entropy with soft-cap + tuned log-Z control (L1, centered).
+A *centered* linear log-partition penalty E[(logZ - c)] steers the softmax
+scale. Reference c=9.0. Since the model's true optimal logZ grows with
+training (as confidence increases), centering around a fixed c gives a stable
+gradient pull each step rather than accumulating."""</span>
+            <p class="ph-note">最反直觉、最有价值的一步：只加了一个常数偏置 9.0，就从 2.07 涨到 1.89。<b>「目标该压向 0 还是压向某个自然水平」这个提问方式，才是模型真正的贡献</b>——这种 trace 靠随机搜索很难想到。</p>
+          </div>
+        </div>
+
+        <div class="interp-phase">
+          <div class="ph-head"><span class="ph-tag neutral">区间 I · Step 19–22</span><span class="ph-title">Test #9/#10 — 复现确认，提交 #8</span></div>
+          <div class="ph-body">
+            <p>同配置连跑两次：1.8899 / 1.8911，均复现 1.89 量级。第 23 步提交 Test #8 为 FINAL。</p>
+            <span class="obs">观察到：三次 1.889/1.8899/1.8911 高度一致，排除随机性。</span>
+          </div>
+        </div>
+
+        <div class="callout green">
+          <b>可迁移技巧清单（loss 任务）</b>：
+          <div class="md-li"><b>每次只改一个变量</b>（加/减一项正则）并对比 val_loss——干净消融是定位有效成分的前提。</div>
+          <div class="md-li"><b>失败后读错误模式做归因</b>：smoothing 崩盘 → 识别 train-eval 失配；exit=137 → 不纠结直接回退。</div>
+          <div class="md-li"><b>复现确认</b>（#3≈#1、#7≈#5、#9≈#8）——区分真实增益与随机波动。</div>
+          <div class="md-li"><b>提出自己的量纲</b>（L1 vs L2、centered vs 0）而不是只调 baseline 参数。</div>
+          <div class="md-li"><b>系数逐步放大</b>（1e-4 → 1e-2 → 2e-2）验证趋势方向。</div>
+        </div>
+        <div class="callout warn">
+          <b>需要警惕的 trace</b>：Test #8 的 1.889 来自 log-Z 往目标 9.0 拉。若 c 设得极端，会退化成"压缩 logits 压低 CE"的作弊式降 loss。agent 最终 lm-eval（arc 56.19）与 baseline 持平略优，未见明显作弊，但这是任务警告里"不要通过扭曲概率分布降 loss"的擦边区，值得人类复核。
+        </div>
+      </div>
+    </details>
+
     <!-- optimizer -->
-    <h3>2.2 llm-pretrain-optimizer — 优化器优化</h3>
+    <h3 id="sec-optimizer">2.2 llm-pretrain-optimizer — 优化器优化</h3>
 
     
     <details class="instr">
@@ -3366,6 +3615,8 @@ Lines 344–346:
       <span class="badge green">完成并提交</span>
       <span class="badge">模型: deepseek-chat</span>
       <span class="badge">run: deepseek-chat_20260818_091638</span>
+      <span class="badge">Harness: MLS-Bench InteractiveAgent (mlsbench agent)</span>
+      <span class="badge">内核: nanogpt (GPT-2 small, 124M)</span>
     </div>
     <p class="path">raw 日志：<a href="experiment_registry_assets/raw_logs/llm-pretrain-optimizer.log">本地归档</a> · 原始远程：<code>/data4/guoshaoyang/nanogpt_agent_logs/llm-pretrain-optimizer.log</code></p>
 
@@ -3428,8 +3679,110 @@ Final lm-eval: arc_easy=60.65, hellaswag=37.46, piqa=65.83, winogrande=54.06
 Submit: test #10 as FINAL（0 tests remaining）</div>
     </details>
 
+    <details class="interp" open>
+      <summary>🧭 §2.2 执行过程 interpreter：optimizer agent 每一步在做什么（逐区间解读）</summary>
+      <div class="instr-body">
+        <p class="md-p"><b>总览</b>：这个 setting 的杠杆明显比 loss 小。共 21 步 / 10 次 test（其中 2 次失败）/ 417k tokens。
+        模型从零实现了 <b>Muon（Newton-Schulz 正交化 + Nesterov 动量）</b>，然后用 CONFIG_OVERRIDES 做 LR 网格搜索。
+        全部 10 次 test 的 val_loss 波动范围只有 2.19–2.22——优化器层的可改善空间远小于 loss 层。</p>
+
+        <div class="interp-phase">
+          <div class="ph-head"><span class="ph-tag neutral">区间 A · Step 1–2</span><span class="ph-title">Test #1 — 从零实现 Muon+Nesterov 组合优化器</span></div>
+          <div class="ph-body">
+            <p>模型没有调参，而是直接实现 Muon：2D 矩阵参数用「SGD 动量 + 5 步 Newton-Schulz 正交化」，嵌入/lm_head/1D 参数保留 AdamW，同时给 Muon 加 Nesterov。保持默认全局 LR。</p>
+            <span class="obs">观察到：val_loss=2.2215，比官方 muon baseline(2.1995) 差 0.02——实现没问题但默认 LR 不适合。</span>
+            <span class="verbatim"># ── Muon: Momentum → Newton-Schulz orthogonalization ──────────────
+class Muon(torch.optim.Optimizer):
+    """Muon optimizer with Nesterov momentum and orthogonalization."""</span>
+            <p class="ph-note">能正确实现 Muon（含 Newton-Schulz、参数分组、bf16 处理）本身就是很有价值的 trace——大部分模型只会套 torch 现成优化器。</p>
+          </div>
+        </div>
+
+        <div class="interp-phase">
+          <div class="ph-head"><span class="ph-tag bad">区间 B · Step 3</span><span class="ph-title">越界被拒 — 学到"可编辑边界"</span></div>
+          <div class="ph-body">
+            <p>模型想直接改 <code>get_lr</code> 函数本体来改调度，被 harness 拒绝。</p>
+            <span class="obs">观察到：<code>✘ ERROR: Lines 288..299 exceed the editable range. You may only edit lines 171–287, 343–345.</code></span>
+            <p class="ph-note">被拒后模型正确转向 CONFIG_OVERRIDES 通道——约束感知是 harness 环境的关键能力。</p>
+          </div>
+        </div>
+
+        <div class="interp-phase">
+          <div class="ph-head"><span class="ph-tag bad">区间 C · Step 4–5</span><span class="ph-title">Test #2 — 激进超参爆炸（exit=1）</span></div>
+          <div class="ph-body">
+            <p>CONFIG_OVERRIDES = {lr: 1e-3, wd: 0.15}。lr 从默认降到 1e-3，同时 wd 从默认升到 0.15，直接失败。</p>
+            <span class="obs">观察到：<code>[STATUS: FAILED exit=1]</code>；step=0 处 train_loss=11.03——模型读出 step0 就爆炸，归因为 LR/WD 过激。</span>
+            <p class="ph-note">模型利用 step0 的 11.03 定位是「初始化即爆」而非「中途发散」，正确判断问题在超参组合而非 Muon 实现。</p>
+          </div>
+        </div>
+
+        <div class="interp-phase">
+          <div class="ph-head"><span class="ph-tag good">区间 D · Step 6–7</span><span class="ph-title">Test #3 — 去掉 wd=0.15，只留 lr=1e-3 → 2.1950</span></div>
+          <div class="ph-body">
+            <p>保留 lr=1e-3、去掉异常 wd。val_loss=2.1950，首次低于官方 muon baseline(2.1995)。</p>
+            <span class="obs">观察到：2.1950 < 2.1995——单变量归因确认 wd=0.15 是元凶。</span>
+            <p class="ph-note">干净的单变量消融，与 loss 任务同一方法论。</p>
+          </div>
+        </div>
+
+        <div class="interp-phase">
+          <div class="ph-head"><span class="ph-tag neutral">区间 E · Step 8–13</span><span class="ph-title">Test #4–#6 — LR 网格搜索（1.2e-3 / 1.1e-3 / 1.0e-3）</span></div>
+          <div class="ph-body">
+            <span class="obs">观察到：1.2e-3→2.1939；1.1e-3→2.1941；1.0e-3→2.1968（平台期 2.19，差异 ~0.003）。</span>
+            <p>模型做邻近 LR 扫描，发现 <b>1.2e-3 附近是当前最优</b>，且 1.0e-3 反而略差。</p>
+            <p class="ph-note">网格搜索有效但效率一般——3 次 test 只换来 0.005 的改善。这也是「优化器层收益递减」的直接证据。</p>
+          </div>
+        </div>
+
+        <div class="interp-phase">
+          <div class="ph-head"><span class="ph-tag bad">区间 F · Step 14–15</span><span class="ph-title">Test #7 — 动 warmup 被杀（exit=137）</span></div>
+          <div class="ph-body">
+            <p>尝试 warmup_iters=800（默认约 520）。<code>[STATUS: FAILED exit=137]</code>，进程被杀。</p>
+            <span class="obs">观察到：exit=137（SIGKILL/OOM）——可能不是参数本身而是调度器/显存，但模型选择保守回退。</span>
+            <p class="ph-note">模型没有深究 exit=137 是参数问题还是环境问题，直接回退——在预算有限时是可接受的选择，但也可能错过一个有效改动。</p>
+          </div>
+        </div>
+
+        <div class="interp-phase">
+          <div class="ph-head"><span class="ph-tag neutral">区间 G · Step 16–17</span><span class="ph-title">Test #8 — 复现 lr=1.0e-3 → 2.1961</span></div>
+          <div class="ph-body">
+            <p>回到 lr=1.0e-3 确认稳定性。</p>
+            <span class="obs">观察到：2.1961 ≈ 2.1968（#6），复现良好。</span>
+          </div>
+        </div>
+
+        <div class="interp-phase">
+          <div class="ph-head"><span class="ph-tag neutral">区间 H · Step 18–19</span><span class="ph-title">Test #9 — 试 min_lr → 2.1939</span></div>
+          <div class="ph-body">
+            <p>lr=1.2e-3 + min_lr=1.2e-4。结果与 #4 持平。</p>
+            <span class="obs">观察到：2.1939 = 2.1939（#4），min_lr 改动无增益。</span>
+          </div>
+        </div>
+
+        <div class="interp-phase">
+          <div class="ph-head"><span class="ph-tag key">区间 I · Step 20–21</span><span class="ph-title">Test #10 — 最高 LR 1.3e-3 → 2.1903（提交）</span></div>
+          <div class="ph-body">
+            <p>最后一个 test 把 LR 推到 1.3e-3，得到全程最低 val_loss=2.1903，同时 winogrande 54.06 也最高，提交为 FINAL。</p>
+            <span class="obs">观察到：val_loss=2.1903；lm-eval 全面优于基线（arc 60.65 / hellaswag 37.46 / piqa 65.83 / winogrande 54.06）。</span>
+            <p class="ph-note">有趣：最优出现在「最后一次 + 最大 LR」。模型没有做「先 1.3e-3 再 1.4e-3」的继续外推——受限于只剩 1 次 test 的预算，说明网格搜索在低预算下容易止步于边界值。</p>
+          </div>
+        </div>
+
+        <div class="callout green">
+          <b>可迁移技巧清单（optimizer 任务）</b>：
+          <div class="md-li"><b>从零实现强优化器</b>（Muon/Newton-Schulz/Nesterov）本身就是大增益的来源——比调现成 AdamW 参数空间更大。</div>
+          <div class="md-li"><b>用 CONFIG_OVERRIDES 做邻近 LR 扫描</b>（1.0/1.1/1.2/1.3 ×1e-3），单变量、可复现。</div>
+          <div class="md-li"><b>读 step0 爆炸值定位「初始化即爆」</b>，区分于中途发散。</div>
+          <div class="md-li"><b>失败后按 exit code 决策</b>：exit=1（参数问题）回退参数，exit=137（被杀）回退改动。</div>
+        </div>
+        <div class="callout warn">
+          <b>需要警惕的 trace</b>：#3/#6/#8 三次重复验证 lr=1.0e-3 浪费了 2 次 test；#10 的最优出现在搜索边界（1.3e-3 是最后一次）——agent 没有预算意识地做「再外推一步」。整体增益只有 0.031（2.2215→2.1903），说明 <b>optimizer 层在这个 setting 里可探索空间远小于 loss 层</b>，是"卷对了地方"的对比参照。
+        </div>
+      </div>
+    </details>
+
     <!-- kernel -->
-    <h3>2.3 llm-pretrain-kernel — GPU Kernel 优化</h3>
+    <h3 id="sec-kernel">2.3 llm-pretrain-kernel — GPU Kernel 优化</h3>
 
     
     <details class="instr">
@@ -4964,6 +5317,8 @@ Lines 319–321:
       <span class="badge green">完成并提交（第二轮）</span>
       <span class="badge">模型: deepseek-chat</span>
       <span class="badge">run: deepseek-chat_20260819_175443（2nd）</span>
+      <span class="badge">Harness: MLS-Bench InteractiveAgent (mlsbench agent)</span>
+      <span class="badge">内核: nanogpt (GPT-2 small, 124M)</span>
     </div>
     <p class="path">raw 日志：<a href="experiment_registry_assets/raw_logs/llm-pretrain-kernel.log">第一轮本地归档</a> · <a href="experiment_registry_assets/raw_logs/llm-pretrain-kernel-2nd.log">第二轮本地归档</a> · 原始远程：<code>/data4/guoshaoyang/nanogpt_agent_logs/llm-pretrain-kernel-2nd.log</code></p>
 
@@ -5030,6 +5385,179 @@ Test #7 2.2764 / 48.49
 Test #8 2.2751 / 48.33，提交为 FINAL
 Final lm-eval: arc_easy=54.88, hellaswag=33.64, piqa=63.76, winogrande=50.36</div>
     </details>
+
+    <details class="interp" open>
+      <summary>🧭 §2.3 执行过程 interpreter：kernel agent 两轮每一步在做什么（逐区间解读）</summary>
+      <div class="instr-body">
+        <p class="md-p"><b>总览</b>：kernel 是三个 setting 里最特殊的一个——<b>目标是"改变建模"还是"加速"存在张力</b>。
+        第一轮（4 步就提交，96k tokens）证明"手写 Triton 提速"路线在这个评测里完全无效还变慢；
+        第二轮（19 步 / 8 次 test / 371k tokens）换思路——<b>改 activation（ReLU²）+ 用 custom autograd 而非 Triton</b>，收获 lambada_ppl 从 67→48 的大幅提升。
+        核心教训：这个 setting 的真正杠杆是 activation 函数（建模质量），不是 kernel 融合（吞吐）。</p>
+
+        <h4 class="md-h">第一轮：Triton 路线（4 步 / 2 次 test，过早提交）</h4>
+
+        <div class="interp-phase">
+          <div class="ph-head"><span class="ph-tag neutral">区间 A · Step 1–2</span><span class="ph-title">Test #1 — 手写 Triton fused linear+GELU kernel</span></div>
+          <div class="ph-body">
+            <p>模型写了一个完整的 Triton kernel：tiled matmul + tanh-approx GELU + custom autograd backward（手写 <code>@triton.jit</code>）。</p>
+            <span class="obs">观察到：val_loss=2.283（比官方 triton_gelu 2.2868 略好，但比 relu_sq_torch 2.2736 差）；<b>elapsed=30959s</b>——比默认训练（~2万秒）慢 50%。</span>
+            <span class="verbatim">"""MLP forward with Triton fused linear+GELU kernel."""
+import triton
+import triton.language as tl
+from triton.language.extra.cuda import libdevice</span>
+            <p class="ph-note"><b>模型 miss 了一个关键 observable</b>：elapsed=30959s 明确显示 kernel 反而更慢，但模型没有注意到 throughput 指标，继续往"数值上再试一次"走。在 kernel 类任务里 elapsed 是核心中间量——这是"没想到的 trace"的反例。</p>
+          </div>
+        </div>
+
+        <div class="interp-phase">
+          <div class="ph-head"><span class="ph-tag neutral">区间 B · Step 3–4</span><span class="ph-title">Test #2 — 几乎无实质改动重跑</span></div>
+          <div class="ph-body">
+            <p>diff 只有注释/排版级别的小改动，没有新的优化方向，重跑一遍。</p>
+            <span class="obs">观察到：val_loss=2.2851，与 #1 持平——没有信息增益。</span>
+            <p class="ph-note">浪费一次 test 的典型 trace：没有新的假说就重跑。</p>
+          </div>
+        </div>
+
+        <div class="interp-phase">
+          <div class="ph-head"><span class="ph-tag bad">区间 C · Step 5</span><span class="ph-title">过早提交 Test #1</span></div>
+          <div class="ph-body">
+            <p>只用 6 次调用就 submit。第一次提交还遇到工具调用格式错误（<code>&lt;=' not supported between 'str' and 'int'</code>），重试后成功。</p>
+            <span class="obs">观察到：final val_loss=2.283，lambada_ppl=49.02（elapsed 30959s 被完全忽略）。</span>
+            <p class="ph-note">预算 20 步只用了 5 步——这是低利用率 + 忽视核心指标的双重失误，也是为什么第二轮被重跑。</p>
+          </div>
+        </div>
+
+        <h4 class="md-h">第二轮：换 activation 路线（19 步 / 8 次 test）</h4>
+
+        <div class="interp-phase">
+          <div class="ph-head"><span class="ph-tag bad">区间 A · Step 1–2</span><span class="ph-title">Test #1 — ReLU² + custom autograd（dtype 错误，FAILED）</span></div>
+          <div class="ph-body">
+            <p>放弃 Triton，改为 PyTorch custom autograd Function：<b>换 activation 为 ReLU²（ViT-G 论文）</b>，fuse linear+activation+linear，backward 只存 pre-activation 省内存。</p>
+            <span class="obs">观察到：<code>RuntimeError: expected mat1 and mat2 to have the same dtype, but got: c10::BFloat16 != float</code>——bf16 与 fp32 混乘。</span>
+            <span class="verbatim">"""MLP forward pass: linear -> activation -> linear, using ReLU^2 activation.
+Uses ReLU^2 activation (Liu et al., 2020 "ViT-G") which is empirically
+superior to GELU for transformer pretraining. Fuses the matmul and
+... intermediate activation tensors multiple times in the backward."""</span>
+            <p class="ph-note">模型正确读 traceback 定位 dtype 不匹配（backward 里 grad_output bf16 @ w_proj fp32），下一轮修复——错误消息是最直接的 observable。</p>
+          </div>
+        </div>
+
+        <div class="interp-phase">
+          <div class="ph-head"><span class="ph-tag bad">区间 B · Step 3–4</span><span class="ph-title">Test #2 — 修 dtype 但被杀（exit=137）</span></div>
+          <div class="ph-body">
+            <p>统一 dtype 转换后重跑，但进程被杀。</p>
+            <span class="obs">观察到：<code>[STATUS: FAILED exit=137]</code>，且训练曲线显示已在正常下降（step 2000: train 3.10）——更像资源问题而非逻辑问题。</span>
+            <p class="ph-note">模型没深究直接重跑（Step 5 不改代码），在资源抖动场景下是合理的，但也浪费了一次 test。</p>
+          </div>
+        </div>
+
+        <div class="interp-phase">
+          <div class="ph-head"><span class="ph-tag good">区间 C · Step 5</span><span class="ph-title">Test #3 — 不改代码重跑 → 2.2765（首次成功！）</span></div>
+          <div class="ph-body">
+            <p>零改动重跑即成功，val_loss=2.2765（elapsed 23589s，比第一轮 Triton 的 30959s 快 25%）。ReLU² 验证有效。</p>
+            <span class="obs">观察到：2.2765 vs 官方 relu_sq_torch 2.2736（差 0.003）；lambada_ppl=48.55 vs 官方 67.05。</span>
+            <p class="ph-note"><b>这一跳验证了核心假说：改 activation 比改 kernel 融合收益大得多</b>——而且这是从第一轮教训中总结出来的方向。</p>
+          </div>
+        </div>
+
+        <div class="interp-phase">
+          <div class="ph-head"><span class="ph-tag neutral">区间 D · Step 6–8</span><span class="ph-title">Test #4 — dtype/reshape 清理 → 2.2766</span></div>
+          <div class="ph-body">
+            <p>整理 backward 的 dtype 处理与 reshape，性能持平。elapsed 21990s 略有改善。</p>
+            <span class="obs">观察到：2.2766 ≈ 2.2765，dtype 整理无模型增益但吞吐略好。</span>
+          </div>
+        </div>
+
+        <div class="interp-phase">
+          <div class="ph-head"><span class="ph-tag bad">区间 E · Step 9–10</span><span class="ph-title">Test #5 — 换回 GELU 做消融 → 2.2838（回退）</span></div>
+          <div class="ph-body">
+            <p>模型做了标准的 A/B：把 activation 换回 FusedGELU（torch 原生，带精确 erf 梯度），验证 ReLU² 是否真的更好。</p>
+            <span class="obs">观察到：2.2838，明显比 ReLU²(2.2765) 差 0.007——<b>确凿证明 ReLU² 是更好的 activation</b>。</span>
+            <span class="verbatim">"""MLP forward pass: linear -> activation -> linear, using GELU activation."""
+class FusedGELUMLP(torch.autograd.Function):
+    ...
+    gelu_grad = torch.special.erf(h / math.sqrt(2.0))</span>
+            <p class="ph-note">教科书级消融：即使 GELU 是默认且作者期望它好，也要用实验证伪。模型据此果断回退到 ReLU²。</p>
+          </div>
+        </div>
+
+        <div class="interp-phase">
+          <div class="ph-head"><span class="ph-tag good">区间 F · Step 11–13</span><span class="ph-title">Test #6 — 回 ReLU² + 内存优化 → 2.2757</span></div>
+          <div class="ph-body">
+            <p>回到 ReLU²，优化内存：只保存 <code>relu_h</code>（pre-squaring 输出）而非 act，backward 里重算。elapsed 21488s（本轮最快）。</p>
+            <span class="obs">观察到：2.2757，刷新本轮最低；elapsed 从 23589→21488（快 9%）。</span>
+            <span class="verbatim"># Save relu_h (not h, not act) — smallest sufficient state.
+ctx.save_for_backward(x, w_fc, w_proj, relu_h)</span>
+            <p class="ph-note">「存最小充分状态 + backward 重算」是正统的激活内存优化，模型写得干净。</p>
+          </div>
+        </div>
+
+        <div class="interp-phase">
+          <div class="ph-head"><span class="ph-tag neutral">区间 G · Step 14–15</span><span class="ph-title">Test #7 — backward 用 float32 → 2.2764</span></div>
+          <div class="ph-body">
+            <p>backward 计算提升到 float32 避免 bf16 精度损失。val_loss 略回 2.2764（噪声内波动）。</p>
+            <span class="obs">观察到：2.2764，与 #6 持平（2.2757–2.2764 差 0.0007，属噪声）。</span>
+          </div>
+        </div>
+
+        <div class="interp-phase">
+          <div class="ph-head"><span class="ph-tag key">区间 H · Step 16–18</span><span class="ph-title">Test #8 — 最终版本 → 2.2751（提交）</span></div>
+          <div class="ph-body">
+            <p>整合全部优化（ReLU² + 最小保存 + float32 backward），得到全程最优 2.2751，提交为 FINAL。elapsed 29813s。</p>
+            <span class="obs">观察到：2.2751（最佳）；lambada_ppl=48.33 vs 官方 67.05（↓28%）；但 lm-eval 平均分略降（arc 54.88 vs 55.43）。</span>
+            <p class="ph-note">最终 val_loss 仍比官方 relu_sq_torch(2.2736) 高 0.0015——<b>但因为 val_loss 在 score_spec 中权重 2.0 主导，lambada 的 -28% 优势没体现在总分</b>。这是"改对了建模、没改对评测权重"的典型。</p>
+          </div>
+        </div>
+
+        <div class="callout green">
+          <b>可迁移技巧清单（kernel 任务）</b>：
+          <div class="md-li"><b>先想清楚杠杆在哪</b>：这个 setting 里 activation 的建模收益 >> kernel 融合的吞吐收益——第一轮花在 Triton 上的功夫几乎全浪费。</div>
+          <div class="md-li"><b>用 A/B 消融证伪默认</b>（GELU vs ReLU²）：即使 ReLU² 不是任务背景里的默认，也要实测确认。</div>
+          <div class="md-li"><b>读 traceback 修 dtype</b>：错误消息是最高信号量的 observable。</div>
+          <div class="md-li"><b>存最小中间量</b>（relu_h 而非 act）+ backward 重算 = 内存/吞吐双赢。</div>
+          <div class="md-li"><b>关注 elapsed</b>：吞吐指标直接反映 kernel 质量——第一轮正是忽略它才误以为 Triton 有效。</div>
+        </div>
+        <div class="callout warn">
+          <b>需要警惕的 trace</b>：第一轮过早提交 + 忽略 elapsed 是明确的失败模式；第二轮仍存在 exit=137 后不深究、以及部分 test 信息增量低（#4/#7 是噪声级改动）的问题。此外 val_loss 与 lambada 的分离说明<b>只看单一主导指标会漏掉真正的建模进步</b>——score_spec 的权重设计本身值得质疑。
+        </div>
+      </div>
+    </details>
+
+    <h3 id="sec-compare">2.4 三 task setting 对比：同样的模型，不同的杠杆</h3>
+
+    <div class="callout">
+      <b>一句话总结</b>：三个 task 共用同一份 nanoGPT 代码、同一套 eval（val_loss + 4 个 lm-eval），但<b>可编辑区域决定了模型的探索空间与收益上限</b>——
+      loss 层收益最大（-0.38）、optimizer 层最小（-0.009）、kernel 层收益在"另一个维度"（lambada -28% 但 val_loss 没赢）。
+    </div>
+
+    <details class="tblwrap" open>
+      <summary>📊 §2.4 三 task 对比总表（默认展开）</summary>
+      <div style="overflow-x:auto">
+<table>
+      <thead><tr><th>维度</th><th>2.1 loss</th><th>2.2 optimizer</th><th>2.3 kernel</th></tr></thead>
+      <tbody>
+        <tr><td><b>可编辑区域</b></td><td><code>compute_loss</code>（188–191, 247–249）</td><td><code>configure_optimizers</code> + <code>get_lr</code>（171–189, 245–247）</td><td><code>fused_mlp_forward</code>（33–48, 257–259）</td></tr>
+        <tr><td><b>干预的层</b></td><td>损失函数 / 正则化</td><td>优化算法 + 学习率调度</td><td>MLP activation + kernel 实现</td></tr>
+        <tr><td><b>默认实现</b></td><td>标准交叉熵</td><td>AdamW + 余弦退火</td><td>PyTorch GELU MLP</td></tr>
+        <tr><td><b>官方最强 baseline</b></td><td>softcap_ce 2.2701</td><td>muon 2.1995</td><td>relu_sq_torch 2.2736</td></tr>
+        <tr><td><b>agent 最佳</b></td><td class="best">1.8890（centered log-Z）</td><td class="best">2.1903（Muon + lr 1.3e-3）</td><td class="best">2.2751（ReLU² fused autograd）</td></tr>
+        <tr><td><b>相对 baseline 增益</b></td><td class="best">-0.381（大幅）</td><td>-0.009（微小）</td><td>+0.0015（val_loss 未赢，但 lambada -28%）</td></tr>
+        <tr><td><b>模型主要手法</b></td><td>正则项设计 + 系数/中心化调优</td><td>从零实现 Muon + LR 网格搜索</td><td>activation 消融 + 内存优化</td></tr>
+        <tr><td><b>关键 observable</b></td><td>TRAIN_METRICS 曲线、val_loss 跳变</td><td>step0 爆炸值、exit code</td><td>traceback、elapsed、val_loss</td></tr>
+        <tr><td><b>搜索效率</b></td><td class="best">高（每次 test 都有信息增量）</td><td>中（3 次重复验证浪费）</td><td>低→中（第一轮全浪费）</td></tr>
+        <tr><td><b>tokens 消耗</b></td><td>378k / 23 步</td><td>417k / 21 步</td><td>96k + 371k / 两轮</td></tr>
+      </tbody>
+    </table>
+      </div>
+    </details>
+
+    <div class="callout green">
+      <b>对「observable 闭环」的启示（三 task 对比）</b>：
+      <div class="md-li"><b>loss 任务</b>的 agent 几乎全程用 TRAIN_METRICS 的中间量做决策，observe→insight→intervention 闭环最完整，收益也最大——中间量密度与收益正相关。</div>
+      <div class="md-li"><b>optimizer 任务</b>的中间量是"低信息量"的（step0 值、exit code），模型不得不用大量网格搜索弥补，收益被锁死在平台期。</div>
+      <div class="md-li"><b>kernel 任务</b>暴露了 agent 的常见盲区：<b>elapsed（吞吐）这个中间量被第一轮完全忽略</b>；第二轮发现正确杠杆（activation）后收益巨大，但受 score_spec 权重压制。</div>
+      <div class="md-li"><b>三者的共同失败模式</b>：重复验证（re-run 无新假说）、止步于搜索边界、不质疑主导指标的权重。</div>
+    </div>
   </section>
 
   <!-- 3. INVERSE BENCH -->
@@ -6066,6 +6594,9 @@ The entire <code>InverseBench/algo/custom.py</code> file is editable. You may de
       <span class="badge yellow">部分完成</span>
       <span class="badge">任务: ai4sci-inverse-diffusion-algo</span>
       <span class="badge">机器: ophis-gpu / 360-1</span>
+      <span class="badge">模型: deepseek-chat</span>
+      <span class="badge">Harness: MLS-Bench InteractiveAgent (mlsbench agent)</span>
+      <span class="badge">run: deepseek-chat_20260818_invdiff</span>
     </div>
 
     <div class="callout">
@@ -8712,11 +9243,15 @@ Lines 115–202:
       <span class="badge running">🔄 运行中</span>
       <span class="badge">任务: ai4sci-mol-property-prediction</span>
       <span class="badge">机器: ophis-gpu</span>
+      <span class="badge">模型: deepseek-chat</span>
+      <span class="badge">Harness: MLS-Bench InteractiveAgent (mlsbench agent)</span>
+      <span class="badge">内核: Uni-Mol (custom_molprop.py)</span>
     </div>
     <div class="callout">
       <b>任务设计</b>：3 个分子性质数据集（BBBP / BACE / Tox21）二分类 ROC-AUC。
       agent 修改 <code>custom_molprop.py</code>（模型/训练超参）。之前因缺 Uni-Mol 包无法启动，
-      已通过本地代理补装。<b>2026-08-26 核对时仍观察到多条 custom_molprop.py 进程</b>，
+      已通过本地代理补装。<b>2026-08-27 核对：8/16 启动的 custom_molprop.py 进程已卡死
+      （9 天 0% CPU），按失败登记</b>，
       但没有可确认的最终 leaderboard 条目，因此这里把链路验证结果和最终实验结果分开登记。
     </div>
     <h4>官方 baseline</h4>
@@ -8783,8 +9318,8 @@ Lines 115–202:
       </svg>
       <div class="viz-note">纵轴 ROC-AUC 0.55–0.95 线性精确映射。橙色菱形 = 我们用 unimol 模型跑通的链路验证分数
       （BBBP 0.696 / BACE 0.808 / Tox21 0.754），均低于官方 unimol baseline 但同一量级，说明评测链路正确。
-      注意：这是<b>部署验证</b>而非 agent 最终成绩——agent 训练截至 2026-08-26 未结算，
-      custom_molprop.py 进程仍在跑，最终结果待回填。</div>
+      注意：这是<b>部署验证</b>而非 agent 最终成绩——agent 训练进程 8/16 启动后卡死
+      （2026-08-27 确认 9 天 0% CPU），未产生任何最终分数，按失败登记。</div>
     </div>
 
     <h4>当前进度</h4>
@@ -8797,7 +9332,7 @@ Lines 115–202:
       <tbody>
         <tr><td>依赖补装</td><td class="status-done">✅</td><td>Uni-Mol 数据 3.7GB + 权重 190MB 经本地代理</td></tr>
         <tr><td>评测链路验证</td><td class="status-done">✅</td><td>BBBP 0.696 / BACE 0.808 / Tox21 0.754（接近 unimol baseline）</td></tr>
-        <tr><td>agent 训练</td><td class="status-running">🔄 未结算</td><td>2026-08-26 仍有 custom_molprop.py 进程；需读取各输出目录并去重后才能宣布最终结果</td></tr>
+        <tr><td>agent 训练</td><td class="status-partial">❌ 卡死，无结果</td><td>8/16 启动的 custom_molprop.py 进程 9 天 0% CPU（累计 CPU 时间仅 2 分钟），疑似等待网络/数据；未写入任何 leaderboard 分数，按失败登记</td></tr>
       </tbody>
     </table>
       </div>
@@ -14573,8 +15108,27 @@ h60/h90 双 0.95 追平综合最强的 MPPI baseline。</div>
 取决于 checkpoint 是否已缓存。后续两个实例（A/B）都直接复用了已有 checkpoint。</div>
     </details>
 
+    <h4>11.4 robo-diffusion-guidance：8/17 我们重跑的 baseline 链路验证</h4>
+    <details class="tblwrap">
+      <summary>📊 §11.4 8/17 实测 baseline（单个环境逐个跑，避免多任务并行超时）</summary>
+      <div style="overflow-x:auto">
+<table>
+      <thead><tr><th>baseline</th><th>hopper</th><th>walker2d</th><th>halfcheetah</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td>no_guidance</td><td>0.4537</td><td>0.66</td><td>0.4104 / 0.413</td><td>与官方 0.436/0.602/0.412 同量级 ✓</td></tr>
+        <tr><td>decision_diffuser</td><td>0.8638</td><td>0.7677</td><td>0.4317</td><td>与官方 0.935/0.697/0.435 同量级 ✓</td></tr>
+        <tr><td>cfg</td><td colspan="3" class="muted">三次均 TIMEOUT（14,700s 预算内未完成）</td><td>官方 0.921/0.762/0.413；需独占卡重跑</td></tr>
+        <tr><td>default</td><td colspan="3" class="muted">8/17 多次提交均为空值（训练超时）</td><td>官方 0.962/0.766/0.436；需独占卡重跑</td></tr>
+      </tbody>
+    </table>
+      </div>
+    </details>
+    <div class="viz-note">教训：12 个完整训练并行挤 3 卡必然超时（每次训练 20 万步 ≈ 3h）；
+    正确跑法是 <code>CUDA_VISIBLE_DEVICES</code> 独占卡 + 一次一个 baseline。这些是链路验证数据，
+    不是 agent 提交的分数。</div>
+
     <div class="callout warn">
-      <b>11.4 不要把其余三个任务当成已有结果</b>：prediction-loss / regularizer /
+      <b>11.5 不要把其余三个任务当成已有结果</b>：prediction-loss / regularizer /
       diffusion-guidance 目前只有「能跑通」的证据（数据加载、训练一步、评测管线输出正常），
       leaderboard 里只有官方 baseline 行，没有任何 agent 提交。若要纳入对比，
       需先在这三个任务上跑完整 autoresearch。
@@ -14609,6 +15163,14 @@ h60/h90 双 0.95 追平综合最强的 MPPI baseline。</div>
         <tr><td>autoresearch 原始题目/作答</td><td class="path">autoresearch/results/quiz/；autoresearch/results/quiz_calib/</td><td>题面 JSON、judge JSON、summary</td></tr>
         <tr><td>sibling 原始题目/作答</td><td class="path">autoresearch/experiments/tree_sibling_judge/data/quiz_tree/</td><td>base / shuffled / context / both</td></tr>
         <tr><td>mlsbench 使用说明</td><td class="path">docs/mlsbench_autoresearch_usage.md</td><td>本地文档</td></tr>
+        <tr><td>jepa-planning agent 日志 ×3</td><td class="path">/data3/guoshaoyang/tmp_robotics/agent_jepa_planning_v3_{1,2,3}.log</td><td>v3_1/v3_3 提交 final，v3_2 最终 0.75/0.95/0.95</td></tr>
+        <tr><td>jepa-planning leaderboard</td><td class="path">/data3/guoshaoyang/mlsbench/tasks/jepa-planning/leaderboard.csv</td><td>含 random/CEM/MPPI/iCEM baseline + deepseek-chat 提交</td></tr>
+        <tr><td>jepa-prediction-loss leaderboard</td><td class="path">/data3/guoshaoyang/mlsbench/tasks/jepa-prediction-loss/leaderboard.csv</td><td>仅官方 baseline（MSE/SmoothL1/Cosine），无 agent 提交</td></tr>
+        <tr><td>jepa-regularizer leaderboard</td><td class="path">/data3/guoshaoyang/mlsbench/tasks/jepa-regularizer/leaderboard.csv</td><td>仅官方 baseline（naive/VICReg/SigReg/Barlow），无 agent 提交</td></tr>
+        <tr><td>robo-diffusion-guidance leaderboard</td><td class="path">/data3/guoshaoyang/mlsbench/tasks/robo-diffusion-guidance/leaderboard.csv</td><td>官方 baseline + 8/17 我们重跑的链路验证行</td></tr>
+        <tr><td>eb_jepa 数据（ckpt/MNIST/CIFAR）</td><td class="path">/data3/guoshaoyang/mlsbench/vendor/data/eb_jepa/</td><td>ac_jepa_e11.pth.tar（33.8MB）→ 软链到 /data1/.../mlsbench-data/eb_jepa</td></tr>
+        <tr><td>D4RL 数据集</td><td class="path">/data/home/guoshaoyang/.d4rl/datasets/</td><td>hopper/walker2d/halfcheetah medium-v2（约 152MB×3）</td></tr>
+        <tr><td>mujoco210 二进制</td><td class="path">/data3/guoshaoyang/mujoco210/</td><td>mujoco_py 运行必需；LD_LIBRARY_PATH 已固化到 pkg_config</td></tr>
       </tbody>
     </table>
       </div>
@@ -14624,5 +15186,26 @@ h60/h90 双 0.95 追平综合最强的 MPPI baseline。</div>
     <a href="task_profiles/autoresearch_task_profiles.html">任务详解</a>
   </div>
 </div>
+<script>
+/* 侧栏目录：滚动高亮 (scroll-spy) */
+(function () {
+  var links = Array.prototype.slice.call(document.querySelectorAll('.sidebar a[href^="#"]'));
+  var sections = links.map(function (a) {
+    return document.querySelector(a.getAttribute('href'));
+  }).filter(Boolean);
+  function onScroll() {
+    var pos = window.scrollY + 120;
+    var cur = -1;
+    for (var i = 0; i < sections.length; i++) {
+      if (sections[i] && sections[i].offsetTop <= pos) cur = i;
+    }
+    links.forEach(function (a, i) {
+      a.classList.toggle('active', i === cur);
+    });
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+})();
+</script>
 </body>
 </html>
