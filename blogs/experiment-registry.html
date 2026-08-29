@@ -87,43 +87,44 @@
   <!-- ============ 主线注入点 ============ -->
   <tr id="registry-m2-v4">
     <td rowspan="2" class="center"><b>主线<br>注入点</b></td>
-    <td>M2-v5 注入点消融<br><span class="note">（当前唯一主线）</span></td>
-    <td>input / y / v / nogram；2000 步；clean R=2²⁰；<code>lr=6e-4</code>、<code>warmup_constant(100)</code>；bf16、不 compile；train loss=当前 batch online loss；seed 42/43/44</td>
-    <td class="visual">正式 current-batch refresh 的原始 online loss/gap 点（只以 3 点均值连线）。
+    <td>M2-v5 注入点消融<br><span class="note">（当前唯一主线 · table LR 128×）</span></td>
+    <td>input / y / v / nogram；2000 步；clean R=2²⁰；<code>lr=6e-4</code>、<code>warmup_constant(100)</code>、<b>table LR scale=128</b>；bf16、不 compile；train loss=当前 batch online loss；seed 42</td>
+    <td class="visual">128× 标准批的原始 online loss/gap 曲线（只以 3 点均值连线），以及 2× vs 128× final gap 对比柱状图。
       <div class="inline-figures">
-        <figure class="inline-figure"><a href="../../docs/figs/main/fig_v5_injection.png"><img src="../../docs/figs/main/fig_v5_injection.png" alt="v5 注入点 online gap 与 loss"></a><figcaption>seed 42 四臂：gap / loss</figcaption></figure>
+        <figure class="inline-figure"><a href="../../docs/figs/main/fig_v5_128x_injection_curves.png"><img src="../../docs/figs/main/fig_v5_128x_injection_curves.png" alt="v5 128x 注入点 online gap 与 loss"></a><figcaption>seed 42 四臂 @128×：gap / loss</figcaption></figure>
+        <figure class="inline-figure"><a href="../../docs/figs/main/fig_v5_128x_injection_bars.png"><img src="../../docs/figs/main/fig_v5_128x_injection_bars.png" alt="v5 128x vs 2x 注入点 gap"></a><figcaption>2× vs 128× final gap</figcaption></figure>
       </div>
-      <span class="note">图源已切换为 <code>nglab1x_input_v5_freq10_r1_fixed</code> 与 <code>nglab1x_{y,v,nogram}_v5_freq10_fixed/train_log.jsonl</code>；点为原始 online 记录，线为 3 点均值。频率统计见下一行；三个 seed 的独立 endpoint 仍保留在历史主线复现记录中。</span>
+      <span class="note">图源为 <code>nglab1x_{input,y,v,nogram}_v5_128x_freq10_fixed</code>（2026-08-29 标准切 128× 后重刷，见 experiment-log §35）；点为原始 online 记录，线为 3 点均值。频率统计见下一行。</span>
     </td>
-    <td class="st-done">✅ 当前正式 frequency-refresh seed 42 四臂完成；input/y/v/nogram=5.755/3.465/2.011/0.248 @2000；多 seed endpoint 仍作为独立复现证据保留</td>
+    <td class="st-done">✅ 128× 四臂完成 @2000：input/y/v/nogram=5.672/5.248/7.648/0.227；高 LR 放大后端注入 gap（v>y>input），nogram 贴零</td>
     <td class="com"><input type="text"></td>
   </tr>
   <tr id="registry-m2-v5-freq10">
-    <td>M2-v5 current-batch frequency refresh</td>
-    <td>input / y / v / nogram；seed 42、2000 步；clean R=2²⁰；<code>lr=6e-4</code>、<code>warmup_constant(100)</code>；bf16、不 compile；val / frequency / exact-frequency / table RMS 每 10 步</td>
+    <td>M2-v5 current-batch frequency refresh<br><span class="note">（128× 重刷）</span></td>
+    <td>input / y / v / nogram；seed 42、2000 步；clean R=2²⁰；<code>lr=6e-4</code>、<code>warmup_constant(100)</code>、table LR scale=128；bf16、不 compile；val / frequency / exact-frequency / table RMS 每 10 步</td>
     <td class="visual">每个 branch 画 input train / fixed-val token fraction 双柱，以及 final per-bin gap 原始点与细 3 点视觉连线。
       <div class="inline-figures">
         <figure class="inline-figure"><a href="../../docs/figs/main/fig_v5_injection_frequency_bigram.png"><img src="../../docs/figs/main/fig_v5_injection_frequency_bigram.png" alt="v5 current-batch bigram frequency bins"></a><figcaption>bigram · fraction / gap</figcaption></figure>
         <figure class="inline-figure"><a href="../../docs/figs/main/fig_v5_injection_frequency_trigram.png"><img src="../../docs/figs/main/fig_v5_injection_frequency_trigram.png" alt="v5 current-batch trigram frequency bins"></a><figcaption>trigram · fraction / gap</figcaption></figure>
       </div>
-      <span class="note">图源严格限定为 <code>nglab1x_input_v5_freq10_r1_fixed</code> 与 <code>nglab1x_{y,v,nogram}_v5_freq10_fixed/freq_bin_loss.jsonl</code> 的 step 2000；原 input ID 已被 100-step smoke 占用，完整证据新起 <code>r1</code>。train 侧直接复用该 step 当前训练 batch 的 pre-update per-token loss，不另取诊断 batch。novel 没有 train loss，故不定义 gap。</span>
+      <span class="note">图源为 <code>nglab1x_{input,y,v,nogram}_v5_128x_freq10_fixed/freq_bin_loss.jsonl</code> 的 step 2000；train 侧直接复用该 step 当前训练 batch 的 pre-update per-token loss。novel 没有 train loss，故不定义 gap。</span>
     </td>
-    <td class="st-done">✅ 4/4 完成；step-2000 input/y/v/nogram gap=5.755/3.465/2.011/0.248</td>
+    <td class="st-done">✅ 4/4 完成 @128×；step-2000 input/y/v/nogram gap=5.672/5.248/7.648/0.227</td>
     <td class="com"><input type="text"></td>
   </tr>
 
   <!-- ============ 剂量扫描 ============ -->
   <tr id="registry-m5">
     <td rowspan="4" class="center"><b>剂量<br>扫描</b></td>
-    <td>M5-v5 fixed-step 剂量扫描</td>
-    <td rowspan="2">0.25x、0.5x、0.75x、1.5x、2x、2.5x、3x、4x、5x、6x、8x；input；2000 步；v5 SSOT</td>
-    <td class="visual">已完成批次的完整 online train / fixed-val / gap 轨迹；当前带 frequency 的正式证据见下方 M5-v5 frequency refresh。
+    <td>M5-v5 fixed-step 剂量扫描<br><span class="note">（128× 重刷）</span></td>
+    <td rowspan="2">0.25x、0.5x、0.75x、1.5x、2x、2.5x、3x、4x、5x、6x、8x；input；2000 步；v5 SSOT、table LR scale=128</td>
+    <td class="visual">128× 标准批的 final gap 随剂量曲线；当前带 frequency 的正式证据见下方 M5-v5 frequency refresh。
       <div class="inline-figures">
-        <figure class="inline-figure"><a href="../../docs/figs/main/fig_v5_dose_trajectories.png"><img src="../../docs/figs/main/fig_v5_dose_trajectories.png" alt="v5 剂量完整曲线"></a><figcaption>正式 v5：loss/gap 轨迹</figcaption></figure>
+        <figure class="inline-figure"><a href="../../docs/figs/main/fig_v5_128x_dose_gap.png"><img src="../../docs/figs/main/fig_v5_128x_dose_gap.png" alt="v5 128x 剂量 final gap"></a><figcaption>128×：final gap vs dose</figcaption></figure>
       </div>
-      <span class="note">图源为 12 个正式 v5 frequency-refresh run 的 summary 与 train_log；点为原始 online 记录，细线为 3 点视觉连接。完整频率统计见下方 M5-v5 frequency refresh，旧 fixed-step/precursor 数值不作为当前证据。</span>
+      <span class="note">图源为 11 个 <code>nglab*_input_v5_128x_freq10_fixed</code> run 的 summary；gap 随剂量单调下降，0.25× 严重过拟合（10.9）、8× 转负（−0.06）、逼近 nogram。</span>
     </td>
-    <td class="st-done">✅ 12/12 正式 frequency-refresh 端点；gap 11.535647（0.25×）→−0.075474（8×）</td>
+    <td class="st-done">✅ 11/11 128× 端点；gap 10.895（0.25×）→ −0.055（8×）</td>
     <td class="com"><input type="text"></td>
   </tr>
   <tr id="registry-m5-v3">
@@ -133,16 +134,15 @@
     <td class="com"><input type="text"></td>
   </tr>
   <tr id="registry-m5-freq10">
-    <td>M5-v5 frequency refresh<br><span class="note">（新批，专供剂量×频率证据）</span></td>
-    <td>11 个非 1x shard dose、input、2000 步；每 10 步 fixed val + current-batch freq-bin；每个 dose 强制绑定对应 train-set frequency index；1x 由 M2 四臂 frequency-refresh 单列重跑；其余 v5 SSOT</td>
+    <td>M5-v5 frequency refresh<br><span class="note">（128× 重刷，专供剂量×频率证据）</span></td>
+    <td>11 个非 1x shard dose、input、2000 步、table LR scale=128；每 10 步 fixed val + current-batch freq-bin；每个 dose 强制绑定对应 train-set frequency index；1x 由 M2 四臂 frequency-refresh 单列重跑；其余 v5 SSOT</td>
     <td class="visual">11/11 个非 1x dose（0.25×–8×）均已验收，绘制 bigram/trigram final raw freq-bin gap heatmap 与完整 loss/gap 轨迹；不以旧批补位。
       <div class="inline-figures">
-        <figure class="inline-figure"><a href="../../docs/figs/main/fig_v5_dose_trajectories.png"><img src="../../docs/figs/main/fig_v5_dose_trajectories.png" alt="v5 dose refresh trajectories"></a><figcaption>12/12 含 1× · loss / gap</figcaption></figure>
-        <figure class="inline-figure"><a href="../../docs/figs/main/fig_v5_dose_frequency_heatmap.png"><img src="../../docs/figs/main/fig_v5_dose_frequency_heatmap.png" alt="v5 dose frequency gap heatmap"></a><figcaption>12/12 含 1× · raw frequency-bin gap</figcaption></figure>
+        <figure class="inline-figure"><a href="../../docs/figs/main/fig_v5_dose_frequency_heatmap.png"><img src="../../docs/figs/main/fig_v5_dose_frequency_heatmap.png" alt="v5 dose frequency gap heatmap"></a><figcaption>128× 批 · raw frequency-bin gap</figcaption></figure>
       </div>
-      <span class="note">图源限定为各自 <code>nglab*_input_v5_freq10_fixed</code> 的 step-2000 summary、online train / fixed-val 曲线与 current-batch frequency bins；novel 没有 train loss，不定义 gap。</span>
+      <span class="note">图源限定为各自 <code>nglab*_input_v5_128x_freq10_fixed</code> 的 step-2000 summary、online train / fixed-val 曲线与 current-batch frequency bins；novel 没有 train loss，不定义 gap。</span>
     </td>
-    <td class="st-done">✅ 11/11 非 1x 完成；含 M2 的 1× 后共 12/12 frequency-refresh 证据</td>
+    <td class="st-done">✅ 11/11 非 1x 完成 @128×；含 M2 的 1× 后共 12/12 frequency-refresh 证据</td>
     <td class="com"><input type="text"></td>
   </tr>
   <tr id="registry-m6">
@@ -212,43 +212,42 @@
 
   <tr id="registry-x1">
     <td rowspan="2" class="center"><b>扩展<br>验证</b></td>
-    <td>X1 optimizer × seed 复现</td>
-    <td>RMSProp / AdamW / SGD(m=0)；table LR scale=2；seed 42/43/44；1000 步；其余 v5 SSOT</td>
-    <td class="visual">三种 table optimizer 的 step-1000 final gap 散点、seed 离散度与 seed-43 gap trajectory
+    <td>X1 optimizer × 复现<br><span class="note">（128× 重刷）</span></td>
+    <td>RMSProp / AdamW / SGD(m=0)；table LR scale=128；seed 42；1000 步；其余 v5 SSOT</td>
+    <td class="visual">三种 table optimizer 的 step-1000 final gap 柱状图
       <div class="inline-figures">
-        <figure class="inline-figure"><a href="../../docs/figs/theory/fig_theory_x1_optimizer.png"><img src="../../docs/figs/theory/fig_theory_x1_optimizer.png" alt="X1 optimizer seed 复现"></a><figcaption>X1：optimizer × seed</figcaption></figure>
+        <figure class="inline-figure"><a href="../../docs/figs/main/fig_v5_128x_optimizer_gap.png"><img src="../../docs/figs/main/fig_v5_128x_optimizer_gap.png" alt="X1 128x optimizer gap"></a><figcaption>X1 @128×：optimizer final gap</figcaption></figure>
       </div>
-      <span class="note">图源为 <code>optv5c_*_fixed</code>；seed 42 复用 §24b，新增 seed 43/44 各 6 个完整 JSONL 产物。点是原始 final gap，误差线是两点 seed 43/44 的半距；表内均值/SD 见 <code>experiment-log.md</code> §27。</span>
+      <span class="note">图源为 <code>optv5c_{rms,adamw,sgd_m0}_s128x_fixed</code>；RMSProp 与 AdamW 几乎相同，SGD 无动量几乎不学。</span>
     </td>
-    <td class="st-done">✅ 完成；三臂 × 三 seed：RMSProp 1.530459±0.025256；AdamW 1.520992±0.016406；SGD 0.053736±0.024813</td>
+    <td class="st-done">✅ 完成 @128×；RMS=2.727、AdamW=2.731、SGD=0.047</td>
     <td class="com"><input type="text"></td>
   </tr>
   <tr id="registry-x2">
-    <td>X2 clean 表行宽扫描</td>
-    <td>bigram/trigram 同步 row width <code>d∈{768,192,48,12}</code>；input；seed 42；1000 步；table LR scale=2；其余 v5 SSOT</td>
+    <td>X2 clean 表行宽扫描<br><span class="note">（128× 重刷）</span></td>
+    <td>bigram/trigram 同步 row width <code>d∈{768,192,48,12}</code>；input；seed 42；1000 步；table LR scale=128；其余 v5 SSOT</td>
     <td class="visual">step-1000 final gap 随 clean-table row width 的容量曲线
       <div class="inline-figures">
-        <figure class="inline-figure"><a href="../../docs/figs/theory/fig_theory_x2_tabledim.png"><img src="../../docs/figs/theory/fig_theory_x2_tabledim.png" alt="X2 clean table row width"></a><figcaption>X2：row width d</figcaption></figure>
+        <figure class="inline-figure"><a href="../../docs/figs/main/fig_v5_128x_rowwidth_gap.png"><img src="../../docs/figs/main/fig_v5_128x_rowwidth_gap.png" alt="X2 128x row width gap"></a><figcaption>X2 @128×：row width d</figcaption></figure>
       </div>
-      <span class="note">图源为 <code>ctbl_dim192_input_v5_fixed</code>、<code>ctbl_dim48_input_v5_fixed</code>、<code>ctbl_dim12_input_v5_fixed</code> 与 d=768 的 v5 baseline。三档新增 run 均有 100 条 step-10 train/val/freq/exact/RMS 日志，无 NaN/Inf。</span>
+      <span class="note">图源为 <code>ctbl_dim{768,192,48,12}_input_v5_128x_fixed</code>；gap 随行宽单调上升。</span>
     </td>
-    <td class="st-done">✅ 完成；d=768/192/48/12 的 gap=5.741356/0.803015/0.363563/0.157422</td>
+    <td class="st-done">✅ 完成 @128×；d=768/192/48/12 的 gap=2.742/1.458/0.552/0.180</td>
     <td class="com"><input type="text"></td>
   </tr>
 
   <!-- ============ 因果干预 ============ -->
   <tr id="registry-causal">
     <td class="center"><b>因果<br>干预</b></td>
-    <td>Causal interventions（v5）</td>
-    <td>input、1000 步、val/frequency=10。已完成 precursor：reset-table e1/e2、mask-readout e1、freeze-table e1、freeze-backbone e1。新 causal-refresh 另加 no-intervention、hash-reseed e1、mask-low-f≤200 e1、mask-high-f&gt;200 e1；其余 v5 SSOT</td>
-    <td class="visual">九臂完整 online train / fixed val / gap 曲线；各色虚线精确标出记录在 <code>summary.json</code> 的干预步（e1 为 step 338，reset e2 为 step 675）。<code>reset_table</code> 重初始化表参数，不改 hash；<code>mask_readout</code> 是边界后的 no-gram 破坏性基准；<code>hash_reseed</code> 只换 context→row 映射、保留表权重与 RMSProp state；low/high mask 用 <code>f≤200</code>/<code>f&gt;200</code> 的互补集合。
+    <td>Causal interventions（v5 · 128× 重刷）</td>
+    <td>input、1000 步、table LR scale=128、val/frequency=10。九臂：none、reset-table e1/e2、mask-readout e1、freeze-table e1、freeze-backbone e1、hash-reseed e1、mask-low-f≤200 e1、mask-high-f&gt;200 e1；其余 v5 SSOT</td>
+    <td class="visual">九臂 final gap 柱状图（128× 批）。
       <div class="inline-figures">
-        <figure class="inline-figure"><a href="../../docs/figs/main/fig_v5_causal_losses.png"><img src="../../docs/figs/main/fig_v5_causal_losses.png" alt="v5 九臂因果 online train validation gap 曲线"></a><figcaption>九臂：online train / fixed val / gap</figcaption></figure>
-        <figure class="inline-figure"><a href="../../docs/figs/main/fig_v5_causal_frequency_effect.png"><img src="../../docs/figs/main/fig_v5_causal_frequency_effect.png" alt="v5 因果低高频屏蔽频率分桶 gap"></a><figcaption>low/high mask：末步频率 gap</figcaption></figure>
+        <figure class="inline-figure"><a href="../../docs/figs/main/fig_v5_128x_causal_gap.png"><img src="../../docs/figs/main/fig_v5_128x_causal_gap.png" alt="v5 128x 九臂因果 final gap"></a><figcaption>九臂：final gap @1000（128×）</figcaption></figure>
       </div>
-      <span class="note">图源严格限定为九个 <code>causalv5c_*_fixed</code> run 的 100 条 step-10 <code>train_log.jsonl</code> / <code>freq_bin_loss.jsonl</code> / <code>exact_freq_loss.jsonl</code> / <code>table_norm.jsonl</code>；均到 step 1000、无 NaN/Inf。频率图只包含已有 train token loss 的桶，<code>novel</code> 不定义 gap。</span>
+      <span class="note">图源严格限定为九个 <code>causalv5c_*_128x_fixed</code> run；均到 step 1000、无 NaN/Inf。<code>reset_table</code> 重初始化表参数，不改 hash；<code>mask_readout</code> 是边界后的 no-gram 破坏性基准；<code>hash_reseed</code> 只换 context→row 映射、保留表权重与 RMSProp state；low/high mask 用 <code>f≤200</code>/<code>f&gt;200</code> 的互补集合。</span>
     </td>
-    <td class="st-done">✅ 9/9 causal-refresh 完成（seed 42、step 1000）：none=1.544；reset e1/e2=0.704/0.068；mask-readout=0.016；freeze table/backbone=1.133/0.821；hash-reseed=0.637；mask low/high=0.066/1.529</td>
+    <td class="st-done">✅ 9/9 完成 @128×（seed 42、step 1000）：none=2.724；reset e1/e2=1.409/0.075；mask-readout=0.008；freeze table/backbone=3.452/1.230；hash-reseed=1.354；mask low/high=0.101/2.808</td>
     <td class="com"><input type="text"></td>
   </tr>
 
