@@ -386,7 +386,10 @@ function renderList() {
   $('showMore').style.display=shown.length<rows.length?'inline-block':'none';
 }
 function render() { drawTimeline(); renderHistogram(); renderDetail(state.selected); renderList(); }
-function selectStep(step) { state.selected=step; render(); }
+function selectStep(step) {
+  state.selected = step?.id ? step : allSteps.find(row => row.session === step?.sessionMeta?.key && row.turn === step.turn && row.step === step.step) || step;
+  render();
+}
 function nearestStep(event) {
   const canvas=$('timeline');
   const rect=canvas.getBoundingClientRect();
@@ -394,7 +397,8 @@ function nearestStep(event) {
   const lane=event.clientY-rect.top < 145 ? 0 : 1;
   const session=sessions[lane];
   const index=Math.round((x-8)/(rect.width-16)*Math.max(0,session.steps.length-1));
-  return session.steps[Math.max(0,Math.min(session.steps.length-1,index))];
+  const raw = session.steps[Math.max(0,Math.min(session.steps.length-1,index))];
+  return allSteps.find(row => row.session === session.key && row.turn === raw.turn && row.step === raw.step) || raw;
 }
 $('sessionFilter').addEventListener('change', event => { state.session=event.target.value; state.limit=200; render(); });
 $('kindFilter').addEventListener('change', event => { state.kind=event.target.value; state.limit=200; render(); });
