@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="DeepSeek Harness 追踪 246 有界素数间隔定理的完整任务轨迹：数值计算、Lean 形式化、远程作业和失败边界。">
-  <title>四百八十万事件之后：DeepSeek Harness 如何追一条 246 的证明路线</title>
+  <meta name="description" content="我和 DeepSeek Harness 一起学习、尝试孪生素数猜想：它自动 fallback 到复现 246，轨迹展示了工程验证、数学推导与形式化证明的差异。">
+  <title>我和 DeepSeek 一起追过一次孪生素数猜想</title>
   <style>
     :root {
       --bg: #0b1118;
@@ -138,14 +138,31 @@
 <main>
   <header>
     <div class="eyebrow">Research log · Agent trajectory audit</div>
-    <h1>四百八十万事件之后：DeepSeek Harness 如何追一条 246 的证明路线</h1>
-    <p class="dek">我把两条正在运行的 DeepSeek Harness 主会话完整拉出来，按逻辑 step 重建它们做过的搜索、写码、数值实验、远程计算和等待。问题不是“模型有没有一句话证明 246”，而是：一个研究型 agent 在有限时间里，究竟把多少工作推进成了可审计的数学对象？</p>
+    <h1>我和 DeepSeek 一起追过一次孪生素数猜想</h1>
+    <p class="dek">这不是一篇宣布“AI 证明了孪生素数”的文章，而是一段学习和尝试的记录：我把问题交给 DeepSeek，让它连续运行几天；它没有找到新定理，却把一条复杂的数值、代码和形式化路线跑得很远。</p>
     <div class="meta">作者：Shaoyang Guo · 轨迹快照：2026-08-29 12:28（北京时间） · <a href="https://github.com/guoshaoyang-pku/twin-prime-admissible" target="_blank" rel="noreferrer">项目仓库</a> · <a href="https://github.com/AxiomMath/PrimeGapsLib" target="_blank" rel="noreferrer">Axiom 对照仓库</a></div>
   </header>
 
   <div class="hero-note">
-    <strong>先给判断：</strong> DSH 做出了相当有价值的研究工程——它拆分了元组侧和筛法侧，写了 C/Python/Lean 工具，纠正了浮点污染，并得到了一些区间算术严格结果。但它没有收敛成 Axiom 那种 Lean kernel 可检查的 246 定理。最关键的差距不是又多等几小时 CPU，而是还没有完成从有限计算到完整解析定理的 soundness 连接。
+    <strong>先说故事的结尾：</strong> DeepSeek Harness 自动 fallback 到了复现已知的 246 路线，刚好与 Axiom Math 宣布形式化 246 定理的新闻撞在一起。它做了很多有价值的工程验证，但没有完成 Axiom 那种 Lean kernel 可检查的完整证明；GPT review 之后也指出，原先的“证明完成”和“新的贡献”都说得过头了。
   </div>
+
+  <section>
+    <h2>故事摘要：我只是想学懂它</h2>
+    <div class="two-col">
+      <div class="panel">
+        <h3>从路上的一个想法开始</h3>
+        <p>前几天赶路时，我给自己科普了一点孪生素数猜想。张益唐、Maynard 和 Polymath8b 的路线里有很强的组合优化味道：先选一个可容许的数字模板，再给模板中不同位置加权，争取让平均素数数量超过阈值。</p>
+        <p>这个直觉未必就是完整证明，但足以成为一个很好的学习入口。于是我让 DSH 继续研究：能不能复现 246，或者在同一框架里把它往下推。</p>
+      </div>
+      <div class="panel">
+        <h3>几天后，得到的不是新定理</h3>
+        <p>DSH 写了搜索器、验证器和 Lean 文件，启动了长时间的高维区间矩阵计算，也反复检查远程机器上的任务。它后来自动回到了 246 附近的已知路线，并把大量时间花在复现和严格化已有计算上。</p>
+        <p>这件事很像一个工程师在陌生数学里工作：先把能运行的东西做出来，再用日志、缓存、精度和证书把它加固；但它不会自动知道什么时候该换掉一条对最终定理帮助不大的路线。</p>
+      </div>
+    </div>
+    <div class="callout"><strong>最重要的修正：</strong> 我们的结果是一个诚实的研究记录，不是孪生素数猜想的证明，也不是对 246 的新突破。Axiom 的 formalization、原始数学家的解析证明、以及 DSH 的工程化探索，应该被明确区分。</div>
+  </section>
 
   <section>
     <div class="metrics">
@@ -158,7 +175,7 @@
   </section>
 
   <section>
-    <h2>一、先把三种工作分开</h2>
+    <h2>技术附录：先把三种工作分开</h2>
     <div class="two-col">
       <div class="panel">
         <h3>DSH：研究型 agent loop</h3>
@@ -275,11 +292,12 @@
   </section>
 
   <section>
-    <h2>七、我对这次运行的结论</h2>
+    <h2>七、重新评价这次运行</h2>
     <div class="callout">
       <strong>研究评价：</strong> DSH 已经证明自己能把一个长周期数学问题推进到相当细的计算和形式化边界；它最有价值的产物不是“发现了一个新定理”，而是展示了 agent 如何把开放问题压缩为一组可复现、可反驳、部分可内核检查的子任务。
     </div>
-    <p>但如果评价标准是“是否完成 Axiom 的 246 theorem formalization”，答案仍然是<strong>没有</strong>。如果评价标准是“是否在有限时间内收敛成完整证明”，答案是：<strong>一般没有这种保证；本次运行也没有收敛到那个层级</strong>。有限时间可以产出完整的有限证书，但前提是目标本身已经被设计成有限、精确、可连接到理论的 proof object。</p>
+    <p>GPT review 之后，最需要收回的是两类说法：第一，DSH 没有完成 Axiom 的 246 theorem formalization；第二，我们不能把“Maynard 筛法的极限就是 246”或“这是新的数学贡献”当成已证明结论。我们真正拥有的是独立的计算实验、有限维严格证书、组合侧 Lean 证明，以及一份完整的 agent trajectory。</p>
+    <p>如果评价标准是“是否在有限时间内收敛成完整证明”，答案是：<strong>一般没有这种保证；本次运行也没有收敛到那个层级</strong>。有限时间可以产出完整的有限证书，但前提是目标本身已经被设计成有限、精确、可连接到理论的 proof object。</p>
     <p>下一步若要继续，最有效的方向不是无止境地等待所有 <code>D=31</code> 计算，而是把 DSH 已经写出的组合定义、矩阵证书和 Lean 证明重新组织成一个明确的 certificate interface，再决定是否直接复用 Axiom 的理论库，或只把这次运行作为独立的数值审计报告。</p>
   </section>
 
