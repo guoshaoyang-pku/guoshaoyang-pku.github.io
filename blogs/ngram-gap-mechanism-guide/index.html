@@ -1,49 +1,161 @@
-<!doctype html>
-<html lang="zh-CN">
+<!DOCTYPE html>
+<html lang="zh">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>n-gram Gap：最小复现与机制证据</title>
+<title>n-gram gap 机制 · 主文档（v5 标准）</title>
 <style>
-:root{--bg:#f7f5ef;--ink:#232426;--muted:#686d73;--line:#c8c1b6;--panel:#fffdf8;--panel2:#f0eee7;--anchor:#353d79;--train:#2d6f9f;--val:#c4493d;--gap:#c4493d;--nogap:#236b70;--weak:#b67524;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink)}main{width:min(1080px,calc(100vw - 32px));margin:0 auto;padding:28px 0 56px}
-h1{margin:0 0 10px;font-size:clamp(27px,4vw,42px);line-height:1.08;letter-spacing:-.02em}h2{margin:0 0 12px;padding-bottom:8px;border-bottom:1px solid var(--line);font-size:22px;font-weight:650}h3{margin:18px 0 8px;font-size:16px;color:var(--anchor)}
-p{margin:0 0 12px;font-size:14.5px;line-height:1.7}a{color:var(--anchor)}code{background:var(--panel2);border-radius:4px;padding:1px 5px;font-size:.92em}
-.topline{display:flex;flex-wrap:wrap;gap:8px 14px;margin:0 0 20px;color:var(--muted);font-size:12px}.topline a{text-decoration:none}.subtitle{max-width:820px;margin-bottom:20px;color:var(--muted);font-size:16px;line-height:1.65}
-.archive,.note,.chart-card,.setting-card,details{background:var(--panel);border:1px solid var(--line);border-radius:10px}.archive{padding:12px 15px;margin-bottom:28px;border-left:4px solid var(--anchor);font-size:13.5px;line-height:1.65}.archive strong{color:var(--anchor)}
-section{margin:0 0 36px}.lead{display:grid;grid-template-columns:1.15fr .85fr;gap:16px}.note{padding:16px 18px}.note.result{border-left:4px solid var(--gap)}.note.method{border-left:4px solid var(--nogap)}
-.mini-flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:14px;color:var(--muted);font-size:13px}.mini-flow span{padding:6px 9px;border:1px solid var(--line);border-radius:7px;background:var(--panel2);color:var(--ink)}.mini-flow b{color:var(--anchor)}
-.setting-card{padding:16px 18px}.setting-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}.setting-item{min-height:72px;padding:10px 12px;border:1px solid rgba(35,36,38,.12);border-radius:8px;background:var(--panel2)}.setting-item small{display:block;margin-bottom:4px;color:var(--muted);font-size:11px}.setting-item b{font-size:14px}.setting-foot{margin:12px 0 0;color:var(--muted);font-size:13px}
-.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0}.metric{padding:14px 12px;text-align:center;background:var(--panel);border:1px solid var(--line);border-radius:9px}.metric .label{color:var(--muted);font-size:12px}.metric .value{margin:3px 0;font:700 27px ui-monospace,SFMono-Regular,Menlo,monospace}.metric .caption{color:var(--muted);font-size:11px}.metric.v .value{color:var(--weak)}.metric.y .value,.metric.input .value{color:var(--gap)}.metric.base .value{color:var(--nogap)}
-.chart-card{padding:14px;margin:14px 0}.chart-title{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:baseline;margin:0 0 8px}.chart-title strong{color:var(--anchor);font-size:15px}.chart-title span{color:var(--muted);font-size:12px}.static-figure{display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:7px;background:#fff}.figure-caption{margin:6px 0 0;color:var(--muted);font-size:12px}.chart-frame{display:block;width:100%;border:1px solid var(--line);border-radius:7px;background:#fff;overflow:hidden}.chart-frame.gap-loss{height:780px}.chart-frame.loss-norm{height:460px}
-.observations{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}.observation{padding:13px 14px;border-top:3px solid var(--anchor);background:var(--panel);border-radius:8px}.observation strong{display:block;margin-bottom:4px;font-size:14px}.observation p{margin:0;color:var(--muted);font-size:13px;line-height:1.55}
-table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}th{padding:8px 10px;text-align:left;color:var(--anchor);border-bottom:2px solid var(--line);white-space:nowrap}td{padding:7px 10px;vertical-align:top;border-bottom:1px solid rgba(35,36,38,.1)}tr:hover td{background:rgba(53,61,121,.04)}.data-table{overflow-x:auto}.data-table table{min-width:700px}.data-table td:not(:first-child),.data-table th:not(:first-child){text-align:right;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
-details{margin:12px 0;padding:0 15px}summary{cursor:pointer;padding:13px 0;color:var(--anchor);font-size:14px;font-weight:650}details>div{padding:0 0 14px}.footer-note{color:var(--muted);font-size:12px}
-.toc{position:fixed;top:28px;left:max(16px,calc((100vw - 1080px)/2 - 160px));width:136px;padding:10px 8px;background:var(--panel);border:1px solid var(--line);border-radius:9px;box-shadow:0 4px 16px rgba(35,36,38,.06)}.toc-title{margin:0 0 7px;color:var(--anchor);font-size:12px;font-weight:650}.toc a{display:block;padding:4px 5px;color:var(--muted);font-size:11px;line-height:1.35;text-decoration:none;border-radius:5px}.toc a:hover{background:rgba(53,61,121,.08);color:var(--anchor)}
-@media(min-width:761px){main{width:min(1080px,calc(100vw - 190px));margin-left:max(180px,calc((100vw - 1080px)/2 + 80px));margin-right:20px}}@media(max-width:760px){.toc{display:none}.lead,.setting-grid{grid-template-columns:1fr}.cards{grid-template-columns:repeat(2,1fr)}.observations{grid-template-columns:1fr}main{width:min(100vw - 20px,1080px)}}
+:root{--ink:#1c2733;--mut:#5b6b7b;--line:#dde5ec;--acc:#2d6f9f;--acc2:#c4493d;--bg:#fbfcfd;--card:#fff}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.75 -apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;color:var(--ink);background:var(--bg)}
+.wrap{max-width:1080px;margin:0 auto;padding:28px 20px 80px}
+h1{font-size:26px;line-height:1.3;margin:.2em 0 .1em}
+h2{font-size:20px;margin:2.2em 0 .6em;padding-bottom:.25em;border-bottom:2px solid var(--line)}
+h3{font-size:16px;margin:1.4em 0 .4em;color:var(--acc)}
+.lead{color:var(--mut);font-size:14.5px;margin:.3em 0 1em}
+.banner{background:#f0f6fb;border:1px solid var(--line);border-radius:10px;padding:12px 16px;font-size:13.5px;margin:14px 0}
+.banner b{color:var(--acc)}
+figure{margin:1.2em 0;padding:14px 14px 10px;background:var(--card);border:1px solid var(--line);border-radius:12px}
+figure img{width:100%;height:auto;display:block;border-radius:6px}
+figcaption{font-size:12.8px;color:var(--mut);margin-top:8px;line-height:1.65}
+figcaption b{color:var(--ink)}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:.8em 0;background:var(--card)}
+th,td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+th{background:#eef3f8}
+code{background:#eef2f6;border-radius:4px;padding:1px 5px;font:12.5px/1.5 ui-monospace,Menlo,monospace}
+.note{background:#fdf6ec;border:1px solid #ecd9b0;border-radius:10px;padding:10px 14px;font-size:13.5px;margin:.9em 0}
+.warn{background:#fdeeee;border:1px solid #e7baba;border-radius:10px;padding:10px 14px;font-size:13.5px;margin:.9em 0}
+.toc{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:8px;margin:1em 0 1.6em}
+.toc a{display:block;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:9px 12px;text-decoration:none;color:var(--ink);font-size:13.5px}
+.toc a:hover{border-color:var(--acc)}
+.toc a b{color:var(--acc)}
+.formula{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 16px;font:14px/1.7 ui-monospace,Menlo,monospace;margin:.9em 0;overflow-x:auto}
+footer{margin-top:3em;padding-top:1em;border-top:1px solid var(--line);color:var(--mut);font-size:12.8px}
+a{color:var(--acc)}
+.small{font-size:12.8px;color:var(--mut)}
 </style>
 </head>
 <body>
-<nav class="toc" aria-label="页面目录"><div class="toc-title">本文目录</div><a href="#setting">1. 最小 setting</a><a href="#result">2. 核心结果</a><a href="#curves">3. 训练曲线</a><a href="#norm">4. Loss / gap / norm</a><a href="#frequency-history">5. 频率 → gap</a><a href="#exact-frequency">6. Exact baseline</a><a href="#sample285-mlp">7. Sample285 + MLP</a><a href="#toy-model">8. Toy model</a><a href="#conclusion">9. 结论</a><a href="#background">背景与 debug</a></nav>
-<main>
-<header><div class="topline"><span>MECHANISTIC REPRODUCTION NOTE</span><span>2026-08-06</span><a href="https://github.com/guoshaoyang-pku/ngram-gap-lab">code: ngram-gap-lab ↗</a></div><h1>n-gram Gap：最小复现与机制证据</h1><p class="subtitle">只问一个问题：在 vanilla nanoGPT 中，仅加入可训练的 bigram / trigram value memory，是否足以让固定顺序 replay 产生 train/val gap？这里把 setting、曲线和频率证据放在主线；术语、伪代码、debug 过程和历史分支放到背景页。</p></header>
-<div class="archive"><strong>版本说明</strong>：本页保留早期 injection-point ablation 作为历史对照，并在下方合并新的 collision-free exact-frequency baseline。旧版完整分析（含 current-shell、exp4/exp5、toy、P1/P2）仍保留在 <a href="index_archive_20260805.html">index_archive_20260805.html</a>；<a href="background.html">背景与 debug 子文档</a>解释这些概念为何不属于最小 setting。</div>
-<section class="lead"><div class="note result"><strong>一句话结果</strong><p>是的。n-gram table 在训练集上逐渐记住 context-specific value；固定顺序多 epoch replay 后，train loss 继续下降，而 val loss 在 epoch 边界后上升，形成 gap。</p><div class="mini-flow"><span>bigram + trigram</span><b>→</b><span>train-specific memory</span><b>→</b><span>replay gap</span></div></div><div class="note method"><strong>本页的判断标准</strong><p>不把 current shell、Muon、RoPE 或复杂观测系统当作必要条件。用同一份 vanilla 模型，只改变 n-gram 的注入点，观察 gap 强弱是否随信号到达输出的方式变化。</p><p class="footer-note">gap 定义为 <code>val loss − train loss</code>；正值表示验证集更差。</p></div></section>
-<section id="setting"><h2>1. 最小 setting</h2><div class="setting-card"><p>标准主线是 <strong>baseline_input</strong>。它对应最朴素的 over-encoding：先查 n-gram value，再加到 token embedding，后面运行普通 Transformer。</p><div class="setting-grid"><div class="setting-item"><small>模型</small><b>vanilla nanoGPT</b></div><div class="setting-item"><small>memory</small><b>bigram + trigram</b></div><div class="setting-item"><small>注入点</small><b>input / wte</b></div><div class="setting-item"><small>数据顺序</small><b>fixed replay</b></div><div class="setting-item"><small>table optimizer</small><b>RMSProp</b></div><div class="setting-item"><small>backbone optimizer</small><b>AdamW</b></div><div class="setting-item"><small>规模</small><b>8L · 6H · 768D</b></div><div class="setting-item"><small>实验</small><b>seed 42 · 2000 steps</b></div></div><p class="setting-foot">训练 shard 约 337 steps / epoch（2000 步约 6 个 epoch）；图中的竖线对应各 epoch 边界。三种注入点仅用于消融，不是三个不同的模型家族。</p></div></section>
-<section id="result"><h2>2. 核心结果：注入点改变 gap 强度</h2><p>同一个 n-gram table 放在不同位置，得到不同的信号路径。<code>y</code> 直接绕过 attention 到达 residual stream；<code>input</code> 在最开始加入 embedding；<code>v</code> 则先进入 attention 的 value，再被权重混合。</p><div class="cards" id="summary-cards"><div class="metric v"><div class="label">v 注入</div><div class="value" id="card-v">5.45</div><div class="caption">gap @ 2000 steps</div></div><div class="metric y"><div class="label">y 注入</div><div class="value" id="card-y">5.80</div><div class="caption">gap @ 2000 steps</div></div><div class="metric input"><div class="label">input 注入</div><div class="value" id="card-input">1.87</div><div class="caption">gap @ 2000 steps</div></div><div class="metric base"><div class="label">无 n-gram</div><div class="value">0.25</div><div class="caption">negative control</div></div></div><div class="observations"><div class="observation"><strong>y：最强、最快</strong><p>n-gram 信号在 attention 之后加入，每层都能直接影响后续输出。</p></div><div class="observation"><strong>input：最基础</strong><p>查表结果一次加到 wte；这是后续实验默认采用的最朴素 setting。</p></div><div class="observation"><strong>v：较弱、较晚</strong><p>value residual 会被 attention 混合，且当前 norm 只有 V 的约 6.5%。</p></div></div></section>
-<section id="curves"><h2>3. 训练曲线：epoch replay 后 train / val 分叉</h2><div class="chart-card"><div class="chart-title"><strong>Loss 与 gap 曲线</strong><span>虚线：epoch boundary · 点击图例可隐藏/恢复曲线 · 实线=平滑曲线，散点=原始记录</span></div><iframe class="chart-frame gap-loss" src="fig_gap_loss.html" scrolling="no" title="n-gram 注入点的 loss 与 gap 曲线"></iframe><p class="figure-caption">input run 在 step 30 有一个单点离群（train loss 9.96、gap −2.60，仅 input 注入出现），绘制时从平滑线中剔除该点，其余原始点以半透明散点保留。</p></div></section>
-<section id="norm"><h2>4. Loss、gap 与 table RMS 的时间对齐</h2><p>将 input 主 setting 的 train loss、validation loss、global gap 与 n-gram table RMS 放在同一张图中，沿同一个 step 轴观察 table memory growth 是否先于或伴随 replay gap 出现。</p><div class="chart-card"><div class="chart-title"><strong>Loss、gap 与 table RMS 的时间对齐</strong><span>input 主 setting · 点击图例可隐藏/恢复曲线 · 实线=平滑曲线，散点=原始记录</span></div><iframe class="chart-frame loss-norm" src="fig_loss_norm.html" scrolling="no" title="table norm 与 loss 对齐图"></iframe></div><div class="data-table"><details><summary>完整 step 数据表（每 10 步一行 · 共 200 行，点击展开）</summary><div><table id="norm-table"><tr><th>step</th><th>v gap</th><th>y gap</th><th>input gap</th><th>v table RMS</th><th>y table RMS</th><th>input table RMS</th></tr></table></div></details></div></section>
-<section id="frequency-history"><h2>5. Frequency → gap：分 bin、Log-x 与 Log–log</h2><p>这里不再画训练频次分布的 bar 或 cumulative fraction。主问题是：不同 training hit-count 的 context，最终对应多大的 train/validation gap。所有 gap 图都排除 <code>novel</code>：它在 train 中没有 token loss，不能定义标准的 <code>val loss − train loss</code>。</p><div class="chart-card"><div class="chart-title"><strong>分 bin 的 loss / gap / contribution</strong><span>静态 SVG；bigram</span></div><img class="static-figure" src="fig_freq_bigram.svg" alt="Bigram frequency bin loss gap contribution"><div class="chart-title"><strong>分 bin 的 loss / gap / contribution</strong><span>静态 SVG；trigram</span></div><img class="static-figure" src="fig_freq_trigram.svg" alt="Trigram frequency bin loss gap contribution"><p class="figure-caption">交互版仍可<a href="fig_gap_by_freq.html">单独打开</a>，支持切换 context branch、loss/gap 和 total contribution。</p></div><div class="chart-card"><div class="chart-title"><strong>Frequency 与 final gap</strong><span>左：Log-x；右：Log-log</span></div><img class="static-figure" src="fig_gap_vs_frequency.svg" alt="Frequency bin 与 final gap 的 log-x 和 log-log 关系"><p class="figure-caption">novel、undefined gap 和非正 gap 均排除；交互版可<a href="fig_gap_vs_frequency_logx.html">打开 Log-x</a>或<a href="fig_gap_vs_frequency_loglog.html">打开 Log-log</a>。</p></div><div class="chart-card"><div class="chart-title"><strong>不同 step 切片下的 gap–frequency 幂律</strong><span>log–log；input run</span></div><img class="static-figure" src="fig_gap_vs_frequency_steps.svg" alt="Gap vs frequency at multiple step slices with fitted power-law exponents"><p class="figure-caption">每条线 = 一个 step 切片，图例标注该切片的拟合幂律指数 α（log–log 最小二乘）。α 并不随 step 稳定：500–750 步最陡（bigram −0.44 → −0.56，trigram −0.47 → −0.68），之后逐渐变平，到 2000 步降为 bigram −0.27、trigram −0.33；step 300 时 trigram 还没有任何正 gap 桶，幂律尚未形成。novel、无有效 train/val 计数的桶和非正 gap 均排除。</p></div><div class="note"><strong>读图重点</strong>：静态图完整显示在页面中，不依赖 iframe 高度，也不产生内部滚动。</div></section>
+<div class="wrap">
 
-<section id="exact-frequency"><h2>6. Exact-frequency baseline：主结果</h2><p>这里保留 collision-free exact trigram baseline 的完整分析报告。<code>r(c)</code> 只来自完整 train epoch 的真实 context count；hash bucket occupancy 不参与频率或 gap 定义。</p><div class="note result"><strong>数据账本</strong>：22,759,032 个 distinct exact contexts；62,931,706 个 train context instances；P50=1，P99=28，最大频率=77,928；NanoGPTOriginal，input injection，bigram + trigram，seed 42，2000 steps。</div><p class="footer-note"><a href="exact-frequency-report.html">打开完整 exact-frequency report</a>（独立页面，不嵌入主文档，避免超长画布）。</p></section>
-<section id="sample285-mlp"><h2>7. 受控样本量复播：Transformer 与 MLP trunk 对照</h2><p>这是同一条 real-text trigram controlled baseline 的样本量重采样和 trunk 对照，不是新的频率定义。完整 upstream train/val block 流先按整行均匀下采样，使一个 epoch 固定为 285 steps；随后只改变 n-gram 表之后的 backbone。</p><div class="note method"><strong>实验口径</strong>：train=20,520 rows，val=288 rows，device batch=72，batch tokens=147,456，2000 steps，约 7 个 replay epochs；seed=42，input-position bigram+trigram VE，unigram/fourgram 关闭，mixed n-gram optimizer，learning rate=0.004。两组 batch hashes 完全一致。频率仍是完整 upstream train epoch 的 exact context count：P50=1、P90=4、P99=28、max=77,928。</div><img src="figs/ngram5_sample285_loss_epoch_replay.svg" style="width:100%;border:1px solid var(--line);border-radius:8px;" alt="Transformer and MLP train validation loss over repeated epochs"><p class="footer-note">图 7.1：蓝=Transformer，橙=MLP；实线=train，虚线=validation；灰色竖虚线是 285 的 epoch 边界。step 2000 的 headline gap：Transformer <strong>+4.282</strong>（train 0.578，val 4.860），MLP <strong>+3.637</strong>（train 1.897，val 5.534）。</p><img src="figs/ngram5_sample285_final_gap_by_frequency.svg" style="width:100%;border:1px solid var(--line);border-radius:8px;" alt="Final gap by exact trigram frequency"><p class="footer-note">图 7.2：step 2000 的分 bin final gap，画法与第 5 章一致——左图 log-x、右图 log-log，x 为每个 bin 频率区间的几何中点。保留两组都有有效 validation loss 的 1,282 个 exact-frequency points；113 个高频点没有有效 val probe，因此不伪造 gap。Transformer 的频率点 gap 均值/中位数为 +2.745/+2.894，MLP 为 +1.672/+1.833；低频 bin 两者都大，进入 1k–5k / 5k+ 后 MLP 接近 0 而 Transformer 仍保留约 2 nats 的残余 gap。</p><div class="data-table"><table><tr><th>真实频率 bin</th><th>有效点数</th><th>Transformer gap</th><th>MLP gap</th></tr><tr><td>1</td><td>1</td><td>7.17</td><td>7.82</td></tr><tr><td>6–10</td><td>5</td><td>6.02</td><td>7.23</td></tr><tr><td>11–20</td><td>10</td><td>5.40</td><td>6.55</td></tr><tr><td>21–50</td><td>30</td><td>4.78</td><td>5.57</td></tr><tr><td>51–100</td><td>50</td><td>4.26</td><td>4.32</td></tr><tr><td>101–200</td><td>100</td><td>3.58</td><td>3.01</td></tr><tr><td>201–500</td><td>296</td><td>2.66</td><td>1.68</td></tr><tr><td>501–1k</td><td>345</td><td>2.62</td><td>1.40</td></tr><tr><td>1k–5k</td><td>391</td><td>2.29</td><td>0.82</td></tr><tr><td>5k+</td><td>50</td><td>2.10</td><td>0.37</td></tr></table></div><div class="note result"><strong>结论边界</strong>：MLP-only 仍产生 gap，因此 gap 不是 attention 才能产生的现象；但 MLP 的 train/val loss 更高，存在欠拟合，所以这不是“机制完全等价”的证明。它是一个干净的存在性/边界验证：更强的 Transformer trunk 能把训练侧记忆拟合得更深，并放大低频 context 的 replay-specific gap。</div><p class="footer-note"><a href="sample285-mlp-comparison-report.html">打开完整 sample285 report</a>（独立页面，含逐频率点数据与完整 trace 说明，不嵌入主文档）。</p></section>
-<section id="toy-model"><h2>8. Toy model：在自己造的小世界里复现 gap</h2><p>前面几节的实验都在真实文本上做。真实文本有两个麻烦：我们并不知道「下一个符号的规则」到底是什么，而且同时变化的变量太多。这一章我们干脆自己造一个小世界：规则由我们定，每个上下文该接什么、接的概率多大，全部已知；甚至还能算出「就算把规则完全告诉模型，它平均还是要猜错多少」——我们叫它<strong>理论最好水平</strong>。在这样的小世界里验证过的结论，就不再是真实数据里的巧合。</p><div class="note method"><strong>这一章怎么读</strong><p>两个小实验，层层递进。第一个是 2×2 开关，证明 gap 的两个必要成分；第二个把规则改成「概率的」，量化模型离理论最好水平差多少、以及 n-gram 表能补多少。</p></div><h3>8.1 第一步：2×2 开关（规则 100% 确定）</h3><p>我们造了一个微型语言：32,768 条「前缀 → 下一个符号」的规则，规则由我们指定；训练文本和验证文本都按这些规则生成，训练时把训练集固定顺序反复重播（和前面真实实验一致）。关键设计是两个开关：</p><ul><li><strong>低频开关</strong>：一部分前缀在训练里只出现 1 / 2 / 4 / 8 次（低频）；它们训练时的接续和验证时的接续是<strong>独立随机抽取</strong>的——模型一旦把训练接续背下来，验证时这些前缀必然做错。另一部分前缀出现 16 次以上，训练和验证接同一个符号（背下来也无害）。</li><li><strong>表开关</strong>：开 = 给模型一张「每个前缀在训练里见过多少次」的表；关 = 模型自己学。</li></ul><div class="data-table"><table><tr><th>低频前缀</th><th>n-gram 表</th><th>gap（验证 loss − 训练 loss）</th><th>读法</th></tr><tr><td>有</td><td>有</td><td><strong>6.92</strong></td><td>表把训练侧的「巧合接续」背到近乎 0；验证侧换了接续，落差被放大</td></tr><tr><td>有</td><td>无</td><td>2.12</td><td>没有表时，模型自己也会去背巧合——这是底噪</td></tr><tr><td>无</td><td>有</td><td>0.84（核心前缀 ≈ 0.002）</td><td>表背的是训练、验证都成立的规律，背得越熟越无害</td></tr><tr><td>无</td><td>无</td><td>0.06</td><td>干净基准：两个成分都没有，系统没有 gap</td></tr></table></div><p class="footer-note">数字是 3 个随机种子的平均。gap = 验证集 loss − 训练集 loss，数字越大表示「验证集比训练集差得越多」。</p><img src="figs/fig_toy_v5_2x2.svg" style="width:100%;border:1px solid var(--line);border-radius:8px;" alt="2x2 开关四象限的 gap（对数坐标）"><p class="footer-note">图 8.1：四个象限的 gap（对数坐标），柱子上方是数值。</p><p>一句话：<strong>低频 token 是燃料，n-gram 表是引擎</strong>；两者同时存在、固定顺序反复重播，gap 必然出现；去掉任何一个，gap 都大幅缓解。</p><h3>8.2 第二步：规则是概率的（完全受控的小世界）</h3><p>第一步里，每个上下文接什么符号是定死的；现实里的规则是「大概率」。第二步把规则改成概率分布，并加上一把尺子：<strong>理论最好水平</strong>——就算把规则完全告诉模型，预测下一个符号平均还是有一定的不确定性（规则越「乱」，下限越高）。我们报告「模型实际表现 − 理论最好水平」，叫它<strong>差距</strong>；差距越接近 0，说明模型越接近「完全懂规则」。</p><p><strong>小世界设定</strong>：8,192 个符号；每 5 个符号一组叫「上下文」；给定上下文，下一个符号按一个固定概率规则产生。共 4,096 种上下文，训练里出现的次数从 8 次到 8,192 次不等。两种规则方案：</p><ul><li><strong>方案 A（私密 + 全局）</strong>：每个上下文主要指向它自己私有的 8 个符号，另加一点「全局常见符号」——像每家店主要卖自己的 8 种货，但也上一点大众货。</li><li><strong>方案 B（共享主题 + 私密）</strong>：32 个「主题」共享一批符号，每个上下文按自己的比例混合这些主题，另加 4 个私有符号——像大家都从 32 个货架进货，但每家比例不同，还卖一点自营货。</li></ul><div class="data-table"><table><tr><th>方案</th><th>理论最好水平</th><th>带 n-gram 表</th><th>不带表</th></tr><tr><td>A 私密 + 全局</td><td>2.57</td><td><strong>2.64（差距 0.07）</strong></td><td>4.11（差距 1.55）</td></tr><tr><td>B 共享主题</td><td>4.39</td><td><strong>4.45（差距 0.06）</strong></td><td>5.29（差距 0.90）</td></tr></table></div><p class="footer-note">step 2000 时验证集上的数字。「差距」= 实际损失 − 理论最好水平；带表后模型几乎达到理论最好水平。</p><img src="figs/fig_toy_synth_gap_vs_freq.svg" style="width:100%;border:1px solid var(--line);border-radius:8px;" alt="按训练出现次数分组，模型离理论最好水平差多少"><p class="footer-note">图 8.2：横轴是上下文在训练里出现的次数（对数），纵轴是「比理论最好水平多出的损失」。不带表（虚线）：越是少见的上下文，差得越多——真实数据里的低频 gap，在完全可控的小世界里原样复现。带表（实线）：几乎贴着 0 线，高频低频差不多。</p><img src="figs/fig_toy_synth_gap_vs_step.svg" style="width:100%;border:1px solid var(--line);border-radius:8px;" alt="训练过程中总体差距的变化"><p class="footer-note">图 8.3：训练过程中「总体差距」的变化。带表的小模型很快逼近理论最好；不带表的始终差一截。</p><p><strong>A 与 B 的对比</strong>：B 的规则里大部分是「大家共享的主题」，不带表时也比 A 好（差距 0.90 vs 1.55）——说明「可以共享学习」的部分不产生 gap，「必须死记」的部分才产生 gap。</p><h3>8.3 小世界告诉我们什么</h3><div class="note result"><ol><li>gap 的两个必要成分是<strong>低频 token + n-gram 表</strong>，缺一不可。</li><li>给模型一张「每个上下文在训练里见过多少次」的表，它就能达到理论最好水平（差距 ≈ 0.06–0.07）——低频 gap 是记忆机制本身造成的，不是数据噪声。</li><li>真实数据里的低频 gap（第 5、6 节）在完全可控的小世界里被精确复现，说明它不是真实文本特有的偶然现象。</li></ol></div></section>
-<section id="conclusion"><h2>9. 结论</h2><div class="note result"><ol><li><strong>最小充分条件</strong>：vanilla nanoGPT + bigram / trigram value table + fixed-order multi-epoch replay + 能到达输出的注入方式。</li><li><strong>默认 setting</strong>：input / wte 注入。它简单、可解释，也最接近 over-encoding 这类 n-gram memory 用法。</li><li><strong>注入点是强度变量，不是 gap 的来源变量</strong>：v、y、input 都能产生不同程度的现象；差别来自信号路径和尺度。</li><li><strong>低频结构解释现象</strong>：table 在重复看到的 train context 上形成强烈的 train-specific value，而 novel / 低频 context 在 val 上暴露出这种记忆的局限。</li><li><strong>小世界复现（第 8 节）</strong>：在完全受控的微型数据上，低频 token + n-gram 表仍是 gap 的充分条件；把「每个上下文见过多少次」直接喂给模型，它能达到理论最好水平。</li></ol></div><p class="footer-note">完整代码、频率索引实现、训练日志与作图脚本：<a href="https://github.com/guoshaoyang-pku/ngram-gap-lab">guoshaoyang-pku/ngram-gap-lab</a>。</p></section>
-<section id="background"><h2>背景、术语与 debug</h2><details><summary>展开背景说明（已拆到子文档）</summary><div><p>如果你需要理解 gate、V / y / input 的伪代码、current shell 为什么是实验分支而不是必要变量，或早期 hash-row 频率统计为什么会把 novel trigram 错判成 seen，请阅读：</p><p><a href="background.html">打开《背景与 debug：从 current shell 回到最小 n-gram setting》</a></p></div></details><details><summary>展开历史实验记录与旧版完整页面</summary><div><p><a href="agent-experiment-log.html">Agent experiment log</a>保留了旧实验的逐项记录；<a href="index_archive_20260805.html">旧版完整 guide</a>保留了历史章节与原始图表。</p></div></details><details><summary>展开子文档：实验登记表与理论附录</summary><div><p><a href="experiment-registry.html">实验登记表（experiment registry）</a>：全部注册实验的 setting、run 状态、统计口径与嵌入图，唯一权威版本；<a href="theory.html">理论附录（theory）</a>：unigram gap 闭式解、采样律与 residual response 的推导与证据。</p></div></details></section>
-</main>
-<script>
-async function loadData(){try{const response=await fetch('injpos_ablation_data.json');if(!response.ok)return;const data=await response.json();for(const key of ['v','y','input']){const card=document.getElementById('card-'+key);if(card&&data[key]&&data[key].final_gap!==undefined)card.textContent=data[key].final_gap.toFixed(2)}const table=document.getElementById('norm-table');if(!data.steps)return;for(const step of data.steps){const row=table.insertRow();row.insertCell(0).textContent=step;for(const key of ['v','y','input']){const gap=data[key]?.gaps?.[step];row.insertCell(-1).textContent=gap===undefined?'—':gap.toFixed(3)}for(const key of ['v','y','input']){const rms=data[key]?.table_rms?.[step];row.insertCell(-1).textContent=rms===undefined?'—':rms.toFixed(3)}}}catch(error){console.log('Training summary is not available:',error.message)}}
-loadData();
-</script>
+<h1>n-gram gap 的机制：注入、频率、表大小、epoch 与干预</h1>
+<p class="lead">本页是<b>唯一权威主文档</b>（blog 发布版；本地只读副本在仓库 <code>docs/report/index.html</code>）。全部结果使用 v5 极简标准与统一口径：gap = fixed-val − current-batch online train loss，run 级溯源见 <a href="experiment-registry.html">实验登记表</a>。</p>
+
+<div class="toc">
+<a href="#s0"><b>0</b> 标准与测量</a>
+<a href="#s1"><b>1</b> 主要现象：加 n-gram 就有 gap</a>
+<a href="#s2"><b>2</b> gap–频率关系</a>
+<a href="#s3"><b>3</b> gap–表大小关系</a>
+<a href="#s4"><b>4</b> epoch 轴：长度、编号与 pass</a>
+<a href="#s5"><b>5</b> 干预实验</a>
+<a href="#s6"><b>6</b> 工作假说（v2）</a>
+<a href="#s7"><b>7</b> 附录：LR 与 β₂ 消融</a>
+<a href="#s8"><b>8</b> 来源与可追溯性</a>
+</div>
+
+<div class="banner"><b>标准 setting（v5）</b>：vanilla nanoGPT 8L·6H·768D，vocab 8192，seq 2048；注入点 input/wte；clean bigram+trigram 单表 R=2²⁰（table-size 轴除外）；表 RMSProp 无动量 (0, 0.99)、table LR ×128；backbone AdamW (0.8,0.95) wd 0.1、lr 6e-4、<b>warmup_constant(100)</b>（无 warmdown/cosine）；bf16、不 torch.compile；seed 42；device batch 72（total 147,456 tok）；train shard 1，val shards 与 train 完全不重叠。<b>口径</b>：train loss = 当前 batch 的 online loss（更新前）；val = fixed batches（与 train 不重叠）；gap = val − train；val/freq 每 10 步。1 epoch = 337 步，1000 步 ≈ 3 pass。</div>
+
+<h2 id="s0">0 · 标准与测量</h2>
+<p><b>代码</b>：训练与注入 <code>code/train.py</code>（n-gram 注入公式 <code>x = wte(idx) + Σ_n ngram_ve[idx_n]</code>，clean 单表 <code>nn.Embedding(R, n_embd)</code>，单一 hash，R = distinct+1 零碰撞）；频率索引 <code>code/ngram_freq.py</code>；launcher <code>code/cluster/run_v5_clean.sh</code>（128× 标准已写死）。<b>口径细节</b>：online train loss 在参数更新前记录，fixed-val 在同 step 更新后；<code>novel</code>（hit=0）无 train loss、不定义 gap；历史 2× 时代数据与 4-layer/2-hash 框架均已退役，仅存档。</p>
+<p>每一张图的 run_id / step / seed 都登记在 <a href="experiment-registry.html">experiment-registry.html</a>；数值断言台账在 <code>docs/claims-ledger.md</code>。旧版主文档（2× 时代，2026-08-06）已快照至 <a href="versions/index-20260806-2x-era.html">versions/</a>。</p>
+
+<h2 id="s1">1 · 主要现象：加 n-gram 就有 gap</h2>
+<p>同一条训练流、同一套评测下，四个注入臂只有带 n-gram 注入的臂产生持续增长的 val−train gap：input / y / v 三臂 gap 随 step 单调增长，nogram 对照贴零。这条现象在 2× 与 128× 两代表 LR 下都成立；128× 下 gap 水平整体抬升（input 主线 @2000 = 5.21，旧 2× 标准 1.87），种子 43/44 复现 5.42 / 5.53，结论稳健。</p>
+<figure><img src="../../docs/figs/main/fig_v5_2x_128x_injection_curves.png" alt="injection curves 2x vs 128x">
+<figcaption><b>图 1 · 注入点 gap 曲线簇（线性坐标）</b>。input / y / v 三条 gap 曲线随 step 单调增长，nogram 贴零；蓝 = 2× 表 LR（历史对照），橙 = 128×（现行标准）。online 单 batch 噪声属正常；点为原始记录、细线为 3 点均值视觉连接。来源：<code>nglab{input,y,v,nogram}_input_v5_{2x,128x}_fixed</code>（<code>run_v5_clean.sh</code>，seed 42，2000 步，val/freq=10）。</figcaption></figure>
+<figure><img src="../../docs/figs/main/fig_v5_128x_injection_bars.png" alt="injection final gap bars">
+<figcaption><b>图 2 · 四臂 final gap 汇总（step 2000）</b>。2×：input 4.928 / y 6.441 / v 6.396 / nogram 0.328；128×：input 5.211 / y 7.058 / v 6.977 / nogram 0.222。注入点之间的差异（y/v &gt; input）是后续机制分析的线索之一，但「有无 gap」本身只由注入决定。</figcaption></figure>
+
+<h2 id="s2">2 · gap–频率关系：低频 context 贡献主要 gap</h2>
+<p>把每个 eval step 的 train/val loss 按 context 的 exact train hit-count f 分桶：per-bin gap 随 f 幂律衰减——<b>低频 context 贡献了大部分 gap</b>。两条独立的测量互相印证：主 run 的 online coarse bins（step-1000 局部斜率 bigram ≈ −0.21 / trigram ≈ −0.44）与固定 train 探针的 exact-f 拟合（bigram −0.253 / trigram −0.318，窗口 [4,4096]，token-mass 加权）。两个口径都不是 1/f；β 不是普适常数（随 R 与口径漂移，见 §6），只作现象描述使用。</p>
+<figure><img src="../../docs/figs/main/fig_v5_128x_injection_frequency_bigram.png" alt="freq bins bigram">
+<figcaption><b>图 3a · bigram 支路频率分桶（128× 主线）</b>。分桶 mean loss（train 探针 = 固定 train 诊断 batch 窗口；val = fixed batches）与 per-bin gap；低频端 gap 显著更高。trigram 见图 3b。</figcaption></figure>
+<figure><img src="../../docs/figs/main/fig_v5_128x_injection_frequency_trigram.png" alt="freq bins trigram">
+<figcaption><b>图 3b · trigram 支路频率分桶（128× 主线）</b>。同图 3a 口径；柱 = 各 bin 的 val token 质量，避免把「context 种类多」误读成「token 质量大」。</figcaption></figure>
+<figure><img src="../../docs/figs/main/fig_v5_s1_frequency_exact_f.png" alt="gap vs exact f">
+<figcaption><b>图 4 · gap 对 exact f（双对数）</b>。横轴 = context 的精确 train hit-count（主 run 的 exact_freq_loss 诊断），bigram / trigram 同图。正 gap 段幂律拟合：bigram −0.253、trigram −0.318（R²≈0.90/0.93）。novel（f=0）不定义 gap，不进入拟合。</figcaption></figure>
+<figure><img src="../../docs/figs/main/fig_v5_s1_frequency_token_mass.png" alt="token mass by f">
+<figcaption><b>图 5 · 频率段的 token 覆盖质量 Σf</b>。各对数频率段覆盖的 token 总量（Σf）。这是「曝光规模」视图：低频段 context 种类极多但单个曝光少，中频段承载主要 token 质量；读 §2 的 gap 曲线时须与本图对照，避免把「种类多」误读成「质量大」。</figcaption></figure>
+<p>频率轴与干预直接相连：把 f≤8 的 n-gram 贡献在 epoch 边界后动态屏蔽，net gap 掉到 <b>0.765</b>（对照 2.724）——少量低频 context 承载了 ~72% 的 gap（见 §5 图 11）。</p>
+
+<h2 id="s3">3 · gap–表大小关系：幂律</h2>
+<p>单支路变 R（另一支路固定 2²⁰，两者都开启），gap 在 R∈[2¹⁶, 2²²] 窗口内呈干净幂律：<b>bigram γ ≈ 0.576、trigram γ ≈ 0.665</b>。表更小 ⇒ 每个 context 的可用行更少 ⇒ 单位记忆的读出通道被压制（机制见 §6 的 a(K/R)）。窗口外（R≲2¹⁴ 或 ≳2²³）偏离线性：小 R 端被噪声与本底主导，大 R 端大量行几乎为空。</p>
+<figure><img src="../../docs/figs/main/fig_v5_s1_table_size_loglog_clean.png" alt="gap vs table R loglog">
+<figcaption><b>图 6 · S1 table-size 双对数（单支路扫描）</b>。蓝 = 只变 bigram 表（<code>s1v5_128_tbl_bi2_R{R}_fixed</code>），红 = 只变 trigram 表（<code>s1v5_128_tbl_tri2_R{R}_fixed</code>）；另一支路固定 2²⁰ 但两个表都开启。窗口斜率：bigram 0.576 / trigram 0.665。<b>术语</b>：K = 训练前缀中 distinct contexts 数；R = 每 branch 物理行数；K/R 是负载比而非 collision rate；实测 collision = (K − occupied)/K。</figcaption></figure>
+
+<h2 id="s4">4 · epoch 轴：长度、编号与 pass 数</h2>
+<p><b>epoch 长度（合法段）</b>：在 ≤1×L4 的真 epoch-length 段（0.25×/0.5×/0.75×/1×L4，nested prefix，同一 shard-1 频率索引），gap 随 epoch 长度温和下降（3.55 → 2.47）。</p>
+<div class="warn"><b>勘误（2026-08-30）</b>：早期“&gt;1×L4 出现 U 形、顶点 0.41×L4”的二次拟合作废——&gt;1×L4 各点共用 shard-1 频率索引，其“一个 epoch”是 shard-1 的 wrap-around 重放，本质是 pass 数轴而非 epoch 长度轴。</div>
+<figure><img src="../../docs/figs/main/fig_v5_s1_epoch_length_valid.png" alt="epoch length valid">
+<figcaption><b>图 7 · epoch 长度轴（仅合法 nested-prefix 段）</b>。0.25×–1×L4，终点 gap 随 epoch 长度温和下降；旧 12 点“U 形”图已删除（见上方勘误）。</figcaption></figure>
+<p><b>epoch 编号</b>：固定 1× 数据量拉长训练，gap 在 337/674/1000 步（=第 1/2/3 个 epoch 终点）近似线性增长后趋缓——pass 数是主状态变量。</p>
+<figure><img src="../../docs/figs/main/fig_v5_s1_epoch_number.png" alt="gap vs epoch number">
+<figcaption><b>图 8 · gap 对 epoch 编号</b>。337 / 674 / 1000 步三个基准点（1× 主线，128×）；近线性后饱和，与 §6 的 A(t, passes) 对应。</figcaption></figure>
+<p><b>pass 折叠</b>：把不同批次的点放到「完成 pass 数」轴上，dose 128× 批、wrap 点与 10-epoch 长 replay 折叠成一条线（0.75× 的 7.9-pass 点 7.21 ≈ replay 8-pass 7.14；dose 6× 在 ≈0.99 pass 处 gap 穿零）——dose 的表观幂律不是独立规律，而是 pass 数轴的重参数化。</p>
+<figure><img src="../../docs/figs/main/fig_v5_pass_collapse.png" alt="pass collapse">
+<figcaption><b>图 9 · 多族数据在 pass 数轴上折叠</b>。横轴 = 完成 pass 数（= 步数/337 × shard 倍率）；同色 = 同实验族。epoch 边界以竖线标示。</figcaption></figure>
+<figure><img src="../../docs/figs/main/fig_v5_128x_dose_gap.png" alt="dose final gap">
+<figcaption><b>图 10 · dose 终点 gap（128× 批，2000 步）</b>。0.25×→5×：10.90 → 0.36。按 pass 数重参数化后并入图 9；旧 11 点 2× 时代剂量结果已退役。</figcaption></figure>
+
+<h2 id="s5">5 · 干预实验：谁在产生 gap</h2>
+<p>在 epoch 边界做单变量干预，读两条曲线（train / val）与 net gap：</p>
+<ul>
+<li><b>freeze_table</b>（e2 起停表写入）：net gap <b>3.452 &gt; 对照 2.724</b>——后期不需要表写入，表内容一个 pass 内已饱和；</li>
+<li><b>freeze_backbone</b>（e2 起停 backbone）：net gap <b>1.230</b>——必须继续更新 backbone 才能放大读出；</li>
+<li><b>hash_reseed</b>（只换 context→row 映射、保留表权重与优化器 state）：内容还在但对不上号，gap 大幅回落——已学内容与映射的对齐是必要的；</li>
+<li><b>mask_low_freq</b>（屏蔽 f≤t 的 n-gram 贡献）：t=8 时 net gap → <b>0.765</b>，低频贡献大头；</li>
+<li><b>mask_high_freq</b>（屏蔽 f≥t，含等号）：t=1（几乎全屏蔽）仍残留 <b>1.927</b> 的 backbone scar——纯表侧模型解释不了的部分；t≥100 后回到平台 2.72–2.82。</li>
+</ul>
+<figure><img src="../../docs/figs/main/fig_v5_causal_losses.png" alt="causal losses">
+<figcaption><b>图 11 · 干预臂的训练/验证曲线（2022 步 ≈ 6 pass，e2 边界竖线）</b>。各臂唯一变量 = 边界干预；train = 当前 batch online loss，val = fixed batches。<code>mask_readout</code> / <code>reset_table</code> 仅作破坏性参考，不承担机制结论。</figcaption></figure>
+<figure><img src="../../docs/figs/main/fig_v5_128x_mask_low_le_scan.png" alt="mask low scan">
+<figcaption><b>图 12 · mask_low 阈值扫描（f ≤ t 屏蔽）</b>。t 越大屏蔽越多，net gap 单调下降；t=8 已去掉 ~72%。语义：f ≥ t 归入 high、f ≤ t 归入 low（互补分区，阈值含端）。</figcaption></figure>
+<figure><img src="../../docs/figs/main/fig_v5_128x_mask_high_threshold_scan.png" alt="mask high scan">
+<figcaption><b>图 13 · mask_high 阈值扫描（f ≥ t 屏蔽）</b>。t=1 残留 1.927（backbone scar：backbone 在 pass 1 期间已把自身参数适配到“有 n-gram 残差”的状态）；t≥100 平台 2.72–2.82。</figcaption></figure>
+
+<h2 id="s6">6 · 工作假说（v2）：稀释-放大模型</h2>
+<p class="small">地位：<b>现象级均场 scaffold</b>——与全部 R 轴/频率轴/pass 轴数据做强一致性检验，尚未闭环为因果机制。完整推导与边界清单见 <code>docs/notes/theory/hypothesis-dilution-amplification.md</code>（v2 节 + H-KAPPA 完整推导）。</p>
+<div class="formula">Gap(R, passes, t) ≈ A(t, passes) · a_emp(K/R) · [ B·M(f) + V·S_eff(f)/f ] · m_f</div>
+<ul>
+<li><b>m_f</b>：频率 f 的 context 承载的 token 质量份额（真实计数直方图，纯记账）；</li>
+<li><b>κ(f) = B·M(f) + V·S_eff/f</b>：逐 context 记忆核。主项 M(f) = N₁(f)/(f·n(f)) 是 Good–Turing <b>缺失延续质量</b>——val 里 (context, next-token) 组合在 train 未出现的发生率；纯语料计数，零训练可算。理想幂律尾 a 下 M(f) ∝ f^(−(1−1/a))，即 <b>β = 1 − 1/a</b>：β 不是新常数，是延续分布支撑增长（Heaps）的边际率；context 越长条件分布越尖 ⇒ β 越大（bigram a≈4/3、trigram a≈3/2）；</li>
+<li><b>a_emp(K/R)</b>：f-平坦的全局负载压制（实测稀释面，见下）；</li>
+<li><b>A(t, passes)</b>：backbone 读出放大。online 语义下 pass 1 恒为 0；表内容 1 pass 内饱和（LR ≥16× 后不再是瓶颈），之后 gap 增长由 backbone 逐 pass 学会读表驱动。</li>
+</ul>
+<figure><img src="../../docs/figs/theory/fig_v5_missing_mass_kernel.png" alt="missing mass kernel">
+<figcaption><b>图 14 · κ(f) 的微观起源 = Good–Turing 缺失质量（H-KAPPA）</b>。左：实测 per-f gap（蓝）vs 纯计数核 M(f)（绿）与两分量核（紫，B=4.17/V=3.40，linR²=0.928）；红虚线 = 被否定的碰撞稀释版（低 f 端压塌，数据不塌）。判决数：M(f) 斜率 bigram −0.241 vs 实测 β −0.253；trigram −0.319 vs −0.318（几乎逐位重合）。中：κ=M(f) 代入真实 n(f) 直方图卷积出 R 轴曲线，窗口斜率 0.567/0.648 vs 实测 0.576/0.665（形状零自由）。右：β(R) 随 R 上升、大 R 端趋近核窗口斜率 −0.441——既是碰撞稀释的支持，也否定「每 branch 一个固定 β」。</figcaption></figure>
+<figure><img src="../../docs/figs/theory/fig_v5_dilution_surface.png" alt="dilution surface">
+<figcaption><b>图 15 · 经验稀释面 s_emp(f, R)</b>：压制在 f 上近乎平坦、只由负载 K/R 决定（load 10→1000 斜率 ≈ −0.59 ≈ R 轴 γ 0.576）。均场 f/(f+T/R) 与 Poisson 行内竞争两种「流量竞争」稀释被 f=1 处数据直接否定（预测压制 47×/6×，实测无塌陷）⇒ table-size 幂律的主体是 f-平坦的通道压制，更像 backbone 按通道信噪比校准读出增益。R₀ 处压制平坦 ⇒ κ 形状未被碰撞污染，只污染幅度。</figcaption></figure>
+<p><b>A 因子的直接判决（backbone LR 扫描）</b>：table LR 全程锁 128×，只扫 backbone LR——net gap 强响应：1e-4 → 2.84 峰值（1e-3）→ 4e-3 回落 2.28（详见 §7 图 18）。若 A 不在 backbone 侧，这条曲线应该是平的。配套证据：freeze_table 后期不需要表写入、freeze_backbone 需要 backbone 更新、dose 6× 在 ≈0.99 pass 穿零（pass-1 online 语义）。</p>
+<p><b>证据等级与开放项</b>：已站稳——κ↔缺失质量定量挂钩、R 轴主体 = f-平坦负载压制、pass 数主状态、表 1-pass 饱和 + backbone 放大。强一致未闭环——三因子乘积形式与全部数据的数值贴合。开放——a(load) 的动力学起源；A 的时间结构；mask 后再平衡/scar 项；均场稀释形式已被否定但正确理论缺位。已否定的旧形式（f/(f+T/R)、G_c = δᵀu、row-width 扫描解释）只在登记表存档。</p>
+
+<h2 id="s7">7 · 附录：LR 与 β₂ 消融</h2>
+<h3>7.1 表侧：LR × 与 β₂（1000 步，val/freq=10）</h3>
+<figure><img src="../../docs/figs/main/fig_v5_optv5f_all_scale_gap_facets.png" alt="scale sweep facets">
+<figcaption><b>图 16 · 表 LR scale 扫描（RMSProp β₂=0.99）</b>。scale ≥16× 后曲线聚拢：表内容 1 个 pass 内就近饱和，LR 不再是瓶颈；128× 只是保证饱和足够早。来源：<code>optv5f_*</code> 批。</figcaption></figure>
+<figure><img src="../../docs/figs/main/fig_v5_optv5f_beta2_compare.png" alt="beta2 compare">
+<figcaption><b>图 17 · β₂ 对比（0.95–0.999，scale=2 中心点）</b>。final gap 全落 2.60–2.75 窄带，无可分辨差异 ⇒ 取 (0, 0.99)（快速响应、数值稳）。历史“β₂=0.999 展开延后”的观测出自 B2-bug 时代，不可复现于 clean 表。</figcaption></figure>
+<h3>7.2 backbone LR 扫描（table LR 锁 128×，A 因子判决批）</h3>
+<figure><img src="../../docs/figs/main/fig_v5_blrv5_backbone_lr.png" alt="backbone lr scan">
+<figcaption><b>图 18 · backbone LR 扫描（<code>blrv5_{input,nogram}_lr{0p0001..0p0040}</code>，§39）</b>。点 = 各 run 原始 final gap（seed 42，1000 步），细线 = 视觉连接。net gap（input − nogram）：1.940 / 2.486 / 2.696 / <b>2.841（峰 @1e-3）</b> / 2.793 / 2.277；nogram 全程平坦（0.011–0.041）。主预言「net gap 随 backbone LR 响应后饱和回落」命中 ⇒ A 因子成立。</figcaption></figure>
+<table>
+<tr><th>backbone lr</th><th>1e-4</th><th>3e-4</th><th>6e-4（主线）</th><th>1e-3</th><th>2e-3</th><th>4e-3</th></tr>
+<tr><td>input gap</td><td>1.975</td><td>2.513</td><td>2.718</td><td><b>2.853</b></td><td>2.834</td><td>2.295</td></tr>
+<tr><td>nogram gap</td><td>0.036</td><td>0.027</td><td>0.022</td><td>0.011</td><td>0.041</td><td>0.018</td></tr>
+<tr><td><b>net gap</b></td><td>1.940</td><td>2.486</td><td>2.696</td><td><b>2.841</b></td><td>2.793</td><td>2.277</td></tr>
+</table>
+<div class="note"><b>4e-3 回落 ≠ 数值失稳</b>：12 run 零 NaN、零正尖峰、train 平滑下降。4e-3 的 train 停在 3.110（1e-3 为 2.479）而 val 只差 +0.07——backbone 过快把正在巩固的读表结构冲刷掉，收敛到「欠巩固」的平衡点（读出增益存在最优点），不是训练发散。1e-3 峰值比主线 6e-4 高 +5.4%（单 seed），不改标准。</div>
+
+<h2 id="s8">8 · 来源与可追溯性</h2>
+<ul>
+<li><b>代码</b>：<code>code/train.py</code>（训练/注入/干预旗标）、<code>code/ngram_freq.py</code>（频率索引）、<code>code/cluster/run_v5_clean.sh</code>（128× 标准 launcher）、<code>code/cluster/run_v5_main_manifest.sh</code>（批量清单）。</li>
+<li><b>绘图脚本</b>：<code>docs/plot_scripts/</code>（每图一个脚本，数据从 <code>data/runs_fixed/*_fixed/</code> 的 summary/train_log/exact_freq_loss 直接读取）。</li>
+<li><b>实验清单</b>：<a href="experiment-registry.html">experiment-registry.html</a>——全部 run 的 run_id / setting / 状态 / 图源映射；<code>docs/experiment-log.md</code> 为登记簿（§38/§39 为最新批）；<code>docs/claims-ledger.md</code> 为断言台账。</li>
+<li><b>术语与伪代码</b>：<a href="background.html">background.html</a>；理论完整推导：<code>docs/notes/theory/hypothesis-dilution-amplification.md</code>。</li>
+<li><b>历史版本</b>：本页旧版（2× 时代）在 <a href="versions/index-20260806-2x-era.html">versions/index-20260806-2x-era.html</a>；主文档只在 blog 仓库手工编辑，改完同步回 <code>docs/report/index.html</code>。</li>
+</ul>
+
+<footer>n-gram-gap-lab · 主文档 v5（2026-08-31 重构：结构对齐七项资产清单；删除 exact-frequency / sample285-MLP / toy model 等退役内容）· 数据命名空间 data/runs_fixed/（_fixed 后缀为权威口径）</footer>
+</div>
 </body>
 </html>
