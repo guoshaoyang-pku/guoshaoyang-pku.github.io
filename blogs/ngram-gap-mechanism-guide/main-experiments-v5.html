@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>主实验报告 · n-gram Gap · v5 clean standard</title>
+<style>
+:root{
+  --bg:#f6f4ef;--ink:#242629;--muted:#626970;--line:#c9c3b9;
+  --panel:#fffdf8;--panel2:#efede6;--blue:#174d73;--red:#b33e39;
+  --teal:#14736f;--orange:#b86b18;--purple:#67439b;
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif
+}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink)}
+main{width:min(1120px,calc(100vw - 32px));margin:0 auto;padding:30px 0 70px}
+h1{margin:0 0 10px;font-size:clamp(28px,4vw,46px);line-height:1.08;letter-spacing:-.025em}
+h2{margin:0 0 14px;padding-bottom:9px;border-bottom:1px solid var(--line);font-size:23px;font-weight:680}
+h3{margin:22px 0 8px;color:var(--blue);font-size:17px}
+p,li{font-size:14.5px;line-height:1.72}p{margin:0 0 12px}
+a{color:var(--blue)}code{padding:1px 5px;background:var(--panel2);border-radius:4px;font-size:.91em}
+.topline{display:flex;flex-wrap:wrap;gap:8px 16px;margin-bottom:19px;color:var(--muted);font-size:12px}
+.topline a{text-decoration:none}.subtitle{max-width:900px;color:var(--muted);font-size:16px;line-height:1.65}
+.banner,.note,.figure-card,.setting-card,details{background:var(--panel);border:1px solid var(--line);border-radius:10px}
+.banner{margin:20px 0 30px;padding:13px 16px;border-left:4px solid var(--blue);font-size:13.5px;line-height:1.65}
+section{margin:0 0 42px}.lead{display:grid;grid-template-columns:1.25fr .75fr;gap:14px}
+.note{padding:16px 18px}.note.result{border-left:4px solid var(--red)}.note.method{border-left:4px solid var(--teal)}
+.metric-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0}
+.metric{padding:13px 10px;text-align:center;background:var(--panel);border:1px solid var(--line);border-radius:9px}
+.metric .label{color:var(--muted);font-size:12px}.metric .value{margin:3px 0;font:700 25px ui-monospace,SFMono-Regular,Menlo,monospace}
+.metric .caption{color:var(--muted);font-size:11px}.metric.input .value{color:var(--blue)}
+.metric.y .value{color:var(--red)}.metric.v .value{color:var(--orange)}.metric.base .value{color:var(--teal)}
+.setting-card{padding:16px 18px}.setting-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:12px 0}
+.setting-item{min-height:72px;padding:10px 12px;border:1px solid rgba(36,38,41,.13);border-radius:8px;background:var(--panel2)}
+.setting-item small{display:block;margin-bottom:4px;color:var(--muted);font-size:11px}.setting-item b{font-size:14px}
+.formula{margin:13px 0;padding:12px 14px;border:1px solid var(--line);background:#f0f5f5;border-radius:8px;font:14px ui-monospace,SFMono-Regular,Menlo,monospace;overflow:auto}
+.figure-card{padding:14px;margin:14px 0}.figure-card img{display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:7px;background:#fff}
+.figure-title{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:baseline;margin:0 0 9px}
+.figure-title strong{color:var(--blue);font-size:15px}.figure-title span{color:var(--muted);font-size:12px}
+.caption{margin:8px 1px 1px;color:var(--muted);font-size:12.5px;line-height:1.55}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}.two-col .figure-card{margin:0}
+.table-wrap{overflow-x:auto}.table-wrap table{min-width:700px}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}
+th{padding:8px 10px;text-align:left;color:var(--blue);border-bottom:2px solid var(--line);white-space:nowrap}
+td{padding:7px 10px;vertical-align:top;border-bottom:1px solid rgba(36,38,41,.11)}
+td.num,th.num{text-align:right;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+tr:hover td{background:rgba(23,77,115,.04)}
+.status{display:inline-block;padding:2px 7px;border-radius:999px;background:#dcefe9;color:#17655f;font-size:12px;font-weight:650}
+.warn{display:inline-block;padding:2px 7px;border-radius:999px;background:#f5e7d5;color:#8b5217;font-size:12px;font-weight:650}
+.tight li{margin:5px 0}.small{color:var(--muted);font-size:12.5px}
+details{margin:12px 0;padding:0 15px}summary{cursor:pointer;padding:13px 0;color:var(--blue);font-size:14px;font-weight:650}
+details>div{padding:0 0 14px}.footer{margin-top:40px;padding-top:15px;border-top:1px solid var(--line);color:var(--muted);font-size:12px;line-height:1.65}
+.toc{position:fixed;top:28px;left:max(16px,calc((100vw - 1120px)/2 - 154px));width:134px;padding:10px 8px;background:var(--panel);border:1px solid var(--line);border-radius:9px;box-shadow:0 4px 16px rgba(35,36,38,.06)}
+.toc-title{margin:0 0 7px;color:var(--blue);font-size:12px;font-weight:650}.toc a{display:block;padding:4px 5px;color:var(--muted);font-size:11px;line-height:1.35;text-decoration:none;border-radius:5px}.toc a:hover{background:rgba(23,77,115,.08);color:var(--blue)}
+@media(min-width:761px){main{width:min(1120px,calc(100vw - 190px));margin-left:max(180px,calc((100vw - 1120px)/2 + 80px));margin-right:20px}}
+@media(max-width:760px){.toc{display:none}.lead,.setting-grid,.two-col{grid-template-columns:1fr}.metric-grid{grid-template-columns:repeat(2,1fr)}main{width:min(calc(100vw - 20px),1120px)}}
+</style>
+</head>
+<body>
+<nav class="toc" aria-label="页面目录">
+  <div class="toc-title">本文目录</div>
+  <a href="#standard">标准与测量</a>
+  <a href="#injection">1. 主要现象</a>
+  <a href="#frequency">2. 频率分 bin</a>
+  <a href="#scaling">3. 三轴 scaling</a>
+  <a href="#optimizer">4. LR / β₂ 附录</a>
+  <a href="#causal">5. 干预</a>
+  <a href="#trace">来源与追溯</a>
+</nav>
+<main>
+<header>
+  <div class="topline"><span>MAIN EXPERIMENT REPORT</span><span>v5 clean standard · 2026-08-29</span><a href="experiment-registry.html">实验注册表 ↗</a><a href="https://github.com/guoshaoyang-pku/ngram-gap-lab">repository ↗</a></div>
+  <h1>n-gram Gap：主实验与机制证据</h1>
+  <p class="subtitle">这是一份只保留当前核心证据的主实验文档：先比较历史 2× 与当前 128× 标准，再看 exact frequency，随后给出 table-size / epoch-length / dose 三轴的定量描述，最后用 LR/β₂ 附录与 causal intervention 检查机制。旧版背景、debug 和历史架构不在本页混写。</p>
+</header>
+
+<div class="banner"><b>当前结论边界：</b>v5 标准已固定为 table LR scale <b>128×</b>（实际 table lr = 0.0768），但 2× 结果仍作为同一 v5 clean measurement contract 下的历史对照保留。所有正文 gap 都是同一 logged step 的 <code>fixed validation loss − current-batch online train loss</code>；曲线中的散点是原始记录，细线仅为 3 点视觉连接，不是额外平滑数据。</div>
+
+<section id="standard">
+  <h2>标准与测量契约</h2>
+  <div class="lead">
+    <div class="setting-card">
+      <div class="setting-grid">
+        <div class="setting-item"><small>模型</small><b>vanilla nanoGPT<br>8L · 6H · 768D</b></div>
+        <div class="setting-item"><small>注入</small><b>input / wte<br>bigram + trigram</b></div>
+        <div class="setting-item"><small>clean table</small><b>R = 2²⁰<br>each branch</b></div>
+        <div class="setting-item"><small>数据</small><b>fixed replay<br>train / val 不重叠</b></div>
+        <div class="setting-item"><small>table optimizer</small><b>RMSProp<br>(0.0, 0.99)</b></div>
+        <div class="setting-item"><small>table LR</small><b>128×<br>0.0768</b></div>
+        <div class="setting-item"><small>backbone</small><b>AdamW (0.8,0.95)<br>lr 0.0006 · wd 0.1</b></div>
+        <div class="setting-item"><small>schedule / dtype</small><b>warmup_constant(100)<br>bf16 · no compile</b></div>
+      </div>
+      <p class="small">标准预算：seed 42；主实验 2000 steps；causal / optimizer 快速批 1000 steps；val、frequency 与 table RMS 每 10 步。1000 步约 3 个 epoch，2000 步约 6 个 epoch；完整 shard 为约 337 device batches / epoch。</p>
+    </div>
+    <div class="note method">
+      <b>测量顺序</b>
+      <div class="formula">x = wte(idx) + ngram_ve<br>gap(step) = fixed_val(step) − online_train_current_batch(step)</div>
+      <p>online train loss 在参数更新前记录；同一步 fixed validation 在更新后计算。频率统计沿用该 step 当前 batch 的 train-side loss；<code>novel</code>（train hit-count = 0）没有 train loss，因此不定义 gap。</p>
+      <p class="small">唯一主线数据命名空间：<code>data/runs_fixed/*_fixed/</code>；S1 scaling 的登记原始数据位于其专用 <code>data/runs_scaling/*_fixed/</code> 目录，并在 CSV 中保留 source、run_id、step、seed。</p>
+    </div>
+  </div>
+  <details>
+    <summary>展开 jargon 对照</summary>
+    <div><p><b>2× / 128×</b> 是 n-gram table learning-rate scale，不是 backbone LR；<b>v5</b> 是当前 clean-table、current-batch online、warmup-constant 的实验波次名；<b>M2</b> 是注入点消融；<b>S1</b> 是 scaling 线；<b>_fixed</b> 表示权威修正后结果目录。历史 2× 不是当前推荐 setting。</p></div>
+  </details>
+</section>
+
+<section id="injection">
+  <h2>1. 主要现象：2× 与 128× 的注入点对照</h2>
+  <p>四臂只改变 n-gram residual 的注入位置：<code>input</code> 加在 wte，<code>y</code> 直接进入 residual stream，<code>v</code> 先经过 attention 的 value 混合，<code>nogram</code> 是负对照。这里先看 2× 历史 v5 和 128× 当前标准的完整 train/val/gap 轨迹，再看末端差异。</p>
+  <div class="figure-card">
+    <div class="figure-title"><strong>图 1 · 完整训练轨迹</strong><span>所有点来自新 v5 clean runs；竖向点线是 epoch boundary</span></div>
+    <img src="../../docs/figs/main/fig_v5_2x_128x_injection_curves.png" alt="2x and 128x injection point trajectories">
+    <p class="caption">2×：<code>nglab1x_{input,y,v,nogram}_v5_fixed</code>；128×：<code>nglab1x_{input,y,v,nogram}_v5_128x_freq10_fixed</code>。点为原始 online 记录，细线为 3 点视觉连接；没有使用旧 4-batch train probe 代替当前 batch。</p>
+  </div>
+  <div class="figure-card">
+    <div class="figure-title"><strong>图 2 · 2000 步 final gap</strong><span>同一 v5 contract 下 2× historical vs 128× current</span></div>
+    <img src="../../docs/figs/main/fig_v5_128x_injection_bars.png" alt="final gap comparison between 2x and 128x table learning rates">
+    <p class="caption">128× 后端注入的 gap 明显放大：<code>v</code> 由 2.014 升至 7.648，<code>y</code> 由 3.640 升至 5.248；input 由 5.741 变为 5.672，nogram 始终接近零。柱状图只展示 step-2000 raw endpoint。</p>
+  </div>
+  <div class="metric-grid">
+    <div class="metric input"><div class="label">input · 2× → 128×</div><div class="value">5.741 → 5.672</div><div class="caption">run seed 42 · step 2000</div></div>
+    <div class="metric y"><div class="label">y · 2× → 128×</div><div class="value">3.640 → 5.248</div><div class="caption">run seed 42 · step 2000</div></div>
+    <div class="metric v"><div class="label">v · 2× → 128×</div><div class="value">2.014 → 7.648</div><div class="caption">run seed 42 · step 2000</div></div>
+    <div class="metric base"><div class="label">nogram · 2× → 128×</div><div class="value">0.245 → 0.227</div><div class="caption">negative control</div></div>
+  </div>
+  <div class="note result"><b>主现象：</b>128× 并没有让 input 主线的最终 gap 消失；它改变了不同注入路径的相对强度，尤其把 value 路径推到最高。因而“gap 存在”与“注入点决定强度”应分开陈述，不能把 2× 时代的排序直接沿用到 128×。</div>
+</section>
+
+<section id="frequency">
+  <h2>2. 频率分 bin：context hit-count 与 gap</h2>
+  <p>频率横轴是训练集里同一个 context 的 exact hit-count <code>f</code>，不是 context 的种类数；宽 bin 仅用于展示。左图显示该 bin 覆盖的 token fraction，右图显示每个 bin 的 raw gap。分 bin train 侧使用当前 logged step 的 online batch，val 侧使用同一步 fixed validation。</p>
+  <div class="two-col">
+    <div class="figure-card"><div class="figure-title"><strong>图 3a · bigram</strong><span>128× · step 2000</span></div><img src="../../docs/figs/main/fig_v5_128x_injection_frequency_bigram.png" alt="128x bigram frequency bins"></div>
+    <div class="figure-card"><div class="figure-title"><strong>图 3b · trigram</strong><span>128× · step 2000</span></div><img src="../../docs/figs/main/fig_v5_128x_injection_frequency_trigram.png" alt="128x trigram frequency bins"></div>
+  </div>
+  <p class="caption">两图均来自 <code>nglab1x_{input,y,v,nogram}_v5_128x_freq10_fixed/freq_bin_loss.jsonl</code>。novel 在覆盖图中保留，因为它有 validation exposure；但 novel 没有 train loss，在 gap 图中不赋值。</p>
+  <div class="figure-card">
+    <div class="figure-title"><strong>图 4 · exact-f 主图与幂律描述</strong><span>S1 v5 frequency main · final logged step 1000</span></div>
+    <img src="../../docs/figs/main/fig_v5_s1_frequency_exact_f.png" alt="exact frequency and gap relationship">
+    <p class="caption">bigram 与 trigram 在同一张图中分别拟合；正 gap、共享 context 且有有效 train/val 统计的点进入 log–log 描述。当前单 seed 的 token-mass-weighted slope 为 bigram −0.253、trigram −0.318，R² 分别为 .997 与 .996；这支持频率相关性，但不是 frequency 的独立因果证明。</p>
+  </div>
+  <div class="figure-card">
+    <div class="figure-title"><strong>图 5 · token mass 视图</strong><span>Σf 是覆盖规模，不替代 exact-f gap</span></div>
+    <img src="../../docs/figs/main/fig_v5_s1_frequency_token_mass.png" alt="frequency token mass distribution">
+    <p class="caption">同一频率段覆盖的 token mass 约为该段的 <code>Σf</code>。它回答“这一段暴露了多少 token”，而图 4 回答“一个频率为 f 的 context 的 gap 如何变化”，两者不能混为一个横轴。</p>
+  </div>
+</section>
+
+<section id="scaling">
+  <h2>3. 三轴 scaling：表大小、epoch 长度、剂量</h2>
+  <p>下面三条轴都使用 128×、clean-table 或对应 v5 标准；拟合是描述性统计，不引入旧 4-layer/2-hash 结果，也不把单 seed 的拟合写成普适定律。</p>
+  <h3>3.1 Table-size：单表、单变量、bigram/trigram 分开</h3>
+  <div class="figure-card"><div class="figure-title"><strong>图 6 · gap–R 双对数图（净 gap、分窗口拟合）</strong><span>31 个 bigram-R 点 + 31 个 trigram-R 点，R=1…2.347M；拟合减去 no-gram floor 0.02（nogram 实测 0.0234，小 R 平台均值 0.0196），只取各分支的线性窗口；R≤1e4 的塌缩区保留为空心点但不进入拟合</span></div><img src="../../docs/figs/main/fig_v5_s1_table_size_loglog_clean.png" alt="clean table size log log scaling"></div>
+  <div class="table-wrap"><table>
+    <tr><th>branch</th><th class="num">拟合窗口</th><th class="num">n</th><th class="num">slope α（净 gap）</th><th class="num">R²</th><th class="num">raw-gap 斜率（敏感性）</th><th>唯一变量</th></tr>
+    <tr><td>bigram-only</td><td class="num">R 2e3–2e5</td><td class="num">12</td><td class="num">0.58</td><td class="num">0.997</td><td class="num">0.50</td><td>bigram physical rows R；trigram table 关闭</td></tr>
+    <tr><td>trigram-only</td><td class="num">R 1e5–9.3e5</td><td class="num">8</td><td class="num">0.66</td><td class="num">0.9997</td><td class="num">0.65</td><td>trigram physical rows R；bigram table 关闭</td></tr>
+  </table></div>
+  <p>两条轴在小 R（≲1e4）都进入 no-gram floor（噪声主导，塌缩区），在大 R 进入饱和：bigram 局部斜率在 R≈3e5 后衰减，trigram 在 R≈1.2e6 后饱和。上面的 α 只取中间线性窗口；换用 raw gap（不减 floor）时斜率降为 0.50 / 0.65，作为 floor 取值的敏感性参考。斜率接近 0.58≈1/2 与 0.66≈2/3，与用户预期一致，但此处仍为描述性拟合，不是机制定律。</p>
+  <p class="small"><code>K</code> 是训练前缀中的 distinct contexts，<code>R</code> 是被扫描分支的 physical rows；<code>K/R</code> 只是 load ratio，不是 collision rate。当前正式 run 没有 occupied-row 观测，因此不从 K/R 推断 collision。</p>
+
+  <h3>3.2 Epoch-length：相对完整 L4 的倍数</h3>
+  <div class="figure-card"><div class="figure-title"><strong>图 7 · 3-epoch epoch-length 阵列</strong><span>trigram-only；横轴是 L4 倍数，L4=337 device batches</span></div><img src="../../docs/figs/main/fig_v5_s1_epoch_length_scaling.png" alt="epoch length scaling relative to L4"></div>
+  <p>12 个点的 final gap 对 <code>ln(L/L4)</code> 做二次描述拟合，顶点约为 <b>0.412×L4</b>，预测 gap 2.649，R²=.774。它概括了观察到的 U 形，但不是机制定律；每个点是 seed 42 的三 epoch 对齐 run。</p>
+  <div class="figure-card"><div class="figure-title"><strong>图 7b · gap–epoch 编号与每 epoch 增量</strong><span>L4 长 replay；原始 epoch-boundary 记录，不平滑</span></div><img src="../../docs/figs/main/fig_v5_s1_epoch_number.png" alt="gap versus epoch number and per-epoch increment"></div>
+  <p>同一 L4（337 device batches/epoch）的 10-epoch trigram-only 长训中，epoch-boundary gap 为 −0.048、1.018、2.473、3.697、4.614、5.609、6.439、7.144、7.847、8.675（epoch 1–10；<code>s1v5_128_ep_tri_1xL4_10ep</code>，seed 42，step 3370）。从 epoch 2 到 10 的线性参考斜率约为 0.96 gap/epoch，但每 epoch 增量从 1.45 的早期峰值逐步降到约 0.7–0.8；因此当前证据支持“近似线性、斜率逐渐变小”的凹增长，而不是已经观测到明确平台。no-gram 对照在同一窗口只从约 0 增至 0.48。图中点是原始 boundary records，没有 21-step 平滑或插值。</p>
+
+  <h3>3.3 Shard dose：同一 input 主线的剂量轴</h3>
+  <div class="figure-card"><div class="figure-title"><strong>图 8 · dose–gap 关系</strong><span>128× · step 2000 · 11 个非 1× dose，1× 由 M2 主线提供</span></div><img src="../../docs/figs/main/fig_v5_128x_dose_gap.png" alt="128x dose and final gap"></div>
+  <p>final gap 从 0.25× 的 <b>10.895</b> 降至 8× 的 <b>−0.055</b>；正 gap 点（≤5×）的 log–log 描述斜率为 <b>−1.727</b>，R²=.887。5× 与 6× 之间发生符号变化，因此不报告跨越零点的全局 power law。</p>
+  <div class="note method"><b>三轴的统一读法：</b>增大 clean table 的物理容量、改变一个 epoch 暴露长度、或提高 shard dose，都会改变表记忆和 replay exposure 的组合；这些轴有清楚的描述性关系，但不能只凭单 seed 拟合区分所有潜在机制。</div>
+</section>
+
+<section id="optimizer">
+  <h2>4. 附录：table LR 与 β₂ 消融</h2>
+  <p>该附录用于确定工作点，不替代当前 128× 主线。干净的 11-arm sweep 使用 1000 steps、val/frequency=10、clean 双表、RMSProp 或对照 optimizer；随后用高 scale 的 1000/2000-step 轨迹检查 β₂=.99 与 .999 在 128×附近是否出现稳定的延后。</p>
+  <div class="figure-card"><div class="figure-title"><strong>图 9 · β₂=.99 的 step-1000 gap 随 table LR scale</strong><span>低 scale + 高 scale；128× 为 SSOT 工作点</span></div><img src="../../docs/figs/main/fig_v5_beta099_gap_step1000_vs_table_lr.png" alt="beta2 0.99 gap versus table learning rate scale"></div>
+  <div class="figure-card"><div class="figure-title"><strong>图 10 · 高 scale β₂ 对比</strong><span>1000 与 2000 steps；直接编码实际 β₂</span></div><img src="../../docs/figs/main/fig_v5_optv5f_beta2_compare.png" alt="high scale beta2 comparison"></div>
+  <div class="table-wrap"><table>
+    <tr><th>消融</th><th>条件</th><th class="num">final gap</th><th>run / step</th></tr>
+    <tr><td>LR scale</td><td>β₂=.99；scale 0.5→4</td><td class="num">0.465→2.072</td><td><code>optv5c_rms_b099_s{0p5,1p0,2p0_r1,3p0,4p0}</code> @1000</td></tr>
+    <tr><td>β₂</td><td>RMSProp；scale=2</td><td class="num">1.239 (.95)<br>1.460 (.98)<br>1.550 (.99)<br>1.594 (.995)<br>1.669 (.999)</td><td><code>optv5c_rms_b{095,098,099,0995,0999}_s2p0</code> @1000</td></tr>
+    <tr><td>optimizer</td><td>scale=2；β₂=.99</td><td class="num">RMS 1.551<br>AdamW 1.502<br>SGD 0.078</td><td><code>optv5c_{rms,adamw,sgd}_*</code> @1000</td></tr>
+    <tr><td>高 scale</td><td>scale=128；β₂=.99 / .999</td><td class="num">2.732 / 2.613 @1000<br>5.724 / 5.399 @2000</td><td><code>optv5f_rms_b{099,0999}_s128p0*</code></td></tr>
+  </table></div>
+  <div class="note result"><b>setting 决策：</b>β₂=.99 在当前证据下足够稳定、响应更快且没有被 .999 明确证伪；128× 在 step-1000 LR 曲线附近是高 gap 工作区，但 256×–1024× 的 2000-step gap 没有继续单调增加。因此当前标准保持 <code>RMSProp (0.0,0.99) + table LR 128×</code>，不把“更大 LR 必然更好”写入结论。</div>
+</section>
+
+<section id="causal">
+  <h2>5. Causal intervention：表内容、映射与低频贡献</h2>
+  <p>所有 causal run 都使用 input、128×、1000 steps；边界是完整 shard 的 epoch boundary，曲线同时报告当前 batch 的 online train loss、fixed validation loss 与 gap。机制证据只采用两类干净干预：<code>hash_reseed</code>（只换 context→row 映射）与互补的 <code>mask_low/high</code>（按训练集静态频率屏蔽 residual）；<code>freeze_table / freeze_backbone</code> 只作为写入路径参考。两种过强的早期干预已从当前代码、登记和图表中删除。</p>
+  <div class="figure-card"><div class="figure-title"><strong>图 11 · causal train / val / gap 轨迹</strong><span>核心干预 + 写入路径参考；raw online records + 3 点连接；虚线为 epoch boundary</span></div><img src="../../docs/figs/main/fig_v5_128x_causal_losses.png" alt="causal intervention losses and gaps"></div>
+  <div class="figure-card"><div class="figure-title"><strong>图 12 · low/high frequency mask 的分 bin 效应</strong><span>low：f&lt;200（含 novel）；high：f≥200；final step 1000</span></div><img src="../../docs/figs/main/fig_v5_128x_causal_frequency_effect.png" alt="causal low and high frequency mask effects"></div>
+  <div class="figure-card"><div class="figure-title"><strong>图 13 · mask_high 阈值扫描</strong><span>epoch-2 边界；横轴为 exact train hit-count 阈值 t，纵轴为 step-1000 raw gap</span></div><img src="../../docs/figs/main/fig_v5_128x_mask_high_threshold_scan.png" alt="mask high frequency threshold scan"></div>
+  <p class="caption">图 13 的 14 个点来自 <code>causalv5m_mask_high_t{1,2,5,10,25,50,100,400,800,1600,3200,6400,12800}_e1_128x_fixed</code>，其中 <code>t=200</code> 复用 <code>causalv5c_mask_high_f200_e1_128x_fixed</code>。点是 step-1000 原始 gap，细线仅为 3 点视觉连接；阈值越低，屏蔽的 seen context 越多。mask 是 context 级的：<b>novel（f=0）context 在 high 模式下永不屏蔽</b>，因此已完成扫描止于 <code>t=1</code>。<b>⚠️ 本图曲线由旧 <code>f&gt;t</code> 边界语义的 run 绘制；mask_high 现定义为 <code>f≥t</code>（含边界），需重刷后重新生成此图。</b><code>t=0</code> 现在定义为屏蔽所有 context（包含 novel），新的全量屏蔽 run 尚待重跑，旧 t=0 产物不再有效且不纳入图表。全量屏蔽只会消除 n-gram 造成的 gap；由于 gap 是不同 train/validation batch 的 loss 差，仍应接近同预算 no-gram 对照，而不是数学上保证为 0。<code>t&gt;100</code> 时 gap 基本维持在约 2.75–2.80，进入 <code>t≤100</code> 后才开始下降，说明主要贡献集中在更低频的 seen context，而不是所有 high-frequency context 等价贡献。</p>
+  <div class="table-wrap"><table>
+    <tr><th>类别</th><th>干预</th><th>语义</th><th class="num">final train</th><th class="num">final val</th><th class="num">final gap</th></tr>
+    <tr><td>control</td><td>none</td><td>无边界干预</td><td class="num">2.574</td><td class="num">5.298</td><td class="num">2.724</td></tr>
+    <tr><td><b>核心机制</b></td><td>hash_reseed e1</td><td>只换 context→row 映射；保留表权重与 RMSProp state</td><td class="num">3.274</td><td class="num">4.628</td><td class="num">1.354</td></tr>
+    <tr><td><b>核心机制</b></td><td>mask_low e1</td><td>边界后屏蔽 f&lt;200（含 novel f=0）的 residual 与梯度</td><td class="num">3.686</td><td class="num">3.787</td><td class="num"><b>0.101</b></td></tr>
+    <tr><td><b>核心机制</b></td><td>mask_high e1</td><td>边界后屏蔽 f≥200 的 residual 与梯度</td><td class="num">3.217</td><td class="num">6.026</td><td class="num">2.808</td></tr>
+    <tr><td>写入路径参考</td><td>freeze_table e1</td><td>边界后停止表写入，仍保留表 readout</td><td class="num">2.111</td><td class="num">5.563</td><td class="num">3.452</td></tr>
+    <tr><td>写入路径参考</td><td>freeze_backbone e1</td><td>边界后停止 backbone 更新，仍训练表</td><td class="num">3.574</td><td class="num">4.804</td><td class="num">1.230</td></tr>
+  </table></div>
+  <div class="note result"><b>机制读法：</b>最干净的比较是同一边界后的互补 mask：屏蔽低频集合（f&lt;200，含 novel）后 gap 约为 0.10，而屏蔽高频集合（f≥200）仍保留约 2.81；阈值扫描进一步显示，只有把阈值降到约 100 及以下、开始屏蔽更低频的 seen context 时 gap 才明显下降。<code>hash_reseed</code> 只破坏 context→row 对齐、保留表内容和 optimizer state，gap 降至 1.354，说明映射对齐确实重要，但它不是“清空内容”的同义操作。</div>
+</section>
+
+<section id="trace">
+  <h2>来源、代码与可追溯约束</h2>
+  <ul class="tight">
+    <li><b>训练入口：</b><code>code/train.py</code>；频率索引与统计：<code>code/ngram_freq.py</code>；集群 launcher：<code>code/cluster/</code>。</li>
+    <li><b>注入公式：</b><code>x = wte(idx) + Σ ngram_ve</code>，n-gram residual 不走 attention；<code>y</code>/<code>v</code> 只作为注入点消融。</li>
+    <li><b>图脚本：</b>本页新增 128× 图由 <code>docs/plot_scripts/plot_v5_128x_doc_figures.py</code> 从 run 目录直接读取；三轴统计与已有图由 <code>docs/appendices/s1_scaling_three_axis/</code> 的 CSV 和脚本生成。</li>
+    <li><b>来源 revision：</b>当前仓库基线为 <code>d716180eb96b08e7d30d0ce39e1ffa265b55b498</code>；每个图注对应 run_id、step、seed 和 fixed 结果目录。主线事实登记在 <a href="../../docs/experiment-log.md">experiment-log.md</a> 与 <a href="../../docs/experiment-lines.md">experiment-lines.md</a>，全部实验的逐项状态见 <a href="experiment-registry.html">experiment-registry.html</a>。</li>
+    <li><b>旧内容：</b>历史 2×、旧表架构、旧 probe 与 current-shell 仅用于溯源，不与当前 128× clean evidence 混合。术语与 debug 说明见 <a href="background.html">background.html</a>。</li>
+  </ul>
+  <div class="footer">本页是主实验汇报副本；主文档发布规则仍以 blog 仓库的发布版为准。数值更新必须先更新权威 run 产物与登记，再重绘图片，最后同步本页。</div>
+</section>
+</main>
+</body>
+</html>

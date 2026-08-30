@@ -48,7 +48,7 @@
 <div class="wrap">
 
 <h1>实验注册表 · ngram-gap-lab</h1>
-<p class="note"><b>唯一权威登记表</b> · 维护时间：2026-08-26 · 主线权威数据源 <code>data/runs_fixed/*_fixed/</code>；scaling 专属数据源 <code>data/runs_scaling/*_fixed/</code> · 口径见 <code>agents.md</code> §1 · 数值细节见 <code>experiment-log.md</code> 与 <code>experiment-lines.md</code>。</p>
+<p class="note"><b>唯一权威登记表</b> · 维护时间：2026-08-30 · 主线权威数据源 <code>data/runs_fixed/*_fixed/</code>；scaling 专属数据源 <code>data/runs_scaling/*_fixed/</code> · 口径见 <code>agents.md</code> §1 · 数值细节见 <code>experiment-log.md</code> 与 <code>experiment-lines.md</code>。主实验叙事见 <a href="main-experiments-v5.html">《主实验与机制证据 · v5 clean standard》</a>；清理前的完整页面与图源已冻结为 <a href="versions/experiment-registry-20260827-before-v5-prune.html">历史快照</a>。</p>
 
 <h2>① 命名法 Jargon（先读这个）</h2>
 <details open>
@@ -61,14 +61,14 @@
   <tr><td><b>v2 波次</b></td><td>重刷波次 2：<b>优化器新标准</b> β₂=0.99（无动量）+ 表 LR ×2</td><td>2026-08-24 用户拍板；run 后缀 <code>_v2_fixed</code>。模型本身没变，变的是优化器口径。</td></tr>
   <tr><td><b>v3 波次</b></td><td>重刷波次 3：freq-bin <b>train 侧改用当前训练 batch</b>（online）</td><td>2026-08-25 用户拍板；run 后缀 <code>_v3_fixed</code>。之前是 4-batch 诊断窗口，判为不一致做法。</td></tr>
   <tr><td><b>v4 波次</b></td><td>重刷波次 4：constant schedule 诊断</td><td>历史探索；零 warmup 的 constant 不作为当前主线。</td></tr>
-  <tr><td><b>v5 波次</b></td><td>当前唯一主线：clean 双表、current-batch online loss、短 warmup 后恒定 LR</td><td>后缀 <code>_v5_fixed</code>。step 1–100 从 0.25×LR 升至 <code>6e-4</code>，其后恒定；bf16、不 compile。</td></tr>
+  <tr><td><b>v5 波次</b></td><td>当前唯一主线：clean 双表、current-batch online loss、短 warmup 后恒定 LR</td><td>run ID 使用 <code>v5</code> 家族名，权威输出目录统一以 <code>_fixed</code> 结尾。step 1–100 从 0.25×LR 升至 <code>6e-4</code>，其后恒定；bf16、不 compile。</td></tr>
   <tr><td><b>M1–M7</b></td><td>主线 nanoGPT 实验线编号</td><td>M2=注入点消融、M3/M4=表优化器、M5/M6=shard 剂量、M7=短 epoch×β₂。</td></tr>
   <tr><td><b>L1–L5</b></td><td>toy 理论任务线（独立小实验）</td><td>L1 查表记忆、L2 Markov 闭式解、L3 采样律、L4 幂律、L5 优化器伪影。</td></tr>
   <tr><td><b>N1–N4</b></td><td>自然语言 5gram 实验</td><td>order=5 表在真实语料上的 gap。</td></tr>
   <tr><td><b>S1</b></td><td>三轴 scaling（epoch / table / frequency）</td><td>极简 setting 下的 scaling 实验线，结果在 <code>data/runs_scaling/</code>。</td></tr>
   <tr><td><b>_fixed</b></td><td>修复 bug 后的权威数据标记</td><td>主线结果在 <code>runs_fixed</code>，scaling 结果在 <code>runs_scaling</code>；当前主线为 <code>_v5_fixed</code>。</td></tr>
   <tr><td><b>current-batch / online</b></td><td>train loss 取"当前训练 batch"</td><td>v3 起的标准；与 online train_loss 同一 forward，零额外计算。</td></tr>
-  <tr><td><b>v5 setting</b></td><td>RMSProp <code>(0,0.99)</code> · 表 LR ×2（实际 0.0012）· backbone LR 0.0006 · <code>warmup_constant(100)</code></td><td>所有 v5 launcher 显式传 <code>--table_betas 0.0,0.99 --table_lr_scale 2.0 --lr 0.0006 --lr_schedule warmup_constant --warmup_steps 100</code>。</td></tr>
+  <tr><td><b>v5 setting</b></td><td>RMSProp <code>(0,0.99)</code> · 表 LR <b>128×</b>（实际 0.0768）· backbone LR 0.0006 · <code>warmup_constant(100)</code></td><td>当前 v5 标准 launcher 显式传 <code>--table_betas 0.0,0.99 --table_lr_scale 128.0 --lr 0.0006 --lr_schedule warmup_constant --warmup_steps 100</code>；历史 2× 仅作对照。</td></tr>
 </table>
 <p><b>一句话</b>：v50/v10 是“评估多密”，v2–v4 是历史重刷口径，v5 是当前唯一主线，M/L/N/S 是“哪条实验线”，<code>_fixed</code> 是“修复后、可追溯的数据标记”。</p>
 </details>
@@ -85,139 +85,86 @@
   <tbody>
 
   <!-- ============ 主线注入点 ============ -->
-  <tr id="registry-m2-v10">
-    <td rowspan="5" class="center"><b>主线<br>注入点</b></td>
-    <td>M2 注入点消融 v10<br><span class="note">（历史口径，被 v2 取代）</span></td>
-    <td>input/y/v/nogram 四臂；2000 步；val 每 10 步；v10 时代口径（β₂=0.999·×1）</td>
-    <td class="visual">注入点 loss/gap 曲线；频率 bin 双轴图；gap-vs-frequency 图；loss-gap-table-RMS 对齐
-      <div class="inline-figures">
-        <figure class="inline-figure"><a href="../../docs/figs/main/fig_gap.svg"><img src="../../docs/figs/main/fig_gap.svg" alt="注入点 gap 曲线"></a><figcaption>gap 曲线</figcaption></figure>
-        <figure class="inline-figure"><a href="../../docs/figs/main/fig_loss.svg"><img src="../../docs/figs/main/fig_loss.svg" alt="注入点 loss 曲线"></a><figcaption>loss 曲线</figcaption></figure>
-        <figure class="inline-figure"><a href="../../docs/figs/main/fig_freq_bigram.svg"><img src="../../docs/figs/main/fig_freq_bigram.svg" alt="bigram 频率 bin"></a><figcaption>bigram 分桶</figcaption></figure>
-        <figure class="inline-figure"><a href="../../docs/figs/main/fig_freq_trigram.svg"><img src="../../docs/figs/main/fig_freq_trigram.svg" alt="trigram 频率 bin"></a><figcaption>trigram 分桶</figcaption></figure>
-        <figure class="inline-figure"><a href="../../docs/figs/main/fig_gap_vs_frequency_loglog.svg"><img src="../../docs/figs/main/fig_gap_vs_frequency_loglog.svg" alt="gap versus frequency 双对数"></a><figcaption>gap–频率双对数</figcaption></figure>
-        <figure class="inline-figure"><a href="../../docs/figs/main/fig_loss_norm.svg"><img src="../../docs/figs/main/fig_loss_norm.svg" alt="loss gap table RMS"></a><figcaption>loss/RMS</figcaption></figure>
-      </div>
-    </td>
-    <td class="st-done">✅ 完成</td>
-    <td class="com"><input type="text"></td>
-  </tr>
-  <tr id="registry-m2-v2">
-    <td>M2-v2 注入点消融<br><span class="note">（历史 bf16+compile 波次）</span></td>
-    <td>同四臂；2000 步；β₂=0.99、表 LR ×2；频率 train 侧不是 current-batch</td>
-    <td class="visual">注入点 gap/loss 曲线（原始点 + 3 点平滑线 + epoch 边界虚线）；final gap 对比；频率 bin 双轴图（23 桶）
-      <div class="inline-figures">
-        <figure class="inline-figure"><a href="../../docs/figs/epoch_scale/fig_sweep_v2_injpos.svg"><img src="../../docs/figs/epoch_scale/fig_sweep_v2_injpos.svg" alt="v2 注入点曲线"></a><figcaption>注入点曲线</figcaption></figure>
-        <figure class="inline-figure"><a href="../../docs/figs/main/fig_freq_bigram.svg"><img src="../../docs/figs/main/fig_freq_bigram.svg" alt="v2 bigram 分桶"></a><figcaption>bigram 分桶</figcaption></figure>
-        <figure class="inline-figure"><a href="../../docs/figs/main/fig_freq_trigram.svg"><img src="../../docs/figs/main/fig_freq_trigram.svg" alt="v2 trigram 分桶"></a><figcaption>trigram 分桶</figcaption></figure>
-      </div>
-    </td>
-    <td class="st-warn">⚠️ 历史口径</td>
-    <td class="com"><input type="text"></td>
-  </tr>
-  <tr id="registry-m2-v3">
-    <td>M2-v3 注入点消融<br><span class="note">（current-batch 口径，含 warmdown）</span></td>
-    <td>同四臂；freq-bin train 侧 = 当前训练 batch per-token loss（零额外 forward）</td>
-    <td class="visual">同上 + freq-bin 的 train 侧与 online train_loss 完全同 batch 校验；v3 独立图片待数据完成后重绘，不复用 v2 图片。</td>
-    <td class="st-run">🟡 三机运行中</td>
-    <td class="com"><input type="text"></td>
-  </tr>
   <tr id="registry-m2-v4">
-    <td>M2-v5 注入点消融<br><span class="note">（当前唯一主线）</span></td>
-    <td>input / y / v / nogram；2000 步；clean R=2²⁰；<code>lr=6e-4</code>、<code>warmup_constant(100)</code>；bf16、不 compile；train loss=当前 batch online loss；seed 42/43/44</td>
-    <td class="visual">原始 online loss/gap 点（只以 3 点均值连线）。
+    <td rowspan="2" class="center"><b>主线<br>注入点</b></td>
+    <td>M2-v5 注入点消融<br><span class="note">（当前唯一主线 · table LR 128×）</span></td>
+    <td>input / y / v / nogram；2000 步；clean R=2²⁰；<code>lr=6e-4</code>、<code>warmup_constant(100)</code>、<b>table LR scale=128</b>；bf16、不 compile；train loss=当前 batch online loss；seed 42</td>
+    <td class="visual">128× 标准批的原始 online loss/gap 曲线（只以 3 点均值连线），以及 2× vs 128× final gap 对比柱状图。
       <div class="inline-figures">
-        <figure class="inline-figure"><a href="../../docs/figs/main/fig_v5_injection.png"><img src="../../docs/figs/main/fig_v5_injection.png" alt="v5 注入点 online gap 与 loss"></a><figcaption>seed 42 四臂：gap / loss</figcaption></figure>
+        <figure class="inline-figure"><a href="../../docs/figs/main/fig_v5_128x_injection_curves.png"><img src="../../docs/figs/main/fig_v5_128x_injection_curves.png" alt="v5 128x 注入点 online gap 与 loss"></a><figcaption>seed 42 四臂 @128×：gap / loss</figcaption></figure>
+        <figure class="inline-figure"><a href="../../docs/figs/main/fig_v5_128x_injection_bars.png"><img src="../../docs/figs/main/fig_v5_128x_injection_bars.png" alt="v5 128x vs 2x 注入点 gap"></a><figcaption>2× vs 128× final gap</figcaption></figure>
       </div>
-      <span class="note">图源：<code>nglab1x_{input,y,v,nogram}_v5_fixed/train_log.jsonl</code>；点为原始 online 记录，线为 3 点均值。该批没有 <code>freq_bin_loss.jsonl</code>，不能承担 current-batch 频率结论；三个 seed 的端点见状态列。</span>
+      <span class="note">图源为 <code>nglab1x_{input,y,v,nogram}_v5_128x_freq10_fixed</code>（2026-08-29 标准切 128× 后重刷，见 experiment-log §35）；点为原始 online 记录，线为 3 点均值。频率统计见下一行。</span>
     </td>
-    <td class="st-done">✅ 三 seed × 四臂完成；seed 42 input/y/v/nogram=5.741/3.640/2.014/0.245，s43=5.811/3.277/2.881/0.253，s44=5.515/3.439/2.723/0.253</td>
+    <td class="st-done">✅ 128× 四臂完成 @2000：input/y/v/nogram=5.672/5.248/7.648/0.227；高 LR 放大后端注入 gap（v>y>input），nogram 贴零</td>
     <td class="com"><input type="text"></td>
   </tr>
   <tr id="registry-m2-v5-freq10">
-    <td>M2-v5 current-batch frequency refresh</td>
-    <td>input / y / v / nogram；seed 42、2000 步；clean R=2²⁰；<code>lr=6e-4</code>、<code>warmup_constant(100)</code>；bf16、不 compile；val / frequency / exact-frequency / table RMS 每 10 步</td>
+    <td>M2-v5 current-batch frequency refresh<br><span class="note">（128× 重刷）</span></td>
+    <td>input / y / v / nogram；seed 42、2000 步；clean R=2²⁰；<code>lr=6e-4</code>、<code>warmup_constant(100)</code>、table LR scale=128；bf16、不 compile；val / frequency / exact-frequency / table RMS 每 10 步</td>
     <td class="visual">每个 branch 画 input train / fixed-val token fraction 双柱，以及 final per-bin gap 原始点与细 3 点视觉连线。
       <div class="inline-figures">
-        <figure class="inline-figure"><a href="../../docs/figs/main/fig_v5_injection_frequency_bigram.png"><img src="../../docs/figs/main/fig_v5_injection_frequency_bigram.png" alt="v5 current-batch bigram frequency bins"></a><figcaption>bigram · fraction / gap</figcaption></figure>
-        <figure class="inline-figure"><a href="../../docs/figs/main/fig_v5_injection_frequency_trigram.png"><img src="../../docs/figs/main/fig_v5_injection_frequency_trigram.png" alt="v5 current-batch trigram frequency bins"></a><figcaption>trigram · fraction / gap</figcaption></figure>
+        <figure class="inline-figure"><a href="../../docs/figs/main/fig_v5_128x_injection_frequency_bigram.png"><img src="../../docs/figs/main/fig_v5_128x_injection_frequency_bigram.png" alt="v5 128x current-batch bigram frequency bins"></a><figcaption>bigram · 128× fraction / gap</figcaption></figure>
+        <figure class="inline-figure"><a href="../../docs/figs/main/fig_v5_128x_injection_frequency_trigram.png"><img src="../../docs/figs/main/fig_v5_128x_injection_frequency_trigram.png" alt="v5 128x current-batch trigram frequency bins"></a><figcaption>trigram · 128× fraction / gap</figcaption></figure>
       </div>
-      <span class="note">图源严格限定为 <code>nglab1x_input_v5_freq10_r1_fixed</code> 与 <code>nglab1x_{y,v,nogram}_v5_freq10_fixed/freq_bin_loss.jsonl</code> 的 step 2000；原 input ID 已被 100-step smoke 占用，完整证据新起 <code>r1</code>。train 侧直接复用该 step 当前训练 batch 的 pre-update per-token loss，不另取诊断 batch。novel 没有 train loss，故不定义 gap。</span>
+      <span class="note">图源为 <code>nglab1x_{input,y,v,nogram}_v5_128x_freq10_fixed/freq_bin_loss.jsonl</code> 的 step 2000；train 侧直接复用该 step 当前训练 batch 的 pre-update per-token loss。novel 没有 train loss，故不定义 gap。</span>
     </td>
-    <td class="st-done">✅ 4/4 完成；step-2000 input/y/v/nogram gap=5.755/3.465/2.011/0.248</td>
+    <td class="st-done">✅ 4/4 完成 @128×；step-2000 input/y/v/nogram gap=5.672/5.248/7.648/0.227</td>
     <td class="com"><input type="text"></td>
   </tr>
 
   <!-- ============ 剂量扫描 ============ -->
   <tr id="registry-m5">
     <td rowspan="4" class="center"><b>剂量<br>扫描</b></td>
-    <td>M5-v5 fixed-step 剂量扫描</td>
-    <td rowspan="2">0.25x、0.5x、0.75x、1.5x、2x、2.5x、3x、4x、5x、6x、8x；input；2000 步；v5 SSOT</td>
-    <td class="visual">原始 online gap vs dose（x 为对数）、gap@2000 与 epoch 分界标注，以及已完成批次的完整 loss/gap 轨迹。当前 v5 是强 dose-dilution / crossover：0.25×=11.589 → 5×=0.088，6× 后过零；不写成全区间幂律。
+    <td>M5-v5 fixed-step 剂量扫描<br><span class="note">（128× 重刷）</span></td>
+    <td rowspan="2">0.25x、0.5x、0.75x、1.5x、2x、2.5x、3x、4x、5x、6x、8x；input；2000 步；v5 SSOT、table LR scale=128</td>
+    <td class="visual">128× 标准批的 final gap 随剂量曲线；当前带 frequency 的正式证据见下方 M5-v5 frequency refresh。
       <div class="inline-figures">
-        <figure class="inline-figure"><a href="../../docs/figs/main/fig_v5_dose_fixedstep.png"><img src="../../docs/figs/main/fig_v5_dose_fixedstep.png" alt="v5 fixed-step 剂量扫描"></a><figcaption>step 2000 · dose–gap</figcaption></figure>
-        <figure class="inline-figure"><a href="../../docs/figs/main/fig_v5_dose_trajectories_existing.png"><img src="../../docs/figs/main/fig_v5_dose_trajectories_existing.png" alt="v5 剂量完整曲线"></a><figcaption>已完成批：loss/gap 轨迹</figcaption></figure>
+        <figure class="inline-figure"><a href="../../docs/figs/main/fig_v5_128x_dose_gap.png"><img src="../../docs/figs/main/fig_v5_128x_dose_gap.png" alt="v5 128x 剂量 final gap"></a><figcaption>128×：final gap vs dose</figcaption></figure>
       </div>
-      <span class="note">图源：11 个 <code>nglab*_input_v5_fixed/{summary.json,train_log.jsonl}</code>；仅改变 train-shard dose，x 轴为对数。<code>.25×–.75×</code> 三点局部 log-log 摘要为 <code>G∝D^-0.359</code>（R²=0.979），但扩展拟合窗口时指数明显漂移、6× 后 gap≤0，故它不是全区间幂律。点为原始 online 记录，细线为 3 点视觉连接。</span>
+      <span class="note">图源为 11 个 <code>nglab*_input_v5_128x_freq10_fixed</code> run 的 summary；gap 随剂量单调下降，0.25× 严重过拟合（10.9）、8× 转负（−0.06）、逼近 nogram。</span>
     </td>
-    <td class="st-done">✅ 11/11 完成；gap 11.589（0.25x）→−0.077（8x）</td>
+    <td class="st-done">✅ 11/11 128× 端点；gap 10.895（0.25×）→ −0.055（8×）</td>
     <td class="com"><input type="text"></td>
   </tr>
   <tr id="registry-m5-v3">
     <td>M6-v5 epoch 对齐批</td>
-    <td class="visual">固定 5 epoch、420–6700 steps；online gap 对比、epoch 分界与剂量曲线。v5 图在完整 run 回传后生成。</td>
-    <td class="st-done">✅ 9/9 完成；0.75x/1x/2x/4x gap=4.511/4.503/3.357/2.089</td>
+    <td class="visual">历史 5-epoch 对齐批；当前正式 epoch-length 阵列见 S1 v5 三 epoch 行。历史图不在当前登记表展示。</td>
+    <td class="st-warn">⚠️ 历史口径；由 S1 v5 三 epoch 阵列取代</td>
     <td class="com"><input type="text"></td>
   </tr>
   <tr id="registry-m5-freq10">
-    <td>M5-v5 frequency refresh<br><span class="note">（新批，专供剂量×频率证据）</span></td>
-    <td>11 个非 1x shard dose、input、2000 步；每 10 步 fixed val + current-batch freq-bin；每个 dose 强制绑定对应 train-set frequency index；1x 由 M2 四臂 frequency-refresh 单列重跑；其余 v5 SSOT</td>
-    <td class="visual">已验收的 7/11 个非 1x dose（0.25×–3×）绘制 bigram/trigram final raw freq-bin gap heatmap 与完整 loss/gap 轨迹；图题明确覆盖范围，4×/5×/6×/8× 未完成时不以旧批补位。
+    <td>M5-v5 frequency refresh<br><span class="note">（128× 重刷，专供剂量×频率证据）</span></td>
+    <td>11 个非 1x shard dose、input、2000 步、table LR scale=128；每 10 步 fixed val + current-batch freq-bin；每个 dose 强制绑定对应 train-set frequency index；1x 由 M2 四臂 frequency-refresh 单列重跑；其余 v5 SSOT</td>
+    <td class="visual">11/11 个非 1x dose（0.25×–8×）均已验收，绘制 bigram/trigram final raw freq-bin gap heatmap 与完整 loss/gap 轨迹；不以旧批补位。
       <div class="inline-figures">
-        <figure class="inline-figure"><a href="../../docs/figs/main/fig_v5_dose_trajectories.png"><img src="../../docs/figs/main/fig_v5_dose_trajectories.png" alt="v5 dose refresh completed trajectories"></a><figcaption>已验收 8/12（含 M2 1×）· loss / gap</figcaption></figure>
-        <figure class="inline-figure"><a href="../../docs/figs/main/fig_v5_dose_frequency_heatmap.png"><img src="../../docs/figs/main/fig_v5_dose_frequency_heatmap.png" alt="v5 dose frequency gap heatmap"></a><figcaption>已验收 8/12（含 M2 1×）· raw frequency-bin gap</figcaption></figure>
+        <figure class="inline-figure"><a href="../../docs/figs/main/fig_v5_dose_frequency_heatmap.png"><img src="../../docs/figs/main/fig_v5_dose_frequency_heatmap.png" alt="v5 dose frequency gap heatmap"></a><figcaption>128× 批 · raw frequency-bin gap</figcaption></figure>
       </div>
-      <span class="note">图源限定为各自 <code>nglab*_input_v5_freq10_fixed</code> 的 step-2000 summary、online train / fixed-val 曲线与 current-batch frequency bins；novel 没有 train loss，不定义 gap。</span>
+      <span class="note">图源限定为各自 <code>nglab*_input_v5_128x_freq10_fixed</code> 的 step-2000 summary、online train / fixed-val 曲线与 current-batch frequency bins；novel 没有 train loss，不定义 gap。</span>
     </td>
-    <td class="st-run">🟡 7/11 非 1x 剂量完成：0.25×–3× 均有四类 200 条 step-10 日志和有限终值；4×/5×/6×/8× 运行中。1×由 M2 四臂 freq10 重刷单列提供。</td>
+    <td class="st-done">✅ 11/11 非 1x 完成 @128×；含 M2 的 1× 后共 12/12 frequency-refresh 证据</td>
     <td class="com"><input type="text"></td>
   </tr>
   <tr id="registry-m6">
     <td>M6 epoch 对齐批（e6，实际 5 epoch）</td>
     <td>对齐 epoch 数（5 epoch）；0.25x–3x；无 LR schedule（勘误见 log §12）</td>
-    <td class="visual">epoch 对齐 gap 曲线；nogram 对照
-      <div class="inline-figures">
-        <figure class="inline-figure"><a href="../../docs/figs/epoch_scale/epoch_aligned_train_val_gap.png"><img src="../../docs/figs/epoch_scale/epoch_aligned_train_val_gap.png" alt="epoch 对齐"></a><figcaption>epoch 对齐</figcaption></figure>
-        <figure class="inline-figure"><a href="../../docs/figs/epoch_scale/nogram_vs_ngram_epochaligned.svg"><img src="../../docs/figs/epoch_scale/nogram_vs_ngram_epochaligned.svg" alt="nogram 对照"></a><figcaption>nogram 对照</figcaption></figure>
-      </div>
-    </td>
-    <td class="st-warn">⚠️ 不完整：缺 4x–8x</td>
+    <td class="visual">历史 epoch 对齐 gap 曲线与 nogram 对照；当前登记表不再展示已被 S1 v5 三 epoch 阵列覆盖的图片。</td>
+    <td class="st-warn">⚠️ 历史且不完整；由 S1 v5 三 epoch 阵列取代</td>
     <td class="com"><input type="text"></td>
   </tr>
 
   <!-- ============ 表优化器 ============ -->
   <tr id="registry-m3">
-    <td rowspan="5" class="center"><b>表<br>优化器</b></td>
+    <td rowspan="6" class="center"><b>表<br>优化器</b></td>
     <td>M3 Table 优化器 · 1x epoch</td>
     <td rowspan="2">RMSProp/AdamW/SGD；LR 剂量（×1/×2/×4）；β₂（0.98/0.99）；1x / 2x epoch</td>
-    <td class="visual">优化器对比 loss/gap；LR 剂量曲线；β₂ 曲线；1x vs 2x 对比
-      <div class="inline-figures">
-        <figure class="inline-figure"><a href="../../docs/figs/table_opt/fig_table_opt.svg"><img src="../../docs/figs/table_opt/fig_table_opt.svg" alt="表优化器对比"></a><figcaption>优化器对比</figcaption></figure>
-        <figure class="inline-figure"><a href="../../docs/figs/table_opt/fig_lr_curves.svg"><img src="../../docs/figs/table_opt/fig_lr_curves.svg" alt="表 LR 曲线"></a><figcaption>LR 曲线</figcaption></figure>
-        <figure class="inline-figure"><a href="../../docs/figs/table_opt/fig_beta2_curves.svg"><img src="../../docs/figs/table_opt/fig_beta2_curves.svg" alt="beta2 曲线"></a><figcaption>β₂ 曲线</figcaption></figure>
-      </div>
-    </td>
+    <td class="visual">历史优化器、table-LR 与 β₂ 对照；当前结论由下方 M3b-v5 完整 11 臂曲线覆盖，历史图片不再在当前登记表展示。</td>
     <td class="st-warn">⚠️ β₂ 结论待修正</td>
     <td class="com"><input type="text"></td>
   </tr>
   <tr id="registry-m4">
     <td>M4 Table 优化器 · 2x epoch</td>
-    <td class="visual">同上（<code>b2_099</code> 0.64→2.00，+210%）
-      <div class="inline-figures">
-        <figure class="inline-figure"><a href="../../docs/figs/table_opt/fig_table_opt_2x.svg"><img src="../../docs/figs/table_opt/fig_table_opt_2x.svg" alt="2x epoch"></a><figcaption>2x epoch</figcaption></figure>
-        <figure class="inline-figure"><a href="../../docs/figs/table_opt/fig_table_opt_1x_vs_2x.svg"><img src="../../docs/figs/table_opt/fig_table_opt_1x_vs_2x.svg" alt="1x vs 2x"></a><figcaption>1x vs 2x</figcaption></figure>
-      </div>
-    </td>
+    <td class="visual">历史 2x epoch 对照（<code>b2_099</code> 0.64→2.00，+210%）；已由当前 v5 统一预算与完整曲线覆盖，历史图片不再展示。</td>
     <td class="st-warn">⚠️ 同上</td>
     <td class="com"><input type="text"></td>
   </tr>
@@ -231,124 +178,130 @@
       </div>
       <span class="note">图源严格限定为 11 个 <code>optv5c_*_fixed</code> run 的 step-1000 <code>train_log.jsonl</code>、<code>freq_bin_loss.jsonl</code> 与 <code>table_norm.jsonl</code>；每类日志均 100 条，无 NaN/Inf。频率图只比较 scale 1 / 2 / 3，novel 没有 train loss，故不定义 gap。旧 <code>optv5_rms_*</code> precursor 保留作历史质量参照，但不替代本图。</span>
     </td>
-    <td class="st-done">✅ 11/11 完成（seed 42、step 1000）：scale 0.5/1/2/3/4=0.465/0.858/1.551/1.886/2.072；β₂ .95/.98/.995/.999=1.239/1.460/1.594/1.669；AdamW=1.502，SGD=0.078</td>
+    <td class="st-done">✅ 11/11 完成（seed 42、step 1000）：scale 0.5/1/2/3/4=0.465/0.858/1.551/1.886/2.072；β₂ .95/.98/.995/.999=1.239/1.460/1.594/1.669；AdamW=1.502，SGD=0.078。高 scale gate 与多 seed 复现见下方扩展验证。</td>
     <td class="com"><input type="text"></td>
   </tr>
   <tr id="registry-m7">
     <td>M7 短 epoch × β₂</td>
     <td>0.25x/0.5x 短 epoch；β₂=0.99</td>
-    <td class="visual">per-epoch 台阶清晰度曲线
-      <div class="inline-figures"><figure class="inline-figure"><a href="../../docs/figs/short_epoch_b2/short_epoch_b2_gap_v11.svg"><img src="../../docs/figs/short_epoch_b2/short_epoch_b2_gap_v11.svg" alt="短 epoch beta2"></a><figcaption>短 epoch×β₂</figcaption></figure></div>
-    </td>
+    <td class="visual">历史 per-epoch 台阶清晰度曲线；当前登记表不再展示已被 v5 epoch-length 阵列覆盖的图片。</td>
     <td class="st-warn">⚠️ 图未按 _fixed 重生成</td>
+    <td class="com"><input type="text"></td>
+  </tr>
+  <tr id="registry-m3c-optv5f">
+    <td>M3c-v5 高 table-LR × β₂ 收敛批<br><span class="note">（optv5f；1000/2000 步）</span></td>
+    <td>table LR scale 8/16/32/64/128 × RMSProp β₂ .99/.999；input；seed 42；1000 或 2000 步；其余 v5 SSOT（backbone 6e-4、warmup_constant(100)、bf16、不 compile、val/freq 每 10 步）</td>
+    <td class="visual">可读分面图：每个小面板固定一个 table LR scale，面板内只比较 β₂=.99 与 .999；低 scale（0.5/1/2/3/4×）与高 scale（8/16/32/64/128×）同一总览图展示。β₂=.99 使用深蓝实线圆点，β₂=.999 使用橙色虚线方点；1000 步与 2000 步使用不同图形；2000 步图另列 train / fixed val / gap 和 Δgap=(.999−.99)，epoch boundary 用竖线标出。点为原始 online 记录，细线为 3 点视觉连接；正式图已按完整 2000 步批次刷新。
+      <div class="inline-figures">
+        <figure class="inline-figure"><a href="../../docs/figs/main/fig_v5_beta099_gap_step1000_vs_table_lr.png"><img src="../../docs/figs/main/fig_v5_beta099_gap_step1000_vs_table_lr.png" alt="beta2 0.99 的 step 1000 gap 与 table LR scale"></a><figcaption>主图：仅 β₂=.99；step 1000 的 gap 随 table LR scale 变化（低 scale + 高 scale）</figcaption></figure>
+        <figure class="inline-figure"><a href="../../docs/figs/main/fig_v5_optv5f_readable_overview.png"><img src="../../docs/figs/main/fig_v5_optv5f_readable_overview.png" alt="V5 table LR scale 可读终值总览"></a><figcaption>可读总览：低 scale + 高 scale</figcaption></figure>
+        <figure class="inline-figure"><a href="../../docs/figs/main/fig_v5_optv5f_readable_2000_facets.png"><img src="../../docs/figs/main/fig_v5_optv5f_readable_2000_facets.png" alt="按 table LR scale 分面的 2000 步曲线"></a><figcaption>诊断图：高 scale 的 train / fixed val / gap / Δgap，并标出 epoch boundary</figcaption></figure>
+      </div>
+      <span class="note">当前只保留三张互补图：step-1000 β₂=.99 总览、全预算终值总览、2000-step train/val/gap/Δgap 分面。图源仍为 <code>optv5c_*_fixed</code>、<code>optv5e_*_fixed</code> 与 <code>optv5f_*_fixed</code>；点为原始 online 记录，细线为 3 点视觉连接。</span>
+    </td>
+    <td class="st-done">✅ scale=8/16 的 β₂ gate 与 1000/2000 步收敛臂均完成；scale=16 的 β₂=.95/.99/.995 final gap=2.489653/2.599353/2.598872，spread=4.22%；另有 256/512/1024× β₂=.99 的 2000-step final gap=5.543/5.474/5.335。256×–1024× 未继续单调增大，暂不支持“学习率仍不足”的判断。</td>
     <td class="com"><input type="text"></td>
   </tr>
   <tr id="registry-lrdiag">
     <td>LR schedule 诊断<br><span class="note">（历史混合 setting，非 v5 证据）</span></td>
     <td>no-gram 纯 backbone；warmdown / warmup-constant / warmup-cosine / constant；不同 base LR；1000 或 2000 步</td>
-    <td class="visual">检查不同 schedule 是否造成纯 backbone 的训练、验证与 gap 形态变化；不与 v5 主线数值混画。
-      <div class="inline-figures">
-        <figure class="inline-figure"><a href="../../docs/figs/main/fig_lrdiag_nogram_train.png"><img src="../../docs/figs/main/fig_lrdiag_nogram_train.png" alt="nogram 学习率诊断训练损失"></a><figcaption>online train loss</figcaption></figure>
-        <figure class="inline-figure"><a href="../../docs/figs/main/fig_lrdiag_nogram_val.png"><img src="../../docs/figs/main/fig_lrdiag_nogram_val.png" alt="nogram 学习率诊断验证损失"></a><figcaption>fixed validation loss</figcaption></figure>
-        <figure class="inline-figure"><a href="../../docs/figs/main/fig_lrdiag_nogram_gap.png"><img src="../../docs/figs/main/fig_lrdiag_nogram_gap.png" alt="nogram 学习率诊断 gap"></a><figcaption>online gap</figcaption></figure>
-        <figure class="inline-figure"><a href="../../docs/figs/main/fig_lrdiag_nogram_lrmult.png"><img src="../../docs/figs/main/fig_lrdiag_nogram_lrmult.png" alt="nogram 学习率乘数轨迹"></a><figcaption>LR multiplier</figcaption></figure>
-        <figure class="inline-figure"><a href="../../docs/figs/main/fig_lrdiag_nogram_train_loglog.png"><img src="../../docs/figs/main/fig_lrdiag_nogram_train_loglog.png" alt="nogram 训练损失双对数"></a><figcaption>train loss log–log</figcaption></figure>
-      </div>
-      <span class="note">图源：<code>docs/plot_scripts/plot_lrdiag_nogram.py</code>；仅作为 schedule 诊断档案，不能推导 v5 主线比较或结论。</span>
-    </td>
+    <td class="visual">检查不同 schedule 是否造成纯 backbone 的训练、验证与 gap 形态变化；仅作历史 schedule 诊断，不与 v5 主线数值混画。图像转入历史快照。</td>
     <td class="st-warn">⚠️ 已登记为历史诊断，不纳入当前 setting</td>
+    <td class="com"><input type="text"></td>
+  </tr>
+
+  <tr id="registry-x1">
+    <td rowspan="2" class="center"><b>扩展<br>验证</b></td>
+    <td>X1 optimizer × 复现<br><span class="note">（128× 重刷）</span></td>
+    <td>RMSProp / AdamW / SGD(m=0)；table LR scale=128；seed 42；1000 步；其余 v5 SSOT</td>
+    <td class="visual">三种 table optimizer 的 step-1000 final gap 柱状图
+      <div class="inline-figures">
+        <figure class="inline-figure"><a href="../../docs/figs/main/fig_v5_128x_optimizer_gap.png"><img src="../../docs/figs/main/fig_v5_128x_optimizer_gap.png" alt="X1 128x optimizer gap"></a><figcaption>X1 @128×：optimizer final gap</figcaption></figure>
+      </div>
+      <span class="note">图源为 <code>optv5c_{rms,adamw,sgd_m0}_s128x_fixed</code>；RMSProp 与 AdamW 几乎相同，SGD 无动量几乎不学。</span>
+    </td>
+    <td class="st-done">✅ 完成 @128×；RMS=2.727、AdamW=2.731、SGD=0.047</td>
+    <td class="com"><input type="text"></td>
+  </tr>
+  <tr id="registry-x2">
+    <td>X2 clean 表行宽扫描<br><span class="note">（128× 重刷）</span></td>
+    <td>bigram/trigram 同步 row width <code>d∈{768,192,48,12}</code>；input；seed 42；1000 步；table LR scale=128；其余 v5 SSOT</td>
+    <td class="visual">step-1000 final gap 随 clean-table row width 的容量曲线
+      <div class="inline-figures">
+        <figure class="inline-figure"><a href="../../docs/figs/main/fig_v5_128x_rowwidth_gap.png"><img src="../../docs/figs/main/fig_v5_128x_rowwidth_gap.png" alt="X2 128x row width gap"></a><figcaption>X2 @128×：row width d</figcaption></figure>
+      </div>
+      <span class="note">图源为 <code>ctbl_dim{768,192,48,12}_input_v5_128x_fixed</code>；gap 随行宽单调上升。</span>
+    </td>
+    <td class="st-done">✅ 完成 @128×；d=768/192/48/12 的 gap=2.742/1.458/0.552/0.180</td>
     <td class="com"><input type="text"></td>
   </tr>
 
   <!-- ============ 因果干预 ============ -->
   <tr id="registry-causal">
     <td class="center"><b>因果<br>干预</b></td>
-    <td>Causal interventions（v5）</td>
-    <td>input、1000 步、val/frequency=10。已完成 precursor：reset-table e1/e2、mask-readout e1、freeze-table e1、freeze-backbone e1。新 causal-refresh 另加 no-intervention、hash-reseed e1、mask-low-f≤200 e1、mask-high-f&gt;200 e1；其余 v5 SSOT</td>
-    <td class="visual">九臂完整 online train / fixed val / gap 曲线；各色虚线精确标出记录在 <code>summary.json</code> 的干预步（e1 为 step 338，reset e2 为 step 675）。<code>reset_table</code> 重初始化表参数，不改 hash；<code>mask_readout</code> 是边界后的 no-gram 破坏性基准；<code>hash_reseed</code> 只换 context→row 映射、保留表权重与 RMSProp state；low/high mask 用 <code>f≤200</code>/<code>f&gt;200</code> 的互补集合。
+    <td>Causal interventions（v5 · 128× 重刷）</td>
+    <td>input、1000 步、table LR scale=128、val/frequency=10。核心机制臂：none、hash-reseed e1、mask-low-f&lt;200 e1、mask-high-f≥200 e1；freeze-table / freeze-backbone 为写入路径参考；另有 mask-high 阈值扫描（t=1…12800，f≥t）。</td>
+    <td class="visual">核心机制臂与参考臂的 final gap、完整 train/val/gap 轨迹，以及 mask-high 阈值扫描。
       <div class="inline-figures">
-        <figure class="inline-figure"><a href="../../docs/figs/main/fig_v5_causal_losses.png"><img src="../../docs/figs/main/fig_v5_causal_losses.png" alt="v5 九臂因果 online train validation gap 曲线"></a><figcaption>九臂：online train / fixed val / gap</figcaption></figure>
-        <figure class="inline-figure"><a href="../../docs/figs/main/fig_v5_causal_frequency_effect.png"><img src="../../docs/figs/main/fig_v5_causal_frequency_effect.png" alt="v5 因果低高频屏蔽频率分桶 gap"></a><figcaption>low/high mask：末步频率 gap</figcaption></figure>
+        <figure class="inline-figure"><a href="../../docs/figs/main/fig_v5_128x_causal_gap.png"><img src="../../docs/figs/main/fig_v5_128x_causal_gap.png" alt="v5 128x causal final gap"></a><figcaption>六臂：final gap @1000（128×）</figcaption></figure>
+        <figure class="inline-figure"><a href="../../docs/figs/main/fig_v5_128x_causal_losses.png"><img src="../../docs/figs/main/fig_v5_128x_causal_losses.png" alt="v5 128x causal train validation gap trajectories"></a><figcaption>六臂：train / val / gap trajectories</figcaption></figure>
+        <figure class="inline-figure"><a href="../../docs/figs/main/fig_v5_128x_causal_frequency_effect.png"><img src="../../docs/figs/main/fig_v5_128x_causal_frequency_effect.png" alt="v5 128x causal frequency effect"></a><figcaption>low/high frequency mask effect</figcaption></figure>
+        <figure class="inline-figure"><a href="../../docs/figs/main/fig_v5_128x_mask_high_threshold_scan.png"><img src="../../docs/figs/main/fig_v5_128x_mask_high_threshold_scan.png" alt="v5 128x mask high threshold scan"></a><figcaption>mask-high threshold scan</figcaption></figure>
       </div>
-      <span class="note">图源严格限定为九个 <code>causalv5c_*_fixed</code> run 的 100 条 step-10 <code>train_log.jsonl</code> / <code>freq_bin_loss.jsonl</code> / <code>exact_freq_loss.jsonl</code> / <code>table_norm.jsonl</code>；均到 step 1000、无 NaN/Inf。频率图只包含已有 train token loss 的桶，<code>novel</code> 不定义 gap。</span>
+      <span class="note">图源为 <code>causalv5c_{none,hash_reseed,mask_low_f200,mask_high_f200,freeze_table,freeze_backbone}_e1_128x_fixed</code>；阈值扫描图源为 <code>causalv5m_mask_high_t{1,2,5,10,25,50,100,400,800,1600,3200,6400,12800}_e1_128x_fixed</code>，<code>t=200</code> 复用 <code>causalv5c_mask_high_f200_e1_128x_fixed</code>。全部到 step 1000、无 NaN/Inf。<code>hash_reseed</code> 只换 context→row 映射、保留表权重与 RMSProp state；mask 语义现定义为 <code>low: f&lt;t（含 novel f=0）</code> 与 <code>high: f≥t</code> 的互补集合；mask 为 context 级，high 模式对 t&gt;0 不屏蔽 novel（f=0），扫描止于 t=1。<b>⚠️ 本行已完成 run 均为旧 <code>f&gt;t</code> 边界语义（f==t 一层未被屏蔽），需按新 <code>f≥t</code> 语义重刷后再作为正式证据。</b>t=0 已定义为包含 novel 的全量屏蔽，需重新运行；旧 t=0 产物不登记。全量屏蔽的 gap 预期接近同预算 no-gram 对照，不保证为数学上的 0。</span>
     </td>
-    <td class="st-done">✅ 9/9 causal-refresh 完成（seed 42、step 1000）：none=1.544；reset e1/e2=0.704/0.068；mask-readout=0.016；freeze table/backbone=1.133/0.821；hash-reseed=0.637；mask low/high=0.066/1.529</td>
+    <td class="st-warn">⚠️ 核心 hash-reseed + 写入路径完成；mask low/high 与阈值扫描为旧 f&gt;t 语义，需按新 f≥t 重刷：none=2.724；hash-reseed=1.354；mask low/high（旧 f&gt;200 语义）=0.101/2.808；阈值扫描（旧 f&gt;t 语义）t=12800→1 为 2.755→1.757</td>
     <td class="com"><input type="text"></td>
   </tr>
 
   <!-- ============ 三轴 scaling ============ -->
   <tr id="registry-s1-epoch-fs">
-    <td rowspan="7" class="center"><b>三轴<br>scaling<br>(S1)</b></td>
-    <td>S1 epoch 轴 · fixed-step（v5）</td>
-    <td rowspan="2">L1–L4 前缀（42/84/168/337 batches）；both 与 no-gram；1000 步；v5 SSOT</td>
-    <td class="visual">online gap vs epoch 长度；both 与 no-gram 对照
-      <div class="inline-figures">
-        <figure class="inline-figure"><a href="../../docs/figs/main/fig_v5_s1_epoch_prefix.png"><img src="../../docs/figs/main/fig_v5_s1_epoch_prefix.png" alt="v5 S1 epoch prefix"></a><figcaption>v5 epoch-prefix 端点</figcaption></figure>
-        <figure class="inline-figure"><a href="../../docs/appendices/s1_scaling_three_axis/figs/epoch_deltaG_fs_multiseed.png"><img src="../../docs/appendices/s1_scaling_three_axis/figs/epoch_deltaG_fs_multiseed.png" alt="epoch 多 seed"></a><figcaption>epoch 多 seed</figcaption></figure>
-        <figure class="inline-figure"><a href="../../docs/appendices/s1_scaling_three_axis/figs/rel_relationship_map.png"><img src="../../docs/appendices/s1_scaling_three_axis/figs/rel_relationship_map.png" alt="三轴关系"></a><figcaption>三轴关系</figcaption></figure>
-      </div>
-      <span class="note">左图图源：<code>s1v5_L{1..4}_{both,nogram}_fs_fixed</code> 的 step-1000 online 端点；其余旧附录图只作历史结构参照。</span>
-    </td>
-    <td class="st-done">✅ 8/8 完成；both/no-gram 均有完整 L1–L4 曲线</td>
+    <td rowspan="11" class="center"><b>三轴<br>scaling<br>(S1)</b></td>
+    <td>S1 epoch 轴 · fixed-step（历史 precursor）</td>
+    <td rowspan="2">历史 L1–L4 前缀（42/84/168/337 batches）；both 与 no-gram；1000 步</td>
+    <td class="visual">历史 online gap vs epoch 长度与 both / no-gram 对照；当前正式 no-compile 三 epoch 阵列见下方 <code>s1v5_128_ep_tri_*xL4_3ep</code>（trigram-only）。历史图片不在当前登记表展示。</td>
+    <td class="st-warn">⚠️ 历史 precursor；由当前 v5 三 epoch 阵列取代</td>
     <td class="com"><input type="text"></td>
   </tr>
   <tr id="registry-s1-epoch-fe">
     <td>S1 epoch 轴 · fixed-epoch（历史）</td>
-    <td class="visual">同上
-      <div class="inline-figures"><figure class="inline-figure"><a href="../../docs/appendices/s1_scaling_three_axis/figs/epoch_deltaG_fs_multiseed.png"><img src="../../docs/appendices/s1_scaling_three_axis/figs/epoch_deltaG_fs_multiseed.png" alt="fixed epoch 多 seed"></a><figcaption>fixed-epoch</figcaption></figure></div>
-    </td>
+    <td class="visual">历史 fixed-epoch 对照；当前登记表不再展示已被 S1 v5 三 epoch 阵列覆盖的图片。</td>
     <td class="st-warn">⚠️ 不纳入当前 v5 结论；恢复时需单独重注册</td>
     <td class="com"><input type="text"></td>
   </tr>
   <tr id="registry-s1-table">
     <td>S1 table size 轴（历史 4-layer/2-hash）</td>
     <td><code>tbl_{TM}_{arm}</code>；logical addresses <code>2R</code>；seed 42/43/44；1000 步 online gap</td>
-    <td class="visual">table-size 双对数局部斜率、collision/occupancy 对照
-      <div class="inline-figures">
-        <figure class="inline-figure"><a href="../../docs/figs/theory/fig_theory_table_slopes.png"><img src="../../docs/figs/theory/fig_theory_table_slopes.png" alt="历史 table size 局部斜率"></a><figcaption>局部斜率审计</figcaption></figure>
-        <figure class="inline-figure"><a href="../../docs/appendices/s1_scaling_three_axis/figs/table_gap_vs_2R.png"><img src="../../docs/appendices/s1_scaling_three_axis/figs/table_gap_vs_2R.png" alt="历史 table size 双对数"></a><figcaption>table–gap 双对数</figcaption></figure>
-      </div>
-    </td>
+    <td class="visual">历史 table-size 双对数局部斜率、collision / occupancy 对照；当前登记表不再展示已被 clean-table v5 轴覆盖的图片。</td>
     <td class="st-warn">⚠️ 历史 compile / 旧表架构；不能替代 clean 单表</td>
     <td class="com"><input type="text"></td>
   </tr>
   <tr id="registry-s1-table-clean">
-    <td>S1 table size 轴（v5 clean 双表）</td>
-    <td>bigram/trigram 同步 clean R；18 个近对数均匀点，16K–2.347M；1000 步末端；seed 42</td>
-    <td class="visual">线性与正 gap log–log 的 gap–R；拟合摘要为 <code>G_both(R)∝R^0.652</code>（R²=0.995）。负载 <code>K/R</code> 与实测 collision 分开画。<code>K</code>=训练前缀中该 branch 的 distinct context 数，<code>R</code>=该 branch 的 physical clean-table rows；<code>K/R</code> 是负载比，<b>不是</b> collision rate；collision=<code>(K−occupied)/K</code>。
+    <td>S1 table size 轴（v5 clean 单表，bi/tri 分开）</td>
+    <td>bigram-only 与 trigram-only 分别改变各自 clean-table R；另一张表关闭；各 31 个近对数点，R=1…2.347M（含小 R 扩展）；1000 步末端；seed 42</td>
+    <td class="visual">两条正式单表轴：bigram-R 与 trigram-R 各 31 点。净 gap（减 no-gram floor 0.02，nogram 实测 0.0234、小 R 平台均值 0.0196）的分窗口 log–log 拟合：<code>(G_bi−0.02)∝R^0.58</code>（R 2e3–2e5，n=12，R²=.997）与 <code>(G_tri−0.02)∝R^0.66</code>（R 1e5–9.3e5，n=8，R²=.9997）；raw gap（不减 floor）敏感性斜率 0.50 / 0.65。小 R（≲1e4）塌缩区保留为原始空心点但不进入拟合；大 R 端 bigram 在 R≈3e5 后、trigram 在 R≈1.2e6 后进入饱和。负载 <code>K/R</code> 仍单独展示；formal run 未记录 occupied rows，因此不推断 collision。<code>K</code>=训练频率索引中的 distinct contexts，<code>R</code>=被扫描 clean table 的 physical rows；<code>K/R</code> 是负载比，<b>不是</b> collision rate。
       <div class="inline-figures">
-        <figure class="inline-figure"><a href="../../docs/figs/main/fig_v5_s1_table_size.png"><img src="../../docs/figs/main/fig_v5_s1_table_size.png" alt="v5 clean 双表 table-size"></a><figcaption>v5 双表 gap–R</figcaption></figure>
-        <figure class="inline-figure"><a href="../../docs/figs/main/fig_v5_s1_table_size_loglog.png"><img src="../../docs/figs/main/fig_v5_s1_table_size_loglog.png" alt="v5 clean 双表 table size log log"></a><figcaption>G∝R^0.652 · R²=.995</figcaption></figure>
-        <figure class="inline-figure"><a href="../../docs/figs/main/fig_v5_s1_table_load_collision.png"><img src="../../docs/figs/main/fig_v5_s1_table_load_collision.png" alt="v5 clean 双表 K/R 与实测 collision"></a><figcaption>K/R 与实测 collision</figcaption></figure>
+        <figure class="inline-figure"><a href="../../docs/figs/main/fig_v5_s1_table_size.png"><img src="../../docs/figs/main/fig_v5_s1_table_size.png" alt="v5 clean branch-wise table-size axes"></a><figcaption>bi/tri 分支 gap–R</figcaption></figure>
+        <figure class="inline-figure"><a href="../../docs/figs/main/fig_v5_s1_table_size_loglog_clean.png"><img src="../../docs/figs/main/fig_v5_s1_table_size_loglog_clean.png" alt="v5 clean single-table table-size log log"></a><figcaption>R=1…2.347M; 净 gap fit bi .58 / tri .66</figcaption></figure>
+        <figure class="inline-figure"><a href="../../docs/figs/main/fig_v5_s1_table_load_proxy.png"><img src="../../docs/figs/main/fig_v5_s1_table_load_proxy.png" alt="v5 clean branch-wise K/R load proxy"></a><figcaption>K/R load proxy</figcaption></figure>
       </div>
-      <span class="note">gap–R 图源：18 个 <code>ctbl_v5_both_{R}_fixed/summary.json</code>；bigram/trigram 同步扩容，seed 42、step 1000。K/R 与 collision 面板读取同一批 run 的 18 个 <code>table_occupancy.json</code>：仅回填诊断、未重训；每一个 branch 都验证 <code>logical_addresses=R</code>、<code>occupied≤R</code>，且 collision 落在 [0,1]。不以历史 4-layer/2-hash 数据替代。log–log 图只排除 gap≤0 的点，因为 log(y) 无定义。</span>
+      <span class="note">图源：<code>s1v5_128_tbl_bi1_R*_fixed</code> 与 <code>s1v5_128_tbl_tri1_R*_fixed</code>，共 62 个 run（每条单表轴 31 点），seed 42、step 1000；bigram-only / trigram-only 均关闭另一张表。双对数拟合使用减 floor（0.02）后的净 gap，只取各分支线性窗口（bigram R 2e3–2e5、trigram R 1e5–9.3e5）；小 R 塌缩区原始点保留为空心点、不进入拟合，也不被删除或平滑。load 图只使用共享 <code>freq_index.npz</code> 的 K/R；collision rate 未测量，不能从 K/R 反推。</span>
     </td>
-    <td class="st-done">✅ 18/18 完成</td>
+    <td class="st-done">✅ 62/62 完成（bigram-R 31/31；trigram-R 31/31）</td>
     <td class="com"><input type="text"></td>
   </tr>
   <tr id="registry-s1-table-clean-early">
     <td>S1 table size 轴（早期 clean 单表）</td>
-    <td>bigram / trigram 分支分别扫 R；bigram 29 点 + perfect-map，trigram 6 点；seed 42、step 1000；横轴为 <code>R/N</code>（各 branch 的 N 固定）</td>
-    <td class="visual">保留两条分支单表幂律：<code>G_bi∝R^0.33</code>（主体区）与 <code>G_tri∝R^0.67</code>（6 点首扫）。它们不能和 v5 paired double-table 的 <code>G_both∝R^0.652</code> 合并。
-      <div class="inline-figures">
-        <figure class="inline-figure"><a href="../../docs/appendices/s1_scaling_three_axis/figs/fig_clean_gap_vs_KN_loglog.png"><img src="../../docs/appendices/s1_scaling_three_axis/figs/fig_clean_gap_vs_KN_loglog.png" alt="early clean single-table branch-wise table-size loglog"></a><figcaption>bi R^.33 · tri R^.67</figcaption></figure>
-      </div>
-      <span class="note">图源：早期 <code>ctbl_{R}_{bigram,trigram}</code> clean 单表网格；bigram 在 <code>K/N&gt;1.5</code> 有断点/涨落，trigram 无 perfect-map 锚点，二者均为单 seed 形状摘要。保留该图是为了与 v5 双表 `R^0.652` 并列，而非混写。</span>
-    </td>
+    <td>bigram / trigram 分支分别扫 R；bigram 29 点 + perfect-map，trigram 6 点；seed 42、step 1000；历史横轴使用各自的 context-count 归一化</td>
+    <td class="visual">早期 clean 单表首扫的局部形状；不能与当前两条正式 v5 单变量轴合并。历史图片转入快照。</td>
     <td class="st-warn">⚠️ 早期 clean 单表、单 seed；只保留局部形状</td>
     <td class="com"><input type="text"></td>
   </tr>
   <tr id="registry-s1-frequency">
-    <td>S1 frequency 轴（v5）</td>
+    <td>S1 frequency 轴（历史 precursor）</td>
     <td>L4 <code>epoch_batches=337</code>；bigram/trigram/both/nogram；1000 步；exact-frequency</td>
-    <td class="visual">bigram/trigram 各自用 7 个宽几何 exact-<code>f</code> bin 展示 context-matched gap；原始 eligible exact-f 点保留为淡灰审计层，高频尾部不由少数点主导。另画每个 exact-f 区间覆盖的 token mass <code>Σ token_count = Σf</code>。主横轴 <code>f</code> 是单个 context 在训练集的命中数；Σf 图是该频率段的总曝光量，<b>不是</b> context 种类数。
-      <div class="inline-figures">
-        <figure class="inline-figure"><a href="../../docs/figs/main/fig_v5_s1_frequency_exact_f.png"><img src="../../docs/figs/main/fig_v5_s1_frequency_exact_f.png" alt="v5 S1 exact frequency gap"></a><figcaption>Gbi∝f^-0.357 · Gtri∝f^-0.259</figcaption></figure>
-        <figure class="inline-figure"><a href="../../docs/figs/main/fig_v5_s1_frequency_token_mass.png"><img src="../../docs/figs/main/fig_v5_s1_frequency_token_mass.png" alt="v5 S1 frequency token mass"></a><figcaption>每段总曝光量 Σf</figcaption></figure>
-      </div>
-      <span class="note">exact-f gap 图源：<code>s1v5_freq_{bigram,trigram}_fixed/exact_freq_loss.jsonl</code> 最后 logged step；eligible exact-f 条目要求 ≥32 shared contexts，按 shared-context token mass 聚合为 7 个宽几何 bin。log-log 摘要为 bigram <code>G∝f^-0.357</code>（R²=0.997）、trigram <code>G∝f^-0.259</code>（R²=0.990）；均为 seed 42 的 fixed-probe shared-context 配对<b>诊断</b>，不是主 scalar gap，也不是跨 seed 的普适指数。每条曲线只使用与该 branch 相同的 module arm。Σf 图源：本地证据副本 <code>data/freq_index.npz</code>（SHA-256 <code>763a5548…2007673d</code>），与 S1 run 记录的训练集索引路径一致；它统计全部训练 contexts 的 exact-f exposure，而非仅有 shared val context 的子集。主 scalar gap 始终读取同 step 的 fixed val − current-batch online train。f=0 novel 只有 val loss，按主口径不定义 gap。</span>
-    </td>
-    <td class="st-done">✅ 4/4 完成；bigram/trigram/both/nogram gap=0.586/1.099/1.529/0.031</td>
+    <td class="visual">历史 frequency precursor，保留作溯源，不承担当前 v5 exact-f 结论。</td>
+    <td class="st-warn">⚠️ 历史数据；不替代当前正式 frequency run</td>
     <td class="com"><input type="text"></td>
   </tr>
   <tr id="registry-s1-backbone">
@@ -358,6 +311,63 @@
       <div class="inline-figures"><figure class="inline-figure"><a href="../../docs/appendices/s1_scaling_three_axis/figs/backbone_safety_L1_nogram_long.png"><img src="../../docs/appendices/s1_scaling_three_axis/figs/backbone_safety_L1_nogram_long.png" alt="backbone safety"></a><figcaption>backbone safety</figcaption></figure></div>
     </td>
     <td class="st-done">✅ 8000/8000 完成；final gap=1.102</td>
+    <td class="com"><input type="text"></td>
+  </tr>
+  <tr id="registry-s1-v5-128-table">
+    <td>S1 v5 formal scaling · table-size bigram-only（128×）</td>
+    <td>只开启 bigram，改变其 physical rows；trigram 关闭；
+      <code>R=1…2.347M</code>；31 点（含 R≤10000 小 R 扩展）；1000 steps；
+      保留 337/674/1000</td>
+    <td class="visual">bigram-only endpoint gap–R；K/R load proxy；不混用已被替代的双表轴。统一双对数图见上方 clean-table 图集。</td>
+    <td class="st-done">✅ 31/31 完成；step-1000 gap 范围 −0.006–1.191；净 gap（减 floor 0.02）线性窗口 R 2e3–2e5 log-log slope=0.58（R²=.997，n=12；raw-gap 敏感性 0.50）；R≤约1e4 塌缩到 no-gram floor、R≈3e5 后饱和；337/674/1000 检查点齐全，table LR=128×、β₂=.99</td>
+    <td class="com"><input type="text"></td>
+  </tr>
+  <tr id="registry-s1-v5-128-table-tri">
+    <td>S1 v5 formal scaling · table-size trigram-only（128×）</td>
+    <td>只开启 trigram，改变其 physical rows；bigram 关闭；
+      <code>R=1…2.347M</code>；31 点（含 R≤10000 小 R 扩展）；1000 steps；
+      保留 337/674/1000</td>
+    <td class="visual">trigram-only endpoint gap–R；K/R load proxy；不混用已被替代的双表轴。统一双对数图见上一行的 clean-table 图集。</td>
+    <td class="st-done">✅ 31/31 完成；step-1000 gap 范围 −0.032–3.617；净 gap（减 floor 0.02）线性窗口 R 1e5–9.3e5 log-log slope=0.66（R²=.9997，n=8；raw-gap 敏感性 0.65）；R≤约1e4 塌缩到 no-gram floor、R≈1.2e6 后饱和；337/674/1000 检查点齐全，table LR=128×、β₂=.99</td>
+    <td class="com"><input type="text"></td>
+  </tr>
+  <tr id="registry-s1-v5-128-frequency">
+    <td>S1 v5 formal scaling · frequency-bin 主实验（128×）</td>
+    <td>input；bigram+trigram；<code>epoch_batches=337</code>；
+      1000 steps；table LR=128×；β₂=.99；保留 337/674/1000；<code>data/freq_index.npz</code></td>
+    <td class="visual">主实验的 frequency-bin fraction + raw gap、exact-frequency sufficient statistics；novel 只有 val loss，不定义 gap；train 侧取当前 batch online loss。
+      <div class="inline-figures">
+        <figure class="inline-figure"><a href="../../docs/figs/main/fig_v5_s1_frequency_exact_f.png"><img src="../../docs/figs/main/fig_v5_s1_frequency_exact_f.png" alt="v5 S1 formal exact frequency gap"></a><figcaption>exact-f gap：−.253 / −.318</figcaption></figure>
+        <figure class="inline-figure"><a href="../../docs/figs/main/fig_v5_s1_frequency_token_mass.png"><img src="../../docs/figs/main/fig_v5_s1_frequency_token_mass.png" alt="v5 S1 formal frequency token mass"></a><figcaption>每段总曝光量 Σf</figcaption></figure>
+      </div>
+      <span class="note">图源严格为 <code>s1v5_128_frequency_main_fixed/exact_freq_loss.jsonl</code> 与共享 <code>data/freq_index.npz</code>；最后 logged step=1000。exact-f 图保留 eligible raw points，并按 shared-context token mass 聚合为 7 个宽几何 bin；描述拟合 bigram <code>G∝f^-0.252746</code>（R²=.997165）、trigram <code>G∝f^-0.318121</code>（R²=.995548）。这是 fixed-probe context-matched 诊断，不是主 scalar gap 或跨 seed 普适指数。</span>
+    </td>
+    <td class="st-done">✅ 完成；final gap=2.736；337/674/1000 三个检查点齐全</td>
+    <td class="com"><input type="text"></td>
+  </tr>
+  <tr id="registry-s1-v5-128-epoch">
+    <td>S1 v5 formal scaling · epoch-length（3 epoch）</td>
+    <td>12 个 L4 倍数：<code>0.125…2.0×L4</code>；
+      <code>epoch_batches=42…674</code>；trigram-only；每个 run 3 个完整 epoch；
+      step = 126…2022；table LR=128×；β₂=.99</td>
+    <td class="visual">按 epoch 1/2/3 对齐的 online train / fixed val / gap 轨迹，竖线标注边界；横轴用“epoch 数”，不使用 L1–L4 jargon。
+      <div class="inline-figures">
+        <figure class="inline-figure"><a href="../../docs/figs/main/fig_v5_s1_epoch_length_scaling.png"><img src="../../docs/figs/main/fig_v5_s1_epoch_length_scaling.png" alt="v5 S1 epoch length scaling"></a><figcaption>3 epoch 终值阵列</figcaption></figure>
+        <figure class="inline-figure"><a href="../../docs/figs/main/fig_v5_s1_epoch_length_trajectories.png"><img src="../../docs/figs/main/fig_v5_s1_epoch_length_trajectories.png" alt="v5 S1 epoch length trajectories"></a><figcaption>按 epoch / step 轨迹</figcaption></figure>
+        <figure class="inline-figure"><a href="../../docs/figs/main/fig_v5_s1_long_replay.png"><img src="../../docs/figs/main/fig_v5_s1_long_replay.png" alt="v5 S1 long replay"></a><figcaption>L4 10 epoch 长训</figcaption></figure>
+        <figure class="inline-figure"><a href="../../docs/figs/main/fig_v5_s1_epoch_number.png"><img src="../../docs/figs/main/fig_v5_s1_epoch_number.png" alt="v5 S1 gap versus epoch number"></a><figcaption>epoch 编号 gap 与逐 epoch 增量</figcaption></figure>
+      </div>
+      <span class="note">图源为 12 个 <code>s1v5_128_ep_tri_*xL4_3ep_fixed</code> 与 L4 trigram-only/no-gram 长训；点为原始 online 记录，细线为 3 点视觉连接，竖线为 epoch boundary。</span>
+    </td>
+    <td class="st-done">✅ 12/12 完成；U 形最低 gap=2.469 @1×L4；0.125×=3.552、2×=5.582</td>
+    <td class="com"><input type="text"></td>
+  </tr>
+  <tr id="registry-s1-v5-128-long">
+    <td>S1 v5 L4 long replay（10 epoch）</td>
+    <td>trigram-only + no-gram；L4=<code>337</code> batches/epoch；10 epochs；
+      3370 steps；table LR=128×；β₂=.99</td>
+    <td class="visual">gap 随 epoch 编号的 trajectory；左侧为 trigram-only、both、no-gram 的原始 boundary gap，右侧为逐 epoch gap 增量；每个 epoch 边界显式标注。</td>
+    <td class="st-done">✅ 完成；L4 trigram-only gap=8.675、no-gram=0.480 @3370；epoch 2–10 线性参考约 0.96/epoch，但增量从早期峰值逐渐降至约 0.7–0.8，支持凹增长/渐缓而非已证实的平台</td>
     <td class="com"><input type="text"></td>
   </tr>
 
@@ -435,21 +445,40 @@
 
 <h2>③ 补充说明</h2>
 
-<p class="note">v5 主线图会写入 <code>docs/figs/main/</code>；完成的 v5 run 同步回本地后，才以 current-batch 口径重绘。现有 v2 图仅是历史参照，不能作为当前结论。</p>
+<p class="note">当前登记表只展示已验收的 v5 图作为现行证据：主线、causal、optimizer、dose refresh 与 S1 正式三轴图均来自带 <code>_fixed</code> 的证据目录；图中点是原始 online 记录，若有细线仅表示 3 点视觉连接。历史 v2/v3/旧 S1 图片已从当前页面移除，完整清理前页面见<a href="versions/experiment-registry-20260827-before-v5-prune.html">历史快照</a>。</p>
 
- <p class="note">其余图片已经放入上方对应实验行的“统计处理 / 画的图”单元格；原始文件仍保留在各自的图目录中。尚未有对应合法结果的图片不在此处虚构或重复展示。</p>
+<p class="note">图片只在对应实验行展示一次；没有被当前 v5 证据覆盖的独立 toy / 受控数据实验仍保留。旧图源资产随历史快照保存，不作为当前结论来源。</p>
+
+<details>
+<summary>Scaling 数值包与后续理论拟合入口</summary>
+<p>正式 S1 统计已由 <code>docs/plot_scripts/analyze_v5_scaling.py</code> 从
+<code>data/runs_scaling/*_fixed/</code> 重新解析。它输出描述性拟合，不把单 seed
+结果当作力学定律：</p>
+<ul>
+  <li>table-size：净 gap（减 floor 0.02）分窗口拟合 bigram <code>(G−0.02)∝R^0.5761</code>（R 2e3–2e5，n=12，R²=.9969）、trigram <code>(G−0.02)∝R^0.6648</code>（R 1e5–9.3e5，n=8，R²=.9997）；raw gap（不减 floor）敏感性斜率 0.5010 / 0.6526。每条单表轴 31 个 run；R≤约1e4 进入 no-gram floor（nogram 实测 0.0234，小 R 平台均值 0.0196），塌缩区不进入拟合；bigram R≈3e5 后、trigram R≈1.2e6 后饱和。旧的 R≥16000 raw-gap 拟合（0.429/0.657）混入两端机制，已废弃。</li>
+  <li>epoch-length：在 ln(L4 multiplier) 上的二次描述拟合顶点为 <code>0.411502×L4</code>，预测 gap=2.648528（R²=.774155）；另有 L4 10-epoch boundary 图，显示 gap 增长逐渐变缓但尚未达到明确平台。</li>
+  <li>dose：5× 以内正 gap 的 log-log slope 为 −1.726983（R²=.887225）；5× 到 6× 之间发生符号翻转，不报告全区间幂律。</li>
+  <li>exact-frequency：bigram slope −.252746（R²=.997165），trigram slope −.318121（R²=.995548）；按 shared-context token mass 的 7 个几何 bin 聚合。</li>
+</ul>
+<p>可复核文件：
+<a href="../../docs/appendices/s1_scaling_three_axis/s1_scaling_analysis.md">统计摘要</a> ·
+<a href="../../docs/appendices/s1_scaling_three_axis/s1_scaling_fits.csv">拟合系数 CSV</a> ·
+<a href="../../docs/appendices/s1_scaling_three_axis/s1_table_size_points.csv">table-size 原始点</a> ·
+<a href="../../docs/appendices/s1_scaling_three_axis/s1_epoch_length_points.csv">epoch 原始点</a> ·
+<a href="../../docs/appendices/s1_scaling_three_axis/s1_dose_frequency_gap.csv">dose × frequency 原始点</a>。</p>
+</details>
 
 <h2>④ 核心代码与「来源唯一可追溯」</h2>
 <table>
   <tr><th style="width:180px">模块</th><th>文件</th><th>职责</th></tr>
-  <tr><td>训练主程序</td><td><code>code/train.py</code>（1715 行）</td><td>vanilla nanoGPT + n-gram 表；3 注入点；MixedOptimizer（表 RMSProp/AdamW/SGD + backbone AdamW）；fixed 数据模式；freq-bin / exact-freq / probe 统计；干预接线</td></tr>
+  <tr><td>训练主程序</td><td><code>code/train.py</code>（2003 行）</td><td>vanilla nanoGPT + n-gram 表；3 注入点；MixedOptimizer（表 RMSProp/AdamW/SGD + backbone AdamW）；fixed 数据模式；current-batch freq-bin、fixed-probe exact-freq 与 scalar gap；干预接线</td></tr>
   <tr><td>频率索引</td><td><code>code/ngram_freq.py</code>（501 行）</td><td><code>GlobalFrequencyIndex.build_from_chunks</code>，与模型 hash 逐位置一致</td></tr>
-  <tr><td>表 occupancy</td><td><code>code/table_occupancy.py</code>（251 行）</td><td>行占用 / 碰撞 / 负载统计</td></tr>
+  <tr><td>表 occupancy</td><td><code>code/table_occupancy.py</code>（248 行）</td><td>行占用 / 碰撞 / 负载统计；正式 S1 v5 run 未写 occupied rows 时不强行推断 collision</td></tr>
   <tr><td>replay/epoch 纯函数</td><td><code>code/gap_experiment.py</code>（312 行）</td><td>主线与 ngram5 共用</td></tr>
   <tr><td>数据准备</td><td><code>code/prepare_data.py</code> / <code>make_ngram_blocks.py</code></td><td>token shards；受控 block 构造</td></tr>
   <tr><td>集群启动器</td><td><code>code/cluster/*.sh</code></td><td><code>run_v5_clean.sh</code> 是单 run 契约；<code>run_v5_main_manifest.sh</code> 调度主线家族；<code>run_v5_table_grid.sh</code> 调度 18 点双表 R 网格。旧 launcher 仅供历史溯源。</td></tr>
   <tr><td>受控数据干预</td><td><code>ngram5_freq_gap/</code></td><td>第四维度：动数据不动模型</td></tr>
-  <tr><td>作图脚本</td><td><code>docs/plot_scripts/</code></td><td>canonical：<code>gen_all_figures.py</code>、<code>gen_sweep_v2_figs.py</code>、<code>gen_shard_sweep_figs.py</code> 等；图进 <code>docs/figs/</code></td></tr>
+  <tr><td>作图脚本</td><td><code>docs/plot_scripts/</code></td><td>当前 canonical：<code>plot_v5_registry_figures.py</code>（登记表主图）与 <code>analyze_v5_scaling.py</code>（CSV/拟合）；图进 <code>docs/figs/</code></td></tr>
   <tr><td>toy 线</td><td><code>tasks/l1..l5/</code></td><td>独立自包含，纯 numpy/torch</td></tr>
 </table>
 
@@ -457,19 +486,19 @@
 <ul>
   <li><b>注入</b>：<code>input</code> 为主——<code>x = wte(idx) + wpe(pos) + Σ ngram_ve</code>，n-gram 向量直接加在 token 嵌入上（over-encoding，不走 attention）；<code>y</code> 注入在 attention 输出后加回 residual；<code>v</code> 注入在 attention 的 V 上（路径最间接）。</li>
   <li><b>表架构</b>：新 SSOT 是 <b>clean 单表</b> <code>nn.Embedding(R, 768)</code>，一个 context → 一行 → 一个完整向量，单层、单 hash（<code>--bigram_clean_table R</code>，R 任意；与 perfect-map 组合 = 零碰撞锚点）。旧 4 层求和 + 2-hash 拼接（<code>vocab×mult</code> 表）已降级为历史框架。</li>
-  <li><b>优化器</b>：表与 backbone 分开——表 RMSProp 无动量 <code>(0.0, 0.99)</code>，表 LR ×2（实际 <code>0.0012</code>）；backbone AdamW。β₁=0 即无动量（<code>table_betas</code> bug 已修：<code>b2 = self.table_betas[1]</code>）。</li>
+  <li><b>优化器</b>：表与 backbone 分开——表 RMSProp 无动量 <code>(0.0, 0.99)</code>，当前标准表 LR 128×（实际 <code>0.0768</code>）；backbone AdamW。β₁=0 即无动量（<code>table_betas</code> bug 已修：<code>b2 = self.table_betas[1]</code>）。历史 2× 结果只作为对照。</li>
   <li><b>训练</b>：<code>fixed</code> 模式 = 固定顺序 epoch replay（每轮从头重放同一 shard，L4=337 batches/epoch）；grad_accum 使 total batch = 147,456 tokens；bf16 autocast；默认不 compile。</li>
 </ul>
 
 <h3>来源是否唯一确定、可追溯 → 是</h3>
 <ol>
-  <li><b>单一权威数据源</b>：主线为 <code>data/runs_fixed/*_fixed/</code>，scaling 为 <code>data/runs_scaling/*_fixed/</code>；<code>data/runs/</code> 与无后缀副本已作废。v5 的 freq-bin train 侧=当前训练 batch 的逐 token loss。</li>
+  <li><b>单一权威数据源</b>：主线为 <code>data/runs_fixed/*_fixed/</code>，scaling 为 <code>data/runs_scaling/*_fixed/</code>；<code>data/runs/</code> 与无后缀副本已作废。v5 的 freq-bin train 侧=当前训练 batch 的逐 token loss；exact-frequency 是 fixed-probe context-matched 诊断。</li>
   <li><b>口径变更必须新 run_id</b>（P2）：v2→v3 的 freq-bin train 侧改动即因此新起 <code>_v3</code> 后缀；<code>_fixed</code> 标记「修复后」，<code>_v3</code> 标记「current-batch 口径」，命名即口径。</li>
-  <li><b>代码即契约</b>：launcher 显式传全部关键参数，不依赖默认值；跨机跑前 <code>md5sum</code> 核对 <code>code/train.py</code>、<code>code/ngram_freq.py</code>、<code>code/cluster/*.sh</code>。</li>
+  <li><b>代码即契约</b>：launcher 显式传全部关键参数，不依赖默认值；本轮正式 source revision 为 <code>7583ae3222ffb4bbfb13262295a6a828e1f08d3f</code>，并在跨机跑前核对 <code>train.py=c4729b30e6f3e842b3321dc701b55bbb</code>、<code>ngram_freq.py=e4f45f5be1317c33e6b3c39bc6cb4bc5</code>、<code>run_v5_clean.sh=8c86d03f79cd42d0cd559259bc77224e</code>。</li>
   <li><b>文档权威性分级</b>：<code>agents.md</code> §1（SSOT）→ <code>experiment-lines.md</code>（全景）→ <code>experiment-log.md</code>（登记簿+勘误）→ <code>claims-ledger.md</code>（断言台账）。结论必须带 run_id / step / seed。</li>
   <li><b>历史框架显式隔离</b>：clean-table 重做后旧 4 层架构标记 <code>[HISTORICAL 4-LAYER FRAMEWORK]</code>；current shell / Muon / RoPE 系结论一律 <code>[DEPRECATED SETTING]</code>。</li>
 </ol>
-<p class="note"><b>唯一留白</b>：<code>experiment-log.md</code> 中 v10 时代（pre-v2）数值尚未回填为 <code>_fixed</code>（T1/T2/T3 待办）；v3 波次运行中，回传后需用 current-batch 口径重绘 freq-bin 图。</p>
+<p class="note"><b>当前留白</b>：本轮 v5-refresh 与 S1 formal 图均已由本地 `_fixed` 证据生成；§32 的 32×·β₂=.999 retry 也已完成并核对配置。历史 v10/pre-v2 数值只在历史 section 中保留，不升级为当前结论。</p>
 
 </div>
 <script>

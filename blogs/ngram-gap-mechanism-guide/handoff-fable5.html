@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reviewer handoff · Claude Fable 5 · n-gram Gap</title>
+<style>
+:root{
+  --bg:#f5f3ee;--ink:#242629;--muted:#626970;--line:#c9c3b9;
+  --panel:#fffdf8;--panel2:#efede6;--blue:#174d73;--red:#a73b36;
+  --teal:#14736f;--orange:#a96117;--purple:#67439b;
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink)}
+main{width:min(1120px,calc(100vw - 32px));margin:0 auto;padding:30px 0 70px}
+h1{margin:0 0 9px;font-size:clamp(27px,4vw,44px);line-height:1.08;letter-spacing:-.025em}
+h2{margin:35px 0 13px;padding-bottom:8px;border-bottom:1px solid var(--line);font-size:23px;color:var(--blue)}
+h3{margin:23px 0 8px;font-size:17px;color:var(--blue)}
+p,li,td,th{font-size:14px;line-height:1.68}
+p{margin:0 0 11px}
+a{color:var(--blue)}
+code{padding:1px 5px;background:var(--panel2);border-radius:4px;font-size:.9em}
+.meta{display:flex;flex-wrap:wrap;gap:8px 17px;color:var(--muted);font-size:12px;margin-bottom:17px}
+.subtitle{max-width:930px;color:var(--muted);font-size:16px;line-height:1.65}
+.banner,.box,details{background:var(--panel);border:1px solid var(--line);border-radius:10px}
+.banner{margin:20px 0 25px;padding:14px 17px;border-left:4px solid var(--red);line-height:1.68}
+.box{padding:14px 17px;margin:12px 0}
+.box.method{border-left:4px solid var(--teal)}
+.box.review{border-left:4px solid var(--purple)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+table{width:100%;border-collapse:collapse;margin:12px 0}
+th{padding:8px 9px;text-align:left;color:var(--blue);border-bottom:2px solid var(--line);white-space:nowrap}
+td{padding:7px 9px;vertical-align:top;border-bottom:1px solid rgba(36,38,41,.12)}
+td.num,th.num{text-align:right;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+tr:hover td{background:rgba(23,77,115,.04)}
+.status{font-weight:700;white-space:nowrap}.done{color:var(--teal)}.pending{color:var(--orange)}.old{color:var(--muted)}
+.formula{margin:12px 0;padding:12px 14px;background:#eef4f3;border:1px solid #c8d9d5;border-radius:8px;font:14px/1.7 ui-monospace,SFMono-Regular,Menlo,monospace;overflow:auto}
+details{margin:14px 0;padding:0 15px}
+summary{cursor:pointer;padding:12px 0;color:var(--blue);font-weight:650}
+details>div{padding:0 0 12px}
+.small{font-size:12px;color:var(--muted)}
+.tag{display:inline-block;margin:2px 4px 2px 0;padding:2px 7px;border-radius:999px;background:var(--panel2);font-size:12px}
+.footer{margin-top:38px;padding-top:15px;border-top:1px solid var(--line);color:var(--muted);font-size:12px;line-height:1.65}
+@media(max-width:760px){main{width:calc(100vw - 20px)}.grid{grid-template-columns:1fr}table{display:block;overflow-x:auto;white-space:normal}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <div class="meta">
+    <span>REVIEWER HANDOFF</span>
+    <span>Claude Fable 5</span>
+    <span>2026-08-30 19:46 CST</span>
+    <a href="main-experiments-v5.html">当前主实验报告 ↗</a>
+    <a href="experiment-registry.html">实验登记表 ↗</a>
+    <a href="https://github.com/guoshaoyang-pku/ngram-gap-lab">GitHub repository ↗</a>
+  </div>
+  <h1>n-gram Gap：项目现状、证据边界与理论问题</h1>
+  <p class="subtitle">这份文档是给强模型 reviewer 的统一上下文。目标不是让 reviewer 再跑实验，而是让它在不混用历史数据、不把描述性拟合升级为定律的前提下，审计当前证据并提出一个能解释频率、表大小、epoch 暴露和干预结果的数学模型。</p>
+</header>
+
+<div class="banner">
+  <b>本 handoff 的执行边界：</b>暂不继续启动实验。请先 review 现有代码、setting、权威 run 产物和报告；如果需要新实验，只提出最小的可辨识性实验，不要自行启动。2026-08-30 的 <code>mask_high</code> 新阈值批仍有部分远端 run 在排队/运行，相关结论必须标为 pending。
+</div>
+
+<h2>0. 先给 reviewer 的任务</h2>
+<div class="box review">
+  <ol>
+    <li>审计“加 n-gram 后出现明显 train/validation gap”在当前 vanilla nanoGPT 协议内是否成立，以及 claim 的准确范围。</li>
+    <li>审计频率轴、clean table-size 轴、epoch-length / epoch-number 轴和 dose 轴是否真的测量了各自声称的变量，尤其检查 train loss 是否为当前 batch 的 online loss。</li>
+    <li>解释为什么频率关系和 table-size 关系在有限区间近似幂律，但低端落到 no-gram floor、高端出现饱和或弯曲。</li>
+    <li>统一解释 epoch 边界的增长、每 epoch 增量逐渐变小、shard dose 稀释，以及 hash reseed / mask-by-frequency / freeze-table / freeze-backbone 的方向。</li>
+    <li>区分已被数据支持的现象、仅有描述性拟合的现象、历史/代理证据和目前无法辨识的参数；给出一个比现有 heuristic 更好的数学模型，或明确证明为什么目前不能得到唯一模型。</li>
+  </ol>
+</div>
+
+<h2>1. 文档与数据的权威层级</h2>
+<table>
+  <tr><th>路径</th><th>作用</th><th>reviewer 用法</th></tr>
+  <tr><td><code>agents.md</code></td><td>不变规则与当前 setting SSOT；当前标准是 128× table LR、warmup_constant(100)、bf16 no-compile。</td><td>最高优先级。若其他旧文档冲突，以这里为准。</td></tr>
+  <tr><td><code>docs/report/main-experiments-v5.html</code></td><td>当前主实验报告：2×/128×、频率、三轴 scaling、LR/β₂ 附录、causal intervention。</td><td>正文现象和当前图的入口；图源应回到 run_id。</td></tr>
+  <tr><td><code>docs/report/experiment-registry.html</code></td><td>实验登记表：每一类实验的 setting、状态、run pattern、图片和 comments。</td><td>核对“做了什么”和“哪些已完成”；不把 planned/running 当结果。</td></tr>
+  <tr><td><code>docs/experiment-lines.md</code></td><td>实验线索引：M2/M3b/M5/S1/X1/X2/toy 的归属、launcher、图和状态。</td><td>先定位实验家族，再进入 run 目录。</td></tr>
+  <tr><td><code>docs/experiment-log.md</code></td><td>逐批、逐 run 的登记簿；最新的 128× 和 2026-08-30 refresh 在靠后 section。</td><td>核对 run_id、train/val shard、index、代码 revision、状态和最终值。</td></tr>
+  <tr><td><code>docs/claims-ledger.md</code></td><td>C1–C9 断言及理论命题的 ceiling。</td><td>这是重要的反过度解读护栏，但文件顶部更新时间较早，不能替代 v5 最新登记。</td></tr>
+  <tr><td><code>docs/report/theory.html</code> + <code>docs/notes/theory/</code></td><td>残差—response、count-table、Markov、toy power-law 和 optimizer response 的现有推导。</td><td>现有理论的起点与失败边界，不是已经解决的统一模型。</td></tr>
+  <tr><td><code>docs/plot_scripts/README.md</code></td><td>唯一 canonical 作图规范：数据源、gap 定义、frequency 处理、log 轴和图嵌入约束。</td><td>任何图的数值都必须从 JSONL/CSV 读取，不从正文手抄。</td></tr>
+</table>
+<div class="box">
+  <b>不要把以下内容当作当前 v5 主结论：</b>
+  <code>docs/report/index.html</code> 仍是 blog 的旧发布版/背景指南；<code>docs/report/versions/</code> 是历史快照；<code>data/runs/</code> 是被 freq-bin iterator bug 污染的旧命名空间；旧 4-layer/2-hash、current-shell、Muon、RoPE、RMSNorm 和 compile 波次不能与当前 clean evidence 混合。
+</div>
+
+<h2>2. 当前标准 setting：唯一应作为主线坐标的协议</h2>
+<table>
+  <tr><th>坐标</th><th>当前 SSOT</th><th>备注</th></tr>
+  <tr><td>backbone</td><td>vanilla nanoGPT；8 layers / 6 heads / 768 dim；vocab 8192；sequence length 2048；learned absolute position；LayerNorm；tied embedding；全 attention。</td><td>不是 current shell、RoPE 或 RMSNorm。</td></tr>
+  <tr><td>n-gram path</td><td><code>input</code> / wte：<code>x = wte(idx) + Σ ngram_ve</code>；bigram + trigram 开启，unigram/fourgram 关闭。</td><td><code>y</code> / <code>v</code> 只用于注入点消融。</td></tr>
+  <tr><td>table architecture</td><td>每个启用 branch 是一个 clean single-table <code>nn.Embedding(R, 768)</code>，单 hash、单层；非 table-size 实验每张表 <code>R=2^20=1,048,576</code>。</td><td>禁止把旧的“1M table”或 <code>table_mult=64</code> 当作 clean-table 定义。</td></tr>
+  <tr><td>table optimizer</td><td>RMSProp，无动量；<code>table_betas=(0.0,0.99)</code>；<code>table_lr_scale=128.0</code>。</td><td>backbone LR 是 0.0006，因此实际 table LR 是 <b>0.0768</b>。</td></tr>
+  <tr><td>backbone optimizer</td><td>AdamW，betas <code>(0.8,0.95)</code>，weight decay 0.1，LR <code>0.0006</code>。</td><td>不要把旧文档中的 0.004 当作当前 v5 backbone LR。</td></tr>
+  <tr><td>LR schedule</td><td><code>--lr_schedule warmup_constant --warmup_steps 100</code>；step 1–100 从 0.25×（0.00015）线性升到 1×（0.0006），之后保持恒定。</td><td>禁止 warmdown；zero-warmup constant 只属于诊断。</td></tr>
+  <tr><td>data</td><td>fixed-order replay；data seed 42；标准 train shard 1；validation shards 与 train 完全不重叠；device batch 72；total batch 147,456 tokens。</td><td>dose/epoch 轴会明确改变 shard 或 replay coordinate。</td></tr>
+  <tr><td>runtime</td><td>seed 42 为默认；主实验 2000 steps；causal/optimizer 1000 steps；bf16 autocast；不使用 <code>torch.compile</code>。</td><td>compile 波次只作历史审计；不进入当前主线结论。</td></tr>
+  <tr><td>measurement</td><td>validation 与 frequency 每 10 steps；table RMS 同步记录。</td><td>曲线图的散点是 raw records；细线最多是 3 点视觉连接，不是平滑观测。</td></tr>
+</table>
+<div class="formula">online gap(step) = fixed validation loss(step) − online current-training-batch loss(step)</div>
+<p>时间顺序是：当前训练 batch 在参数更新前计算并写入 online train loss；完成 update 后，在 fixed validation batches 上计算 val loss；两者共享 logged step，但不是同一批样本。<code>novel</code>（train hit-count = 0）没有 train-side loss，因此不能定义标准 gap。</p>
+
+<h2>3. 核心代码、数据和可追溯性</h2>
+<table>
+  <tr><th>内容</th><th>位置</th><th>说明</th></tr>
+  <tr><td>训练入口</td><td><code>code/train.py</code></td><td>模型、clean table、注入点、优化器、schedule、online/fixed-val measurement、intervention 和 summary 写出。</td></tr>
+  <tr><td>频率索引与聚合</td><td><code>code/ngram_freq.py</code></td><td>exact context hit-count、frequency bin、token count/fraction/mean loss/contribution。</td></tr>
+  <tr><td>launcher</td><td><code>code/cluster/</code></td><td>当前包括 <code>run_v5_clean.sh</code>、<code>run_v5_main_manifest.sh</code>、<code>run_v5_s1_three_axis_queue.sh</code> 等；历史 launcher 不自动代表当前 setting。</td></tr>
+  <tr><td>canonical main artifacts</td><td><code>data/runs_fixed/&lt;run_id&gt;_fixed/</code></td><td>主线的唯一权威结果空间；至少核对 <code>summary.json</code>、<code>config.json</code>、<code>train_log.jsonl</code>，有频率/表诊断时再核对对应 JSONL。</td></tr>
+  <tr><td>S1 artifacts</td><td><code>data/runs_scaling/&lt;run_id&gt;_fixed/</code></td><td>table-size、frequency、epoch-length 三轴的专用结果空间；CSV 保留 source、run_id、step、seed。</td></tr>
+  <tr><td>plot source</td><td><code>docs/plot_scripts/</code></td><td>主图脚本从 run 目录/登记 CSV 读取；生成图在 <code>docs/figs/</code>。</td></tr>
+</table>
+<p>当前本地代码 HEAD 为 <code>8f7d198</code>（multi-epoch intervention、inclusive mask 语义）。但每个 run 的 <code>summary.json</code> 与 CSV 中的 <code>source_code_revision</code> 优先于仓库 HEAD：S1 某些已完成 run 的 source revision 是 <code>7583ae3</code>，不能只看现在的 HEAD 就把所有 run 说成同一份代码。</p>
+
+<h2>4. 主要实验与当前可写的现象</h2>
+
+<h3>4.1 注入点：n-gram memory 足以产生明显 gap，但路径改变幅度</h3>
+<p>当前 128× 主线是四臂 input/y/v/nogram、2000 steps、seed 42。step-2000 结果为：</p>
+<table>
+  <tr><th>arm</th><th>run family</th><th class="num">final train</th><th class="num">final val</th><th class="num">gap</th></tr>
+  <tr><td>input / wte</td><td><code>nglab1x_input_v5_128x_freq10</code></td><td class="num">1.259</td><td class="num">6.930</td><td class="num">5.672</td></tr>
+  <tr><td>y</td><td><code>nglab1x_y_v5_128x_freq10</code></td><td class="num">1.203</td><td class="num">6.451</td><td class="num">5.248</td></tr>
+  <tr><td>v</td><td><code>nglab1x_v_v5_128x_freq10</code></td><td class="num">0.385</td><td class="num">8.033</td><td class="num">7.648</td></tr>
+  <tr><td>no-gram</td><td><code>nglab1x_nogram_v5_128x_freq10</code></td><td class="num">3.121</td><td class="num">3.348</td><td class="num">0.227</td></tr>
+</table>
+<p>这里最稳妥的 claim 是：在这套 paired vanilla protocol 中，n-gram value memory 显著降低 online train loss，同时对 fixed validation 造成更大损失，形成明显 gap；注入路径影响 gap 的大小。不能把 2× 时期的 input/y/v 排序直接推广到 128×，也不能推广到所有模型、tokenizer 或训练预算。</p>
+<p class="small">主图：<code>docs/figs/main/fig_v5_2x_128x_injection_curves.png</code>、<code>fig_v5_128x_injection_bars.png</code>；主报告：<code>docs/report/main-experiments-v5.html</code> §1。</p>
+
+<h3>4.2 频率：真实 context hit-count 越低，gap 通常越大</h3>
+<p>频率轴的横轴是 hash 前同一真实 context 在训练 shard 中的 exact hit-count <code>f</code>，不是 context 种类数，也不是 hash row 的 load。主频率图使用当前 v5 frequency artifacts；S1 另有 7 个宽几何 bin 的 exact-f 形状诊断。</p>
+<table>
+  <tr><th>证据</th><th>数值</th><th>边界</th></tr>
+  <tr><td>M2 current-batch frequency</td><td><code>fig_v5_128x_injection_frequency_bigram.png</code> / <code>...trigram.png</code>；step 2000、每 10 步。</td><td>观察不同 frequency bucket 的 train/val loss 与 gap；<code>novel</code> 不定义 gap。</td></tr>
+  <tr><td>S1 exact-f summary</td><td>bigram slope <b>−0.252746</b>（R²=.997165）；trigram slope <b>−0.318121</b>（R²=.995548）；7 bins。</td><td>seed 42 的局部、token-mass-weighted、正 gap bin 描述性拟合，不是自然语言普适指数。</td></tr>
+</table>
+<p>频率图中的 token fraction / token mass 与 per-bin gap 是两个不同对象：fraction 说明该段覆盖多少 token，gap 说明该段 train/validation loss 差。不要把 <code>Σf</code> 当成 context 种类数，也不要从宽 bin 插值出不存在的 exact-f loss。</p>
+
+<h3>4.3 table size：单表 clean 轴在中间窗口近似幂律，两端不是</h3>
+<p>S1 table-size 已修正为单表、单变量：bigram-only 时 trigram table 关闭；trigram-only 时 bigram table 关闭。总计 62 个 no-compile v5 runs，每条轴 31 点，R 从约 1 到 2.347M。</p>
+<table>
+  <tr><th>branch</th><th>拟合窗口</th><th class="num">n</th><th class="num">净 gap slope</th><th class="num">R²</th><th class="num">raw-gap sensitivity</th></tr>
+  <tr><td>bigram-only</td><td><code>R=2e3–2e5</code></td><td class="num">12</td><td class="num">0.5761 ≈ 0.58</td><td class="num">.9969</td><td class="num">.5010</td></tr>
+  <tr><td>trigram-only</td><td><code>R=1e5–9.3e5</code></td><td class="num">8</td><td class="num">0.6648 ≈ 0.66</td><td class="num">.9997</td><td class="num">.6526</td></tr>
+</table>
+<p>拟合的是 <code>(G−0.02)∝R^α</code>，其中 floor 0.02 介于 no-gram step-1000 gap 0.0234 与小 R 平台均值 0.0196 之间。小 R（约 ≤1e4）已经塌到 floor，不能硬拟合；大 R 端 bigram 在约 3e5 后局部斜率衰减，trigram 在约 1.2e6 后饱和。这里的 0.58 / 0.66 很接近 1/2 / 2/3，但它们是有限区间的描述性指数，不是全区间或跨 setting 定律。训练前 distinct context 数为 bigram <code>K=3,541,098</code>、trigram <code>K=19,027,841</code>；<code>K/R</code> 是 load ratio，不是实测 collision rate。</p>
+<p class="small">图：<code>docs/figs/main/fig_v5_s1_table_size_loglog_clean.png</code>。原始点全部保留；正式拟合只取上述中间窗口。</p>
+
+<h3>4.4 epoch length 与 epoch number：两个不同问题</h3>
+<p><b>Epoch length 轴：</b>12 个 trigram-only run，每个完成 3 个 epoch，<code>epoch_batches/L4=42…674 / 337</code>。step-3epoch final gap 呈 U 形：0.125×=3.552、1×L4=2.469（最低）、2×=5.582。对 <code>ln(L/L4)</code> 的二次描述拟合顶点为 0.411502×L4，预测 gap 2.648528，R²=.774155；这只是对 U 形的压缩摘要。</p>
+<p><b>Epoch number 轴：</b>同一 L4（337 batches/epoch）的 10-epoch long replay。trigram-only 在 epoch boundary 的 gap 是：</p>
+<div class="formula">−0.048, 1.018, 2.473, 3.697, 4.614, 5.609, 6.439, 7.144, 7.847, 8.675  (epoch 1…10)</div>
+<p>epoch 2–10 的线性参考约为 0.96 gap/epoch，但每 epoch 增量从早期峰值（约 1.45）下降到后期约 0.7–0.8。对应 no-gram control 在 step 3370 为 gap 0.480。当前应写成“近似线性但逐渐变缓的凹增长”；不能写成已经证明的饱和平台。图源为 <code>s1v5_128_ep_tri_1xL4_10ep</code> 和 <code>s1v5_128_ep1xL4_10ep_nogram</code>，seed 42。</p>
+
+<h3>4.5 shard dose：更大训练语料在 fixed-step 下稀释 replay exposure</h3>
+<p>input 主线、2000 steps、seed 42 的 dose refresh 从 0.25× 到 8×。gap 从 0.25× 的约 11.536 单调降到 5× 的 0.084，6×/8× 分别约 −0.088/−0.075；正 gap（≤5×）的 log-log 描述斜率为 −1.726983（R²=.887225），但 5× 到 6× 穿过零点，因此不能报告全区间幂律。更大 dose 代表在固定 optimizer steps 内每个训练样本被 replay 的次数减少；这条轴与 epoch-length、frequency 共同反映 exposure，而不是一个孤立的“数据质量”变量。</p>
+
+<h2>5. 干预实验：目前最接近机制识别的证据</h2>
+<p>干预都在 input、clean 双表、128×、1000 steps、epoch boundary 上进行。干预发生后，mask 会让相应 residual 为零且不向表行回传梯度；hash reseed 只替换 context→row 映射，保留表权重、RMSProp state 和 backbone 参数。</p>
+<table>
+  <tr><th>干预</th><th>精确定义</th><th>当前结果</th><th>证据状态</th></tr>
+  <tr><td><code>hash_reseed e1</code></td><td>epoch 2 开始只换 context→row hash identity。</td><td>single-boundary final gap 1.354；新的 e1+e2 refresh 到约 0.069。</td><td><span class="status done">done，但双边界结果待本地同步</span></td></tr>
+  <tr><td><code>mask_low f≤t</code></td><td>只屏蔽低 hit-count context；新 refresh 使用 inclusive boundary，t=0 包含 novel。</td><td>t=0: 2.945；t=1: 1.578；t=2: 1.320；t=4: 1.046；t=8: 0.765；旧 f≤200 端点约 0.101。</td><td><span class="status done">新低频扫描已完成；旧 f200 端点不作为同语义主证据</span></td></tr>
+  <tr><td><code>mask_high f≥t</code></td><td>只屏蔽高频 seen context；新定义包含边界。</td><td>t=1: 1.927；t=2: 1.752；t=200: 2.824；t=5…12800 的其余点仍在远端队列。</td><td><span class="status pending">partial / running</span></td></tr>
+  <tr><td><code>freeze_table e1</code></td><td>epoch 2 后停止 table 更新，但保留 readout。</td><td>final gap 3.452。</td><td><span class="status done">done；写入路径参考</span></td></tr>
+  <tr><td><code>freeze_backbone e1</code></td><td>epoch 2 后停止 backbone 更新，但继续训练 table。</td><td>final gap 1.230。</td><td><span class="status done">done；写入路径参考</span></td></tr>
+</table>
+<p>最重要的方向性读法是：低频 context 的屏蔽会大幅削弱 gap；只保留/屏蔽高频集合不能产生同样的下降；重映射会破坏已学内容与 context 的对齐。可是 <code>mask_high</code> 全量扫描仍未完成，且早期 six-arm f200 结果采用过旧边界语义，不能把旧表格中的 0.101/2.808 直接当作新 inclusive contract 的最终比较。</p>
+<p class="small">破坏性参考 <code>reset_table</code> 与 <code>mask_readout</code> 已从当前主线删除，不承担机制结论。</p>
+
+<h2>6. LR / β₂ 附录：为什么标准固定为 128×、β₂=.99</h2>
+<table>
+  <tr><th>消融</th><th>当前摘要</th><th>主线决定</th></tr>
+  <tr><td>table LR scale，β₂=.99</td><td>step-1000 gap 随 scale 0.5→4 从约 0.465→2.072；高 scale 8…128 进入约 2.4–2.7 的工作区。</td><td>128× 是高 gap、仍可训练的工作点；不宣称 scale 越大越好。</td></tr>
+  <tr><td>β₂</td><td>β₂=.95/.98/.99/.995/.999 在 scale=2 的 1000-step gap 为约 1.239/1.460/1.550/1.594/1.669；高 scale 1000/2000-step 对比没有稳定、明显的 .999 延后。</td><td>采用 RMSProp <code>(0.0,0.99)</code>；.999 没被证明更优。</td></tr>
+  <tr><td>table optimizer</td><td>RMSProp 和 AdamW（都自适应）在 128×附近相近；SGD 无动量 gap 很小，几乎没有可辨识频率幂律。</td><td>当前标准用无动量 RMSProp，不把 dense state 必要性写成普遍结论。</td></tr>
+</table>
+<p>附录的功能是锁定一个可复现、反应足够快、没有明显失控的工作点，不是用单 seed 的最大 gap 选择“最好模型”。旧文档中 backbone LR=0.004、warmdown 和 table LR=2×的表格属于历史/不同阶段，不能覆盖 <code>agents.md</code> 的当前 SSOT。</p>
+
+<h2>7. 现有数学模型：已经知道什么，以及为什么还不够</h2>
+<h3>7.1 已经成立的最小恒等式</h3>
+<p>固定一个 context，令真实条件分布为 <code>p</code>，训练经验分布为 <code>p̂</code>，模型学到的 logits 为 <code>z_D</code>，采样残差为 <code>δ=p̂−p</code>。同一个已学模型在 population/validation 与 training empirical distribution 上的交叉熵差，可以写成 residual 与 learned response 的内积：</p>
+<div class="formula">CE(p, q_D) − CE(p̂, q_D) = δᵀ log q_D<br>z_D = z₀ + Aδ + ½B[δ,δ] + …</div>
+<p>这说明 signed mean gap 不是简单等于“采样方差”；它取决于模型如何响应训练残差。在线单数据集 gap 还会叠加 finite validation noise、context mixture、hash aliasing 和 backbone shared representation。</p>
+
+<h3>7.2 已有解析结果的适用范围</h3>
+<ul>
+  <li>resolved finite-support count table、平滑且有效输出满足 <code>fP(y)≫1</code> 时，<code>E[G(f)] = (K−1)/f + O(f⁻²)</code>；这是 count-table 渐近，不是 Transformer 的验收定律。</li>
+  <li>若 learned response 近似有幅度标度 <code>u(λδ)∝λ^a u(δ)</code>，则典型 gap 标度为 <code>f^{−(a+1)/2}</code>。归一化型 optimizer 的启发式是 <code>a≈0</code>，因此得到约 <code>f^−1/2</code>，但当前自然语料的观测 −0.253/−0.318 仍受 support、collision、exposure 和 aggregation 影响。</li>
+  <li>现有两因素 heuristic <code>G(E,f)=A f^(−β)[1−exp(−c f^γ)]</code> 能表达低频/高频 crossover，但 S1 只支持有限窗口内 β 的相对稳定；<code>A,c,γ</code> 在当前覆盖下不可辨识。</li>
+  <li>table-size 的 clean 结果要求另一个模块显式关闭。中间区 <code>G−G_floor∝R^α</code> 的 α≈0.58/0.66 可能混合了可用 row 数、collision/aliasing、表写入响应和 backbone interaction；不能直接从 count-table 的 <code>K/f</code> 式子推出。</li>
+</ul>
+
+<h3>7.3 reviewer 必须解决的统一模型问题</h3>
+<div class="box review">
+  <p>请尝试构造或严格否定一个最小模型，使以下现象能够在同一套变量中出现，而不是为每张图单独拟合一个幂律：</p>
+  <ol>
+    <li><code>f</code> 轴：bigram/trigram 的局部负斜率不同，低频贡献更强，novel 与 seen 不能混作同一 gap。</li>
+    <li><code>R</code> 轴：低 R 落到 no-gram floor，中间窗口近似 <code>R^0.58</code>/<code>R^0.66</code>，高 R 逐渐饱和；bigram 和 trigram 的 context support 不同。</li>
+    <li><code>E</code> 轴：fixed-step 下 epoch length 出现 U 形；固定 L4 replay 时 gap 随 epoch number 凹增长、每 epoch 增量下降。</li>
+    <li><code>D</code> 轴：固定 step 下更大 shard dose 稀释 replay exposure，gap 穿过 near-zero floor。</li>
+    <li>干预：保留表内容但 reseed 映射会破坏 gap；mask 低频会显著消除 gap；freeze table/backbone 改变 train/val 轨迹但不等价。</li>
+    <li>优化器：per-coordinate normalization、table LR scale 与 β₂ 改变写入速度和 transient，而不是只改变一个静态 noise variance。</li>
+  </ol>
+  <p>理想输出应明确给出：状态变量、可辨识参数、每个渐近区的假设、floor 与 saturation 的来源、为什么指数不是唯一固定分数，以及哪些现有数据足以证伪该模型。</p>
+</div>
+
+<h2>8. 必须保留的证据边界</h2>
+<table>
+  <tr><th>事项</th><th>可以写</th><th>不能写</th></tr>
+  <tr><td>gap 形成</td><td>在当前 paired vanilla protocol 内，n-gram value memory 足以形成明显 train/validation gap。</td><td>所有 Transformer、所有 tokenizer 或所有训练协议必然如此。</td></tr>
+  <tr><td>frequency</td><td>低 hit-count 的真实 context 往往贡献更大的 gap；局部频率曲线可用负幂律描述。</td><td>自然语言全频段都有一个普适 −1、−1/2 或 −1/3 指数。</td></tr>
+  <tr><td>table size</td><td>clean 单表的中间窗口接近 0.58/0.66，低端 floor、高端弯曲/饱和。</td><td>全 R 区间的单一幂律；把 K/R 称为 collision rate；把双表 both 轴并入同一公式。</td></tr>
+  <tr><td>epoch</td><td>当前长训显示 gap 增长逐渐变缓；epoch-length 3-epoch 网格呈 U 形。</td><td>已经证明一个平台值或独立的普适 G(E) 定律。</td></tr>
+  <tr><td>causal</td><td>hash 对齐、低频 read/write contribution 和更新路径受到干预影响。</td><td>把尚未完成的 mask_high 全阈值扫描写成完成；把旧 f>t 结果冒充新 f≥t 结果。</td></tr>
+  <tr><td>theory</td><td>residual–response covariance、count-table resolved asymptotic、toy exact enumeration 是可用基础。</td><td>声称当前理论已经推出自然语料的所有观测指数和 saturation。</td></tr>
+</table>
+
+<h2>9. 当前实验状态与待收束事项</h2>
+<table>
+  <tr><th>实验组</th><th>状态</th><th>当前处理</th></tr>
+  <tr><td>M2 injection 128×</td><td class="done">DONE</td><td>4 arms、2000 steps、频率与完整曲线齐全。</td></tr>
+  <tr><td>optimizer / LR / β₂</td><td class="done">DONE</td><td>optv5c 11-arm、high-scale 8…1024、warmup diagnostics 已有；标准锁定 128×/.99。</td></tr>
+  <tr><td>S1 table-size</td><td class="done">DONE</td><td>62/62 single-table clean runs；当前报告使用 floor-subtracted middle-window fit。</td></tr>
+  <tr><td>S1 epoch-length / long replay</td><td class="done">DONE</td><td>12 个 3-epoch 点 + L4 10-epoch trigram/no-gram；新增 epoch-number 图。</td></tr>
+  <tr><td>S1 frequency main</td><td class="done">DONE</td><td>主频率图和 exact-f 诊断图已生成；需要 reviewer 明确不同 frequency artifact 的 measurement provenance。</td></tr>
+  <tr><td>dose refresh</td><td class="done">DONE</td><td>0.25×–8×，2000 steps，matching index。</td></tr>
+  <tr><td>causal refresh II</td><td class="pending">PARTIAL</td><td>双边界 reseed、mask_low t=0/1/2/4/8 已完成；mask_high f≥t 仅 t=1/2/200 完成，其余远端排队/运行。</td></tr>
+  <tr><td>direct Engram / Over-Encoding matched experiment</td><td class="old">UNRUN</td><td>当前只有机制对照和本地 proxy；是否做是独立决策。</td></tr>
+</table>
+
+<h2>10. Reviewer 交付格式</h2>
+<div class="box method">
+  <ol>
+    <li><b>Verdict：</b>按 claim 给出 supported / local-only / descriptive-only / unsupported / unrun。</li>
+    <li><b>Data audit：</b>指出任何 run、图、caption、summary 或测量口径不一致；每个批次引用 run_id、step、seed、source revision。</li>
+    <li><b>Model proposal：</b>优先给出一个最小生成模型，说明 state、exposure、frequency、capacity、optimizer response、floor/saturation 的关系，并把可辨识与不可辨识参数分开。</li>
+    <li><b>Failure analysis：</b>解释现有 count-table、Markov、residual-response 和两因素 heuristic 为什么各自只能解释一部分现象。</li>
+    <li><b>Next actions：</b>只提出最有信息增益的少量实验或分析；本轮不要自行运行 GPU 队列。</li>
+  </ol>
+</div>
+
+<div class="footer">
+  本文档是 reviewer handoff，不替代 <code>agents.md</code>、experiment registry 或原始 run artifacts。所有数字都应回到对应的 <code>_fixed</code> 目录与 JSONL 复核；对尚未同步回本地的远端 refresh，本文只记录状态，不把它当作已沉淀的最终图或最终 claim。
+</div>
+</main>
+</body>
+</html>
