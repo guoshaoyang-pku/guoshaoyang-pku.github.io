@@ -64,6 +64,7 @@ details>div{padding:0 0 14px}.footer{margin-top:40px;padding-top:15px;border-top
   <a href="#scaling">3. 三轴 scaling</a>
   <a href="#optimizer">4. LR / β₂ 附录</a>
   <a href="#causal">5. 干预</a>
+  <a href="#model">6. 工作假说</a>
   <a href="#trace">来源与追溯</a>
 </nav>
 <main>
@@ -110,7 +111,7 @@ details>div{padding:0 0 14px}.footer{margin-top:40px;padding-top:15px;border-top
   <div class="figure-card">
     <div class="figure-title"><strong>图 1 · 完整训练轨迹</strong><span>所有点来自新 v5 clean runs；竖向点线是 epoch boundary</span></div>
     <img src="../../docs/figs/main/fig_v5_2x_128x_injection_curves.png" alt="2x and 128x injection point trajectories">
-    <p class="caption">2×：<code>nglab1x_{input,y,v,nogram}_v5_fixed</code>；128×：<code>nglab1x_{input,y,v,nogram}_v5_128x_freq10_fixed</code>。点为原始 online 记录，细线为 3 点视觉连接；没有使用旧 4-batch train probe 代替当前 batch。</p>
+    <p class="caption">2×：<code>nglab1x_{input,y,v,nogram}_v5_fixed</code>；128×：<code>nglab1x_{input,y,v,nogram}_v5_128x_freq10_fixed</code>。点为原始 online 记录，细线为 3 点视觉连接。</p>
   </div>
   <div class="figure-card">
     <div class="figure-title"><strong>图 2 · 2000 步 final gap</strong><span>同一 v5 contract 下 2× historical vs 128× current</span></div>
@@ -148,7 +149,7 @@ details>div{padding:0 0 14px}.footer{margin-top:40px;padding-top:15px;border-top
 
 <section id="scaling">
   <h2>3. 三轴 scaling：表大小、epoch 长度、剂量</h2>
-  <p>下面三条轴都使用 128×、clean-table 或对应 v5 标准；拟合是描述性统计，不引入旧 4-layer/2-hash 结果，也不把单 seed 的拟合写成普适定律。</p>
+  <p>三条轴均为 128× v5 标准；拟合是单 seed 描述性统计。</p>
   <h3>3.1 Table-size：单表、单变量、bigram/trigram 分开</h3>
   <div class="figure-card"><div class="figure-title"><strong>图 6 · gap–R 双对数图（净 gap、分窗口拟合）</strong><span>31 个 bigram-R 点 + 31 个 trigram-R 点，R=1…2.347M；拟合减去 no-gram floor 0.02（nogram 实测 0.0234，小 R 平台均值 0.0196），只取各分支的线性窗口；R≤1e4 的塌缩区保留为空心点但不进入拟合</span></div><img src="../../docs/figs/main/fig_v5_s1_table_size_loglog_clean.png" alt="clean table size log log scaling"></div>
   <div class="table-wrap"><table>
@@ -156,19 +157,21 @@ details>div{padding:0 0 14px}.footer{margin-top:40px;padding-top:15px;border-top
     <tr><td>bigram-only</td><td class="num">R 2e3–2e5</td><td class="num">12</td><td class="num">0.58</td><td class="num">0.997</td><td class="num">0.50</td><td>bigram physical rows R；trigram table 关闭</td></tr>
     <tr><td>trigram-only</td><td class="num">R 1e5–9.3e5</td><td class="num">8</td><td class="num">0.66</td><td class="num">0.9997</td><td class="num">0.65</td><td>trigram physical rows R；bigram table 关闭</td></tr>
   </table></div>
-  <p>两条轴在小 R（≲1e4）都进入 no-gram floor（噪声主导，塌缩区），在大 R 进入饱和：bigram 局部斜率在 R≈3e5 后衰减，trigram 在 R≈1.2e6 后饱和。上面的 α 只取中间线性窗口；换用 raw gap（不减 floor）时斜率降为 0.50 / 0.65，作为 floor 取值的敏感性参考。斜率接近 0.58≈1/2 与 0.66≈2/3，与用户预期一致，但此处仍为描述性拟合，不是机制定律。</p>
+  <p>两条轴在小 R（≲1e4）都进入 no-gram floor（噪声主导，塌缩区），在大 R 进入饱和：bigram 局部斜率在 R≈3e5 后衰减，trigram 在 R≈1.2e6 后饱和。上面的 α 只取中间线性窗口；换用 raw gap（不减 floor）时斜率为 0.50 / 0.65。两端弯头与中段斜率能被 §6 的碰撞稀释模型统一复现。</p>
   <p class="small"><code>K</code> 是训练前缀中的 distinct contexts，<code>R</code> 是被扫描分支的 physical rows；<code>K/R</code> 只是 load ratio，不是 collision rate。当前正式 run 没有 occupied-row 观测，因此不从 K/R 推断 collision。</p>
 
   <h3>3.2 Epoch-length：相对完整 L4 的倍数</h3>
   <div class="figure-card"><div class="figure-title"><strong>图 7 · 3-epoch epoch-length 阵列</strong><span>trigram-only；横轴是 L4 倍数，L4=337 device batches</span></div><img src="../../docs/figs/main/fig_v5_s1_epoch_length_scaling.png" alt="epoch length scaling relative to L4"></div>
-  <p>12 个点的 final gap 对 <code>ln(L/L4)</code> 做二次描述拟合，顶点约为 <b>0.412×L4</b>，预测 gap 2.649，R²=.774。它概括了观察到的 U 形，但不是机制定律；每个点是 seed 42 的三 epoch 对齐 run。</p>
+  <p>复查后，这条轴必须拆成两段读。<b>≤1×L4 是真正的 epoch-length 变量</b>（shard-1 嵌套前缀、3 个 pass 对齐）：gap 随 L 温和下降，从 0.125×L4 的 3.55 降到 1×L4 的 2.47。<b>&gt;1×L4 的点不是更长的数据集</b>：12 个 run 共用同一份 shard-1 频率索引（同一 <code>freq_index_sha256</code>），1.25–2×L4 的“一个 epoch”是 shard 1 的 wrap-around 重放，因此这些点实际落在 pass 数轴上——2×L4 的 3-epoch 终点（step 2022，gap 5.582）与 10-epoch 长 replay 的同步同 pass 点（5.609）几乎重合。旧的“U 形 + 顶点 0.41×L4”二次拟合把两个变量混进一条轴，已作废。</p>
   <div class="figure-card"><div class="figure-title"><strong>图 7b · gap–epoch 编号与每 epoch 增量</strong><span>L4 长 replay；原始 epoch-boundary 记录，不平滑</span></div><img src="../../docs/figs/main/fig_v5_s1_epoch_number.png" alt="gap versus epoch number and per-epoch increment"></div>
   <p>同一 L4（337 device batches/epoch）的 10-epoch trigram-only 长训中，epoch-boundary gap 为 −0.048、1.018、2.473、3.697、4.614、5.609、6.439、7.144、7.847、8.675（epoch 1–10；<code>s1v5_128_ep_tri_1xL4_10ep</code>，seed 42，step 3370）。从 epoch 2 到 10 的线性参考斜率约为 0.96 gap/epoch，但每 epoch 增量从 1.45 的早期峰值逐步降到约 0.7–0.8；因此当前证据支持“近似线性、斜率逐渐变小”的凹增长，而不是已经观测到明确平台。no-gram 对照在同一窗口只从约 0 增至 0.48。图中点是原始 boundary records，没有 21-step 平滑或插值。</p>
+  <div class="figure-card"><div class="figure-title"><strong>图 7c · pass 数折叠</strong><span>长 replay、&gt;1×L4 wrap 点、dose 轴放到同一“完成 pass 数”横轴</span></div><img src="../../docs/figs/main/fig_v5_pass_collapse.png" alt="pass count collapse across replay, wrap-around and dose runs"></div>
+  <p>把三族 run 的横轴统一改为“训练集完成 pass 数”后：trigram-only 长 replay（红）与 &gt;1×L4 wrap 点（橙）基本落在同一条曲线上；input 双表 128× dose 轴（蓝）也大致贴合——dose 6× 在 2000 步恰好不足 1 个 pass（2000/(337×6)=0.99），gap 正好在此穿零；0.75× 的 7.9-pass 点（7.21）与 replay 的 8-pass 点（7.14）几乎重合。0.25× 的 23.7-pass 点（10.90）低于 pass 2–10 段的线性外推，说明高 pass 端的凹弯继续发展。dose 轴的 log–log 描述斜率因此主要是 pass 数关系的重参数化，不是独立的机制幂律。</p>
 
   <h3>3.3 Shard dose：同一 input 主线的剂量轴</h3>
   <div class="figure-card"><div class="figure-title"><strong>图 8 · dose–gap 关系</strong><span>128× · step 2000 · 11 个非 1× dose，1× 由 M2 主线提供</span></div><img src="../../docs/figs/main/fig_v5_128x_dose_gap.png" alt="128x dose and final gap"></div>
-  <p>final gap 从 0.25× 的 <b>10.895</b> 降至 8× 的 <b>−0.055</b>；正 gap 点（≤5×）的 log–log 描述斜率为 <b>−1.727</b>，R²=.887。5× 与 6× 之间发生符号变化，因此不报告跨越零点的全局 power law。</p>
-  <div class="note method"><b>三轴的统一读法：</b>增大 clean table 的物理容量、改变一个 epoch 暴露长度、或提高 shard dose，都会改变表记忆和 replay exposure 的组合；这些轴有清楚的描述性关系，但不能只凭单 seed 拟合区分所有潜在机制。</div>
+  <p>128× 批（<code>nglab*_input_v5_128x_freq10</code>）final gap 从 0.25× 的 <b>10.895</b> 降至 8× 的 <b>−0.055</b>；正 gap 点（≤5×，n=10）的 log–log 描述斜率为 <b>−1.176</b>，R²=.899。5× 与 6× 之间发生符号变化，因此不报告跨越零点的全局 power law。<b>勘误：</b>此前引用的斜率 −1.727 来自另一批 <code>nglab*_input_v5_freq10</code>（config 实测 <code>table_lr_scale=2.0</code>，2× 时代），不是 128× 标准；该批保留为历史对照（0.25× gap 11.536）。</p>
+  <div class="note method"><b>三轴的统一读法：</b>dose 轴大体是 pass 数轴的重参数化（图 7c）；epoch-length 轴 ≤1×L4 段与 table-size 轴则共享“碰撞稀释”结构（K∝L 或 R 变化都改变每行的干涉流量），见 §6。</div>
 </section>
 
 <section id="optimizer">
@@ -192,17 +195,37 @@ details>div{padding:0 0 14px}.footer{margin-top:40px;padding-top:15px;border-top
   <div class="figure-card"><div class="figure-title"><strong>图 11 · causal train / val / gap 轨迹</strong><span>核心干预 + 写入路径参考；raw online records + 3 点连接；虚线为 epoch boundary</span></div><img src="../../docs/figs/main/fig_v5_128x_causal_losses.png" alt="causal intervention losses and gaps"></div>
   <div class="figure-card"><div class="figure-title"><strong>图 12 · low/high frequency mask 的分 bin 效应</strong><span>low：f&lt;200（含 novel）；high：f≥200；final step 1000</span></div><img src="../../docs/figs/main/fig_v5_128x_causal_frequency_effect.png" alt="causal low and high frequency mask effects"></div>
   <div class="figure-card"><div class="figure-title"><strong>图 13 · mask_high 阈值扫描</strong><span>epoch-2 边界；横轴为 exact train hit-count 阈值 t，纵轴为 step-1000 raw gap</span></div><img src="../../docs/figs/main/fig_v5_128x_mask_high_threshold_scan.png" alt="mask high frequency threshold scan"></div>
-  <p class="caption">图 13 的 14 个点来自 <code>causalv5m_mask_high_t{1,2,5,10,25,50,100,400,800,1600,3200,6400,12800}_e1_128x_fixed</code>，其中 <code>t=200</code> 复用 <code>causalv5c_mask_high_f200_e1_128x_fixed</code>。点是 step-1000 原始 gap，细线仅为 3 点视觉连接；阈值越低，屏蔽的 seen context 越多。mask 是 context 级的：<b>novel（f=0）context 在 high 模式下永不屏蔽</b>，因此已完成扫描止于 <code>t=1</code>。<b>⚠️ 本图曲线由旧 <code>f&gt;t</code> 边界语义的 run 绘制；mask_high 现定义为 <code>f≥t</code>（含边界），需重刷后重新生成此图。</b><code>t=0</code> 现在定义为屏蔽所有 context（包含 novel），新的全量屏蔽 run 尚待重跑，旧 t=0 产物不再有效且不纳入图表。全量屏蔽只会消除 n-gram 造成的 gap；由于 gap 是不同 train/validation batch 的 loss 差，仍应接近同预算 no-gram 对照，而不是数学上保证为 0。<code>t&gt;100</code> 时 gap 基本维持在约 2.75–2.80，进入 <code>t≤100</code> 后才开始下降，说明主要贡献集中在更低频的 seen context，而不是所有 high-frequency context 等价贡献。</p>
+  <p class="caption">图 13 的 14 个点全部来自新语义（<code>f≥t</code>，含边界）的重刷批 <code>causalv5m2_mask_high_t{1,2,5,10,25,50,100,200,400,800,1600,3200,6400,12800}_e1_fixed</code>（1000 步、seed 42、epoch-2 边界），每个 run 的 summary 事件记录 <code>high_context_counts</code> 已逐一与 <code>freq_index.npz</code> 的 f≥t 实测吻合。点是 step-1000 原始 gap，细线仅为 3 点视觉连接；阈值越低，屏蔽的 seen context 越多。mask 是 context 级的：<b>novel（f=0）context 在 high 模式下永不屏蔽</b>，因此扫描下界是 <code>t=1</code>（仅剩 novel 读出）。曲线形态：t≥100 进入 ~2.72–2.82 的平台（峰值在 t=200 处 2.824）；t≤25 开始明显下降（t=10 → 2.291、t=5 → 2.023、t=2 → 1.752），t=1 回升到 1.927——此时全部 seen context 均被屏蔽，train/val 同时失去 table 信号。主要结论：gap 的贡献集中在更低频的 seen context，而不是所有 high-frequency context 等价贡献。</p>
   <div class="table-wrap"><table>
     <tr><th>类别</th><th>干预</th><th>语义</th><th class="num">final train</th><th class="num">final val</th><th class="num">final gap</th></tr>
     <tr><td>control</td><td>none</td><td>无边界干预</td><td class="num">2.574</td><td class="num">5.298</td><td class="num">2.724</td></tr>
     <tr><td><b>核心机制</b></td><td>hash_reseed e1</td><td>只换 context→row 映射；保留表权重与 RMSProp state</td><td class="num">3.274</td><td class="num">4.628</td><td class="num">1.354</td></tr>
+    <tr><td><b>核心机制</b></td><td>hash_reseed e1+e2</td><td>epoch-2 与 epoch-3 边界各 reseed 一次</td><td class="num">4.304</td><td class="num">4.373</td><td class="num"><b>0.069</b></td></tr>
     <tr><td><b>核心机制</b></td><td>mask_low e1</td><td>边界后屏蔽 f&lt;200（含 novel f=0）的 residual 与梯度</td><td class="num">3.686</td><td class="num">3.787</td><td class="num"><b>0.101</b></td></tr>
-    <tr><td><b>核心机制</b></td><td>mask_high e1</td><td>边界后屏蔽 f≥200 的 residual 与梯度</td><td class="num">3.217</td><td class="num">6.026</td><td class="num">2.808</td></tr>
+    <tr><td><b>核心机制</b></td><td>mask_high e1</td><td>边界后屏蔽 f≥200 的 residual 与梯度（<code>causalv5m2_mask_high_t200_e1</code>，f≥t 新语义）</td><td class="num">3.232</td><td class="num">6.056</td><td class="num">2.824</td></tr>
     <tr><td>写入路径参考</td><td>freeze_table e1</td><td>边界后停止表写入，仍保留表 readout</td><td class="num">2.111</td><td class="num">5.563</td><td class="num">3.452</td></tr>
     <tr><td>写入路径参考</td><td>freeze_backbone e1</td><td>边界后停止 backbone 更新，仍训练表</td><td class="num">3.574</td><td class="num">4.804</td><td class="num">1.230</td></tr>
   </table></div>
-  <div class="note result"><b>机制读法：</b>最干净的比较是同一边界后的互补 mask：屏蔽低频集合（f&lt;200，含 novel）后 gap 约为 0.10，而屏蔽高频集合（f≥200）仍保留约 2.81；阈值扫描进一步显示，只有把阈值降到约 100 及以下、开始屏蔽更低频的 seen context 时 gap 才明显下降。<code>hash_reseed</code> 只破坏 context→row 对齐、保留表内容和 optimizer state，gap 降至 1.354，说明映射对齐确实重要，但它不是“清空内容”的同义操作。</div>
+  <div class="note result"><b>机制读法：</b>最干净的比较是同一边界后的互补 mask：屏蔽低频集合（f&lt;200，含 novel）后 gap 约为 0.10，而屏蔽高频集合（f≥200，新 f≥t 语义）仍保留约 2.82；阈值扫描进一步显示，只有把阈值降到约 100 及以下、开始屏蔽更低频的 seen context 时 gap 才明显下降。<code>hash_reseed</code> 只破坏 context→row 映射、保留表内容和 optimizer state，单边界后 gap 降至 1.354，说明映射对齐确实重要；但 epoch-3 又会学出新映射，把 gap 拉回来——在 epoch-2 与 epoch-3 两个边界都 reseed 时 gap 塌缩到 0.069，证实持续的对齐破坏才能压制重写。</div>
+</section>
+
+<section id="model">
+  <h2>6. 工作假说：碰撞稀释的逐 context 记忆 × backbone 读出放大</h2>
+  <div class="note method"><b>状态：假设（待挑战）。</b>本节把三轴与干预统一到一个可计算的模型上；已闭合的部分给出数值检验，未闭合的部分列入挑战清单。所有输入均来自已登记 run 与 <code>data/freq_index.npz</code>（shard-1 exact counts），脚本为 <code>docs/plot_scripts/plot_v5_theory_alpha_collapse.py</code> 与 <code>plot_v5_interference_model.py</code>。</div>
+  <div class="formula">Gap(R, passes, t) ≈ A(t, passes) · Σ_c m_c · κ(f_c) · s_c(R)，&nbsp;&nbsp; s_c(R) = f_c / (f_c + T/R)</div>
+  <p><b>三个因子：</b>① <code>m_c</code> 是 context c 的 token 质量份额（真实计数直方图）；② <code>κ(f)</code> 是逐 context 记忆核，经验上取频率轴测得的 <code>f^−β</code>（bigram β=.253 / trigram β=.318）；③ <code>s_c(R)</code> 是 hash 碰撞下的写入份额稀释——RMSProp 无动量时每次命中的更新步长近似相等，一行收敛到共享该行的各 context 残差的流量加权平均，context c 保留份额 f_c/(f_c+T/R)（T 为该 branch 总流量），这一形式是推导而非拟合。④ 前置因子 <code>A</code> 是 backbone 读出放大：pass 1 恒为零（online 语义下首次见样本无记忆收益），随重复训练增长、终受 wd 约束。</p>
+  <div class="figure-card"><div class="figure-title"><strong>图 14 · 干涉稀释模型 vs 实测 table-size 轴</strong><span>核 β 取自频率轴实测；每 branch 只有一个自由幅度参数</span></div><img src="../../docs/figs/theory/fig_v5_interference_model_vs_data.png" alt="interference dilution model versus measured table size axis"></div>
+  <p><b>已闭合的检验：</b>把频率轴的 β 与真实计数直方图代入上式做数值卷积，预测 table-size 拟合窗口斜率 bigram <b>0.567</b> / trigram <b>0.648</b>（实测 0.576 / 0.665），并同时复现大 R 饱和弯头的位置与 trigram 全程 4 个量级的曲线形状——即<b>频率指数与表大小指数确有确定关系，但它是“β + 真实 n(f) + 碰撞份额”的卷积结果，不是干净的代数幂律</b>。</p>
+  <div class="figure-card"><div class="figure-title"><strong>图 15 · 真实 context Zipf 结构</strong><span>data/freq_index.npz · rank–frequency 与 table-size 拟合窗口</span></div><img src="../../docs/figs/theory/fig_v5_zipf_context_alpha.png" alt="context rank frequency structure and local zipf exponents"></div>
+  <p><b>被证伪的朴素版：</b>理想 Zipf（q_r∝r^−α）下模型可解析出 γ = 1 − α(1−β)。用实测局部 α（bigram 0.99 / trigram 0.84，拟合窗口同 table-size 轴）代入得 γ=0.26/0.43，远低于实测 0.58/0.66——闭合所需 α 为 0.57/0.49。真实 n-gram 计数分布有明显曲率（不同窗口 α 从 0.67 漂到 1.28），因此代数幂律版<b>不成立</b>，只有数值卷积版成立；这也解释了为什么双对数“线性”只出现在中段。</p>
+  <p><b>模型对既有事实的覆盖：</b>pass 数是主状态变量（图 7c 折叠、dose 6× 恰在 1 pass 穿零）；gap 密度 ∝ m(f)·κ(f)·s(f) 在低频端富集（mask_low/high 与阈值扫描方向一致）；hash_reseed 破坏 content–mapping 对齐即压制 gap；5-gram / MLP backbone 仍出现 gap（机制只需要稀疏查表 + 共享读出，不需要 attention）。</p>
+  <div class="note result"><b>挑战清单（下一步要打的靶）：</b>
+    ① κ(f)∝f^−β 的微观起源未推导：采样方差论给 1/f、CLT 论给 f^−1/2，都比实测 β≈1/4、1/3 陡；候选解释是“小 f 端受条件熵 H_c 截断、大 f 端趋向 (S−1)/f”的交叉区混合，可用按 H_c 分层与超大 f 端局部斜率检验。
+    ② 静态份额 ≠ 动态 mask 结果：卷积预测 trigram f≤8 只占 gap 约 25%，而 mask_low f≤8 动态实验去掉约 74%（2.945→0.765，2× 批）——mask 后的再平衡 / backbone scar 不可忽略。
+    ③ A(t,passes) 只有形状约束、没有动力学推导；freeze_table（3.452 &gt; control 2.724）与 mask_high t=1 残留 1.927 都说明 backbone 侧存在共适应/伤痕项。
+    ④ 份额取 share¹ 是 RMSProp 等步长的自然结果，但 share² 未被排除。
+    ⑤ β 疑似依赖 regime（2× 时代的旧描述拟合更陡），需要同一诊断在 2× 与 128× 上重测。</div>
+  <p><b>可证伪预测：</b>(a) 把 3 个 pass 的数据全局混匀（打破 epoch 分块，保持每 context 总命中数）后，终点 gap 与分块 replay 相同、epoch 齿消失；(b) 换 R 会系统改变频率轴局部 β（小 R 更平）；(c) 增大 backbone wd 会压低高 pass 端的 gap 走廊；(d) 5-gram/MLP 的 (β,γ) 也应由各自计数直方图卷积闭合。</p>
 </section>
 
 <section id="trace">
@@ -210,8 +233,8 @@ details>div{padding:0 0 14px}.footer{margin-top:40px;padding-top:15px;border-top
   <ul class="tight">
     <li><b>训练入口：</b><code>code/train.py</code>；频率索引与统计：<code>code/ngram_freq.py</code>；集群 launcher：<code>code/cluster/</code>。</li>
     <li><b>注入公式：</b><code>x = wte(idx) + Σ ngram_ve</code>，n-gram residual 不走 attention；<code>y</code>/<code>v</code> 只作为注入点消融。</li>
-    <li><b>图脚本：</b>本页新增 128× 图由 <code>docs/plot_scripts/plot_v5_128x_doc_figures.py</code> 从 run 目录直接读取；三轴统计与已有图由 <code>docs/appendices/s1_scaling_three_axis/</code> 的 CSV 和脚本生成。</li>
-    <li><b>来源 revision：</b>当前仓库基线为 <code>d716180eb96b08e7d30d0ce39e1ffa265b55b498</code>；每个图注对应 run_id、step、seed 和 fixed 结果目录。主线事实登记在 <a href="../../docs/experiment-log.md">experiment-log.md</a> 与 <a href="../../docs/experiment-lines.md">experiment-lines.md</a>，全部实验的逐项状态见 <a href="experiment-registry.html">experiment-registry.html</a>。</li>
+    <li><b>图脚本：</b>本页新增 128× 图由 <code>docs/plot_scripts/plot_v5_128x_doc_figures.py</code> 从 run 目录直接读取；三轴统计与已有图由 <code>docs/appendices/s1_scaling_three_axis/</code> 的 CSV 和脚本生成；§6 两图与 <code>s1_dose_points_128x.csv</code> 由 <code>plot_v5_theory_alpha_collapse.py</code>、<code>plot_v5_interference_model.py</code> 生成。</li>
+    <li><b>来源 revision：</b>当前仓库基线为 <code>d716180eb96b08e7d30d0ce39e1ffa265b55b498</code>；每个图注对应 run_id、step、seed 和 fixed 结果目录。主线事实登记在 <a href="../experiment-log.md">experiment-log.md</a> 与 <a href="../experiment-lines.md">experiment-lines.md</a>，全部实验的逐项状态见 <a href="experiment-registry.html">experiment-registry.html</a>。</li>
     <li><b>旧内容：</b>历史 2×、旧表架构、旧 probe 与 current-shell 仅用于溯源，不与当前 128× clean evidence 混合。术语与 debug 说明见 <a href="background.html">background.html</a>。</li>
   </ul>
   <div class="footer">本页是主实验汇报副本；主文档发布规则仍以 blog 仓库的发布版为准。数值更新必须先更新权威 run 产物与登记，再重绘图片，最后同步本页。</div>

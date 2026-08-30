@@ -154,25 +154,25 @@ details>div{padding:0 0 12px}
 <p class="small">图：<code>docs/figs/main/fig_v5_s1_table_size_loglog_clean.png</code>。原始点全部保留；正式拟合只取上述中间窗口。</p>
 
 <h3>4.4 epoch length 与 epoch number：两个不同问题</h3>
-<p><b>Epoch length 轴：</b>12 个 trigram-only run，每个完成 3 个 epoch，<code>epoch_batches/L4=42…674 / 337</code>。step-3epoch final gap 呈 U 形：0.125×=3.552、1×L4=2.469（最低）、2×=5.582。对 <code>ln(L/L4)</code> 的二次描述拟合顶点为 0.411502×L4，预测 gap 2.648528，R²=.774155；这只是对 U 形的压缩摘要。</p>
+<p><b>Epoch length 轴：</b>12 个 trigram-only run，每个完成 3 个 epoch，<code>epoch_batches/L4=42…674 / 337</code>。<b>2026-08-30 勘误：这条轴必须拆开读。</b>≤1×L4 是真正的 epoch-length 变量（shard-1 嵌套前缀）：gap 随 L 从 0.125× 的 3.552 温和降到 1×L4 的 2.469。&gt;1×L4 的点共用同一份 shard-1 频率索引，其“一个 epoch”是 shard 1 的 wrap-around 重放，因此实际是 pass 数点——2×L4 的 3-epoch 终点（step 2022，gap 5.582）与 10-epoch 长 replay 的同 pass 值 5.609 几乎重合。旧的“U 形 + 二次拟合顶点 0.41×L4”把两个变量混进一条轴，已作废。</p>
 <p><b>Epoch number 轴：</b>同一 L4（337 batches/epoch）的 10-epoch long replay。trigram-only 在 epoch boundary 的 gap 是：</p>
 <div class="formula">−0.048, 1.018, 2.473, 3.697, 4.614, 5.609, 6.439, 7.144, 7.847, 8.675  (epoch 1…10)</div>
 <p>epoch 2–10 的线性参考约为 0.96 gap/epoch，但每 epoch 增量从早期峰值（约 1.45）下降到后期约 0.7–0.8。对应 no-gram control 在 step 3370 为 gap 0.480。当前应写成“近似线性但逐渐变缓的凹增长”；不能写成已经证明的饱和平台。图源为 <code>s1v5_128_ep_tri_1xL4_10ep</code> 和 <code>s1v5_128_ep1xL4_10ep_nogram</code>，seed 42。</p>
 
 <h3>4.5 shard dose：更大训练语料在 fixed-step 下稀释 replay exposure</h3>
-<p>input 主线、2000 steps、seed 42 的 dose refresh 从 0.25× 到 8×。gap 从 0.25× 的约 11.536 单调降到 5× 的 0.084，6×/8× 分别约 −0.088/−0.075；正 gap（≤5×）的 log-log 描述斜率为 −1.726983（R²=.887225），但 5× 到 6× 穿过零点，因此不能报告全区间幂律。更大 dose 代表在固定 optimizer steps 内每个训练样本被 replay 的次数减少；这条轴与 epoch-length、frequency 共同反映 exposure，而不是一个孤立的“数据质量”变量。</p>
+<p>input 主线、2000 steps、seed 42 的 dose 轴有两个批次，必须分开引用：<b>2× 批</b> <code>nglab*_input_v5_freq10</code>（config 实测 <code>table_lr_scale=2.0</code>）gap 从 0.25× 的 11.536 降到 5× 的 0.084、6×/8× 约 −0.088/−0.075，正 gap 段斜率 −1.727（R²=.887）；<b>128× 权威批</b> <code>nglab*_input_v5_128x_freq10</code> 从 10.895 降到 5× 的 0.355、6×/8× −0.087/−0.055，正 gap（≤5×，n=10）斜率 −1.176（R²=.899，登记于 <code>s1_dose_points_128x.csv</code>）。两批都在 5×–6× 之间穿零，因此不能报告全区间幂律。把横轴改成完成 pass 数后，dose 轴与 epoch-number 长 replay 基本折叠（主报告图 7c），6× 恰好在 1 pass 处穿零。</p>
 
 <h2>5. 干预实验：目前最接近机制识别的证据</h2>
 <p>干预都在 input、clean 双表、128×、1000 steps、epoch boundary 上进行。干预发生后，mask 会让相应 residual 为零且不向表行回传梯度；hash reseed 只替换 context→row 映射，保留表权重、RMSProp state 和 backbone 参数。</p>
 <table>
   <tr><th>干预</th><th>精确定义</th><th>当前结果</th><th>证据状态</th></tr>
-  <tr><td><code>hash_reseed e1</code></td><td>epoch 2 开始只换 context→row hash identity。</td><td>single-boundary final gap 1.354；新的 e1+e2 refresh 到约 0.069。</td><td><span class="status done">done，但双边界结果待本地同步</span></td></tr>
+  <tr><td><code>hash_reseed e1</code></td><td>epoch 2 开始只换 context→row hash identity。</td><td>single-boundary final gap 1.354；e1+e2 双边界 0.069。</td><td><span class="status done">done（含双边界，已本地入库）</span></td></tr>
   <tr><td><code>mask_low f≤t</code></td><td>只屏蔽低 hit-count context；新 refresh 使用 inclusive boundary，t=0 包含 novel。</td><td>t=0: 2.945；t=1: 1.578；t=2: 1.320；t=4: 1.046；t=8: 0.765；旧 f≤200 端点约 0.101。</td><td><span class="status done">新低频扫描已完成；旧 f200 端点不作为同语义主证据</span></td></tr>
-  <tr><td><code>mask_high f≥t</code></td><td>只屏蔽高频 seen context；新定义包含边界。</td><td>t=1: 1.927；t=2: 1.752；t=200: 2.824；t=5…12800 的其余点仍在远端队列。</td><td><span class="status pending">partial / running</span></td></tr>
+  <tr><td><code>mask_high f≥t</code></td><td>只屏蔽高频 seen context；新定义包含边界（novel 永不屏蔽，下界 t=1）。</td><td>14 点阈值扫描已完成：t≥100 进入 ~2.72–2.82 平台（峰值 t=200：2.824）；t=10: 2.291、t=5: 2.023、t=2: 1.752、t=1: 1.927。</td><td><span class="status done">done（causalv5m2 批，14/14）</span></td></tr>
   <tr><td><code>freeze_table e1</code></td><td>epoch 2 后停止 table 更新，但保留 readout。</td><td>final gap 3.452。</td><td><span class="status done">done；写入路径参考</span></td></tr>
   <tr><td><code>freeze_backbone e1</code></td><td>epoch 2 后停止 backbone 更新，但继续训练 table。</td><td>final gap 1.230。</td><td><span class="status done">done；写入路径参考</span></td></tr>
 </table>
-<p>最重要的方向性读法是：低频 context 的屏蔽会大幅削弱 gap；只保留/屏蔽高频集合不能产生同样的下降；重映射会破坏已学内容与 context 的对齐。可是 <code>mask_high</code> 全量扫描仍未完成，且早期 six-arm f200 结果采用过旧边界语义，不能把旧表格中的 0.101/2.808 直接当作新 inclusive contract 的最终比较。</p>
+<p>最重要的方向性读法是：低频 context 的屏蔽会大幅削弱 gap；只保留/屏蔽高频集合不能产生同样的下降；重映射会破坏已学内容与 context 的对齐。注意早期 six-arm f200 结果采用过旧边界语义，不能把旧表格中的 0.101/2.808 直接当作新 inclusive contract 的最终比较；mask_high t=1 仍残留 1.927 的 gap（train/val 同时失去全部 seen 读出后的不对称恢复/scar），是任何纯表侧模型都必须解释的点。</p>
 <p class="small">破坏性参考 <code>reset_table</code> 与 <code>mask_readout</code> 已从当前主线删除，不承担机制结论。</p>
 
 <h2>6. LR / β₂ 附录：为什么标准固定为 128×、β₂=.99</h2>
@@ -204,12 +204,13 @@ details>div{padding:0 0 12px}
   <ol>
     <li><code>f</code> 轴：bigram/trigram 的局部负斜率不同，低频贡献更强，novel 与 seen 不能混作同一 gap。</li>
     <li><code>R</code> 轴：低 R 落到 no-gram floor，中间窗口近似 <code>R^0.58</code>/<code>R^0.66</code>，高 R 逐渐饱和；bigram 和 trigram 的 context support 不同。</li>
-    <li><code>E</code> 轴：fixed-step 下 epoch length 出现 U 形；固定 L4 replay 时 gap 随 epoch number 凹增长、每 epoch 增量下降。</li>
+    <li><code>E</code> 轴：≤1×L4 段 gap 随 epoch length 温和下降；&gt;1×L4 点实为 wrap-around pass 数点；固定 L4 replay 时 gap 随 pass 数凹增长、每 pass 增量下降。</li>
     <li><code>D</code> 轴：固定 step 下更大 shard dose 稀释 replay exposure，gap 穿过 near-zero floor。</li>
     <li>干预：保留表内容但 reseed 映射会破坏 gap；mask 低频会显著消除 gap；freeze table/backbone 改变 train/val 轨迹但不等价。</li>
     <li>优化器：per-coordinate normalization、table LR scale 与 β₂ 改变写入速度和 transient，而不是只改变一个静态 noise variance。</li>
   </ol>
   <p>理想输出应明确给出：状态变量、可辨识参数、每个渐近区的假设、floor 与 saturation 的来源、为什么指数不是唯一固定分数，以及哪些现有数据足以证伪该模型。</p>
+  <p><b>2026-08-30 起点：</b>主报告 §6 已给出第一个候选（碰撞稀释卷积 × backbone 放大）：用频率轴 β 与真实计数直方图数值卷积可复现 table-size 轴斜率与饱和弯头（0.567/0.648 vs 实测 0.576/0.665），纯代数版 γ=1−α(1−β) 已被实测 Zipf 结构证伪。挑战清单见该节；请优先攻击 κ(f) 的微观起源与 A(t,passes) 动力学。</p>
 </div>
 
 <h2>8. 必须保留的证据边界</h2>
@@ -218,8 +219,8 @@ details>div{padding:0 0 12px}
   <tr><td>gap 形成</td><td>在当前 paired vanilla protocol 内，n-gram value memory 足以形成明显 train/validation gap。</td><td>所有 Transformer、所有 tokenizer 或所有训练协议必然如此。</td></tr>
   <tr><td>frequency</td><td>低 hit-count 的真实 context 往往贡献更大的 gap；局部频率曲线可用负幂律描述。</td><td>自然语言全频段都有一个普适 −1、−1/2 或 −1/3 指数。</td></tr>
   <tr><td>table size</td><td>clean 单表的中间窗口接近 0.58/0.66，低端 floor、高端弯曲/饱和。</td><td>全 R 区间的单一幂律；把 K/R 称为 collision rate；把双表 both 轴并入同一公式。</td></tr>
-  <tr><td>epoch</td><td>当前长训显示 gap 增长逐渐变缓；epoch-length 3-epoch 网格呈 U 形。</td><td>已经证明一个平台值或独立的普适 G(E) 定律。</td></tr>
-  <tr><td>causal</td><td>hash 对齐、低频 read/write contribution 和更新路径受到干预影响。</td><td>把尚未完成的 mask_high 全阈值扫描写成完成；把旧 f>t 结果冒充新 f≥t 结果。</td></tr>
+  <tr><td>epoch</td><td>当前长训显示 gap 增长逐渐变缓；epoch-length ≤1×L4 段随 L 温和下降，&gt;1×L4 点是 pass 数点（wrap-around）。</td><td>已经证明一个平台值或独立的普适 G(E) 定律。</td></tr>
+  <tr><td>causal</td><td>hash 对齐、低频 read/write contribution 和更新路径受到干预影响；mask_high 14 点阈值扫描已完成（f≥t 新语义）。</td><td>把旧 f&gt;t 结果冒充新 f≥t 结果；忽略 t=1 残留 gap 的 backbone scar 解释缺口。</td></tr>
   <tr><td>theory</td><td>residual–response covariance、count-table resolved asymptotic、toy exact enumeration 是可用基础。</td><td>声称当前理论已经推出自然语料的所有观测指数和 saturation。</td></tr>
 </table>
 

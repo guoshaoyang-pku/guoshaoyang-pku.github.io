@@ -248,9 +248,9 @@
         <figure class="inline-figure"><a href="../../docs/figs/main/fig_v5_128x_causal_frequency_effect.png"><img src="../../docs/figs/main/fig_v5_128x_causal_frequency_effect.png" alt="v5 128x causal frequency effect"></a><figcaption>low/high frequency mask effect</figcaption></figure>
         <figure class="inline-figure"><a href="../../docs/figs/main/fig_v5_128x_mask_high_threshold_scan.png"><img src="../../docs/figs/main/fig_v5_128x_mask_high_threshold_scan.png" alt="v5 128x mask high threshold scan"></a><figcaption>mask-high threshold scan</figcaption></figure>
       </div>
-      <span class="note">图源为 <code>causalv5c_{none,hash_reseed,mask_low_f200,mask_high_f200,freeze_table,freeze_backbone}_e1_128x_fixed</code>；阈值扫描图源为 <code>causalv5m_mask_high_t{1,2,5,10,25,50,100,400,800,1600,3200,6400,12800}_e1_128x_fixed</code>，<code>t=200</code> 复用 <code>causalv5c_mask_high_f200_e1_128x_fixed</code>。全部到 step 1000、无 NaN/Inf。<code>hash_reseed</code> 只换 context→row 映射、保留表权重与 RMSProp state；mask 语义现定义为 <code>low: f&lt;t（含 novel f=0）</code> 与 <code>high: f≥t</code> 的互补集合；mask 为 context 级，high 模式对 t&gt;0 不屏蔽 novel（f=0），扫描止于 t=1。<b>⚠️ 本行已完成 run 均为旧 <code>f&gt;t</code> 边界语义（f==t 一层未被屏蔽），需按新 <code>f≥t</code> 语义重刷后再作为正式证据。</b>t=0 已定义为包含 novel 的全量屏蔽，需重新运行；旧 t=0 产物不登记。全量屏蔽的 gap 预期接近同预算 no-gram 对照，不保证为数学上的 0。</span>
+      <span class="note">图源为 <code>causalv5c_{none,hash_reseed,mask_low_f200,mask_high_f200,freeze_table,freeze_backbone}_e1_128x_fixed</code>（128× 主批，旧 f&gt;t 语义的 mask 臂仅作参考）；阈值扫描图源已全部替换为 <b>新 f≥t 语义</b>的 <code>causalv5m2_mask_high_t{1,2,5,10,25,50,100,200,400,800,1600,3200,6400,12800}_e1_fixed</code>（14 点全量重刷，1000 步、seed 42、epoch-2 边界，每 run 的 <code>high_context_counts</code> 与 <code>freq_index.npz</code> f≥t 实测逐一核对）。全部到 step 1000、无 NaN/Inf。<code>hash_reseed</code> 只换 context→row 映射、保留表权重与 RMSProp state：单边界（e1）gap=1.354，epoch-2+epoch-3 双边界（<code>causalv5c_hash_reseed_e1e2</code>）gap=0.069，证实持续对齐破坏才能压制重写；mask 语义为 <code>low: f≤t（含 novel f=0）</code> 与 <code>high: f≥t</code> 的互补集合；mask 为 context 级，high 模式对 t&gt;0 不屏蔽 novel（f=0），扫描止于 t=1。全量屏蔽的 gap 预期接近同预算 no-gram 对照，不保证为数学上的 0。</span>
     </td>
-    <td class="st-warn">⚠️ 核心 hash-reseed + 写入路径完成；mask low/high 与阈值扫描为旧 f&gt;t 语义，需按新 f≥t 重刷：none=2.724；hash-reseed=1.354；mask low/high（旧 f&gt;200 语义）=0.101/2.808；阈值扫描（旧 f&gt;t 语义）t=12800→1 为 2.755→1.757</td>
+    <td class="st-ok">✅ 14/14 完成：阈值扫描已按新 f≥t 语义全量重刷（causalv5m2，t=1…12800，峰值 t=200 gap 2.824，t≥100 平台 ~2.72–2.82，t≤25 下降至 t=2 最低 1.752、t=1 回升 1.927）；hash-reseed 双边界 e1+e2 done（gap 0.069）；mask_high t200（f≥t）=2.824。核心 7 臂 + 双边界 reseed + 14 点扫描全部回填 §35.8</td>
     <td class="com"><input type="text"></td>
   </tr>
 
@@ -359,7 +359,7 @@
       </div>
       <span class="note">图源为 12 个 <code>s1v5_128_ep_tri_*xL4_3ep_fixed</code> 与 L4 trigram-only/no-gram 长训；点为原始 online 记录，细线为 3 点视觉连接，竖线为 epoch boundary。</span>
     </td>
-    <td class="st-done">✅ 12/12 完成；U 形最低 gap=2.469 @1×L4；0.125×=3.552、2×=5.582</td>
+    <td class="st-done">✅ 12/12 完成；≤1×L4（真 epoch-length 段）gap 随 L 从 0.125× 的 3.552 降到 1× 的 2.469；&gt;1×L4 点为 shard-1 wrap-around（pass 数点，2×L4=5.582 ≈ 长 replay 6-pass 5.609），旧“U 形+顶点 0.41×L4”读法作废（2026-08-30 勘误，pass 折叠图见主报告图 7c）</td>
     <td class="com"><input type="text"></td>
   </tr>
   <tr id="registry-s1-v5-128-long">
@@ -456,8 +456,8 @@
 结果当作力学定律：</p>
 <ul>
   <li>table-size：净 gap（减 floor 0.02）分窗口拟合 bigram <code>(G−0.02)∝R^0.5761</code>（R 2e3–2e5，n=12，R²=.9969）、trigram <code>(G−0.02)∝R^0.6648</code>（R 1e5–9.3e5，n=8，R²=.9997）；raw gap（不减 floor）敏感性斜率 0.5010 / 0.6526。每条单表轴 31 个 run；R≤约1e4 进入 no-gram floor（nogram 实测 0.0234，小 R 平台均值 0.0196），塌缩区不进入拟合；bigram R≈3e5 后、trigram R≈1.2e6 后饱和。旧的 R≥16000 raw-gap 拟合（0.429/0.657）混入两端机制，已废弃。</li>
-  <li>epoch-length：在 ln(L4 multiplier) 上的二次描述拟合顶点为 <code>0.411502×L4</code>，预测 gap=2.648528（R²=.774155）；另有 L4 10-epoch boundary 图，显示 gap 增长逐渐变缓但尚未达到明确平台。</li>
-  <li>dose：5× 以内正 gap 的 log-log slope 为 −1.726983（R²=.887225）；5× 到 6× 之间发生符号翻转，不报告全区间幂律。</li>
+  <li>epoch-length：<b>2026-08-30 勘误</b>——&gt;1×L4 的点共用 shard-1 频率索引，是 wrap-around 重放（pass 数点），旧“在 ln(L4 multiplier) 上二次拟合顶点 0.41×L4”的 U 形读法把两个变量混进一条轴，已作废；≤1×L4 段 gap 随 L 温和下降（3.552→2.469）。L4 10-epoch boundary 图显示 gap 增长逐渐变缓但尚未达到明确平台。</li>
+  <li>dose：<b>2026-08-30 勘误</b>——slope −1.726983（R²=.887225）来自 2× 批 <code>nglab*_input_v5_freq10</code>（config 实测 <code>table_lr_scale=2.0</code>）；128× 权威批 <code>nglab*_input_v5_128x_freq10</code> 正 gap（≤5×，n=10）slope −1.176（R²=.899），0.25×=10.895、5×=0.355、6×/8×=−0.087/−0.055，登记于 <code>s1_dose_points_128x.csv</code>。两批均在 5×–6× 间穿零，不报告全区间幂律；pass 数折叠见主报告图 7c。</li>
   <li>exact-frequency：bigram slope −.252746（R²=.997165），trigram slope −.318121（R²=.995548）；按 shared-context token mass 的 7 个几何 bin 聚合。</li>
 </ul>
 <p>可复核文件：
@@ -465,7 +465,9 @@
 <a href="../../docs/appendices/s1_scaling_three_axis/s1_scaling_fits.csv">拟合系数 CSV</a> ·
 <a href="../../docs/appendices/s1_scaling_three_axis/s1_table_size_points.csv">table-size 原始点</a> ·
 <a href="../../docs/appendices/s1_scaling_three_axis/s1_epoch_length_points.csv">epoch 原始点</a> ·
-<a href="../../docs/appendices/s1_scaling_three_axis/s1_dose_frequency_gap.csv">dose × frequency 原始点</a>。</p>
+<a href="../../docs/appendices/s1_scaling_three_axis/s1_dose_points_128x.csv">dose 128× 原始点</a> ·
+<a href="../../docs/appendices/s1_scaling_three_axis/s1_dose_frequency_gap.csv">dose × frequency 原始点</a>。
+理论假说（H-DILUTE，待挑战）及其数值检验图（干涉稀释卷积、Zipf 结构、pass 折叠）见主报告 §6 与 <code>docs/notes/theory/hypothesis-dilution-amplification.md</code>。</p>
 </details>
 
 <h2>④ 核心代码与「来源唯一可追溯」</h2>
