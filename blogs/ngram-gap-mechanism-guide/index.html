@@ -48,7 +48,7 @@ a{color:var(--acc)}
 <a href="#s3"><b>3</b> gap–表大小关系</a>
 <a href="#s4"><b>4</b> epoch 轴：长度、编号与 pass</a>
 <a href="#s5"><b>5</b> 干预实验</a>
-<a href="#s6"><b>6</b> 工作假说（v2）</a>
+<a href="#s6"><b>6</b> 核心区间模型：频率核 × replay 读出</a>
 <a href="#s7"><b>7</b> 附录：LR 与 β₂ 消融</a>
 <a href="#s8"><b>8</b> 来源与可追溯性</a>
 </div>
@@ -79,7 +79,7 @@ a{color:var(--acc)}
 <p>频率轴与干预直接相连：把 f≤8 的 n-gram 贡献在 epoch 边界后动态屏蔽，net gap 掉到 <b>0.765</b>（对照 2.724）——少量低频 context 承载了 ~72% 的 gap（见 §5 图 11）。</p>
 
 <h2 id="s3">3 · gap–表大小关系：幂律</h2>
-<p>单支路变 R（另一支路固定 2²⁰，两者都开启），gap 在 R∈[2¹⁶, 2²²] 窗口内呈干净幂律：<b>bigram γ ≈ 0.576、trigram γ ≈ 0.665</b>。表更小 ⇒ 每个 context 的可用行更少 ⇒ 单位记忆的读出通道被压制（机制见 §6 的 a(K/R)）。窗口外（R≲2¹⁴ 或 ≳2²³）偏离线性：小 R 端被噪声与本底主导，大 R 端大量行几乎为空。</p>
+<p>单支路变 R（另一支路固定 2²⁰，两者都开启），gap 在 R∈[2¹⁶, 2²²] 窗口内呈干净幂律：<b>bigram γ ≈ 0.576、trigram γ ≈ 0.665</b>。在 §6 的核心模型里，R 主要改变同一个频率核能被读出的总幅度；我们把它记为经验修正 ρ(R)，不再把某个尚未验证的碰撞公式塞进主方程。窗口外（R≲2¹⁴ 或 ≳2²³）偏离线性：小 R 端被噪声与本底主导，大 R 端大量行几乎为空。</p>
 <figure><img src="../../docs/figs/main/fig_v5_s1_table_size_loglog_clean.png" alt="gap vs table R loglog">
 <figcaption><b>图 6 · S1 table-size 双对数（单支路扫描）</b>。蓝 = 只变 bigram 表（<code>s1v5_128_tbl_bi2_R{R}_fixed</code>），红 = 只变 trigram 表（<code>s1v5_128_tbl_tri2_R{R}_fixed</code>）；另一支路固定 2²⁰ 但两个表都开启。窗口斜率：bigram 0.576 / trigram 0.665。<b>术语</b>：K = 训练前缀中 distinct contexts 数；R = 每 branch 物理行数；K/R 是负载比而非 collision rate；实测 collision = (K − occupied)/K。</figcaption></figure>
 
@@ -88,9 +88,11 @@ a{color:var(--acc)}
 <div class="warn"><b>勘误（2026-08-30）</b>：早期“&gt;1×L4 出现 U 形、顶点 0.41×L4”的二次拟合作废——&gt;1×L4 各点共用 shard-1 频率索引，其“一个 epoch”是 shard-1 的 wrap-around 重放，本质是 pass 数轴而非 epoch 长度轴。</div>
 <figure><img src="../../docs/figs/main/fig_v5_s1_epoch_length_valid.png" alt="epoch length valid">
 <figcaption><b>图 7 · epoch 长度轴（仅合法 nested-prefix 段）</b>。0.25×–1×L4，终点 gap 随 epoch 长度温和下降；旧 12 点“U 形”图已删除（见上方勘误）。</figcaption></figure>
-<p><b>epoch 编号</b>：固定 1× 数据量拉长训练，gap 在 337/674/1000 步（=第 1/2/3 个 epoch 终点）近似线性增长后趋缓——pass 数是主状态变量。</p>
+<p><b>epoch 编号</b>：固定同一份 1× 数据反复 replay，gap 随完成 pass 数增长。这里的关键不是“第几个 epoch”这个标签，而是：<b>第二轮开始时，当前样本在被预测之前，表里已经有第一轮写入的、与这份训练集特有误差相关的内容</b>。train 会反复遇到同一误差，val 则来自独立样本；共享 backbone 又会在每轮更新中逐渐学会放大这条表信号，所以两者分叉。完整推导见 §6。</p>
 <figure><img src="../../docs/figs/main/fig_v5_s1_epoch_number.png" alt="gap vs epoch number">
-<figcaption><b>图 8 · gap 对 epoch 编号</b>。337 / 674 / 1000 步三个基准点（1× 主线，128×）；近线性后饱和，与 §6 的 A(t, passes) 对应。</figcaption></figure>
+<figcaption><b>图 8 · gap 对 epoch 编号</b>。337 / 674 / 1000 步三个基准点（1× 主线，128×）。这三个点只覆盖早期增长，不能单独证明饱和。</figcaption></figure>
+<figure><img src="../../docs/figs/theory/fig_v5_epoch_kernel_dynamics.png" alt="epoch kernel dynamics">
+<figcaption><b>图 8b · 10-epoch replay 对单状态动力学的检验</b>。原始边界点来自 <code>s1v5_128_ep_tri_1xL4_10ep</code> 与 matched <code>s1v5_128_ep1xL4_10ep_nogram</code>（seed 42，337 步/pass）；红线为二者相减后的 net n-gram gap。虚线只在 e=1…10 内作递推形状检验（R²=.9986），外推平台未被观测、不是实验结论。右图显示逐轮增量总体下降但有 batch 噪声。</figcaption></figure>
 <p><b>pass 折叠</b>：把不同批次的点放到「完成 pass 数」轴上，dose 128× 批、wrap 点与 10-epoch 长 replay 折叠成一条线（0.75× 的 7.9-pass 点 7.21 ≈ replay 8-pass 7.14；dose 6× 在 ≈0.99 pass 处 gap 穿零）——dose 的表观幂律不是独立规律，而是 pass 数轴的重参数化。</p>
 <figure><img src="../../docs/figs/main/fig_v5_pass_collapse.png" alt="pass collapse">
 <figcaption><b>图 9 · 多族数据在 pass 数轴上折叠</b>。横轴 = 完成 pass 数（= 步数/337 × shard 倍率）；同色 = 同实验族。epoch 边界以竖线标示。</figcaption></figure>
@@ -113,21 +115,58 @@ a{color:var(--acc)}
 <figure><img src="../../docs/figs/main/fig_v5_128x_mask_high_threshold_scan.png" alt="mask high scan">
 <figcaption><b>图 13 · mask_high 阈值扫描（f ≥ t 屏蔽）</b>。t=1 残留 1.927（backbone scar：backbone 在 pass 1 期间已把自身参数适配到“有 n-gram 残差”的状态）；t≥100 平台 2.72–2.82。</figcaption></figure>
 
-<h2 id="s6">6 · 工作假说（v2）：稀释-放大模型</h2>
-<p class="small">地位：<b>现象级均场 scaffold</b>——与全部 R 轴/频率轴/pass 轴数据做强一致性检验，尚未闭环为因果机制。完整推导与边界清单见 <code>docs/notes/theory/hypothesis-dilution-amplification.md</code>（v2 节 + H-KAPPA 完整推导）。</p>
-<div class="formula">Gap(R, passes, t) ≈ A(t, passes) · a_emp(K/R) · [ B·M(f) + V·S_eff(f)/f ] · m_f</div>
+<h2 id="s6">6 · 核心区间模型：频率核 M(f) × replay 读出 a<sub>e</sub></h2>
+<p class="small">地位：这是对当前数据<b>最小且可证伪</b>的工作模型。它只解释已经被数据支持的核心区间：exact-f 的可靠正-gap 段、当前 R 中段与 e=1…10 的 fixed replay；不声称解释极小 R、高频尾、mask 后再平衡或更长时间的最终平台。</p>
+
+<h3>6.1 先把要解释的量减到一个</h3>
+<p>为排除普通 backbone 自身的小 gap，下面建模 <b>net n-gram gap</b>：</p>
+<div class="formula">G<sub>e</sub> := Gap<sub>ngram,e</sub> − Gap<sub>nogram,e</sub></div>
+<p>对训练中出现 f 次的 context，记其局部 net gap 为 g<sub>e</sub>(f)。核心区间只需要一个语料核和一个训练状态：</p>
+<div class="formula">局部：g<sub>e</sub>(f) ≈ a<sub>e</sub> M(f)<br>
+全局：G<sub>e</sub> ≈ a<sub>e</sub> Q，　Q := Σ<sub>f</sub> μ<sub>f</sub>M(f)</div>
 <ul>
-<li><b>m_f</b>：频率 f 的 context 承载的 token 质量份额（真实计数直方图，纯记账）；</li>
-<li><b>κ(f) = B·M(f) + V·S_eff/f</b>：逐 context 记忆核。主项 M(f) = N₁(f)/(f·n(f)) 是 Good–Turing <b>缺失延续质量</b>——val 里 (context, next-token) 组合在 train 未出现的发生率；纯语料计数，零训练可算。理想幂律尾 a 下 M(f) ∝ f^(−(1−1/a))，即 <b>β = 1 − 1/a</b>：β 不是新常数，是延续分布支撑增长（Heaps）的边际率；context 越长条件分布越尖 ⇒ β 越大（bigram a≈4/3、trigram a≈3/2）；</li>
-<li><b>a_emp(K/R)</b>：f-平坦的全局负载压制（实测稀释面，见下）；</li>
-<li><b>A(t, passes)</b>：backbone 读出放大。online 语义下 pass 1 恒为 0；表内容 1 pass 内饱和（LR ≥16× 后不再是瓶颈），之后 gap 增长由 backbone 逐 pass 学会读表驱动。</li>
+<li><b>M(f)</b> = N₁(f)/(f·n(f))：频率为 f 的 context 的 Good–Turing 缺失延续质量。n(f) 是这类 context 数，N₁(f) 是它们只出现一次的 next-token 类型总数。直观上，M(f) 估计“val 再见这个 context 时，next token 在 train 从未跟它搭配过”的概率；它只由语料计数决定，<b>没有拟合参数</b>。</li>
+<li><b>μ<sub>f</sub></b>：验证 token 落在频率 f 的质量份额；Q 是把局部核按真实 token 质量加总后的固定常数，也不是新参数。</li>
+<li><b>a<sub>e</sub></b>：完成 e 个 pass 后，backbone 对表中训练集特有方向的“可用读出强度”。这是模型里唯一随 epoch 变化的状态。</li>
 </ul>
+<p>因此旧式子里的 B、V、S<sub>eff</sub>、A(t,passes) 不再进入核心模型；复杂的两分量核只保留为高频尾修正的候选。<b>核心区间的判决只问一件事：不同 f 的曲线是否等于同一个 M(f) 乘一个幅度。</b></p>
+
+<h3>6.2 为什么 M(f) 是合理的 kernel</h3>
+<p>对一个 context c，真实 next-token 分布是 p<sub>c</sub>，有限训练集给出的经验分布是 p̂<sub>c</sub>。两者之差 δ<sub>c</sub>=p̂<sub>c</sub>−p<sub>c</sub> 是这份训练集特有的采样残差。n-gram 表按 context 分行，少数样本就能把一行的更新对准 δ<sub>c</sub>；共享 backbone 则把这条方向变成 logits 上的损失下降。</p>
+<p>当同一训练样本再次出现时，它来自 p̂<sub>c</sub>，所以与已存的 δ<sub>c</sub> 相关；独立 val 样本来自 p<sub>c</sub>，没有同样的相关收益。对交叉熵在当前 logits 附近作二阶展开，train−val 的差异主项就是采样残差的曲率加权平方，形式上为：</p>
+<div class="formula">g<sub>e</sub>(c) ≈ a<sub>e</sub> ‖p̂<sub>c</sub>−p<sub>c</sub>‖²<sub>H<sub>c</sub></sub></div>
+<p>这个平方残差本身无法从未知 p<sub>c</sub> 直接算；M(f) 是它的可观测、非参数代理：缺失延续越多，经验条件分布与真实条件分布的支撑错配越大。它不是从“方差必为 1/f”推出来的，所以允许 bigram/trigram 有不同表观指数。</p>
 <figure><img src="../../docs/figs/theory/fig_v5_missing_mass_kernel.png" alt="missing mass kernel">
-<figcaption><b>图 14 · κ(f) 的微观起源 = Good–Turing 缺失质量（H-KAPPA）</b>。左：实测 per-f gap（蓝）vs 纯计数核 M(f)（绿）与两分量核（紫，B=4.17/V=3.40，linR²=0.928）；红虚线 = 被否定的碰撞稀释版（低 f 端压塌，数据不塌）。判决数：M(f) 斜率 bigram −0.241 vs 实测 β −0.253；trigram −0.319 vs −0.318（几乎逐位重合）。中：κ=M(f) 代入真实 n(f) 直方图卷积出 R 轴曲线，窗口斜率 0.567/0.648 vs 实测 0.576/0.665（形状零自由）。右：β(R) 随 R 上升、大 R 端趋近核窗口斜率 −0.441——既是碰撞稀释的支持，也否定「每 branch 一个固定 β」。</figcaption></figure>
+<figcaption><b>图 14 · kernel 的核心区间检验</b>。在 reliable bigram 区间 f≤721，实测 g(f) 的斜率 −0.2551，M(f) 的斜率 −0.2547；只拟合一个全局幅度后，token-mass 加权 R²=.964、乘法 RMSE≈5.7%。更严格地只用 f≤100 拟合幅度，再预测 100&lt;f≤721，R²=.885、乘法误差≈4.3%。trigram 的实测/计数斜率 −0.318/−0.319。也就是说，<b>指数不是先验塞进去的，而是计数核自己给出的</b>。图中的两分量与碰撞曲线只作为区间外 challenge，不再属于主公式。</figcaption></figure>
+
+<h3>6.3 为什么 epoch 编号会进入：第一轮写，后续轮次才能“预先读”</h3>
+<ol>
+<li><b>pass 1 写入。</b> online loss 在更新前记录；一个样本第一次出现时，不能使用自己随后写入的表内容。高频 context 可在同一 pass 内复现，所以“第一轮严格为零”不是数学恒等式；但当前 trigram-only 聚合数据在 e1 的 net gap 为 −0.006，故这里有 a₁≈0。</li>
+<li><b>pass 2 起复用。</b> 同一个 fixed train 样本再次到来前，表行已经含有与该训练集采样残差 δ<sub>c</sub> 对齐的内容。它会实打实降低这个 train 样本的 loss；独立 val 不重复同一残差，因此没有等量收益。</li>
+<li><b>backbone 逐轮放大。</b> 表 LR=128× 时，表写入很快；但表向量是否在深层网络中成为可用预测信号，取决于共享 backbone 的更新。每轮 replay 都再次提供“这个表方向能降低 train loss”的相关梯度，因此 a<sub>e</sub> 继续增长。</li>
+<li><b>边际增量变小。</b> 当读出已经较强，交叉熵曲率、共享参数任务干涉与 weight decay 会抵消继续放大的梯度，于是每轮增加量下降。这里不需要显式“熵正则项”：恢复力来自原损失的局部曲率、参数 superposition 和已有 wd。</li>
+</ol>
+<p>最小动力学只写一个一阶递推：</p>
+<div class="formula">a<sub>e+1</sub> − a<sub>e</sub> = η<sub>b</sub>(s − λa<sub>e</sub>)<br>
+令 q=1−η<sub>b</sub>λ，a<sub>∞</sub>=s/λ，则<br>
+a<sub>e</sub> = a<sub>∞</sub>[1−q<sup>e−1</sup>]，　G<sub>e</sub>=G<sub>∞</sub>[1−q<sup>e−1</sup>]</div>
+<p>s 是 fixed replay 反复提供的训练残差相关信号；λ 是上述有效恢复力，不是新增到代码里的正则项。早期 e 较小时，G<sub>e</sub> 近似随 e 线性；之后每轮增量按 q 缩小。10-epoch net 曲线的区间内拟合给出 q=.904、R²=.9986（图 8b）。对应的“平台 13.58、时间常数 9.88 epoch”只是短窗口外推，<b>目前没有数据支持把它当作真实平台</b>。</p>
+
+<h3>6.4 学习率悖论为何消失，以及因果干预是否支持</h3>
+<p>增大 table LR 只加快“写入”，不能凭空创造第二次见到同一样本，也不能把 backbone 的 a<sub>e</sub> 瞬间推到多 epoch 状态。因此 ≥16× 后 table LR 曲线聚拢，而 epoch 依赖仍保留。新完成的 6-pass 因果批给出更直接的判决（全部 seed 42、2022 步、128×，唯一变量为干预）：</p>
+<ul>
+<li><code>causalv5m3_freeze_backbone_e1/e2/e3</code> 的 final gap 依次为 <b>1.585 / 2.505 / 3.389</b>，未冻结对照 <code>causalv5m3_none_2022</code> 为 <b>5.733</b>。允许 backbone 多训练一轮，就锁存更多 gap，方向与 a<sub>e</sub> 单调增长一致。</li>
+<li><code>causalv5m3_freeze_table_e2</code> final gap=<b>5.386</b>，保留对照的 94%；说明 e2 后继续写表不是后续增长的主要必要条件。</li>
+<li>backbone wd 0 / 0.1 / 0.3 的 final gap 为 <b>5.833 / 5.733 / 5.609</b>，方向符合 λ 增大使读出下降；但只有单 seed 且差值约 0.12，只算弱支持。</li>
+</ul>
+
+<h3>6.5 table size 放在哪里</h3>
+<p>在当前实测 R 中段，改变 R 近似只改变所有 f 的共同幅度，因此作为一个独立的有限容量修正即可：</p>
+<div class="formula">G<sub>e</sub>(R) ≈ ρ(R) · a<sub>e</sub> · Q，　并约定 ρ(R<sub>ref</sub>)=1</div>
+<p>ρ(R) 在中段近似 R<sup>γ</sup>（bigram γ=.576，trigram γ=.665），但这只是经验规律。已测稀释面在 f 上近乎平坦，而 f/(f+T/R) 会错误地压塌 f=1，因此我们暂不把“碰撞如何产生 ρ”写进核心机制。</p>
 <figure><img src="../../docs/figs/theory/fig_v5_dilution_surface.png" alt="dilution surface">
-<figcaption><b>图 15 · 经验稀释面 s_emp(f, R)</b>：压制在 f 上近乎平坦、只由负载 K/R 决定（load 10→1000 斜率 ≈ −0.59 ≈ R 轴 γ 0.576）。均场 f/(f+T/R) 与 Poisson 行内竞争两种「流量竞争」稀释被 f=1 处数据直接否定（预测压制 47×/6×，实测无塌陷）⇒ table-size 幂律的主体是 f-平坦的通道压制，更像 backbone 按通道信噪比校准读出增益。R₀ 处压制平坦 ⇒ κ 形状未被碰撞污染，只污染幅度。</figcaption></figure>
-<p><b>A 因子的直接判决（backbone LR 扫描）</b>：table LR 全程锁 128×，只扫 backbone LR——net gap 强响应：1e-4 → 2.84 峰值（1e-3）→ 4e-3 回落 2.28（详见 §7 图 18）。若 A 不在 backbone 侧，这条曲线应该是平的。配套证据：freeze_table 后期不需要表写入、freeze_backbone 需要 backbone 更新、dose 6× 在 ≈0.99 pass 穿零（pass-1 online 语义）。</p>
-<p><b>证据等级与开放项</b>：已站稳——κ↔缺失质量定量挂钩、R 轴主体 = f-平坦负载压制、pass 数主状态、表 1-pass 饱和 + backbone 放大。强一致未闭环——三因子乘积形式与全部数据的数值贴合。开放——a(load) 的动力学起源；A 的时间结构；mask 后再平衡/scar 项；均场稀释形式已被否定但正确理论缺位。已否定的旧形式（f/(f+T/R)、G_c = δᵀu、row-width 扫描解释）只在登记表存档。</p>
+<figcaption><b>图 15 · 为什么把 ρ(R) 留作经验修正</b>。实测 R 压制在 f 上近乎平坦；两种行内流量竞争公式在低频端被直接否定。它支持“R 改幅度、不改核心 M(f) 形状”，但尚未给出 ρ 的微观推导。</figcaption></figure>
+<p><b>当前判决</b>：核心区间模型 g<sub>e</sub>(f)=a<sub>e</sub>M(f) 已同时通过频率形状、10-epoch 动力学、freeze-backbone 阶梯与 freeze-table 保留四类检验，足以作为主报告的定量解释；仍不能称为对所有 regime 的证明。最关键的下一次 challenge 是把同一 shard×3 全局混匀后与分块 replay 比较：若终点相同而 epoch 齿消失，说明状态主要是累计复用；若终点显著改变，就必须在 a<sub>e</sub> 中加入重复间隔/顺序变量。</p>
 
 <h2 id="s7">7 · 附录：LR 与 β₂ 消融</h2>
 <h3>7.1 表侧：LR × 与 β₂（1000 步，val/freq=10）</h3>
@@ -155,7 +194,7 @@ a{color:var(--acc)}
 <li><b>历史版本</b>：本页旧版（2× 时代）在 <a href="versions/index-20260806-2x-era.html">versions/index-20260806-2x-era.html</a>；主文档只在 blog 仓库手工编辑，改完同步回 <code>docs/report/index.html</code>。</li>
 </ul>
 
-<footer>n-gram-gap-lab · 主文档 v5（2026-08-31 重构：结构对齐七项资产清单；删除 exact-frequency / sample285-MLP / toy model 等退役内容）· 数据命名空间 data/runs_fixed/（_fixed 后缀为权威口径）</footer>
+<footer>n-gram-gap-lab · 主文档 v5（2026-08-31：核心模型简化为 M(f)×aₑ，并补全 replay/epoch 动力学与 causalv5m3 因果判决）· 数据命名空间 data/runs_fixed/（_fixed 后缀为权威口径）</footer>
 </div>
 </body>
 </html>
