@@ -223,14 +223,18 @@ M(f) \;:=\; \frac{N_1(f)}{f\, n(f)} \;=\; \operatorname*{avg}_{c \in L_f}\left[\
 <li><b>backbone 逐轮放大。</b>表 LR=128× 时表写入很快；但表向量是否在深层网络中成为可用预测信号，取决于共享 backbone 的更新。每轮 replay 都再次提供「这个表方向能降低 train loss」的相关梯度，因此 \(a_e\) 继续增长。</li>
 <li><b>边际增量变小。</b>当读出已经较强，交叉熵曲率、共享参数任务干涉与 weight decay 会抵消继续放大的梯度，于是每轮增加量下降。这里不需要显式「熵正则项」：恢复力来自原损失的局部曲率、参数 superposition 和已有 wd。</li>
 </ol>
-<p>最小动力学只写一个一阶递推：</p>
-\[a_{e+1}-a_e \;=\; \eta_b\,(s-\lambda\, a_e)
-\qquad\Longrightarrow\qquad
-a_e \;=\; a_\infty\left(1-q^{\,e-1}\right),
-\qquad
-G_e \;=\; G_\infty\left(1-q^{\,e-1}\right),
-\qquad q=1-\eta_b\lambda,\;\; a_\infty = s/\lambda\]
-<p>\(s\) 是 fixed replay 反复提供的训练残差相关信号；\(\lambda\) 是上述有效恢复力，不是新增到代码里的正则项。早期 \(e\) 较小时 \(G_e\) 近似随 \(e\) 线性；之后每轮增量按 \(q\) 缩小。<b>20-epoch 判决（§41，图 8b）</b>：递推在 e=1…20 全窗口内拟合 \(q=.953\)、\(R^2=.9970\)，形状描述仍然可用；但平台参数随窗口剧烈漂移——同一条曲线在 e=1…10 窗口外推平台 12.66，在 e=1…20 窗口外推 23.69——且实测净增量在 e20 仍有约 +0.5/epoch。因此「平台 13.58」的外推说法<b>撤回</b>：在观测范围内（20 epoch）没有平台，增长是亚线性的，递推模型缺一个慢变量。</p>
+<p>最小动力学最初写成一阶递推 \(a_{e+1}-a_e \;=\; \eta_b\,(s-\lambda\, a_e)\)。它的三个机制预言在判决批中<b>全部失败，已被推翻</b>：</p>
+<ul>
+<li><b>不按累计 backbone dose 折叠</b>：同一累计 dose \(D=5.925\) 下，backbone LR 3e-4 / 6e-4 / 1e-3 / 2e-3 的净 gap 依次 14.74 / 13.05 / 11.45 / 8.50——经历更多次 write–reuse–readout 循环的臂 gap 更大。更新算符不对易 \((F_B(\eta_B)\circ F_T)^E \neq F_B(E\eta_B)\circ F_T\)，pass 数本身必须进入状态。</li>
+<li>\(-\log q/\eta_B\) 随臂从 57 漂到 2680（约 47 倍），不存在常数恢复率 \(\lambda\)。</li>
+<li>平台 \(G_\infty\) 随拟合窗口漂移（e≤10 外推 12.7，e≤20 外推 23.7），且所有正常训练臂末端仍在增长——不存在已观测到的平衡位置。</li>
+</ul>
+<p><b>升级后的最小模型是两状态</b>：快速 table 记忆 \(z_e\)（写入在 1 个 pass 内近饱和）+ 慢速 backbone 读出 \(\theta_e\)。三类独立证据锁定这个结构：</p>
+<ul>
+<li><b>κ(f) 形状检验</b>：10-epoch 边界 exact-f 快照做 e·f 水平重标度彻底失败（加权 log-RMSE 随 epoch 单调恶化 1.6→4.8），而垂直重标度 \(g/A_e\) 塌缩良好（RMSE 0.6–0.9）——κ(f) 是 f 轴上的稳定形状，epoch 增长是纯乘性放大 \(A(e)\)（bigram \(A_{10}/A_1\approx 28.6\)、trigram \(\approx 66.4\)）。</li>
+<li><b>freeze 四因子 10-epoch 判决</b>：e2 后全冻结（freeze_both）的 train/val/gap 在其后 8 个评测点 <b>bit-exact 锁死</b>于 +3.0759——没有任何参数更新时，epoch 重复对 gap 的贡献严格为零。仅表继续写（freeze_backbone）8 个 epoch，val 只从 4.758 涨到 4.963（+0.21，对照同期 +4.55）——<b>表写入本身几乎不产生 val 伤害，backbone 更新才是放大器</b>（晚期 val 增长 ≥95% 需要 backbone 参与）。仅 backbone 继续学（freeze_table）达到对照 gap 的 71.8%。</li>
+<li><b>train 侧碰撞擦除证据</b>：freeze_table 的 online train @e3=1.35 远低于对照 2.54——冻结表反而<b>保住</b>了边界 batch 的 self-write；对照中后续写入会通过碰撞擦除/稀释已写行（§46 实测 71.5%/94.5% 的 context 碰撞率佐证这一机制）。</li>
+</ul>
 
 <h3>8.7 学习率悖论与干预证据</h3>
 <p>增大 table LR 只加快「写入」，不能凭空创造第二次见到同一样本，也不能把 backbone 的 \(a_e\) 瞬间推到多 epoch 状态。因此 ≥16× 后 table LR 曲线聚拢（图 16b），而 epoch 依赖仍保留。6-pass 因果批给出更直接的判决（全部 seed 42、2022 步、128×，唯一变量为干预）：</p>
@@ -238,6 +242,7 @@ G_e \;=\; G_\infty\left(1-q^{\,e-1}\right),
 <li><code>causalv5m3_freeze_backbone_e1/e2/e3</code> 的 final gap 依次为 <b>1.585 / 2.505 / 3.389</b>，未冻结对照 <code>causalv5m3_none_2022</code> 为 <b>5.733</b>。允许 backbone 多训练一轮，就锁存更多 gap，方向与 \(a_e\) 单调增长一致。</li>
 <li><code>causalv5m3_freeze_table_e2</code> final gap = <b>5.386</b>，保留对照的 94%；说明 e2 后继续写表不是后续增长的主要必要条件。</li>
 <li>backbone wd 0 / 0.1 / 0.3 的 final gap 为 <b>5.833 / 5.733 / 5.609</b>，方向符合 \(\lambda\) 增大使读出下降；但只有单 seed 且差值约 0.12，只算弱支持。</li>
+<li>10-epoch 四因子长程批（3370 步，e2=step 675 冻结，§45.1）把判决推到极限：<code>ffqv5_freeze_both_e2_10ep</code> 边界后 8 个评测点 train/val/gap <b>bit-exact 不变</b>（gap 锁死 +3.0759）；<code>ffqv5_freeze_backbone_e2_10ep</code>（仅表写）final gap 2.727，val 增幅仅为对照的 4.5%（+0.205 vs +4.549）；<code>ffqv5_freeze_table_e2_10ep</code>（仅 backbone 学）final gap 6.399 = 对照 8.917 的 71.8%。</li>
 </ul>
 
 <h3>8.8 表大小修正 ρ(R) 与模型边界</h3>
@@ -247,19 +252,20 @@ G_e \;=\; G_\infty\left(1-q^{\,e-1}\right),
 <p>\(\rho(R)\) 在中段近似 \(R^{\gamma}\)（bigram \(\gamma=.576\)、trigram \(\gamma=.665\)），但这只是经验规律。已测稀释面在 \(f\) 上近乎平坦（图 15），而行内流量竞争公式 \(f/(f+T/R)\) 会错误压塌 \(f{=}1\) 端，因此「碰撞如何产生 \(\rho\)」暂不写入核心机制。</p>
 <figure><img src="../../docs/figs/theory/fig_v5_dilution_surface.png" alt="dilution surface">
 <figcaption><b>图 15 · 表大小如何压制 gap：三张检验，一个结论</b>。纵轴 \(s_{emp}\) = 某 run 的 per-f gap 相对参考 run（R=2.35M）的比值，即「该 R 下记忆被压制的份额」。<b>左</b>：不同 R 下 \(s_{emp}\) 对 \(f\) 近乎平坦——压制不偏爱任何频率。<b>中</b>：若行内流量竞争公式 \(f/(f+T/R)\) 成立，所有点应落在虚线 \(s=x\) 上——低频端被直接否定。<b>右</b>：\(s_{emp}\) 对负载 \(K/R\) 单调下降，且不同 \(f\) 的点（颜色）除最高频端外基本折叠——压制主要由全局负载决定。结论：R 改变总幅度 \(\rho(R)\)、不改变核的形状 \(M(f)\)，故 \(\rho\) 作为经验修正单列；其微观推导仍开放。</figcaption></figure>
-<p><b>当前判决</b>：核心区间模型 \(g_e(f)=a_e\, M(f)\) 已通过频率形状（图 14）、freeze-backbone 阶梯与 freeze-table 保留三类检验，足以作为主报告的定量解释；但 20-epoch 判决表明 \(a_e\) 不能用单状态递推封闭（图 8b：平台参数随窗口漂移、无实测平台），epoch 方向缺一个慢变量，仍不能称为对所有 regime 的证明。最关键的下一次 challenge：把同一 shard×3 全局混匀后与分块 replay 比较——若终点相同而 epoch 齿消失，说明状态主要是累计复用；若终点显著改变，就必须在 \(a_e\) 中加入重复间隔/顺序变量。backbone LR 响应曲线的形状（图 18）同样尚未被模型解释。</p>
+<p><b>碰撞侧的直接测量（§46，零 GPU）</b>：用训练 hash 把 exact-f 索引映射到表行，在 R=2²⁰ 实测——bigram 71.5% 的 context 发生碰撞，但按 token 质量算，<b>行主（dominant context）仍持有 86.5%</b>；trigram 94.5% 碰撞、行主仅持有 <b>43.7%</b>；严格零碰撞（solo）的 token 质量两边都≈0。这解释了为什么「碰撞率」必须用 token-mass 口径：gap ∝ token mass，高频 context 在碰撞下仍保有私有通道，而 trigram 私有通道减半正是它对 R 更敏感（γ .665 > .576）的碰撞侧素材。后续建模应以实测 owner_frac(R)（log-log 近似线性，斜率≈0.8–0.9）替换解析式 \(f/(f+T/R)\）。</p>
+<p><b>当前判决</b>：核心区间模型 \(g_e(f)=a_e\, M(f)\) 已通过频率形状（图 14）、freeze-backbone 阶梯、freeze-table 保留与 10-epoch freeze 四因子四类检验；但 epoch 方向的单状态递推已被推翻，现行模型是两状态（快速表记忆 + 慢速 backbone 读出放大），pass 数与重复间隔均进入状态。混匀判决（§45.2，trigram-only ×3 pass）结果：全局混匀使 <b>epoch 齿消失</b>（step 337 gap 即 +0.89，replay 臂为 −0.06），但终点 gap 改变 −7.5%（2.288 vs 2.474）——「累计复用」近似成立但不精确，<b>重复间隔进入状态变量</b>（massed repeats 的第二次写入落在新鲜行上、边际收益小；spaced repeats 重写被碰撞稀释的行、恢复更多）。backbone LR 响应曲线的形状（图 18）与重复间隔的定量律仍是开放问题。</p>
 
 <h2 id="s9">9 · 来源与可追溯性</h2>
 <ul>
 <li><b>代码</b>：<code>code/train.py</code>（训练/注入/干预旗标）、<code>code/ngram_freq.py</code>（频率索引）、<code>code/cluster/run_v5_clean.sh</code>（128× 标准 launcher）、<code>code/cluster/run_v5_main_manifest.sh</code>（批量清单）。</li>
 <li><b>绘图脚本</b>：<code>docs/plot_scripts/</code>（每图一个脚本，数据从 <code>data/runs_fixed/*_fixed/</code> 的 summary/train_log/exact_freq_loss 直接读取）。</li>
 <li><b>绘图纪律</b>：全部新图共用 <code>docs/plot_scripts/v5_style.py</code>（统一字体/网格/配色：input 蓝、y 红、v 金、nogram 灰、bigram 青、trigram 橙）；每图同时产出 PNG + SVG，正文优先嵌 SVG；可交互视图用 Plotly（图 1），图例点击可隐藏曲线；脚本一图一个、数据只读 <code>data/runs_*/*_fixed/</code> 与已提交 CSV，不从散文数字造图。</li>
-<li><b>实验清单</b>：<a href="experiment-registry.html">experiment-registry.html</a>——全部 run 的 run_id / setting / 状态 / 图源映射；<code>docs/experiment-log.md</code> 为登记簿（§38–§40 为最新批）；<code>docs/claims-ledger.md</code> 为断言台账。</li>
+<li><b>实验清单</b>：<a href="experiment-registry.html">experiment-registry.html</a>——全部 run 的 run_id / setting / 状态 / 图源映射；<code>docs/experiment-log.md</code> 为登记簿（§38–§46 为最新批）；<code>docs/claims-ledger.md</code> 为断言台账。</li>
 <li><b>术语与伪代码</b>：<a href="background.html">background.html</a>；理论完整推导：<code>docs/notes/theory/hypothesis-dilution-amplification.md</code>。</li>
 <li><b>历史版本</b>：本页旧版（2× 时代）在 <a href="versions/index-20260806-2x-era.html">versions/index-20260806-2x-era.html</a>；主文档只在 blog 仓库手工编辑，改完同步回 <code>docs/report/index.html</code>。</li>
 </ul>
 
-<footer>n-gram-gap-lab · 主文档 v5（2026-08-31 二轮：图 1 改交互可切换；图 3 并入 token 质量（对数桶+f=0）；图 5 退役；图 4/6/7/17 统一风格重绘为 SVG；§5 自洽重写并登记 20-epoch 长 replay 与二次 reseed 在途批；β₂ 比对统一 step-1000）· 数据命名空间 data/runs_fixed/（_fixed 后缀为权威口径）</footer>
+<footer>n-gram-gap-lab · 主文档 v5（2026-09-01 三轮：§8.6 一状态递推推翻、两状态模型正位；§8.7 补 10-epoch freeze 四因子判决（freeze_both bit-exact 锁死）；§8.8 补 §46 碰撞 owner-mass 实测与 §45.2 混匀判决）· 数据命名空间 data/runs_fixed/（_fixed 后缀为权威口径）</footer>
 </div>
 </body>
 </html>
