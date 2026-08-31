@@ -91,9 +91,9 @@ a{color:var(--acc)}
 <figcaption><b>图 7 · epoch 长度轴（0.125×–3.95×L4）</b>。固定 3 pass，gap 随 unique 池长单调下降。左段（≤1×L4）：shard-1 nested prefixes（旧 val 集）；右段（&gt;1×L4）：多 shard 真实池 <code>s1v5_128_epfx_*</code>，实际池长 670/1000/1330 batches（= 1.99/2.97/3.95×L4，shard 尾部取整）。trigram 单支路、table ×128、seed 42；红虚线为 val 组成切换处。脚本 <code>plot_v5_epoch_length_valid.py</code>。</figcaption></figure>
 <p><b>epoch 编号</b>：固定同一份 1× 数据反复 replay，gap 随完成 pass 数增长。这里的关键不是「第几个 epoch」这个标签，而是：<b>第二轮开始时，当前样本在被预测之前，表里已经有第一轮写入的、与这份训练集特有误差相关的内容</b>。train 会反复遇到同一误差，val 则来自独立样本；共享 backbone 又会在每轮更新中逐渐学会放大这条表信号，所以两者分叉。完整推导见 §8.6。</p>
 <figure><img src="../../docs/figs/main/fig_v5_s1_epoch_number.png" alt="gap vs epoch number">
-<figcaption><b>图 8 · gap 对 epoch 编号（早期三点）</b>。337 / 674 / 1000 步三个基准点（1× 主线，128×），只覆盖早期增长。长程行为由 20-epoch 批 <code>s1v5_128_ep{,_tri}_1xL4_20ep{,_nogram}</code>（§41，进行中）直接测量，完成后本图并入图 8b 的全程版。</figcaption></figure>
+<figcaption><b>图 8 · gap 对 epoch 编号（20-epoch 全程版）</b>。固定同一份 shard-1 数据 replay 20 个 epoch（L4 = 337 batches/epoch，128×，seed 42），三臂：trigram 单支路 / 双表 / nogram 对照，点 = epoch 边界原始记录（gap = fixed val − online train）。e20 时 gap 达 15.55（tri）/ 12.67（双表）/ 1.01（nogram）；右图增量在 e2–3 达峰（~1.5/epoch）后缓慢衰减，但 <b>e20 仍约 +0.6（tri）/ +0.24（双表）——亚线性增长，观测范围内无平台</b>。nogram 臂 e4 起 gap 转正并缓涨到 1.01：backbone 自身也有慢速过拟合。来源：<code>s1v5_128_ep_tri_1xL4_20ep</code> / <code>s1v5_128_ep1xL4_20ep_both</code> / <code>s1v5_128_ep1xL4_20ep_nogram</code>（§41）；脚本 <code>plot_v5_128x_doc_figures.py</code>。</figcaption></figure>
 <figure><img src="../../docs/figs/theory/fig_v5_epoch_kernel_dynamics.png" alt="epoch kernel dynamics">
-<figcaption><b>图 8b · 10-epoch replay：现象 + 单状态动力学检验</b>。与图 8 是<b>同一现象、两个呈现</b>：图 8 是 1× 主线前三点的原始读数；本图是 trigram 单支路 10 个完整 epoch 的边界序列（原始灰点来自 <code>s1v5_128_ep_tri_1xL4_10ep</code>，seed 42，337 步/pass），红线 = 减去 matched nogram 臂后的 net n-gram gap，虚线 = 单状态递推 \(G_e=G_\infty(1-q^{e-1})\) 在 e=1…10 内的形状检验（R²=.9986）；右图 = 逐轮增量（总体下降、有 batch 噪声）。递推外推的「平台 13.58、时间常数 9.88 epoch」只是 10 点窗口的外推，<b>是否真有平台由 §41 的 20-epoch 批判决</b>——若 e&gt;10 后进入平台，递推获支持；若继续近似线性增长，「平台」说法撤回。</figcaption></figure>
+<figcaption><b>图 8b · 20-epoch replay：单状态动力学检验与判决</b>。与图 8 是<b>同一现象、两个呈现</b>：图 8 是三臂的原始读数；本图把 trigram 单支路减去 matched nogram 得到 net n-gram gap（红），虚线 = 单状态递推 \(G_e=G_\infty(1-q^{e-1})\) 在 e=1…20 全窗口的拟合（q=.953，R²=.9970）。拟合在窗口内仍然漂亮，但<b>平台参数随窗口漂移</b>：同一条曲线 e=1…10 外推平台 12.66、e=1…20 外推 23.69；右图实测净增量在 e20 仍约 +0.5，递推预测的增量衰减过快。<b>判决：观测范围内无平台，「平台 13.58」外推撤回，递推缺慢变量。</b>数据：<code>s1_epoch_long_replay_points.csv</code>（20ep 行）；脚本 <code>plot_v5_epoch_kernel_dynamics.py</code>。</figcaption></figure>
 <figure><img src="../../docs/figs/main/fig_v5_128x_dose_gap.png" alt="dose final gap">
 <figcaption><b>图 9 · dose 终点 gap（128× 批，2000 步）</b>。<b>setting</b>：每臂 train shards 数为 0.25×–5× 个 shard 的对应分片组合（shard 内顺序固定、不重复消费），val 固定不变，其余与主线一致；步数统一 2000，因此低剂量臂在 2000 步内完成的 pass 数更多（0.25×：~24 pass；5×：~1.2 pass）。终点 gap 0.25×→5×：10.90 → 0.36；6× 臂在 ≈0.99 pass 处 gap 穿零——与「pass 1 的 online gap 恒 ≈0」（§8.6）一致。旧 11 点 2× 时代剂量结果已退役。</figcaption></figure>
 
@@ -230,7 +230,7 @@ a_e \;=\; a_\infty\left(1-q^{\,e-1}\right),
 \qquad
 G_e \;=\; G_\infty\left(1-q^{\,e-1}\right),
 \qquad q=1-\eta_b\lambda,\;\; a_\infty = s/\lambda\]
-<p>\(s\) 是 fixed replay 反复提供的训练残差相关信号；\(\lambda\) 是上述有效恢复力，不是新增到代码里的正则项。早期 \(e\) 较小时 \(G_e\) 近似随 \(e\) 线性；之后每轮增量按 \(q\) 缩小。10-epoch net 曲线的区间内拟合给出 \(q=.904\)、\(R^2=.9986\)（图 8b）。对应的「平台 13.58、时间常数 9.88 epoch」只是短窗口外推，<b>目前没有数据支持把它当作真实平台</b>。</p>
+<p>\(s\) 是 fixed replay 反复提供的训练残差相关信号；\(\lambda\) 是上述有效恢复力，不是新增到代码里的正则项。早期 \(e\) 较小时 \(G_e\) 近似随 \(e\) 线性；之后每轮增量按 \(q\) 缩小。<b>20-epoch 判决（§41，图 8b）</b>：递推在 e=1…20 全窗口内拟合 \(q=.953\)、\(R^2=.9970\)，形状描述仍然可用；但平台参数随窗口剧烈漂移——同一条曲线在 e=1…10 窗口外推平台 12.66，在 e=1…20 窗口外推 23.69——且实测净增量在 e20 仍有约 +0.5/epoch。因此「平台 13.58」的外推说法<b>撤回</b>：在观测范围内（20 epoch）没有平台，增长是亚线性的，递推模型缺一个慢变量。</p>
 
 <h3>8.7 学习率悖论与干预证据</h3>
 <p>增大 table LR 只加快「写入」，不能凭空创造第二次见到同一样本，也不能把 backbone 的 \(a_e\) 瞬间推到多 epoch 状态。因此 ≥16× 后 table LR 曲线聚拢（图 16b），而 epoch 依赖仍保留。6-pass 因果批给出更直接的判决（全部 seed 42、2022 步、128×，唯一变量为干预）：</p>
@@ -247,7 +247,7 @@ G_e \;=\; G_\infty\left(1-q^{\,e-1}\right),
 <p>\(\rho(R)\) 在中段近似 \(R^{\gamma}\)（bigram \(\gamma=.576\)、trigram \(\gamma=.665\)），但这只是经验规律。已测稀释面在 \(f\) 上近乎平坦（图 15），而行内流量竞争公式 \(f/(f+T/R)\) 会错误压塌 \(f{=}1\) 端，因此「碰撞如何产生 \(\rho\)」暂不写入核心机制。</p>
 <figure><img src="../../docs/figs/theory/fig_v5_dilution_surface.png" alt="dilution surface">
 <figcaption><b>图 15 · 表大小如何压制 gap：三张检验，一个结论</b>。纵轴 \(s_{emp}\) = 某 run 的 per-f gap 相对参考 run（R=2.35M）的比值，即「该 R 下记忆被压制的份额」。<b>左</b>：不同 R 下 \(s_{emp}\) 对 \(f\) 近乎平坦——压制不偏爱任何频率。<b>中</b>：若行内流量竞争公式 \(f/(f+T/R)\) 成立，所有点应落在虚线 \(s=x\) 上——低频端被直接否定。<b>右</b>：\(s_{emp}\) 对负载 \(K/R\) 单调下降，且不同 \(f\) 的点（颜色）除最高频端外基本折叠——压制主要由全局负载决定。结论：R 改变总幅度 \(\rho(R)\)、不改变核的形状 \(M(f)\)，故 \(\rho\) 作为经验修正单列；其微观推导仍开放。</figcaption></figure>
-<p><b>当前判决</b>：核心区间模型 \(g_e(f)=a_e\, M(f)\) 已同时通过频率形状（图 14）、10-epoch 动力学（图 8b）、freeze-backbone 阶梯与 freeze-table 保留四类检验，足以作为主报告的定量解释；仍不能称为对所有 regime 的证明。最关键的下一次 challenge：把同一 shard×3 全局混匀后与分块 replay 比较——若终点相同而 epoch 齿消失，说明状态主要是累计复用；若终点显著改变，就必须在 \(a_e\) 中加入重复间隔/顺序变量。backbone LR 响应曲线的形状（图 18）同样尚未被模型解释。</p>
+<p><b>当前判决</b>：核心区间模型 \(g_e(f)=a_e\, M(f)\) 已通过频率形状（图 14）、freeze-backbone 阶梯与 freeze-table 保留三类检验，足以作为主报告的定量解释；但 20-epoch 判决表明 \(a_e\) 不能用单状态递推封闭（图 8b：平台参数随窗口漂移、无实测平台），epoch 方向缺一个慢变量，仍不能称为对所有 regime 的证明。最关键的下一次 challenge：把同一 shard×3 全局混匀后与分块 replay 比较——若终点相同而 epoch 齿消失，说明状态主要是累计复用；若终点显著改变，就必须在 \(a_e\) 中加入重复间隔/顺序变量。backbone LR 响应曲线的形状（图 18）同样尚未被模型解释。</p>
 
 <h2 id="s9">9 · 来源与可追溯性</h2>
 <ul>
