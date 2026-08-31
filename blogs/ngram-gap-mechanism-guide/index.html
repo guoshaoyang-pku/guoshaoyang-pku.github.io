@@ -67,8 +67,8 @@ a{color:var(--acc)}
 
 <h2 id="s2">2 · 主要现象：加 n-gram 就有 gap</h2>
 <p>同一条训练流、同一套评测下，四个注入臂只有带 n-gram 注入的臂产生持续增长的 val−train gap：input / y / v 三臂 gap 随 step 单调增长，nogram 对照贴零。这条现象在 2× 与 128× 两代表 LR 下都成立；128× 下终点 gap 为 5.67（input）/ 5.25（y）/ 7.65（v）/ 0.23（nogram）；种子 43/44 在 2× 时代复现为 5.42 / 5.53，结论稳健。</p>
-<figure><iframe src="../../docs/figs/main/fig_v5_injection_interactive.html" title="injection trajectories (interactive)" style="width:100%;height:540px;border:none;background:#fff;border-radius:6px" loading="lazy"></iframe>
-<figcaption><b>图 1 · 注入点轨迹（可交互，单臂单面板）</b>。同一 y 轴同时画 online train loss（青）、fixed val loss（红）与 gap（灰）；左上角下拉在 <b>16 个组合（4 臂 input / y / v / nogram × 4 档：128×·1k / 128×·2k / 2×·1k / 2×·2k，默认 input·128×·1k）</b>间切换；图例点击可隐藏单条曲线。点 = 原始 online 记录（每 10 步），细线 = 3 点均值视觉连接。input / y / v 三臂 gap 单调增长，nogram 全程贴零。来源：<code>nglab1x_{input,y,v,nogram}_v5_128x_freq10_fixed</code>（128×）与 <code>nglab1x_{input,y,v,nogram}_v5_fixed</code>（2× 历史），seed 42，val/freq=10。脚本 <code>plot_v5_fig01_injection_interactive.py</code>。</figcaption></figure>
+<figure><iframe src="../../docs/figs/main/fig_v5_injection_interactive.html" title="injection trajectories (interactive)" style="width:100%;height:570px;border:none;background:#fff;border-radius:6px" loading="lazy"></iframe>
+<figcaption><b>图 1 · 注入点轨迹（可交互，双臂默认叠加）</b>。左上角下拉选择<b>学习率 × 步数</b>（128×·1k（默认）/ 128×·2k / 2×·1k / 2×·2k）；四臂叠加展示，<b>点击图例显示/隐藏臂，默认选中 input 与 nogram</b>（y、v 点图例即加出）。每臂三条：train = 臂色实线、val = 同色半透明实线、gap = 同色虚线；点 = 原始 online 记录（每 10 步），线 = 3 点均值视觉连接。input / y / v 三臂 gap 单调增长，nogram 全程贴零。来源：<code>nglab1x_{input,y,v,nogram}_v5_128x_freq10_fixed</code>（128×）与 <code>nglab1x_{input,y,v,nogram}_v5_fixed</code>（2× 历史），seed 42，val/freq=10。脚本 <code>plot_v5_fig01_injection_interactive.py</code>。</figcaption></figure>
 <figure><img src="../../docs/figs/main/fig_v5_128x_injection_bars.png" alt="injection final gap bars">
 <figcaption><b>图 2 · 四臂 final gap 汇总（step 2000）</b>。2×：input 5.74 / y 3.64 / v 2.01 / nogram 0.25；128×：input 5.67 / y 5.25 / v 7.65 / nogram 0.23。注入臂排序随表 LR 变化（2× 时 input 最高，128× 时 v 最高），「有无 gap」本身只由注入决定；排序差异的机制留作开放问题。</figcaption></figure>
 
