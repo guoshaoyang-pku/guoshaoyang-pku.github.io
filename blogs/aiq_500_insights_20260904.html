@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ArchitectureIQ 500 题评测：现状、两条 insight 与规律总结（2026-09-04）</title>
+<style>
+:root { --fg:#1a2230; --dim:#66707f; --line:#e5e8ee; --accent:#2f6fed; --warn:#c0392b; --ok:#0a8a4a; }
+* { box-sizing:border-box }
+body { font-family:-apple-system,'PingFang SC','Helvetica Neue',Arial,sans-serif; color:var(--fg);
+  max-width:1080px; margin:0 auto; padding:32px 20px 80px; background:#fafbfc; line-height:1.75 }
+h1 { font-size:25px; margin:0 0 4px }
+.sub { color:var(--dim); font-size:13px; margin-bottom:20px }
+h2 { font-size:19px; margin:38px 0 10px; padding-top:10px; border-top:2px solid var(--line) }
+h3 { font-size:15.5px; margin:22px 0 6px }
+p { margin:8px 0; font-size:14px }
+ul, ol { font-size:14px; margin:6px 0; padding-left:22px }
+li { margin:3px 0 }
+table { width:100%; border-collapse:collapse; background:#fff; border:1px solid var(--line);
+  border-radius:10px; overflow:hidden; font-size:13.5px; margin:10px 0 }
+th { background:#f2f4f8; text-align:left; padding:8px 10px; font-weight:600; font-size:12.5px; color:#3c4656; white-space:nowrap }
+td { padding:7px 10px; border-top:1px solid var(--line); white-space:nowrap }
+td.num, th.num { text-align:right }
+td.hi { font-weight:700; color:var(--accent) }
+.up { color:var(--ok) } .down { color:var(--warn) }
+.callout { background:#fff8e6; border:1px solid #f0dfa0; border-radius:10px; padding:12px 16px; margin:14px 0; font-size:14px }
+.callout.blue { background:#eef3ff; border-color:#c3d4f5 }
+.callout.red { background:#fdeeee; border-color:#f0c5c5 }
+code { background:#eef1f5; padding:1px 5px; border-radius:4px; font-size:12.5px }
+.small { font-size:12.5px; color:var(--dim) }
+.tag { display:inline-block; background:#eef3ff; color:var(--accent); border-radius:5px; padding:0 7px; font-size:12px; margin-right:6px }
+.foot { margin-top:36px; font-size:12.5px; color:var(--dim); line-height:1.9; border-top:1px solid var(--line); padding-top:14px }
+</style></head><body>
+
+<h1>ArchitectureIQ 500 题评测：现状、两条 insight 与规律总结</h1>
+<div class="sub">整理时间：2026-09-04 21:30 · 数据来源：群「Architecture IQ &amp; 元模型」聊天记录、本地评测目录 <code>data/evals/</code>、<code>docs/aiq_leaderboard.html</code> · 配套：<a href="https://architecture-iq.com">architecture-iq.com</a></div>
+
+<div class="callout blue">
+<b>一页结论</b>
+<ol style="margin:6px 0 2px">
+<li><b>还没上线。</b>内测推迟，最新安排：9/5（明天）18:00 网站更新 50 题（从 500 题里抽），21:00 前交卷，君子协定不用 AI。奖池改为：1-3 名 3000 / 4-6 名 2000 / 7-9 名 1000。</li>
+<li><b>Insight 1：分数与思考强度几乎无关。</b>17 档 reasoning effort × 50 题的扫描显示答案在几百 token 内定型，4k~34k token 的思考收益在噪声内（opus none 0.760 vs max 0.740）。</li>
+<li><b>Insight 2：分数与 dataset 几乎无关，选项侧先验主导。</b>删掉整个数据集卡片的「盲测」正确率不降反升（opus 0.740→0.792）；偷换数据集后答案翻转率仅比内在抖动高 ~5pt。</li>
+<li><b>真正的区分度在 architecture_only 题</b>：主榜上 opt 题头部模型已饱和（83-88%），arch 题只有 37-61%；本地 insight-50 复核更极端——4 个模型 arch 题 0-21%（低于随机 33%），opt 题 63-95%。</li>
+<li><b>对考生的含义</b>：选项侧判据（优化器流程、容量反直觉）就是主要得分来源——这正好是刘老师规则库和 KB v2 覆盖的内容；arch 题要预期「大≠好、深≠好」的反直觉答案。</li>
+</ol>
+</div>
+
+<h2>1. 现状：题库、榜单、上线安排</h2>
+
+<h3>1.1 v1.5 正式题库（500 题，3 选 1）</h3>
+<table>
+<tr><th>维度</th><th>分布</th></tr>
+<tr><td>family</td><td>synthetic_tabular 100 / univariate 100 / multivariate 100 / bigram_lm 100 / spiral 50 / xor 50</td></tr>
+<tr><td>题型</td><td>architecture_only 170 / optimizer_only 168 / mixed 162（≈1:1:1）</td></tr>
+<tr><td>预算</td><td>4096 / 8192 / 16384 / 32768（各约 1/4；注意大预算占一半）</td></tr>
+<tr><td>GT 口径</td><td>10 seeds 全胜显著性闸门（win_rate = 1.0），选项顺序已打乱，correct_letter 分布 ≈ 均匀</td></tr>
+</table>
+
+<h3>1.2 主榜 · 500 题（2026-09-04 13:18 UTC，修正版 prompt）</h3>
+<p class="small">arch / opt / mixed 为分题型正确率(%)。<b>architecture_only 是主要的区分度来源，optimizer_only 头部模型已基本饱和。</b></p>
+<table>
+<tr><th>#</th><th>模型</th><th class="num">acc</th><th class="num">arch</th><th class="num">opt</th><th class="num">mixed</th><th>选A率</th><th>状态</th></tr>
+<tr><td>1</td><td><b>GLM-5.2</b></td><td class="num hi">80.9</td><td class="num">47</td><td class="num">88</td><td class="num">89</td><td>28%</td><td class="small">⏳ 204/500 多渠道补跑</td></tr>
+<tr><td>2</td><td><b>GPT-5.6 Sol</b></td><td class="num hi">77.6</td><td class="num">60</td><td class="num">87</td><td class="num">85</td><td>31%</td><td class="small">⏳ 486/500</td></tr>
+<tr><td>3</td><td><b>Claude Opus 5</b></td><td class="num hi">76.0</td><td class="num">61</td><td class="num">86</td><td class="num">81</td><td>36%</td><td class="small">✅ 完赛</td></tr>
+<tr><td>4</td><td>DeepSeek V4 Flash</td><td class="num">70.4</td><td class="num">48</td><td class="num">85</td><td class="num">79</td><td>30%</td><td class="small">✅（曾 0.788 后回落）</td></tr>
+<tr><td>5</td><td>DeepSeek V4 Pro</td><td class="num">68.3</td><td class="num">43</td><td class="num">83</td><td class="num">79</td><td>30%</td><td class="small">✅</td></tr>
+<tr><td>6</td><td>GPT-5.6 Luna</td><td class="num">67.8</td><td class="num">42</td><td class="num">85</td><td class="num">76</td><td>32%</td><td class="small">✅</td></tr>
+<tr><td>7</td><td>Gemini 3.1 Pro Preview</td><td class="num">66.8</td><td class="num">42</td><td class="num">85</td><td class="num">74</td><td>37%</td><td class="small">✅</td></tr>
+<tr><td>8</td><td>Claude Sonnet 5</td><td class="num">65.4</td><td class="num">38</td><td class="num">83</td><td class="num">75</td><td>36%</td><td class="small">✅</td></tr>
+<tr><td>9</td><td>GPT-4o</td><td class="num">60.2</td><td class="num">52</td><td class="num">70</td><td class="num">58</td><td>41%</td><td class="small">✅（选A率偏高）</td></tr>
+<tr><td>10</td><td>DeepSeek R1 (0528)</td><td class="num">59.4</td><td class="num">42</td><td class="num">71</td><td class="num">65</td><td>38%</td><td class="small">⏳ 490/500</td></tr>
+<tr><td>11</td><td>Gemini 2.5 Pro</td><td class="num">55.8</td><td class="num">37</td><td class="num">70</td><td class="num">61</td><td>34%</td><td class="small">✅</td></tr>
+</table>
+
+<h3>1.3 Insight 榜 · 50 题子集：旧 prompt 的选 A 锚定 bug 已实锤并修复</h3>
+<ul>
+<li>旧 prompt 的格式示例里写了字面 <code>&lt;answer&gt;A&lt;/answer&gt;</code>，导致一批模型位置锚定：Gemini 2.5 Pro 偏好选 A、Llama 几乎全选 A。</li>
+<li>新 prompt（示例改为占位符）后锚定分布回到 ≈33%，分数回归真实水平：o3 66→<b>54</b>（-12）、Qwen3.5 27B 56→<b>46</b>（-10）、Gemini 2.5 Flash 51→<b>61.4</b>（+10.3）、Muse Spark 62→<b>66</b>（+4）。</li>
+<li>GLM-5.2 的 80.9 含 max（422 题）与 high（78 题降级重试）混档，且目前只有 204/500，排名仍可能变动。</li>
+</ul>
+
+<h3>1.4 上线与考试安排（群内 9/3-9/4 最新）</h3>
+<ul>
+<li>9/3 唐晨成：内测推迟——「题目的难度、配比和测评还有一些需要调整的地方」。</li>
+<li>9/4 刘子鸣拍板：<b>9/5 18:00 网站更新题目，21:00 前交卷</b>（自己截图 + 后端验证），不能使用 AI（君子协定）；<b>50 题，从 500 题里抽</b>（这样人能跟 LLM 做 apples-to-apples 比较）。</li>
+<li>奖池调整为普惠制：1-3 名 3000 / 4-6 名 2000 / 7-9 名 1000（9 人报名）。</li>
+<li>题型配比讨论：曾提议人类题包去掉 tabular cls，唐晨成担心与 LLM 分数不可比，最终决定维持原分布。</li>
+</ul>
+
+<h2>2. Insight 1：分数与思考强度几乎无关</h2>
+<p>实验：opus / luna / v4-flash / v4-pro 各设多档 reasoning effort，同做 insight-50 题（共 17 档 ≈850 次调用）。横轴 = 平均 output tokens/题。</p>
+<table>
+<tr><th>模型</th><th>档位</th><th class="num">正确率</th><th class="num">output tok/题</th><th class="num">其中 reasoning</th></tr>
+<tr><td rowspan="6"><b>opus-5</b></td><td>none</td><td class="num">0.760</td><td class="num">1,496</td><td class="num small">(relay 不报告)</td></tr>
+<tr><td>low</td><td class="num">0.780</td><td class="num">156</td><td class="num"></td></tr>
+<tr><td>medium</td><td class="num hi">0.800</td><td class="num">425</td><td class="num"></td></tr>
+<tr><td>high</td><td class="num">0.760</td><td class="num">1,764</td><td class="num"></td></tr>
+<tr><td>xhigh</td><td class="num">0.740</td><td class="num">2,786</td><td class="num"></td></tr>
+<tr><td>max</td><td class="num">0.740</td><td class="num">4,326</td><td class="num"></td></tr>
+<tr><td rowspan="5"><b>luna</b></td><td>none</td><td class="num">0.560</td><td class="num">100</td><td class="num">0</td></tr>
+<tr><td>low</td><td class="num hi">0.660</td><td class="num">324</td><td class="num">220</td></tr>
+<tr><td>medium</td><td class="num">0.620</td><td class="num">477</td><td class="num">372</td></tr>
+<tr><td>high</td><td class="num hi">0.660</td><td class="num">1,630</td><td class="num">1,515</td></tr>
+<tr><td>xhigh</td><td class="num">0.600</td><td class="num">3,890</td><td class="num">3,746</td></tr>
+<tr><td rowspan="3"><b>v4-pro</b></td><td>low</td><td class="num">0.600</td><td class="num">2,671</td><td class="num">2,556</td></tr>
+<tr><td>high</td><td class="num">0.620</td><td class="num">13,171</td><td class="num">13,045</td></tr>
+<tr><td>max</td><td class="num">0.660</td><td class="num">16,705</td><td class="num">16,577</td></tr>
+<tr><td rowspan="3"><b>v4-flash</b></td><td>low</td><td class="num">0.640</td><td class="num">9,893</td><td class="num">9,771</td></tr>
+<tr><td>high</td><td class="num">0.640</td><td class="num">26,596</td><td class="num">26,476</td></tr>
+<tr><td>max</td><td class="num">0.660</td><td class="num">34,482</td><td class="num">34,366</td></tr>
+</table>
+<ul>
+<li><b>配对消噪</b>（同题对比，只看答案翻转）：opus none vs max = 3胜:2负；luna none vs xhigh = 4:6；pro low vs max = 3:6；flash low vs max = 2:3——全部在二项噪声内。</li>
+<li><b>opus 不需要思考</b>：none 档 0.760 ≈ max 档 0.740，答案在第一反应里定型；medium 的 0.800 是噪声峰。</li>
+<li><b>luna 是唯一有真实剂量响应的</b>：none（100 token 直答）0.560 → low 档加 220 个 reasoning token 跳到 0.660；之后 324→3,890 token（12×）收益为零甚至为负。<b>边际收益全部集中在前几百 token。</b></li>
+<li><b>flash 是效率灾难</b>：烧 26k reasoning token 买到和 pro max 一样的 0.66。</li>
+</ul>
+<div class="callout">
+<b>Caveat</b>：n=50，每格标准误 ±7pt，格间差异全在噪声内；relay 不暴露 Claude 的 thinking token 计数（opus 行横轴只是可见输出，真实思考量被低估）。数据在服务器 <code>data/evals/v15_effort_sweep/</code>。
+</div>
+
+<h2>3. Insight 2：分数与 dataset 几乎无关，选项（setting）侧主导</h2>
+
+<h3>3.1 实验 A：盲测（删掉整个 Dataset 段，只看选项答题）</h3>
+<table>
+<tr><th>模型</th><th class="num">全文正确率</th><th class="num">盲测正确率</th><th class="num">Δ</th></tr>
+<tr><td>claude-opus-5</td><td class="num">0.740</td><td class="num">0.792</td><td class="num up">+5pt</td></tr>
+<tr><td>deepseek-v4-flash</td><td class="num">0.660</td><td class="num">0.680</td><td class="num up">+2pt</td></tr>
+<tr><td>deepseek-v4-pro</td><td class="num">0.660</td><td class="num">0.660</td><td class="num">0</td></tr>
+</table>
+<p>三个模型盲测全部<b>不低于</b>全文——数据集卡片对决策的贡献为零，删掉甚至略涨（噪声内；可能长 prompt 稀释了注意力）。</p>
+
+<h3>3.2 实验 B：数据集偷换（同 bucket 内换卡片）+ 错误数据集</h3>
+<table>
+<tr><th>模型</th><th class="num">对照组翻转（内在抖动）</th><th class="num">换数据集后翻转</th></tr>
+<tr><td>opus-5</td><td class="num">1/18 (5%) → 6/40 (15%)</td><td class="num">3/19 (16%) → 9/40 (23%)</td></tr>
+<tr><td>v4-flash</td><td class="num">3/40 (7.5%)</td><td class="num">6/40 (15%)</td></tr>
+<tr><td>v4-pro</td><td class="num">1/19 (5%)</td><td class="num">1/17 (6%)</td></tr>
+<tr><td>luna</td><td class="num">2/40 (5%)</td><td class="num">5/40 (13%)</td></tr>
+</table>
+<p>换数据集后翻转率平均只比内在抖动高 ~5pt；「盲测 ≥ 全文」「错数据集 ≈ 原题重答」在四个模型上全部成立。</p>
+
+<h3>3.3 机制解释：选项代码本身泄露了任务类型</h3>
+<ul>
+<li>选项侧的生成代码足以判断 family：CE loss + 2 logits = 二分类、<code>reshape(-1, vocab)</code> = bigram LM、输入维度 = tabular 类型。</li>
+<li>知道 family + setting（优化器/lr/架构/预算）后，剩下的全靠「选项侧先验」排序——数据集卡片写的是哪个实例几乎不影响判断。</li>
+</ul>
+
+<h3>3.4 本地独立复核（insight-50，4 个模型逐题统计）</h3>
+<p>按 family 分，正确率差基本在噪声内（支持 insight 2）；但按<b>题型</b>分，差异巨大：</p>
+<table>
+<tr><th>模型</th><th class="num">总</th><th class="num">architecture_only</th><th class="num">optimizer_only</th><th class="num">mixed</th></tr>
+<tr><td>Muse Spark 1.2</td><td class="num">33/50 (0.66)</td><td class="num down">2/14 (14%)</td><td class="num up">18/19 (95%)</td><td class="num">13/17 (76%)</td></tr>
+<tr><td>o3</td><td class="num">27/50 (0.54)</td><td class="num down">0/14 (0%)</td><td class="num up">16/19 (84%)</td><td class="num">11/17 (65%)</td></tr>
+<tr><td>Gemini 2.5 Flash</td><td class="num">27/50 (0.54)</td><td class="num down">3/14 (21%)</td><td class="num up">12/19 (63%)</td><td class="num">12/17 (71%)</td></tr>
+<tr><td>Gemini 2.5 Pro</td><td class="num">28/50 (0.56)</td><td class="num down">1/14 (7%)</td><td class="num up">15/19 (79%)</td><td class="num">12/17 (71%)</td></tr>
+</table>
+<p class="small">注：该 50 题子集的 arch 题只有 14 道，样本小；但主榜 500 题同方向（arch 37-61% vs opt 70-88%）。子集上 arch 甚至<b>低于随机（33%）</b>——模型在 arch 题上持有系统性错误先验（典型：以为更深/更宽/带 residual 一定更好，而短预算 GT 经常相反）。</p>
+
+<h2>4. 这对 benchmark 设计意味着什么</h2>
+<div class="callout red">
+<b>核心问题</b>：当前题目区分的是「选项侧启发式先验」的好坏，而不是「分析这个具体数据集」的能力。数据集卡片写了等于没写。
+</div>
+<ul>
+<li><b>v1.6 改进方向（刘子鸣提出）</b>：选题时筛选<b>数据集敏感题</b>——同一个选项集合，换同 bucket 的另一个数据集实例后 GT 赢家会翻转的题。出题器可以在同一 candidate set 跨数据集复用候选来发现这种翻转对，逼着答题者必须读数据集。</li>
+<li><b>GT 裁决实验（进行中，不调 API 跑真实 GT）</b>：把 20 对配对题的候选代码（3 choice × 10 seeds × 20 对 = 120 个 GT 作业）拿到对方数据集上真实重训。两种结果指向不同结论——
+  <ul>
+  <li>GT 赢家换数据集后<b>很少翻转</b> → 模型忽略数据集是<b>理性</b>的，"数据集没用"是出题性质，不是模型缺陷；</li>
+  <li>GT 赢家<b>经常翻转</b>但模型答案不动 → 模型真的在偷懒，数据集推理是未开发的区分度来源。</li>
+  </ul></li>
+<li><b>信息剂量分层实验（进行中）</b>：盲测 → 现有卡片 → +完整 synthesize.py → +家族采样器源码（uni/mv sampler 168/236 行、bigram 生成器、tabular 规则库 582 行），配 GT 翻转率，画完整的「信息量 → 正确率」分层图。</li>
+</ul>
+
+<h2>5. 对明天考试（9/5 18:00-21:00，50 题）的策略含义</h2>
+<div class="callout blue">
+<b>既然「分数主要由选项侧先验决定」，那么选项侧判据就是主要得分来源</b>——这正是刘老师规则库 + KB v2 + 我们 GT 实测覆盖的内容。考前优先级：
+</div>
+<ol>
+<li><b>optimizer_only 题（约 1/3）按流程走，这是最稳的分</b>：先排 SGD+tiny lr → Adam/AdamW/RMSProp 同级比 lr（甜区 1e-3~3e-3）→ AdaGrad 按 η_eff≈η/√t 换算（短预算要放大名义 lr）→ wd/loss/layer_norm 直接忽略。</li>
+<li><b>architecture_only 题（约 1/3）是拉开差距的地方，且要预期反直觉答案</b>：LLM 在这类题只有 37-61%（子集上甚至低于随机），因为「更深/更宽/更多稳定器 = 更好」的先验在短预算 GT 下经常是错的。GT 实测要点：depth=1 必欠拟合；depth≥3 / width≥256 在噪声大/高维实例上惨败（d2w64 赢 d4w256）；bigram 选 GRU 不选 transformer，transformer 内部加深无益、d_ff 64→256 有帮助。</li>
+<li><b>混合题按「优化器 → 有效 lr → 架构」的顺序做 successive elimination</b>（刘老师决策链），dominant effect 出现就停。</li>
+<li><b>数据集卡片还是要读，但只读关键字段</b>：input_dim（≥8 → 别选大模型）、noise_std（0.1 → 容量收敛）、rule_family（spiral 多圈 → 深度不可替代；xor → 一隐层够）、vocab_size（算 ln V 基线）。</li>
+<li><b>预算题</b>：16k/32k 大预算占一半，长预算下小 lr 能追平高 lr、AdaGrad 后期衰减，套用短预算结论前先换算训练步数（steps = budget / batch_size）。</li>
+<li><b>人类 vs LLM 的机会窗口</b>：LLM 天花板目前 ≈0.77-0.81，arch 题是它们最弱的地方（&lt;50%）。人只要 arch 题正确率过 60%，总分就能进前列。</li>
+</ol>
+
+<h2>6. 规律库索引（累计沉淀）</h2>
+<table>
+<tr><th>来源</th><th>内容</th><th>位置</th></tr>
+<tr><td>刘子鸣 36 题思维链</td><td>逐题口述推理 + 8 道重点题（6/9/12/18/22/25/29/31）</td><td><code>lark-im-resources/36题思维链.docx</code></td></tr>
+<tr><td>刘子鸣 推理知识库</td><td>successive elimination 决策链：任务→优化器→有效lr→归纳偏置→深度→梯度→泛化</td><td><code>lark-im-resources/推理知识库.docx</code></td></tr>
+<tr><td>刘子鸣 Agent Skill</td><td>7 步决策协议 + 冲突处理表 + 伪代码</td><td><code>lark-im-resources/Agent_Skill.docx</code></td></tr>
+<tr><td>KB v2（定量版，17 条）</td><td>位移分诊 D/s、跨优化器换算、平凡基线判据、U 形曲线、残差/深度边界等</td><td><code>data/kb/knowledge_base_v2.json</code></td></tr>
+<tr><td>GT 实测扫描（58+17 个候选）</td><td>lr 死区/甜区实测、容量倒 U、GRU&gt;transformer、cross-budget 追平</td><td><code>data/tmp_exam_prep/sweep*.py + *_results.json</code></td></tr>
+<tr><td>本次 insight 实验</td><td>effort sweep（17 档）/ 盲测 / 偷换 / GT 裁决（进行中）</td><td>服务器 <code>data/evals/v15_effort_sweep/</code> 等</td></tr>
+</table>
+
+<div class="foot">
+<b>口径与免责</b><br>
+· 主榜数据截至 2026-09-04 13:18 UTC，GLM-5.2 / Sol / R1 仍在补跑，排名可能变动；GLM-5.2 混档（max 422 题 + high 78 题）。<br>
+· insight-50 本地复核基于 <code>data/evals/v15_insight50_p2/results/</code>（4 模型 × 50 题）；arch 子项仅 14 题，绝对值谨慎引用，方向与主榜一致。<br>
+· effort sweep 与盲测/偷换实验均为 n=50，格间差异多在噪声内；GT 裁决实验与信息剂量实验结果未出，本文结论以后续数据为准。<br>
+· 生成：2026-09-04 · 整理：郭绍阳 + Verdent
+</div>
+</body></html>
