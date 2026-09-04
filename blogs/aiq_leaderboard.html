@@ -107,12 +107,12 @@ arch/opt/mixed 为分题型正确率(%)——<b>architecture_only 是主要的�
 <p class="desc">† GLM 的 none 需 <code>thinking.type=disabled</code> 才真关思考(relay 的 effort=none 对它无效,reasoning 反而更多);配对消噪:opus none vs max 3胜2负、luna none vs xhigh 4胜6负、pro low vs max 3胜6负、flash low vs max 2胜3负,均在噪声内。</p>
 
 <h2>消融 ② · 数据集信息的价值 · 50 题</h2>
-<p class="desc">对 prompt 中的数据集卡片做删/换/加码。「偷换」=嫁接同 bucket 另一题的数据集(校验输入维度不穿帮);GT 裁决=把候选代码拿到对方数据集真实重训(10 seeds),<b>真实赢家仅 3/39(8%)翻转</b>。结论:<b>模型不读数据集卡片也不会变差——因为当前题目里答案本来就几乎不随数据集变</b>,卡片区分度近乎为零;v1.6 应按「换实例后 GT 赢家翻转」来选题。</p>
-<table><thead><tr><th>模型</th><th>原始全文</th><th>盲测(删数据集)</th><th>对照重答</th><th>偷换数据集</th><th>+实例生成代码</th><th>+家族生成器源码</th></tr></thead>
-<tbody><tr><td class='model'>Claude Opus 5</td><td>74.0</td><td>78.0</td><td>70.0</td><td>69.2</td><td>58.0</td><td>60.0</td></tr>
-<tr><td class='model'>GPT-5.6 Luna</td><td>60.0</td><td>68.0</td><td>60.0</td><td>57.5</td><td>68.0</td><td>62.0</td></tr>
-<tr><td class='model'>DeepSeek V4 Flash</td><td>66.0</td><td>68.0</td><td>65.0</td><td>70.0</td><td>70.0</td><td>66.0</td></tr>
-<tr><td class='model'>DeepSeek V4 Pro</td><td>66.0</td><td>66.0</td><td>60.0</td><td>62.5</td><td>64.0</td><td>64.0</td></tr></tbody></table>
+<p class="desc">对 prompt 内容做删/换/加码/裁剪。「偷换」=嫁接同 bucket 另一题的数据集(校验输入维度不穿帮);「仅差异设置」=删掉三个选项全部共同内容、只留选项间有差异的字段;GT 裁决=把候选代码拿到对方数据集真实重训(10 seeds),<b>真实赢家仅 3/39(8%)翻转</b>。结论:<b>模型不读数据集卡片、也不读共同上下文(仅差异列变化 −4~+4pt,在噪声内)——因为当前题目里答案本来就几乎不随数据集变</b>,卡片区分度近乎为零;v1.6 应按「换实例后 GT 赢家翻转」来选题。</p>
+<table><thead><tr><th>模型</th><th>原始全文</th><th>盲测(删数据集)</th><th>对照重答</th><th>偷换数据集</th><th>+实例生成代码</th><th>+家族生成器源码</th><th>仅差异设置</th></tr></thead>
+<tbody><tr><td class='model'>Claude Opus 5</td><td>74.0</td><td>78.0</td><td>70.0</td><td>69.2</td><td>58.0</td><td>60.0</td><td>70.0</td></tr>
+<tr><td class='model'>GPT-5.6 Luna</td><td>60.0</td><td>68.0</td><td>60.0</td><td>57.5</td><td>68.0</td><td>62.0</td><td>64.0</td></tr>
+<tr><td class='model'>DeepSeek V4 Flash</td><td>66.0</td><td>68.0</td><td>65.0</td><td>70.0</td><td>70.0</td><td>66.0</td><td>62.0</td></tr>
+<tr><td class='model'>DeepSeek V4 Pro</td><td>66.0</td><td>66.0</td><td>60.0</td><td>62.5</td><td>64.0</td><td>64.0</td><td>62.0</td></tr></tbody></table>
 <!-- END HAND-MAINTAINED SECTIONS -->
 
 <div class="foot">
