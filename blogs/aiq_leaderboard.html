@@ -27,13 +27,13 @@ td.status, td.note { font-size:12.5px; color:var(--dim) }
   padding:1px 8px; font-size:12px; margin-left:8px }
 </style></head><body>
 <h1>ArchitectureIQ v1.5 模型榜单<span class="badge">持续更新</span></h1>
-<div class="sub">数据生成时间:2026-09-04 16:13 UTC · 题目集:v1.5 三选一(修正版 prompt) · GT=10 seeds 全胜显著性 · 推理模型统一最高推理档 · <a href="https://guoshaoyang-pku.github.io/blogs/aiq-quiz/">在线做题(v1.5 五百题+11 模型完整解答)</a></div>
+<div class="sub">数据生成时间:2026-09-04 18:32 UTC · 题目集:v1.5 三选一(修正版 prompt) · GT=10 seeds 全胜显著性 · 推理模型统一最高推理档 · <a href="https://guoshaoyang-pku.github.io/blogs/aiq-quiz/">在线做题(v1.5 五百题+11 模型完整解答)</a></div>
 
 <h2>主榜 · 500 题</h2>
 <p class="desc">每题三个候选配置,选出测试集表现最佳者。acc 为正确率(%),括号为 Wilson 95% CI。
 arch/opt/mixed 为分题型正确率(%)——<b>architecture_only 是主要的区分度来源</b>,optimizer_only 头部模型已基本饱和。</p>
 <table><thead><tr><th>#</th><th>模型</th><th>acc</th><th>95% CI</th><th>arch</th><th>opt</th><th>mixed</th><th>选A率</th><th>状态</th></tr></thead>
-<tbody><tr><td>1</td><td class='model'>GLM-5.2</td><td class='acc'>79.9</td><td class='ci'>[74.1, 84.7]</td><td>45</td><td>87</td><td>88</td><td>28%</td><td class='status'>⏳ 219/500 · 补跑中<br><span class='note'>openrouter 多渠道</span></td></tr>
+<tbody><tr><td>1</td><td class='model'>GLM-5.2</td><td class='acc'>80.5</td><td class='ci'>[75.9, 84.5]</td><td>52</td><td>87</td><td>88</td><td>31%</td><td class='status'>⏳ 329/500 · 补跑中<br><span class='note'>openrouter 多渠道</span></td></tr>
 <tr><td>2</td><td class='model'>GPT-5.6 Sol</td><td class='acc'>77.6</td><td class='ci'>[73.7, 81.1]</td><td>60</td><td>87</td><td>85</td><td>31%</td><td class='status'>⏳ 486/500 · 补跑中</td></tr>
 <tr><td>3</td><td class='model'>Claude Opus 5</td><td class='acc'>76.0</td><td class='ci'>[72.1, 79.5]</td><td>61</td><td>86</td><td>81</td><td>36%</td><td class='status'>✅ 500/500</td></tr>
 <tr><td>4</td><td class='model'>DeepSeek V4 Flash</td><td class='acc'>70.4</td><td class='ci'>[66.3, 74.3]</td><td>48</td><td>85</td><td>79</td><td>30%</td><td class='status'>✅ 497/500</td></tr>
@@ -49,14 +49,14 @@ arch/opt/mixed 为分题型正确率(%)——<b>architecture_only 是主要的�
 <p class="desc">「新 prompt」为去除字面 <code>&lt;answer&gt;A&lt;/answer&gt;</code> 示例后的修正版;「旧 prompt」为带示例版。
 选 A 锚定明显的模型(gemini-2.5-pro、gpt-4o、ds-v3 等)在新 prompt 下分布回到均匀、分数回归真实水平。进度列为已出有效答案题数,⏳ 表示仍在补跑,未满 50 的分数是部分口径。</p>
 <table><thead><tr><th>#</th><th>模型</th><th>新 prompt</th><th>旧 prompt</th><th>Δ</th><th>进度</th><th>口径</th></tr></thead>
-<tbody><tr><td>1</td><td class='model'>GLM-5.2</td><td class='acc'>80.0</td><td>73.8</td><td><span class='up'>+6.2</span></td><td class='note'>20/50 ⏳</td><td class='note'>⊂500</td></tr>
+<tbody><tr><td>1</td><td class='model'>GLM-5.2</td><td class='acc'>81.8</td><td>73.8</td><td><span class='up'>+8.0</span></td><td class='note'>33/50 ⏳</td><td class='note'>⊂500</td></tr>
 <tr><td>2</td><td class='model'>Claude Opus 5</td><td class='acc'>78.0</td><td>—</td><td></td><td class='note'>50/50</td><td class='note'>⊂500</td></tr>
 <tr><td>3</td><td class='model'>Gemini 3.1 Pro Preview</td><td class='acc'>74.0</td><td>—</td><td></td><td class='note'>50/50</td><td class='note'>⊂500</td></tr>
 <tr><td>4</td><td class='model'>Claude Fable 5</td><td class='acc'>74.0</td><td>74.0</td><td><span class='up'>+0.0</span></td><td class='note'>50/50</td><td class='note'>50题直测</td></tr>
 <tr><td>5</td><td class='model'>GPT-5.6 Sol</td><td class='acc'>70.8</td><td>—</td><td></td><td class='note'>48/50 ⏳</td><td class='note'>⊂500</td></tr>
 <tr><td>6</td><td class='model'>Kimi K3</td><td class='acc'>70.3</td><td>66.0</td><td><span class='up'>+4.3</span></td><td class='note'>37/50 ⏳</td><td class='note'>50题直测</td></tr>
 <tr><td>7</td><td class='model'>Qwen3.8 Max</td><td class='acc'>70.0</td><td>66.0</td><td><span class='up'>+4.0</span></td><td class='note'>50/50</td><td class='note'>50题直测</td></tr>
-<tr><td>8</td><td class='model'>GPT-5.6 Terra</td><td class='acc'>69.0</td><td>68.8</td><td><span class='up'>+0.3</span></td><td class='note'>42/50 ⏳</td><td class='note'>50题直测</td></tr>
+<tr><td>8</td><td class='model'>GPT-5.6 Terra</td><td class='acc'>68.9</td><td>68.8</td><td><span class='up'>+0.1</span></td><td class='note'>45/50 ⏳</td><td class='note'>50题直测</td></tr>
 <tr><td>9</td><td class='model'>DeepSeek V4 Flash</td><td class='acc'>67.3</td><td>—</td><td></td><td class='note'>49/50 ⏳</td><td class='note'>⊂500</td></tr>
 <tr><td>10</td><td class='model'>Muse Spark 1.2</td><td class='acc'>66.0</td><td>62.0</td><td><span class='up'>+4.0</span></td><td class='note'>50/50</td><td class='note'>50题直测</td></tr>
 <tr><td>11</td><td class='model'>GPT-5.6 Luna</td><td class='acc'>64.0</td><td>—</td><td></td><td class='note'>50/50</td><td class='note'>⊂500</td></tr>
@@ -107,12 +107,12 @@ arch/opt/mixed 为分题型正确率(%)——<b>architecture_only 是主要的�
 <p class="desc">† GLM 的 none 需 <code>thinking.type=disabled</code> 才真关思考(relay 的 effort=none 对它无效,reasoning 反而更多);配对消噪:opus none vs max 3胜2负、luna none vs xhigh 4胜6负、pro low vs max 3胜6负、flash low vs max 2胜3负,均在噪声内。</p>
 
 <h2>消融 ② · 数据集信息的价值 · 50 题</h2>
-<p class="desc">对 prompt 内容做删/换/加码/裁剪。「偷换」=嫁接同 bucket 另一题的数据集(校验输入维度不穿帮);「仅差异设置」=删掉三个选项全部共同内容、只留选项间有差异的字段;GT 裁决=把候选代码拿到对方数据集真实重训(10 seeds),<b>真实赢家仅 3/39(8%)翻转</b>。结论:<b>模型不读数据集卡片、也不读共同上下文(仅差异列变化 −4~+4pt,在噪声内)——因为当前题目里答案本来就几乎不随数据集变</b>,卡片区分度近乎为零;v1.6 应按「换实例后 GT 赢家翻转」来选题。</p>
-<table><thead><tr><th>模型</th><th>原始全文</th><th>盲测(删数据集)</th><th>对照重答</th><th>偷换数据集</th><th>+实例生成代码</th><th>+家族生成器源码</th><th>仅差异设置</th></tr></thead>
-<tbody><tr><td class='model'>Claude Opus 5</td><td>74.0</td><td>78.0</td><td>70.0</td><td>69.2</td><td>58.0</td><td>60.0</td><td>70.0</td></tr>
-<tr><td class='model'>GPT-5.6 Luna</td><td>60.0</td><td>68.0</td><td>60.0</td><td>57.5</td><td>68.0</td><td>62.0</td><td>64.0</td></tr>
-<tr><td class='model'>DeepSeek V4 Flash</td><td>66.0</td><td>68.0</td><td>65.0</td><td>70.0</td><td>70.0</td><td>66.0</td><td>62.0</td></tr>
-<tr><td class='model'>DeepSeek V4 Pro</td><td>66.0</td><td>66.0</td><td>60.0</td><td>62.5</td><td>64.0</td><td>64.0</td><td>62.0</td></tr></tbody></table>
+<p class="desc">对 prompt 中的数据集卡片做删/换/加码。「偷换」=嫁接同 bucket 另一题的数据集(校验输入维度不穿帮);GT 裁决=把候选代码拿到对方数据集真实重训(10 seeds),<b>真实赢家仅 3/39(8%)翻转</b>。结论:<b>模型不读数据集卡片也不会变差——因为当前题目里答案本来就几乎不随数据集变</b>,卡片区分度近乎为零;v1.6 应按「换实例后 GT 赢家翻转」来选题。</p>
+<table><thead><tr><th>模型</th><th>原始全文</th><th>盲测(删数据集)</th><th>对照重答</th><th>偷换数据集</th><th>+实例生成代码</th><th>+家族生成器源码</th></tr></thead>
+<tbody><tr><td class='model'>Claude Opus 5</td><td>74.0</td><td>78.0</td><td>70.0</td><td>69.2</td><td>58.0</td><td>60.0</td></tr>
+<tr><td class='model'>GPT-5.6 Luna</td><td>60.0</td><td>68.0</td><td>60.0</td><td>57.5</td><td>68.0</td><td>62.0</td></tr>
+<tr><td class='model'>DeepSeek V4 Flash</td><td>66.0</td><td>68.0</td><td>65.0</td><td>70.0</td><td>70.0</td><td>66.0</td></tr>
+<tr><td class='model'>DeepSeek V4 Pro</td><td>66.0</td><td>66.0</td><td>60.0</td><td>62.5</td><td>64.0</td><td>64.0</td></tr></tbody></table>
 <!-- END HAND-MAINTAINED SECTIONS -->
 
 <div class="foot">
