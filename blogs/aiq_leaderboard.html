@@ -80,6 +80,41 @@ arch/opt/mixed 为分题型正确率(%)——<b>architecture_only 是主要的�
 <tr><td>29</td><td class='model'>Llama 3.1 8B</td><td class='acc'>42.0</td><td>46.0</td><td><span class='down'>-4.0</span></td><td class='note'>50/50</td><td class='note'>50题直测</td></tr>
 <tr><td>30</td><td class='model'>MiniCPM5 1B</td><td class='acc'>—</td><td>32.0</td><td></td><td class='note'>—</td><td class='note'></td></tr></tbody></table>
 
+<!-- HAND-MAINTAINED SECTIONS (other agent, commit d4fe76f): do not remove on regeneration -->
+<h2>消融 ① · 思维链剂量(TTS) · 50 题</h2>
+<p class="desc">同模型同题集,逐档调整 reasoning effort。output tokens 为 completion 总量(其中 reasoning 占绝大部分;opus 经 relay 不单列)。n=50,格间 ±7pt 内为噪声。结论:<b>增益集中在最初几百 token,继续加档基本无效</b>;GLM 的 none→low 是唯一的陡增(+14.8pt)。</p>
+<table><thead><tr><th>模型</th><th>档位</th><th>正确率</th><th>output tok/题</th></tr></thead>
+<tbody><tr><td class='model'>Claude Opus 5</td><td>none</td><td>76.0</td><td>1,496</td></tr>
+<tr><td class='model'></td><td>low</td><td>78.0</td><td>156</td></tr>
+<tr><td class='model'></td><td>medium</td><td>80.0</td><td>425</td></tr>
+<tr><td class='model'></td><td>high</td><td>76.0</td><td>1,764</td></tr>
+<tr><td class='model'></td><td>xhigh</td><td>74.0</td><td>2,786</td></tr>
+<tr><td class='model'></td><td>max</td><td>74.0</td><td>4,326</td></tr>
+<tr><td class='model'>GPT-5.6 Luna</td><td>none</td><td>56.0</td><td>100</td></tr>
+<tr><td class='model'></td><td>low</td><td>66.0</td><td>324</td></tr>
+<tr><td class='model'></td><td>medium</td><td>62.0</td><td>477</td></tr>
+<tr><td class='model'></td><td>high</td><td>66.0</td><td>1,630</td></tr>
+<tr><td class='model'></td><td>xhigh</td><td>60.0</td><td>3,890</td></tr>
+<tr><td class='model'>GLM-5.2</td><td>none†</td><td>54.0</td><td>145</td></tr>
+<tr><td class='model'></td><td>low</td><td>68.8</td><td>11,091</td></tr>
+<tr><td class='model'></td><td>high</td><td>65.3</td><td>19,263</td></tr>
+<tr><td class='model'>DeepSeek V4 Pro</td><td>low</td><td>60.0</td><td>2,671</td></tr>
+<tr><td class='model'></td><td>high</td><td>62.0</td><td>13,171</td></tr>
+<tr><td class='model'></td><td>max</td><td>66.0</td><td>16,705</td></tr>
+<tr><td class='model'>DeepSeek V4 Flash</td><td>low</td><td>64.0</td><td>9,893</td></tr>
+<tr><td class='model'></td><td>high</td><td>64.0</td><td>26,596</td></tr>
+<tr><td class='model'></td><td>max</td><td>66.0</td><td>34,482</td></tr></tbody></table>
+<p class="desc">† GLM 的 none 需 <code>thinking.type=disabled</code> 才真关思考(relay 的 effort=none 对它无效,reasoning 反而更多);配对消噪:opus none vs max 3胜2负、luna none vs xhigh 4胜6负、pro low vs max 3胜6负、flash low vs max 2胜3负,均在噪声内。</p>
+
+<h2>消融 ② · 数据集信息的价值 · 50 题</h2>
+<p class="desc">对 prompt 中的数据集卡片做删/换/加码。「偷换」=嫁接同 bucket 另一题的数据集(校验输入维度不穿帮);GT 裁决=把候选代码拿到对方数据集真实重训(10 seeds),<b>真实赢家仅 3/39(8%)翻转</b>。结论:<b>模型不读数据集卡片也不会变差——因为当前题目里答案本来就几乎不随数据集变</b>,卡片区分度近乎为零;v1.6 应按「换实例后 GT 赢家翻转」来选题。</p>
+<table><thead><tr><th>模型</th><th>原始全文</th><th>盲测(删数据集)</th><th>对照重答</th><th>偷换数据集</th><th>+实例生成代码</th><th>+家族生成器源码</th></tr></thead>
+<tbody><tr><td class='model'>Claude Opus 5</td><td>74.0</td><td>78.0</td><td>70.0</td><td>69.2</td><td>58.0</td><td>60.0</td></tr>
+<tr><td class='model'>GPT-5.6 Luna</td><td>60.0</td><td>68.0</td><td>60.0</td><td>57.5</td><td>68.0</td><td>62.0</td></tr>
+<tr><td class='model'>DeepSeek V4 Flash</td><td>66.0</td><td>68.0</td><td>65.0</td><td>70.0</td><td>70.0</td><td>66.0</td></tr>
+<tr><td class='model'>DeepSeek V4 Pro</td><td>66.0</td><td>66.0</td><td>60.0</td><td>62.5</td><td>64.0</td><td>64.0</td></tr></tbody></table>
+<!-- END HAND-MAINTAINED SECTIONS -->
+
 <div class="foot">
 <b>口径说明</b><br>
 · 每题 3 个选项,GT 由 10 个 seed 实测训练得出(10 全胜显著性闸门);预算/批次在题面明示。<br>
