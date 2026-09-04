@@ -27,7 +27,7 @@ td.status, td.note { font-size:12.5px; color:var(--dim) }
   padding:1px 8px; font-size:12px; margin-left:8px }
 </style></head><body>
 <h1>ArchitectureIQ v1.5 模型榜单<span class="badge">持续更新</span></h1>
-<div class="sub">数据生成时间:2026-09-04 14:12 UTC · 题目集:v1.5 三选一(修正版 prompt) · GT=10 seeds 全胜显著性 · 推理模型统一最高推理档 · <a href="https://guoshaoyang-pku.github.io/blogs/aiq-quiz/">在线做题(v1.5 五百题+11 模型完整解答)</a></div>
+<div class="sub">数据生成时间:2026-09-04 15:01 UTC · 题目集:v1.5 三选一(修正版 prompt) · GT=10 seeds 全胜显著性 · 推理模型统一最高推理档 · <a href="https://guoshaoyang-pku.github.io/blogs/aiq-quiz/">在线做题(v1.5 五百题+11 模型完整解答)</a></div>
 
 <h2>主榜 · 500 题</h2>
 <p class="desc">每题三个候选配置,选出测试集表现最佳者。acc 为正确率(%),括号为 Wilson 95% CI。
@@ -41,82 +41,49 @@ arch/opt/mixed 为分题型正确率(%)——<b>architecture_only 是主要的�
 <tr><td>6</td><td class='model'>GPT-5.6 Luna</td><td class='acc'>67.8</td><td class='ci'>[63.6, 71.7]</td><td>42</td><td>85</td><td>76</td><td>32%</td><td class='status'>✅ 500/500</td></tr>
 <tr><td>7</td><td class='model'>Gemini 3.1 Pro Preview</td><td class='acc'>66.8</td><td class='ci'>[62.6, 70.8]</td><td>42</td><td>85</td><td>74</td><td>37%</td><td class='status'>✅ 500/500</td></tr>
 <tr><td>8</td><td class='model'>Claude Sonnet 5</td><td class='acc'>65.4</td><td class='ci'>[61.1, 69.4]</td><td>38</td><td>83</td><td>75</td><td>36%</td><td class='status'>✅ 500/500</td></tr>
-<tr><td>9</td><td class='model'>GPT-4o</td><td class='acc'>60.2</td><td class='ci'>[55.8, 64.4]</td><td>52</td><td>70</td><td>58</td><td>41%</td><td class='status'>✅ 500/500</td></tr>
+<tr><td>9</td><td class='model'>GPT-4o (2024-11-20)</td><td class='acc'>60.2</td><td class='ci'>[55.8, 64.4]</td><td>52</td><td>70</td><td>58</td><td>41%</td><td class='status'>✅ 500/500</td></tr>
 <tr><td>10</td><td class='model'>DeepSeek R1 (2025-01)</td><td class='acc'>59.4</td><td class='ci'>[55.0, 63.6]</td><td>42</td><td>71</td><td>65</td><td>38%</td><td class='status'>⏳ 490/500 · 补跑中</td></tr>
 <tr><td>11</td><td class='model'>Gemini 2.5 Pro</td><td class='acc'>55.8</td><td class='ci'>[51.4, 60.1]</td><td>37</td><td>70</td><td>61</td><td>34%</td><td class='status'>✅ 500/500</td></tr></tbody></table>
 
 <h2>Insight 榜 · 50 题(同分布子集)</h2>
 <p class="desc">「新 prompt」为去除字面 <code>&lt;answer&gt;A&lt;/answer&gt;</code> 示例后的修正版;「旧 prompt」为带示例版。
-选 A 锚定明显的模型(gemini-2.5-pro、gpt-4o、ds-v3 等)在新 prompt 下分布回到均匀、分数回归真实水平。</p>
-<table><thead><tr><th>#</th><th>模型</th><th>新 prompt</th><th>旧 prompt</th><th>Δ</th><th>口径</th></tr></thead>
-<tbody><tr><td>1</td><td class='model'>GPT-5.5</td><td class='acc'>100.0</td><td>64.0</td><td><span class='up'>+36.0</span></td><td class='note'>50题直测</td></tr>
-<tr><td>2</td><td class='model'>GPT-5.6 Terra</td><td class='acc'>100.0</td><td>68.8</td><td><span class='up'>+31.2</span></td><td class='note'>50题直测</td></tr>
-<tr><td>3</td><td class='model'>GLM-5.2</td><td class='acc'>80.0</td><td>73.8</td><td><span class='up'>+6.2</span></td><td class='note'>⊂500</td></tr>
-<tr><td>4</td><td class='model'>Claude Opus 5</td><td class='acc'>78.0</td><td>—</td><td></td><td class='note'>⊂500</td></tr>
-<tr><td>5</td><td class='model'>Gemini 3.1 Pro Preview</td><td class='acc'>74.0</td><td>—</td><td></td><td class='note'>⊂500</td></tr>
-<tr><td>6</td><td class='model'>GPT-5.6 Sol</td><td class='acc'>70.8</td><td>—</td><td></td><td class='note'>⊂500</td></tr>
-<tr><td>7</td><td class='model'>DeepSeek V4 Flash</td><td class='acc'>67.3</td><td>—</td><td></td><td class='note'>⊂500</td></tr>
-<tr><td>8</td><td class='model'>Claude Fable 5</td><td class='acc'>66.7</td><td>74.0</td><td><span class='down'>-7.3</span></td><td class='note'>50题直测</td></tr>
-<tr><td>9</td><td class='model'>Muse Spark 1.2</td><td class='acc'>66.0</td><td>62.0</td><td><span class='up'>+4.0</span></td><td class='note'>50题直测</td></tr>
-<tr><td>10</td><td class='model'>GPT-5.4</td><td class='acc'>64.3</td><td>58.0</td><td><span class='up'>+6.3</span></td><td class='note'>50题直测</td></tr>
-<tr><td>11</td><td class='model'>GPT-5.6 Luna</td><td class='acc'>64.0</td><td>—</td><td></td><td class='note'>⊂500</td></tr>
-<tr><td>12</td><td class='model'>GPT-5</td><td class='acc'>63.6</td><td>60.0</td><td><span class='up'>+3.6</span></td><td class='note'>50题直测</td></tr>
-<tr><td>13</td><td class='model'>DeepSeek V4 Pro</td><td class='acc'>62.0</td><td>—</td><td></td><td class='note'>⊂500</td></tr>
-<tr><td>14</td><td class='model'>Gemini 2.5 Flash</td><td class='acc'>61.4</td><td>51.0</td><td><span class='up'>+10.3</span></td><td class='note'>50题直测</td></tr>
-<tr><td>15</td><td class='model'>Claude Sonnet 5</td><td class='acc'>60.0</td><td>—</td><td></td><td class='note'>⊂500</td></tr>
-<tr><td>16</td><td class='model'>Claude Sonnet 4.5 (thinking)</td><td class='acc'>60.0</td><td>56.0</td><td><span class='up'>+4.0</span></td><td class='note'>50题直测</td></tr>
-<tr><td>17</td><td class='model'>Claude Opus 4.6</td><td class='acc'>57.1</td><td>68.0</td><td><span class='down'>-10.9</span></td><td class='note'>50题直测</td></tr>
-<tr><td>18</td><td class='model'>Gemini 2.5 Pro</td><td class='acc'>56.0</td><td>—</td><td></td><td class='note'>⊂500</td></tr>
-<tr><td>19</td><td class='model'>o3</td><td class='acc'>54.0</td><td>66.0</td><td><span class='down'>-12.0</span></td><td class='note'>50题直测</td></tr>
-<tr><td>20</td><td class='model'>DeepSeek R1 (2025-01)</td><td class='acc'>51.0</td><td>—</td><td></td><td class='note'>⊂500</td></tr>
-<tr><td>21</td><td class='model'>DeepSeek V3-0324</td><td class='acc'>50.0</td><td>54.0</td><td><span class='down'>-4.0</span></td><td class='note'>50题直测</td></tr>
-<tr><td>22</td><td class='model'>GPT-4o</td><td class='acc'>48.0</td><td>—</td><td></td><td class='note'>⊂500</td></tr>
-<tr><td>23</td><td class='model'>Qwen3.5 27B</td><td class='acc'>46.0</td><td>56.0</td><td><span class='down'>-10.0</span></td><td class='note'>50题直测</td></tr>
-<tr><td>24</td><td class='model'>Llama 3.1 70B</td><td class='acc'>42.0</td><td>36.0</td><td><span class='up'>+6.0</span></td><td class='note'>50题直测</td></tr>
-<tr><td>25</td><td class='model'>Llama 3.1 8B</td><td class='acc'>42.0</td><td>46.0</td><td><span class='down'>-4.0</span></td><td class='note'>50题直测</td></tr>
-<tr><td>26</td><td class='model'>R1-Distill 32B</td><td class='acc'>—</td><td>54.0</td><td></td><td class='note'></td></tr>
-<tr><td>27</td><td class='model'>R1-Distill 7B</td><td class='acc'>—</td><td>50.0</td><td></td><td class='note'></td></tr>
-<tr><td>28</td><td class='model'>Kimi K3</td><td class='acc'>—</td><td>66.0</td><td></td><td class='note'></td></tr>
-<tr><td>29</td><td class='model'>MiniCPM5 1B</td><td class='acc'>—</td><td>32.0</td><td></td><td class='note'></td></tr>
-<tr><td>30</td><td class='model'>Qwen3.8 Max</td><td class='acc'>—</td><td>66.0</td><td></td><td class='note'></td></tr></tbody></table>
-
-<h2>消融 ① · 思维链剂量(TTS) · 50 题</h2>
-<p class="desc">同模型同题集,逐档调整 reasoning effort。output tokens 为 completion 总量(其中 reasoning 占绝大部分;opus 经 relay 不单列)。n=50,格间 ±7pt 内为噪声。结论:<b>增益集中在最初几百 token,继续加档基本无效</b>;GLM 的 none→low 是唯一的陡增(+14.8pt)。</p>
-<table><thead><tr><th>模型</th><th>档位</th><th>正确率</th><th>output tok/题</th></tr></thead>
-<tbody><tr><td class='model'>Claude Opus 5</td><td>none</td><td>76.0</td><td>1,496</td></tr>
-<tr><td class='model'></td><td>low</td><td>78.0</td><td>156</td></tr>
-<tr><td class='model'></td><td>medium</td><td>80.0</td><td>425</td></tr>
-<tr><td class='model'></td><td>high</td><td>76.0</td><td>1,764</td></tr>
-<tr><td class='model'></td><td>xhigh</td><td>74.0</td><td>2,786</td></tr>
-<tr><td class='model'></td><td>max</td><td>74.0</td><td>4,326</td></tr>
-<tr><td class='model'>GPT-5.6 Luna</td><td>none</td><td>56.0</td><td>100</td></tr>
-<tr><td class='model'></td><td>low</td><td>66.0</td><td>324</td></tr>
-<tr><td class='model'></td><td>medium</td><td>62.0</td><td>477</td></tr>
-<tr><td class='model'></td><td>high</td><td>66.0</td><td>1,630</td></tr>
-<tr><td class='model'></td><td>xhigh</td><td>60.0</td><td>3,890</td></tr>
-<tr><td class='model'>GLM-5.2</td><td>none†</td><td>54.0</td><td>145</td></tr>
-<tr><td class='model'></td><td>low</td><td>68.8</td><td>11,091</td></tr>
-<tr><td class='model'></td><td>high</td><td>65.3</td><td>19,263</td></tr>
-<tr><td class='model'>DeepSeek V4 Pro</td><td>low</td><td>60.0</td><td>2,671</td></tr>
-<tr><td class='model'></td><td>high</td><td>62.0</td><td>13,171</td></tr>
-<tr><td class='model'></td><td>max</td><td>66.0</td><td>16,705</td></tr>
-<tr><td class='model'>DeepSeek V4 Flash</td><td>low</td><td>64.0</td><td>9,893</td></tr>
-<tr><td class='model'></td><td>high</td><td>64.0</td><td>26,596</td></tr>
-<tr><td class='model'></td><td>max</td><td>66.0</td><td>34,482</td></tr></tbody></table>
-<p class="desc">† GLM 的 none 需 <code>thinking.type=disabled</code> 才真关思考(relay 的 effort=none 对它无效,reasoning 反而更多);配对消噪:opus none vs max 3胜2负、luna none vs xhigh 4胜6负、pro low vs max 3胜6负、flash low vs max 2胜3负,均在噪声内。</p>
-
-<h2>消融 ② · 数据集信息的价值 · 50 题</h2>
-<p class="desc">对 prompt 中的数据集卡片做删/换/加码。「偷换」=嫁接同 bucket 另一题的数据集(校验输入维度不穿帮);GT 裁决=把候选代码拿到对方数据集真实重训(10 seeds),<b>真实赢家仅 3/39(8%)翻转</b>。结论:<b>模型不读数据集卡片也不会变差——因为当前题目里答案本来就几乎不随数据集变</b>,卡片区分度近乎为零;v1.6 应按「换实例后 GT 赢家翻转」来选题。</p>
-<table><thead><tr><th>模型</th><th>原始全文</th><th>盲测(删数据集)</th><th>对照重答</th><th>偷换数据集</th><th>+实例生成代码</th><th>+家族生成器源码</th></tr></thead>
-<tbody><tr><td class='model'>Claude Opus 5</td><td>74.0</td><td>78.0</td><td>70.0</td><td>69.2</td><td>58.0</td><td>60.0</td></tr>
-<tr><td class='model'>GPT-5.6 Luna</td><td>60.0</td><td>68.0</td><td>60.0</td><td>57.5</td><td>68.0</td><td>62.0</td></tr>
-<tr><td class='model'>DeepSeek V4 Flash</td><td>66.0</td><td>68.0</td><td>65.0</td><td>70.0</td><td>70.0</td><td>66.0</td></tr>
-<tr><td class='model'>DeepSeek V4 Pro</td><td>66.0</td><td>66.0</td><td>60.0</td><td>62.5</td><td>64.0</td><td>64.0</td></tr></tbody></table>
+选 A 锚定明显的模型(gemini-2.5-pro、gpt-4o、ds-v3 等)在新 prompt 下分布回到均匀、分数回归真实水平。进度列为已出有效答案题数,⏳ 表示仍在补跑,未满 50 的分数是部分口径。</p>
+<table><thead><tr><th>#</th><th>模型</th><th>新 prompt</th><th>旧 prompt</th><th>Δ</th><th>进度</th><th>口径</th></tr></thead>
+<tbody><tr><td>1</td><td class='model'>GLM-5.2</td><td class='acc'>80.0</td><td>73.8</td><td><span class='up'>+6.2</span></td><td class='note'>20/50 ⏳</td><td class='note'>⊂500</td></tr>
+<tr><td>2</td><td class='model'>Claude Opus 5</td><td class='acc'>78.0</td><td>—</td><td></td><td class='note'>50/50</td><td class='note'>⊂500</td></tr>
+<tr><td>3</td><td class='model'>GPT-5.6 Terra</td><td class='acc'>76.2</td><td>68.8</td><td><span class='up'>+7.4</span></td><td class='note'>21/50 ⏳</td><td class='note'>50题直测</td></tr>
+<tr><td>4</td><td class='model'>Claude Fable 5</td><td class='acc'>75.6</td><td>74.0</td><td><span class='up'>+1.6</span></td><td class='note'>45/50 ⏳</td><td class='note'>50题直测</td></tr>
+<tr><td>5</td><td class='model'>Gemini 3.1 Pro Preview</td><td class='acc'>74.0</td><td>—</td><td></td><td class='note'>50/50</td><td class='note'>⊂500</td></tr>
+<tr><td>6</td><td class='model'>GPT-5.6 Sol</td><td class='acc'>70.8</td><td>—</td><td></td><td class='note'>48/50 ⏳</td><td class='note'>⊂500</td></tr>
+<tr><td>7</td><td class='model'>Kimi K3</td><td class='acc'>70.8</td><td>66.0</td><td><span class='up'>+4.9</span></td><td class='note'>24/50 ⏳</td><td class='note'>50题直测</td></tr>
+<tr><td>8</td><td class='model'>Qwen3.8 Max</td><td class='acc'>67.7</td><td>66.0</td><td><span class='up'>+1.6</span></td><td class='note'>34/50 ⏳</td><td class='note'>50题直测</td></tr>
+<tr><td>9</td><td class='model'>DeepSeek V4 Flash</td><td class='acc'>67.3</td><td>—</td><td></td><td class='note'>49/50 ⏳</td><td class='note'>⊂500</td></tr>
+<tr><td>10</td><td class='model'>Muse Spark 1.2</td><td class='acc'>66.0</td><td>62.0</td><td><span class='up'>+4.0</span></td><td class='note'>50/50</td><td class='note'>50题直测</td></tr>
+<tr><td>11</td><td class='model'>Claude Opus 4.6</td><td class='acc'>64.4</td><td>68.0</td><td><span class='down'>-3.6</span></td><td class='note'>45/50 ⏳</td><td class='note'>50题直测</td></tr>
+<tr><td>12</td><td class='model'>GPT-5.6 Luna</td><td class='acc'>64.0</td><td>—</td><td></td><td class='note'>50/50</td><td class='note'>⊂500</td></tr>
+<tr><td>13</td><td class='model'>DeepSeek V4 Pro</td><td class='acc'>62.0</td><td>—</td><td></td><td class='note'>50/50</td><td class='note'>⊂500</td></tr>
+<tr><td>14</td><td class='model'>Gemini 2.5 Flash</td><td class='acc'>61.4</td><td>51.0</td><td><span class='up'>+10.3</span></td><td class='note'>44/50 ⏳</td><td class='note'>50题直测</td></tr>
+<tr><td>15</td><td class='model'>Claude Sonnet 5</td><td class='acc'>60.0</td><td>—</td><td></td><td class='note'>50/50</td><td class='note'>⊂500</td></tr>
+<tr><td>16</td><td class='model'>GPT-5.4</td><td class='acc'>60.0</td><td>58.0</td><td><span class='up'>+2.0</span></td><td class='note'>45/50 ⏳</td><td class='note'>50题直测</td></tr>
+<tr><td>17</td><td class='model'>GPT-5</td><td class='acc'>60.0</td><td>60.0</td><td><span class='up'>+0.0</span></td><td class='note'>45/50 ⏳</td><td class='note'>50题直测</td></tr>
+<tr><td>18</td><td class='model'>GPT-5.5</td><td class='acc'>57.9</td><td>64.0</td><td><span class='down'>-6.1</span></td><td class='note'>38/50 ⏳</td><td class='note'>50题直测</td></tr>
+<tr><td>19</td><td class='model'>Claude Sonnet 4.5 (thinking)</td><td class='acc'>57.8</td><td>56.0</td><td><span class='up'>+1.8</span></td><td class='note'>45/50 ⏳</td><td class='note'>50题直测</td></tr>
+<tr><td>20</td><td class='model'>Gemini 2.5 Pro</td><td class='acc'>56.0</td><td>—</td><td></td><td class='note'>50/50</td><td class='note'>⊂500</td></tr>
+<tr><td>21</td><td class='model'>o3</td><td class='acc'>54.0</td><td>66.0</td><td><span class='down'>-12.0</span></td><td class='note'>50/50</td><td class='note'>50题直测</td></tr>
+<tr><td>22</td><td class='model'>R1-Distill 32B</td><td class='acc'>53.1</td><td>54.0</td><td><span class='down'>-0.9</span></td><td class='note'>32/50 ⏳</td><td class='note'>50题直测</td></tr>
+<tr><td>23</td><td class='model'>DeepSeek R1 (2025-01)</td><td class='acc'>51.0</td><td>—</td><td></td><td class='note'>49/50 ⏳</td><td class='note'>⊂500</td></tr>
+<tr><td>24</td><td class='model'>DeepSeek V3-0324</td><td class='acc'>50.0</td><td>54.0</td><td><span class='down'>-4.0</span></td><td class='note'>50/50</td><td class='note'>50题直测</td></tr>
+<tr><td>25</td><td class='model'>GPT-4o (2024-11-20)</td><td class='acc'>48.0</td><td>—</td><td></td><td class='note'>50/50</td><td class='note'>⊂500</td></tr>
+<tr><td>26</td><td class='model'>R1-Distill 7B</td><td class='acc'>46.5</td><td>50.0</td><td><span class='down'>-3.5</span></td><td class='note'>43/50 ⏳</td><td class='note'>50题直测</td></tr>
+<tr><td>27</td><td class='model'>Qwen3.5 27B</td><td class='acc'>46.0</td><td>56.0</td><td><span class='down'>-10.0</span></td><td class='note'>50/50</td><td class='note'>50题直测</td></tr>
+<tr><td>28</td><td class='model'>Llama 3.1 70B</td><td class='acc'>42.0</td><td>36.0</td><td><span class='up'>+6.0</span></td><td class='note'>50/50</td><td class='note'>50题直测</td></tr>
+<tr><td>29</td><td class='model'>Llama 3.1 8B</td><td class='acc'>42.0</td><td>46.0</td><td><span class='down'>-4.0</span></td><td class='note'>50/50</td><td class='note'>50题直测</td></tr>
+<tr><td>30</td><td class='model'>MiniCPM5 1B</td><td class='acc'>—</td><td>32.0</td><td></td><td class='note'>—</td><td class='note'></td></tr></tbody></table>
 
 <div class="foot">
 <b>口径说明</b><br>
 · 每题 3 个选项,GT 由 10 个 seed 实测训练得出(10 全胜显著性闸门);预算/批次在题面明示。<br>
-· 推理模型均开启各平台最高推理档(max/xhigh/high,经 reasoning token 计数实证);gpt-4o 等非推理模型直发。<br>
+· 推理模型均开启各平台最高推理档(max/xhigh/high,经 reasoning token 计数实证);GPT-4o(relay 实解析为 gpt-4o-2024-11-20)等非推理模型直发。<br>
 · GLM-5.2 经 openrouter 多渠道(z-ai/DeepInfra/Novita/StreamLake)补跑,request_params 留痕可审计。<br>
 · 选 A 率 ≈33% 为健康;显著偏高说明存在位置锚定(答题纪律缺陷,非推理能力)。<br>
 · 本页由评测结果自动生成并持续更新;题目与 11 个模型的完整解答(含思维链摘要与对错)见 <a href="https://guoshaoyang-pku.github.io/blogs/aiq-quiz/">在线 quiz</a>(每题下方选模型对照,或隐藏答案自测)。
