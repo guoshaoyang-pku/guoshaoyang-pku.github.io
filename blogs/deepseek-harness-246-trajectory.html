@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="我和 DeepSeek Harness 一起学习、尝试孪生素数猜想：它自动 fallback 到复现 246，轨迹展示了工程验证、数学推导与形式化证明的差异。">
+  <meta name="description" content="我和 DeepSeek Harness 一起学习、尝试孪生素数猜想：它自动 fallback 到复现 246；随后人类与 AI 把纪录推进到 240 与 186。本文科普为什么孪生素数猜想是三层优化问题，并完整可视化与审计 DSH 的研究轨迹。">
   <title>我和 DeepSeek 一起追过一次孪生素数猜想</title>
   <style>
     :root {
@@ -139,29 +139,68 @@
   <header>
     <div class="eyebrow">Research log · Agent trajectory audit</div>
     <h1>我和 DeepSeek 一起追过一次孪生素数猜想</h1>
-    <p class="dek">这不是一篇宣布“AI 证明了孪生素数”的文章，而是一段学习和尝试的记录：我把问题交给 DeepSeek，让它连续运行几天；它没有找到新定理，却把一条复杂的数值、代码和形式化路线跑得很远。</p>
-    <div class="meta">作者：Shaoyang Guo · 轨迹快照：2026-08-29 12:28（北京时间） · <a href="https://github.com/guoshaoyang-pku/twin-prime-admissible" target="_blank" rel="noreferrer">项目仓库</a> · <a href="https://github.com/AxiomMath/PrimeGapsLib" target="_blank" rel="noreferrer">Axiom 对照仓库</a></div>
+    <p class="dek">这不是一篇宣布“AI 证明了孪生素数”的文章。我把问题交给 DeepSeek Harness 让它连跑五天，它自动 fallback 到复现 246；我们随后把它的全部工作审计成三件诚实的东西。9 月 4 日，人类数学家和 GPT-6 把世界纪录推到 240 与 186——恰好都发生在 DSH 所在的“房间”之外。本文也是一篇科普：为什么孪生素数猜想本质上是三层优化问题。</p>
+    <div class="meta">作者：Shaoyang Guo · 轨迹快照：2026-08-29 · 终稿：2026-09-06（北京时间） · <a href="https://github.com/guoshaoyang-pku/twin-prime-admissible" target="_blank" rel="noreferrer">项目仓库</a> · <a href="https://github.com/AxiomMath/PrimeGapsLib" target="_blank" rel="noreferrer">Axiom 对照仓库</a></div>
   </header>
 
   <div class="hero-note">
-    <strong>先说故事的结尾：</strong> DeepSeek Harness 自动 fallback 到了复现已知的 246 路线，刚好与 Axiom Math 宣布形式化 246 定理的新闻撞在一起。它做了很多有价值的工程验证，但没有完成 Axiom 那种 Lean kernel 可检查的完整证明；GPT review 之后也指出，原先的“证明完成”和“新的贡献”都说得过头了。
+    <strong>先说故事的结尾：</strong> 这场追逐有两个结局。DeepSeek Harness 没有证明孪生素数，也没有改进 246——它在第五天自动 fallback 到复现 246 路线，而我们随后用一周把它的产出审计成三件诚实的东西：一张与权威数据逐项吻合的最小直径表、一张 k=49 的有限维区间算术证书、和一个精确写下的开放问题。然后，在 9 月 4 日早晨，领域本身越过了我们：人类数学家 Julia Stadlmann 把 246 推进到 240，同日 OpenAI 的 GPT-6 Astra 宣布 186（附 Lean 形式化），Axiom 与 Anthropic 给出 212 与 188。回头看，DSH 所在的房间（Bombieri–Vinogradov + 标准权重）的天花板恰好被我们量到了 ≈3.99 &lt; 4；而所有新纪录都来自房间之外——更强的素数分布输入。所以这不是“AI 攻克难题”的故事，而是一个关于 AI 如何做研究、如何被审计、以及如何与领域进展对表的故事。
   </div>
 
   <section>
-    <h2>故事摘要：我只是想学懂它</h2>
+    <h2>一、梗概</h2>
+    <table>
+      <thead><tr><th style="width:130px">时间</th><th>事件</th></tr></thead>
+      <tbody>
+        <tr><td>8 月 20 日</td><td>我把孪生素数猜想交给 DSH，目标：复现 246，或在同一框架里往下推。</td></tr>
+        <tr><td>8 月 20–29 日</td><td>DSH 两条主会话连续运行：元组搜索、Maynard 泛函、高维区间矩阵、Lean 文件；期间自动 fallback 到复现 246 的已知路线。</td></tr>
+        <tr><td>8 月 29 日</td><td>轨迹快照：11,651 个逻辑 step、483 万原始事件，全部可视化于本页。</td></tr>
+        <tr><td>8 月 31 日</td><td>（当时未注意到）人类数学家 Julia Stadlmann 发表 <a href="https://arxiv.org/abs/2608.31126" target="_blank" rel="noreferrer">240</a>：Bombieri–Vinogradov + 光滑模上的新等分布估计。240 恰好等于我们表中的 H(49)。</td></tr>
+        <tr><td>9 月 1–3 日</td><td>人类审计收尾：A 会话完成 k=49, D=33 的 6740 维区间 LDL，全部主元下界 &gt; 0（最小 ≈1.13e-60）——有限维证书 M(V<sub>33</sub>) &lt; 4；B 会话的 Kato–Temple 全空间升级经审计 blocked（完整残差 0.106 ≫ 谱隙 0.07），改产 <code>OPEN_PROBLEM.md</code>。</td></tr>
+        <tr><td>9 月 4 日</td><td>GPT-6 Astra 宣布 <a href="https://cdn.openai.com/pdf/51126fac-1b68-4128-9666-c908bcc16033/short_gaps.pdf" target="_blank" rel="noreferrer">186</a>（k=40 元组 + Lean 形式化）；同日 Axiom 宣布 212、Anthropic 宣布 188。</td></tr>
+        <tr><td><strong>结论</strong></td><td>DSH 没有发明新数学，但它把“纯 BV + 标准权重”房间的天花板量到了 ≈3.99 &lt; 4；所有新纪录都来自房间外（素数分布水平 θ &gt; 1/2）。我们的记录成为旧框架边界的独立刻画。</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>二、科普：为什么孪生素数猜想是一个优化问题</h2>
+    <p>孪生素数猜想问的是：是否有无穷多对相差 2 的素数（11 与 13、17 与 19、29 与 31……）。一百多年没人能证。2013 年张益唐换了个问法：不追“差 2”，改证“存在无穷多对间距不超过某个有限值 H 的素数对”——于是全世界的战场变成了把 H 从 7000 万往下压。</p>
+    <p>这个战场为什么本质上是<strong>优化问题</strong>？因为整条 Maynard 路线由三层互相耦合的优化组成：</p>
     <div class="two-col">
       <div class="panel">
-        <h3>从路上的一个想法开始</h3>
-        <p>前几天赶路时，我给自己科普了一点孪生素数猜想。张益唐、Maynard 和 Polymath8b 的路线里有很强的组合优化味道：先选一个可容许的数字模板，再给模板中不同位置加权，争取让平均素数数量超过阈值。</p>
-        <p>这个直觉未必就是完整证明，但足以成为一个很好的学习入口。于是我让 DSH 继续研究：能不能复现 246，或者在同一框架里把它往下推。</p>
+        <h3>第一层：组合优化——选模板</h3>
+        <p>取 k 个非负整数 h<sub>1</sub> &lt; h<sub>2</sub> &lt; … &lt; h<sub>k</sub> 作为“模板”，要求<strong>可容许</strong>：对每个素数 p，这 k 个数 mod p 不能覆盖全部剩余类。反例正是孪生素数对本身：{0, 2} mod 2 覆盖了 {0, 1} 两类——无论 n 是奇是偶，n 与 n+2 总有一个是偶数，筛法必然筛掉一个。而三元组 {0, 2, 6} 就是可容许的。</p>
+        <p>可容许是筛法工作的入场券，于是第一个优化问题出现：在可容许的前提下<strong>最小化直径</strong> H(k) = h<sub>k</sub> − h<sub>1</sub>。模板越窄，纪录越好压。我们用 DFS + SAT 独立严格验证了 H(46)=216、H(48)=236、H(49)=240、H(50)=246。</p>
       </div>
       <div class="panel">
-        <h3>几天后，得到的不是新定理</h3>
-        <p>DSH 写了搜索器、验证器和 Lean 文件，启动了长时间的高维区间矩阵计算，也反复检查远程机器上的任务。它后来自动回到了 246 附近的已知路线，并把大量时间花在复现和严格化已有计算上。</p>
-        <p>这件事很像一个工程师在陌生数学里工作：先把能运行的东西做出来，再用日志、缓存、精度和证书把它加固；但它不会自动知道什么时候该换掉一条对最终定理帮助不大的路线。</p>
+        <h3>第二层：变分优化——调权重</h3>
+        <p>光有模板不够：筛法本身只能给出“平均而言素数稀疏”，要证明的是某个<strong>加权平均可以超过阈值</strong>。做法是在 (k−1) 维单纯形上放一个非负权重函数 F，把“素数出现的加权平均次数”最大化，得到变分常数 M<sub>k</sub>。</p>
+        <p>Maynard 证明：只要 M<sub>k</sub> &gt; 2m/θ，就有无穷多个 n 使模板中至少 m+1 个位置同时是素数。要证“两个素数”（m=1）就要 M<sub>k</sub> &gt; 2/θ。第二个优化问题：<strong>把 M<sub>k</sub> 做大</strong>——这是他 2013 年的核心贡献。</p>
       </div>
     </div>
-    <div class="callout"><strong>最重要的修正：</strong> 我们的结果是一个诚实的研究记录，不是孪生素数猜想的证明，也不是对 246 的新突破。Axiom 的 formalization、原始数学家的解析证明、以及 DSH 的工程化探索，应该被明确区分。</div>
+    <div class="panel">
+      <h3>第三层：解析优化——素数分布得有多均匀</h3>
+      <p>阈值的分母 θ 是“素数在算术级数中的分布水平”。Bombieri–Vinogradov 定理给 θ = 1/2，于是阈值钉死在 2/θ = 4。Polymath8b 把三层一起拧紧：k=50 的模板（直径 246）+ 精心优化的权重算出 M<sub>50</sub> = 4.0043 &gt; 4——<strong>246 定理诞生</strong>。注意 4.0043 离 4 只有 0.1%：在 θ=1/2 的房间里，这条路几乎已经拧到了头。</p>
+    </div>
+    <pre>纪录 H = min over k { H(k) : M_k &gt; 2m/θ }
+  ├── H(k) ：组合层，越小越好（打包问题）
+  ├── M_k  ：变分层，越大越好（权重设计）
+  └── θ    ：解析层，越大阈值越低（素数分布输入）</pre>
+    <h3>246 → 186：三层各自被拧紧的历史</h3>
+    <table>
+      <thead><tr><th>上界</th><th>谁</th><th>关键改进在哪一层</th></tr></thead>
+      <tbody>
+        <tr><td>70,000,000</td><td>张益唐（2013）</td><td>变分层首次跑通（GPY 方法），θ = 1/2</td></tr>
+        <tr><td>600</td><td>Maynard（2013）</td><td>变分层重做：多维筛权重，任意大 k 时 M<sub>k</sub> 随 log k 增长</td></tr>
+        <tr><td>246</td><td>Polymath8b（2014）</td><td>三层同拧：k=50、M<sub>50</sub>=4.0043 &gt; 4、θ = 1/2</td></tr>
+        <tr><td>240</td><td>Stadlmann（2026-08-31，人类）</td><td>解析层：BV + 光滑模上的新等分布估计；240 = H(49)</td></tr>
+        <tr><td>212 / 188</td><td>Axiom / Anthropic（2026-09-04）</td><td>同一框架内继续拧紧并 Lean 形式化</td></tr>
+        <tr><td><strong>186</strong></td><td>GPT-6 Astra（2026-09-04）</td><td>解析层 θ ≈ 0.525（阈值降到 ≈3.81）+ 新因子分解条件扩大权重支撑；k=40，直径 186；Lean 形式化</td></tr>
+      </tbody>
+    </table>
+    <p>关键观察：246 之后十年无人推进，不是变分层没拧干净——而是阈值 2/θ 被 θ=1/2 钉死在 4，M<sub>50</sub>=4.0043 已经贴着天花板。要再往下，必须换解析输入。这正是 Stadlmann 和 GPT-6 做的事：提高光滑模上的分布水平，阈值降到 ≈3.81，于是更小的 k=40 就够了，直径直接砍到 186。</p>
+    <p>当然，这条路线之外还有更深的墙：奇偶性障碍（parity problem）表明纯筛法不可能把 H 压到 6 以下，孪生素数猜想本身仍需要别的思想。但在墙到达之前，它确实是一个可以逐项计分的优化问题——这也正是它适合交给机器的原因。</p>
   </section>
 
   <section>
@@ -175,37 +214,20 @@
   </section>
 
   <section>
-    <h2>技术附录：先把三种工作分开</h2>
-    <div class="two-col">
-      <div class="panel">
-        <h3>DSH：研究型 agent loop</h3>
-        <p>它把语言模型、Bash、文件编辑器、网页搜索、远程作业和等待循环接在一起。模型可以提出猜想、写程序、跑实验、读日志、修改算法，再决定下一步做什么。</p>
-        <p>它的输出首先是<strong>研究过程</strong>：候选路线、代码、数值证据、失败原因和未完成的缺口。过程本身没有自动的完备性或终止性保证。</p>
-      </div>
-      <div class="panel">
-        <h3>Axiom：形式化证明流水线</h3>
-        <p>它把人类已有的 GPY/Maynard 证明和精确证书翻译成 Lean。真正的最终裁判是 Lean kernel，而不是语言模型是否写出了一段看起来合理的解释。</p>
-        <p>因此，Axiom 的核心交付物是 <code>existsEpsCert50</code> 及其理论组装；DSH 当前交付的是有限维矩阵判定、可容许元组证书和一条正在收敛的研究轨迹。</p>
-      </div>
-    </div>
-    <div class="callout"><strong>有限计算可以成为完整证明的一部分</strong>：前提是它产生精确证书，并且已有形式化的 soundness 定理把证书连接到目标命题。当前 DSH 有不少“证书候选”和“严格有限维判断”，但还没有这条完整连接。</div>
-  </section>
-
-  <section>
-    <h2>二、两条主轨迹到底在做什么</h2>
+    <h2>三、两条主轨迹到底在做什么（含最终审计）</h2>
     <table>
-      <thead><tr><th>轨迹</th><th>规模</th><th>主要动作</th><th>研究方向</th><th>当前评价</th></tr></thead>
+      <thead><tr><th>轨迹</th><th>规模</th><th>主要动作</th><th>研究方向</th><th>最终评价（含 9 月审计）</th></tr></thead>
       <tbody>
-        <tr><td><strong>A</strong><br><span class="small">证明猜想 main</span></td><td>48 turns<br>5,319 steps<br>2.20M raw events</td><td>3,786 次 Bash、70 次 edit、60 次 write、1,415 次 job_output</td><td>元组搜索、M 泛函、D=31 区间 LDLᵀ、Legendre 后处理</td><td>完成了 <code>k=49,D=31</code> 的严格 LDLᵀ 判定；后处理仍在推进</td></tr>
-        <tr><td><strong>B</strong><br><span class="small">证明猜想 main (1)</span></td><td>60 turns<br>6,332 steps<br>2.62M raw events</td><td>5,232 次 Bash、123 次 edit、74 次 write、869 次 job_output</td><td>高维区间证书、<code>k=48,D=19</code>、<code>k=49,D=21</code> 高精度重算</td><td><code>k=48,D=19</code> 已完成；<code>k=49,D=21</code> 在快照时仍是长时间 CPU 计算</td></tr>
+        <tr><td><strong>A</strong><br><span class="small">证明猜想 main</span></td><td>48 turns<br>5,319 steps<br>2.20M raw events</td><td>3,786 次 Bash、70 次 edit、60 次 write、1,415 次 job_output</td><td>元组搜索、M 泛函、区间 LDLᵀ（D=31 → 33）、独立 sanity 审计</td><td>完成 <code>k=49, D=33</code> 的 6740 维区间 LDLᵀ：全部主元下界 &gt; 0，最小 ≈1.13e-60 —— 有限维证书 M(V<sub>33</sub>) &lt; 4。k=2 手算级审计逐项通过；它自己写的高维大审计因拒绝采样零命中被人类抓住，修复后 k=3 通过。证书只是有限维结论。</td></tr>
+        <tr><td><strong>B</strong><br><span class="small">证明猜想 main (1)</span></td><td>60 turns<br>6,332 steps<br>2.62M raw events</td><td>5,232 次 Bash、123 次 edit、74 次 write、869 次 job_output</td><td>高维区间证书、Kato–Temple 后验谱界、乘子路线探针</td><td><code>k=48, D=19</code> 完成；Kato–Temple 全空间升级经审计 <strong>blocked</strong>：完整残差相对量 ≈0.106，远大于可用谱隙 ≈0.07；改产 <code>OPEN_PROBLEM.md</code>，把全空间 M<sub>49,1/25</sub> &lt; 4 的严格化写成社区可接手的问题。</td></tr>
       </tbody>
     </table>
     <p class="small">计数来自 session.history 的全量反向分页。两条会话的 raw event 总量约 4,829,047，其中绝大多数是模型流式输出 chunk；本页将它们聚合到对应的逻辑 step。</p>
   </section>
 
   <section>
-    <h2>三、可视化全部 trajectory</h2>
-    <p>上面的横向轨道包含两条会话的每一个逻辑 step。颜色代表该 step 的主要动作类型；可以按会话、动作、关键词筛选，也可以直接点击轨道上的点查看模型摘要、工具参数、结果和序号范围。密集区域不是被省略，而是每个点都绘制在同一条轨道上。</p>
+    <h2>四、可视化全部 trajectory</h2>
+    <p>下面的横向轨道包含两条会话的每一个逻辑 step。颜色代表该 step 的主要动作类型；可以按会话、动作、关键词筛选，也可以直接点击轨道上的点查看模型摘要、工具参数、结果和序号范围。密集区域不是被省略，而是每个点都绘制在同一条轨道上。</p>
     <div class="viz-shell">
       <div class="viz-toolbar">
         <select id="sessionFilter" aria-label="筛选会话"><option value="all">全部会话</option><option value="A">A · 主线</option><option value="B">B · 高精度支线</option></select>
@@ -237,25 +259,25 @@
   </section>
 
   <section>
-    <h2>四、DSH 做得好的地方</h2>
+    <h2>五、DSH 做得好的地方</h2>
     <div class="two-col">
       <div class="panel">
         <h3>把一个不可解目标拆成可检验对象</h3>
-        <p>它没有真的“解决孪生素数猜想”，而是把问题拆成可容许元组的 <code>H(k)</code>、Maynard 泛函 <code>M_{k,ε}</code>、有限多项式族和区间矩阵判定。这个拆分是对的，也让失败可以定位。</p>
+        <p>它没有真的“解决孪生素数猜想”，而是把问题拆成可容许元组的 <code>H(k)</code>、Maynard 泛函 <code>M_k</code>、有限多项式族和区间矩阵判定。这个拆分与第二节的三层优化完全对应，也让失败可以定位到层。</p>
         <h3>反例驱动地修正实现</h3>
         <p>轨迹中出现过剪枝完备性问题和 <code>int/int</code> 混入浮点导致假正特征值。模型通过小规模反例和精确有理数对称性检查修复了它们，而不是把第一版结果直接包装成结论。</p>
       </div>
       <div class="panel">
         <h3>形成 proof-carrying computation 的雏形</h3>
-        <p>可容许元组侧已经有 Lean 文件；数值侧使用区间算术和对称选主元 LDLᵀ。<code>k=49,D=31</code> 最终得到“全部主元下界 &gt; 0”的严格有限维结论，说明这不是普通双精度实验。</p>
-        <h3>诚实地留下边界</h3>
-        <p>轨迹最后没有把有限函数族里的 <code>M&lt;4</code> 外推成全空间上界，也没有把“CPU 还在跑”写成“定理即将完成”。这一点比一段漂亮的伪证明更重要。</p>
+        <p>可容许元组侧已经有 Lean 文件；数值侧使用区间算术和对称选主元 LDLᵀ。D=33 的最终运行得到“全部 6740 个主元下界 &gt; 0”的严格有限维结论，说明这不是普通双精度实验。</p>
+        <h3>被审计之后能立刻修正</h3>
+        <p>9 月 1–3 日的审计中，它自己生成的高维 sanity 检查用了 48 维拒绝采样（命中率约 1/48!，几乎必然零样本），被人类抓住后立即改为指数/Dirichlet 采样，并通过了 k=2 手算级与 k=3 数值级复核。一个“被指出 bug 会修、被指出 overclaim 会收”的 agent，比一个“永远自信”的 agent 有用得多。</p>
       </div>
     </div>
   </section>
 
   <section>
-    <h2>五、它为什么没有在有限时间内收敛成完整证明</h2>
+    <h2>六、它为什么没有在有限时间内收敛成完整证明</h2>
     <div class="score">
       <div class="score-row"><span>研究分解</span><div class="score-track"><div class="score-fill" style="width:92%;background:var(--teal)"></div></div><strong>强</strong></div>
       <div class="score-row"><span>程序与数值实验</span><div class="score-track"><div class="score-fill" style="width:86%;background:var(--orange)"></div></div><strong>较强</strong></div>
@@ -265,47 +287,52 @@
     <div class="two-col">
       <div class="panel">
         <h3>算力瓶颈是真实的，但只影响局部任务</h3>
-        <p><code>n=4910</code> 或 <code>n=3506</code> 的高精度区间 LDLᵀ 是 CPU-bound，某些主元位置会极慢；远程任务需要几十小时甚至更久。更强机器、并行分块、缓存和更好的线性代数实现都能改善这一段。</p>
-        <p>但把 <code>k=49</code> 的计算跑完，仍然不是 Axiom 所需的 <code>M_{50,1/25}&gt;4</code> 精确证书。</p>
+        <p>数千维的高精度区间 LDLᵀ 是 CPU-bound，某些主元位置会极慢；D=33 的完整运行花了约两天半。更强机器、并行分块、缓存和更好的线性代数实现都能改善这一段。</p>
+        <p>但把 k=49 的有限维计算跑完，仍然不是 186 或 212 所需的解析层突破——算力买不到 θ。</p>
       </div>
       <div class="panel">
-        <h3>真正的瓶颈是证明对象不一致</h3>
-        <p>当前主线大量工作是在尝试证明某些 <code>k&lt;50</code> 的受限空间里 <code>M&lt;4</code>，这对“能否把 246 再缩短”是有信息量的负结果，但不是 246 定理的正向证明。</p>
-        <p>要复现 Axiom，需要精确打包的 <code>M_{50,1/25}&gt;4</code> 证书、证书 soundness、Maynard/GPY 解析链和最终 theorem assembly。它们不是等待现有 Python 进程结束就会自动出现的。</p>
+        <h3>真正的瓶颈是证明对象不一致 + 墙确实存在</h3>
+        <p>主线大量工作在尝试证明某些 k&lt;50 的受限空间里 M &lt; 4，这对“能否改进 246”是有信息量的负结果，但不是任何正向定理。9 月的审计进一步确认了墙的真实性：下界方向，嵌套 Ritz 外推给出全空间数值地板 ≈3.9936，单调收敛且饱和；上界方向，Kato–Temple 后验估计需要完整残差远小于谱隙，而实测残差 ≈0.106 ≫ 0.07——标准后验路线在这套权重上无法闭合。</p>
+        <p>换句话说：DSH 不是差一点就证明出什么，而是把“这个房间里没有更多东西可拿”这件事本身做实了。</p>
       </div>
     </div>
   </section>
 
   <section>
-    <h2>六、和 Axiom 的公平比较</h2>
+    <h2>七、尾声：我们量到了旧房间的天花板</h2>
+    <p>9 月 4 日的新闻发布后，我们手里这三件东西的意义变得清晰了：</p>
     <table>
-      <thead><tr><th>层次</th><th>DSH 当前交付</th><th>Axiom 交付</th></tr></thead>
+      <thead><tr><th>结论</th><th>等级</th><th>状态与新闻之后的意义</th></tr></thead>
       <tbody>
-        <tr><td>探索</td><td>模型自主拆解任务、检索文献、提出多个计算路线</td><td>多智能体 formalizer / conjecturer / prover 协作</td></tr>
-        <tr><td>数值</td><td>高精度、区间算术、有限维 LDLᵀ、远程作业</td><td>精确整数/有理数证书，作为 Lean 数据输入</td></tr>
-        <tr><td>组合对象</td><td>已验证若干可容许元组及直径事实</td><td><code>H50</code> 的定义、直径和可容许性接入正式库</td></tr>
-        <tr><td>理论连接</td><td>仍主要依赖论文理解和人工审计</td><td>以 Lean theorem 连接证书与 bounded-gap 理论</td></tr>
-        <tr><td>最终状态</td><td>有限维严格证据 + 大量研究轨迹</td><td>kernel-checkable 的 246 定理形式化结果（依赖明确列出）</td></tr>
+        <tr><td>H(46..50) 最小直径 = 216 / 226 / 236 / 240 / 246</td><td><strong>A · 严格</strong></td><td>SAT 见证 + C 穷举 UNSAT，与权威数据一致。<strong>完好无损</strong>：Stadlmann 的 240 = H(49)，新纪录与我们的表完全相容。</td></tr>
+        <tr><td>k=49、V<sub>33</sub>（6740 维）上 M &lt; 4</td><td><strong>A · 有限维</strong></td><td>区间 LDLᵀ，全部主元 &gt; 0（最小 ≈1.13e-60）。刻画了 θ=1/2 房间内的有限维事实，与外部突破不矛盾。</td></tr>
+        <tr><td>全空间 M<sub>49,1/25</sub> 极限 ≈ 3.9936</td><td>B · 数值</td><td>嵌套 Ritz 外推，非定理。它是“纯 BV + 标准权重”房间的数值地板：3.99 &lt; 4，说明这个房间确实出不去。</td></tr>
+        <tr><td>Kato–Temple 全空间升级</td><td>C · blocked</td><td>完整残差 ≈0.106 ≫ 谱隙 ≈0.07；已写成 <code>OPEN_PROBLEM.md</code>。</td></tr>
+        <tr><td>改进 246 / 证明孪生素数猜想</td><td>—</td><td>未解决。246 已被外部推进至 240（人类）与 186（GPT-6）。</td></tr>
+        <tr><td>“Maynard 筛法的极限就是 246”</td><td>—</td><td>我们从未把它当成定理，只是数值上逼近过这个边界；9 月 4 日它被事实否定——门一直在，钥匙在解析层。</td></tr>
       </tbody>
     </table>
-    <p>这不是说 DSH “失败”而 Axiom “只是多跑了几张卡”。两者目标函数不同：DSH 更像一个开放式数学实验室，Axiom 更像一个 proof-producing 编译器和内核审计流水线。</p>
-  </section>
-
-  <section>
-    <h2>七、重新评价这次运行</h2>
-    <div class="callout">
-      <strong>研究评价：</strong> DSH 已经证明自己能把一个长周期数学问题推进到相当细的计算和形式化边界；它最有价值的产物不是“发现了一个新定理”，而是展示了 agent 如何把开放问题压缩为一组可复现、可反驳、部分可内核检查的子任务。
+    <p>回头看，GPT-6 论文把突破归功于 Polymath8b 在 §9 里<strong>九年前就标注过</strong>、但当时“积分难以计算”的未利用方向——更强的光滑模等分布输入。DSH 撞的墙和 GPT-6 开的门，是同一张地图上的同一面墙和同一扇门。这让我们的负结果有了正面价值：它是旧框架边界的独立数值刻画，可以作为后来者引用的界标。</p>
+    <div class="two-col">
+      <div class="panel">
+        <h3>同一天，四种研究范式同场竞技</h3>
+        <p><strong>Stadlmann（纯人类）240</strong>：解析层的深度洞察。<strong>GPT-6 Astra 186</strong>：在大搜索空间里找到人类没试过的组合 + Lean 形式化。<strong>Axiom 212 / Anthropic 188</strong>：形式化流水线。<strong>DSH</strong>：工程验证型 agent——不擅长开新路线（它会 fallback 到已知路线），但可以几天几夜不停执行，把一条路线推到可复现证书的边界，并且被审计后能立刻修正。</p>
+        <p>负责任的 AI 数学研究需要三者协同：<strong>生成</strong>（提出并搜索路线）、<strong>执行</strong>（长时间跑通并留证）、<strong>验证</strong>（kernel 级检查）。缺任何一环，要么是伪证明，要么是无法复现的宣称。</p>
+      </div>
+      <div class="panel">
+        <h3>给读者的 takeaway</h3>
+        <p>AI 没有替代“决定哪扇门值得开”的判断——Polymath8b 九年前就写下了那扇门。但 AI 正在把“开门”的成本从以年计压到以天计：张益唐到 Maynard 用了数月，Polymath 用了全球协作，而 9 月 4 日一天之内出现了三个新纪录。</p>
+        <p>差别不在算力，而在<strong>地图感</strong>：知道哪面墙是死的，哪扇门只是没锁。DSH 的五天没有白跑——它用 483 万个事件把一面墙的厚度量了出来。下一次，先给 agent 一张好地图。</p>
+      </div>
     </div>
-    <p>GPT review 之后，最需要收回的是两类说法：第一，DSH 没有完成 Axiom 的 246 theorem formalization；第二，我们不能把“Maynard 筛法的极限就是 246”或“这是新的数学贡献”当成已证明结论。我们真正拥有的是独立的计算实验、有限维严格证书、组合侧 Lean 证明，以及一份完整的 agent trajectory。</p>
-    <p>如果评价标准是“是否在有限时间内收敛成完整证明”，答案是：<strong>一般没有这种保证；本次运行也没有收敛到那个层级</strong>。有限时间可以产出完整的有限证书，但前提是目标本身已经被设计成有限、精确、可连接到理论的 proof object。</p>
-    <p>下一步若要继续，最有效的方向不是无止境地等待所有 <code>D=31</code> 计算，而是把 DSH 已经写出的组合定义、矩阵证书和 Lean 证明重新组织成一个明确的 certificate interface，再决定是否直接复用 Axiom 的理论库，或只把这次运行作为独立的数值审计报告。</p>
   </section>
 
   <section>
     <h2>八、复现和审计入口</h2>
     <div class="source-box" style="padding:20px">
-      <p><strong>项目仓库：</strong> <a href="https://github.com/guoshaoyang-pku/twin-prime-admissible" target="_blank" rel="noreferrer">twin-prime-admissible</a></p>
-      <p><strong>Axiom 对照：</strong> <a href="https://github.com/AxiomMath/PrimeGapsLib" target="_blank" rel="noreferrer">PrimeGapsLib</a> · <a href="https://primegaps.axiommath.ai/paper/" target="_blank" rel="noreferrer">formalization paper</a></p>
+      <p><strong>本项目：</strong> <a href="https://github.com/guoshaoyang-pku/twin-prime-admissible" target="_blank" rel="noreferrer">twin-prime-admissible</a>（可容许元组见证 + 直径搜索 + 本页轨迹数据）</p>
+      <p><strong>新闻之后的新论文：</strong> <a href="https://arxiv.org/abs/2608.31126" target="_blank" rel="noreferrer">Stadlmann, Bounded gaps between primes (240)</a> · <a href="https://cdn.openai.com/pdf/51126fac-1b68-4128-9666-c908bcc16033/short_gaps.pdf" target="_blank" rel="noreferrer">OpenAI, Improved Short Gaps Between Primes (186)</a></p>
+      <p><strong>Axiom 对照：</strong> <a href="https://github.com/AxiomMath/PrimeGapsLib" target="_blank" rel="noreferrer">PrimeGapsLib</a> · <a href="https://primegaps.axiommath.ai/paper/" target="_blank" rel="noreferrer">246 形式化论文</a></p>
       <p><strong>轨迹定义：</strong> 页面从 DeepSeek Harness 的 <code>session.history</code> 全量分页读取两条主会话，保留每个逻辑 step 的 turn/step、时间、工具调用、结果、模型摘要和 source sequence 范围；凭证样式字符串被脱敏，assistant 流式 chunk 被聚合。</p>
       <p class="small">这是一个带快照时间的研究日志，不是供应商原始 API 导出。结论等级仍须区分：Lean kernel 检查、区间算术严格有限维结果、可复现计算、启发式解释。</p>
     </div>
