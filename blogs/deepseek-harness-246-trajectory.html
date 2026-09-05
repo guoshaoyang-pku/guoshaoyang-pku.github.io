@@ -139,12 +139,12 @@
   <header>
     <div class="eyebrow">Research log · Agent trajectory audit</div>
     <h1>我和 DeepSeek 一起追过一次孪生素数猜想</h1>
-    <p class="dek">这不是一篇宣布“AI 证明了孪生素数”的文章。8 月中旬我把“解决猜想”直接交给 DeepSeek Harness，它两天内自行降级为形式化已知结果；随后的主会话连跑数日，自动 fallback 到复现 246。我们把它的全部工作审计成三件诚实的东西。9 月 4 日，人类数学家和 GPT-6 把世界纪录推到 240 与 186——恰好都发生在 DSH 所在的“房间”之外。本文也是一篇科普：为什么孪生素数猜想本质上是三层优化问题。</p>
+    <p class="dek">这不是一篇宣布“AI 证明了孪生素数”的文章。8 月中旬我把“解决猜想”直接交给 DeepSeek Harness，它先是被调度去跑一场 42.4 万子空间的大规模 UNSAT 穷举与 Lean 证书化，随后自行降级为形式化已知结果；8 月 20 日主会话继续上路，最终自动 fallback 到复现 246。我们把它的全部工作审计成三件诚实的东西。9 月 4 日，人类数学家和 GPT-6 把世界纪录推到 240 与 186——恰好都发生在 DSH 所在的“房间”之外。本文也是一篇科普：为什么孪生素数猜想本质上是三层优化问题。</p>
     <div class="meta">作者：Shaoyang Guo · 轨迹快照：2026-08-29 · 终稿：2026-09-06（北京时间） · <a href="https://github.com/guoshaoyang-pku/twin-prime-admissible" target="_blank" rel="noreferrer">项目仓库</a> · <a href="https://github.com/AxiomMath/PrimeGapsLib" target="_blank" rel="noreferrer">Axiom 对照仓库</a></div>
   </header>
 
   <div class="hero-note">
-    <strong>先说故事的结尾：</strong> 这场追逐有一个前传和两个结局。前传：约 8 月 13–15 日，我最初把“解决孪生素数猜想”直接交给 DSH，它开局即声明不可行、自行降级为对已知结果的严格验证与形式化——两天后，Axiom 的 246 形式化新闻才发布。结局之一：DSH 没有证明孪生素数，也没有改进 246——它最终自动 fallback 到复现 246 路线，而我们随后用一周把它的产出审计成三件诚实的东西：一张与权威数据逐项吻合的最小直径表、一张 k=49 的有限维区间算术证书、和一个精确写下的开放问题。然后，在 9 月 4 日早晨，领域本身越过了我们：人类数学家 Julia Stadlmann 把 246 推进到 240，同日 OpenAI 的 GPT-6 Astra 宣布 186（附 Lean 形式化），Axiom 与 Anthropic 给出 212 与 188。回头看，DSH 所在的房间（Bombieri–Vinogradov + 标准权重）的天花板恰好被我们量到了 ≈3.99 &lt; 4；而所有新纪录都来自房间之外——更强的素数分布输入。所以这不是“AI 攻克难题”的故事，而是一个关于 AI 如何做研究、如何被审计、以及如何与领域进展对表的故事。
+    <strong>先说故事的结尾：</strong> 这场追逐有一个长前传和两个结局。长前传：8 月 13 日 22:26（北京），我最初把“解决孪生素数猜想”直接交给 DSH，它先搜索了当前纪录，写 C 分段筛验证 π₂(10⁷) 与 π₂(10⁸)，随即开始本地构建可容许元组搜索器；8 月 14 日 23:32 工作被搬到远程 GPU 集群，随即跑出 42.4 万子空间的大规模 UNSAT 穷举与 Lean 证书化（8 月 18–20 日）——这比 Axiom 的 246 形式化新闻早两天发布。之后它才自行降级并转入本页两条主会话，继续研究 Maynard 泛函与有限维证书。结局之一：DSH 没有证明孪生素数，也没有改进 246——它最终自动 fallback 到复现 246 路线，而我们随后用一周把它的产出审计成三件诚实的东西：一张与权威数据逐项吻合的最小直径表、一张 k=49 的有限维区间算术证书、和一个精确写下的开放问题。然后，在 9 月 4 日早晨，领域本身越过了我们：人类数学家 Julia Stadlmann 把 246 推进到 240，同日 OpenAI 的 GPT-6 Astra 宣布 186（附 Lean 形式化），Axiom 与 Anthropic 给出 212 与 188。回头看，DSH 所在的房间（Bombieri–Vinogradov + 标准权重）的天花板恰好被我们量到了 ≈3.99 &lt; 4；而所有新纪录都来自房间之外——更强的素数分布输入。所以这不是“AI 攻克难题”的故事，而是一个关于 AI 如何做研究、如何被审计、以及如何与领域进展对表的故事。
   </div>
 
   <section>
@@ -152,12 +152,15 @@
     <table>
       <thead><tr><th style="width:130px">时间</th><th>事件</th></tr></thead>
       <tbody>
-        <tr><td>约 8 月 13–15 日</td><td>第一轮：我把孪生素数猜想直接交给 DSH，原始任务就是“解决孪生素数猜想，或者把现有的值（246）缩短”。它开局即声明两件事在当前框架下均不可行——猜想被 Selberg 奇偶性障碍阻挡，246 是 Polymath8b 压线多年的结果——随即把目标降级为对已知结果的严格验证与形式化。</td></tr>
-        <tr><td>8 月 17 日</td><td>Axiom Math 宣布完成 246 定理的 Lean 形式化（被形式化的证明本体正是 Polymath8b 的工作）。DSH 在新闻之前两天就已经自己走到了同一条路上。</td></tr>
-        <tr><td>8 月 20 日</td><td>第二轮收口成文并公开仓库：H(43..50) 最小直径的完全自足穷举证明（DFS + 频数剪枝 + SAT）、89 个定理的 Lean 4 零 sorry 库、M<sub>k,ε</sub> 泛函的精确有理数判定工具链；同日文献核实确认“246 仍是无条件纪录，k&lt;50 的 M 值是文献空白”。</td></tr>
+        <tr><td>8 月 13 日 22:26（北京）</td><td>我把孪生素数猜想直接交给 DSH，原始任务就是“解决孪生素数猜想，或者把现有的值（246）缩短”。<code>session-32a1d97a</code> 是第一个主会话，工作目录还是空的；它先搜索了当前纪录，写 C 分段筛验证 π₂(10⁷) 与 π₂(10⁸)，然后立即开始构建可容许元组搜索器。</td></tr>
+        <tr><td>8 月 13–14 日</td><td>DSH 在本地开始 H(k) 的穷举与见证：生成 <code>admissible.c</code>、<code>admissible_d.c</code>、<code>verify_admissible.py</code>，并行跑大量 <code>./admissible_d k d</code> 判定；到 8 月 14 日上午已独立完成 k=46 边界 d=194/192 UNSAT、k=50 d=246 SAT 等关键结果。同一时段有多个 fork 子会话（<code>session-2a5e1b0f</code>、<code>session-6f9b09d6</code> 等）在同步推进。</td></tr>
+        <tr><td>8 月 14 日 23:32（北京）</td><td>工作被搬到远程 GPU 集群（<code>ophis-gpu:/data3/...</code>），remote <code>start_time.txt</code> 记录为 2026-08-14 15:32:32 UTC。随后几天在 192 核上跑出 <strong>42.4 万子空间的大规模 UNSAT 穷举</strong>：对 1593 个 (k,d) 目标按前几个元素六层切分，任务文件 45.6 万行，结果 1.7 GB，<strong>全部 319/319 关键目标 UNSAT</strong>。期间还处理了调度器层级匹配 bug 和 /data3 600 GB 磁盘配额硬顶。</td></tr>
+        <tr><td>8 月 18–20 日</td><td>将 UNSAT 侧变成 Lean 4 机器检查证明：生成约 <strong>25 万节点</strong>的“剩余类分配失败树”证书，1593 个下界定理，<code>certValidRoot_sound</code> soundness 证明；<code>TwinPrimeAdmissible.lean</code> SAT 侧 96 定理；三实现交叉验证通过。</td></tr>
+        <tr><td>8 月 17 日</td><td>Axiom Math 宣布完成 246 定理的 Lean 形式化。DSH 的大规模 UNSAT + Lean 证书化在新闻之前两天已经跑完，覆盖 Axiom 未包含的 H(k) 下界半边。</td></tr>
+        <tr><td>8 月 20 日</td><td>本地 <code>math</code> 仓库做干净初始提交；第二轮收口成文并公开仓库：H(43..50) 最小直径的完全自足穷举证明、1593 个 Lean 下界定理、<code>M<sub>k,ε</sub></code> 泛函的精确有理数判定工具链。</td></tr>
         <tr><td>8 月 20–29 日</td><td>两条主会话（本页轨迹）连续运行：元组搜索、Maynard 泛函、高维区间矩阵、Lean 文件；期间自动 fallback 到复现 246 的已知路线。</td></tr>
         <tr><td>8 月 29 日</td><td>轨迹快照：11,651 个逻辑 step、483 万原始事件，全部可视化于本页。</td></tr>
-        <tr><td>8 月 31 日</td><td>（当时未注意到）人类数学家 Julia Stadlmann 发表 <a href="https://arxiv.org/abs/2608.31126" target="_blank" rel="noreferrer">240</a>：Bombieri–Vinogradov + 光滑模上的新等分布估计。240 恰好等于我们表中的 H(49)。</td></tr>
+        <tr><td>8 月 31 日</td><td>人类数学家 Julia Stadlmann 发表 <a href="https://arxiv.org/abs/2608.31126" target="_blank" rel="noreferrer">240</a>：Bombieri–Vinogradov + 光滑模上的新等分布估计。240 恰好等于我们表中的 H(49)。</td></tr>
         <tr><td>9 月 1–3 日</td><td>人类审计收尾：A 会话完成 k=49, D=33 的 6740 维区间 LDL，全部主元下界 &gt; 0（最小 ≈1.13e-60）——有限维证书 M(V<sub>33</sub>) &lt; 4；B 会话的 Kato–Temple 全空间升级经审计 blocked（完整残差 0.106 ≫ 谱隙 0.07），改产 <code>OPEN_PROBLEM.md</code>。</td></tr>
         <tr><td>9 月 4 日</td><td>GPT-6 Astra 宣布 <a href="https://cdn.openai.com/pdf/51126fac-1b68-4128-9666-c908bcc16033/short_gaps.pdf" target="_blank" rel="noreferrer">186</a>（k=40 元组 + Lean 形式化）；同日 Axiom 宣布 212、Anthropic 宣布 188。</td></tr>
         <tr><td><strong>结论</strong></td><td>DSH 没有发明新数学，但它把“纯 BV + 标准权重”房间的天花板量到了 ≈3.99 &lt; 4；所有新纪录都来自房间外（素数分布水平 θ &gt; 1/2）。我们的记录成为旧框架边界的独立刻画。</td></tr>
@@ -228,7 +231,24 @@
   </section>
 
   <section>
-    <h2>四、可视化全部 trajectory</h2>
+    <h2>四、项目全景：本页两条轨迹只是第二阶段</h2>
+    <p>本页可视化的 11,651 个逻辑 step 是 8 月 20 日之后两条主会话的轨迹。但在此之前的 8 月 13–20 日，已经有一轮高强度的、被长期低估的工作，起点甚至早于 Axiom 的 246 形式化新闻：</p>
+    <table>
+      <thead><tr><th>阶段</th><th>产物</th><th>严格性</th></tr></thead>
+      <tbody>
+        <tr><td>8 月 13 日 22:26 — 8 月 14 日 23:32（本地）</td><td>DSH 从空目录开始：C 分段筛验证 π₂(10⁷)/π₂(10⁸)；生成 <code>admissible.c</code>、<code>admissible_d.c</code>、<code>verify_admissible.py</code>；独立跑出 k=46 边界 d=194/192 UNSAT、k=50 d=246 SAT 等关键结果；撰写 <code>孪生素数猜想-最终报告.md</code>。</td><td>算法 A/B/C 三实现交叉验证；DFS 剪枝数学正确性手写论证；与 OEIS A008407 逐项吻合。</td></tr>
+        <tr><td>8 月 14 日 23:32 — 8 月 18 日（远程 192 核）</td><td>42.4 万子空间大规模 UNSAT 穷举：1593 个 (k,d) 目标按前几个元素六层切分，任务文件 45.6 万行，结果 1.7 GB，319/319 关键目标 UNSAT，闭合 H(43..50) 最小直径下界。</td><td>完备 DFS + 频数剪枝；调度器层级匹配 bug 修复；<code>verify_coverage.py</code> 检查 285,848 节点零缺口。</td></tr>
+        <tr><td>8 月 18–20 日（远程）</td><td>约 25 万节点的“剩余类分配失败树”证书；1593 个下界定理；<code>certValidRoot_sound</code> soundness 证明；<code>TwinPrimeAdmissible.lean</code> SAT 侧 96 定理。</td><td>Lean kernel 检查（含 1593 条纯 <code>by decide</code> 无 native_decide 版本）。</td></tr>
+        <tr><td>8 月 17 日</td><td>Axiom Math 宣布 246 定理 Lean 形式化。DSH 的 H(k) 下界 Lean 证书已在前两天完成。</td><td>时间戳可核。</td></tr>
+        <tr><td>8 月 20 日</td><td>本地 <code>math</code> 仓库干净初始提交；公开仓库；收口成文。</td><td>可复现。</td></tr>
+        <tr><td>8 月 20–29 日主会话（本页）</td><td>高维区间矩阵证书、Kato–Temple 诊断、乘子路线探针。</td><td>有限维证书（A 级）+ 全空间 open problem（C 级）。</td></tr>
+      </tbody>
+    </table>
+    <p class="small">时间戳来源：本地 DSH session JSONL zstd 档案（<code>session-32a1d97a、session-2a5e1b0f、session-6f9b09d6</code> 等）的首尾事件时间；远程 <code>start_time.txt</code> 与 <code>blog_素数间隔246.md</code>；当前仓库在 8 月 20 日做了一次干净初始提交，因此本地 git log 只从那天开始。</p>
+  </section>
+
+  <section>
+    <h2>五、可视化全部 trajectory</h2>
     <p>下面的横向轨道包含两条会话的每一个逻辑 step。颜色代表该 step 的主要动作类型；可以按会话、动作、关键词筛选，也可以直接点击轨道上的点查看模型摘要、工具参数、结果和序号范围。密集区域不是被省略，而是每个点都绘制在同一条轨道上。</p>
     <div class="viz-shell">
       <div class="viz-toolbar">
@@ -271,7 +291,7 @@
       </div>
       <div class="panel">
         <h3>形成 proof-carrying computation 的雏形</h3>
-        <p>可容许元组侧已经有 Lean 文件；数值侧使用区间算术和对称选主元 LDLᵀ。D=33 的最终运行得到“全部 6740 个主元下界 &gt; 0”的严格有限维结论，说明这不是普通双精度实验。</p>
+        <p>可容许元组侧在 8 月 18–20 日就产出了 1593 个 Lean kernel 检查的下界定理；数值侧使用区间算术和对称选主元 LDLᵀ。D=33 的最终运行得到“全部 6740 个主元下界 &gt; 0”的严格有限维结论。这说明它不是普通双精度实验。</p>
         <h3>被审计之后能立刻修正</h3>
         <p>9 月 1–3 日的审计中，它自己生成的高维 sanity 检查用了 48 维拒绝采样（命中率约 1/48!，几乎必然零样本），被人类抓住后立即改为指数/Dirichlet 采样，并通过了 k=2 手算级与 k=3 数值级复核。一个“被指出 bug 会修、被指出 overclaim 会收”的 agent，比一个“永远自信”的 agent 有用得多。</p>
       </div>
@@ -302,16 +322,16 @@
 
   <section>
     <h2>七、尾声：我们量到了旧房间的天花板</h2>
-    <p>9 月 4 日的新闻发布后，我们手里这三件东西的意义变得清晰了：</p>
+    <p>9 月 4 日的新闻发布后，我们手里这些东西的意义变得清晰了。注意：严格结论中<strong>最早取得的是 8 月 18–20 日的 H(k) 下界 Lean 证书化</strong>，它比 Axiom 的 246 形式化新闻还早：</p>
     <table>
       <thead><tr><th>结论</th><th>等级</th><th>状态与新闻之后的意义</th></tr></thead>
       <tbody>
-        <tr><td>H(46..50) 最小直径 = 216 / 226 / 236 / 240 / 246</td><td><strong>A · 严格</strong></td><td>SAT 见证 + C 穷举 UNSAT，与权威数据一致。<strong>完好无损</strong>：Stadlmann 的 240 = H(49)，新纪录与我们的表完全相容。</td></tr>
-        <tr><td>k=49、V<sub>33</sub>（6740 维）上 M &lt; 4</td><td><strong>A · 有限维</strong></td><td>区间 LDLᵀ，全部主元 &gt; 0（最小 ≈1.13e-60）。刻画了 θ=1/2 房间内的有限维事实，与外部突破不矛盾。</td></tr>
-        <tr><td>全空间 M<sub>49,1/25</sub> 极限 ≈ 3.9936</td><td>B · 数值</td><td>嵌套 Ritz 外推，非定理。它是“纯 BV + 标准权重”房间的数值地板：3.99 &lt; 4，说明这个房间确实出不去。</td></tr>
+        <tr><td>H(43..50) 最小直径 = 200/210/212/216/226/236/240/246（SAT + UNSAT 闭合）</td><td><strong>A · 严格</strong></td><td>8 月 18–20 日已得：42.4 万子空间穷举 + 1593 个 Lean kernel 检查下界定理 + 三实现交叉验证。与权威数据一致；<strong>完好无损</strong>：Stadlmann 的 240 = H(49)，新纪录与我们的表完全相容。</td></tr>
+        <tr><td>k=49、V<sub>33</sub>（6740 维）上 M &lt; 4</td><td><strong>A · 有限维</strong></td><td>9 月 1–3 日完成：区间 LDLᵀ，全部主元 &gt; 0（最小 ≈1.13e-60）。刻画 θ=1/2 房间内的有限维事实。</td></tr>
+        <tr><td>全空间 M<sub>49,1/25</sub> 极限 ≈ 3.9936</td><td>B · 数值</td><td>嵌套 Ritz 外推，非定理。是“纯 BV + 标准权重”房间的数值地板：3.99 &lt; 4。</td></tr>
         <tr><td>Kato–Temple 全空间升级</td><td>C · blocked</td><td>完整残差 ≈0.106 ≫ 谱隙 ≈0.07；已写成 <code>OPEN_PROBLEM.md</code>。</td></tr>
         <tr><td>改进 246 / 证明孪生素数猜想</td><td>—</td><td>未解决。246 已被外部推进至 240（人类）与 186（GPT-6）。</td></tr>
-        <tr><td>“Maynard 筛法的极限就是 246”</td><td>—</td><td>我们从未把它当成定理，只是数值上逼近过这个边界；9 月 4 日它被事实否定——门一直在，钥匙在解析层。</td></tr>
+        <tr><td>“Maynard 筛法的极限就是 246”</td><td>—</td><td>我们从未把它当成定理，只是数值上逼近过这个边界；9 月 4 日它被事实否定。</td></tr>
       </tbody>
     </table>
     <p>回头看，GPT-6 论文把突破归功于 Polymath8b 在 §9 里<strong>九年前就标注过</strong>、但当时“积分难以计算”的未利用方向——更强的光滑模等分布输入。DSH 撞的墙和 GPT-6 开的门，是同一张地图上的同一面墙和同一扇门。这让我们的负结果有了正面价值：它是旧框架边界的独立数值刻画，可以作为后来者引用的界标。</p>
