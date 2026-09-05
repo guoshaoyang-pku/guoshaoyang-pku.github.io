@@ -139,12 +139,12 @@
   <header>
     <div class="eyebrow">Research log · Agent trajectory audit</div>
     <h1>我和 DeepSeek 一起追过一次孪生素数猜想</h1>
-    <p class="dek">这不是一篇宣布“AI 证明了孪生素数”的文章。我把问题交给 DeepSeek Harness 让它连跑五天，它自动 fallback 到复现 246；我们随后把它的全部工作审计成三件诚实的东西。9 月 4 日，人类数学家和 GPT-6 把世界纪录推到 240 与 186——恰好都发生在 DSH 所在的“房间”之外。本文也是一篇科普：为什么孪生素数猜想本质上是三层优化问题。</p>
+    <p class="dek">这不是一篇宣布“AI 证明了孪生素数”的文章。8 月中旬我把“解决猜想”直接交给 DeepSeek Harness，它两天内自行降级为形式化已知结果；随后的主会话连跑数日，自动 fallback 到复现 246。我们把它的全部工作审计成三件诚实的东西。9 月 4 日，人类数学家和 GPT-6 把世界纪录推到 240 与 186——恰好都发生在 DSH 所在的“房间”之外。本文也是一篇科普：为什么孪生素数猜想本质上是三层优化问题。</p>
     <div class="meta">作者：Shaoyang Guo · 轨迹快照：2026-08-29 · 终稿：2026-09-06（北京时间） · <a href="https://github.com/guoshaoyang-pku/twin-prime-admissible" target="_blank" rel="noreferrer">项目仓库</a> · <a href="https://github.com/AxiomMath/PrimeGapsLib" target="_blank" rel="noreferrer">Axiom 对照仓库</a></div>
   </header>
 
   <div class="hero-note">
-    <strong>先说故事的结尾：</strong> 这场追逐有两个结局。DeepSeek Harness 没有证明孪生素数，也没有改进 246——它在第五天自动 fallback 到复现 246 路线，而我们随后用一周把它的产出审计成三件诚实的东西：一张与权威数据逐项吻合的最小直径表、一张 k=49 的有限维区间算术证书、和一个精确写下的开放问题。然后，在 9 月 4 日早晨，领域本身越过了我们：人类数学家 Julia Stadlmann 把 246 推进到 240，同日 OpenAI 的 GPT-6 Astra 宣布 186（附 Lean 形式化），Axiom 与 Anthropic 给出 212 与 188。回头看，DSH 所在的房间（Bombieri–Vinogradov + 标准权重）的天花板恰好被我们量到了 ≈3.99 &lt; 4；而所有新纪录都来自房间之外——更强的素数分布输入。所以这不是“AI 攻克难题”的故事，而是一个关于 AI 如何做研究、如何被审计、以及如何与领域进展对表的故事。
+    <strong>先说故事的结尾：</strong> 这场追逐有一个前传和两个结局。前传：约 8 月 13–15 日，我最初把“解决孪生素数猜想”直接交给 DSH，它开局即声明不可行、自行降级为对已知结果的严格验证与形式化——两天后，Axiom 的 246 形式化新闻才发布。结局之一：DSH 没有证明孪生素数，也没有改进 246——它最终自动 fallback 到复现 246 路线，而我们随后用一周把它的产出审计成三件诚实的东西：一张与权威数据逐项吻合的最小直径表、一张 k=49 的有限维区间算术证书、和一个精确写下的开放问题。然后，在 9 月 4 日早晨，领域本身越过了我们：人类数学家 Julia Stadlmann 把 246 推进到 240，同日 OpenAI 的 GPT-6 Astra 宣布 186（附 Lean 形式化），Axiom 与 Anthropic 给出 212 与 188。回头看，DSH 所在的房间（Bombieri–Vinogradov + 标准权重）的天花板恰好被我们量到了 ≈3.99 &lt; 4；而所有新纪录都来自房间之外——更强的素数分布输入。所以这不是“AI 攻克难题”的故事，而是一个关于 AI 如何做研究、如何被审计、以及如何与领域进展对表的故事。
   </div>
 
   <section>
@@ -152,8 +152,10 @@
     <table>
       <thead><tr><th style="width:130px">时间</th><th>事件</th></tr></thead>
       <tbody>
-        <tr><td>8 月 20 日</td><td>我把孪生素数猜想交给 DSH，目标：复现 246，或在同一框架里往下推。</td></tr>
-        <tr><td>8 月 20–29 日</td><td>DSH 两条主会话连续运行：元组搜索、Maynard 泛函、高维区间矩阵、Lean 文件；期间自动 fallback 到复现 246 的已知路线。</td></tr>
+        <tr><td>约 8 月 13–15 日</td><td>第一轮：我把孪生素数猜想直接交给 DSH，原始任务就是“解决孪生素数猜想，或者把现有的值（246）缩短”。它开局即声明两件事在当前框架下均不可行——猜想被 Selberg 奇偶性障碍阻挡，246 是 Polymath8b 压线多年的结果——随即把目标降级为对已知结果的严格验证与形式化。</td></tr>
+        <tr><td>8 月 17 日</td><td>Axiom Math 宣布完成 246 定理的 Lean 形式化（被形式化的证明本体正是 Polymath8b 的工作）。DSH 在新闻之前两天就已经自己走到了同一条路上。</td></tr>
+        <tr><td>8 月 20 日</td><td>第二轮收口成文并公开仓库：H(43..50) 最小直径的完全自足穷举证明（DFS + 频数剪枝 + SAT）、89 个定理的 Lean 4 零 sorry 库、M<sub>k,ε</sub> 泛函的精确有理数判定工具链；同日文献核实确认“246 仍是无条件纪录，k&lt;50 的 M 值是文献空白”。</td></tr>
+        <tr><td>8 月 20–29 日</td><td>两条主会话（本页轨迹）连续运行：元组搜索、Maynard 泛函、高维区间矩阵、Lean 文件；期间自动 fallback 到复现 246 的已知路线。</td></tr>
         <tr><td>8 月 29 日</td><td>轨迹快照：11,651 个逻辑 step、483 万原始事件，全部可视化于本页。</td></tr>
         <tr><td>8 月 31 日</td><td>（当时未注意到）人类数学家 Julia Stadlmann 发表 <a href="https://arxiv.org/abs/2608.31126" target="_blank" rel="noreferrer">240</a>：Bombieri–Vinogradov + 光滑模上的新等分布估计。240 恰好等于我们表中的 H(49)。</td></tr>
         <tr><td>9 月 1–3 日</td><td>人类审计收尾：A 会话完成 k=49, D=33 的 6740 维区间 LDL，全部主元下界 &gt; 0（最小 ≈1.13e-60）——有限维证书 M(V<sub>33</sub>) &lt; 4；B 会话的 Kato–Temple 全空间升级经审计 blocked（完整残差 0.106 ≫ 谱隙 0.07），改产 <code>OPEN_PROBLEM.md</code>。</td></tr>
