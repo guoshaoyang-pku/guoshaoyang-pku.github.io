@@ -118,6 +118,15 @@ arch/opt/mixed 为分题型正确率(%)——<b>architecture_only 是主要的�
 <tr><td class='model'>GPT-5.6 Luna</td><td>60.0</td><td>68.0</td><td>60.0</td><td>57.5</td><td>68.0</td><td>62.0</td></tr>
 <tr><td class='model'>DeepSeek V4 Flash</td><td>66.0</td><td>68.0</td><td>65.0</td><td>70.0</td><td>70.0</td><td>66.0</td></tr>
 <tr><td class='model'>DeepSeek V4 Pro</td><td>66.0</td><td>66.0</td><td>60.0</td><td>62.5</td><td>64.0</td><td>64.0</td></tr></tbody></table>
+
+<h2>消融 ③ · 知识注入与自进化 · 50 题</h2>
+<p class="desc">测试「经验/知识」能否变成正确率。三个设定:①<b>few-shot</b>=同 family 另 10 题带正确答案(来自主库 500,不与测试集重叠)进 prompt 再答测试题;②<b>KB</b>=模型先从同样 10 题写一份知识库,之后只带 KB 裸答;③<b>顺序反馈</b>=50 题连续作答,每题答完反馈全部选项真实 loss curve(10 seeds 均值采 10 点)+终值+真实赢家。对照为同题单题基线(主榜成绩)。结论:<b>三类知识注入全部无效</b>——few-shot 对 opus +4pt(噪声内)、对 sol −9pt(3 胜 6 负,例题反而误导);KB 更差(sol 0 胜 4 负);顺序反馈两模型全程恒定 −4pt 左右,无学习曲线。模型错误是逐实例的分析失败,不是知识缺口;题库也无法靠「刷经验」被攻破。</p>
+<table><thead><tr><th>模型</th><th>单题基线</th><th>① few-shot</th><th>② KB</th><th>③ 顺序反馈</th></tr></thead>
+<tbody><tr><td class='model'>Claude Opus 5</td><td>76.1</td><td>80.4 (+5/-3)</td><td>76.0 (+3/-2)</td><td>70.0 (+2/-4)</td></tr>
+<tr><td class='model'>GPT-5.6 Sol</td><td>68.8</td><td>60.0 (+3/-6)</td><td>58.0 (+0/-4)</td><td>—</td></tr>
+<tr><td class='model'>GPT-5.6 Luna</td><td>64.0</td><td>—</td><td>—</td><td>58.0 (+4/-7)</td></tr>
+<tr><td class='model'>DeepSeek V4 Flash</td><td>71.4</td><td>71.4 (n=7)</td><td>50.0 (n=4)</td><td>—</td></tr></tbody></table>
+<p class="desc">括号为同题配对翻转(变对/变错),其余均为平局;±7pt 内为噪声(n=50)。顺序反馈的前后半「下降」经题目难度对照确认为组成差异,相对基线前后半恒定。</p>
 <!-- END HAND-MAINTAINED SECTIONS -->
 
 <div class="foot">
