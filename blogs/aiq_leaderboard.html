@@ -31,22 +31,28 @@ td.status, td.note { font-size:12.5px; color:var(--dim) }
 
 <h2>主榜 · 500 题</h2>
 <p class="desc">每题三个候选配置,选出测试集表现最佳者。acc 为正确率(%),括号为 Wilson 95% CI。
-arch/opt/mixed 为分题型正确率(%)——<b>architecture_only 是主要的区分度来源</b>,optimizer_only 头部模型已基本饱和。</p>
+arch/opt/mixed 为分题型正确率(%)——<b>architecture_only 是主要的区分度来源</b>,optimizer_only 头部模型已基本饱和。
+<b>仅完赛(≥495/500)的模型计入排名</b>;未完赛模型因幸存题目偏易、分数天然偏高,一律不计名次(见下表)。</p>
 <table><thead><tr><th>#</th><th>模型</th><th>acc</th><th>95% CI</th><th>arch</th><th>opt</th><th>mixed</th><th>选A率</th><th>状态</th></tr></thead>
-<tbody><tr><td>1</td><td class='model'>GLM-5.2 (openrouter·max)</td><td class='acc'>77.2</td><td class='ci'>[72.8, 81.1]</td><td>53</td><td>85</td><td>84</td><td>31%</td><td class='status'>⏸ 395/500 · 停跑<br><span class='note'>openrouter 多渠道</span></td></tr>
-<tr><td>2</td><td class='model'>GPT-5.6 Sol</td><td class='acc'>76.4</td><td class='ci'>[72.5, 79.9]</td><td>58</td><td>87</td><td>85</td><td>31%</td><td class='status'>✅ 500/500</td></tr>
-<tr><td>3</td><td class='model'>Claude Opus 5</td><td class='acc'>76.0</td><td class='ci'>[72.1, 79.5]</td><td>61</td><td>86</td><td>81</td><td>36%</td><td class='status'>✅ 500/500</td></tr>
-<tr><td>4</td><td class='model'>DeepSeek V4 Flash</td><td class='acc'>70.5</td><td class='ci'>[66.4, 74.4]</td><td>48</td><td>85</td><td>80</td><td>30%</td><td class='status'>✅ 499/500</td></tr>
-<tr><td>5</td><td class='model'>DeepSeek V4 Pro</td><td class='acc'>68.3</td><td class='ci'>[64.1, 72.3]</td><td>43</td><td>83</td><td>79</td><td>30%</td><td class='status'>✅ 499/500</td></tr>
-<tr><td>6</td><td class='model'>GPT-5.6 Luna</td><td class='acc'>67.8</td><td class='ci'>[63.6, 71.7]</td><td>42</td><td>85</td><td>76</td><td>32%</td><td class='status'>✅ 500/500</td></tr>
-<tr><td>7</td><td class='model'>Gemini 3.1 Pro Preview</td><td class='acc'>66.8</td><td class='ci'>[62.6, 70.8]</td><td>42</td><td>85</td><td>74</td><td>37%</td><td class='status'>✅ 500/500</td></tr>
-<tr><td>8</td><td class='model'>GLM-5.2 (relay·low)</td><td class='acc'>66.0</td><td class='ci'>[61.7, 70.0]</td><td>39</td><td>84</td><td>75</td><td>33%</td><td class='status'>✅ 500/500</td></tr>
-<tr><td>9</td><td class='model'>Claude Sonnet 5</td><td class='acc'>65.4</td><td class='ci'>[61.1, 69.4]</td><td>38</td><td>83</td><td>75</td><td>36%</td><td class='status'>✅ 500/500</td></tr>
-<tr><td>10</td><td class='model'>GPT-4o (2024-11-20)</td><td class='acc'>60.2</td><td class='ci'>[55.8, 64.4]</td><td>52</td><td>70</td><td>58</td><td>41%</td><td class='status'>✅ 500/500</td></tr>
-<tr><td>11</td><td class='model'>DeepSeek R1 (2025-01)</td><td class='acc'>59.0</td><td class='ci'>[54.6, 63.2]</td><td>41</td><td>71</td><td>65</td><td>38%</td><td class='status'>✅ 500/500</td></tr>
-<tr><td>12</td><td class='model'>Gemini 2.5 Pro</td><td class='acc'>55.8</td><td class='ci'>[51.4, 60.1]</td><td>37</td><td>70</td><td>61</td><td>34%</td><td class='status'>✅ 500/500</td></tr>
-<tr><td>13</td><td class='model'>MiniCPM5 1B</td><td class='acc'>38.9</td><td class='ci'>[27.0, 52.2]</td><td>42</td><td>39</td><td>35</td><td>33%</td><td class='status'>⏳ 54/500 · 补跑中</td></tr>
-<tr><td>14</td><td class='model'>qwen3.5-0.8b</td><td class='acc'>37.8</td><td class='ci'>[33.3, 42.6]</td><td>38</td><td>33</td><td>42</td><td>56%</td><td class='status'>⏳ 407/500 · 补跑中</td></tr></tbody></table>
+<tbody><tr><td>1</td><td class='model'>GPT-5.6 Sol</td><td class='acc'>76.4</td><td class='ci'>[72.5, 79.9]</td><td>58</td><td>87</td><td>85</td><td>31%</td><td class='status'>✅ 500/500</td></tr>
+<tr><td>2</td><td class='model'>Claude Opus 5</td><td class='acc'>76.0</td><td class='ci'>[72.1, 79.5]</td><td>61</td><td>86</td><td>81</td><td>36%</td><td class='status'>✅ 500/500</td></tr>
+<tr><td>3</td><td class='model'>DeepSeek V4 Flash</td><td class='acc'>70.5</td><td class='ci'>[66.4, 74.4]</td><td>48</td><td>85</td><td>80</td><td>30%</td><td class='status'>✅ 499/500</td></tr>
+<tr><td>4</td><td class='model'>DeepSeek V4 Pro</td><td class='acc'>68.3</td><td class='ci'>[64.1, 72.3]</td><td>43</td><td>83</td><td>79</td><td>30%</td><td class='status'>✅ 499/500</td></tr>
+<tr><td>5</td><td class='model'>GPT-5.6 Luna</td><td class='acc'>67.8</td><td class='ci'>[63.6, 71.7]</td><td>42</td><td>85</td><td>76</td><td>32%</td><td class='status'>✅ 500/500</td></tr>
+<tr><td>6</td><td class='model'>Gemini 3.1 Pro Preview</td><td class='acc'>66.8</td><td class='ci'>[62.6, 70.8]</td><td>42</td><td>85</td><td>74</td><td>37%</td><td class='status'>✅ 500/500</td></tr>
+<tr><td>7</td><td class='model'>GLM-5.2 (relay·low)</td><td class='acc'>66.0</td><td class='ci'>[61.7, 70.0]</td><td>39</td><td>84</td><td>75</td><td>33%</td><td class='status'>✅ 500/500</td></tr>
+<tr><td>8</td><td class='model'>Claude Sonnet 5</td><td class='acc'>65.4</td><td class='ci'>[61.1, 69.4]</td><td>38</td><td>83</td><td>75</td><td>36%</td><td class='status'>✅ 500/500</td></tr>
+<tr><td>9</td><td class='model'>GPT-4o (2024-11-20)</td><td class='acc'>60.2</td><td class='ci'>[55.8, 64.4]</td><td>52</td><td>70</td><td>58</td><td>41%</td><td class='status'>✅ 500/500</td></tr>
+<tr><td>10</td><td class='model'>DeepSeek R1 (2025-01)</td><td class='acc'>59.0</td><td class='ci'>[54.6, 63.2]</td><td>41</td><td>71</td><td>65</td><td>38%</td><td class='status'>✅ 500/500</td></tr>
+<tr><td>11</td><td class='model'>Gemini 2.5 Pro</td><td class='acc'>55.8</td><td class='ci'>[51.4, 60.1]</td><td>37</td><td>70</td><td>61</td><td>34%</td><td class='status'>✅ 500/500</td></tr></tbody></table>
+
+<h2>未完赛 · 不计名次</h2>
+<p class="desc">GLM-5.2(zai·max)因渠道成本冻结在 395/500。同题对撞(与 Sol 都作答的 395 题):GLM 0.772 vs <b>Sol 0.813</b>,
+正面对决 Sol 净胜 24:8(其余 363 题同对错)——<b>榜首实为 GPT-5.6 Sol</b>。</p>
+<table><thead><tr><th>#</th><th>模型</th><th>acc</th><th>95% CI</th><th>arch</th><th>opt</th><th>mixed</th><th>选A率</th><th>状态</th></tr></thead>
+<tbody><tr><td>—</td><td class='model'>GLM-5.2 (openrouter·max)</td><td class='acc'>77.2</td><td class='ci'>[72.8, 81.1]</td><td>53</td><td>85</td><td>84</td><td>31%</td><td class='status'>⏸ 395/500 · 停跑冻结<br><span class='note'>openrouter 多渠道</span></td></tr>
+<tr><td>—</td><td class='model'>MiniCPM5 1B</td><td class='acc'>38.9</td><td class='ci'>[27.0, 52.2]</td><td>42</td><td>39</td><td>35</td><td>33%</td><td class='status'>⏳ 54/500 · 补跑中</td></tr>
+<tr><td>—</td><td class='model'>qwen3.5-0.8b</td><td class='acc'>37.8</td><td class='ci'>[33.3, 42.6]</td><td>38</td><td>33</td><td>42</td><td>56%</td><td class='status'>⏳ 407/500 · 补跑中</td></tr></tbody></table>
 
 <h2>Insight 榜 · 50 题(同分布子集)</h2>
 <p class="desc">「新 prompt」为去除字面 <code>&lt;answer&gt;A&lt;/answer&gt;</code> 示例后的修正版;「旧 prompt」为带示例版。
