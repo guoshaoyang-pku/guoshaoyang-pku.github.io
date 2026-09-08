@@ -137,39 +137,26 @@
 <body>
 <main>
   <header>
-    <div class="eyebrow">Research log · Agent trajectory audit</div>
+    <div class="eyebrow">一段研究记录</div>
     <h1>我和 DeepSeek 一起追过一次孪生素数猜想</h1>
-    <p class="dek">这不是一篇宣布“AI 证明了孪生素数”的文章。8 月中旬我把“解决猜想”直接交给 DeepSeek Harness，它先是被调度去跑一场 42.4 万子空间的大规模 UNSAT 穷举与 Lean 证书化，随后自行降级为形式化已知结果；8 月 20 日主会话继续上路，最终自动 fallback 到复现 246。我们把它的全部工作审计成三件诚实的东西。9 月 4 日，人类数学家和 GPT-6 把世界纪录推到 240 与 186——恰好都发生在 DSH 所在的“房间”之外。本文也是一篇科普：为什么孪生素数猜想本质上是三层优化问题。</p>
+    <p class="dek">8 月 13 日，我把一个几乎不可能完成的任务交给了 DeepSeek：“解决孪生素数猜想，或者把 246 往下推。”接下来的几天，它没有找到新定理，却一直在工作：写程序、跑计算、修错误、把有限的结论做成证书。后来我才意识到，这不只是一次失败的证明尝试，而是一场关于模型性格、长期执行和数学研究方式的实验。</p>
     <div class="meta">作者：Shaoyang Guo · 轨迹快照：2026-08-29 · 终稿：2026-09-06（北京时间） · <a href="https://github.com/guoshaoyang-pku/twin-prime-admissible" target="_blank" rel="noreferrer">项目仓库</a> · <a href="https://github.com/AxiomMath/PrimeGapsLib" target="_blank" rel="noreferrer">Axiom 对照仓库</a></div>
   </header>
 
   <div class="hero-note">
-    <strong>先说故事的结尾：</strong> 这场追逐有一个长前传和两个结局。长前传：8 月 13 日 22:26（北京），我最初把“解决孪生素数猜想”直接交给 DSH，它先搜索了当前纪录，写 C 分段筛验证 π₂(10⁷) 与 π₂(10⁸)，随即开始本地构建可容许元组搜索器；8 月 14 日 23:32 工作被搬到远程 GPU 集群，随即跑出 42.4 万子空间的大规模 UNSAT 穷举与 Lean 证书化（8 月 18–20 日）——这比 Axiom 的 246 形式化新闻早两天发布。之后它才自行降级并转入本页两条主会话，继续研究 Maynard 泛函与有限维证书。结局之一：DSH 没有证明孪生素数，也没有改进 246——它最终自动 fallback 到复现 246 路线，而我们随后用一周把它的产出审计成三件诚实的东西：一张与权威数据逐项吻合的最小直径表、一张 k=49 的有限维区间算术证书、和一个精确写下的开放问题。然后，在 9 月 4 日早晨，领域本身越过了我们：人类数学家 Julia Stadlmann 把 246 推进到 240，同日 OpenAI 的 GPT-6 Astra 宣布 186（附 Lean 形式化），Axiom 与 Anthropic 给出 212 与 188。回头看，DSH 所在的房间（Bombieri–Vinogradov + 标准权重）的天花板恰好被我们量到了 ≈3.99 &lt; 4；而所有新纪录都来自房间之外——更强的素数分布输入。所以这不是“AI 攻克难题”的故事，而是一个关于 AI 如何做研究、如何被审计、以及如何与领域进展对表的故事。
+    <strong>先说结果：</strong> DeepSeek 没有证明孪生素数猜想，也没有把 246 推得更低。它最后回到了已知的 246 路线。但这几天并没有白费：它完成了大量可复现的组合搜索和 Lean 证书，把许多候选路线推到边界；它还让我看清了一件事——一个模型可以非常擅长“持续做事”，却并不擅长在未知处改变问题本身。
   </div>
 
   <section>
-    <h2>一、梗概</h2>
-    <table>
-      <thead><tr><th style="width:130px">时间</th><th>事件</th></tr></thead>
-      <tbody>
-        <tr><td>8 月 13 日 22:26（北京）</td><td>我把孪生素数猜想直接交给 DSH，原始任务就是“解决孪生素数猜想，或者把现有的值（246）缩短”。<code>session-32a1d97a</code> 是第一个主会话，工作目录还是空的；它先搜索了当前纪录，写 C 分段筛验证 π₂(10⁷) 与 π₂(10⁸)，然后立即开始构建可容许元组搜索器。</td></tr>
-        <tr><td>8 月 13–14 日</td><td>DSH 在本地开始 H(k) 的穷举与见证：生成 <code>admissible.c</code>、<code>admissible_d.c</code>、<code>verify_admissible.py</code>，并行跑大量 <code>./admissible_d k d</code> 判定；到 8 月 14 日上午已独立完成 k=46 边界 d=194/192 UNSAT、k=50 d=246 SAT 等关键结果。同一时段有多个 fork 子会话（<code>session-2a5e1b0f</code>、<code>session-6f9b09d6</code> 等）在同步推进。</td></tr>
-        <tr><td>8 月 14 日 23:32（北京）</td><td>工作被搬到远程 GPU 集群（<code>ophis-gpu:/data3/...</code>），remote <code>start_time.txt</code> 记录为 2026-08-14 15:32:32 UTC。随后几天在 192 核上跑出 <strong>42.4 万子空间的大规模 UNSAT 穷举</strong>：对 1593 个 (k,d) 目标按前几个元素六层切分，任务文件 45.6 万行，结果 1.7 GB，<strong>全部 319/319 关键目标 UNSAT</strong>。期间还处理了调度器层级匹配 bug 和 /data3 600 GB 磁盘配额硬顶。</td></tr>
-        <tr><td>8 月 18–20 日</td><td>将 UNSAT 侧变成 Lean 4 机器检查证明：生成约 <strong>25 万节点</strong>的“剩余类分配失败树”证书，1593 个下界定理，<code>certValidRoot_sound</code> soundness 证明；<code>TwinPrimeAdmissible.lean</code> SAT 侧 96 定理；三实现交叉验证通过。</td></tr>
-        <tr><td>8 月 17 日</td><td>Axiom Math 宣布完成 246 定理的 Lean 形式化。DSH 的大规模 UNSAT + Lean 证书化在新闻之前两天已经跑完，覆盖 Axiom 未包含的 H(k) 下界半边。</td></tr>
-        <tr><td>8 月 20 日</td><td>本地 <code>math</code> 仓库做干净初始提交；第二轮收口成文并公开仓库：H(43..50) 最小直径的完全自足穷举证明、1593 个 Lean 下界定理、<code>M<sub>k,ε</sub></code> 泛函的精确有理数判定工具链。</td></tr>
-        <tr><td>8 月 20–29 日</td><td>两条主会话（本页轨迹）连续运行：元组搜索、Maynard 泛函、高维区间矩阵、Lean 文件；期间自动 fallback 到复现 246 的已知路线。</td></tr>
-        <tr><td>8 月 29 日</td><td>轨迹快照：11,651 个逻辑 step、483 万原始事件，全部可视化于本页。</td></tr>
-        <tr><td>8 月 31 日</td><td>人类数学家 Julia Stadlmann 发表 <a href="https://arxiv.org/abs/2608.31126" target="_blank" rel="noreferrer">240</a>：Bombieri–Vinogradov + 光滑模上的新等分布估计。240 恰好等于我们表中的 H(49)。</td></tr>
-        <tr><td>9 月 1–3 日</td><td>人类审计收尾：A 会话完成 k=49, D=33 的 6740 维区间 LDL，全部主元下界 &gt; 0（最小 ≈1.13e-60）——有限维证书 M(V<sub>33</sub>) &lt; 4；B 会话的 Kato–Temple 全空间升级经审计 blocked（完整残差 0.106 ≫ 谱隙 0.07），改产 <code>OPEN_PROBLEM.md</code>。</td></tr>
-        <tr><td>9 月 4 日</td><td>GPT-6 Astra 宣布 <a href="https://cdn.openai.com/pdf/51126fac-1b68-4128-9666-c908bcc16033/short_gaps.pdf" target="_blank" rel="noreferrer">186</a>（k=40 元组 + Lean 形式化）；同日 Axiom 宣布 212、Anthropic 宣布 188。</td></tr>
-        <tr><td><strong>结论</strong></td><td>DSH 没有发明新数学，但它把“纯 BV + 标准权重”房间的天花板量到了 ≈3.99 &lt; 4；所有新纪录都来自房间外（素数分布水平 θ &gt; 1/2）。我们的记录成为旧框架边界的独立刻画。</td></tr>
-      </tbody>
-    </table>
+    <h2>一、事情是怎么开始的</h2>
+    <p>8 月 13 日晚上，我没有给它一篇详细的研究计划，只给了一个目标：“请解决孪生素数猜想，或者把现有的值缩短。不要停止思考。”</p>
+    <p>它从一个空目录开始。先查当前纪录，写程序数孪生素数，再开始搜索可容许元组。第二天，它已经得到了一些边界结果：哪些直径不可能，哪些直径可以找到见证。到了 8 月 14 日晚上，工作被搬到远程机器上，192 个核心开始同时运行。</p>
+    <p>接下来的几天很像一间不关灯的实验室。任务被拆成数十万个小块；有的进程失败，调度器会出错，磁盘空间会不够。DeepSeek 就修脚本、重启任务、补验证、再继续。它没有停下来等一个新提示。</p>
+    <p>最后，这一阶段留下了 42.4 万个子空间的 UNSAT 搜索结果、约 25 万节点的证书树，以及可以由 Lean kernel 检查的下界定理。它没有找到孪生素数，但把问题的一大片有限区域彻底检查了一遍。</p>
   </section>
 
   <section>
-    <h2>二、科普：为什么孪生素数猜想是一个优化问题</h2>
+    <h2>二、为什么这个问题适合交给机器</h2>
     <p>孪生素数猜想问的是：是否有无穷多对相差 2 的素数（11 与 13、17 与 19、29 与 31……）。一百多年没人能证。2013 年张益唐换了个问法：不追“差 2”，改证“存在无穷多对间距不超过某个有限值 H 的素数对”——于是全世界的战场变成了把 H 从 7000 万往下压。</p>
     <p>这个战场为什么本质上是<strong>优化问题</strong>？直观地说，我们知道素数由解析公式控制，但在巨大范围内不能逐个算出它们。于是先选一个“模板”：一组平移量，让模板尽可能窄；再给模板中每个位置加权，计算它在无穷大区间上的平均贡献；最后证明这个加权平均超过阈值。平均值若大于 1，就意味着有无穷多个平移位置让模板中至少出现两个素数。整条 Maynard 路线正是三层互相耦合的优化：</p>
     <div class="two-col">
@@ -192,7 +179,7 @@
   ├── H(k) ：组合层，越小越好（打包问题）
   ├── M_k  ：变分层，越大越好（权重设计）
   └── θ    ：解析层，越大阈值越低（素数分布输入）</pre>
-    <h3>246 → 186：三层各自被拧紧的历史</h3>
+    <h3>246 → 更小的数字：这条路后来怎样继续</h3>
     <table>
       <thead><tr><th>上界</th><th>谁</th><th>关键改进在哪一层</th></tr></thead>
       <tbody>
@@ -204,7 +191,7 @@
         <tr><td><strong>186</strong></td><td>GPT-6 Astra（2026-09-04）</td><td>解析层 θ ≈ 0.525（阈值降到 ≈3.81）+ 新因子分解条件扩大权重支撑；k=40，直径 186；Lean 形式化</td></tr>
       </tbody>
     </table>
-    <p>关键观察：246 之后十年无人推进，不是变分层没拧干净——而是阈值 2/θ 被 θ=1/2 钉死在 4，M<sub>50</sub>=4.0043 已经贴着天花板。要再往下，必须换解析输入。这正是后来突破的方向：提高光滑模上的分布水平，降低阈值，再配合更好的模板和权重。我们在这里必须区分已核实的事实与新闻摘要中的解释：纪录确实很快从 246 进入 240、212、188、186 的竞争，但每个新结果的完整证明对象和 Lean 仓库都应以各团队的正式论文与代码为准。</p>
+    <p>这也解释了为什么 246 长时间没有变化。并不是没人会继续调参数，而是这套方法里的门槛已经贴近 4。要继续往下，必须改善素数在算术级数中的分布估计，或者找到新的权重结构。后来出现的 240、212、188、186，正是从这些方向推进。新闻标题很容易把它们写成“AI 突然解决了问题”，但真正发生的事情更像是：有人换了一扇门，有人找到了旧论文里尚未充分利用的入口。</p>
     <p>当然，这条路线之外还有更深的墙：奇偶性障碍（parity problem）表明纯筛法不可能把 H 压到 6 以下，孪生素数猜想本身仍需要别的思想。但在墙到达之前，它确实是一个可以逐项计分的优化问题——这也正是它适合交给机器的原因。</p>
   </section>
 
@@ -230,32 +217,26 @@
   </section>
 
   <section>
-    <h2>四、两条主轨迹到底在做什么（含最终审计）</h2>
-    <table>
-      <thead><tr><th>轨迹</th><th>规模</th><th>主要动作</th><th>研究方向</th><th>最终评价（含 9 月审计）</th></tr></thead>
-      <tbody>
-        <tr><td><strong>A</strong><br><span class="small">证明猜想 main</span></td><td>48 turns<br>5,319 steps<br>2.20M raw events</td><td>3,786 次 Bash、70 次 edit、60 次 write、1,415 次 job_output</td><td>元组搜索、M 泛函、区间 LDLᵀ（D=31 → 33）、独立 sanity 审计</td><td>完成 <code>k=49, D=33</code> 的 6740 维区间 LDLᵀ：全部主元下界 &gt; 0，最小 ≈1.13e-60 —— 有限维证书 M(V<sub>33</sub>) &lt; 4。k=2 手算级审计逐项通过；它自己写的高维大审计因拒绝采样零命中被人类抓住，修复后 k=3 通过。证书只是有限维结论。</td></tr>
-        <tr><td><strong>B</strong><br><span class="small">证明猜想 main (1)</span></td><td>60 turns<br>6,332 steps<br>2.62M raw events</td><td>5,232 次 Bash、123 次 edit、74 次 write、869 次 job_output</td><td>高维区间证书、Kato–Temple 后验谱界、乘子路线探针</td><td><code>k=48, D=19</code> 完成；Kato–Temple 全空间升级经审计 <strong>blocked</strong>：完整残差相对量 ≈0.106，远大于可用谱隙 ≈0.07；改产 <code>OPEN_PROBLEM.md</code>，把全空间 M<sub>49,1/25</sub> &lt; 4 的严格化写成社区可接手的问题。</td></tr>
-      </tbody>
-    </table>
-    <p class="small">计数来自 session.history 的全量反向分页。两条会话的 raw event 总量约 4,829,047，其中绝大多数是模型流式输出 chunk；本页将它们聚合到对应的逻辑 step。</p>
+    <h2>四、后来它去了哪里</h2>
+    <p>8 月 20 日以后，故事进入了第二幕。两条长时间运行的主会话开始尝试 Maynard 泛函、高维矩阵和谱估计。</p>
+    <p><strong>A 轨迹</strong>比较像一个数值实验室。它不断增大有限维空间，最后完成了 k=49、D=33 的 6740 维区间 LDL<sup>T</sup> 计算，所有主元下界都为正。这是一个有价值的有限维证书，但它仍然不是全空间结论。</p>
+    <p><strong>B 轨迹</strong>试图把这个有限维结果升级成全空间的严格上界。它走到了 Kato–Temple 后验估计，但完整残差约为 0.106，而可用谱隙约为 0.07，条件没有闭合。最后它没有把这一步包装成证明，而是留下了一个明确的开放问题。</p>
+    <p>两条轨迹合计有 11,651 个逻辑 step、约 483 万个原始事件。页面下方保留了完整的 step 级轨迹；但真正重要的不是数字本身，而是你可以看到一个 agent 如何在几天里不断尝试、修复、回退和重新选择方向。</p>
   </section>
 
   <section>
-    <h2>五、项目全景：本页两条轨迹只是第二阶段</h2>
-    <p>本页可视化的 11,651 个逻辑 step 是 8 月 20 日之后两条主会话的轨迹。但在此之前的 8 月 13–20 日，已经有一轮高强度的、被长期低估的工作，起点甚至早于 Axiom 的 246 形式化新闻：</p>
+    <h2>五、这不是一个“证明已经完成”的故事</h2>
+    <p>这里最容易产生误解。我们确实完成了几件严格的事情，但它们属于不同层次：</p>
     <table>
       <thead><tr><th>阶段</th><th>产物</th><th>严格性</th></tr></thead>
       <tbody>
-        <tr><td>8 月 13 日 22:26 — 8 月 14 日 23:32（本地）</td><td>DSH 从空目录开始：C 分段筛验证 π₂(10⁷)/π₂(10⁸)；生成 <code>admissible.c</code>、<code>admissible_d.c</code>、<code>verify_admissible.py</code>；独立跑出 k=46 边界 d=194/192 UNSAT、k=50 d=246 SAT 等关键结果；撰写 <code>孪生素数猜想-最终报告.md</code>。</td><td>算法 A/B/C 三实现交叉验证；DFS 剪枝数学正确性手写论证；与 OEIS A008407 逐项吻合。</td></tr>
-        <tr><td>8 月 14 日 23:32 — 8 月 18 日（远程 192 核）</td><td>42.4 万子空间大规模 UNSAT 穷举：1593 个 (k,d) 目标按前几个元素六层切分，任务文件 45.6 万行，结果 1.7 GB，319/319 关键目标 UNSAT，闭合 H(43..50) 最小直径下界。</td><td>完备 DFS + 频数剪枝；调度器层级匹配 bug 修复；<code>verify_coverage.py</code> 检查 285,848 节点零缺口。</td></tr>
-        <tr><td>8 月 18–20 日（远程）</td><td>约 25 万节点的“剩余类分配失败树”证书；1593 个下界定理；<code>certValidRoot_sound</code> soundness 证明；<code>TwinPrimeAdmissible.lean</code> SAT 侧 96 定理。</td><td>Lean kernel 检查（含 1593 条纯 <code>by decide</code> 无 native_decide 版本）。</td></tr>
-        <tr><td>8 月 17 日</td><td>Axiom Math 宣布 246 定理 Lean 形式化。DSH 的 H(k) 下界 Lean 证书已在前两天完成。</td><td>时间戳可核。</td></tr>
-        <tr><td>8 月 20 日</td><td>本地 <code>math</code> 仓库干净初始提交；公开仓库；收口成文。</td><td>可复现。</td></tr>
-        <tr><td>8 月 20–29 日主会话（本页）</td><td>高维区间矩阵证书、Kato–Temple 诊断、乘子路线探针。</td><td>有限维证书（A 级）+ 全空间 open problem（C 级）。</td></tr>
+        <tr><td>严格计算</td><td>可容许元组的最小直径表；H(43..50) 的 SAT/UNSAT 闭合；Lean kernel 检查的下界证书。</td><td>可以复现，也可以逐步检查。</td></tr>
+        <tr><td>有限维数值证书</td><td>k=49、D=33 上 6740 维区间 LDL<sup>T</sup> 的所有主元下界为正。</td><td>严格有限维结论，不自动延伸到全空间。</td></tr>
+        <tr><td>全空间结论</td><td>试图证明 M<sub>49,1/25</sub> &lt; 4。</td><td>尚未完成；Kato–Temple 路线被审计为 blocked。</td></tr>
+        <tr><td>孪生素数猜想</td><td>证明相差 2 的素数对无穷多。</td><td>仍然没有解决。</td></tr>
       </tbody>
     </table>
-    <p class="small">时间戳来源：本地 DSH session JSONL zstd 档案（<code>session-32a1d97a、session-2a5e1b0f、session-6f9b09d6</code> 等）的首尾事件时间；远程 <code>start_time.txt</code> 与 <code>blog_素数间隔246.md</code>；当前仓库在 8 月 20 日做了一次干净初始提交，因此本地 git log 只从那天开始。</p>
+    <p class="small">这些时间线来自 DSH session 档案、远程计算日志和仓库文件。8 月 20 日的仓库是一次干净初始提交，所以仓库 git log 并不能代表研究真正的起点。</p>
   </section>
 
   <section>
