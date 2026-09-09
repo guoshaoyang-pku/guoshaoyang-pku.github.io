@@ -38,11 +38,16 @@ window.MathJax = { tex: { inlineMath: [['\\(','\\)']], displayMath: [['\\[','\\]
     border-radius:6px;font-size:16px}
   blockquote cite{display:block;color:var(--muted);font-style:normal;font-size:13px;
     margin-top:8px;font-family:ui-monospace,Menlo,monospace}
-  .facts{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:24px 0}
-  .fact{background:#fff;border:1px solid var(--line);border-radius:6px;padding:12px 10px;text-align:center}
-  .fact b{display:block;font-size:24px;color:var(--sea);line-height:1.2}
-  .fact span{font-size:12.5px;color:var(--muted)}
-  @media (max-width:640px){.facts{grid-template-columns:repeat(2,1fr)}}
+  .timeline{position:relative;margin:30px 0 30px 4px;padding-left:26px;border-left:2px solid var(--line)}
+  .tl-item{position:relative;margin:0 0 20px}
+  .tl-item:last-child{margin-bottom:0}
+  .tl-item::before{content:"";position:absolute;left:-34px;top:7px;width:10px;height:10px;
+    border-radius:50%;background:var(--sea);border:2px solid var(--paper);box-shadow:0 0 0 1px var(--line)}
+  .tl-item.hot::before{background:var(--accent)}
+  .tl-year{font-family:ui-monospace,Menlo,monospace;font-size:12.5px;color:var(--muted);
+    letter-spacing:.08em;text-transform:uppercase}
+  .tl-item p{margin:2px 0 0;font-size:15.5px}
+  .tl-item b{color:var(--accent);font-size:17px}
   table{width:100%;border-collapse:collapse;font-size:14.5px;margin:18px 0 26px;background:#fff}
   th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
   th{background:#f3f1ec;font-weight:600}
@@ -91,16 +96,45 @@ window.MathJax = { tex: { inlineMath: [['\\(','\\)']], displayMath: [['\\[','\\]
 
 <p>真正的转折发生在 2013 年：Šuvakov 与 Dmitrašinović 用数值方法一举找到等质量平面三体问题的
 13 条新周期轨道（11 个新族）。2017 年起，上海交通大学廖世俊团队用「干净数值模拟」
-（Clean Numerical Simulation, CNS）配合超级计算机，把周期解的发现推进到了工业化规模：</p>
+（Clean Numerical Simulation, CNS）配合超级计算机，把周期解的发现推进到了工业化规模。
+把三百年的积累与最近十年的井喷放在同一条时间轴上，才能看出这场爆炸有多剧烈：</p>
 
-<div class="facts">
-  <div class="fact"><b>695</b><span>族 · 等质量<br>Li &amp; Liao 2017</span></div>
-  <div class="fact"><b>1349</b><span>族 · 两体等质量<br>Li, Jing &amp; Liao 2018</span></div>
-  <div class="fact"><b>313</b><span>族 · 自由落体任意质量比<br>Li &amp; Liao 2019</span></div>
-  <div class="fact"><b>2022</b><span>CNS+机器学习路线图<br>Liao, Li &amp; Yang</span></div>
+<div class="timeline">
+  <div class="tl-item">
+    <span class="tl-year">1687 – 2013 · 三百余年</span>
+    <p>全人类共找到 <b>3 族</b>周期解：Euler 共线解、Lagrange 等边解、Broucke–Hénon 族。
+    平均一百年一族。</p>
+  </div>
+  <div class="tl-item">
+    <span class="tl-year">2013 · 数值突破</span>
+    <p>Šuvakov &amp; Dmitrašinović（PRL）：等质量、零角动量，一篇论文 <b>13 条新轨道（11 新族）</b>，
+    超过此前三百年总和的三倍。</p>
+  </div>
+  <div class="tl-item hot">
+    <span class="tl-year">2017 · 超算 + CNS</span>
+    <p>李晓明、廖世俊（Sci. China-PMA）：天河二号算出等质量情形 <b>695 族</b>，
+    样本量首次达到「统计」量级——广义开普勒定律正是从这 695 个数据点里拟合出来的。</p>
+  </div>
+  <div class="tl-item hot">
+    <span class="tl-year">2018 · 走向不等质量</span>
+    <p>李-景-廖（PASJ）：两个天体等质量、第三个任意，<b>1349 族</b>，
+    发现不变量随质量比近似线性变化。</p>
+  </div>
+  <div class="tl-item hot">
+    <span class="tl-year">2019 · 最极端初值</span>
+    <p>李-廖（New Astronomy）：三体从静止自由释放、任意质量比，<b>313 族</b>。
+    连这种看似最容易坍缩的情形也满是周期解。</p>
+  </div>
+  <div class="tl-item">
+    <span class="tl-year">2022 · 方法论闭环</span>
+    <p>廖-李-杨（New Astronomy）：CNS + 机器学习提出周期轨道「搜索路线图」，
+    任意质量三体周期解从偶然发现变成可按图索骥。</p>
+  </div>
 </div>
 
-<p>正是这批海量周期解，让一条隐藏的规律浮出了水面。</p>
+<p>三百年攒下 3 族，十年井喷到两千余族。样本量从个位数变成千位数，
+统计层面的规律——开普勒不变量近似为常数——才第一次有可能被看见。
+正是这批海量周期解，让一条隐藏的规律浮出了水面。</p>
 
 <h2><small>ACT II · THE PATTERN</small>数值中浮现的「准开普勒第三定律」</h2>
 
