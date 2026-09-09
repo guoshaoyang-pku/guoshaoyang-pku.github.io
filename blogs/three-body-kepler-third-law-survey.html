@@ -301,6 +301,99 @@ window.MathJax = { tex: { inlineMath: [['\\(','\\)']], displayMath: [['\\[','\\]
 它更像混沌海面上露出的一座灯塔：看得见，还没人能走过去。
 </div>
 
+<h2><small>ACT VI · THE TWIST · 2026-09-09 补记</small>反转：精确等式被证伪</h2>
+
+<p>本文上线当天，我们收到一份由 GPT 给出的严格推导；本节已逐步独立复核
+（区间运算全部用有理数精确核验，另做了独立能量交叉验证），确认其成立。
+上一节问「为什么没有证明」，答案是：<strong>因为它不成立</strong>。
+精确等式（Sun 2018 猜想）在两种解读下分别被严格反驳；
+但同一推导也给出了这个方向上第一个可以完整证明的定理。</p>
+
+<h3>反例一：Lagrange 等边三角形旋转解（纯解析）</h3>
+
+<p>三个任意正质量置于边长 \(\ell\) 的等边三角形顶点、绕质心匀速旋转。
+由质心条件 \(\sum_i m_i\mathbf q_i=0\)，牛顿方程化为
+\(\ddot{\mathbf q}_i=-(GM/\ell^3)\,\mathbf q_i\)，取 \(\omega^2=GM/\ell^3\) 即得精确无碰撞周期解。
+其能量 \(E=-GS/(2\ell)\)（记 \(S=\sum_{i&lt;j}m_im_j\)），消去 \(\ell\) 得</p>
+
+<div class="formula">
+\[ T\,|E|^{3/2}=\frac{\pi G}{\sqrt2}\sqrt{\frac{S^{3}}{M}}\quad\Longrightarrow\quad
+\text{等质量：}\ T|E|^{3/2}=\frac{3\pi}{\sqrt2}Gm^{5/2} \]
+<span class="tag">精确解 · 恰为孙文预言（\(\pi Gm^{5/2}/\sqrt2\)）的三倍</span>
+</div>
+
+<p>精确解出现的是「<strong>和的立方</strong>」\(S^3\)，而猜想是「<strong>立方的和</strong>」；
+正质量下 \(S^3&gt;\sum_{i&lt;j}(m_im_j)^3\)，二者严格矛盾。
+孙原文只检验了 \(m_3\to0\) 与「一重多轻」两个极限——恰好都是两个质量分支无法区分的退化情形，
+漏掉了三体问题里最经典的精确解。</p>
+
+<h3>反例二：8 字轨道 + 计算机辅助证明（拓扑归一化也救不回来）</h3>
+
+<p>等质量 8 字轨道是无碰撞、零角动量周期解，拓扑字 \(abAB\)，故 \(L_f=4\)。
+Kapela–Simó 的严格区间证书（\(G=m=1\)、\(T=2\pi\) 归一化）给出真实解初值的包围盒；
+即使把区间大幅放宽，仍可推出 \(K&lt;1.374\)、\(r_{12},r_{13}&lt;1.651\)、\(r_{23}&lt;0.688\)，
+从而 \(|E|&gt;1.29\)。于是</p>
+
+<div class="formula">
+\[ \frac{T\,|E|^{3/2}}{L_f}\;&gt;\;\frac{6.28}{4}\,(1.29)^{3/2}\;=\;2.30\;&gt;\;\frac{\pi}{\sqrt2}\;=\;2.2214 \]
+<span class="tag">8 字轨道 · 拓扑归一化后仍越界（真值 \(9.238/4\approx 2.309\)）</span>
+</div>
+
+<p>把 \(T\) 解读成 \(T/L_f\)，猜想依然不成立——且这个反例恰好落在经验拟合所在的零角动量类内。
+整串比较只涉及有理数四则与开方，可机器核验；区间中点给出的能量
+\(-1.29298\) 与 8 字轨道已知值 \(-1.29297\) 四位有效数字一致，佐证了区间证书的有效性。</p>
+
+<h3>漏洞定位：量纲分析丢掉了轨道形状</h3>
+
+<p>孙推导的关键步骤 \(|E|\sqrt A/\alpha=\mathrm{const}\) 连二体都不成立：
+由 \(A=\pi a^2\sqrt{1-e^2}\)、\(|E|=\alpha/(2a)\)，它等于 \(\frac{\sqrt\pi}{2}(1-e^2)^{1/4}\)，
+依赖偏心率。量纲分析只允许
+\(T|E|^{3/2}=GM^{5/2}\,\Phi(\text{质量比};\text{无量纲轨道数据})\)，排除不了形状与拓扑依赖；
+二体的偏心率恰好消去是特殊性质，不能推广。更具讽刺意味的是：取正则的广义约化质量
+\(\mu=S/M\)（\(n=2\) 时回到真正的约化质量），孙自己的公式骨架 \(\alpha\sqrt\mu\)
+给出的恰是「和的立方」分支——他在量纲分析的两条合法分支里选错了那一条。</p>
+
+<h3>可证明的修正版：周期–能量不等式</h3>
+
+<p><strong>定理（附条件）。</strong>设无碰撞 \(T\)-周期解在质心系中满足
+每个质点的时间平均位置为零：\(\frac1T\int_0^T\mathbf q_i\,dt=0\)
+（该条件涵盖全部追逐型轨道——含 8 字轨道——与 Lagrange 旋转解）。则</p>
+
+<div class="formula">
+\[ \boxed{\;T\,|E|^{3/2}\ \ge\ \frac{\pi G}{\sqrt2}\left[\dfrac{\left(\displaystyle\sum_{i&lt;j}m_im_j\right)^{3}}{\displaystyle\sum_i m_i}\right]^{1/2}\;} \]
+<span class="tag">可严格证明的下界 · 等边三角形匀速旋转取等号，常数最优</span>
+</div>
+
+<p>证明骨架：Lagrange–Jacobi 恒等式 \(I''=4K-2U\) 周期积分给出位力关系
+\(2\langle K\rangle=\langle U\rangle\)，故作用量 \(\mathcal A=\int_0^T(K+U)\,dt=3|E|T\)；
+质心系动能按质点对分解后，对每对（零均值、周期的）相对矢量联用 Wirtinger 不等式与
+\(y^{-1/2}\) 的 Jensen 不等式，再对唯一自由参数取极小，
+每对贡献 \(\ge\frac32(GM)^{2/3}(2\pi/T)^{2/3}\)，装配即毕。</p>
+
+<h3>限定与余波</h3>
+
+<p><strong>条件充分而非必要。</strong>二体偏心轨道的时间平均位置为
+\(-\frac32ae\,\hat e\)（指向远拱点），违反定理条件，但不等式对一切偏心率取等号。
+放松适用条件是明确可做的问题。</p>
+
+<p><strong>被证伪的是精确等式，经验规律还活着。</strong>
+\(\bar T|E|^{3/2}\approx2.433\) 的近似恒常性（百分之几散布）依然成立、依然无解释——
+它现在成为唯一真正待证的目标：由 \(\mathcal A=3|E|T\) 有
+\(\bar T|E|^{3/2}=\mathcal A\sqrt{|E|}/(3L_f)\)，即把「每单位拓扑字长的作用量近似恒定」
+变成带误差界的命题。</p>
+
+<p><strong>一个耐人寻味的巧合。</strong>可证下界的常数恰好等于孙博华 2019 年的
+<em>量子版</em>公式；等质量时「下界 ÷ 经典猜想值」精确等于 \(n(n-1)/2\)
+——正是 Semay–Willemyns 发现的量子-经典偏差因子。这个因子由此获得纯经典解释，
+也再次指向「和的立方」才是物理上正确的分支。</p>
+
+<div class="thesis">
+一句话总结反转：作为精确等式，孙博华猜想已被证伪——Lagrange 旋转解相差三倍，
+8 字轨道在拓扑归一化下仍以严格区间证据越界。但它的灰烬里留下了两样东西：
+一条带明确适用条件、常数最优的周期–能量不等式，
+和一个仍然悬而未决的经验之谜——拓扑归一化的开普勒不变量为何近似恒定。
+</div>
+
 <h2><small>REFERENCES</small>主要文献</h2>
 
 <ol class="refs">
@@ -318,6 +411,7 @@ window.MathJax = { tex: { inlineMath: [['\\(','\\)']], displayMath: [['\\[','\\]
 <li>C.-Y. Zhao and M.-J. Zhang, <em>A conjecture on Kepler's third law of n-body periodic orbits</em> (2018). <a href="https://arxiv.org/abs/1811.00735">arXiv:1811.00735</a></li>
 <li>A. Chenciner and R. Montgomery, <em>A remarkable periodic solution of the three-body problem in the case of equal masses</em>, Annals of Mathematics <b>152</b>, 881–901 (2000).</li>
 <li>S. J. Liao and X. M. Li, <em>On the periodic solutions of the three-body problem</em>, National Science Review <b>6</b>, 1070 (2019). <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8291409/">PMC8291409</a></li>
+<li>T. Kapela and C. Simó, <em>Computer assisted proofs for nonsymmetric planar choreographies and for stability of the Eight</em>, Nonlinearity <b>20</b>, 1241–1255 (2007).（ACT VI 反例二的严格区间证书来源）</li>
 </ol>
 
 <p class="end">本文基于公开文献调研撰写，公式与数值均核对自原始论文。
