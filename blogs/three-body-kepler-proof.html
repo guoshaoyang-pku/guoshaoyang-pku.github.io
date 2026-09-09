@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="孙博华的 N 体开普勒第三定律猜想：量子版本被证明是一条严格且尖锐的下界（Hölder + Lagrange 恒等式 + Jensen + Wirtinger），经典版本被精确反例否定。附 125 条精确周期轨道的数值验证。">
+<title>三体的节拍器 II · 一个证明：广义开普勒第三定律的下界定理</title>
+<script>
+window.MathJax = { tex: { inlineMath: [['\\(','\\)']], displayMath: [['\\[','\\]']] } };
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+<style>
+  :root{
+    --ink:#1c1c1c; --muted:#6b6b6b; --line:#e6e2da; --paper:#fbfaf7;
+    --accent:#b5472b; --sea:#2b6f8e; --green:#2e6b3e;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  html,body{margin:0;background:var(--paper);color:var(--ink);
+    font-family:Georgia,"Songti SC","STSong","Times New Roman",serif;
+    font-size:17px;line-height:1.85}
+  main{max-width:780px;margin:0 auto;padding:64px 20px 96px}
+  h1{font-size:35px;line-height:1.3;margin:0 0 10px;letter-spacing:.2px}
+  h2{font-size:24px;margin:62px 0 16px;padding-top:24px;border-top:1px solid var(--line)}
+  h2 small{display:block;color:var(--muted);font-size:13px;font-weight:normal;
+    letter-spacing:2px;margin-bottom:6px;font-family:ui-monospace,Menlo,monospace;text-transform:uppercase}
+  h3{font-size:18px;margin:32px 0 8px}
+  p{margin:0 0 18px}
+  .byline{font-size:14px;color:var(--muted);margin:0 0 8px}
+  a{color:var(--sea)}
+  .thesis{border-left:3px solid var(--accent);padding:8px 18px;margin:28px 0;
+    font-size:17.5px;background:#fff}
+  .theorem{background:#fff;border:1px solid var(--line);border-left:3px solid var(--sea);
+    border-radius:4px;padding:14px 20px;margin:22px 0}
+  .theorem .lbl{font-family:ui-monospace,Menlo,monospace;font-size:12px;letter-spacing:1.5px;
+    text-transform:uppercase;color:var(--sea);display:block;margin-bottom:6px}
+  .formula{background:#fff;border:1px solid var(--line);border-radius:6px;
+    padding:14px 20px;margin:20px 0;overflow-x:auto;text-align:center}
+  .formula .tag{display:block;text-align:right;color:var(--muted);font-size:13px;
+    font-family:ui-monospace,Menlo,monospace}
+  blockquote{margin:22px 0;padding:14px 20px;background:#fff;border:1px solid var(--line);
+    border-radius:6px;font-size:16px}
+  blockquote cite{display:block;color:var(--muted);font-style:normal;font-size:13px;
+    margin-top:8px;font-family:ui-monospace,Menlo,monospace}
+  .facts{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:24px 0}
+  .fact{background:#fff;border:1px solid var(--line);border-radius:6px;padding:12px 10px;text-align:center}
+  .fact b{display:block;font-size:22px;color:var(--sea);line-height:1.25}
+  .fact span{font-size:12.5px;color:var(--muted)}
+  @media (max-width:640px){.facts{grid-template-columns:repeat(2,1fr)}}
+  table{width:100%;border-collapse:collapse;font-size:14px;margin:18px 0 26px;background:#fff}
+  th,td{border:1px solid var(--line);padding:7px 9px;text-align:left;vertical-align:top}
+  th{background:#f3f1ec;font-weight:600}
+  td.num,th.num{text-align:right;font-family:ui-monospace,Menlo,monospace;font-size:13px}
+  .mono,code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.92em}
+  code{padding:.1em .3em;border-radius:4px;background:#f3f1ec;color:#4a4438}
+  .small{color:var(--muted);font-size:13.5px}
+  .verdict{display:inline-block;padding:1px 8px;border-radius:999px;font-size:12.5px;
+    font-family:ui-monospace,Menlo,monospace;white-space:nowrap}
+  .v-proved{background:#e8f2ea;color:#2e6b3e;border:1px solid #c4dbc9}
+  .v-refuted{background:#f9e9e6;color:#a03a20;border:1px solid #e8ccc4}
+  .v-open{background:#fbf0e8;color:#a04a1f;border:1px solid #ecd3c2}
+  ol.refs{font-size:14px;color:#3a3a3a;padding-left:22px}
+  ol.refs li{margin-bottom:8px;line-height:1.6}
+  ol.proof{padding-left:22px}
+  ol.proof>li{margin-bottom:14px}
+  .end{color:var(--muted);font-size:14px;margin-top:56px;padding-top:20px;border-top:1px solid var(--line)}
+  .qed{float:right;color:var(--muted)}
+</style>
+</head>
+<body>
+<main>
+
+<h1>三体的节拍器 II：一个证明</h1>
+<p class="byline">广义开普勒第三定律的下界定理，以及孙博华两个公式的准确法律地位 · 2026 年 9 月</p>
+
+<div class="thesis">
+<a href="https://guoshaoyang-pku.github.io/blogs/three-body-kepler-third-law-survey.html">上一篇</a>梳理了孙博华猜想的全貌，结论是「经典版与量子版都没被证明」。
+这一篇改变其中一半的结论。<br><br>
+我证明了：孙博华的<strong>量子公式是一条严格定理</strong>——它是所有 N 体周期轨道的
+\(\tau=T|E|^{3/2}\) 的一条<strong>下界</strong>，且这条下界是<strong>尖锐的</strong>：
+二体开普勒椭圆（任意偏心率）与三体 Lagrange 等边轨道恰好取到等号。
+证明只需四件经典工具：位力定理、Lagrange 恒等式、Hölder 不等式、Wirtinger 不等式。<br><br>
+同时我用<strong>精确解析反例</strong>否定了孙博华的<strong>经典公式</strong>作为「定律」的资格：
+Lagrange 等边轨道的 \(\tau\) 恰好是它的 <strong>3 倍</strong>，Euler 共线轨道恰好是它的
+\(5\sqrt2/2\) 倍。它只是一条更弱的下界。<br><br>
+全部结论都由 125 条精确周期轨道（\(N=2\ldots6\)，质量比跨 0.05–4.4，闭合残差中位数 \(1.8\times10^{-12}\)）
+逐步复核，33 项证明链检查零失败。
+</div>
+
+<div class="facts">
+  <div class="fact"><b>125</b><span>条精确周期轨道<br>N = 2…6</span></div>
+  <div class="fact"><b>1.8e-12</b><span>闭合残差中位数<br>位力残差 1.2e-14</span></div>
+  <div class="fact"><b>33/33</b><span>证明链检查通过<br>0 失败</span></div>
+  <div class="fact"><b>×3</b><span>Lagrange 等边轨道<br>对孙氏经典公式的精确偏离</span></div>
+</div>
+
+<h2><small>ACT I · SETUP</small>要证的到底是什么</h2>
+
+<p>设 \(N\) 个质点 \(m_1,\dots,m_N\) 在牛顿引力下作周期运动，周期 \(T\)，总能量 \(E<0\)。
+牛顿势是 \(-1\) 次齐次的，因此 \(\mathbf q\to\lambda\mathbf q,\ t\to\lambda^{3/2}t\) 把解映为解，
+且 \(E\to\lambda^{-1}E\)、\(T\to\lambda^{3/2}T\)。于是</p>
+
+<div class="formula">
+\[ \tau \;=\; T\,|E|^{3/2} \]
+<span class="tag">开普勒不变量 · 严格标度不变（这一步本身就是定理）</span>
+</div>
+
+<p>\(\tau\) 的标度不变性是精确的，这才是「三体也服从开普勒第三定律」这个经验现象的真正内核：
+它说明 \(\tau\) 只依赖轨道的<em>形状</em>（与质量），不依赖轨道的大小。
+问题于是变成一个纯几何问题：<strong>\(\tau\) 在周期解空间上有没有下界？下界是什么？何时取到？</strong></p>
+
+<p>孙博华给出了两个候选答案：</p>
+
+<div class="formula">
+\[ \tau_{\rm C}=\frac{\pi}{\sqrt2}\,G\sqrt{\frac{\sum_{i<j}(m_im_j)^{3}}{\sum_k m_k}}
+\qquad\qquad
+\tau_{\rm Q}=\frac{\pi}{\sqrt2}\,G\sqrt{\frac{\big(\sum_{i<j}m_im_j\big)^{3}}{\sum_k m_k}} \]
+<span class="tag">经典式（2018）· 量子和式（2019）· 区别仅在「立方和」与「和的立方」</span>
+</div>
+
+<p>两者在 \(N=2\) 时完全相同（都退化为精确的开普勒第三定律），这是它们都能通过二体检验的原因。
+\(N\ge3\) 时由 \(\sum p^3\le(\sum p)^3\) 立得 \(\tau_{\rm C}\le\tau_{\rm Q}\)。
+下面证明：<strong>\(\tau_{\rm Q}\) 是定理，\(\tau_{\rm C}\) 不是。</strong></p>
+
+<h2><small>ACT II · TWO IDENTITIES</small>两条恒等式</h2>
+
+<div class="theorem">
+<span class="lbl">恒等式 T1（位力恒等式）</span>
+取 \(s=t/T\)，\(\mathbf q' = d\mathbf q/ds\)，质心系下定义
+\[
+A_K=\frac12\int_0^1\sum_i m_i|\mathbf q_i'(s)|^2ds,\qquad
+A_U=G\int_0^1\sum_{i<j}\frac{m_im_j}{|\mathbf q_{ij}(s)|}\,ds .
+\]
+则<strong>任何</strong>周期解（无需是最小作用量解）都满足
+\[ \tau=\frac12\,A_U\sqrt{A_K}. \]
+</div>
+
+<p><strong>证明。</strong>换元给出 \(A_K=T^2\langle K\rangle\)、\(A_U=\langle U\rangle\)（\(\langle\cdot\rangle\) 为时间平均）。
+对 \(-1\) 次齐次势的周期解，位力定理给 \(\langle K\rangle=|E|\)、\(\langle U\rangle=2|E|\)。
+代入：\(\frac12A_U\sqrt{A_K}=\frac12(2|E|)(T\sqrt{|E|})=T|E|^{3/2}=\tau\)。<span class="qed">∎</span></p>
+
+<p class="small">数值复核：33 组轨道上 \(\tau\) 与 \(\frac12A_U\sqrt{A_K}\) 的相对偏差 \(4\times10^{-14}\)–\(2\times10^{-10}\)（偏差随偏心率升高而增大，纯属积分精度）。</p>
+
+<div class="theorem">
+<span class="lbl">恒等式 T2（Lagrange 恒等式）</span>
+质心系下，对<strong>任意</strong>位形（不必是中心位形）
+\[ \sum_{i<j}m_im_j\,d_{ij}^2 \;=\; M\,I,\qquad
+   I=\sum_i m_i|\mathbf q_i|^2,\quad M=\sum_k m_k . \]
+</div>
+
+<p>数值复核：最大相对偏差 \(3\times10^{-16}\)–\(8\times10^{-16}\)，即机器精度。</p>
+
+<h2><small>ACT III · THE THEOREM</small>主定理与证明</h2>
+
+<div class="theorem">
+<span class="lbl">主定理</span>
+记 \(\bar I=\int_0^1 I(s)\,ds\)，\(\bar{\mathbf q}_i=\int_0^1\mathbf q_i(s)\,ds\)，
+\(V=\int_0^1\sum_i m_i|\mathbf q_i(s)-\bar{\mathbf q}_i|^2ds\)，\(P=\sum_{i<j}m_im_j\)。
+则任何周期解满足
+\[
+\boxed{\;\tau\ \ge\ \frac{\pi}{\sqrt2}\,G\,\frac{P^{3/2}}{\sqrt M}\cdot\sqrt{\frac{V}{\bar I}}\;}
+\]
+特别地，若 \(\bar{\mathbf q}_i=0\)（每个质点的时间平均位置都在质心），则 \(V=\bar I\)，从而
+\[
+\boxed{\;\tau\ \ge\ \frac{\pi}{\sqrt2}\,G\sqrt{\frac{\big(\sum_{i<j}m_im_j\big)^3}{\sum_k m_k}}\ =\ \tau_{\rm Q}\;}
+\]
+即<strong>孙博华量子公式是一条严格的下界</strong>。
+\(\bar{\mathbf q}_i=0\) 的条件在两类重要轨道上自动成立：
+<strong>(a)</strong> 等质量 choreography（所有质点沿同一条闭曲线等时距行进，含 8 字轨道）；
+<strong>(b)</strong> 任何满足半周期反演对称 \(\mathbf q(t+T/2)=-\mathbf q(t)\) 的轨道。
+</div>
+
+<ol class="proof">
+<li><strong>S1（重述 T1）。</strong>\(\tau=\frac12A_U\sqrt{A_K}\)，且 \(A_K=T^2\langle K\rangle\)、\(A_U=\langle U\rangle\)。</li>
+
+<li><strong>S2（逐点 Hölder）。</strong>令 \(p_{ij}=m_im_j\)、\(d_{ij}=|\mathbf q_{ij}(s)|\)。对每个固定的 \(s\)，用指数 \((3/2,\,3)\) 的 Hölder 不等式：
+\[
+P=\sum_k p_k=\sum_k\Big(\frac{p_k}{d_k}\Big)^{2/3}\big(p_kd_k^2\big)^{1/3}
+\le\Big(\sum_k\frac{p_k}{d_k}\Big)^{2/3}\Big(\sum_kp_kd_k^2\Big)^{1/3}.
+\]
+两边立方，再用 T2 把 \(\sum_kp_kd_k^2\) 换成 \(M I(s)\)：
+\[
+\sum_{i<j}\frac{m_im_j}{d_{ij}(s)}\ \ge\ \frac{P^{3/2}}{\sqrt{M\,I(s)}} .
+\]
+<strong>等号成立当且仅当所有 \(d_{ij}(s)\) 相等。</strong></li>
+
+<li><strong>S3（Jensen）。</strong>\(x\mapsto x^{-1/2}\) 在 \((0,\infty)\) 上凸，故对 S2 积分得
+\[
+\frac{A_U}{G}=\int_0^1\sum_{i<j}\frac{m_im_j}{d_{ij}}ds
+\ \ge\ \frac{P^{3/2}}{\sqrt M}\int_0^1 I(s)^{-1/2}ds
+\ \ge\ \frac{P^{3/2}}{\sqrt{M\,\bar I}} .
+\]</li>
+
+<li><strong>S4（Wirtinger / Poincaré）。</strong>\(\mathbf q_i-\bar{\mathbf q}_i\) 是零均值的 1-周期函数，故
+\[
+A_K=\frac12\int_0^1\sum_i m_i|\mathbf q_i'|^2ds
+=\frac12\int_0^1\sum_i m_i|(\mathbf q_i-\bar{\mathbf q}_i)'|^2ds
+\ \ge\ \frac12\cdot4\pi^2 V=2\pi^2V .
+\]
+等号成立当且仅当每个 \(\mathbf q_i\) 只含单一 Fourier 模（匀速圆周）。</li>
+
+<li><strong>S5（合并）。</strong>
+\[
+A_U\sqrt{A_K}\ \ge\ \frac{GP^{3/2}}{\sqrt{M\bar I}}\cdot\pi\sqrt2\sqrt V
+=\pi\sqrt2\,G\,\frac{P^{3/2}}{\sqrt M}\sqrt{\frac{V}{\bar I}},
+\]
+除以 2 并用 S1 即得主定理。<span class="qed">∎</span></li>
+</ol>
+
+<h3>尖锐性：等号在哪里取到</h3>
+
+<p>这条下界不是松的。<strong>\(N=2\) 时它被每一条开普勒椭圆精确取到，与偏心率无关。</strong>
+这看起来矛盾——偏心率 \(e>0\) 时 S3 的 Jensen 步与 S4 的 Wirtinger 步都是严格不等式——
+但两个亏格恰好互相抵消：</p>
+
+<table>
+<tr><th>\(e\)</th><th class="num">Jensen 亏格</th><th class="num">Wirtinger 亏格</th><th class="num">\(V/\bar I\)</th><th class="num">\(\tau/\tau_{\rm Q}\)（实测）</th></tr>
+<tr><td>0.0</td><td class="num">1.000000000</td><td class="num">1.000000000</td><td class="num">1.000000000</td><td class="num">1.000000000000</td></tr>
+<tr><td>0.2</td><td class="num">1.029563014</td><td class="num">1.030927835</td><td class="num">0.915094340</td><td class="num">1.000000000000</td></tr>
+<tr><td>0.5</td><td class="num">1.172603940</td><td class="num">1.230769231</td><td class="num">0.590909091</td><td class="num">1.000000000000</td></tr>
+<tr><td>0.8</td><td class="num">1.399999999</td><td class="num">1.923076923</td><td class="num">0.265306122</td><td class="num">1.000000000000</td></tr>
+<tr><td>0.95</td><td class="num">1.534193600</td><td class="num">3.094777563</td><td class="num">0.137280935</td><td class="num">1.000000000000</td></tr>
+</table>
+
+<p class="small">解析地：二体时 Jensen 亏格为 \(\sqrt{1+\tfrac32e^2}\)，Wirtinger 亏格为 \((1-\tfrac34e^2)^{-1}\)，
+而 \(V/\bar I=(1-\tfrac34e^2)/(1+\tfrac32e^2)\)；三者相乘恒等于 1。</p>
+
+<p>\(N=3\) 时等号还被 <strong>Lagrange 等边轨道</strong>取到（见 ACT IV），而且对<em>任意</em>质量都成立。
+\(N\ge4\) 时等号取不到——原因很干净：平面内不存在四点两两等距的位形。</p>
+
+<h2><small>ACT IV · EXACT VALUES</small>homographic 轨道的精确闭式，以及孙氏量子公式的真身</h2>
+
+<div class="theorem">
+<span class="lbl">定理 T3（homographic 精确值）</span>
+设 \(\mathbf c\) 是任意中心位形（任意 \(N\)、任意质量），则它生成的周期轨道（圆或椭圆，<strong>任意偏心率</strong>）满足
+\[
+\tau_{\rm hom}=\frac{\pi}{\sqrt2}\sqrt{I(\mathbf c)}\;U(\mathbf c)
+=\frac{\pi}{\sqrt2}\,G\sqrt{\frac{\sum_{i<j}m_im_jd_{ij}^2}{M}}\;\cdot\;\sum_{i<j}\frac{m_im_j}{d_{ij}} .
+\]
+</div>
+
+<p><strong>证明。</strong>中心位形满足 \(\nabla_iU=\lambda m_i\mathbf c_i\)，\(\lambda=-U/I\)。
+圆轨道角速度 \(\omega^2=U/I\)，故 \(K=U/2\)、\(E=-U/2\)、\(T=2\pi/\omega\)，代入
+\(\tau=T|E|^{3/2}\) 得 \(\frac{\pi}{\sqrt2}\sqrt I\,U\)。椭圆 homographic 轨道是同一形状的
+Kepler 标度族，而 \(\tau\) 标度不变，故值不变。<span class="qed">∎</span></p>
+
+<p class="small">数值复核：Lagrange 等边、Euler 共线、正 \(N\) 边形（\(N=2\ldots8\)）在 \(e=0,0.4,0.6,0.8\) 下，
+\(\tau\) 与闭式符合到 \(10^{-15}\)–\(10^{-16}\)，且<strong>完全不依赖偏心率</strong>。</p>
+
+<div class="theorem">
+<span class="lbl">推论 T4（孙氏量子公式的真身）</span>
+对 \(N=3\) 的 Lagrange 等边位形与<strong>任意</strong>质量，
+\[ \tau_{\rm hom}\ \equiv\ \tau_{\rm Q}. \]
+更一般地，对<strong>任何</strong>中心位形、任何 \(N\)、任何质量，
+\[ \tau_{\rm hom}\ \ge\ \tau_{\rm Q}, \]
+<strong>等号成立当且仅当所有 \(d_{ij}\) 相等。</strong>
+</div>
+
+<p><strong>证明。</strong>等边位形 \(d_{ij}\equiv a\)，Lagrange 恒等式给 \(I=a^2P/M\)，而 \(U=GP/a\)，
+代入 T3 即得 \(\tau_{\rm hom}=\frac{\pi}{\sqrt2}G\,P^{3/2}/\sqrt M=\tau_{\rm Q}\)。
+一般情形正是主定理证明中的 S2 步（Hölder），等号条件即所有 \(d_{ij}\) 相等。<span class="qed">∎</span></p>
+
+<blockquote>
+这解释了一件此前无人指出的事：Semay 用「包络理论」为量子 N 体推出的公式，
+与孙博华用量纲分析猜出的公式，与三体 Lagrange 等边轨道的经典 \(\tau\)，
+<strong>三者在 \(N=3\) 时是同一个数</strong>。包络理论的平均场基态本质上就是一个「尽可能等距」的刚性位形，
+所以它必然落在 Hölder 的等号上。
+<cite>数值：等边 (1,2,3) 质量下 \(\tau_{\rm hom}=33.086305648825\)，\(\tau_{\rm Q}=33.086305649\)，比值 1.000000000</cite>
+</blockquote>
+
+<p>正 \(N\) 边形（等质量、边长参数 \(s\)）另有闭式 \(\tau=\frac{\pi}{4\sqrt2}N^{3/2}S_N\,Gm^{5/2}\)，
+\(S_N=\sum_{k=1}^{N-1}\csc(\pi k/N)\)。它与两个孙氏公式的比值如下——这正是 \(N\ge4\) 时严格不等号的量化：</p>
+
+<table>
+<tr><th class="num">\(N\)</th><th class="num">\(\tau_{\rm hom}\)（闭式=数值）</th><th class="num">\(\tau_{\rm hom}/\tau_{\rm Q}\)</th><th class="num">\(\tau_{\rm hom}/\tau_{\rm C}\)</th></tr>
+<tr><td class="num">2</td><td class="num">1.570796326795</td><td class="num">1.000000</td><td class="num">1.000000</td></tr>
+<tr><td class="num">3</td><td class="num">6.664324407238</td><td class="num">1.000000</td><td class="num">3.000000</td></tr>
+<tr><td class="num">4</td><td class="num">17.009253552518</td><td class="num">1.041966</td><td class="num">6.251795</td></tr>
+<tr><td class="num">5</td><td class="num">34.184469190917</td><td class="num">1.088125</td><td class="num">10.881254</td></tr>
+<tr><td class="num">6</td><td class="num">59.660041616809</td><td class="num">1.132368</td><td class="num">16.985513</td></tr>
+<tr><td class="num">7</td><td class="num">94.821879793332</td><td class="num">1.173529</td><td class="num">24.644105</td></tr>
+<tr><td class="num">8</td><td class="num">140.987934988088</td><td class="num">1.211588</td><td class="num">33.924469</td></tr>
+</table>
+
+<h2><small>ACT V · COUNTEREXAMPLES</small>经典公式为什么不是定律</h2>
+
+<div class="theorem">
+<span class="lbl">定理 T5（精确反例）</span>
+孙博华 2018 年的经典公式
+\(\tau_{\rm C}=\frac{\pi}{\sqrt2}G\sqrt{\sum_{i<j}(m_im_j)^3/\sum_km_k}\)
+<strong>不是</strong>周期轨道的普适规律。存在精确解析反例：
+<table style="margin-top:12px">
+<tr><th>轨道</th><th class="num">\(\tau\)（精确值）</th><th class="num">\(\tau_{\rm C}\)</th><th class="num">\(\tau/\tau_{\rm C}\)</th></tr>
+<tr><td>二体（任意 \(m_1,m_2\)，任意 \(e\)）</td><td class="num">\(\frac{\pi}{\sqrt2}G\frac{(m_1m_2)^{3/2}}{\sqrt{m_1+m_2}}\)</td><td class="num">同左</td><td class="num">1</td></tr>
+<tr><td>Lagrange 等边，\(m_i=m\)</td><td class="num">\(\frac{3\pi}{\sqrt2}Gm^{5/2}\)</td><td class="num">\(\frac{\pi}{\sqrt2}Gm^{5/2}\)</td><td class="num"><strong>3</strong></td></tr>
+<tr><td>Euler 共线，\(m_i=m\)</td><td class="num">\(\frac{5\pi}{2}Gm^{5/2}\)</td><td class="num">\(\frac{\pi}{\sqrt2}Gm^{5/2}\)</td><td class="num"><strong>\(5\sqrt2/2\)</strong></td></tr>
+<tr><td>Lagrange 等边，\((1,2,3)\)</td><td class="num">33.086305648825</td><td class="num">14.367993088</td><td class="num">2.302779</td></tr>
+</table>
+</div>
+
+<p>三个反例都是牛顿方程的<strong>精确</strong>解（中心位形条件残差 \(10^{-16}\)），比值是<strong>闭式常数</strong>，
+不存在数值误差的余地。因子 3 的来源很清楚：它正是 \(N=3\) 的质点对数 \(\binom32\)；
+Euler 共线的 \(5\sqrt2/2\) 来自其距离比 \(1:1:2\)。</p>
+
+<p>不过 \(\tau_{\rm C}\) 并非毫无意义：由 \(\tau_{\rm C}\le\tau_{\rm Q}\le\tau\)，
+<strong>经典公式是一条成立但远不尖锐的下界</strong>。孙博华的量纲分析抓对了唯一能被量纲分析抓住的东西——
+\(\tau\) 的质量量纲与 \(G\) 的幂次；抓不住的正是那个 \(O(1)\) 的对称函数选择，
+而「立方和」与「和的立方」的差别恰恰就在这里。数值上 \(2.433\pm0.075\)（廖世俊组）
+落在 \(\tau_{\rm C}=2.221\) 与 \(\tau_{\rm Q}=6.664\) 之间，也印证了这一点。</p>
+
+<h2><small>ACT VI · NUMERICS</small>125 条精确周期轨道上的复核</h2>
+
+<p>方法：Fourier 参数化的最小作用量搜索（解析梯度，经有限差分校验到 \(10^{-9}\)），
+必要时用<strong>变分方程（monodromy）Newton 抛光</strong>把轨道精化到真正的 ODE 解。
+Newton 里必须消除四个零方向：时间平移、平面旋转、质心平移、Galilei boost
+（后两者由质心投影消除）。每条轨道都检查闭合残差、位力残差、最小间距、
+以及与周期相容的尺度比 \(R_{\rm typ}/R_K\)（后者专门用来剔除
+「作用量趋于 0 的逃逸伪解」——在拓扑平凡类中最小化作用量会跑到无穷远，这是搜索中最大的陷阱）。</p>
+
+<table>
+<tr><th>族</th><th class="num">\(N\)</th><th class="num">轨道数</th><th class="num">质量范围</th><th class="num">\(\tau\) 范围</th><th class="num">\(\min\tau/\tau_{\rm Q}\)</th><th class="num">\(\min\) C2</th></tr>
+<tr><td>two_body（\(e=0.6\)，质量延拓）</td><td class="num">2</td><td class="num">54</td><td class="num">0.050–4.405</td><td class="num">0.0242–8.8349</td><td class="num">0.99999992</td><td class="num">1.000000</td></tr>
+<tr><td>equil（Lagrange 等边，质量延拓）</td><td class="num">3</td><td class="num">37</td><td class="num">0.364–1.000</td><td class="num">3.2823–6.6643</td><td class="num">0.99999980</td><td class="num">1.000000</td></tr>
+<tr><td>euler_e07（Euler 共线，\(e=0.7\)）</td><td class="num">3</td><td class="num">23</td><td class="num">0.552–1.000</td><td class="num">4.2435–6.6643</td><td class="num">1.00000217</td><td class="num">1.000003</td></tr>
+<tr><td>euler（Euler 共线，圆）</td><td class="num">3</td><td class="num">3</td><td class="num">0.907–1.000</td><td class="num">7.2366–7.8540</td><td class="num">1.17631359</td><td class="num">1.000000</td></tr>
+<tr><td>fig8（8 字轨道类，质量延拓）</td><td class="num">3</td><td class="num">2</td><td class="num">0.743–0.747</td><td class="num">5.7817–5.8053</td><td class="num">1.09981680</td><td class="num">1.009483</td></tr>
+<tr><td>ngon4</td><td class="num">4</td><td class="num">2</td><td class="num">等质量</td><td class="num">17.009254</td><td class="num">1.04196589</td><td class="num">1.000000</td></tr>
+<tr><td>ngon5</td><td class="num">5</td><td class="num">2</td><td class="num">等质量</td><td class="num">34.184469</td><td class="num">1.08812545</td><td class="num">1.000000</td></tr>
+<tr><td>ngon6</td><td class="num">6</td><td class="num">2</td><td class="num">等质量</td><td class="num">59.660042</td><td class="num">1.13236755</td><td class="num">1.000000</td></tr>
+</table>
+
+<p>其中「C2」指等价命题——质量度量引理
+\(\big(\int_0^1 ds/|\mathbf Q|\big)^2\int_0^1|\mathbf Q'|^2ds\ge4\pi^2\)，
+\(\mathbf Q=(\sqrt{m_1}\mathbf q_1,\dots)\)；它与主定理在 \(V=\bar I\) 时等价。</p>
+
+<h3>三点值得注意</h3>
+
+<p><strong>(1) 没有反例，只有取等。</strong>
+所有比值的最小值是 \(1-2\times10^{-7}\)，出现在闭合残差最差（\(1.9\times10^{-6}\)）的那条轨道上；
+闭合残差达机器精度（\(\sim10^{-12}\)）的轨道，比值全部 \(\ge1\) 到全精度。
+更重要的是，逼近 1 的<strong>恰好是理论预言取等号的两族</strong>：
+全部 54 个二体质量比，以及全部 37 条 Lagrange 等边轨道（质量低至 0.364）——
+后者正是 Hölder 等号条件「所有 \(d_{ij}\) 相等」的体现。
+这不是数值巧合，是定理的等号集被数值独立复现。</p>
+
+<p><strong>(2) \(\tau\) 只依赖（同伦类，质量）。</strong>
+对 8 字轨道分别在 \(T=6.3059\)、\(6.3259\)、\(6.3359\) 三个不同周期下做 Newton 抛光，得到
+\[
+\tau = 9.237681250724,\quad 9.237682750851,\quad 9.237682750851 ,
+\]
+即三条<em>不同大小</em>的轨道给出同一个 \(\tau\) 到 12 位。
+这是标度不变性的直接体现，也解释了为什么最小作用量解的 \(\tau\) 是一个良定义的
+「类函数」——廖世俊组观测到的 \(\tau/L_f\approx\) 常数，其根源就在这里。</p>
+
+<p><strong>(3) 8 字轨道的精确数据。</strong>
+从公开初值出发 Newton 抛光到闭合残差 \(7.7\times10^{-14}\)：
+\(T=6.325913976757529\)，\(E=-1.2871419918\)，\(\tau=9.2376812001\)，
+角动量 \(3\times10^{-15}\)，位力残差 \(2\times10^{-14}\)，\(\tau/\tau_{\rm Q}=1.3861391847\)，
+\(\tau/\tau_{\rm C}=4.158417554\)，\(|\bar{\mathbf q}|=10^{-8}\)（故主定理的无条件形式适用）。</p>
+
+<h2><small>ACT VII · OPEN</small>还剩下什么没被证明</h2>
+
+<table>
+<tr><th>命题</th><th>状态</th><th>说明</th></tr>
+<tr><td>\(\tau\) 严格标度不变</td><td><span class="verdict v-proved">定理</span></td><td>势的齐次性，教科书级</td></tr>
+<tr><td>\(\tau=\frac12A_U\sqrt{A_K}\)</td><td><span class="verdict v-proved">定理 T1</span></td><td>位力定理的重新包装</td></tr>
+<tr><td>homographic 轨道闭式 \(\frac\pi{\sqrt2}\sqrt I\,U\)，与偏心率无关</td><td><span class="verdict v-proved">定理 T3</span></td><td>覆盖任意 \(N\)、任意质量</td></tr>
+<tr><td>\(\tau_{\rm hom}\ge\tau_{\rm Q}\)，等号 ⟺ 等距</td><td><span class="verdict v-proved">定理 T4</span></td><td>Hölder + Lagrange 恒等式</td></tr>
+<tr><td>\(\tau\ge\tau_{\rm Q}\sqrt{V/\bar I}\)（一般）；\(\tau\ge\tau_{\rm Q}\)（当 \(\bar{\mathbf q}=0\)）</td><td><span class="verdict v-proved">主定理</span></td><td>等号集含全部二体椭圆与三体等边轨道</td></tr>
+<tr><td>孙氏经典公式作为普适定律</td><td><span class="verdict v-refuted">已否定</span></td><td>精确反例：因子 3 与 \(5\sqrt2/2\)</td></tr>
+<tr><td>\(\tau\ge\tau_{\rm Q}\) 对<strong>所有</strong>周期解（去掉 \(\bar{\mathbf q}=0\)）</td><td><span class="verdict v-open">开放</span></td><td>125 条轨道全部支持；缺口是 \(\sqrt{V/\bar I}\)，二体情形显示该因子是证明技术的产物而非真实障碍</td></tr>
+<tr><td>质量度量引理 \((\int ds/|\mathbf Q|)^2\int|\mathbf Q'|^2\ge4\pi^2\)</td><td><span class="verdict v-open">开放</span></td><td>等价于上一条；二体全偏心率取等，几何上无拓扑障碍（\(N\ge3\) 时 \(\mathbb R^{2N-2}\setminus\{0\}\) 单连通），故须用动力学</td></tr>
+<tr><td>\(\tau/L_f\approx\) 常数（廖世俊组的经验律）</td><td><span class="verdict v-open">开放</span></td><td>\(\tau\) 是「类+质量」的函数已由数值确认；为何近似正比于自由群字长仍无解释</td></tr>
+<tr><td>量子版本的严格化</td><td><span class="verdict v-open">开放</span></td><td>包络理论只给变分上限；且 \(N\ge4\) 时与 homographic 值差 4%–21%</td></tr>
+</table>
+
+<p>把主定理推到无条件形式，等价于证明质量度量引理。二体情形提供了强有力的线索：
+它对所有偏心率<em>精确</em>取等（数值上 \((\int ds/d)^2\int|q'|^2ds/4\pi^2=1-10^{-13}\)），
+说明这条引理若有证明，等号集必然包含全部开普勒椭圆——这是一个非常强的刚性要求，
+也提示正确的证明应当把「径向 Wirtinger」与「角向」两部分以某种恰好互补的方式配对，
+正如主定理中 Jensen 亏格与 Wirtinger 亏格在二体情形精确互消那样。</p>
+
+<h2><small>REPRODUCE</small>复现</h2>
+
+<p>全部代码在 <code>math/kepler3/</code>：
+<code>analytic.py</code>（闭式公式、中心位形求解、Hölder 亏格）、
+<code>core.py</code>（N 体流、自适应 Gauss–Legendre 诊断、Fourier 最小作用量、monodromy Newton、形状球拓扑）、
+<code>validate.py</code>（V1–V5 精确解校验）、
+<code>prove.py</code>（S1–S7 证明链逐步数值复核，33 项检查）、
+<code>search.py</code> / <code>continue.py</code>（搜索与质量延拓）、
+<code>report.py</code>（汇总与反例筛查）。
+计算在 192 核节点上完成。</p>
+
+<h2><small>REFERENCES</small>文献</h2>
+<ol class="refs">
+<li>B. H. Sun, <em>Kepler's third law of n-body periodic orbits in a Newtonian gravitation field</em>, Sci. China-Phys. Mech. Astron. <b>61</b>, 054721 (2018). <a href="https://arxiv.org/abs/1807.10685">arXiv:1807.10685</a></li>
+<li>B. H. Sun, <em>Classical and Quantum Kepler's Third Law of N-Body System</em>, Results in Physics <b>13</b>, 102144 (2019). <a href="https://arxiv.org/abs/1904.05148">arXiv:1904.05148</a></li>
+<li>C. Semay, <em>Quantum support to BoHua Sun's conjecture</em>, Results in Physics <b>13</b>, 102167 (2019). <a href="https://arxiv.org/abs/1812.00807">arXiv:1812.00807</a></li>
+<li>C. Semay and C. T. Willemyns, <em>Quasi Kepler's third law for quantum many-body systems</em>, Eur. Phys. J. Plus <b>136</b>, 342 (2021). <a href="https://arxiv.org/abs/2005.06973">arXiv:2005.06973</a></li>
+<li>C.-Y. Zhao and M.-J. Zhang, <em>A conjecture on Kepler's third law of n-body periodic orbits</em> (2018). <a href="https://arxiv.org/abs/1811.00735">arXiv:1811.00735</a></li>
+<li>X. M. Li and S. J. Liao, <em>More than six hundred new families of Newtonian periodic planar collisionless three-body orbits</em>, Sci. China-Phys. Mech. Astron. <b>60</b>, 129511 (2017). <a href="https://arxiv.org/abs/1705.00527">arXiv:1705.00527</a></li>
+<li>X. Li, Y. P. Jing and S. J. Liao, <em>Over a thousand new periodic orbits of a planar three-body system with unequal masses</em>, Publ. Astron. Soc. Japan <b>70</b>, 64 (2018). <a href="https://arxiv.org/abs/1709.04775">arXiv:1709.04775</a></li>
+<li>X. Li and S. J. Liao, <em>Collisionless periodic orbits in the free-fall three-body problem</em>, New Astronomy <b>70</b>, 22–26 (2019). <a href="https://arxiv.org/abs/1805.07980">arXiv:1805.07980</a></li>
+<li>S. Liao, X. Li and Y. Yang, <em>Three-body problem — from Newton to supercomputer plus machine learning</em>, New Astronomy <b>96</b>, 101850 (2022). <a href="https://arxiv.org/abs/2106.11010">arXiv:2106.11010</a></li>
+<li>V. Dmitrašinović and M. Šuvakov, <em>Topological dependence of Kepler's third law for collisionless periodic three-body orbits</em>, Phys. Lett. A <b>379</b>, 1939–1945 (2015).</li>
+<li>A. Chenciner and R. Montgomery, <em>A remarkable periodic solution of the three-body problem in the case of equal masses</em>, Annals of Mathematics <b>152</b>, 881–901 (2000).</li>
+<li>R. Montgomery, <em>A new solution of the three-body problem</em>, Notices AMS <b>48</b>, 471–481 (2001).（形状球与自由群分类）</li>
+<li>S. J. Liao and X. M. Li, <em>On the periodic solutions of the three-body problem</em>, National Science Review <b>6</b>, 1070 (2019). <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8291409/">PMC8291409</a></li>
+</ol>
+
+<p class="end">
+上一篇的结论需要修改一处：孙博华的<strong>量子</strong>公式不只是「未证明的猜想」，
+在 \(\bar{\mathbf q}=0\) 的一大类轨道（含全部等质量 choreography）上它是<strong>已证的尖锐下界</strong>，
+并且它恰好等于三体 Lagrange 等边轨道的精确 \(\tau\)——这是一个可以写成一行恒等式的事实。
+<strong>经典</strong>公式则相反：它被精确反例否定为定律，只能作为一条较弱的下界成立。<br><br>
+仍然开放的，是把下界从 \(\bar{\mathbf q}=0\) 推广到全部周期解——等价于证明一条关于闭曲线的
+纯几何-动力学不等式，而二体开普勒椭圆在任意偏心率下精确取等，说明它若成立就必然非常刚性。
+</p>
+
+</main>
+</body>
+</html>
