@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Agent Swarm and Perelman Formalization</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Agent Swarm and Perelman Formalization</h1>
+</header>
+<h1
+id="把-lean-证明做成一座可恢复的工厂perelman-形式化与-agent-swarm">把
+Lean 证明做成一座可恢复的工厂：Perelman 形式化与 Agent Swarm</h1>
+<blockquote>
+<p>这篇文章记录的是一个正在运行的工程系统，而不是一篇宣布数学结论已经完成的论文。仓库当前包含已编译的
+Lean
+基础、条件接口、模型级结果、上游资料适配和独立审计；它还没有给出一个无条件、完整的庞加莱猜想
+Lean 证明。</p>
+</blockquote>
+<p>我们最初面对的问题看起来像“找一个足够强的模型，把 Perelman
+的证明翻译成
+Lean”。实际运行之后，问题变成了另一件事：如何把一个跨越几何、偏微分方程、Ricci
+flow、奇点分析、手术和三维拓扑的长期数学工程，拆成许多可以独立执行、可以恢复、可以复核、可以被下游消费的工作单元。</p>
+<p>这也是这套系统和普通的多 agent 编程脚本之间最重要的区别。我们不把
+agent 数量当作进度，不把一张写着 <code>TASK_DONE</code>
+的卡片当作定理，不把一段能编译的接口当作已经完成的数学。每一项结果都必须带有它的证据等级、源文件
+hash、编译命令、依赖公理和下游使用记录。</p>
+<h2 id="1-逆向的三层结构">1. 逆向的三层结构</h2>
+<p>这套系统从人机交互开始，而不是从自动派工开始。最开始，人类和主控
+Astra
+一起讨论项目的边界、数学逻辑和资源预算。主控不要求人类一次性写出所有定理；人类给出几个模糊方向，主控负责把它们变成可审计的研究组。</p>
+<p>系统的运行结构是：</p>
+<pre class="text"><code>P0  Human PI + Astra controller
+    ├── 给出模糊方向、优先级、禁止越界的结论
+    ├── 冻结项目级数学 DAG 和证据规则
+    └── 观察各组的 checkpoint、blocker、ETA 和产物
+          │ 双向通信
+          ▼
+P1  Astra-level group leads
+    ├── 维护本组的局部 DAG
+    ├── 调整研究路线和任务粒度
+    ├── 识别可以前瞻推进的接口和模型
+    └── 向 fleet 生成带依赖和验收命令的任务
+          │ 任务、结果卡、审计请求
+          ▼
+P2  DeepSeek Flash execution fleet
+    ├── 在独立 worktree 中写 Lean 或研究产物
+    ├── 运行 lake build / lake env lean
+    ├── 写 checkpoint、heartbeat 和 result card
+    └── 在失败、传输中断或数学受阻时保留现场并暂停</code></pre>
+<p>P0、P1 和 P2 不是三个互相隔离的部门。P0 可以调整组的方向，P1
+可以根据实际 blocker 重新规划自己的局部 DAG，P2
+的编译结果和失败原因又会反过来改变 P1 和 P0 的决策。</p>
+<p>目前仓库已经把这套角色协议写成了长期可恢复的控制面：每个 leader
+有独立 worktree、checkpoint 和 <code>comms/</code>；leader 可以在
+<code>comms/outbox/</code> 生成子任务；dispatcher
+负责领取、租约、恢复和编译 gate；integrator
+是唯一可以把通过门禁的结果合并到 publication branch 的角色。</p>
+<p>这里有一个现实限制需要单独说清楚：协议允许 P1 使用 Astra
+级模型，但已检查的远程主机目前实际配置的是
+<code>deepseek-flash</code>。因此，“Astra 级组长 + Flash
+执行体”是当前架构的目标接口；已运行的队列仍主要由 DeepSeek Flash
+驱动。模型名称不会因为主控使用了 Astra 就被静默改写。</p>
+<h2 id="2-为什么研究组必须拥有模糊方向">2.
+为什么研究组必须拥有“模糊方向”</h2>
+<p>如果把任务一开始就切成完全固定的细粒度命题，系统会遇到两个问题。第一，Perelman
+证明中有许多依赖在 Lean 里还没有成熟的 API，过早冻结目标只会产生大量
+statement-only
+文件。第二，证明过程中常常会发现原始接口的假设不正确、过强或缺少关键正则性；这时需要改变路线，而不是让
+worker 继续向错误方向堆代码。</p>
+<p>因此，每个组接收的是一个有边界的方向，而不是一份不可修改的脚本。例如：</p>
+<ul>
+<li>analytic 组负责热核、抛物 PDE 和 DeTurck
+生产者，但不能把一个欧氏模型包装成一般流形定理；</li>
+<li>geometric 组负责流形积分、体积比较、测地线和紧性，但要显式报告
+pointed Gromov–Hausdorff 层仍然缺失；</li>
+<li>topology
+组负责识别、三角剖分、手术接口和反例审计，但不能把条件识别证书写成已经完成的庞加莱结论；</li>
+<li>upstream 组负责 Frenzymath 等资料的版本适配，但不同 Lean/mathlib pin
+的源码不能直接混入 release。</li>
+</ul>
+<p>“模糊”指的是允许组长在局部选择证明路线；“有边界”指的是语义分类、编译门禁和禁止事项不能被局部决定。</p>
+<h2 id="3-perelman-证明如何分组">3. Perelman 证明如何分组</h2>
+<p>佩雷尔曼证明的分组方法不是按文件夹名字划分，而是先列出数学逻辑
+DAG，再在 DAG 上寻找可以提前推进的叶子。顶层结构大致是：</p>
+<pre class="text"><code>Riemannian foundations
+        │
+        ▼
+Parabolic PDE / maximum principles
+        │
+        ▼
+DeTurck short-time Ricci flow
+        │
+        ▼
+Perelman F/W entropy and reduced volume
+        │
+        ▼
+κ-noncollapsing / κ-solutions / compactness
+        │
+        ▼
+Canonical neighborhoods
+        │
+        ▼
+Ricci flow with surgery
+        │
+        ▼
+Extinction and topological recognition
+        │
+        ▼
+Poincaré conclusion</code></pre>
+<p>这张图表达数学依赖，但不能直接作为任务队列。真正的调度图还要加入“哪些依赖已经通过编译
+gate”“哪些只是条件接口”“哪些可以在上游完成之前先做”。因此，我们把同一张图展开成五个长期研究组：</p>
+<pre class="text"><code>                         ┌────────────────────────────┐
+                         │ L1 Lean baseline / integrator│
+                         └──────────────┬─────────────┘
+                                        │ release inputs
+          ┌─────────────────────────────┼────────────────────────────┐
+          ▼                             ▼                            ▼
+┌─────────────────────┐      ┌─────────────────────┐       ┌─────────────────────┐
+│ L2 Upstream adapters │─────▶│ L3 Analytic critical │──────▶│ L4 Geometric critical│
+│ v4.32.1 bridge      │      │ heat/PDE/DeTurck     │       │ IBP/GH/compactness   │
+└─────────────────────┘      └─────────────────────┘       └──────────┬──────────┘
+                                                                       │
+                                                                       ▼
+                                                          ┌─────────────────────┐
+                                                          │ L5 Topology + audit  │
+                                                          │ recognition/surgery │
+                                                          └─────────────────────┘</code></pre>
+<p>这不是一条只能从左向右走的线。L3
+可以先做欧氏热核和条件化的半群接口；L4 可以先做纯度量层的 GH 紧性；L5
+可以先做识别证书和负控制；L2
+可以先完成版本清点和适配计划。它们不能因此跳过依赖，而是先把未来依赖所需的接口、模型、审计和消费端准备好。</p>
+<h2 id="4-前瞻式开发先做未来证明会消费的东西">4.
+前瞻式开发：先做未来证明会消费的东西</h2>
+<p>异步前瞻开发的关键不是给后续任务一个假定为真的
+theorem，而是把假设写进接口，并让接口的语义等级保持可见。</p>
+<p>例如，一般流形热核尚未完成时，analytic 组仍然可以并行推进：</p>
+<pre class="text"><code>一般流形热核存在性       [open / upstream]      ─────┐
+                                                     ▼
+可积测试函数接口           [conditional]      ───▶  热半群 consumer
+                                                     ▲
+欧氏 Gaussian core         [model, proved]    ──────┘</code></pre>
+<p>欧氏 Gaussian 结果可以是 kernel-checked
+的模型定理；条件接口可以明确写出正则性、可积性、domination 等假设；下游
+consumer 可以在接口上编译。等一般流形定理后来出现时，只需接入满足接口的
+producer。</p>
+<p>同样，几何组可以先完成不依赖曲率的 GHSpace
+结果，拓扑组可以先完成覆盖空间识别和三角剖分接口。这样做的工程价值很大：</p>
+<ol type="1">
+<li>未来任务的输入格式在上游完成之前就稳定下来；</li>
+<li>可以提前发现假设缺失、方向错误和 API 不匹配；</li>
+<li>worker 不必等待整条证明链闭合；</li>
+<li>前瞻产物不会因为“编译通过”而被误标为一般数学结果。</li>
+</ol>
+<p>当前 dispatcher 已经支持 <code>deps</code> 和
+<code>after_terminal</code>
+两类依赖。前者要求前置任务通过验证；后者允许消费已结束但可能是
+blocked、paused 或 needs-review 的结果。后续真正需要补上的，是让 leader
+自动把这种前瞻计划写成正式的子 DAG，并由全局状态生成器统一显示。</p>
+<h2 id="5-每个节点必须显示什么">5. 每个节点必须显示什么</h2>
+<p>这类项目只画节点和箭头是不够的。一个节点至少应当显示四种信息：</p>
+<pre class="text"><code>节点标题
+状态：verified / running / queued / blocked
+进度：已完成 / 计划总量
+时间：实际 agent-hours + ETA
+产物：Lean 文件、声明、LOC、result card、audit
+证据：proved / conditional / model / statement-only / upstream source claim</code></pre>
+<p>顶层节点是研究组这样的超节点；展开后，组内显示具体 theorem
+cluster、接口、模型和审计任务。这样，读者可以同时回答两个问题：</p>
+<ul>
+<li>证明逻辑上，哪一项依赖阻塞了后续？</li>
+<li>工程上，哪个组正在产生可消费的产物，哪个组只是等待资源或上游？</li>
+</ul>
+<p>当前仓库里的原型页面已经实现了组级
+DAG、局部任务列表、状态过滤、进度条、agent time、ETA
+和证据等级。它还是静态快照；下一步应由 queue、checkpoint、result
+card、compile gate 和 semantic ledger 自动生成
+<code>swarm-state.json</code>，页面只负责渲染。</p>
+<h2 id="6-当前运行数据我们到底做出了什么">6.
+当前运行数据：我们到底做出了什么</h2>
+<p>截至当前监督快照，舰队有三个主要远程主机：<code>ophis-gpu</code>、<code>360-1</code>
+和 <code>360-2</code>。本地控制面负责 publication
+repo、relay、结果回收和监督。dispatcher 使用独立
+worktree、heartbeat、暂停标记和 source-hash 编译 gate。</p>
+<p>仓库交接记录显示：</p>
+<ul>
+<li>D1–D10 已形成较完整的 Ricci-flow 基础链；</li>
+<li>D11 有热核桥接、谱模型、比较模型和 reduced-volume 的部分结果；</li>
+<li>D12 的 14 条研究轨道已经交付 result
+card，部分结果带有编译和公理审计；</li>
+<li>D13 正在推进 upstream adapter、集成和交叉审计；</li>
+<li>结果卡中累计包含大量已编译声明和模型级/条件级产物；</li>
+<li>一般流形层仍有 U1–U12、I1–I8 等开放 blocker。</li>
+</ul>
+<p>这些数字的意义是“可审计工作量”，不是“庞加莱定理的完成比例”。例如，一个模型级
+Gaussian theorem 可以有完整的 <code>#print axioms</code>
+证据，但它并不替代一般流形上的热核、紧性或手术分析。</p>
+<h2 id="7-lean-真的完成了吗">7. Lean 真的完成了吗？</h2>
+<p>没有。更准确的说法是：Lean
+工程的若干基础层已经真实完成，整个数学目标还没有完成。</p>
+<p>我们使用下面的证据等级：</p>
+<table>
+<thead>
+<tr>
+<th>等级</th>
+<th>含义</th>
+<th>能否当作完整证明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>proved</code></td>
+<td>Lean kernel 检查通过，依赖和语义范围经过审计</td>
+<td>只对该声明及其明确范围成立</td>
+</tr>
+<tr>
+<td><code>conditional</code></td>
+<td>结论已编译，但依赖显式数学假设或 producer</td>
+<td>不能</td>
+</tr>
+<tr>
+<td><code>model</code></td>
+<td>在欧氏、离散或其他具体模型中成立</td>
+<td>不能外推到一般流形</td>
+</tr>
+<tr>
+<td><code>statement-only</code></td>
+<td>只有目标接口或 frontier，没有证明主体</td>
+<td>不能</td>
+</tr>
+<tr>
+<td><code>upstream source claim</code></td>
+<td>上游资料中的声明或源码线索，尚未在当前 pin 下复现</td>
+<td>不能</td>
+</tr>
+</tbody>
+</table>
+<p>完整 Perelman 形式化仍需关闭一般流形上的 PDE、热核、DeTurck
+短时存在、体积与 IBP、紧性、canonical neighborhood、surgery
+和拓扑识别等依赖，并完成完整依赖锥的 clean rebuild、下游消费、axiom
+audit 和独立复现。</p>
+<h2 id="8-能不能发布">8. 能不能发布？</h2>
+<p>可以发布，但发布对象必须命名准确。</p>
+<p>现在可以发布的是：</p>
+<ul>
+<li>一套可恢复的 Lean formalization swarm 控制协议；</li>
+<li>研究组和任务 DAG；</li>
+<li>queue、dispatcher、worker、checkpoint、result card 和编译
+gate；</li>
+<li>已经 kernel-checked 的中间 Lean 模块；</li>
+<li>条件接口、模型定理、上游适配计划和负控制；</li>
+<li>blocker ledger、语义分类和独立审计记录；</li>
+<li>一个用于展示工程进度的静态 swarm DAG。</li>
+</ul>
+<p>适合的发布标题是：</p>
+<blockquote>
+<p><strong>Poincaré Formalization Swarm: Infrastructure and Verified
+Intermediate Results</strong></p>
+</blockquote>
+<p>目前不能发布成：</p>
+<blockquote>
+<p><strong>A Complete Lean Formalization of Perelman’s
+Proof</strong></p>
+</blockquote>
+<p>后一个标题要求整个一般流形依赖链闭合，并由独立 verifier 在 clean
+worktree 中重现。</p>
+<h2 id="9-宇宙监督猜想的扩展方式">9. 宇宙监督猜想的扩展方式</h2>
+<p>同一套 P0–P1–P2
+结构不只适用于一个数学命题。对于“宇宙监督猜想”，可以把当前各类场论分别作为独立研究组，而不是强迫它们共享一个过早冻结的证明路线：</p>
+<pre class="text"><code>P0 Human PI + Astra
+        │
+        ├── QFT / gauge theory group
+        ├── gravity / spacetime group
+        ├── cosmology / perturbation group
+        ├── string / higher-structure group
+        ├── numerical simulation group
+        └── independent audit group
+                 │
+                 ▼
+          shared definitions, conjecture ledger,
+          benchmark problems, evidence and red-team review</code></pre>
+<p>每个场论组拥有自己的局部 DAG、模型、文献账本、数值试验和 Lean
+接口。只有跨组真正需要的定义和 theorem 才进入全局
+DAG。这样可以把“不同理论是否支持同一监督机制”变成可测量的工程问题：哪个方向产生了可复现的不变量，哪个方向只产生了
+statement-only 的猜想，哪个方向需要升级到更强的 group lead。</p>
+<h2 id="10-下一步从原型图到实时控制面">10.
+下一步：从原型图到实时控制面</h2>
+<p>当前最值得做的不是继续给静态 HTML
+增加更多装饰，而是补上状态生成器和事件模型：</p>
+<pre class="text"><code>queue.json + checkpoints + result cards + gate.json + semantic ledger
+                                │
+                                ▼
+                         swarm-state.json
+                                │
+                                ├── global group DAG
+                                ├── local task DAGs
+                                ├── artifact and hash index
+                                ├── agent-hours / ETA
+                                ├── blocker frontier
+                                └── publication readiness
+                                │
+                                ▼
+                         HTML control map</code></pre>
+<p>当这一步完成后，图上的状态就不再由人工修改。一个任务只有在真实
+artifact、编译记录和审计结果改变之后，才会改变节点状态。组长可以继续调整局部方向，主控可以继续重排全局优先级，而人类看到的是同一份可追溯的
+DAG。</p>
+<p>这正是我们希望的工程形态：人类和 Astra
+负责选择问题、边界和研究方向；Astra-level group lead
+负责在不确定的数学空间里组织路线；DeepSeek Flash fleet
+负责大量具体执行；Lean kernel、编译 gate
+和独立审计负责决定哪些结果真的可以留下。</p>
+<hr />
+<h2 id="附可复现材料">附：可复现材料</h2>
+<ul>
+<li>控制面规范：<code>infra/swarm/LEADER-PROTOCOL.md</code>、<code>infra/swarm/codex-deploy.md</code>、<code>infra/swarm/policy.json</code></li>
+<li>长时任务协议：<code>longrun/README.md</code>、<code>longrun/bin/dispatch_loop.py</code>、<code>longrun/bin/worker_loop.sh</code></li>
+<li>项目交接与当前数学状态：<code>HANDOVER.md</code></li>
+<li>证明概念图：<code>third_party/frenzymath/Poincare-Conjecture/site/proof-map/</code></li>
+</ul>
+</body>
+</html>
