@@ -1,180 +1,124 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-CN" xml:lang="zh-CN">
 <head>
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <title>Agent Swarm and Perelman Formalization</title>
+  <title>实现 agent swarm 的“人月神话”——一周内形式化本来需要几年的 Perelman 证明</title>
   <style>
-    html {
-      color: #1a1a1a;
-      background-color: #fdfdfd;
-    }
-    body {
-      margin: 0 auto;
-      max-width: 36em;
-      padding-left: 50px;
-      padding-right: 50px;
-      padding-top: 50px;
-      padding-bottom: 50px;
-      hyphens: auto;
-      overflow-wrap: break-word;
-      text-rendering: optimizeLegibility;
-      font-kerning: normal;
-    }
-    @media (max-width: 600px) {
-      body {
-        font-size: 0.9em;
-        padding: 12px;
-      }
-      h1 {
-        font-size: 1.8em;
-      }
-    }
-    @media print {
-      html {
-        background-color: white;
-      }
-      body {
-        background-color: transparent;
-        color: black;
-        font-size: 12pt;
-      }
-      p, h2, h3 {
-        orphans: 3;
-        widows: 3;
-      }
-      h2, h3, h4 {
-        page-break-after: avoid;
-      }
-    }
-    p {
-      margin: 1em 0;
-    }
-    a {
-      color: #1a1a1a;
-    }
-    a:visited {
-      color: #1a1a1a;
-    }
-    img {
-      max-width: 100%;
-    }
-    svg {
-      height: auto;
-      max-width: 100%;
-    }
-    h1, h2, h3, h4, h5, h6 {
-      margin-top: 1.4em;
-    }
-    h5, h6 {
-      font-size: 1em;
-      font-style: italic;
-    }
-    h6 {
-      font-weight: normal;
-    }
-    ol, ul {
-      padding-left: 1.7em;
-      margin-top: 1em;
-    }
-    li > ol, li > ul {
-      margin-top: 0;
-    }
-    blockquote {
-      margin: 1em 0 1em 1.7em;
-      padding-left: 1em;
-      border-left: 2px solid #e6e6e6;
-      color: #606060;
-    }
-    code {
-      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
-      font-size: 85%;
-      margin: 0;
-      hyphens: manual;
-    }
-    pre {
-      margin: 1em 0;
-      overflow: auto;
-    }
-    pre code {
-      padding: 0;
-      overflow: visible;
-      overflow-wrap: normal;
-    }
-    .sourceCode {
-     background-color: transparent;
-     overflow: visible;
-    }
-    hr {
-      border: none;
-      border-top: 1px solid #1a1a1a;
-      height: 1px;
-      margin: 1em 0;
-    }
-    table {
-      margin: 1em 0;
-      border-collapse: collapse;
-      width: 100%;
-      overflow-x: auto;
-      display: block;
-      font-variant-numeric: lining-nums tabular-nums;
-    }
-    table caption {
-      margin-bottom: 0.75em;
-    }
-    tbody {
-      margin-top: 0.5em;
-      border-top: 1px solid #1a1a1a;
-      border-bottom: 1px solid #1a1a1a;
-    }
-    th {
-      border-top: 1px solid #1a1a1a;
-      padding: 0.25em 0.5em 0.25em 0.5em;
-    }
-    td {
-      padding: 0.125em 0.5em 0.25em 0.5em;
-    }
-    header {
-      margin-bottom: 4em;
-      text-align: center;
-    }
-    #TOC li {
-      list-style: none;
-    }
-    #TOC ul {
-      padding-left: 1.3em;
-    }
-    #TOC > ul {
-      padding-left: 0;
-    }
-    #TOC a:not(:hover) {
-      text-decoration: none;
-    }
-    code{white-space: pre-wrap;}
-    span.smallcaps{font-variant: small-caps;}
-    div.columns{display: flex; gap: min(4vw, 1.5em);}
-    div.column{flex: auto; overflow-x: auto;}
-    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
-    /* The extra [class] is a hack that increases specificity enough to
-       override a similar rule in reveal.js */
-    ul.task-list[class]{list-style: none;}
-    ul.task-list li input[type="checkbox"] {
-      font-size: inherit;
-      width: 0.8em;
-      margin: 0 0.8em 0.2em -1.6em;
-      vertical-align: middle;
-    }
-    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
-  </style>
+  :root{
+    --ink:#1c1c1c; --muted:#6b6b6b; --line:#e6e2da; --paper:#fbfaf7;
+    --accent:#b5472b; --sea:#2b6f8e;
+    --c-compute:#2b6f8e; --c-code:#b5472b; --c-research:#7a5fb8;
+    --c-wait:#c27ba0; --c-tool:#9a9284; --c-error:#c0392b; --c-model:#8a8a8a;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  html,body{margin:0;background:var(--paper);color:var(--ink);
+    font-family:Georgia,"Songti SC","STSong","Times New Roman",serif;
+    font-size:17px;line-height:1.85}
+  main{max-width:720px;margin:0 auto;padding:64px 20px 96px}
+  h1{font-size:38px;line-height:1.25;margin:0 0 10px;letter-spacing:.2px}
+  h2{font-size:24px;margin:64px 0 16px;padding-top:24px;border-top:1px solid var(--line)}
+  h2 small{display:block;color:var(--muted);font-size:13px;font-weight:normal;
+    letter-spacing:2px;margin-bottom:6px;font-family:ui-monospace,Menlo,monospace;text-transform:uppercase}
+  h3{font-size:18px;margin:32px 0 8px}
+  p{margin:0 0 18px}
+  .byline{font-size:14px;color:var(--muted);margin:0 0 8px}
+  .byline a{margin-right:14px;text-decoration:none}
+  a{color:var(--sea)}
+  .thesis{border-left:3px solid var(--accent);padding:6px 18px;margin:28px 0;
+    font-size:18px;background:#fff}
+  blockquote{margin:22px 0;padding:14px 20px;background:#fff;border:1px solid var(--line);
+    border-radius:6px;font-size:16px}
+  blockquote cite{display:block;color:var(--muted);font-style:normal;font-size:13px;
+    margin-top:8px;font-family:ui-monospace,Menlo,monospace}
+  .facts{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:24px 0}
+  .fact{background:#fff;border:1px solid var(--line);border-radius:6px;padding:12px 10px;text-align:center}
+  .fact b{display:block;font-size:26px;color:var(--sea);line-height:1.1}
+  .fact span{font-size:12.5px;color:var(--muted)}
+  table{width:100%;border-collapse:collapse;font-size:15px;margin:18px 0 26px;background:#fff}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+  th{background:#f3f1ec;font-weight:600}
+  .mono,code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.92em}
+  code{padding:.1em .3em;border-radius:4px;background:#f3f1ec;color:#4a4438}
+  .small{color:var(--muted);font-size:13.5px}
+  .end{color:var(--muted);font-size:14px;margin-top:56px;padding-top:20px;border-top:1px solid var(--line)}
+
+  /* ---- trajectory viewer (wider than the text column) ---- */
+  .wide{max-width:980px;margin:40px calc(50% - 490px + 0px) 0}
+  @media (max-width:1020px){ .wide{margin-left:0;margin-right:0} }
+  .viz-shell{margin-top:22px;padding:18px;border:1px solid var(--line);border-radius:8px;background:#fff}
+  .viz-toolbar{display:grid;grid-template-columns:170px 170px minmax(180px,1fr) auto;gap:10px;align-items:center;margin-bottom:14px}
+  select,input{width:100%;min-height:38px;border:1px solid var(--line);border-radius:6px;
+    padding:7px 10px;color:var(--ink);background:var(--paper);font:inherit;font-size:14px}
+  button{border:1px solid var(--line);border-radius:6px;padding:8px 12px;color:var(--ink);
+    background:#f3f1ec;cursor:pointer;font:inherit;font-size:14px}
+  button:hover,button:focus-visible{border-color:var(--sea);outline:none}
+  .viz-count{color:var(--muted);font-size:12px;text-align:right;white-space:nowrap}
+  .legend{display:flex;flex-wrap:wrap;gap:8px 16px;margin:12px 0 4px;color:var(--muted);font-size:12px}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .dot{display:inline-block;width:9px;height:9px;border-radius:50%}
+  .timeline-wrap{position:relative;overflow:hidden;border:1px solid var(--line);border-radius:6px;background:#f7f5f0}
+  #timeline{display:block;width:100%;height:260px;cursor:crosshair}
+  .timeline-label{position:absolute;left:12px;z-index:2;font:700 11px ui-monospace,Menlo,monospace;pointer-events:none}
+  .timeline-label.a{top:58px;color:var(--c-compute)}
+  .timeline-label.b{top:174px;color:var(--c-code)}
+  .tooltip{position:fixed;z-index:20;display:none;max-width:380px;padding:10px 12px;
+    border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink);
+    box-shadow:0 8px 30px rgba(0,0,0,.14);pointer-events:none;font-size:12px}
+  .detail{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+  .detail-box{min-width:0;padding:14px;border:1px solid var(--line);border-radius:6px;background:var(--paper)}
+  .detail-box h4{margin:0 0 8px;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.09em}
+  .detail-box pre{max-height:260px;margin:0;white-space:pre-wrap;word-break:break-word;
+    font:12.5px/1.6 ui-monospace,Menlo,monospace;overflow:auto}
+  .action-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+  .badge{display:inline-block;padding:3px 7px;border-radius:999px;color:#fff;
+    font:700 11px ui-monospace,Menlo,monospace}
+  .badge.compute{background:var(--c-compute)} .badge.code{background:var(--c-code)}
+  .badge.research{background:var(--c-research)} .badge.wait{background:var(--c-wait)}
+  .badge.tool{background:var(--c-tool)} .badge.error{background:var(--c-error)}
+  .histogram{display:grid;gap:10px;margin-top:14px}
+  .bar-row{display:grid;grid-template-columns:108px 1fr 64px;gap:9px;align-items:center;font-size:12px}
+  .bar-label{overflow:hidden;color:var(--muted);text-overflow:ellipsis;white-space:nowrap}
+  .bar-track{height:11px;overflow:hidden;border-radius:999px;background:#ece7dd}
+  .bar-fill{height:100%;border-radius:inherit}
+  .bar-value{color:var(--ink);text-align:right;font-family:ui-monospace,Menlo,monospace}
+  .step-list{display:grid;gap:8px;margin-top:18px}
+  .step-card{padding:13px 15px;border:1px solid var(--line);border-radius:6px;background:var(--paper)}
+  .step-card.selected{border-color:var(--sea);box-shadow:0 0 0 1px var(--sea)}
+  .step-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;cursor:pointer}
+  .step-head strong{color:var(--ink);font-size:13px}
+  .step-head .spacer{flex:1}
+  .step-head time,.seq{color:var(--muted);font:11px ui-monospace,Menlo,monospace}
+  .step-preview{margin-top:7px;color:var(--muted);font-size:13px;white-space:pre-wrap;overflow-wrap:anywhere}
+  .step-body{display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+  .step-card.open .step-body{display:block}
+  .step-body pre{margin:8px 0 0;max-height:230px;white-space:pre-wrap;word-break:break-word;
+    font:12.5px/1.6 ui-monospace,Menlo,monospace;overflow:auto}
+  .list-footer{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-top:12px;color:var(--muted);font-size:12px}
+  .pill-row{display:flex;flex-wrap:wrap;gap:8px}
+  .pill{padding:6px 10px;border:1px solid var(--line);border-radius:999px;color:var(--muted);background:#fff;font-size:12px}
+  .pill strong{color:var(--ink)}
+  @media (max-width:640px){
+    h1{font-size:28px} .facts{grid-template-columns:repeat(2,1fr)}
+    .detail{grid-template-columns:1fr} .viz-toolbar{grid-template-columns:1fr}
+    .bar-row{grid-template-columns:88px 1fr 56px} th,td{padding:6px 6px;font-size:12.5px}
+  }
+
+
+  /* Poincare formalization article */
+  .dag-embed{width:100%;height:980px;border:1px solid var(--line);border-radius:6px;background:#fff}
+  .callout{border-left:3px solid var(--accent);padding:6px 18px;margin:28px 0;background:#fff}
+  .wide-code{max-width:980px;margin:30px calc(50% - 490px);overflow:auto}
+  @media(max-width:1020px){.wide-code{margin-left:0;margin-right:0}}
+
 </head>
 <body>
-<header id="title-block-header">
-<h1 class="title">Agent Swarm and Perelman Formalization</h1>
-</header>
+
 <h1
-id="把-lean-证明做成一座可恢复的工厂perelman-形式化与-agent-swarm">把
-Lean 证明做成一座可恢复的工厂：Perelman 形式化与 Agent Swarm</h1>
+id="实现-agent-swarm-的人月神话一周内形式化本来需要几年的-perelman-证明">实现
+agent swarm 的“人月神话”——一周内形式化本来需要几年的 Perelman 证明</h1>
 <blockquote>
 <p>这篇文章记录的是一个正在运行的工程系统，而不是一篇宣布数学结论已经完成的论文。仓库当前包含已编译的
 Lean
@@ -322,6 +266,12 @@ producer。</p>
 blocked、paused 或 needs-review 的结果。后续真正需要补上的，是让 leader
 自动把这种前瞻计划写成正式的子 DAG，并由全局状态生成器统一显示。</p>
 <h2 id="5-每个节点必须显示什么">5. 每个节点必须显示什么</h2>
+<p>当前工程进度和分组 DAG 可以在下面的交互页面中查看。点击 L1–L5
+可以展开组内任务，进度条显示当前快照，任务表可以按状态筛选。</p>
+<iframe src="lean-formalization-agent-swarm-dag.html" title="Poincare formalization swarm DAG" style="width:100%;height:980px;border:1px solid #e6e2da;border-radius:6px;background:#fbfaf7"></iframe>
+
+<p><a href="lean-formalization-agent-swarm-dag.html">在新页面打开当前进度 DAG →</a></p>
+
 <p>这类项目只画节点和箭头是不够的。一个节点至少应当显示四种信息：</p>
 <pre class="text"><code>节点标题
 状态：verified / running / queued / blocked
