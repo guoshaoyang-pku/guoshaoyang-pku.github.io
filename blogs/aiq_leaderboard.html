@@ -27,7 +27,7 @@ td.status, td.note, td.tok { font-size:12.5px; color:var(--dim) }
   padding:1px 8px; font-size:12px; margin-left:8px }
 </style></head><body>
 <h1>ArchitectureIQ v1.5 模型榜单<span class="badge">持续更新</span></h1>
-<div class="sub">数据生成时间:2026-09-09 13:58 UTC · 题目集:v1.5 三选一(修正版 prompt) · GT=10 seeds 全胜显著性 · 推理模型统一最高推理档 · <a href="https://guoshaoyang-pku.github.io/blogs/aiq-quiz/">在线做题(v1.5 五百题+11 模型完整解答)</a></div>
+<div class="sub">数据生成时间:2026-09-09 13:58 UTC · Jev 数据:2026-09-20 UTC · 题目集:v1.5 三选一(修正版 prompt) · GT=10 seeds 全胜显著性 · 推理模型统一最高推理档 · <a href="https://guoshaoyang-pku.github.io/blogs/aiq-quiz/">在线做题(v1.5 五百题+11 模型完整解答)</a></div>
 
 <h2>主榜 · 500 题</h2>
 <p class="desc">每题三个候选配置,选出测试集表现最佳者。acc 为正确率(%),括号为 Wilson 95% CI。
@@ -46,9 +46,16 @@ tok/题 = 平均输出 tokens(含思维链,按平台口径)。主榜口径:<b>�
 <tr><td>8</td><td class='model'>Claude Sonnet 5</td><td class='acc'>65.4</td><td class='ci'>[61.1, 69.4]</td><td>38</td><td>83</td><td>75</td><td class='tok'>9,115</td><td class='status'>✅ 500/500</td></tr>
 <tr><td>9</td><td class='model'>GPT-4o (2024-11-20)</td><td class='acc'>60.2</td><td class='ci'>[55.8, 64.4]</td><td>52</td><td>70</td><td>58</td><td class='tok'>352</td><td class='status'>✅ 500/500</td></tr>
 <tr><td>10</td><td class='model'>DeepSeek R1 (2025-01)</td><td class='acc'>59.0</td><td class='ci'>[54.6, 63.2]</td><td>41</td><td>71</td><td>65</td><td class='tok'>2,677</td><td class='status'>✅ 500/500</td></tr>
-<tr><td>11</td><td class='model'>Gemini 2.5 Pro</td><td class='acc'>55.8</td><td class='ci'>[51.4, 60.1]</td><td>37</td><td>70</td><td>61</td><td class='tok'>3,567</td><td class='status'>✅ 500/500</td></tr>
-<tr><td>12</td><td class='model'>MiniCPM5 1B</td><td class='acc'>39.0</td><td class='ci'>[34.8, 43.3]</td><td>41</td><td>46</td><td>30</td><td class='tok'>4,942</td><td class='status'>✅ 500/500</td></tr>
-<tr><td>13</td><td class='model'>qwen3.5-0.8b</td><td class='acc'>36.4</td><td class='ci'>[32.3, 40.7]</td><td>37</td><td>32</td><td>40</td><td class='tok'>742</td><td class='status'>✅ 500/500</td></tr></tbody></table>
+<tr><td>11</td><td class='model'>Jev 1.13.0 (System One)†</td><td class='acc'>56.8</td><td class='ci'>[52.4, 61.1]</td><td>44</td><td>69</td><td>58</td><td class='tok'>39</td><td class='status'>✅ 500/500</td></tr>
+<tr><td>12</td><td class='model'>Gemini 2.5 Pro</td><td class='acc'>55.8</td><td class='ci'>[51.4, 60.1]</td><td>37</td><td>70</td><td>61</td><td class='tok'>3,567</td><td class='status'>✅ 500/500</td></tr>
+<tr><td>13</td><td class='model'>MiniCPM5 1B</td><td class='acc'>39.0</td><td class='ci'>[34.8, 43.3]</td><td>41</td><td>46</td><td>30</td><td class='tok'>4,942</td><td class='status'>✅ 500/500</td></tr>
+<tr><td>14</td><td class='model'>qwen3.5-0.8b</td><td class='acc'>36.4</td><td class='ci'>[32.3, 40.7]</td><td>37</td><td>32</td><td>40</td><td class='tok'>742</td><td class='status'>✅ 500/500</td></tr></tbody></table>
+
+<p class="desc">† <b>Jev(TypeSafe System One)不是文本生成模型</b>:输入 <code>state</code> + 类型化问题,直接返回结构化选择、概率分布与置信度,不产生思维链。
+因此 tok/题(39)与其他模型不可比(其余模型的 tok 含思维链);每题作答约 1.1s、输入约 3.3k tokens。
+评测口径:题面完整保留(含候选代码),决策以 Choice 形式给出,各选项判据为其自然语言描述;推理档位设置对其不适用。
+主榜 500 题为单次全量;insight 50 题 4 次重复为 48/48/48/50%(均值 48.5),分题型单次波动 ±7pt 内。
+其 56.8% 中有约 2pt 来自"总选 A"(选 A 率 42%,而正确答案 A 占 32%),平衡准确率 57.4%,与原始值基本一致。</p>
 
 <h2>Insight 榜 · 50 题(同分布子集)</h2>
 <p class="desc">统一使用新 prompt(去除字面 <code>&lt;answer&gt;A&lt;/answer&gt;</code> 示例的修正版)。
@@ -82,11 +89,12 @@ arch / opt / mixed 为分题型正确率(%); tok/题 = 平均输出 tokens(含�
 <tr><td>24</td><td class='model'>R1-Distill 7B</td><td class='acc'>50.0</td><td>57</td><td>47</td><td>47</td><td class='tok'>1,092</td><td class='note'>50/50</td></tr>
 <tr><td>25</td><td class='model'>DeepSeek V3-0324</td><td class='acc'>50.0</td><td>42</td><td>68</td><td>52</td><td class='tok'>307</td><td class='note'>50/50</td></tr>
 <tr><td>26</td><td class='model'>GPT-4o (2024-11-20)</td><td class='acc'>48.0</td><td>35</td><td>63</td><td>41</td><td class='tok'>336</td><td class='note'>50/50</td></tr>
-<tr><td>27</td><td class='model'>MiniCPM5 1B</td><td class='acc'>46.0</td><td>50</td><td>63</td><td>23</td><td class='tok'>4,695</td><td class='note'>50/50</td></tr>
-<tr><td>28</td><td class='model'>R1-Distill 32B</td><td class='acc'>46.0</td><td>21</td><td>68</td><td>41</td><td class='tok'>1,397</td><td class='note'>50/50</td></tr>
-<tr><td>29</td><td class='model'>Qwen3.5 27B</td><td class='acc'>46.0</td><td>21</td><td>63</td><td>58</td><td class='tok'>4,832</td><td class='note'>50/50</td></tr>
-<tr><td>30</td><td class='model'>Llama 3.1 70B</td><td class='acc'>42.0</td><td>42</td><td>36</td><td>47</td><td class='tok'>152</td><td class='note'>50/50</td></tr>
-<tr><td>31</td><td class='model'>Llama 3.1 8B</td><td class='acc'>42.0</td><td>35</td><td>31</td><td>58</td><td class='tok'>176</td><td class='note'>50/50</td></tr></tbody></table>
+<tr><td>27</td><td class='model'>Jev 1.13.0 (System One)†</td><td class='acc'>48.0</td><td>14</td><td>58</td><td>65</td><td class='tok'>39</td><td class='note'>50/50</td></tr>
+<tr><td>28</td><td class='model'>MiniCPM5 1B</td><td class='acc'>46.0</td><td>50</td><td>63</td><td>23</td><td class='tok'>4,695</td><td class='note'>50/50</td></tr>
+<tr><td>29</td><td class='model'>R1-Distill 32B</td><td class='acc'>46.0</td><td>21</td><td>68</td><td>41</td><td class='tok'>1,397</td><td class='note'>50/50</td></tr>
+<tr><td>30</td><td class='model'>Qwen3.5 27B</td><td class='acc'>46.0</td><td>21</td><td>63</td><td>58</td><td class='tok'>4,832</td><td class='note'>50/50</td></tr>
+<tr><td>31</td><td class='model'>Llama 3.1 70B</td><td class='acc'>42.0</td><td>42</td><td>36</td><td>47</td><td class='tok'>152</td><td class='note'>50/50</td></tr>
+<tr><td>32</td><td class='model'>Llama 3.1 8B</td><td class='acc'>42.0</td><td>35</td><td>31</td><td>58</td><td class='tok'>176</td><td class='note'>50/50</td></tr></tbody></table>
 
 <!-- HAND-MAINTAINED SECTIONS (other agent, commit d4fe76f): do not remove on regeneration -->
 <h2>消融 ① · 思维链剂量(TTS) · 50 题</h2>
@@ -131,6 +139,7 @@ arch / opt / mixed 为分题型正确率(%); tok/题 = 平均输出 tokens(含�
 · 每题 3 个选项,GT 由 10 个 seed 实测训练得出(10 全胜显著性闸门);预算/批次在题面明示。<br>
 · 推理模型均开启各平台最高推理档(max/xhigh/high,经 reasoning token 计数实证);GPT-4o(gpt-4o-2024-11-20)等非推理模型直发。<br>
 · GLM-5.2:统一 low 档(max 档 64k 截断无法评测)。<br>
+· Jev(TypeSafe System One)为非文本生成的决策模型(结构化 Choice 输出,无思维链),tok/题 不可与其他模型横向比较;详见主榜下方 † 注。<br>
 · 本页由评测结果自动生成并持续更新;题目与 11 个模型的完整解答(含思维链摘要与对错)见 <a href="https://guoshaoyang-pku.github.io/blogs/aiq-quiz/">在线 quiz</a>(每题下方选模型对照,或隐藏答案自测)。
 </div>
 </body></html>
