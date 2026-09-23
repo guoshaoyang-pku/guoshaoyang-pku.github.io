@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>从 Test-Time Scaling 到自动科研 · 雄安深度学习课程第六讲讲义</title>
+<meta name="description" content="雄安·深度学习课程·第六讲讲义（助教：郭绍阳）。3 学时、81 页，围绕 Reasoning、Agent、Multi-Agent 与 AutoResearch，从 test-time scaling 一路讲到 OpenAI 用万级 agent 蜂群攻克 Navier–Stokes 千禧年问题。">
+<link rel="canonical" href="https://guoshaoyang-pku.github.io/blogs/xiongan-agent-course/">
+<style>
+:root{
+  --ink:#141c22; --muted:#5f6f77; --paper:#fffdf8;
+  --teal:#19715e; --blue:#2b5f78; --amber:#b5762a; --violet:#6a4f9c;
+  --line:#dfe5df;
+}
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(150deg,#e9f2ee,#f7f4ec 52%,#eef1f6);color:var(--ink);
+  font:17px/1.7 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",Georgia,serif}
+main{max-width:1120px;margin:auto;padding:44px 22px 84px}
+a{color:var(--blue)}
+.hero{background:radial-gradient(120% 140% at 12% 0%,#20343c 0%,#131f26 55%,#0d171c 100%);
+  color:#fff;padding:46px 44px;border-radius:26px;position:relative;overflow:hidden}
+.hero:after{content:"";position:absolute;right:-70px;top:-70px;width:280px;height:280px;
+  background:radial-gradient(circle,#2fbfa4 0%,transparent 68%);opacity:.32}
+.kicker{color:#9fe6d2;text-transform:uppercase;letter-spacing:.18em;font:700 12px system-ui}
+.hero h1{font:800 clamp(30px,5.4vw,58px)/1.08 system-ui;margin:14px 0 10px;position:relative;z-index:1}
+.hero .sub{font:600 clamp(16px,2.4vw,23px)/1.4 system-ui;color:#cfe6df;margin:0 0 20px;position:relative;z-index:1}
+.meta{display:flex;flex-wrap:wrap;gap:10px;position:relative;z-index:1}
+.pill{display:inline-block;background:#e4ad5c;color:#2d2417;border-radius:999px;padding:6px 15px;font:700 13.5px system-ui}
+.pill.alt{background:#2fbfa4;color:#0c2620}
+.pill.ghost{background:rgba(255,255,255,.12);color:#e6f2ee;border:1px solid rgba(255,255,255,.22)}
+section{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:26px 28px;margin-top:26px}
+h2{font:800 26px/1.2 system-ui;margin:0 0 6px}
+h2 .en{display:block;font:600 13px system-ui;color:var(--muted);letter-spacing:.06em;margin-top:6px;text-transform:uppercase}
+.lede{color:#2c3a41;font-size:18px}
+.backbone{border-left:6px solid var(--amber);background:#fff6e6;padding:20px 24px;border-radius:0 14px 14px 0;margin:8px 0 0;
+  font:600 19px/1.6 Georgia,"Songti SC",serif;color:#3a2f1c}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:22px}
+.stat{background:#f2f6f3;border:1px solid var(--line);border-radius:14px;padding:16px 14px;text-align:center}
+.stat b{display:block;font:800 30px system-ui;color:var(--teal)}
+.stat span{font:600 13px system-ui;color:var(--muted)}
+.viewer{margin-top:14px;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#2a3238}
+.viewer iframe{display:block;width:100%;height:820px;border:0}
+.dlrow{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:16px}
+.btn{display:inline-flex;align-items:center;gap:8px;background:var(--teal);color:#fff;text-decoration:none;
+  padding:12px 22px;border-radius:12px;font:700 15px system-ui;transition:.15s}
+.btn:hover{background:#14584a}
+.btn.ghost{background:#fff;color:var(--teal);border:2px solid var(--teal)}
+.btn.ghost:hover{background:#eef6f3}
+.note{color:var(--muted);font-size:14px}
+ol.parts{list-style:none;counter-reset:p;padding:0;margin:14px 0 0}
+ol.parts li{counter-increment:p;position:relative;padding:16px 16px 16px 62px;border:1px solid var(--line);
+  border-radius:14px;margin-bottom:12px;background:#fbfdfb}
+ol.parts li:before{content:counter(p);position:absolute;left:16px;top:16px;width:32px;height:32px;border-radius:9px;
+  background:var(--blue);color:#fff;font:800 16px system-ui;display:flex;align-items:center;justify-content:center}
+ol.parts li:nth-child(1):before{background:var(--teal)}
+ol.parts li:nth-child(3):before{background:var(--violet)}
+ol.parts li:nth-child(4):before{background:#a3552f}
+ol.parts li:nth-child(5):before{background:#2f6da3}
+ol.parts li:nth-child(6):before{background:#b5762a}
+ol.parts h3{margin:0 0 4px;font:700 18.5px system-ui}
+ol.parts p{margin:0;color:#3d4b52;font-size:15.5px}
+.pg{float:right;font:700 12.5px system-ui;color:#fff;background:#93a29b;border-radius:999px;padding:3px 11px}
+.refs{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:14px}
+.ref{border:1px solid var(--line);border-radius:12px;padding:14px 16px;background:#fbfdfb}
+.ref b{display:block;font:700 15.5px system-ui;margin-bottom:3px}
+.ref span{color:var(--muted);font-size:13.5px}
+.ref a{font:600 13px system-ui}
+footer{margin-top:34px;color:var(--muted);font:14px system-ui;text-align:center;line-height:1.9}
+@media(max-width:820px){
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .refs{grid-template-columns:1fr}
+  .viewer iframe{height:640px}
+  .hero{padding:34px 24px}
+  section{padding:22px 18px}
+}
+</style>
+</head>
+<body>
+<main>
+  <header class="hero">
+    <div class="kicker">雄安 · 深度学习课程 · 第六讲 · 课程讲义</div>
+    <h1>从 Test-Time Scaling 到自动科研</h1>
+    <p class="sub">Reasoning、Agent、Multi-Agent 与 AutoResearch</p>
+    <div class="meta">
+      <span class="pill">助教讲义 · 郭绍阳</span>
+      <span class="pill alt">3 学时 · 81 页</span>
+      <span class="pill ghost">2026-09-24</span>
+    </div>
+  </header>
+
+  <section>
+    <h2>这份讲义是什么<span class="en">About this handout</span></h2>
+    <p class="lede">这是我在<strong>雄安·深度学习课程</strong>担任<strong>助教</strong>时，为第六讲（收官讲）准备的课程讲义。听众以在读博士为主，一场 3 学时、共 81 页，围绕一条主线把 2025–2026 年 reasoning 与 agent 的进展讲透：从 test-time scaling 的规律，到 agent 的组成与 harness 自改进，再到 multi-agent 的取舍，最后落在 OpenAI 用万级 agent 蜂群攻克 Navier–Stokes 千禧年问题的极端并行形态。每一处引用都直接放进原文与原文配图，对着讲义即可把内容讲清楚。</p>
+    <div class="backbone">Reasoning 是在时间维上扩展一个模型，multi-agent 是在并行维上扩展一个模型，而 context engineering 决定这些额外计算究竟是在协作，还是只是在互相制造噪声。</div>
+    <div class="stats">
+      <div class="stat"><b>81</b><span>页 slides</span></div>
+      <div class="stat"><b>6</b><span>个 Part</span></div>
+      <div class="stat"><b>3</b><span>学时</span></div>
+      <div class="stat"><b>7</b><span>篇主线材料</span></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>在线阅读<span class="en">Read the slides</span></h2>
+    <div class="viewer">
+      <iframe src="lecture.pdf#view=FitH" title="从 Test-Time Scaling 到自动科研 · 讲义 PDF"></iframe>
+    </div>
+    <div class="dlrow">
+      <a class="btn" href="lecture.pdf" download>下载讲义 PDF</a>
+      <a class="btn ghost" href="lecture.pdf" target="_blank" rel="noreferrer">在新标签页打开</a>
+      <span class="note">若上方内嵌阅读器为空，请用「在新标签页打开」。</span>
+    </div>
+  </section>
+
+  <section>
+    <h2>六个 Part · 内容索引<span class="en">Outline</span></h2>
+    <ol class="parts">
+      <li>
+        <span class="pg">p.3</span>
+        <h3>Part 1 · Reasoning 范式下，如何让大模型拥有一个能力</h3>
+        <p>为什么 reasoning 与 agent 突然重要。姚顺雨《The Second Half》：科研游戏规则从 optimization 转向 evaluation；recipe = 强 prior + reasoning + RL，而思考本身是一种 action。</p>
+      </li>
+      <li>
+        <span class="pg">p.7</span>
+        <h3>Part 2 · LLM Reasoning 的规律</h3>
+        <p>test-time computation 作为新的 scaling 维度。Lilian Weng《Why We Think》：横向 branching vs 纵向 revision、reasoning RL 与 R1、CoT faithfulness 与 obfuscated reward hacking、Snell 的 compute-optimal 与 s1 budget forcing。</p>
+      </li>
+      <li>
+        <span class="pg">p.25</span>
+        <h3>Part 3 · Agent 的定义和实现</h3>
+        <p>Agent = Brain + Planning + Memory + Tools（2023 经典框架）。ReAct 只是一种 protocol；从单次 reasoning 到持续 interaction 的桥，以及为什么不建议再读 24 年及以前的 agent 文章。</p>
+      </li>
+      <li>
+        <span class="pg">p.31</span>
+        <h3>Part 4 · Agent Harness 和自我迭代</h3>
+        <p>Lilian Weng《Harness Engineering》：优化对象沿 prompts → context → workflow → harness code → optimizer code 上移。Anthropic《Automated Weak-to-Strong Researcher》案例：9 个 agent、PGR 0.97，与四类未预见的 reward hacking。</p>
+      </li>
+      <li>
+        <span class="pg">p.53</span>
+        <h3>Part 5 · Multi-agent：能不能堆很多 agent？</h3>
+        <p>Cognition 2025《Don't Build Multi-Agents》与 2026《What's Actually Working》的观点演化：context engineering、independent intelligence + centralized action、map-reduce-and-manage，核心问题是 communication。</p>
+      </li>
+      <li>
+        <span class="pg">p.60</span>
+        <h3>Part 6 · 并行的极端形态：OpenAI 解决千禧年问题</h3>
+        <p>OpenAI《On the Navier–Stokes Millennium Prize Problem》：约 1 万并发 agent、88 小时出解、先解代理问题 Euler 再放大、分组证明/证伪 + cross-pollination。以及我的逆向工程 prototype 与两个实例。</p>
+      </li>
+    </ol>
+    <p class="note" style="margin-top:14px">正文之后附参考文献（p.71）、Q&amp;A（p.74），以及附录储备主题（p.75–81）：math→code→agent 三级阶梯、「AI 的下半场」如何给模型一个能力、为何先搭 benchmark、产品级 VLM / Seedream / 化学题训练。</p>
+  </section>
+
+  <section>
+    <h2>主线材料<span class="en">Source materials</span></h2>
+    <div class="refs">
+      <div class="ref"><b>The Second Half</b><span>姚顺雨 · 2025-04</span><br><a href="https://ysymyth.github.io/The-Second-Half" target="_blank" rel="noreferrer">ysymyth.github.io</a></div>
+      <div class="ref"><b>Why We Think</b><span>Lilian Weng · 2025-05</span><br><a href="https://lilianweng.github.io/posts/2025-05-01-thinking/" target="_blank" rel="noreferrer">lilianweng.github.io</a></div>
+      <div class="ref"><b>LLM Powered Autonomous Agents</b><span>Lilian Weng · 2023-06</span><br><a href="https://lilianweng.github.io/posts/2023-06-23-agent/" target="_blank" rel="noreferrer">lilianweng.github.io</a></div>
+      <div class="ref"><b>Harness Engineering for Self-Improvement</b><span>Lilian Weng · 2026-07</span><br><a href="https://lilianweng.github.io/posts/2026-07-04-harness/" target="_blank" rel="noreferrer">lilianweng.github.io</a></div>
+      <div class="ref"><b>Don't Build Multi-Agents / What's Actually Working</b><span>Cognition · 2025 &amp; 2026</span><br><a href="https://cognition.com/blog/dont-build-multi-agents" target="_blank" rel="noreferrer">Don't Build</a> · <a href="https://cognition.com/blog/multi-agents-working" target="_blank" rel="noreferrer">What's Working</a></div>
+      <div class="ref"><b>Automated Weak-to-Strong Researcher</b><span>Anthropic Alignment · 2026-04</span><br><a href="https://alignment.anthropic.com/2026/automated-w2s-researcher/" target="_blank" rel="noreferrer">alignment.anthropic.com</a></div>
+      <div class="ref" style="grid-column:1/-1"><b>On the Navier–Stokes Millennium Prize Problem</b><span>OpenAI · 2026-09</span><br><a href="https://openai.com/index/navier-stokes-solution" target="_blank" rel="noreferrer">openai.com</a></div>
+    </div>
+  </section>
+
+  <footer>
+    雄安 · 深度学习课程 · 第六讲课程讲义 · 助教：郭绍阳<br>
+    <a href="/">← 返回主页</a>
+  </footer>
+</main>
+</body>
+</html>
