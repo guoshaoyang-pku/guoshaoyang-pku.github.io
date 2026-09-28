@@ -7,50 +7,54 @@
 <meta name="description" content="我在雄安·深度学习课程担任助教时为第六讲（收官讲）准备的课程讲义，听众是交叉学科的工作者和研究者（医学、数学、金融、其他工程从业者）。">
 <link rel="canonical" href="https://guoshaoyang-pku.github.io/blogs/xiongan-agent-course/">
 <style>
-:root{--ink:#141c22;--muted:#5f6f77;--paper:#fffdf8;--teal:#19715e;--blue:#2b5f78;--violet:#6a4f9c;--amber:#b5762a;--line:#dfe5df}
+:root{
+  --bg:#f0f0ea;          /* anthropic cream */
+  --paper:#faf9f5;       /* card surface */
+  --ink:#141413;         /* near-black */
+  --muted:#6e6a61;       /* warm gray */
+  --accent:#cc785c;      /* book cloth terracotta */
+  --accent-dark:#a65a41;
+  --accent-soft:#ead9d0;
+  --line:#e0ded4;
+  --serif:Georgia,"Times New Roman","Songti SC","STSong",serif;
+  --sans:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+}
 *{box-sizing:border-box}
-body{margin:0;background:linear-gradient(150deg,#e9f2ee,#f7f4ec 52%,#eef1f6);color:var(--ink);
-  font:17px/1.75 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",Georgia,serif}
-main{max-width:900px;margin:auto;padding:48px 22px 80px}
-a{color:var(--blue)}
-.title-block{border-bottom:2px solid var(--line);padding-bottom:20px}
-.kicker{color:var(--teal);text-transform:uppercase;letter-spacing:.14em;font:700 12px system-ui}
-h1{font:800 clamp(27px,5vw,42px)/1.22 system-ui;margin:12px 0 10px}
-.meta{color:var(--muted);font:600 14px system-ui;margin:0}
-.lede{font-size:18px;color:#2c3a41;margin:24px 0 6px}
-section{margin-top:32px}
-h2{font:800 22px/1.2 system-ui;margin:0 0 16px;padding-left:12px;border-left:5px solid var(--teal)}
-.viewer{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#2a3238}
+::selection{background:var(--accent);color:#fff}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.75 var(--sans)}
+main{max-width:900px;margin:auto;padding:56px 22px 80px}
+a{color:var(--accent-dark)}
+.title-block{border-bottom:1px solid var(--line);padding-bottom:24px}
+h1{font:700 clamp(28px,5vw,44px)/1.25 var(--serif);margin:0 0 14px;letter-spacing:.01em}
+.meta{color:var(--muted);font:500 14.5px var(--sans);margin:0;letter-spacing:.02em}
+.lede{font-size:18px;color:var(--ink);margin:26px 0 6px;max-width:46em}
+section{margin-top:36px}
+h2{font:700 23px/1.3 var(--serif);margin:0 0 16px;padding-left:13px;border-left:3px solid var(--accent)}
+.viewer{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--ink)}
 .viewer iframe{display:block;width:100%;height:840px;border:0}
 .note{color:var(--muted);font-size:14px;margin-top:14px}
 ol.parts{list-style:none;counter-reset:p;padding:0;margin:0}
-ol.parts li{counter-increment:p;position:relative;padding:16px 16px 16px 62px;border:1px solid var(--line);
-  border-radius:14px;margin-bottom:12px;background:var(--paper)}
-ol.parts li:before{content:counter(p);position:absolute;left:16px;top:16px;width:32px;height:32px;border-radius:9px;
-  background:var(--blue);color:#fff;font:800 16px system-ui;display:flex;align-items:center;justify-content:center}
-ol.parts li:nth-child(1):before{background:var(--teal)}
-ol.parts li:nth-child(3):before{background:var(--violet)}
-ol.parts li:nth-child(4):before{background:#a3552f}
-ol.parts li:nth-child(5):before{background:#2f6da3}
-ol.parts li:nth-child(6):before{background:var(--amber)}
-ol.parts h3{margin:0 0 4px;font:700 18px system-ui}
-ol.parts p{margin:0;color:#3d4b52;font-size:15.5px}
-.pg{float:right;font:700 12.5px system-ui;color:#fff;background:#93a29b;border-radius:999px;padding:3px 11px}
+ol.parts li{counter-increment:p;position:relative;padding:16px 18px 16px 64px;border:1px solid var(--line);
+  border-radius:10px;margin-bottom:12px;background:var(--paper)}
+ol.parts li:before{content:counter(p);position:absolute;left:18px;top:17px;width:31px;height:31px;border-radius:8px;
+  background:var(--accent);color:#fff;font:700 15px var(--sans);display:flex;align-items:center;justify-content:center}
+ol.parts h3{margin:0 0 4px;font:700 18px var(--serif)}
+ol.parts p{margin:0;color:var(--muted);font-size:15.5px}
+.pg{float:right;font:600 12.5px var(--sans);color:var(--accent-dark);background:var(--accent-soft);border-radius:999px;padding:3px 11px}
 .refs{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
-.ref{border:1px solid var(--line);border-radius:12px;padding:14px 16px;background:var(--paper)}
-.ref b{display:block;font:700 15.5px system-ui;margin-bottom:3px}
+.ref{border:1px solid var(--line);border-radius:10px;padding:14px 16px;background:var(--paper)}
+.ref b{display:block;font:700 15.5px var(--serif);margin-bottom:3px}
 .ref span{color:var(--muted);font-size:13.5px}
-.ref a{font:600 13px system-ui}
-footer{margin-top:38px;text-align:center;font:14px system-ui}
-@media(max-width:820px){.refs{grid-template-columns:1fr}.viewer iframe{height:660px}main{padding:32px 16px 60px}}
+.ref a{font:600 13px var(--sans)}
+footer{margin-top:42px;text-align:center;font:14px var(--sans)}
+@media(max-width:820px){.refs{grid-template-columns:1fr}.viewer iframe{height:660px}main{padding:36px 16px 60px}}
 </style>
 </head>
 <body>
 <main>
   <header class="title-block">
-    <div class="kicker">雄安 · 深度学习课程 · 第六讲（收官讲）· 课程讲义</div>
     <h1>从reasoning到autoresearch——agent的历史</h1>
-    <p class="meta">助教：郭绍阳 · 2026-09-24</p>
+    <p class="meta">雄安深度学习课程 · 第六讲（收官讲）· 课程讲义 · 2026-09-24</p>
   </header>
 
   <p class="lede">这是我在雄安·深度学习课程担任助教时，为第六讲（收官讲）准备的课程讲义，听众是交叉学科的工作者和研究者（比如说医学，数学，金融，其他工程从业者）。</p>
