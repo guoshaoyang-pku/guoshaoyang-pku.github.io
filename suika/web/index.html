@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>合成大西瓜 · 引擎与 AI 运作可视化</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<header id="topbar">
+  <div class="brand">
+    <span class="logo">🍉</span>
+    <div class="brandtext">
+      <h1>合成大西瓜 · 引擎与 AI 运作可视化</h1>
+      <p class="sub">Suika Engine &amp; AI Observatory — 还原物理引擎，透视启发式前瞻与 AlphaZero MCTS 的思考过程</p>
+    </div>
+  </div>
+  <div class="topctrl">
+    <label>对局
+      <select id="gameSelect"></select>
+    </label>
+    <span id="engineBadge" class="badge">引擎: —</span>
+    <span id="ruleBadge" class="badge">规则: loop</span>
+    <button id="infoBtn" class="ghost">说明 ⓘ</button>
+  </div>
+</header>
+
+<main id="layout">
+  <!-- LEFT: engine canvas + playback + curve -->
+  <section id="leftCol">
+    <div id="hud">
+      <div class="huditem"><span class="k">分数</span><span class="v" id="hudScore">0</span></div>
+      <div class="huditem"><span class="k">步数</span><span class="v" id="hudStep">0</span></div>
+      <div class="huditem"><span class="k">水果数</span><span class="v" id="hudFruits">0</span></div>
+      <div class="huditem"><span class="k">堆顶高</span><span class="v" id="hudHeight">0</span></div>
+      <div class="huditem"><span class="k">最大水果</span><span class="v" id="hudMax">—</span></div>
+      <div class="huditem nextfruits">
+        <span class="k">当前</span><span class="fruitdot" id="hudCur"></span><span class="fname" id="hudCurName">—</span>
+        <span class="k">下一个</span><span class="fruitdot" id="hudNext"></span><span class="fname" id="hudNextName">—</span>
+      </div>
+    </div>
+
+    <div id="canvasWrap">
+      <canvas id="board" width="560" height="760"></canvas>
+      <div id="overlayToggles">
+        <label><input type="checkbox" id="tgVelocity" checked> 速度矢量</label>
+        <label><input type="checkbox" id="tgMerges" checked> 合成事件</label>
+        <label><input type="checkbox" id="tgAim" checked> 落点瞄准</label>
+        <label><input type="checkbox" id="tgCand" checked> 候选打分</label>
+        <label><input type="checkbox" id="tgLabels"> 等级数字</label>
+        <label><input type="checkbox" id="tgDead" checked> 死亡线</label>
+      </div>
+    </div>
+
+    <div id="playback">
+      <button id="playBtn">▶ 播放</button>
+      <button id="stepBack" title="上一帧">⏮</button>
+      <button id="stepFwd" title="下一帧">⏭</button>
+      <label>倍速 <select id="speedSel">
+        <option value="0.25">0.25×</option>
+        <option value="0.5">0.5×</option>
+        <option value="1" selected>1×</option>
+        <option value="2">2×</option>
+        <option value="4">4×</option>
+        <option value="8">8×</option>
+      </select></label>
+      <input type="range" id="frameSlider" min="0" max="0" value="0" />
+      <span id="frameLabel">0 / 0</span>
+    </div>
+
+    <div id="decisionNav">
+      <label>决策步 <select id="stepSelect"></select></label>
+      <span id="decisionHint">选择一步查看该步 AI 的完整思考过程</span>
+    </div>
+
+    <div id="playBar" style="display:none">
+      <span id="playHint">点击棋盘落子</span>
+      <label>对局 <select id="playGameSelect"></select></label>
+      <span class="liveonly"><label>规则 <select id="playRule">
+        <option value="loop" selected>loop（双西瓜→循环）</option>
+        <option value="poof">poof（双西瓜消除）</option>
+      </select></label></span>
+      <button id="playNew" class="liveonly">新局</button>
+    </div>
+
+    <div id="curveWrap">
+      <svg id="curve" width="560" height="130"></svg>
+    </div>
+
+    <div id="arenaWrap">
+      <div class="arenaHead">智能体竞技场 · 分数-步数对比（粗线 = 当前对局；虚线 = poof 规则）。注意：各曲线来自<b>不同引擎/规则</b>（ole-batting 1280×720 settle 步进；mattjacobs30 1280×720 但 120 帧/步 + 随机开局；moonfloof 640×960 Matter.js），属跨引擎展示而非同环境受控对比；同环境受控对比请看 ole-batting 的 random/heuristic/alphazero。</div>
+      <svg id="arena" width="560" height="180"></svg>
+    </div>
+  </section>
+
+  <!-- RIGHT: AI decision panels -->
+  <section id="rightCol">
+    <div id="agentCard">
+      <div id="agentTitle">—</div>
+      <div id="agentMeta"></div>
+    </div>
+    <div id="tabs">
+      <button class="tab active" data-tab="tree">MCTS 搜索树</button>
+      <button class="tab" data-tab="pv">策略 / 价值</button>
+      <button class="tab" data-tab="heur">启发式分解</button>
+    </div>
+    <div id="panels">
+      <div class="panel active" id="panel-tree">
+        <div class="panelhint">边粗细 ∝ 访问次数 N，颜色 ∝ 动作价值 Q（<span class="qbad">红=差</span> → <span class="qgood">绿=好</span>），节点大小 ∝ 访问。悬停查看详情，金色路径为选中列。</div>
+        <svg id="treeSvg" width="520" height="440"></svg>
+        <div id="treeStats" class="statline"></div>
+      </div>
+      <div class="panel" id="panel-pv">
+        <div class="panelhint">AlphaZero：先验 P(a) + 访问分布 N(a)（K=16 列）+ 价值仪表；DQN：当前步 Q(a) 全列展示（min-max 归一化，悬停看原始值）。</div>
+        <svg id="pvSvg" width="520" height="300"></svg>
+        <div id="valueGauge" class="statline"></div>
+      </div>
+      <div class="panel" id="panel-heur">
+        <div class="panelhint">每个候选列的 1 步真物理前瞻打分分解：合并 / 安全(堆顶) / 潜力(同级相邻) / −数量 / 游戏结束惩罚。</div>
+        <svg id="heurSvg" width="520" height="440"></svg>
+        <div id="heurStats" class="statline"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- INFO DRAWER -->
+<div id="infoDrawer" class="drawer">
+  <div class="drawerInner">
+    <button id="infoClose" class="ghost closebtn">✕</button>
+    <h2>关于本项目</h2>
+    <div id="infoContent"></div>
+  </div>
+</div>
+
+<div id="tooltip"></div>
+<div id="loading">载入中…</div>
+
+<!-- manifest + baseline leaderboard are tiny; load eagerly. trace_*.js are injected on demand. -->
+<script src="../traces/manifest.js"></script>
+<script src="../traces/benchmarks.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
