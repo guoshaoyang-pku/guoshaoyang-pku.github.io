@@ -84,7 +84,7 @@ function overview() {
    <div style="border-left:4px solid var(--amber)"><b>② 发现</b><br>同一会话续写：揭示答案与得分；工具 search_history / read_record / python 沙箱（只看前序 epoch）。对→low 可 skip，错→medium。输出 comment + hypothesis。</div>
    <div style="border-left:4px solid var(--violet)"><b>③ 总结者</b><br>epoch 末，xhigh。看本 epoch 全部记录 + 历史 + KB 索引；add / merge / delete / adjust，每个操作一条 commit；finish 写 science digest。</div>
    <div style="border-left:4px solid var(--green)"><b>④ KB 快照 t</b><br>credit：被引用的 claim 按得分记 s += score, f += 1−score；加上总结者的结构操作。</div></div></div>
-  <div class="card"><h3>每个 epoch</h3><table><tr><th>epoch</th><th>本轮训练题均分</th><th>假说数</th><th>KB 条数</th><th>结构操作</th><th>总结者轮数</th></tr>${rows}</table></div>
+  <div class="card"><h3>每个 epoch</h3><table><tr><th>epoch</th><th>本轮训练题均分</th><th>猜想数</th><th>KB 条数</th><th>结构操作</th><th>总结者轮数</th></tr>${rows}</table></div>
   <div class="card"><h3>评测</h3><table><tr><th>KB 版本</th><th>题数</th><th>均分</th><th>分题源</th></tr>${ev.map(([k, v]) => `<tr><td>${k}</td><td>${v.n}</td><td>${v.mean.toFixed(3)}</td><td>${esc(JSON.stringify(v.by_source))}</td></tr>`).join("")}</table></div>`;
 }
 
@@ -94,7 +94,7 @@ function epochView() {
   let side = D.epochs.map(e => `<div class="item ${e.epoch === E.epoch ? "on" : ""}" onclick="state.epoch=${e.epoch};state.q=null;render()">第 ${e.epoch} 轮 <small>均分 ${(e.metrics.mean_score ?? 0).toFixed(2)}</small></div>`).join("");
   if (state.sub === "records") {
     side += `<div class="note" style="padding:6px 10px">本轮题目</div>` + E.records.map((r, i) =>
-      `<div class="item ${state.q === i ? "on" : ""}" onclick="state.q=${i};render()">${r.question_id} ${scoreTag(r.score)}<br><small>${r.source} · ${r.family} · ${r.skipped ? "跳过" : r.hypothesis ? "有假说" : "仅评论"}</small></div>`).join("");
+      `<div class="item ${state.q === i ? "on" : ""}" onclick="state.q=${i};render()">${r.question_id} ${scoreTag(r.score)}<br><small>${r.source} · ${r.family} · ${r.skipped ? "跳过" : r.hypothesis ? "有猜想" : "仅评论"}</small></div>`).join("");
   }
   $("side").innerHTML = side;
   const sub = [["records", "解题 + 发现（逐题）"], ["summ", "总结者（逐轮）"], ["diff", "KB 变化"], ["sci", "科学总结"]];
@@ -107,7 +107,7 @@ function epochView() {
 }
 function recordsTable(E) {
   return `<div class="card"><h3>第 ${E.epoch} 轮：${E.records.length} 题（点左侧或下表查看完整内容）</h3><table><tr><th>题号</th><th>题源</th><th>得分</th><th>预测 / 答案</th><th>引用</th><th>发现阶段</th><th>评论</th></tr>${E.records.map((r, i) =>
-    `<tr><td><a href="#" onclick="state.q=${i};render();return false">${r.question_id}</a></td><td>${r.source}</td><td>${scoreTag(r.score)}</td><td>${esc(r.prediction)}<br><small>${esc(r.answer)}</small></td><td>${linkC((r.cited || []).join(" "))}</td><td>${r.discover_effort}${r.skipped ? " 跳过" : ""} · ${r.discover_trace.length} 轮${r.hypothesis ? " · <b>有假说</b>" : ""}</td><td>${esc((r.comment || "").slice(0, 220))}</td></tr>`).join("")}</table></div>`;
+    `<tr><td><a href="#" onclick="state.q=${i};render();return false">${r.question_id}</a></td><td>${r.source}</td><td>${scoreTag(r.score)}</td><td>${esc(r.prediction)}<br><small>${esc(r.answer)}</small></td><td>${linkC((r.cited || []).join(" "))}</td><td>${r.discover_effort}${r.skipped ? " 跳过" : ""} · ${r.discover_trace.length} 轮${r.hypothesis ? " · <b>有猜想</b>" : ""}</td><td>${esc(r.comment || "")}</td></tr>`).join("")}</table></div>`;
 }
 function turns(tr) {
   return tr.map(t => `<div class="turn"><b>第 ${t.turn + 1} 步</b> <span class="note">${t.secs ?? ""} 秒 · 输入 ${t.usage.prompt_tokens ?? "?"} token · 输出 ${t.usage.completion_tokens ?? "?"} token</span>
@@ -131,8 +131,8 @@ function recordView(E, r) {
    <p><b>引用的条目（解题时的状态）</b></p><table><tr><th>编号</th><th>可信度</th><th>胜/负</th><th>内容</th></tr>${cites || "<tr><td colspan=4>未引用</td></tr>"}</table></div>
   <div class="card disc"><h3>② 发现 agent（effort=${r.discover_effort}${r.skipped ? "，选择跳过" : ""}，${r.discover_trace.length} 轮）</h3>
    ${turns(r.discover_trace)}
-   <p><b>最终评论（comment）</b></p><pre>${linkC(r.comment || "-")}</pre>
-   <p><b>假说（hypothesis）</b></p><pre>${linkC(r.hypothesis || "-")}</pre></div>`;
+   <p><b>评论（comment）</b></p><pre>${linkC(r.comment || "-")}</pre>
+   <p><b>猜想（hypothesis）</b></p><pre>${linkC(r.hypothesis || "-")}</pre></div>`;
 }
 function summView(E) {
   const ops = D.commits.filter(c => c.epoch === E.epoch && !["credit", "seed"].includes(c.op));
