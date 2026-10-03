@@ -129,6 +129,24 @@
     $("#loading").classList.add("show"); $("#loading").textContent = "载入 " + name + " …";
     var entry = (window.SUIKA_MANIFEST.traces || []).filter(function (t) { return t.name === name; })[0];
     var file = entry ? entry.file : ("trace_" + name + ".js");
+    var gz = entry ? entry.file_gz : null;
+    if (gz && window.fetch && window.DecompressionStream) {
+      fetch("../traces/" + gz).then(function (r) {
+        if (!r.ok) throw new Error("http " + r.status);
+        return r.arrayBuffer();
+      }).then(function (buf) {
+        return new Response(new Blob([buf]).stream().pipeThrough(new DecompressionStream("gzip"))).text();
+      }).then(function (txt) {
+        $("#loading").classList.remove("show");
+        var tr = JSON.parse(txt);
+        window.SUIKA_TRACES = window.SUIKA_TRACES || {};
+        window.SUIKA_TRACES[name] = tr;
+        setupTrace(tr, name);
+      }).catch(function (e) {
+        $("#loading").classList.add("show"); $("#loading").textContent = "无法加载 " + gz + "（" + e.message + "）";
+      });
+      return;
+    }
     var sc = document.createElement("script");
     sc.src = "../traces/" + file;
     sc.onload = function () {
