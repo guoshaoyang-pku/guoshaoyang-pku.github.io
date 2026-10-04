@@ -1,0 +1,53 @@
+[
+  {
+    "op": "add",
+    "source_question_ids": [
+      "q_7cbcd0"
+    ],
+    "text": "Exact q_7cbcd0 recipe transfers, not original-target replication: on sym_178a38/sym_3a19ad, SGD(.001,m.9,wd0),b32,T512,default init, deep residual GELU B(d5w96,LN00010) and C(d3w128,LN001) beat shallow plain Leaky.01 E(d1w256,LN0). B-E MSE=-.025775139/-.043398214; C-E=-.021718174/-.042130033,10/10 paired seed wins each; all t9 95%CIs below0;0 failures/exclusions. Full gold A<B<C<E<D fails on both transfers: D is not last. Bundles do not isolate skips,depth,width,LN or activation; no universal topology override.",
+    "reason": "Preregistered exact-model transfer with source-verified Leaky.01, paired statistics and cached provenance in R3288179b92."
+  },
+  {
+    "op": "add",
+    "source_question_ids": [
+      "q_4c7ce8"
+    ],
+    "text": "q_4c7ce8 exact recipe transfers on sym_178a38/sym_3a19ad: shared SGD(.001,m.9,wd0),b32,T256,default init; deep residual SiLU C(d4w32,LN0110) beats shallow residual Leaky.01 A(d1w64,LN1) in mean MSE. C-A=-.038969505,95%paired-t CI[-.052046623,-.025892386],10/10; -.013086336[-.029003001,+.002830329],7/10. Full B<C<A<E<D transfers2/2,0 failures. C activation-only Leaky improves both targets10/10; skip-only effect reverses. This is bundle evidence, not GELU or a universal residual/depth score.",
+    "reason": "Exact-model AST/source audit and preregistered comparison; uncertainty prevents claiming reliably resolved C/A on second target."
+  },
+  {
+    "op": "add",
+    "source_question_ids": [
+      "q_7cbcd0",
+      "q_4c7ce8"
+    ],
+    "text": "Matched skip counterconditions at SGD(.001,m.9,wd0),default init,b32: q7 w128,d3,terminal-preLN,T512 Leaky.01 residual-minus-plain MSE=+.001037332[+.000614841,+.001459823] on sym_178a38 and +.000604119[+.000413577,+.000794661] on sym_3a19ad,0/10 residual wins each. q4 w32,d4,SiLU,LN0110,T256 skip effect reverses: -.050084675[-.104681055,+.004511705],8/10 versus +.016558154[+.000457842,+.032658465],4/10. Paired t9 CIs;0 failures. Skip benefit is target/recipe-conditional; deep smooth bundle wins do not identify propagation.",
+    "reason": "Falsifies preregistered universal matched skip sign on measured targets; retained counterexamples alongside successful bundle transfer."
+  },
+  {
+    "op": "annotate",
+    "claim_ids": [
+      "K1008",
+      "K1039"
+    ],
+    "source_question_ids": [
+      "q_7cbcd0",
+      "q_4c7ce8"
+    ],
+    "text": "R3288179b92: exact deep smooth bundles beat shallow Leaky at shared focal SGD,while fixed-architecture Leaky.01 improves all q7 GELU controls and q4 SiLU controls. Thus activation tendency survives but cannot total-order topology/LN/width changes. Source-audit slope correction is essential; no pooled support-count update.",
+    "reason": "Adds directly scoped evidence without replacing existing activation claims with universal topology precedence."
+  },
+  {
+    "op": "annotate",
+    "claim_ids": [
+      "K1015",
+      "K1074"
+    ],
+    "source_question_ids": [
+      "q_7cbcd0",
+      "q_4c7ce8"
+    ],
+    "text": "R3288179b92: matched depth mean gains survive both selected targets,but skips worsen both q7 depth3 Leaky controls and q4 skip sign reverses across targets. q7 plain D is not last in either exact-recipe transfer. q7 C depth3 is outside K1074's depth>=4 anchor. No causal propagation/composition diagnosis or pooled count recalibration.",
+    "reason": "Separates new bundled winners, matched depth signs and skip counterconditions; preserves existing scoped parent cautions."
+  }
+]

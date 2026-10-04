@@ -1,0 +1,165 @@
+[
+  {
+    "id": "K1008",
+    "text": "MSE regression,SHARED optimizer/lr/T and EQUAL LN count: prefer ReLU/LeakyReLU to SiLU/GELU as a tendency,not a tie-break across residual/tail/rate changes. Smooth targets do not imply smooth activation. Older equal-LN multivariate37/52:SGD13/15(~2x MSE),adaptive24/37(~1.1x);activation-only univariate adaptive with>=2LN9/9(~14x),LeakyReLU>SiLU7/7. Fewer-LN rectifier17/33 is mixed,NOT mandatory LN-first(q_52be5a). Shared-SGD one-LN-gap:K1039. This activation evidence cannot reject faster momentumSGD SiLU for slower Adam rectifier(q_4c7053),or rank cross-optimizer choices(q_bdfcc1).",
+    "support_count": 39.0,
+    "failure_count": 22.0,
+    "credibility": 0.6349206349206349,
+    "created_epoch": 0,
+    "sources": [],
+    "merged_from": [],
+    "origin": "seed:seed_distill_v1",
+    "mechanism": "Activation derivatives and normalization may alter feature/gradient propagation, but equal-LN observational pairs do not isolate that from residual, depth or placement. Same-architecture activation controls support the scoped rectifier preference; loss ratios do not prove slope-attenuation as the cause.",
+    "regime": {
+      "family": [
+        "univariate_regression",
+        "multivariate_regression"
+      ],
+      "model_type": [
+        "mlp"
+      ],
+      "activation": [
+        "relu",
+        "leaky_relu",
+        "gelu",
+        "silu"
+      ],
+      "steps": [
+        256,
+        2048
+      ],
+      "loss": [
+        "mse"
+      ],
+      "note": "Shared optimizer/lr/T,equalLN;activation-only strongest. Residual/tail/depth matching needed for causal activation effect;unequalLN mixed,SGD-specific K1039."
+    },
+    "phase": "Rect vs smooth (multivariate lab): equal LN SGD 13/15, adaptive 24/37; rect with fewer LN 17/33 (coin flip); rect with more LN 12/13. Univariate activation-only: \u22652 LN adaptive 9/9, SGD 5/6; <2 LN adaptive 3/6.",
+    "last_evaluated_epoch": 13,
+    "report_ids": [
+      "R09627434ba",
+      "R69689e7876"
+    ]
+  },
+  {
+    "id": "K1015",
+    "text": "MLP residual/depth at shared optimizer/lr/T: residual status is NOT a task-wide trump card. Older confounded corpus: deeper plain regression beats shallower residual24/39; classification deeper residual beats shallow plain33/47,shallow residual beats deep plain19/32. These counts do not isolate skips or justify 'never choose deep plain'. Terminal LN,activation,features and budget matter:K1061,K1065,K1033,K1074. q_6e56f3 at32epochs favors3-block plain over5-block residual; q_611798/q_bca005 reverse identical recipes across1/2-turn datasets. Deep residual appearance53% vs plain29% is not a matched comparison or universal residual+depth rank.",
+    "support_count": 17.0,
+    "failure_count": 16.0,
+    "credibility": 0.5142857142857142,
+    "created_epoch": 0,
+    "sources": [],
+    "merged_from": [],
+    "origin": "seed:seed_distill_v1",
+    "last_evaluated_epoch": 12,
+    "report_ids": [
+      "R1dd74ea5c0",
+      "R5e6506510f"
+    ],
+    "regime": {
+      "family": [
+        "univariate_regression",
+        "multivariate_regression",
+        "spiral_classification",
+        "xor_classification",
+        "synthetic_tabular_classification"
+      ],
+      "model_type": [
+        "mlp"
+      ],
+      "note": "Shared optimizer/lr/T required for architecture use;pooled corpus counts not isolated residual effects. Check task,tail-LN,features,actual sample budget."
+    },
+    "mechanism": "Residual signal propagation and nonlinear composition are hypotheses here. Corpus depth/residual comparisons confound normalization, activation, width and budget; no universal causal ordering is established.",
+    "phase": "Old corpus counts:MSEdeepPlain24/39;CEdeepRes33/47,shallowRes19/32. Current ordinal counterconditions:tabular32epochs q_6e56f3 shallowplain>deepres;spiral recipes q611/qbca reverse1vs2turns. No numerical loss ratios for those history cases."
+  },
+  {
+    "id": "K1039",
+    "text": "MSE regression ONLY,SHARED SGD/lr/momentum/T (NOT XOR or other CE): rectifiers often beat SiLU/GELU at equal LN or one fewer LN; NOT a deep/shallow trump card. Old equal-LN corpus9/10 +controlled8/8 (MSEratio.04-.5);one-fewerLN14/17 (controlled6/6,corpus5/8). At>=2fewerLN only12/25 (corpus1/6;large-offset controls differ),so no forced activation/LN score. T256-2048,SGDm0/.9. Deeper SiLU loses more in pooled depth5 12/16 vsdepth4 4/8;depth/skips/width confound cause. Adam-family SiLU-moreLN wins11/16,not cross-optimizer guidance. q_b204a3 is XOR2 CE and OUTSIDE scope;its proposed interaction score needs separate controls.",
+    "support_count": 17.0,
+    "failure_count": 6.0,
+    "credibility": 0.72,
+    "created_epoch": 0,
+    "sources": [],
+    "merged_from": [],
+    "origin": "c000105",
+    "mechanism": "Activation/preLN Jacobians may alter raw SGD gradients;SiLU'(0)=.5 does not prove geometric halving in normalized/residual stacks or cancellation by Adam. Existing endpoint counts are empirical,not mediator evidence;XOR2 CE needs separate study Je8247e6fbbc4.",
+    "regime": {
+      "family": [
+        "univariate_regression",
+        "multivariate_regression"
+      ],
+      "type": [
+        "architecture_only"
+      ],
+      "model_type": [
+        "mlp"
+      ],
+      "optimizer": [
+        "SGD"
+      ],
+      "lr": [
+        0.0001,
+        0.003
+      ],
+      "steps": [
+        256,
+        2048
+      ],
+      "activation": [
+        "relu",
+        "leaky_relu",
+        "silu",
+        "gelu"
+      ],
+      "loss": [
+        "mse"
+      ]
+    },
+    "phase": "SharedSGD MSE rectifier vs smooth:LN gap0 old17/18;gap1 14/17;gap>=2 12/25,corpus1/6. Adam-family smooth-moreLN11/16 separate. No matched deep/shallow blanket precedence or CE transfer. q_b204a3 hypothesis is unvalidated,not support for this regression claim.",
+    "refines": "K1006",
+    "last_evaluated_epoch": 13,
+    "report_ids": [
+      "R096205344f"
+    ]
+  },
+  {
+    "id": "K1074",
+    "text": "Univariate MSE:depth>=4 with>=1LN and>=rivalLN is favored over depth<=2 when Delta_deep>=Delta_shallow/3 (old corpus31/38,lab380/461,MSE ratio.15-.2). This is confounded preference,not 'whenever'. Below1/3,shallow corpus8/9,lab228/295. Multivariate old broad deep18/22 corpus,323/435 lab(.7),BUT matched optimizer type/lr at adaptiveDelta>=.1 deep3/11 in8sets(1.093,K1080);below.1 17/22(.854). Do not automatically override a trained shallow rival with normalized depth. Width,data,activation,optimizer and LN placement matter;zeroLN deep plain is outside strong evidence.",
+    "support_count": 27.25,
+    "failure_count": 13.75,
+    "credibility": 0.6569767441860465,
+    "created_epoch": 0,
+    "sources": [],
+    "merged_from": [
+      "K1007",
+      "K1060"
+    ],
+    "origin": "c000032",
+    "mechanism": "Nonlinear composition and normalization may affect optimization, but pooled depth/width/activation/optimizer comparisons do not isolate that mechanism; endpoint test MSE does not establish generalization versus fitting.",
+    "regime": {
+      "family": [
+        "univariate_regression",
+        "multivariate_regression"
+      ],
+      "model_type": [
+        "mlp"
+      ],
+      "loss": [
+        "mse"
+      ],
+      "depth": [
+        1,
+        5
+      ],
+      "steps": [
+        256,
+        2048
+      ],
+      "note": "Deep>=4,>=1LN,>=shallowLN vs shallow<=2. Delta ratio calibrated; broad counts confounded. Multivariate adaptive>=.1:no reliable depth override(K1079)."
+    },
+    "phase": "Inherited broad deep wins atDelta ratio>=1/3:uni380/461,multi323/435. Below1/3 shallow uni228/295,multi159/215. New base matched-type/lr multi adaptive<.1 deep17/22,22sets,.854;>=.1 3/11,8sets,1.093;T256-512,budgets4096/8192,not32k.",
+    "last_evaluated_epoch": 13,
+    "report_ids": [
+      "R09627434ba"
+    ]
+  }
+]

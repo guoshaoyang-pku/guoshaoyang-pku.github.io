@@ -1,0 +1,293 @@
+{
+  "original": {
+    "question_id": "q_db6259",
+    "epoch": 12,
+    "source": "ranking_v2",
+    "task": "ranking",
+    "type": "optimizer_only",
+    "family": "univariate_regression",
+    "question": "You are taking the ArchitectureIQ benchmark.\n\nEach question describes one **dataset instance** and several **choices** (each choice is one **candidate**: model, optimizer, loss, and training budget). All choices use the same materialized dataset instance. Depending on the question, one or more training axes may vary; read each choice's complete setup and code rather than assuming an axis is shared.\n\nYour task is to **rank every choice** by its held-out test metric, from lowest to highest (a lower loss is better), using architecture and learning-mechanics reasoning only \u2014 no training results are provided.\n\nThe reply format is defined once, in the final \"Your answer\" section.\n\n## Dataset\n**Family:** univariate regression on `[0, 1]`.\n\n- Input and target are 1-D scalars.\n- Training and test points are sampled uniformly on the domain.\n- The target is a symbolic expression of `x`, and `y` is its exact evaluation.\n\n### Synthesis (PyTorch)\n```python\ndef target(x: torch.Tensor) -> torch.Tensor:\n    return torch.sin(2 * torch.pi * torch.sin(2 * torch.pi * x))\n\n\ndef synthesize(\n    *,\n    train_size: int = 256,\n    test_size: int = 256,\n    point_seed: int = 10000587263702,\n    domain_low: float = 0.0,\n    domain_high: float = 1.0,\n) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:\n    gen = torch.Generator().manual_seed(point_seed)\n    train_x = torch.rand(train_size, generator=gen) * (domain_high - domain_low) + domain_low\n    test_x = torch.rand(test_size, generator=gen) * (domain_high - domain_low) + domain_low\n    train_y = target(train_x)\n    test_y = target(test_x)\n    return train_x.unsqueeze(-1), train_y.unsqueeze(-1), test_x.unsqueeze(-1), test_y.unsqueeze(-1)\n```\n\n### Data splits and training protocol\n- Target expression (canonical): `sin(2*pi*sin(2*pi*x))`\n- Train split size: 256 fixed `(x, y)` pairs\n- Test split size: 256 fixed `(x, y)` pairs (held out)\n- Input domain: [0.0, 1.0], uniform sampling\n- Point-sampling seed: 10000587263702 (materializes the fixed train/test splits)\n- Minibatch construction: each step draws `batch_size` train indices uniformly at random **with replacement**\n- Evaluation: **test MSE** is mean squared error on the entire fixed test split\n- Randomness: `torch.manual_seed(seed)` once before model init and the training loop\n- Reference device: cpu\n\n## Sample budget (same for all choices)\n- training_steps: 512\n- batch_size: 32\n- total_samples_seen: 16384 (= training_steps \u00d7 batch_size)\n\n## Evaluation metric\n- Ground-truth ranking uses **test_mse** on the held-out test split.\n- Each choice is trained independently for **10** seeds (`0`..`9`), one `torch.manual_seed(seed)` per run.\n- Execution device: cpu.\n- Rank all candidates by their mean test_mse over seeds; lower is better, so write the order from lowest to highest.\n\n## Choices\n\n### Choice A\n\n**Model (natural language)**\n- Type: MLP\n- Depth: 2 hidden Linear layers of width 128, between the input projection and the output head (4 nn.Linear layers in total)\n- Width: 128 (all hidden layers)\n- Residual connections: False\n- Layer norm per layer: [False, True]\n- Activation: gelu (one activation, shared by every layer)\n- Initialization: PyTorch Linear defaults\n\n**Model code**\n```python\nclass MLPBlock(nn.Module):\n    \"\"\"One hidden layer: gelu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.GELU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(1, 128),\n            nn.GELU(),\n            MLPBlock(width=128, use_layer_norm=False),\n            MLPBlock(width=128, use_layer_norm=True),\n            nn.Linear(128, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)\n```\n\n**Optimizer**\n- Optimizer: Adagrad\n- Learning rate: 0.0003\n- Weight decay: 0.0001\n\n```python\ndef build_optimizer(model: nn.Module) -> torch.optim.Optimizer:\n    params = model.parameters()\n    return torch.optim.Adagrad(params, lr=0.0003, weight_decay=0.0001)\n```\n\n**Loss**\n- Loss: mean squared error (MSE) on the minibatch\n\n```python\ndef loss_fn(model: nn.Module, pred: torch.Tensor, target: torch.Tensor) -> torch.Tensor:\n    return torch.mean((pred - target) ** 2)\n```\n\n### Choice E\n\n**Model (natural language)**\n- Type: MLP\n- Depth: 2 hidden Linear layers of width 128, between the input projection and the output head (4 nn.Linear layers in total)\n- Width: 128 (all hidden layers)\n- Residual connections: False\n- Layer norm per layer: [False, True]\n- Activation: gelu (one activation, shared by every layer)\n- Initialization: PyTorch Linear defaults\n\n**Model code**\n```python\nclass MLPBlock(nn.Module):\n    \"\"\"One hidden layer: gelu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.GELU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(1, 128),\n            nn.GELU(),\n            MLPBlock(width=128, use_layer_norm=False),\n            MLPBlock(width=128, use_layer_norm=True),\n            nn.Linear(128, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)\n```\n\n**Optimizer**\n- Optimizer: AdamW\n- Learning rate: 0.003\n- Weight decay: 0.001\n- Betas: [0.9, 0.999]\n\n```python\ndef build_optimizer(model: nn.Module) -> torch.optim.Optimizer:\n    params = model.parameters()\n    return torch.optim.AdamW(params, lr=0.003, betas=(0.9, 0.999), weight_decay=0.001)\n```\n\n**Loss**\n- Loss: mean squared error (MSE) on the minibatch\n\n```python\ndef loss_fn(model: nn.Module, pred: torch.Tensor, target: torch.Tensor) -> torch.Tensor:\n    return torch.mean((pred - target) ** 2)\n```\n\n### Choice C\n\n**Model (natural language)**\n- Type: MLP\n- Depth: 2 hidden Linear layers of width 128, between the input projection and the output head (4 nn.Linear layers in total)\n- Width: 128 (all hidden layers)\n- Residual connections: False\n- Layer norm per layer: [False, True]\n- Activation: gelu (one activation, shared by every layer)\n- Initialization: PyTorch Linear defaults\n\n**Model code**\n```python\nclass MLPBlock(nn.Module):\n    \"\"\"One hidden layer: gelu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.GELU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(1, 128),\n            nn.GELU(),\n            MLPBlock(width=128, use_layer_norm=False),\n            MLPBlock(width=128, use_layer_norm=True),\n            nn.Linear(128, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)\n```\n\n**Optimizer**\n- Optimizer: RMSprop\n- Learning rate: 0.003\n- Weight decay: 0.0001\n\n```python\ndef build_optimizer(model: nn.Module) -> torch.optim.Optimizer:\n    params = model.parameters()\n    return torch.optim.RMSprop(params, lr=0.003, weight_decay=0.0001)\n```\n\n**Loss**\n- Loss: mean squared error (MSE) on the minibatch\n\n```python\ndef loss_fn(model: nn.Module, pred: torch.Tensor, target: torch.Tensor) -> torch.Tensor:\n    return torch.mean((pred - target) ** 2)\n```\n\n### Choice B\n\n**Model (natural language)**\n- Type: MLP\n- Depth: 2 hidden Linear layers of width 128, between the input projection and the output head (4 nn.Linear layers in total)\n- Width: 128 (all hidden layers)\n- Residual connections: False\n- Layer norm per layer: [False, True]\n- Activation: gelu (one activation, shared by every layer)\n- Initialization: PyTorch Linear defaults\n\n**Model code**\n```python\nclass MLPBlock(nn.Module):\n    \"\"\"One hidden layer: gelu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.GELU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(1, 128),\n            nn.GELU(),\n            MLPBlock(width=128, use_layer_norm=False),\n            MLPBlock(width=128, use_layer_norm=True),\n            nn.Linear(128, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)\n```\n\n**Optimizer**\n- Optimizer: SGD\n- Learning rate: 0.0003\n- Weight decay: 0\n- Momentum: 0\n\n```python\ndef build_optimizer(model: nn.Module) -> torch.optim.Optimizer:\n    params = model.parameters()\n    return torch.optim.SGD(params, lr=0.0003, momentum=0, weight_decay=0)\n```\n\n**Loss**\n- Loss: mean squared error (MSE) on the minibatch\n\n```python\ndef loss_fn(model: nn.Module, pred: torch.Tensor, target: torch.Tensor) -> torch.Tensor:\n    return torch.mean((pred - target) ** 2)\n```\n\n### Choice D\n\n**Model (natural language)**\n- Type: MLP\n- Depth: 2 hidden Linear layers of width 128, between the input projection and the output head (4 nn.Linear layers in total)\n- Width: 128 (all hidden layers)\n- Residual connections: False\n- Layer norm per layer: [False, True]\n- Activation: gelu (one activation, shared by every layer)\n- Initialization: PyTorch Linear defaults\n\n**Model code**\n```python\nclass MLPBlock(nn.Module):\n    \"\"\"One hidden layer: gelu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.GELU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(1, 128),\n            nn.GELU(),\n            MLPBlock(width=128, use_layer_norm=False),\n            MLPBlock(width=128, use_layer_norm=True),\n            nn.Linear(128, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)\n```\n\n**Optimizer**\n- Optimizer: SGD\n- Learning rate: 0.001\n- Weight decay: 0\n- Momentum: 0\n\n```python\ndef build_optimizer(model: nn.Module) -> torch.optim.Optimizer:\n    params = model.parameters()\n    return torch.optim.SGD(params, lr=0.001, momentum=0, weight_decay=0)\n```\n\n**Loss**\n- Loss: mean squared error (MSE) on the minibatch\n\n```python\ndef loss_fn(model: nn.Module, pred: torch.Tensor, target: torch.Tensor) -> torch.Tensor:\n    return torch.mean((pred - target) ** 2)\n```\n\n## Your answer\nRank all five choices from lowest to highest held-out loss, using each letter exactly once. Write the complete order inside a single `<answer>` tag, as the letters joined by `<`, and put nothing after the tag, for example `<answer>B<C<D<E<A</answer>`. The grader reads only the **final** `<answer>` tag in your reply.",
+    "answer": "E<C<A<B<D",
+    "prediction": "E<C<A<D<B",
+    "score": 0.75,
+    "inversions": 1,
+    "cited": [
+      "K1002",
+      "K1003",
+      "K1004",
+      "K1072"
+    ],
+    "explanation": "<cited>K1002,K1003,K1004,K1072</cited>\n<answer>E<C<A<D<B</answer>",
+    "comment": "The sole miss was B versus D: plain SGD at .0003 beat .001 on the identical GELU/terminal-LN network. I incorrectly converted a 3.33\u00d7 rate increase into guaranteed improvement. K1003 supported slow SGD relative to adaptive optimizers, not monotonic SGD rate ordering; K1012 warned against treating progress estimates as decisive. K1002/K1004 helped rank E, C and A. Backtesting found one matched univariate history comparison, favoring the higher rate; the lab contained zero exact-model univariate plain-SGD rate pairs. Six architecture-confounded comparisons across six lab sets also favored higher rates. Thus this reversal is instance-specific evidence. Optimization-path or held-out generalization differences are plausible, but ordinal gold does not identify the mechanism or justify a lower-rate rule.",
+    "hypothesis": null,
+    "imported_from": null,
+    "question_provenance": {
+      "kind": "current_pool",
+      "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_bench_repo/releases/kb_science_pool_v3/questions.jsonl"
+    }
+  },
+  "selected": [
+    {
+      "family": "univariate_regression",
+      "dataset_id": "sym_1582b1",
+      "set_id": "sym_1582b1/set_4096_fix_fix_var_60965a",
+      "candidate_id": "c_237604",
+      "dataset": {
+        "instance_seed": 32862270,
+        "sampler": {
+          "id": "symbolic_expr",
+          "seed": 32862270,
+          "max_depth": 3,
+          "retry": 6
+        },
+        "expression": "-sin(2*pi*cos(2*pi*x))",
+        "domain": [
+          0.0,
+          1.0
+        ],
+        "train_size": 256,
+        "test_size": 256,
+        "point_sampling": {
+          "distribution": "uniform",
+          "seed": 32863270
+        }
+      },
+      "budget": {
+        "training_steps": 256,
+        "batch_size": 16,
+        "total_samples_seen": 4096
+      },
+      "params": 75073,
+      "model_type": "mlp",
+      "depth": 2,
+      "width": 192,
+      "residual": true,
+      "activation": "leaky_relu",
+      "layer_norm": [
+        false,
+        true
+      ],
+      "n_ln": 1,
+      "leaky_slope": null,
+      "init": "default",
+      "model": {
+        "type": "mlp",
+        "depth": 2,
+        "width": 192,
+        "residual": true,
+        "activation": "leaky_relu",
+        "layer_norm": [
+          false,
+          true
+        ],
+        "leaky_relu_slope": 0.01,
+        "input_dim": 1,
+        "output_dim": 1
+      },
+      "optimizer": {
+        "type": "AdamW",
+        "lr": 3e-05,
+        "weight_decay": 0.0,
+        "betas": [
+          0.9,
+          0.999
+        ]
+      },
+      "loss": {
+        "loss_id": "mse_l2",
+        "lambda": 0.1
+      },
+      "metric": "test_mse",
+      "mean": 0.3383674144744873,
+      "std": 0.006400648553973551,
+      "failed_seeds": 0,
+      "excluded": false
+    },
+    {
+      "family": "univariate_regression",
+      "dataset_id": "sym_994c08",
+      "set_id": "sym_994c08/set_4096_var_var_fix_d53ab7",
+      "candidate_id": "c_5a9b54",
+      "dataset": {
+        "instance_seed": 93196836,
+        "sampler": {
+          "id": "symbolic_expr",
+          "seed": 93196836,
+          "max_depth": 3,
+          "retry": 1
+        },
+        "expression": "sin(2*pi*tanh(2*x)) - x",
+        "domain": [
+          0.0,
+          1.0
+        ],
+        "train_size": 256,
+        "test_size": 256,
+        "point_sampling": {
+          "distribution": "uniform",
+          "seed": 93197836
+        }
+      },
+      "budget": {
+        "training_steps": 256,
+        "batch_size": 16,
+        "total_samples_seen": 4096
+      },
+      "params": 2497,
+      "model_type": "mlp",
+      "depth": 1,
+      "width": 48,
+      "residual": false,
+      "activation": "gelu",
+      "layer_norm": [
+        false
+      ],
+      "n_ln": 0,
+      "leaky_slope": null,
+      "init": "default",
+      "model": {
+        "type": "mlp",
+        "depth": 1,
+        "width": 48,
+        "residual": false,
+        "activation": "gelu",
+        "layer_norm": [
+          false
+        ],
+        "input_dim": 1,
+        "output_dim": 1
+      },
+      "optimizer": {
+        "type": "Adam",
+        "lr": 0.0003,
+        "weight_decay": 0.001,
+        "betas": [
+          0.9,
+          0.95
+        ]
+      },
+      "loss": {
+        "loss_id": "mse"
+      },
+      "metric": "test_mse",
+      "mean": 0.26817655116319655,
+      "std": 0.022911265799903227,
+      "failed_seeds": 0,
+      "excluded": false
+    }
+  ],
+  "relevant_kb": [
+    {
+      "id": "K1003",
+      "text": "Normalized MLPs or bigram LMs,SGD vs adaptive BELOW saturation: plain SGD is often slow,NOT automatically frozen or last. It lost138/141 pairs when adaptiveDelta>15x its estimate(K1019); old all-family appearance wins~8% are pooled,not same-model controls. Momentum.9 lr.001-.003 is a contender,not guaranteed winner: general Adam-equivalent rate~lr/10,bigram~lr/30,MSE~lr/3. At lr<=.0003 it usually loses to same-lr adaptive below saturation. Calibration is a proxy,NOT proof momentum beats plain at equal lr/(1-m);q_0a12ba favors plain at parity,with decay differing. Deep zeroLN smooth MLPs need task-specific scope(K1038).",
+      "support_count": 34.0,
+      "failure_count": 15.0,
+      "credibility": 0.6862745098039216,
+      "created_epoch": 0,
+      "sources": [],
+      "merged_from": [
+        "K0012",
+        "K0174"
+      ],
+      "origin": "seed:seed_distill_v1",
+      "last_evaluated_epoch": 12,
+      "report_ids": [
+        "R58730d84ac",
+        "R79e71854c8",
+        "R838be7703a"
+      ],
+      "regime": {
+        "optimizer": [
+          "SGD",
+          "Adam",
+          "AdamW",
+          "RMSprop",
+          "Adagrad"
+        ],
+        "model_type": [
+          "mlp",
+          "transformer_lm",
+          "gru_lm"
+        ],
+        "note": "SGD vs adaptive below saturation; normalized MLP calibration. Pooled appearance rates are not parity controls or parameter-motion measurements."
+      },
+      "mechanism": "Loss rankings and appearance rates do not demonstrate parameter freezing. SGD raw-gradient calibration is empirical predictive evidence against adaptive rivals; initialization, normalization, gradients, momentum startup and noise are possible explanations."
+    },
+    {
+      "id": "K1012",
+      "text": "Mixed-optimizer/architecture rankings: close Delta estimates are NOT winner evidence; even a25% edge is inconclusive. Below task/model saturation,old >=4x gap favors progress35/40;within3x architecture wins11/19,only a weak preference. Once both Delta>=.3,extra wins~62%;check task/model/budget(K1004/K1063/K1071-K1073). Delta<.005 does NOT establish tied CE=lnV/ln2 or MSE=Var(y): initialization logit scale and target mean affect baseline loss. Do not turn weak architecture tendencies into a complete rank there. Nominal parity supplies no automatic adaptive-over-SGD tie-break(q_826eab),nor RMSprop-over-Adagrad law.",
+      "support_count": 62.75,
+      "failure_count": 28.25,
+      "credibility": 0.6854838709677419,
+      "created_epoch": 0,
+      "sources": [],
+      "merged_from": [],
+      "origin": "seed:seed_distill_v1",
+      "phase": "Preserve older mixed gap observations35/40 at>=4x and11/19 within3x conditional below saturation;both>=.3 extra wins~62%. Near-init phase requires initial output calibration,not a universalDelta<.005 tied block. Older smallerDelta>=.1 larger>=3x lab wins:bigram4/16,tabular63/146,spiral54%,multi56%,XOR58%,uni60%;not matched rate-only effects.",
+      "last_evaluated_epoch": 12,
+      "report_ids": [
+        "R02d63c19c2",
+        "R7dd7d943d3",
+        "Rea2c3b5177"
+      ],
+      "regime": {
+        "family": "all",
+        "steps": [
+          256,
+          2048
+        ],
+        "note": "Mixed recipes;Delta nominal,K1001/K1019. Progress ordering only below task/model saturation;initial-loss/tie inference invalid without output/target calibration."
+      },
+      "mechanism": "Delta is a nominal optimizer progress scale, not observed parameter/function motion. Initial CE depends on logits; MSE at f=0 equals E[y^2]=Var(y)+E[y]^2. Therefore small Delta alone identifies neither uniform CE nor a tied bottom block. Actual calibration and learning boundaries remain under investigation."
+    },
+    {
+      "id": "K1072",
+      "text": "Univariate MSE,SAME depth>=2 width>=64 MLP: Delta>=1 is a relative overshoot RISK,not automatic loss to Delta.1-.5. Older high wins:w64 0/12(MSE x8.8),w128 5/18(x5.5),w256 1/13(x4.4);controlled moderate wins11/12. Counterexample K1115:zeroLN d2/w128 LeakyReLU Adam,T2048,Delta6.144 MSE.01578 beats Delta.2048 MSE.35314;q_af3ba4 also favors high over most slow recipes. No universal zeroLN exemption or near-frozen rival cutoff. Width<=32,depth1 and multivariate are outside this scope,NOT high-rate safety evidence(multivariate K1114/K1117). Check target,optimizer,budget and trained rival.",
+      "support_count": 9.5,
+      "failure_count": 4.5,
+      "credibility": 0.65625,
+      "created_epoch": 0,
+      "sources": [],
+      "merged_from": [
+        "K1055",
+        "K1064"
+      ],
+      "origin": "c000028",
+      "mechanism": "Unannealed-rate jitter is a candidate explanation, not an established width/depth causal law. Fixed zeroLN oscillatory target shows high rate can still improve final MSE at2048; multivariate exclusion cannot imply safety.",
+      "regime": {
+        "family": [
+          "univariate_regression"
+        ],
+        "model_type": [
+          "mlp"
+        ],
+        "optimizer": [
+          "Adam",
+          "AdamW",
+          "RMSprop",
+          "Adagrad"
+        ],
+        "width": [
+          64,
+          256
+        ],
+        "depth": [
+          2,
+          5
+        ],
+        "steps": [
+          256,
+          2048
+        ],
+        "note": "Same model/data;Delta>=1 versus progressed rival is risk,not deterministic ceiling. New fixed w128,d2,zeroLN counterexample; no general zeroLN exemption."
+      },
+      "phase": "Old highDelta winsw64 0/12,w1285/18,w2561/13;controls moderate11/12. New exact-recipe w128/d2/zeroLN T2048 highDelta6.144 wins3/3 lower rates including Delta.2048,ratio.0447;one dataset(K1083). Multivariate controlled reversalK1081 is outside univariate claim.",
+      "last_evaluated_epoch": 12,
+      "report_ids": [
+        "R58d9d83b4f",
+        "R7dd7d943d3",
+        "Rc5401dd3c0"
+      ]
+    }
+  ]
+}

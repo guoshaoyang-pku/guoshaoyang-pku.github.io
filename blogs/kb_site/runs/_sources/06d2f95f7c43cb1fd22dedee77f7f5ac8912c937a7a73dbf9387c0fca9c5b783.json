@@ -1,0 +1,121 @@
+{
+  "pin": "Jfad422145d3a_research_e0013_v000001_d1c6a1db769a",
+  "history_count": 1223,
+  "claims": [
+    {
+      "id": "K1001",
+      "text": "Optimizer comparison,SAME model/data/budget: use Delta as a progress proxy ONLY below task/model saturation. T256 can be32epochs; neither step count nor nominal parity proves adaptive or max-Delta wins. Adam/AdamW/RMSprop:lr*T;Adagrad:2*lr*sqrt(T);SGD:lr*T*|g|/(1-m),g~.01 (bigram.003,momentumMSE.03,K1019). Check K1004/K1071-K1073 and target/batch first;close mixed-recipe estimates:K1012. Old largerDelta~85% backtests were ceiling-filtered,not a law. Byte-identical q_561d81/q_21a335 recipes reverse winners on different targets/splits. Long XOR optimizer reversal K1119 is NOT a low-rate rule;no universal ceiling.",
+      "support_count": 104.25,
+      "failure_count": 42.75,
+      "credibility": 0.7063758389261745,
+      "created_epoch": 0,
+      "sources": [],
+      "merged_from": [
+        "K0019",
+        "K0009",
+        "K0031",
+        "K0016",
+        "K0124",
+        "K0010",
+        "K0073",
+        "K0101",
+        "K0212",
+        "K0228",
+        "K0138",
+        "K0166",
+        "K0020",
+        "K0184"
+      ],
+      "origin": "seed:seed_distill_v1",
+      "mechanism": "Nominal cumulative displacement is a progress heuristic, not actual parameter or function motion. Endpoint rate grids show target/recipe/budget-conditional reversals. R1e820ab3a7 cannot test function-step or jitter mechanism because runner exposes endpoints only; no theory is established.",
+      "phase": "Progress-limited same-model comparisons retain positive higher-Delta tendency. T256 can represent32exposureepochs. q561d81/q21a335 byte-identical choices reverse ordinal winners with changed target/point seeds;rates also alter betas/decay. R1e820ab3a7 new within-set U grid higher wins12/12;oscillatory T1024 all6pairs favor lower;polynomial T1024 nonmonotonic. Keep each recipe/dataset separate.",
+      "last_evaluated_epoch": 13,
+      "report_ids": [
+        "R02d63c19c2",
+        "R58d9d83b4f",
+        "R653e44588b",
+        "R6625c8f0a1",
+        "R7dd7d943d3",
+        "Raeabecdef0",
+        "Rc5401dd3c0",
+        "Rea2c3b5177"
+      ],
+      "regime": {
+        "family": "all",
+        "steps": [
+          256,
+          2048
+        ],
+        "note": "Same model/data/loss/budget;below target/model saturation. Delta proxy not measured motion;check batch,exposure,initialization,optimizer/decay before ranking;mixed/parity K1012."
+      }
+    },
+    {
+      "id": "K1004",
+      "text": "LR/\u0394 exceptions: do NOT assume maximum \u0394 or lr3e-3 is always safe. MSE RMSprop lr\u22651e-3: versus \u22653\u00d7 smaller \u0394, wins22/36 corpus (better MLP6/6, equal12/22, worse4/8); at equal lr prefer Adam (RMSprop3e-3 loses33/35). Univariate lower-RMSprop-rate preference can occur even below this ceiling (K1063). Bigram optima depend on model width (K1071); wide multilayer univariate high-\u0394 fitting risk is comparative, not automatic last place (K1072). Tabular optimum changes with epochs/data rule (K1073). Short-budget XOR/spiral often benefit from high rates, but T2048 winners q_46d72e/q_fb4a7f refute blanket long-budget safety; no general replacement ceiling is validated.",
+      "support_count": 5.75,
+      "failure_count": 4.25,
+      "credibility": 0.5625,
+      "created_epoch": 0,
+      "sources": [],
+      "merged_from": [
+        "K0139"
+      ],
+      "origin": "seed:seed_distill_v1",
+      "mechanism": "RMSprop's first steps are lr/sqrt(small square-avg) \u2248 up to 10\u00d7 lr with no momentum smoothing; in unnormalized MLPs these kicks inflate hidden activations and the MSE output, so training oscillates. LayerNorm bounds hidden scale (and residual paths keep the function near-identity), absorbing the kicks \u2014 predicts instability only when the RMSprop net lacks LN/residual, as observed (6/6 vs 4/8).",
+      "regime": {
+        "family": [
+          "univariate_regression",
+          "multivariate_regression",
+          "bigram_lm"
+        ],
+        "optimizer": [
+          "RMSprop",
+          "Adam",
+          "AdamW"
+        ],
+        "lr": [
+          0.001,
+          0.003
+        ],
+        "loss": [
+          "mse",
+          "cross_entropy"
+        ],
+        "note": "(a) corpus regression pairs; (b) bigram post-LN transformer vs GRU"
+      },
+      "phase": "RMSprop\u22653e-3 vs \u22653\u00d7 smaller-\u0394 choice on MSE: RMSprop net has higher LN+residual score \u2192 wins 6/6; equal \u2192 12/22; lower \u2192 4/8. RMSprop 1e-3 univariate 1/4.",
+      "last_evaluated_epoch": 13,
+      "report_ids": [
+        "R6625c8f0a1"
+      ]
+    },
+    {
+      "id": "K1012",
+      "text": "Mixed-optimizer/architecture rankings: close Delta estimates are NOT winner evidence; even a25% edge is inconclusive. Below task/model saturation,old >=4x gap favors progress35/40;within3x architecture wins11/19,only a weak preference. Once both Delta>=.3,extra wins~62%;check task/model/budget(K1004/K1063/K1071-K1073). Delta<.005 does NOT establish tied CE=lnV/ln2 or MSE=Var(y): initialization logit scale and target mean affect baseline loss. Do not turn weak architecture tendencies into a complete rank there. Nominal parity supplies no automatic adaptive-over-SGD tie-break(q_826eab),nor RMSprop-over-Adagrad law.",
+      "support_count": 70.5,
+      "failure_count": 29.5,
+      "credibility": 0.7009803921568627,
+      "created_epoch": 0,
+      "sources": [],
+      "merged_from": [],
+      "origin": "seed:seed_distill_v1",
+      "phase": "Preserve older mixed gap observations35/40 at>=4x and11/19 within3x conditional below saturation;both>=.3 extra wins~62%. Near-init phase requires initial output calibration,not a universalDelta<.005 tied block. Older smallerDelta>=.1 larger>=3x lab wins:bigram4/16,tabular63/146,spiral54%,multi56%,XOR58%,uni60%;not matched rate-only effects.",
+      "last_evaluated_epoch": 13,
+      "report_ids": [
+        "R02d63c19c2",
+        "R6625c8f0a1",
+        "R7dd7d943d3",
+        "Rea2c3b5177"
+      ],
+      "regime": {
+        "family": "all",
+        "steps": [
+          256,
+          2048
+        ],
+        "note": "Mixed recipes;Delta nominal,K1001/K1019. Progress ordering only below task/model saturation;initial-loss/tie inference invalid without output/target calibration."
+      },
+      "mechanism": "Delta is a nominal optimizer progress scale, not observed parameter/function motion. Initial CE depends on logits; MSE at f=0 equals E[y^2]=Var(y)+E[y]^2. Therefore small Delta alone identifies neither uniform CE nor a tied bottom block. Actual calibration and learning boundaries remain under investigation."
+    }
+  ]
+}
