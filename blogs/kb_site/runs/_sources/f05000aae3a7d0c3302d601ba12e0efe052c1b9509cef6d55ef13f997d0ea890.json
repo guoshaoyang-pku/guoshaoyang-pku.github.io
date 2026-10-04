@@ -1,0 +1,514 @@
+{
+  "origin_epoch": 9,
+  "job_id": "Jfb67e0e17594",
+  "why": "Preregistered A/B/C full original recipe transfer; T1024 Delta=.1024 above .1; four-feature piecewise target 1. Not activation-only.",
+  "input": {
+    "dataset": "synthetic_tabular_classification/stabcls_ee7169",
+    "candidates": [
+      {
+        "model": {
+          "type": "mlp",
+          "depth": 3,
+          "width": 128,
+          "residual": true,
+          "activation": "silu",
+          "layer_norm": [
+            false,
+            false,
+            true
+          ],
+          "input_dim": 4,
+          "output_dim": 2,
+          "init": "default"
+        },
+        "optimizer": {
+          "type": "RMSprop",
+          "lr": 0.0001,
+          "weight_decay": 0.0001,
+          "betas": [
+            0.9,
+            0.95
+          ]
+        },
+        "loss": {
+          "loss_id": "cross_entropy"
+        },
+        "budget": {
+          "training_steps": 1024,
+          "batch_size": 16
+        }
+      },
+      {
+        "model": {
+          "type": "mlp",
+          "depth": 4,
+          "width": 96,
+          "residual": false,
+          "activation": "relu",
+          "layer_norm": [
+            false,
+            false,
+            false,
+            true
+          ],
+          "input_dim": 4,
+          "output_dim": 2,
+          "init": "default"
+        },
+        "optimizer": {
+          "type": "RMSprop",
+          "lr": 0.0001,
+          "weight_decay": 0.0001,
+          "betas": [
+            0.9,
+            0.95
+          ]
+        },
+        "loss": {
+          "loss_id": "cross_entropy"
+        },
+        "budget": {
+          "training_steps": 1024,
+          "batch_size": 16
+        }
+      },
+      {
+        "model": {
+          "type": "mlp",
+          "depth": 1,
+          "width": 192,
+          "residual": true,
+          "activation": "relu",
+          "layer_norm": [
+            true
+          ],
+          "input_dim": 4,
+          "output_dim": 2,
+          "init": "default"
+        },
+        "optimizer": {
+          "type": "RMSprop",
+          "lr": 0.0001,
+          "weight_decay": 0.0001,
+          "betas": [
+            0.9,
+            0.95
+          ]
+        },
+        "loss": {
+          "loss_id": "cross_entropy"
+        },
+        "budget": {
+          "training_steps": 1024,
+          "batch_size": 16
+        }
+      }
+    ]
+  },
+  "dataset_params": {
+    "instance_seed": 4241,
+    "input_dim": 4,
+    "num_classes": 2,
+    "rule_family": "piecewise_boundary",
+    "active_features": [
+      1,
+      3
+    ],
+    "interaction_order": 2,
+    "interaction_pairs": [],
+    "rule_weights": [
+      -1.125,
+      1.0,
+      1.0
+    ],
+    "piecewise_breakpoint": -0.25,
+    "spiral_turns": 2.0,
+    "decision_threshold": 0.125,
+    "train_size": 1024,
+    "test_size": 2048
+  },
+  "profile": "v1.5",
+  "result": {
+    "dataset": "synthetic_tabular_classification/stabcls_ee7169",
+    "family": "synthetic_tabular_classification",
+    "results": [
+      {
+        "mean": 0.11065298542380334,
+        "std": 0.01611159961832493,
+        "metric": "test_ce",
+        "cached": false,
+        "failed_seeds": 0,
+        "excluded": false,
+        "n_seeds": 10,
+        "base_seed": 0,
+        "seed_results": [
+          {
+            "seed": 0,
+            "failed": false,
+            "final_test_ce": 0.14612635970115662,
+            "final_test_accuracy": 0.9345703125
+          },
+          {
+            "seed": 1,
+            "failed": false,
+            "final_test_ce": 0.10983462631702423,
+            "final_test_accuracy": 0.9619140625
+          },
+          {
+            "seed": 2,
+            "failed": false,
+            "final_test_ce": 0.11368542909622192,
+            "final_test_accuracy": 0.9501953125
+          },
+          {
+            "seed": 3,
+            "failed": false,
+            "final_test_ce": 0.13404914736747742,
+            "final_test_accuracy": 0.9443359375
+          },
+          {
+            "seed": 4,
+            "failed": false,
+            "final_test_ce": 0.1009860634803772,
+            "final_test_accuracy": 0.95654296875
+          },
+          {
+            "seed": 5,
+            "failed": false,
+            "final_test_ce": 0.1061062291264534,
+            "final_test_accuracy": 0.9638671875
+          },
+          {
+            "seed": 6,
+            "failed": false,
+            "final_test_ce": 0.10176322609186172,
+            "final_test_accuracy": 0.96240234375
+          },
+          {
+            "seed": 7,
+            "failed": false,
+            "final_test_ce": 0.10585126280784607,
+            "final_test_accuracy": 0.962890625
+          },
+          {
+            "seed": 8,
+            "failed": false,
+            "final_test_ce": 0.09667320549488068,
+            "final_test_accuracy": 0.9658203125
+          },
+          {
+            "seed": 9,
+            "failed": false,
+            "final_test_ce": 0.09145430475473404,
+            "final_test_accuracy": 0.970703125
+          }
+        ],
+        "measurement_files": {
+          "candidate_spec.json": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/synthetic_tabular_classification/stabcls_ee7169/x_5c22958969/candidate_spec.json",
+            "sha256": "691e6e01dfb70e15fa11291c0337ca60b289d41b76ef35c5e6cb06af20bf5ffc",
+            "bytes": 861,
+            "repo_path": "measurements/691e6e01dfb70e15fa11291c0337ca60b289d41b76ef35c5e6cb06af20bf5ffc.json"
+          },
+          "results/summary.json": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/synthetic_tabular_classification/stabcls_ee7169/x_5c22958969/results/summary.json",
+            "sha256": "befda42cb29402a3873ae75ef36ce4d05af6556b8289e23a497a396064932442",
+            "bytes": 2240,
+            "repo_path": "measurements/befda42cb29402a3873ae75ef36ce4d05af6556b8289e23a497a396064932442.json"
+          },
+          "results/curves.npz": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/synthetic_tabular_classification/stabcls_ee7169/x_5c22958969/results/curves.npz",
+            "sha256": "9e64fd2e3647e169f4ecdb788ab294c0cdc3c8a04e3fc69d5069144888985c5c",
+            "bytes": 90884,
+            "repo_path": "measurements/9e64fd2e3647e169f4ecdb788ab294c0cdc3c8a04e3fc69d5069144888985c5c.npz"
+          }
+        },
+        "secs": 20.3,
+        "candidate": {
+          "model": {
+            "type": "mlp",
+            "depth": 3,
+            "width": 128,
+            "residual": true,
+            "activation": "silu",
+            "layer_norm": [
+              false,
+              false,
+              true
+            ],
+            "input_dim": 4,
+            "output_dim": 2,
+            "init": "default"
+          },
+          "optimizer": {
+            "type": "RMSprop",
+            "lr": 0.0001,
+            "weight_decay": 0.0001,
+            "betas": [
+              0.9,
+              0.95
+            ]
+          },
+          "loss": {
+            "loss_id": "cross_entropy"
+          },
+          "budget": {
+            "training_steps": 1024,
+            "batch_size": 16
+          }
+        }
+      },
+      {
+        "mean": 0.09399670884013175,
+        "std": 0.024082897294495927,
+        "metric": "test_ce",
+        "cached": false,
+        "failed_seeds": 0,
+        "excluded": false,
+        "n_seeds": 10,
+        "base_seed": 0,
+        "seed_results": [
+          {
+            "seed": 0,
+            "failed": false,
+            "final_test_ce": 0.139444962143898,
+            "final_test_accuracy": 0.9423828125
+          },
+          {
+            "seed": 1,
+            "failed": false,
+            "final_test_ce": 0.10729464143514633,
+            "final_test_accuracy": 0.96533203125
+          },
+          {
+            "seed": 2,
+            "failed": false,
+            "final_test_ce": 0.08259302377700806,
+            "final_test_accuracy": 0.96240234375
+          },
+          {
+            "seed": 3,
+            "failed": false,
+            "final_test_ce": 0.0782957598567009,
+            "final_test_accuracy": 0.96728515625
+          },
+          {
+            "seed": 4,
+            "failed": false,
+            "final_test_ce": 0.07856075465679169,
+            "final_test_accuracy": 0.9697265625
+          },
+          {
+            "seed": 5,
+            "failed": false,
+            "final_test_ce": 0.08135442435741425,
+            "final_test_accuracy": 0.9677734375
+          },
+          {
+            "seed": 6,
+            "failed": false,
+            "final_test_ce": 0.10179092735052109,
+            "final_test_accuracy": 0.9638671875
+          },
+          {
+            "seed": 7,
+            "failed": false,
+            "final_test_ce": 0.13198430836200714,
+            "final_test_accuracy": 0.93896484375
+          },
+          {
+            "seed": 8,
+            "failed": false,
+            "final_test_ce": 0.06377696990966797,
+            "final_test_accuracy": 0.978515625
+          },
+          {
+            "seed": 9,
+            "failed": false,
+            "final_test_ce": 0.07487131655216217,
+            "final_test_accuracy": 0.9697265625
+          }
+        ],
+        "measurement_files": {
+          "candidate_spec.json": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/synthetic_tabular_classification/stabcls_ee7169/x_c0b20f90fa/candidate_spec.json",
+            "sha256": "3e785e2513ff645810ceaac0d502464e53de37a1968fe5143ca93de7c4041525",
+            "bytes": 874,
+            "repo_path": "measurements/3e785e2513ff645810ceaac0d502464e53de37a1968fe5143ca93de7c4041525.json"
+          },
+          "results/summary.json": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/synthetic_tabular_classification/stabcls_ee7169/x_c0b20f90fa/results/summary.json",
+            "sha256": "a906a71fdaf10034e209080f1b0cada969a08ef3b51f497bfbfadc43939dac23",
+            "bytes": 2241,
+            "repo_path": "measurements/a906a71fdaf10034e209080f1b0cada969a08ef3b51f497bfbfadc43939dac23.json"
+          },
+          "results/curves.npz": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/synthetic_tabular_classification/stabcls_ee7169/x_c0b20f90fa/results/curves.npz",
+            "sha256": "0aa1b7cb00bd5e423fd83430e08fdd66a9cae62d23fff675ad5cfa88a403e53f",
+            "bytes": 90884,
+            "repo_path": "measurements/0aa1b7cb00bd5e423fd83430e08fdd66a9cae62d23fff675ad5cfa88a403e53f.npz"
+          }
+        },
+        "secs": 12.0,
+        "candidate": {
+          "model": {
+            "type": "mlp",
+            "depth": 4,
+            "width": 96,
+            "residual": false,
+            "activation": "relu",
+            "layer_norm": [
+              false,
+              false,
+              false,
+              true
+            ],
+            "input_dim": 4,
+            "output_dim": 2,
+            "init": "default"
+          },
+          "optimizer": {
+            "type": "RMSprop",
+            "lr": 0.0001,
+            "weight_decay": 0.0001,
+            "betas": [
+              0.9,
+              0.95
+            ]
+          },
+          "loss": {
+            "loss_id": "cross_entropy"
+          },
+          "budget": {
+            "training_steps": 1024,
+            "batch_size": 16
+          }
+        }
+      },
+      {
+        "mean": 0.1403971344232559,
+        "std": 0.006537418919017922,
+        "metric": "test_ce",
+        "cached": false,
+        "failed_seeds": 0,
+        "excluded": false,
+        "n_seeds": 10,
+        "base_seed": 0,
+        "seed_results": [
+          {
+            "seed": 0,
+            "failed": false,
+            "final_test_ce": 0.14438536763191223,
+            "final_test_accuracy": 0.9404296875
+          },
+          {
+            "seed": 1,
+            "failed": false,
+            "final_test_ce": 0.1555798053741455,
+            "final_test_accuracy": 0.9326171875
+          },
+          {
+            "seed": 2,
+            "failed": false,
+            "final_test_ce": 0.13820099830627441,
+            "final_test_accuracy": 0.9453125
+          },
+          {
+            "seed": 3,
+            "failed": false,
+            "final_test_ce": 0.1384335160255432,
+            "final_test_accuracy": 0.94921875
+          },
+          {
+            "seed": 4,
+            "failed": false,
+            "final_test_ce": 0.13871900737285614,
+            "final_test_accuracy": 0.947265625
+          },
+          {
+            "seed": 5,
+            "failed": false,
+            "final_test_ce": 0.1464695930480957,
+            "final_test_accuracy": 0.9404296875
+          },
+          {
+            "seed": 6,
+            "failed": false,
+            "final_test_ce": 0.14012411236763,
+            "final_test_accuracy": 0.94482421875
+          },
+          {
+            "seed": 7,
+            "failed": false,
+            "final_test_ce": 0.13627293705940247,
+            "final_test_accuracy": 0.94873046875
+          },
+          {
+            "seed": 8,
+            "failed": false,
+            "final_test_ce": 0.13169263303279877,
+            "final_test_accuracy": 0.9541015625
+          },
+          {
+            "seed": 9,
+            "failed": false,
+            "final_test_ce": 0.13409337401390076,
+            "final_test_accuracy": 0.95361328125
+          }
+        ],
+        "measurement_files": {
+          "candidate_spec.json": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/synthetic_tabular_classification/stabcls_ee7169/x_4d1836d39c/candidate_spec.json",
+            "sha256": "ff63a48c07f38637ec0b9b642553d5e30219a56082b6aef6c5d0d51d1c7a4626",
+            "bytes": 835,
+            "repo_path": "measurements/ff63a48c07f38637ec0b9b642553d5e30219a56082b6aef6c5d0d51d1c7a4626.json"
+          },
+          "results/summary.json": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/synthetic_tabular_classification/stabcls_ee7169/x_4d1836d39c/results/summary.json",
+            "sha256": "ba76671a7111f26896c46e2a812dcd5d7dbfdb0b6df8281ac931da5dfa63af68",
+            "bytes": 2234,
+            "repo_path": "measurements/ba76671a7111f26896c46e2a812dcd5d7dbfdb0b6df8281ac931da5dfa63af68.json"
+          },
+          "results/curves.npz": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/synthetic_tabular_classification/stabcls_ee7169/x_4d1836d39c/results/curves.npz",
+            "sha256": "79b9635c15ea313016bc31db0f61f09df32ee654e9db317d8762f3b3398f29b6",
+            "bytes": 90884,
+            "repo_path": "measurements/79b9635c15ea313016bc31db0f61f09df32ee654e9db317d8762f3b3398f29b6.npz"
+          }
+        },
+        "secs": 13.5,
+        "candidate": {
+          "model": {
+            "type": "mlp",
+            "depth": 1,
+            "width": 192,
+            "residual": true,
+            "activation": "relu",
+            "layer_norm": [
+              true
+            ],
+            "input_dim": 4,
+            "output_dim": 2,
+            "init": "default"
+          },
+          "optimizer": {
+            "type": "RMSprop",
+            "lr": 0.0001,
+            "weight_decay": 0.0001,
+            "betas": [
+              0.9,
+              0.95
+            ]
+          },
+          "loss": {
+            "loss_id": "cross_entropy"
+          },
+          "budget": {
+            "training_steps": 1024,
+            "batch_size": 16
+          }
+        }
+      }
+    ]
+  }
+}

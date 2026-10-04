@@ -1,0 +1,438 @@
+{
+  "origin_epoch": 10,
+  "job_id": "J6fe3befeca0f",
+  "why": "Numerical audit of existing K1102 d128 measurements. Request cached reuse only; not independent replication.",
+  "input": {
+    "dataset": "bigram_lm/bg_87ba9c",
+    "candidates": [
+      {
+        "model": {
+          "type": "transformer_lm",
+          "vocab_size": 24,
+          "context_length": 16,
+          "d_model": 128,
+          "num_layers": 4,
+          "num_heads": 4,
+          "d_ff": 64
+        },
+        "optimizer": {
+          "type": "SGD",
+          "lr": 0.0001,
+          "weight_decay": 1e-05,
+          "betas": [
+            0.9,
+            0.999
+          ],
+          "momentum": 0.9
+        },
+        "loss": {
+          "loss_id": "cross_entropy"
+        },
+        "budget": {
+          "training_steps": 256,
+          "batch_size": 32
+        }
+      },
+      {
+        "model": {
+          "type": "transformer_lm",
+          "vocab_size": 24,
+          "context_length": 16,
+          "d_model": 128,
+          "num_layers": 4,
+          "num_heads": 4,
+          "d_ff": 64
+        },
+        "optimizer": {
+          "type": "Adagrad",
+          "lr": 0.0001,
+          "weight_decay": 0,
+          "betas": [
+            0.9,
+            0.999
+          ]
+        },
+        "loss": {
+          "loss_id": "cross_entropy"
+        },
+        "budget": {
+          "training_steps": 256,
+          "batch_size": 32
+        }
+      },
+      {
+        "model": {
+          "type": "transformer_lm",
+          "vocab_size": 24,
+          "context_length": 16,
+          "d_model": 128,
+          "num_layers": 4,
+          "num_heads": 4,
+          "d_ff": 64
+        },
+        "optimizer": {
+          "type": "RMSprop",
+          "lr": 0.003,
+          "weight_decay": 1e-05,
+          "betas": [
+            0.9,
+            0.999
+          ]
+        },
+        "loss": {
+          "loss_id": "cross_entropy"
+        },
+        "budget": {
+          "training_steps": 256,
+          "batch_size": 32
+        }
+      }
+    ]
+  },
+  "dataset_params": {
+    "instance_seed": 404,
+    "vocab_size": 24,
+    "context_length": 16,
+    "train_size": 800,
+    "test_size": 200,
+    "alpha": 1.4,
+    "layout": "lm",
+    "sequence_seed": 404,
+    "table_seed": 10404
+  },
+  "profile": "v1.5",
+  "result": {
+    "dataset": "bigram_lm/bg_87ba9c",
+    "family": "bigram_lm",
+    "results": [
+      {
+        "mean": 3.133867931365967,
+        "std": 0.03165282395751193,
+        "metric": "test_ce",
+        "cached": true,
+        "failed_seeds": 0,
+        "excluded": false,
+        "n_seeds": 10,
+        "base_seed": 0,
+        "seed_results": [
+          {
+            "seed": 0,
+            "failed": false,
+            "final_test_ce": 3.18135142326355
+          },
+          {
+            "seed": 1,
+            "failed": false,
+            "final_test_ce": 3.1288022994995117
+          },
+          {
+            "seed": 2,
+            "failed": false,
+            "final_test_ce": 3.1372804641723633
+          },
+          {
+            "seed": 3,
+            "failed": false,
+            "final_test_ce": 3.0684239864349365
+          },
+          {
+            "seed": 4,
+            "failed": false,
+            "final_test_ce": 3.187319755554199
+          },
+          {
+            "seed": 5,
+            "failed": false,
+            "final_test_ce": 3.111860990524292
+          },
+          {
+            "seed": 6,
+            "failed": false,
+            "final_test_ce": 3.1267905235290527
+          },
+          {
+            "seed": 7,
+            "failed": false,
+            "final_test_ce": 3.131772994995117
+          },
+          {
+            "seed": 8,
+            "failed": false,
+            "final_test_ce": 3.1278109550476074
+          },
+          {
+            "seed": 9,
+            "failed": false,
+            "final_test_ce": 3.137265920639038
+          }
+        ],
+        "measurement_files": {
+          "candidate_spec.json": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/bigram_lm/bg_87ba9c/x_2d865ad6bc/candidate_spec.json",
+            "sha256": "8c909b0506e99959369b3a8dce77203ac47b5f0e167e8d18b9e9b07740b54e05",
+            "bytes": 774,
+            "repo_path": "measurements/8c909b0506e99959369b3a8dce77203ac47b5f0e167e8d18b9e9b07740b54e05.json"
+          },
+          "results/summary.json": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/bigram_lm/bg_87ba9c/x_2d865ad6bc/results/summary.json",
+            "sha256": "9871ebfdff70545731efd8ea20ea153b5f17e4d62d03d71547806bff119bbcdd",
+            "bytes": 1710,
+            "repo_path": "measurements/9871ebfdff70545731efd8ea20ea153b5f17e4d62d03d71547806bff119bbcdd.json"
+          },
+          "results/curves.npz": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/bigram_lm/bg_87ba9c/x_2d865ad6bc/results/curves.npz",
+            "sha256": "c23fe5e6e969f1d5318f283cf510e5abcbd119ab5e9e789f944b25a6ae3e6825",
+            "bytes": 23300,
+            "repo_path": "measurements/c23fe5e6e969f1d5318f283cf510e5abcbd119ab5e9e789f944b25a6ae3e6825.npz"
+          }
+        },
+        "candidate": {
+          "model": {
+            "type": "transformer_lm",
+            "vocab_size": 24,
+            "context_length": 16,
+            "d_model": 128,
+            "num_layers": 4,
+            "num_heads": 4,
+            "d_ff": 64
+          },
+          "optimizer": {
+            "type": "SGD",
+            "lr": 0.0001,
+            "weight_decay": 1e-05,
+            "betas": [
+              0.9,
+              0.999
+            ],
+            "momentum": 0.9
+          },
+          "loss": {
+            "loss_id": "cross_entropy"
+          },
+          "budget": {
+            "training_steps": 256,
+            "batch_size": 32
+          }
+        }
+      },
+      {
+        "mean": 3.0106467723846437,
+        "std": 0.031630669853277206,
+        "metric": "test_ce",
+        "cached": true,
+        "failed_seeds": 0,
+        "excluded": false,
+        "n_seeds": 10,
+        "base_seed": 0,
+        "seed_results": [
+          {
+            "seed": 0,
+            "failed": false,
+            "final_test_ce": 3.0640158653259277
+          },
+          {
+            "seed": 1,
+            "failed": false,
+            "final_test_ce": 3.0101852416992188
+          },
+          {
+            "seed": 2,
+            "failed": false,
+            "final_test_ce": 3.0053374767303467
+          },
+          {
+            "seed": 3,
+            "failed": false,
+            "final_test_ce": 2.942592144012451
+          },
+          {
+            "seed": 4,
+            "failed": false,
+            "final_test_ce": 3.0540621280670166
+          },
+          {
+            "seed": 5,
+            "failed": false,
+            "final_test_ce": 2.990041732788086
+          },
+          {
+            "seed": 6,
+            "failed": false,
+            "final_test_ce": 3.015246629714966
+          },
+          {
+            "seed": 7,
+            "failed": false,
+            "final_test_ce": 3.0112216472625732
+          },
+          {
+            "seed": 8,
+            "failed": false,
+            "final_test_ce": 3.0151772499084473
+          },
+          {
+            "seed": 9,
+            "failed": false,
+            "final_test_ce": 2.9985876083374023
+          }
+        ],
+        "measurement_files": {
+          "candidate_spec.json": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/bigram_lm/bg_87ba9c/x_38e3e5ee8d/candidate_spec.json",
+            "sha256": "4b0326f86a0d1bd61806a384c1f9560b050c03caf4aca5766735669951e695e5",
+            "bytes": 753,
+            "repo_path": "measurements/4b0326f86a0d1bd61806a384c1f9560b050c03caf4aca5766735669951e695e5.json"
+          },
+          "results/summary.json": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/bigram_lm/bg_87ba9c/x_38e3e5ee8d/results/summary.json",
+            "sha256": "ad9af56f94f9296d271fa4668fc6694a9596c2212154a7b3ef0424829a063a1d",
+            "bytes": 1715,
+            "repo_path": "measurements/ad9af56f94f9296d271fa4668fc6694a9596c2212154a7b3ef0424829a063a1d.json"
+          },
+          "results/curves.npz": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/bigram_lm/bg_87ba9c/x_38e3e5ee8d/results/curves.npz",
+            "sha256": "e677adf6b7f59f682d86889a36ed8aa1c5ec0ef5f7e94194ec35dde72ef46cab",
+            "bytes": 23300,
+            "repo_path": "measurements/e677adf6b7f59f682d86889a36ed8aa1c5ec0ef5f7e94194ec35dde72ef46cab.npz"
+          }
+        },
+        "candidate": {
+          "model": {
+            "type": "transformer_lm",
+            "vocab_size": 24,
+            "context_length": 16,
+            "d_model": 128,
+            "num_layers": 4,
+            "num_heads": 4,
+            "d_ff": 64
+          },
+          "optimizer": {
+            "type": "Adagrad",
+            "lr": 0.0001,
+            "weight_decay": 0,
+            "betas": [
+              0.9,
+              0.999
+            ]
+          },
+          "loss": {
+            "loss_id": "cross_entropy"
+          },
+          "budget": {
+            "training_steps": 256,
+            "batch_size": 32
+          }
+        }
+      },
+      {
+        "mean": 3.1138193130493166,
+        "std": 0.0030438315731114427,
+        "metric": "test_ce",
+        "cached": true,
+        "failed_seeds": 0,
+        "excluded": false,
+        "n_seeds": 10,
+        "base_seed": 0,
+        "seed_results": [
+          {
+            "seed": 0,
+            "failed": false,
+            "final_test_ce": 3.114314079284668
+          },
+          {
+            "seed": 1,
+            "failed": false,
+            "final_test_ce": 3.1108133792877197
+          },
+          {
+            "seed": 2,
+            "failed": false,
+            "final_test_ce": 3.112724542617798
+          },
+          {
+            "seed": 3,
+            "failed": false,
+            "final_test_ce": 3.1078553199768066
+          },
+          {
+            "seed": 4,
+            "failed": false,
+            "final_test_ce": 3.11423397064209
+          },
+          {
+            "seed": 5,
+            "failed": false,
+            "final_test_ce": 3.1158559322357178
+          },
+          {
+            "seed": 6,
+            "failed": false,
+            "final_test_ce": 3.120082378387451
+          },
+          {
+            "seed": 7,
+            "failed": false,
+            "final_test_ce": 3.114530324935913
+          },
+          {
+            "seed": 8,
+            "failed": false,
+            "final_test_ce": 3.112764835357666
+          },
+          {
+            "seed": 9,
+            "failed": false,
+            "final_test_ce": 3.115018367767334
+          }
+        ],
+        "measurement_files": {
+          "candidate_spec.json": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/bigram_lm/bg_87ba9c/x_b5ba21796e/candidate_spec.json",
+            "sha256": "0c831f25c2254aa67eb2d0c5c2b0c464301345ec26be55e989576f8f19638677",
+            "bytes": 756,
+            "repo_path": "measurements/0c831f25c2254aa67eb2d0c5c2b0c464301345ec26be55e989576f8f19638677.json"
+          },
+          "results/summary.json": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/bigram_lm/bg_87ba9c/x_b5ba21796e/results/summary.json",
+            "sha256": "4e84977666b81759d2953ce5804a487181d98f54e7510dc21f2c40daf59eef59",
+            "bytes": 1711,
+            "repo_path": "measurements/4e84977666b81759d2953ce5804a487181d98f54e7510dc21f2c40daf59eef59.json"
+          },
+          "results/curves.npz": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/bigram_lm/bg_87ba9c/x_b5ba21796e/results/curves.npz",
+            "sha256": "76429422ca5251a817ea251f54214bed8170c3979ff769ee8260992e509488c2",
+            "bytes": 23300,
+            "repo_path": "measurements/76429422ca5251a817ea251f54214bed8170c3979ff769ee8260992e509488c2.npz"
+          }
+        },
+        "candidate": {
+          "model": {
+            "type": "transformer_lm",
+            "vocab_size": 24,
+            "context_length": 16,
+            "d_model": 128,
+            "num_layers": 4,
+            "num_heads": 4,
+            "d_ff": 64
+          },
+          "optimizer": {
+            "type": "RMSprop",
+            "lr": 0.003,
+            "weight_decay": 1e-05,
+            "betas": [
+              0.9,
+              0.999
+            ]
+          },
+          "loss": {
+            "loss_id": "cross_entropy"
+          },
+          "budget": {
+            "training_steps": 256,
+            "batch_size": 32
+          }
+        }
+      }
+    ]
+  }
+}

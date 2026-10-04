@@ -1,0 +1,368 @@
+{
+  "origin_epoch": 10,
+  "job_id": "J5b324e3673c9",
+  "why": "R42fb9af244 second publication preregistered batch/exposure diagnostic: predict high wins at2048b32 and1024b32 equal draws to2048b16. Batch16 controls reused,not replicated.",
+  "input": {
+    "dataset": "multivariate_regression/mvar_6fea20",
+    "candidates": [
+      {
+        "model": {
+          "type": "mlp",
+          "depth": 3,
+          "width": 256,
+          "residual": false,
+          "activation": "leaky_relu",
+          "layer_norm": [
+            true,
+            false,
+            true
+          ],
+          "input_dim": 2,
+          "output_dim": 1,
+          "leaky_relu_slope": 0.01,
+          "leaky_slope": 0.01,
+          "init": "default"
+        },
+        "optimizer": {
+          "type": "AdamW",
+          "lr": 3e-05,
+          "weight_decay": 1e-05,
+          "momentum": 0.9,
+          "betas": [
+            0.9,
+            0.999
+          ]
+        },
+        "loss": {
+          "loss_id": "mse",
+          "lambda": 1.0
+        },
+        "budget": {
+          "training_steps": 2048,
+          "batch_size": 32
+        }
+      },
+      {
+        "model": {
+          "type": "mlp",
+          "depth": 3,
+          "width": 256,
+          "residual": false,
+          "activation": "leaky_relu",
+          "layer_norm": [
+            true,
+            false,
+            true
+          ],
+          "input_dim": 2,
+          "output_dim": 1,
+          "leaky_relu_slope": 0.01,
+          "leaky_slope": 0.01,
+          "init": "default"
+        },
+        "optimizer": {
+          "type": "AdamW",
+          "lr": 0.001,
+          "weight_decay": 1e-05,
+          "momentum": 0.9,
+          "betas": [
+            0.9,
+            0.999
+          ]
+        },
+        "loss": {
+          "loss_id": "mse",
+          "lambda": 1.0
+        },
+        "budget": {
+          "training_steps": 2048,
+          "batch_size": 32
+        }
+      }
+    ]
+  },
+  "dataset_params": {
+    "instance_seed": 100128921399,
+    "input_dim": 2,
+    "sampler": {
+      "id": "symbolic_expr_mv",
+      "seed": 100128921399,
+      "max_depth": 3,
+      "retry": 0
+    },
+    "expression": "x1**2 + cos(2*pi*sin(2*pi*x0)) + cos(2*pi*x1) + x0 - 1",
+    "domain": [
+      0.0,
+      1.0
+    ],
+    "train_size": 256,
+    "test_size": 256
+  },
+  "profile": "v1.5",
+  "result": {
+    "dataset": "multivariate_regression/mvar_6fea20",
+    "family": "multivariate_regression",
+    "results": [
+      {
+        "mean": 0.24399930685758592,
+        "std": 0.010027125689402758,
+        "metric": "test_mse",
+        "cached": false,
+        "failed_seeds": 0,
+        "excluded": false,
+        "n_seeds": 10,
+        "base_seed": 0,
+        "seed_results": [
+          {
+            "seed": 0,
+            "failed": false,
+            "final_test_mse": 0.23285378515720367,
+            "mean_test_mse": 0.23285378515720367
+          },
+          {
+            "seed": 1,
+            "failed": false,
+            "final_test_mse": 0.2286144495010376,
+            "mean_test_mse": 0.2286144495010376
+          },
+          {
+            "seed": 2,
+            "failed": false,
+            "final_test_mse": 0.2421828955411911,
+            "mean_test_mse": 0.2421828955411911
+          },
+          {
+            "seed": 3,
+            "failed": false,
+            "final_test_mse": 0.26002228260040283,
+            "mean_test_mse": 0.26002228260040283
+          },
+          {
+            "seed": 4,
+            "failed": false,
+            "final_test_mse": 0.23870351910591125,
+            "mean_test_mse": 0.23870351910591125
+          },
+          {
+            "seed": 5,
+            "failed": false,
+            "final_test_mse": 0.2433275431394577,
+            "mean_test_mse": 0.2433275431394577
+          },
+          {
+            "seed": 6,
+            "failed": false,
+            "final_test_mse": 0.24347606301307678,
+            "mean_test_mse": 0.24347606301307678
+          },
+          {
+            "seed": 7,
+            "failed": false,
+            "final_test_mse": 0.2456362545490265,
+            "mean_test_mse": 0.2456362545490265
+          },
+          {
+            "seed": 8,
+            "failed": false,
+            "final_test_mse": 0.24245169758796692,
+            "mean_test_mse": 0.24245169758796692
+          },
+          {
+            "seed": 9,
+            "failed": false,
+            "final_test_mse": 0.2627245783805847,
+            "mean_test_mse": 0.2627245783805847
+          }
+        ],
+        "measurement_files": {
+          "candidate_spec.json": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/multivariate_regression/mvar_6fea20/x_07e6d20f8c/candidate_spec.json",
+            "sha256": "2740ba2856d9f92d7a68cd9a19b73a4752ede4ace60de4ecf9c4b79596e332e8",
+            "bytes": 937,
+            "repo_path": "measurements/2740ba2856d9f92d7a68cd9a19b73a4752ede4ace60de4ecf9c4b79596e332e8.json"
+          },
+          "results/summary.json": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/multivariate_regression/mvar_6fea20/x_07e6d20f8c/results/summary.json",
+            "sha256": "5e806641bab2465a34b6454ca71e75b83ed49edc315099307f5aa4041bc9278c",
+            "bytes": 2172,
+            "repo_path": "measurements/5e806641bab2465a34b6454ca71e75b83ed49edc315099307f5aa4041bc9278c.json"
+          },
+          "results/curves.npz": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/multivariate_regression/mvar_6fea20/x_07e6d20f8c/results/curves.npz",
+            "sha256": "c66d5a27851ec98934c99d3b3ca6a449c0e160a1979ffceee70816b96f14a45e",
+            "bytes": 180996,
+            "repo_path": "measurements/c66d5a27851ec98934c99d3b3ca6a449c0e160a1979ffceee70816b96f14a45e.npz"
+          }
+        },
+        "secs": 18.3,
+        "candidate": {
+          "model": {
+            "type": "mlp",
+            "depth": 3,
+            "width": 256,
+            "residual": false,
+            "activation": "leaky_relu",
+            "layer_norm": [
+              true,
+              false,
+              true
+            ],
+            "input_dim": 2,
+            "output_dim": 1,
+            "leaky_relu_slope": 0.01,
+            "leaky_slope": 0.01,
+            "init": "default"
+          },
+          "optimizer": {
+            "type": "AdamW",
+            "lr": 3e-05,
+            "weight_decay": 1e-05,
+            "momentum": 0.9,
+            "betas": [
+              0.9,
+              0.999
+            ]
+          },
+          "loss": {
+            "loss_id": "mse",
+            "lambda": 1.0
+          },
+          "budget": {
+            "training_steps": 2048,
+            "batch_size": 32
+          }
+        }
+      },
+      {
+        "mean": 0.03645895477384329,
+        "std": 0.01734093679409274,
+        "metric": "test_mse",
+        "cached": false,
+        "failed_seeds": 0,
+        "excluded": false,
+        "n_seeds": 10,
+        "base_seed": 0,
+        "seed_results": [
+          {
+            "seed": 0,
+            "failed": false,
+            "final_test_mse": 0.026403864845633507,
+            "mean_test_mse": 0.026403864845633507
+          },
+          {
+            "seed": 1,
+            "failed": false,
+            "final_test_mse": 0.026411399245262146,
+            "mean_test_mse": 0.026411399245262146
+          },
+          {
+            "seed": 2,
+            "failed": false,
+            "final_test_mse": 0.024595776572823524,
+            "mean_test_mse": 0.024595776572823524
+          },
+          {
+            "seed": 3,
+            "failed": false,
+            "final_test_mse": 0.05853023752570152,
+            "mean_test_mse": 0.05853023752570152
+          },
+          {
+            "seed": 4,
+            "failed": false,
+            "final_test_mse": 0.015626633539795876,
+            "mean_test_mse": 0.015626633539795876
+          },
+          {
+            "seed": 5,
+            "failed": false,
+            "final_test_mse": 0.03611581400036812,
+            "mean_test_mse": 0.03611581400036812
+          },
+          {
+            "seed": 6,
+            "failed": false,
+            "final_test_mse": 0.07472443580627441,
+            "mean_test_mse": 0.07472443580627441
+          },
+          {
+            "seed": 7,
+            "failed": false,
+            "final_test_mse": 0.04513098672032356,
+            "mean_test_mse": 0.04513098672032356
+          },
+          {
+            "seed": 8,
+            "failed": false,
+            "final_test_mse": 0.03475828468799591,
+            "mean_test_mse": 0.03475828468799591
+          },
+          {
+            "seed": 9,
+            "failed": false,
+            "final_test_mse": 0.022292114794254303,
+            "mean_test_mse": 0.022292114794254303
+          }
+        ],
+        "measurement_files": {
+          "candidate_spec.json": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/multivariate_regression/mvar_6fea20/x_d481694906/candidate_spec.json",
+            "sha256": "d94e802ad1bd87ebe9f28f183eb77cd213bdee96c0d0af53860536dfa8f7ae5f",
+            "bytes": 937,
+            "repo_path": "measurements/d94e802ad1bd87ebe9f28f183eb77cd213bdee96c0d0af53860536dfa8f7ae5f.json"
+          },
+          "results/summary.json": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/multivariate_regression/mvar_6fea20/x_d481694906/results/summary.json",
+            "sha256": "df8e91765087f7d18fbc42823cdce21971a4cd2865d823ffc3f0cf999f37cdf6",
+            "bytes": 2191,
+            "repo_path": "measurements/df8e91765087f7d18fbc42823cdce21971a4cd2865d823ffc3f0cf999f37cdf6.json"
+          },
+          "results/curves.npz": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/multivariate_regression/mvar_6fea20/x_d481694906/results/curves.npz",
+            "sha256": "10b80887900a300697dd633245e4d4e5e670ce1bbbc580be940bb28c9a80ac61",
+            "bytes": 180996,
+            "repo_path": "measurements/10b80887900a300697dd633245e4d4e5e670ce1bbbc580be940bb28c9a80ac61.npz"
+          }
+        },
+        "secs": 18.2,
+        "candidate": {
+          "model": {
+            "type": "mlp",
+            "depth": 3,
+            "width": 256,
+            "residual": false,
+            "activation": "leaky_relu",
+            "layer_norm": [
+              true,
+              false,
+              true
+            ],
+            "input_dim": 2,
+            "output_dim": 1,
+            "leaky_relu_slope": 0.01,
+            "leaky_slope": 0.01,
+            "init": "default"
+          },
+          "optimizer": {
+            "type": "AdamW",
+            "lr": 0.001,
+            "weight_decay": 1e-05,
+            "momentum": 0.9,
+            "betas": [
+              0.9,
+              0.999
+            ]
+          },
+          "loss": {
+            "loss_id": "mse",
+            "lambda": 1.0
+          },
+          "budget": {
+            "training_steps": 2048,
+            "batch_size": 32
+          }
+        }
+      }
+    ]
+  }
+}
