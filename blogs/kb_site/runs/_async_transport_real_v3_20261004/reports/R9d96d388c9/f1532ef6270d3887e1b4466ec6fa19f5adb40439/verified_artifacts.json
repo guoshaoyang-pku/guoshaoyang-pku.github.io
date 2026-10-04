@@ -1,0 +1,2227 @@
+[
+  {
+    "row": {
+      "family": "bigram_lm",
+      "dataset_id": "bg_1d9caf",
+      "set_id": "exp:2ba2012e9989",
+      "candidate_id": "cbd9a504",
+      "dataset": {
+        "instance_seed": 100064931980,
+        "vocab_size": 24,
+        "context_length": 24,
+        "train_size": 800,
+        "test_size": 200,
+        "alpha": 0.8,
+        "layout": "lm",
+        "sequence_seed": 100064931980,
+        "table_seed": 100064941980
+      },
+      "budget": {
+        "training_steps": 1024,
+        "batch_size": 32,
+        "total_samples_seen": 32768
+      },
+      "params": null,
+      "model_type": "gru_lm",
+      "d_model": 64,
+      "num_layers": 2,
+      "model": {
+        "type": "gru_lm",
+        "vocab_size": 32,
+        "context_length": 24,
+        "d_model": 64,
+        "num_layers": 2,
+        "layer_residual": false
+      },
+      "optimizer": {
+        "type": "AdamW",
+        "lr": 0.0003,
+        "weight_decay": 0.001,
+        "momentum": 0.9,
+        "betas": [
+          0.9,
+          0.95
+        ]
+      },
+      "loss": {
+        "loss_id": "cross_entropy"
+      },
+      "metric": "test_ce",
+      "mean": 2.8942680835723875,
+      "std": 0.002503537066838171,
+      "source": "experiment",
+      "epoch": 1,
+      "origin_epoch": 1,
+      "why": "Preregistered provenance repair in R9d96d388c9: explicit V24/context24 vs matching V32/context24, seeds0..9. At T1024 predict GRU .003 CE worse than .0003 and weak SGD; Adagrad reversal not guaranteed. No directional V effect predicted. Need runtime embedding/head dimensions or constructor provenance to determine whether prior exp:59726980c70d used32 or transport overrides24; metadata alone is not proof. Training-visible bg_1d9caf only, not q_7dbb0e evaluation data. Return actual dimensions, seed counts/failures if available."
+    },
+    "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/bigram_lm/bg_1d9caf/x_fdb9acce2c",
+    "summary": {
+      "schema_version": "1.0",
+      "candidate_id": "x_fdb9acce2c",
+      "selection_metric": "test_ce",
+      "execution": "candidate_py_files",
+      "n_seeds": 10,
+      "base_seed": 0,
+      "failed_seeds": 0,
+      "excluded": false,
+      "mean_test_ce": 2.8942680835723875,
+      "std_test_ce": 0.002503537066838171,
+      "seed_results": [
+        {
+          "seed": 0,
+          "failed": false,
+          "final_test_ce": 2.8968849182128906
+        },
+        {
+          "seed": 1,
+          "failed": false,
+          "final_test_ce": 2.8907010555267334
+        },
+        {
+          "seed": 2,
+          "failed": false,
+          "final_test_ce": 2.893659830093384
+        },
+        {
+          "seed": 3,
+          "failed": false,
+          "final_test_ce": 2.894132375717163
+        },
+        {
+          "seed": 4,
+          "failed": false,
+          "final_test_ce": 2.898299217224121
+        },
+        {
+          "seed": 5,
+          "failed": false,
+          "final_test_ce": 2.892956495285034
+        },
+        {
+          "seed": 6,
+          "failed": false,
+          "final_test_ce": 2.89445161819458
+        },
+        {
+          "seed": 7,
+          "failed": false,
+          "final_test_ce": 2.8899803161621094
+        },
+        {
+          "seed": 8,
+          "failed": false,
+          "final_test_ce": 2.894916296005249
+        },
+        {
+          "seed": 9,
+          "failed": false,
+          "final_test_ce": 2.8966987133026123
+        }
+      ],
+      "environment": {
+        "python": "3.10.9 (main, Jan 11 2023, 09:18:18) [Clang 14.0.6 ]",
+        "platform": "macOS-26.5.1-arm64-arm-64bit",
+        "torch": "2.13.0",
+        "requested_device": "cpu",
+        "device": "cpu",
+        "cuda_available": false,
+        "cuda_runtime": null,
+        "cuda_device_name": null,
+        "cuda_device_capability": null,
+        "deterministic_algorithms": false,
+        "seed_workers": 1,
+        "torch_threads_per_seed": 1,
+        "git_commit": null
+      }
+    },
+    "spec": {
+      "schema_version": "1.0",
+      "profile": "v1.5",
+      "dataset_id": "bg_1d9caf",
+      "family": "bigram_lm",
+      "budget": {
+        "training_steps": 1024,
+        "batch_size": 32,
+        "total_samples_seen": 32768
+      },
+      "model": {
+        "type": "gru_lm",
+        "vocab_size": 32,
+        "context_length": 24,
+        "d_model": 64,
+        "num_layers": 2,
+        "layer_residual": false
+      },
+      "optimizer": {
+        "type": "AdamW",
+        "lr": 0.0003,
+        "weight_decay": 0.001,
+        "betas": [
+          0.9,
+          0.95
+        ]
+      },
+      "loss": {
+        "loss_id": "cross_entropy"
+      },
+      "execution": {
+        "device": "cpu"
+      },
+      "files": {
+        "model": "model.py",
+        "train": "train.py",
+        "loss": "loss.py",
+        "optimizer": "optimizer.py"
+      },
+      "candidate_id": "x_fdb9acce2c"
+    },
+    "model_source": "\"\"\"Causal unidirectional GRU language model.\"\"\"\nfrom __future__ import annotations\n\nimport torch\nimport torch.nn as nn\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.context_length = 24\n        self.token_embed = nn.Embedding(32, 64)\n        self.gru = nn.GRU(\n            input_size=64,\n            hidden_size=64,\n            num_layers=2,\n            batch_first=True,\n            dropout=0.0,\n        )\n        self.head = nn.Linear(64, 32)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.token_embed(x)\n        h, _ = self.gru(h)\n        return self.head(h)\n",
+    "train_source": "\"\"\"Training loop for this candidate \u2014 executed by the ground-truth runner.\"\"\"\nfrom __future__ import annotations\n\nimport math\n\nimport torch\nimport torch.nn.functional as F\n\nfrom loss import loss_fn\nfrom model import Model\nfrom optimizer import build_optimizer\n\n\ndef _resolve_device(device: str) -> torch.device:\n    if device not in {\"cpu\", \"cuda\"}:\n        raise ValueError(f\"Unsupported execution device {device!r}; choose 'cpu' or 'cuda'\")\n    if device == \"cuda\" and not torch.cuda.is_available():\n        raise RuntimeError(\n            \"CUDA was requested but is unavailable \"\n            f\"(torch={torch.__version__}, torch.version.cuda={torch.version.cuda!r})\"\n        )\n    return torch.device(device)\n\n\ndef _test_ce(model: torch.nn.Module, test_x: torch.Tensor, test_y: torch.Tensor) -> float:\n    model.eval()\n    with torch.inference_mode():\n        pred = model(test_x)\n        if pred.ndim == 3:\n            vocab = pred.shape[-1]\n            loss = F.cross_entropy(pred.reshape(-1, vocab), test_y.reshape(-1))\n        else:\n            loss = F.cross_entropy(pred, test_y.reshape(-1))\n        return float(loss.item())\n\n\ndef train_and_eval(\n    train_x: torch.Tensor,\n    train_y: torch.Tensor,\n    test_x: torch.Tensor,\n    test_y: torch.Tensor,\n    *,\n    steps: int,\n    batch_size: int,\n    seed: int = 0,\n    fail_threshold: float = float(\"inf\"),\n    device: str = \"cpu\",\n    progress_callback=None,\n) -> dict:\n    torch.manual_seed(seed)\n    run_device = _resolve_device(device)\n    if run_device.type == \"cuda\":\n        torch.cuda.manual_seed_all(seed)\n    model = Model().to(run_device)\n    optimizer = build_optimizer(model)\n    train_x = train_x.to(run_device)\n    train_y = train_y.to(run_device)\n    test_x = test_x.to(run_device)\n    test_y = test_y.to(run_device)\n    n = train_x.shape[0]\n    step_metrics: list[float] = []\n    eval_samples: list[int] = []\n    failed = False\n    progress_interval = max(1, steps // 100)\n\n    for step in range(1, steps + 1):\n        model.train()\n        idx = torch.randint(0, n, (batch_size,), device=run_device)\n        pred = model(train_x[idx])\n        loss = loss_fn(model, pred, train_y[idx])\n        if not torch.isfinite(loss):\n            failed = True\n            break\n        optimizer.zero_grad(set_to_none=True)\n        loss.backward()\n        optimizer.step()\n\n        metric = _test_ce(model, test_x, test_y)\n        if not math.isfinite(metric):\n            failed = True\n            break\n        eval_samples.append(step * batch_size)\n        step_metrics.append(metric)\n        if progress_callback is not None and (\n            step == 1 or step % progress_interval == 0 or step == steps\n        ):\n            progress_callback(\n                {\n                    \"step\": step,\n                    \"training_steps\": steps,\n                    \"samples_seen\": step * batch_size,\n                    \"total_samples_seen\": steps * batch_size,\n                    \"metric\": metric,\n                }\n            )\n\n    final_metric = step_metrics[-1] if step_metrics else float(\"inf\")\n    if final_metric > fail_threshold:\n        failed = True\n\n    return {\n        \"failed\": failed,\n        \"final_test_ce\": final_metric,\n        \"eval_samples\": eval_samples,\n        \"step_metrics\": step_metrics,\n    }\n",
+    "optimizer_source": "\"\"\"Optimizer factory for this candidate.\"\"\"\nfrom __future__ import annotations\n\nimport torch\nimport torch.nn as nn\n\n\ndef build_optimizer(model: nn.Module) -> torch.optim.Optimizer:\n    params = model.parameters()\n    return torch.optim.AdamW(params, lr=0.0003, betas=(0.9, 0.95), weight_decay=0.001)\n",
+    "source_hashes": {
+      "model_source": "1483ff666792a074929122ec41e50d4314f3c0ea97926a6c0c963b183afa040a",
+      "train_source": "c7c6188e0aad5362c2effe513374adbd21d4ce01d72a727497a49fca30e5fa2a",
+      "optimizer_source": "7195b04054edffd03084cad18e5127dd026f28fa4b07dd3348fd68e57c11822c"
+    }
+  },
+  {
+    "row": {
+      "family": "bigram_lm",
+      "dataset_id": "bg_1d9caf",
+      "set_id": "exp:2ba2012e9989",
+      "candidate_id": "abe9743b",
+      "dataset": {
+        "instance_seed": 100064931980,
+        "vocab_size": 24,
+        "context_length": 24,
+        "train_size": 800,
+        "test_size": 200,
+        "alpha": 0.8,
+        "layout": "lm",
+        "sequence_seed": 100064931980,
+        "table_seed": 100064941980
+      },
+      "budget": {
+        "training_steps": 1024,
+        "batch_size": 32,
+        "total_samples_seen": 32768
+      },
+      "params": null,
+      "model_type": "transformer_lm",
+      "d_model": 32,
+      "num_layers": 3,
+      "num_heads": 2,
+      "d_ff": 256,
+      "model": {
+        "type": "transformer_lm",
+        "vocab_size": 24,
+        "context_length": 24,
+        "d_model": 32,
+        "num_layers": 3,
+        "layer_residual": false,
+        "num_heads": 2,
+        "d_ff": 256
+      },
+      "optimizer": {
+        "type": "Adagrad",
+        "lr": 3e-05,
+        "weight_decay": 0.0001,
+        "momentum": 0.9
+      },
+      "loss": {
+        "loss_id": "cross_entropy"
+      },
+      "metric": "test_ce",
+      "mean": 3.2942272424697876,
+      "std": 0.008527808520280481,
+      "source": "experiment",
+      "epoch": 1,
+      "origin_epoch": 1,
+      "why": "Preregistered provenance repair in R9d96d388c9: explicit V24/context24 vs matching V32/context24, seeds0..9. At T1024 predict GRU .003 CE worse than .0003 and weak SGD; Adagrad reversal not guaranteed. No directional V effect predicted. Need runtime embedding/head dimensions or constructor provenance to determine whether prior exp:59726980c70d used32 or transport overrides24; metadata alone is not proof. Training-visible bg_1d9caf only, not q_7dbb0e evaluation data. Return actual dimensions, seed counts/failures if available."
+    },
+    "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/bigram_lm/bg_1d9caf/x_eb522bd461",
+    "summary": {
+      "schema_version": "1.0",
+      "candidate_id": "x_eb522bd461",
+      "selection_metric": "test_ce",
+      "execution": "candidate_py_files",
+      "n_seeds": 10,
+      "base_seed": 0,
+      "failed_seeds": 0,
+      "excluded": false,
+      "mean_test_ce": 3.2942272424697876,
+      "std_test_ce": 0.008527808520280481,
+      "seed_results": [
+        {
+          "seed": 0,
+          "failed": false,
+          "final_test_ce": 3.282158136367798
+        },
+        {
+          "seed": 1,
+          "failed": false,
+          "final_test_ce": 3.3097195625305176
+        },
+        {
+          "seed": 2,
+          "failed": false,
+          "final_test_ce": 3.282269239425659
+        },
+        {
+          "seed": 3,
+          "failed": false,
+          "final_test_ce": 3.2912771701812744
+        },
+        {
+          "seed": 4,
+          "failed": false,
+          "final_test_ce": 3.3052303791046143
+        },
+        {
+          "seed": 5,
+          "failed": false,
+          "final_test_ce": 3.289792537689209
+        },
+        {
+          "seed": 6,
+          "failed": false,
+          "final_test_ce": 3.3008036613464355
+        },
+        {
+          "seed": 7,
+          "failed": false,
+          "final_test_ce": 3.2929418087005615
+        },
+        {
+          "seed": 8,
+          "failed": false,
+          "final_test_ce": 3.2954814434051514
+        },
+        {
+          "seed": 9,
+          "failed": false,
+          "final_test_ce": 3.2925984859466553
+        }
+      ],
+      "environment": {
+        "python": "3.10.9 (main, Jan 11 2023, 09:18:18) [Clang 14.0.6 ]",
+        "platform": "macOS-26.5.1-arm64-arm-64bit",
+        "torch": "2.13.0",
+        "requested_device": "cpu",
+        "device": "cpu",
+        "cuda_available": false,
+        "cuda_runtime": null,
+        "cuda_device_name": null,
+        "cuda_device_capability": null,
+        "deterministic_algorithms": false,
+        "seed_workers": 1,
+        "torch_threads_per_seed": 1,
+        "git_commit": null
+      }
+    },
+    "spec": {
+      "schema_version": "1.0",
+      "profile": "v1.5",
+      "dataset_id": "bg_1d9caf",
+      "family": "bigram_lm",
+      "budget": {
+        "training_steps": 1024,
+        "batch_size": 32,
+        "total_samples_seen": 32768
+      },
+      "model": {
+        "type": "transformer_lm",
+        "vocab_size": 24,
+        "context_length": 24,
+        "d_model": 32,
+        "num_layers": 3,
+        "layer_residual": false,
+        "num_heads": 2,
+        "d_ff": 256
+      },
+      "optimizer": {
+        "type": "Adagrad",
+        "lr": 3e-05,
+        "weight_decay": 0.0001,
+        "betas": [
+          0.9,
+          0.95
+        ]
+      },
+      "loss": {
+        "loss_id": "cross_entropy"
+      },
+      "execution": {
+        "device": "cpu"
+      },
+      "files": {
+        "model": "model.py",
+        "train": "train.py",
+        "loss": "loss.py",
+        "optimizer": "optimizer.py"
+      },
+      "candidate_id": "x_eb522bd461"
+    },
+    "model_source": "\"\"\"Causal transformer language model.\"\"\"\nfrom __future__ import annotations\n\nimport torch\nimport torch.nn as nn\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.context_length = 24\n        self.token_embed = nn.Embedding(24, 32)\n        self.pos_embed = nn.Embedding(24, 32)\n        layer = nn.TransformerEncoderLayer(\n            d_model=32,\n            nhead=2,\n            dim_feedforward=256,\n            dropout=0.0,\n            batch_first=True,\n            activation=\"gelu\",\n        )\n        self.encoder = nn.TransformerEncoder(layer, num_layers=3)\n        self.head = nn.Linear(32, 24)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        b, seq_len = x.shape\n        positions = torch.arange(seq_len, device=x.device).unsqueeze(0).expand(b, -1)\n        h = self.token_embed(x) + self.pos_embed(positions)\n        mask = torch.triu(torch.ones(seq_len, seq_len, device=x.device), diagonal=1).bool()\n        h = self.encoder(h, mask=mask)\n        return self.head(h)\n",
+    "train_source": "\"\"\"Training loop for this candidate \u2014 executed by the ground-truth runner.\"\"\"\nfrom __future__ import annotations\n\nimport math\n\nimport torch\nimport torch.nn.functional as F\n\nfrom loss import loss_fn\nfrom model import Model\nfrom optimizer import build_optimizer\n\n\ndef _resolve_device(device: str) -> torch.device:\n    if device not in {\"cpu\", \"cuda\"}:\n        raise ValueError(f\"Unsupported execution device {device!r}; choose 'cpu' or 'cuda'\")\n    if device == \"cuda\" and not torch.cuda.is_available():\n        raise RuntimeError(\n            \"CUDA was requested but is unavailable \"\n            f\"(torch={torch.__version__}, torch.version.cuda={torch.version.cuda!r})\"\n        )\n    return torch.device(device)\n\n\ndef _test_ce(model: torch.nn.Module, test_x: torch.Tensor, test_y: torch.Tensor) -> float:\n    model.eval()\n    with torch.inference_mode():\n        pred = model(test_x)\n        if pred.ndim == 3:\n            vocab = pred.shape[-1]\n            loss = F.cross_entropy(pred.reshape(-1, vocab), test_y.reshape(-1))\n        else:\n            loss = F.cross_entropy(pred, test_y.reshape(-1))\n        return float(loss.item())\n\n\ndef train_and_eval(\n    train_x: torch.Tensor,\n    train_y: torch.Tensor,\n    test_x: torch.Tensor,\n    test_y: torch.Tensor,\n    *,\n    steps: int,\n    batch_size: int,\n    seed: int = 0,\n    fail_threshold: float = float(\"inf\"),\n    device: str = \"cpu\",\n    progress_callback=None,\n) -> dict:\n    torch.manual_seed(seed)\n    run_device = _resolve_device(device)\n    if run_device.type == \"cuda\":\n        torch.cuda.manual_seed_all(seed)\n    model = Model().to(run_device)\n    optimizer = build_optimizer(model)\n    train_x = train_x.to(run_device)\n    train_y = train_y.to(run_device)\n    test_x = test_x.to(run_device)\n    test_y = test_y.to(run_device)\n    n = train_x.shape[0]\n    step_metrics: list[float] = []\n    eval_samples: list[int] = []\n    failed = False\n    progress_interval = max(1, steps // 100)\n\n    for step in range(1, steps + 1):\n        model.train()\n        idx = torch.randint(0, n, (batch_size,), device=run_device)\n        pred = model(train_x[idx])\n        loss = loss_fn(model, pred, train_y[idx])\n        if not torch.isfinite(loss):\n            failed = True\n            break\n        optimizer.zero_grad(set_to_none=True)\n        loss.backward()\n        optimizer.step()\n\n        metric = _test_ce(model, test_x, test_y)\n        if not math.isfinite(metric):\n            failed = True\n            break\n        eval_samples.append(step * batch_size)\n        step_metrics.append(metric)\n        if progress_callback is not None and (\n            step == 1 or step % progress_interval == 0 or step == steps\n        ):\n            progress_callback(\n                {\n                    \"step\": step,\n                    \"training_steps\": steps,\n                    \"samples_seen\": step * batch_size,\n                    \"total_samples_seen\": steps * batch_size,\n                    \"metric\": metric,\n                }\n            )\n\n    final_metric = step_metrics[-1] if step_metrics else float(\"inf\")\n    if final_metric > fail_threshold:\n        failed = True\n\n    return {\n        \"failed\": failed,\n        \"final_test_ce\": final_metric,\n        \"eval_samples\": eval_samples,\n        \"step_metrics\": step_metrics,\n    }\n",
+    "optimizer_source": "\"\"\"Optimizer factory for this candidate.\"\"\"\nfrom __future__ import annotations\n\nimport torch\nimport torch.nn as nn\n\n\ndef build_optimizer(model: nn.Module) -> torch.optim.Optimizer:\n    params = model.parameters()\n    return torch.optim.Adagrad(params, lr=3e-05, weight_decay=0.0001)\n",
+    "source_hashes": {
+      "model_source": "22a837266af359b283cb38e27c37febe1b0d673826afaa8778ee97d7831ea18d",
+      "train_source": "c7c6188e0aad5362c2effe513374adbd21d4ce01d72a727497a49fca30e5fa2a",
+      "optimizer_source": "bd37454c125b9c9dd201cf5eb1fde83c38429e50860432e551c3e02cc0084b00"
+    }
+  },
+  {
+    "row": {
+      "family": "bigram_lm",
+      "dataset_id": "bg_1d9caf",
+      "set_id": "exp:2ba2012e9989",
+      "candidate_id": "30ea40fd",
+      "dataset": {
+        "instance_seed": 100064931980,
+        "vocab_size": 24,
+        "context_length": 24,
+        "train_size": 800,
+        "test_size": 200,
+        "alpha": 0.8,
+        "layout": "lm",
+        "sequence_seed": 100064931980,
+        "table_seed": 100064941980
+      },
+      "budget": {
+        "training_steps": 1024,
+        "batch_size": 32,
+        "total_samples_seen": 32768
+      },
+      "params": null,
+      "model_type": "transformer_lm",
+      "d_model": 64,
+      "num_layers": 1,
+      "num_heads": 4,
+      "d_ff": 256,
+      "model": {
+        "type": "transformer_lm",
+        "vocab_size": 24,
+        "context_length": 24,
+        "d_model": 64,
+        "num_layers": 1,
+        "layer_residual": false,
+        "num_heads": 4,
+        "d_ff": 256
+      },
+      "optimizer": {
+        "type": "SGD",
+        "lr": 0.003,
+        "weight_decay": 0.001,
+        "momentum": 0
+      },
+      "loss": {
+        "loss_id": "cross_entropy"
+      },
+      "metric": "test_ce",
+      "mean": 3.1384860277175903,
+      "std": 0.013009899726148298,
+      "source": "experiment",
+      "epoch": 1,
+      "origin_epoch": 1,
+      "why": "Preregistered provenance repair in R9d96d388c9: explicit V24/context24 vs matching V32/context24, seeds0..9. At T1024 predict GRU .003 CE worse than .0003 and weak SGD; Adagrad reversal not guaranteed. No directional V effect predicted. Need runtime embedding/head dimensions or constructor provenance to determine whether prior exp:59726980c70d used32 or transport overrides24; metadata alone is not proof. Training-visible bg_1d9caf only, not q_7dbb0e evaluation data. Return actual dimensions, seed counts/failures if available."
+    },
+    "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/bigram_lm/bg_1d9caf/x_24b7256bb2",
+    "summary": {
+      "schema_version": "1.0",
+      "candidate_id": "x_24b7256bb2",
+      "selection_metric": "test_ce",
+      "execution": "candidate_py_files",
+      "n_seeds": 10,
+      "base_seed": 0,
+      "failed_seeds": 0,
+      "excluded": false,
+      "mean_test_ce": 3.1384860277175903,
+      "std_test_ce": 0.013009899726148298,
+      "seed_results": [
+        {
+          "seed": 0,
+          "failed": false,
+          "final_test_ce": 3.1335971355438232
+        },
+        {
+          "seed": 1,
+          "failed": false,
+          "final_test_ce": 3.134241819381714
+        },
+        {
+          "seed": 2,
+          "failed": false,
+          "final_test_ce": 3.102917194366455
+        },
+        {
+          "seed": 3,
+          "failed": false,
+          "final_test_ce": 3.1392319202423096
+        },
+        {
+          "seed": 4,
+          "failed": false,
+          "final_test_ce": 3.1441762447357178
+        },
+        {
+          "seed": 5,
+          "failed": false,
+          "final_test_ce": 3.1465516090393066
+        },
+        {
+          "seed": 6,
+          "failed": false,
+          "final_test_ce": 3.1460084915161133
+        },
+        {
+          "seed": 7,
+          "failed": false,
+          "final_test_ce": 3.1517677307128906
+        },
+        {
+          "seed": 8,
+          "failed": false,
+          "final_test_ce": 3.140904188156128
+        },
+        {
+          "seed": 9,
+          "failed": false,
+          "final_test_ce": 3.1454639434814453
+        }
+      ],
+      "environment": {
+        "python": "3.10.9 (main, Jan 11 2023, 09:18:18) [Clang 14.0.6 ]",
+        "platform": "macOS-26.5.1-arm64-arm-64bit",
+        "torch": "2.13.0",
+        "requested_device": "cpu",
+        "device": "cpu",
+        "cuda_available": false,
+        "cuda_runtime": null,
+        "cuda_device_name": null,
+        "cuda_device_capability": null,
+        "deterministic_algorithms": false,
+        "seed_workers": 1,
+        "torch_threads_per_seed": 1,
+        "git_commit": null
+      }
+    },
+    "spec": {
+      "schema_version": "1.0",
+      "profile": "v1.5",
+      "dataset_id": "bg_1d9caf",
+      "family": "bigram_lm",
+      "budget": {
+        "training_steps": 1024,
+        "batch_size": 32,
+        "total_samples_seen": 32768
+      },
+      "model": {
+        "type": "transformer_lm",
+        "vocab_size": 24,
+        "context_length": 24,
+        "d_model": 64,
+        "num_layers": 1,
+        "layer_residual": false,
+        "num_heads": 4,
+        "d_ff": 256
+      },
+      "optimizer": {
+        "type": "SGD",
+        "lr": 0.003,
+        "weight_decay": 0.001,
+        "momentum": 0
+      },
+      "loss": {
+        "loss_id": "cross_entropy"
+      },
+      "execution": {
+        "device": "cpu"
+      },
+      "files": {
+        "model": "model.py",
+        "train": "train.py",
+        "loss": "loss.py",
+        "optimizer": "optimizer.py"
+      },
+      "candidate_id": "x_24b7256bb2"
+    },
+    "model_source": "\"\"\"Causal transformer language model.\"\"\"\nfrom __future__ import annotations\n\nimport torch\nimport torch.nn as nn\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.context_length = 24\n        self.token_embed = nn.Embedding(24, 64)\n        self.pos_embed = nn.Embedding(24, 64)\n        layer = nn.TransformerEncoderLayer(\n            d_model=64,\n            nhead=4,\n            dim_feedforward=256,\n            dropout=0.0,\n            batch_first=True,\n            activation=\"gelu\",\n        )\n        self.encoder = nn.TransformerEncoder(layer, num_layers=1)\n        self.head = nn.Linear(64, 24)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        b, seq_len = x.shape\n        positions = torch.arange(seq_len, device=x.device).unsqueeze(0).expand(b, -1)\n        h = self.token_embed(x) + self.pos_embed(positions)\n        mask = torch.triu(torch.ones(seq_len, seq_len, device=x.device), diagonal=1).bool()\n        h = self.encoder(h, mask=mask)\n        return self.head(h)\n",
+    "train_source": "\"\"\"Training loop for this candidate \u2014 executed by the ground-truth runner.\"\"\"\nfrom __future__ import annotations\n\nimport math\n\nimport torch\nimport torch.nn.functional as F\n\nfrom loss import loss_fn\nfrom model import Model\nfrom optimizer import build_optimizer\n\n\ndef _resolve_device(device: str) -> torch.device:\n    if device not in {\"cpu\", \"cuda\"}:\n        raise ValueError(f\"Unsupported execution device {device!r}; choose 'cpu' or 'cuda'\")\n    if device == \"cuda\" and not torch.cuda.is_available():\n        raise RuntimeError(\n            \"CUDA was requested but is unavailable \"\n            f\"(torch={torch.__version__}, torch.version.cuda={torch.version.cuda!r})\"\n        )\n    return torch.device(device)\n\n\ndef _test_ce(model: torch.nn.Module, test_x: torch.Tensor, test_y: torch.Tensor) -> float:\n    model.eval()\n    with torch.inference_mode():\n        pred = model(test_x)\n        if pred.ndim == 3:\n            vocab = pred.shape[-1]\n            loss = F.cross_entropy(pred.reshape(-1, vocab), test_y.reshape(-1))\n        else:\n            loss = F.cross_entropy(pred, test_y.reshape(-1))\n        return float(loss.item())\n\n\ndef train_and_eval(\n    train_x: torch.Tensor,\n    train_y: torch.Tensor,\n    test_x: torch.Tensor,\n    test_y: torch.Tensor,\n    *,\n    steps: int,\n    batch_size: int,\n    seed: int = 0,\n    fail_threshold: float = float(\"inf\"),\n    device: str = \"cpu\",\n    progress_callback=None,\n) -> dict:\n    torch.manual_seed(seed)\n    run_device = _resolve_device(device)\n    if run_device.type == \"cuda\":\n        torch.cuda.manual_seed_all(seed)\n    model = Model().to(run_device)\n    optimizer = build_optimizer(model)\n    train_x = train_x.to(run_device)\n    train_y = train_y.to(run_device)\n    test_x = test_x.to(run_device)\n    test_y = test_y.to(run_device)\n    n = train_x.shape[0]\n    step_metrics: list[float] = []\n    eval_samples: list[int] = []\n    failed = False\n    progress_interval = max(1, steps // 100)\n\n    for step in range(1, steps + 1):\n        model.train()\n        idx = torch.randint(0, n, (batch_size,), device=run_device)\n        pred = model(train_x[idx])\n        loss = loss_fn(model, pred, train_y[idx])\n        if not torch.isfinite(loss):\n            failed = True\n            break\n        optimizer.zero_grad(set_to_none=True)\n        loss.backward()\n        optimizer.step()\n\n        metric = _test_ce(model, test_x, test_y)\n        if not math.isfinite(metric):\n            failed = True\n            break\n        eval_samples.append(step * batch_size)\n        step_metrics.append(metric)\n        if progress_callback is not None and (\n            step == 1 or step % progress_interval == 0 or step == steps\n        ):\n            progress_callback(\n                {\n                    \"step\": step,\n                    \"training_steps\": steps,\n                    \"samples_seen\": step * batch_size,\n                    \"total_samples_seen\": steps * batch_size,\n                    \"metric\": metric,\n                }\n            )\n\n    final_metric = step_metrics[-1] if step_metrics else float(\"inf\")\n    if final_metric > fail_threshold:\n        failed = True\n\n    return {\n        \"failed\": failed,\n        \"final_test_ce\": final_metric,\n        \"eval_samples\": eval_samples,\n        \"step_metrics\": step_metrics,\n    }\n",
+    "optimizer_source": "\"\"\"Optimizer factory for this candidate.\"\"\"\nfrom __future__ import annotations\n\nimport torch\nimport torch.nn as nn\n\n\ndef build_optimizer(model: nn.Module) -> torch.optim.Optimizer:\n    params = model.parameters()\n    return torch.optim.SGD(params, lr=0.003, momentum=0, weight_decay=0.001)\n",
+    "source_hashes": {
+      "model_source": "bf98c11ca2bf01d68bb06cdb19673b56b89c1302d979d85d376e6311017617bd",
+      "train_source": "c7c6188e0aad5362c2effe513374adbd21d4ce01d72a727497a49fca30e5fa2a",
+      "optimizer_source": "55990bc075ef2258cefcca3751e6ef2b0a6cb53bcbbbf19d1953ecf695f95c9b"
+    }
+  },
+  {
+    "row": {
+      "family": "bigram_lm",
+      "dataset_id": "bg_1d9caf",
+      "set_id": "exp:2ba2012e9989",
+      "candidate_id": "f65b30b1",
+      "dataset": {
+        "instance_seed": 100064931980,
+        "vocab_size": 24,
+        "context_length": 24,
+        "train_size": 800,
+        "test_size": 200,
+        "alpha": 0.8,
+        "layout": "lm",
+        "sequence_seed": 100064931980,
+        "table_seed": 100064941980
+      },
+      "budget": {
+        "training_steps": 256,
+        "batch_size": 32,
+        "total_samples_seen": 8192
+      },
+      "params": null,
+      "model_type": "gru_lm",
+      "d_model": 64,
+      "num_layers": 2,
+      "model": {
+        "type": "gru_lm",
+        "vocab_size": 32,
+        "context_length": 24,
+        "d_model": 64,
+        "num_layers": 2,
+        "layer_residual": false
+      },
+      "optimizer": {
+        "type": "AdamW",
+        "lr": 0.0003,
+        "weight_decay": 0.001,
+        "momentum": 0.9,
+        "betas": [
+          0.9,
+          0.95
+        ]
+      },
+      "loss": {
+        "loss_id": "cross_entropy"
+      },
+      "metric": "test_ce",
+      "mean": 3.0344087362289427,
+      "std": 0.0073667564696916436,
+      "source": "experiment",
+      "epoch": 1,
+      "origin_epoch": 1,
+      "why": "Preregistered provenance repair in R9d96d388c9: explicit V24/context24 vs matching V32/context24, seeds0..9. At T1024 predict GRU .003 CE worse than .0003 and weak SGD; Adagrad reversal not guaranteed. No directional V effect predicted. Need runtime embedding/head dimensions or constructor provenance to determine whether prior exp:59726980c70d used32 or transport overrides24; metadata alone is not proof. Training-visible bg_1d9caf only, not q_7dbb0e evaluation data. Return actual dimensions, seed counts/failures if available."
+    },
+    "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/bigram_lm/bg_1d9caf/x_83f1a9e372",
+    "summary": {
+      "schema_version": "1.0",
+      "candidate_id": "x_83f1a9e372",
+      "selection_metric": "test_ce",
+      "execution": "candidate_py_files",
+      "n_seeds": 10,
+      "base_seed": 0,
+      "failed_seeds": 0,
+      "excluded": false,
+      "mean_test_ce": 3.0344087362289427,
+      "std_test_ce": 0.0073667564696916436,
+      "seed_results": [
+        {
+          "seed": 0,
+          "failed": false,
+          "final_test_ce": 3.025697708129883
+        },
+        {
+          "seed": 1,
+          "failed": false,
+          "final_test_ce": 3.03641414642334
+        },
+        {
+          "seed": 2,
+          "failed": false,
+          "final_test_ce": 3.0217583179473877
+        },
+        {
+          "seed": 3,
+          "failed": false,
+          "final_test_ce": 3.0379104614257812
+        },
+        {
+          "seed": 4,
+          "failed": false,
+          "final_test_ce": 3.034132242202759
+        },
+        {
+          "seed": 5,
+          "failed": false,
+          "final_test_ce": 3.048011064529419
+        },
+        {
+          "seed": 6,
+          "failed": false,
+          "final_test_ce": 3.0364696979522705
+        },
+        {
+          "seed": 7,
+          "failed": false,
+          "final_test_ce": 3.041879415512085
+        },
+        {
+          "seed": 8,
+          "failed": false,
+          "final_test_ce": 3.034132957458496
+        },
+        {
+          "seed": 9,
+          "failed": false,
+          "final_test_ce": 3.027681350708008
+        }
+      ],
+      "environment": {
+        "python": "3.10.9 (main, Jan 11 2023, 09:18:18) [Clang 14.0.6 ]",
+        "platform": "macOS-26.5.1-arm64-arm-64bit",
+        "torch": "2.13.0",
+        "requested_device": "cpu",
+        "device": "cpu",
+        "cuda_available": false,
+        "cuda_runtime": null,
+        "cuda_device_name": null,
+        "cuda_device_capability": null,
+        "deterministic_algorithms": false,
+        "seed_workers": 1,
+        "torch_threads_per_seed": 1,
+        "git_commit": null
+      }
+    },
+    "spec": {
+      "schema_version": "1.0",
+      "profile": "v1.5",
+      "dataset_id": "bg_1d9caf",
+      "family": "bigram_lm",
+      "budget": {
+        "training_steps": 256,
+        "batch_size": 32,
+        "total_samples_seen": 8192
+      },
+      "model": {
+        "type": "gru_lm",
+        "vocab_size": 32,
+        "context_length": 24,
+        "d_model": 64,
+        "num_layers": 2,
+        "layer_residual": false
+      },
+      "optimizer": {
+        "type": "AdamW",
+        "lr": 0.0003,
+        "weight_decay": 0.001,
+        "momentum": 0.9,
+        "betas": [
+          0.9,
+          0.95
+        ]
+      },
+      "loss": {
+        "loss_id": "cross_entropy"
+      },
+      "execution": {
+        "device": "cpu"
+      },
+      "files": {
+        "model": "model.py",
+        "train": "train.py",
+        "loss": "loss.py",
+        "optimizer": "optimizer.py"
+      },
+      "candidate_id": "x_83f1a9e372"
+    },
+    "model_source": "\"\"\"Causal unidirectional GRU language model.\"\"\"\nfrom __future__ import annotations\n\nimport torch\nimport torch.nn as nn\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.context_length = 24\n        self.token_embed = nn.Embedding(32, 64)\n        self.gru = nn.GRU(\n            input_size=64,\n            hidden_size=64,\n            num_layers=2,\n            batch_first=True,\n            dropout=0.0,\n        )\n        self.head = nn.Linear(64, 32)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.token_embed(x)\n        h, _ = self.gru(h)\n        return self.head(h)\n",
+    "train_source": "\"\"\"Training loop for this candidate \u2014 executed by the ground-truth runner.\"\"\"\nfrom __future__ import annotations\n\nimport math\n\nimport torch\nimport torch.nn.functional as F\n\nfrom loss import loss_fn\nfrom model import Model\nfrom optimizer import build_optimizer\n\n\ndef _resolve_device(device: str) -> torch.device:\n    if device not in {\"cpu\", \"cuda\"}:\n        raise ValueError(f\"Unsupported execution device {device!r}; choose 'cpu' or 'cuda'\")\n    if device == \"cuda\" and not torch.cuda.is_available():\n        raise RuntimeError(\n            \"CUDA was requested but is unavailable \"\n            f\"(torch={torch.__version__}, torch.version.cuda={torch.version.cuda!r})\"\n        )\n    return torch.device(device)\n\n\ndef _test_ce(model: torch.nn.Module, test_x: torch.Tensor, test_y: torch.Tensor) -> float:\n    model.eval()\n    with torch.inference_mode():\n        pred = model(test_x)\n        if pred.ndim == 3:\n            vocab = pred.shape[-1]\n            loss = F.cross_entropy(pred.reshape(-1, vocab), test_y.reshape(-1))\n        else:\n            loss = F.cross_entropy(pred, test_y.reshape(-1))\n        return float(loss.item())\n\n\ndef train_and_eval(\n    train_x: torch.Tensor,\n    train_y: torch.Tensor,\n    test_x: torch.Tensor,\n    test_y: torch.Tensor,\n    *,\n    steps: int,\n    batch_size: int,\n    seed: int = 0,\n    fail_threshold: float = float(\"inf\"),\n    device: str = \"cpu\",\n    progress_callback=None,\n) -> dict:\n    torch.manual_seed(seed)\n    run_device = _resolve_device(device)\n    if run_device.type == \"cuda\":\n        torch.cuda.manual_seed_all(seed)\n    model = Model().to(run_device)\n    optimizer = build_optimizer(model)\n    train_x = train_x.to(run_device)\n    train_y = train_y.to(run_device)\n    test_x = test_x.to(run_device)\n    test_y = test_y.to(run_device)\n    n = train_x.shape[0]\n    step_metrics: list[float] = []\n    eval_samples: list[int] = []\n    failed = False\n    progress_interval = max(1, steps // 100)\n\n    for step in range(1, steps + 1):\n        model.train()\n        idx = torch.randint(0, n, (batch_size,), device=run_device)\n        pred = model(train_x[idx])\n        loss = loss_fn(model, pred, train_y[idx])\n        if not torch.isfinite(loss):\n            failed = True\n            break\n        optimizer.zero_grad(set_to_none=True)\n        loss.backward()\n        optimizer.step()\n\n        metric = _test_ce(model, test_x, test_y)\n        if not math.isfinite(metric):\n            failed = True\n            break\n        eval_samples.append(step * batch_size)\n        step_metrics.append(metric)\n        if progress_callback is not None and (\n            step == 1 or step % progress_interval == 0 or step == steps\n        ):\n            progress_callback(\n                {\n                    \"step\": step,\n                    \"training_steps\": steps,\n                    \"samples_seen\": step * batch_size,\n                    \"total_samples_seen\": steps * batch_size,\n                    \"metric\": metric,\n                }\n            )\n\n    final_metric = step_metrics[-1] if step_metrics else float(\"inf\")\n    if final_metric > fail_threshold:\n        failed = True\n\n    return {\n        \"failed\": failed,\n        \"final_test_ce\": final_metric,\n        \"eval_samples\": eval_samples,\n        \"step_metrics\": step_metrics,\n    }\n",
+    "optimizer_source": "\"\"\"Optimizer factory for this candidate.\"\"\"\nfrom __future__ import annotations\n\nimport torch\nimport torch.nn as nn\n\n\ndef build_optimizer(model: nn.Module) -> torch.optim.Optimizer:\n    params = model.parameters()\n    return torch.optim.AdamW(params, lr=0.0003, betas=(0.9, 0.95), weight_decay=0.001)\n",
+    "source_hashes": {
+      "model_source": "1483ff666792a074929122ec41e50d4314f3c0ea97926a6c0c963b183afa040a",
+      "train_source": "c7c6188e0aad5362c2effe513374adbd21d4ce01d72a727497a49fca30e5fa2a",
+      "optimizer_source": "7195b04054edffd03084cad18e5127dd026f28fa4b07dd3348fd68e57c11822c"
+    }
+  },
+  {
+    "row": {
+      "family": "bigram_lm",
+      "dataset_id": "bg_1d9caf",
+      "set_id": "exp:2ba2012e9989",
+      "candidate_id": "2ad8f1cf",
+      "dataset": {
+        "instance_seed": 100064931980,
+        "vocab_size": 24,
+        "context_length": 24,
+        "train_size": 800,
+        "test_size": 200,
+        "alpha": 0.8,
+        "layout": "lm",
+        "sequence_seed": 100064931980,
+        "table_seed": 100064941980
+      },
+      "budget": {
+        "training_steps": 1024,
+        "batch_size": 32,
+        "total_samples_seen": 32768
+      },
+      "params": null,
+      "model_type": "transformer_lm",
+      "d_model": 64,
+      "num_layers": 1,
+      "num_heads": 4,
+      "d_ff": 256,
+      "model": {
+        "type": "transformer_lm",
+        "vocab_size": 32,
+        "context_length": 24,
+        "d_model": 64,
+        "num_layers": 1,
+        "layer_residual": false,
+        "num_heads": 4,
+        "d_ff": 256
+      },
+      "optimizer": {
+        "type": "SGD",
+        "lr": 0.003,
+        "weight_decay": 0.001,
+        "momentum": 0
+      },
+      "loss": {
+        "loss_id": "cross_entropy"
+      },
+      "metric": "test_ce",
+      "mean": 3.2614080190658568,
+      "std": 0.021666991565068263,
+      "source": "experiment",
+      "epoch": 1,
+      "origin_epoch": 1,
+      "why": "Preregistered provenance repair in R9d96d388c9: explicit V24/context24 vs matching V32/context24, seeds0..9. At T1024 predict GRU .003 CE worse than .0003 and weak SGD; Adagrad reversal not guaranteed. No directional V effect predicted. Need runtime embedding/head dimensions or constructor provenance to determine whether prior exp:59726980c70d used32 or transport overrides24; metadata alone is not proof. Training-visible bg_1d9caf only, not q_7dbb0e evaluation data. Return actual dimensions, seed counts/failures if available."
+    },
+    "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/bigram_lm/bg_1d9caf/x_12699d7f22",
+    "summary": {
+      "schema_version": "1.0",
+      "candidate_id": "x_12699d7f22",
+      "selection_metric": "test_ce",
+      "execution": "candidate_py_files",
+      "n_seeds": 10,
+      "base_seed": 0,
+      "failed_seeds": 0,
+      "excluded": false,
+      "mean_test_ce": 3.2614080190658568,
+      "std_test_ce": 0.021666991565068263,
+      "seed_results": [
+        {
+          "seed": 0,
+          "failed": false,
+          "final_test_ce": 3.237086772918701
+        },
+        {
+          "seed": 1,
+          "failed": false,
+          "final_test_ce": 3.2523534297943115
+        },
+        {
+          "seed": 2,
+          "failed": false,
+          "final_test_ce": 3.233557939529419
+        },
+        {
+          "seed": 3,
+          "failed": false,
+          "final_test_ce": 3.2725462913513184
+        },
+        {
+          "seed": 4,
+          "failed": false,
+          "final_test_ce": 3.2726733684539795
+        },
+        {
+          "seed": 5,
+          "failed": false,
+          "final_test_ce": 3.298569440841675
+        },
+        {
+          "seed": 6,
+          "failed": false,
+          "final_test_ce": 3.2881057262420654
+        },
+        {
+          "seed": 7,
+          "failed": false,
+          "final_test_ce": 3.273555278778076
+        },
+        {
+          "seed": 8,
+          "failed": false,
+          "final_test_ce": 3.2372546195983887
+        },
+        {
+          "seed": 9,
+          "failed": false,
+          "final_test_ce": 3.2483773231506348
+        }
+      ],
+      "environment": {
+        "python": "3.10.9 (main, Jan 11 2023, 09:18:18) [Clang 14.0.6 ]",
+        "platform": "macOS-26.5.1-arm64-arm-64bit",
+        "torch": "2.13.0",
+        "requested_device": "cpu",
+        "device": "cpu",
+        "cuda_available": false,
+        "cuda_runtime": null,
+        "cuda_device_name": null,
+        "cuda_device_capability": null,
+        "deterministic_algorithms": false,
+        "seed_workers": 1,
+        "torch_threads_per_seed": 1,
+        "git_commit": null
+      }
+    },
+    "spec": {
+      "schema_version": "1.0",
+      "profile": "v1.5",
+      "dataset_id": "bg_1d9caf",
+      "family": "bigram_lm",
+      "budget": {
+        "training_steps": 1024,
+        "batch_size": 32,
+        "total_samples_seen": 32768
+      },
+      "model": {
+        "type": "transformer_lm",
+        "vocab_size": 32,
+        "context_length": 24,
+        "d_model": 64,
+        "num_layers": 1,
+        "layer_residual": false,
+        "num_heads": 4,
+        "d_ff": 256
+      },
+      "optimizer": {
+        "type": "SGD",
+        "lr": 0.003,
+        "weight_decay": 0.001,
+        "betas": [
+          0.9,
+          0.95
+        ],
+        "momentum": 0
+      },
+      "loss": {
+        "loss_id": "cross_entropy"
+      },
+      "execution": {
+        "device": "cpu"
+      },
+      "files": {
+        "model": "model.py",
+        "train": "train.py",
+        "loss": "loss.py",
+        "optimizer": "optimizer.py"
+      },
+      "candidate_id": "x_12699d7f22"
+    },
+    "model_source": "\"\"\"Causal transformer language model.\"\"\"\nfrom __future__ import annotations\n\nimport torch\nimport torch.nn as nn\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.context_length = 24\n        self.token_embed = nn.Embedding(32, 64)\n        self.pos_embed = nn.Embedding(24, 64)\n        layer = nn.TransformerEncoderLayer(\n            d_model=64,\n            nhead=4,\n            dim_feedforward=256,\n            dropout=0.0,\n            batch_first=True,\n            activation=\"gelu\",\n        )\n        self.encoder = nn.TransformerEncoder(layer, num_layers=1)\n        self.head = nn.Linear(64, 32)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        b, seq_len = x.shape\n        positions = torch.arange(seq_len, device=x.device).unsqueeze(0).expand(b, -1)\n        h = self.token_embed(x) + self.pos_embed(positions)\n        mask = torch.triu(torch.ones(seq_len, seq_len, device=x.device), diagonal=1).bool()\n        h = self.encoder(h, mask=mask)\n        return self.head(h)\n",
+    "train_source": "\"\"\"Training loop for this candidate \u2014 executed by the ground-truth runner.\"\"\"\nfrom __future__ import annotations\n\nimport math\n\nimport torch\nimport torch.nn.functional as F\n\nfrom loss import loss_fn\nfrom model import Model\nfrom optimizer import build_optimizer\n\n\ndef _resolve_device(device: str) -> torch.device:\n    if device not in {\"cpu\", \"cuda\"}:\n        raise ValueError(f\"Unsupported execution device {device!r}; choose 'cpu' or 'cuda'\")\n    if device == \"cuda\" and not torch.cuda.is_available():\n        raise RuntimeError(\n            \"CUDA was requested but is unavailable \"\n            f\"(torch={torch.__version__}, torch.version.cuda={torch.version.cuda!r})\"\n        )\n    return torch.device(device)\n\n\ndef _test_ce(model: torch.nn.Module, test_x: torch.Tensor, test_y: torch.Tensor) -> float:\n    model.eval()\n    with torch.inference_mode():\n        pred = model(test_x)\n        if pred.ndim == 3:\n            vocab = pred.shape[-1]\n            loss = F.cross_entropy(pred.reshape(-1, vocab), test_y.reshape(-1))\n        else:\n            loss = F.cross_entropy(pred, test_y.reshape(-1))\n        return float(loss.item())\n\n\ndef train_and_eval(\n    train_x: torch.Tensor,\n    train_y: torch.Tensor,\n    test_x: torch.Tensor,\n    test_y: torch.Tensor,\n    *,\n    steps: int,\n    batch_size: int,\n    seed: int = 0,\n    fail_threshold: float = float(\"inf\"),\n    device: str = \"cpu\",\n    progress_callback=None,\n) -> dict:\n    torch.manual_seed(seed)\n    run_device = _resolve_device(device)\n    if run_device.type == \"cuda\":\n        torch.cuda.manual_seed_all(seed)\n    model = Model().to(run_device)\n    optimizer = build_optimizer(model)\n    train_x = train_x.to(run_device)\n    train_y = train_y.to(run_device)\n    test_x = test_x.to(run_device)\n    test_y = test_y.to(run_device)\n    n = train_x.shape[0]\n    step_metrics: list[float] = []\n    eval_samples: list[int] = []\n    failed = False\n    progress_interval = max(1, steps // 100)\n\n    for step in range(1, steps + 1):\n        model.train()\n        idx = torch.randint(0, n, (batch_size,), device=run_device)\n        pred = model(train_x[idx])\n        loss = loss_fn(model, pred, train_y[idx])\n        if not torch.isfinite(loss):\n            failed = True\n            break\n        optimizer.zero_grad(set_to_none=True)\n        loss.backward()\n        optimizer.step()\n\n        metric = _test_ce(model, test_x, test_y)\n        if not math.isfinite(metric):\n            failed = True\n            break\n        eval_samples.append(step * batch_size)\n        step_metrics.append(metric)\n        if progress_callback is not None and (\n            step == 1 or step % progress_interval == 0 or step == steps\n        ):\n            progress_callback(\n                {\n                    \"step\": step,\n                    \"training_steps\": steps,\n                    \"samples_seen\": step * batch_size,\n                    \"total_samples_seen\": steps * batch_size,\n                    \"metric\": metric,\n                }\n            )\n\n    final_metric = step_metrics[-1] if step_metrics else float(\"inf\")\n    if final_metric > fail_threshold:\n        failed = True\n\n    return {\n        \"failed\": failed,\n        \"final_test_ce\": final_metric,\n        \"eval_samples\": eval_samples,\n        \"step_metrics\": step_metrics,\n    }\n",
+    "optimizer_source": "\"\"\"Optimizer factory for this candidate.\"\"\"\nfrom __future__ import annotations\n\nimport torch\nimport torch.nn as nn\n\n\ndef build_optimizer(model: nn.Module) -> torch.optim.Optimizer:\n    params = model.parameters()\n    return torch.optim.SGD(params, lr=0.003, momentum=0, weight_decay=0.001)\n",
+    "source_hashes": {
+      "model_source": "cde6385b4de2535a921bf0cac7ff5260ce65dde2ff88da17b434b35be0fb701b",
+      "train_source": "c7c6188e0aad5362c2effe513374adbd21d4ce01d72a727497a49fca30e5fa2a",
+      "optimizer_source": "55990bc075ef2258cefcca3751e6ef2b0a6cb53bcbbbf19d1953ecf695f95c9b"
+    }
+  },
+  {
+    "row": {
+      "family": "bigram_lm",
+      "dataset_id": "bg_1d9caf",
+      "set_id": "exp:2ba2012e9989",
+      "candidate_id": "aa379e73",
+      "dataset": {
+        "instance_seed": 100064931980,
+        "vocab_size": 24,
+        "context_length": 24,
+        "train_size": 800,
+        "test_size": 200,
+        "alpha": 0.8,
+        "layout": "lm",
+        "sequence_seed": 100064931980,
+        "table_seed": 100064941980
+      },
+      "budget": {
+        "training_steps": 1024,
+        "batch_size": 32,
+        "total_samples_seen": 32768
+      },
+      "params": null,
+      "model_type": "gru_lm",
+      "d_model": 64,
+      "num_layers": 2,
+      "model": {
+        "type": "gru_lm",
+        "vocab_size": 32,
+        "context_length": 24,
+        "d_model": 64,
+        "num_layers": 2,
+        "layer_residual": false
+      },
+      "optimizer": {
+        "type": "AdamW",
+        "lr": 0.003,
+        "weight_decay": 0.001,
+        "momentum": 0.9,
+        "betas": [
+          0.9,
+          0.95
+        ]
+      },
+      "loss": {
+        "loss_id": "cross_entropy"
+      },
+      "metric": "test_ce",
+      "mean": 3.703194189071655,
+      "std": 0.03710294447825075,
+      "source": "experiment",
+      "epoch": 1,
+      "origin_epoch": 1,
+      "why": "Preregistered provenance repair in R9d96d388c9: explicit V24/context24 vs matching V32/context24, seeds0..9. At T1024 predict GRU .003 CE worse than .0003 and weak SGD; Adagrad reversal not guaranteed. No directional V effect predicted. Need runtime embedding/head dimensions or constructor provenance to determine whether prior exp:59726980c70d used32 or transport overrides24; metadata alone is not proof. Training-visible bg_1d9caf only, not q_7dbb0e evaluation data. Return actual dimensions, seed counts/failures if available."
+    },
+    "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/bigram_lm/bg_1d9caf/x_769a645f46",
+    "summary": {
+      "schema_version": "1.0",
+      "candidate_id": "x_769a645f46",
+      "selection_metric": "test_ce",
+      "execution": "candidate_py_files",
+      "n_seeds": 10,
+      "base_seed": 0,
+      "failed_seeds": 0,
+      "excluded": false,
+      "mean_test_ce": 3.703194189071655,
+      "std_test_ce": 0.03710294447825075,
+      "seed_results": [
+        {
+          "seed": 0,
+          "failed": false,
+          "final_test_ce": 3.720297336578369
+        },
+        {
+          "seed": 1,
+          "failed": false,
+          "final_test_ce": 3.615318536758423
+        },
+        {
+          "seed": 2,
+          "failed": false,
+          "final_test_ce": 3.6690242290496826
+        },
+        {
+          "seed": 3,
+          "failed": false,
+          "final_test_ce": 3.6800878047943115
+        },
+        {
+          "seed": 4,
+          "failed": false,
+          "final_test_ce": 3.6950695514678955
+        },
+        {
+          "seed": 5,
+          "failed": false,
+          "final_test_ce": 3.7349772453308105
+        },
+        {
+          "seed": 6,
+          "failed": false,
+          "final_test_ce": 3.7248694896698
+        },
+        {
+          "seed": 7,
+          "failed": false,
+          "final_test_ce": 3.7360713481903076
+        },
+        {
+          "seed": 8,
+          "failed": false,
+          "final_test_ce": 3.7185912132263184
+        },
+        {
+          "seed": 9,
+          "failed": false,
+          "final_test_ce": 3.7376351356506348
+        }
+      ],
+      "environment": {
+        "python": "3.10.9 (main, Jan 11 2023, 09:18:18) [Clang 14.0.6 ]",
+        "platform": "macOS-26.5.1-arm64-arm-64bit",
+        "torch": "2.13.0",
+        "requested_device": "cpu",
+        "device": "cpu",
+        "cuda_available": false,
+        "cuda_runtime": null,
+        "cuda_device_name": null,
+        "cuda_device_capability": null,
+        "deterministic_algorithms": false,
+        "seed_workers": 1,
+        "torch_threads_per_seed": 1,
+        "git_commit": null
+      }
+    },
+    "spec": {
+      "schema_version": "1.0",
+      "profile": "v1.5",
+      "dataset_id": "bg_1d9caf",
+      "family": "bigram_lm",
+      "budget": {
+        "training_steps": 1024,
+        "batch_size": 32,
+        "total_samples_seen": 32768
+      },
+      "model": {
+        "type": "gru_lm",
+        "vocab_size": 32,
+        "context_length": 24,
+        "d_model": 64,
+        "num_layers": 2,
+        "layer_residual": false
+      },
+      "optimizer": {
+        "type": "AdamW",
+        "lr": 0.003,
+        "weight_decay": 0.001,
+        "momentum": 0.9,
+        "betas": [
+          0.9,
+          0.95
+        ]
+      },
+      "loss": {
+        "loss_id": "cross_entropy"
+      },
+      "execution": {
+        "device": "cpu"
+      },
+      "files": {
+        "model": "model.py",
+        "train": "train.py",
+        "loss": "loss.py",
+        "optimizer": "optimizer.py"
+      },
+      "candidate_id": "x_769a645f46"
+    },
+    "model_source": "\"\"\"Causal unidirectional GRU language model.\"\"\"\nfrom __future__ import annotations\n\nimport torch\nimport torch.nn as nn\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.context_length = 24\n        self.token_embed = nn.Embedding(32, 64)\n        self.gru = nn.GRU(\n            input_size=64,\n            hidden_size=64,\n            num_layers=2,\n            batch_first=True,\n            dropout=0.0,\n        )\n        self.head = nn.Linear(64, 32)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.token_embed(x)\n        h, _ = self.gru(h)\n        return self.head(h)\n",
+    "train_source": "\"\"\"Training loop for this candidate \u2014 executed by the ground-truth runner.\"\"\"\nfrom __future__ import annotations\n\nimport math\n\nimport torch\nimport torch.nn.functional as F\n\nfrom loss import loss_fn\nfrom model import Model\nfrom optimizer import build_optimizer\n\n\ndef _resolve_device(device: str) -> torch.device:\n    if device not in {\"cpu\", \"cuda\"}:\n        raise ValueError(f\"Unsupported execution device {device!r}; choose 'cpu' or 'cuda'\")\n    if device == \"cuda\" and not torch.cuda.is_available():\n        raise RuntimeError(\n            \"CUDA was requested but is unavailable \"\n            f\"(torch={torch.__version__}, torch.version.cuda={torch.version.cuda!r})\"\n        )\n    return torch.device(device)\n\n\ndef _test_ce(model: torch.nn.Module, test_x: torch.Tensor, test_y: torch.Tensor) -> float:\n    model.eval()\n    with torch.inference_mode():\n        pred = model(test_x)\n        if pred.ndim == 3:\n            vocab = pred.shape[-1]\n            loss = F.cross_entropy(pred.reshape(-1, vocab), test_y.reshape(-1))\n        else:\n            loss = F.cross_entropy(pred, test_y.reshape(-1))\n        return float(loss.item())\n\n\ndef train_and_eval(\n    train_x: torch.Tensor,\n    train_y: torch.Tensor,\n    test_x: torch.Tensor,\n    test_y: torch.Tensor,\n    *,\n    steps: int,\n    batch_size: int,\n    seed: int = 0,\n    fail_threshold: float = float(\"inf\"),\n    device: str = \"cpu\",\n    progress_callback=None,\n) -> dict:\n    torch.manual_seed(seed)\n    run_device = _resolve_device(device)\n    if run_device.type == \"cuda\":\n        torch.cuda.manual_seed_all(seed)\n    model = Model().to(run_device)\n    optimizer = build_optimizer(model)\n    train_x = train_x.to(run_device)\n    train_y = train_y.to(run_device)\n    test_x = test_x.to(run_device)\n    test_y = test_y.to(run_device)\n    n = train_x.shape[0]\n    step_metrics: list[float] = []\n    eval_samples: list[int] = []\n    failed = False\n    progress_interval = max(1, steps // 100)\n\n    for step in range(1, steps + 1):\n        model.train()\n        idx = torch.randint(0, n, (batch_size,), device=run_device)\n        pred = model(train_x[idx])\n        loss = loss_fn(model, pred, train_y[idx])\n        if not torch.isfinite(loss):\n            failed = True\n            break\n        optimizer.zero_grad(set_to_none=True)\n        loss.backward()\n        optimizer.step()\n\n        metric = _test_ce(model, test_x, test_y)\n        if not math.isfinite(metric):\n            failed = True\n            break\n        eval_samples.append(step * batch_size)\n        step_metrics.append(metric)\n        if progress_callback is not None and (\n            step == 1 or step % progress_interval == 0 or step == steps\n        ):\n            progress_callback(\n                {\n                    \"step\": step,\n                    \"training_steps\": steps,\n                    \"samples_seen\": step * batch_size,\n                    \"total_samples_seen\": steps * batch_size,\n                    \"metric\": metric,\n                }\n            )\n\n    final_metric = step_metrics[-1] if step_metrics else float(\"inf\")\n    if final_metric > fail_threshold:\n        failed = True\n\n    return {\n        \"failed\": failed,\n        \"final_test_ce\": final_metric,\n        \"eval_samples\": eval_samples,\n        \"step_metrics\": step_metrics,\n    }\n",
+    "optimizer_source": "\"\"\"Optimizer factory for this candidate.\"\"\"\nfrom __future__ import annotations\n\nimport torch\nimport torch.nn as nn\n\n\ndef build_optimizer(model: nn.Module) -> torch.optim.Optimizer:\n    params = model.parameters()\n    return torch.optim.AdamW(params, lr=0.003, betas=(0.9, 0.95), weight_decay=0.001)\n",
+    "source_hashes": {
+      "model_source": "1483ff666792a074929122ec41e50d4314f3c0ea97926a6c0c963b183afa040a",
+      "train_source": "c7c6188e0aad5362c2effe513374adbd21d4ce01d72a727497a49fca30e5fa2a",
+      "optimizer_source": "eb8e7c364a7defefbbf9ac4b032377fdc75f8d9f6c25c683b888aedcadd0d9c3"
+    }
+  },
+  {
+    "row": {
+      "family": "bigram_lm",
+      "dataset_id": "bg_1d9caf",
+      "set_id": "exp:2ba2012e9989",
+      "candidate_id": "07c45000",
+      "dataset": {
+        "instance_seed": 100064931980,
+        "vocab_size": 24,
+        "context_length": 24,
+        "train_size": 800,
+        "test_size": 200,
+        "alpha": 0.8,
+        "layout": "lm",
+        "sequence_seed": 100064931980,
+        "table_seed": 100064941980
+      },
+      "budget": {
+        "training_steps": 256,
+        "batch_size": 32,
+        "total_samples_seen": 8192
+      },
+      "params": null,
+      "model_type": "gru_lm",
+      "d_model": 64,
+      "num_layers": 2,
+      "model": {
+        "type": "gru_lm",
+        "vocab_size": 32,
+        "context_length": 24,
+        "d_model": 64,
+        "num_layers": 2,
+        "layer_residual": false
+      },
+      "optimizer": {
+        "type": "AdamW",
+        "lr": 0.003,
+        "weight_decay": 0.001,
+        "momentum": 0.9,
+        "betas": [
+          0.9,
+          0.95
+        ]
+      },
+      "loss": {
+        "loss_id": "cross_entropy"
+      },
+      "metric": "test_ce",
+      "mean": 2.9265910148620606,
+      "std": 0.004377776698997469,
+      "source": "experiment",
+      "epoch": 1,
+      "origin_epoch": 1,
+      "why": "Preregistered provenance repair in R9d96d388c9: explicit V24/context24 vs matching V32/context24, seeds0..9. At T1024 predict GRU .003 CE worse than .0003 and weak SGD; Adagrad reversal not guaranteed. No directional V effect predicted. Need runtime embedding/head dimensions or constructor provenance to determine whether prior exp:59726980c70d used32 or transport overrides24; metadata alone is not proof. Training-visible bg_1d9caf only, not q_7dbb0e evaluation data. Return actual dimensions, seed counts/failures if available."
+    },
+    "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/bigram_lm/bg_1d9caf/x_1700cf2753",
+    "summary": {
+      "schema_version": "1.0",
+      "candidate_id": "x_1700cf2753",
+      "selection_metric": "test_ce",
+      "execution": "candidate_py_files",
+      "n_seeds": 10,
+      "base_seed": 0,
+      "failed_seeds": 0,
+      "excluded": false,
+      "mean_test_ce": 2.9265910148620606,
+      "std_test_ce": 0.004377776698997469,
+      "seed_results": [
+        {
+          "seed": 0,
+          "failed": false,
+          "final_test_ce": 2.929687023162842
+        },
+        {
+          "seed": 1,
+          "failed": false,
+          "final_test_ce": 2.918574094772339
+        },
+        {
+          "seed": 2,
+          "failed": false,
+          "final_test_ce": 2.925567865371704
+        },
+        {
+          "seed": 3,
+          "failed": false,
+          "final_test_ce": 2.9228389263153076
+        },
+        {
+          "seed": 4,
+          "failed": false,
+          "final_test_ce": 2.9312543869018555
+        },
+        {
+          "seed": 5,
+          "failed": false,
+          "final_test_ce": 2.9229331016540527
+        },
+        {
+          "seed": 6,
+          "failed": false,
+          "final_test_ce": 2.9328885078430176
+        },
+        {
+          "seed": 7,
+          "failed": false,
+          "final_test_ce": 2.9239630699157715
+        },
+        {
+          "seed": 8,
+          "failed": false,
+          "final_test_ce": 2.927055835723877
+        },
+        {
+          "seed": 9,
+          "failed": false,
+          "final_test_ce": 2.931147336959839
+        }
+      ],
+      "environment": {
+        "python": "3.10.9 (main, Jan 11 2023, 09:18:18) [Clang 14.0.6 ]",
+        "platform": "macOS-26.5.1-arm64-arm-64bit",
+        "torch": "2.13.0",
+        "requested_device": "cpu",
+        "device": "cpu",
+        "cuda_available": false,
+        "cuda_runtime": null,
+        "cuda_device_name": null,
+        "cuda_device_capability": null,
+        "deterministic_algorithms": false,
+        "seed_workers": 1,
+        "torch_threads_per_seed": 1,
+        "git_commit": null
+      }
+    },
+    "spec": {
+      "schema_version": "1.0",
+      "profile": "v1.5",
+      "dataset_id": "bg_1d9caf",
+      "family": "bigram_lm",
+      "budget": {
+        "training_steps": 256,
+        "batch_size": 32,
+        "total_samples_seen": 8192
+      },
+      "model": {
+        "type": "gru_lm",
+        "vocab_size": 32,
+        "context_length": 24,
+        "d_model": 64,
+        "num_layers": 2,
+        "layer_residual": false
+      },
+      "optimizer": {
+        "type": "AdamW",
+        "lr": 0.003,
+        "weight_decay": 0.001,
+        "betas": [
+          0.9,
+          0.95
+        ]
+      },
+      "loss": {
+        "loss_id": "cross_entropy"
+      },
+      "execution": {
+        "device": "cpu"
+      },
+      "files": {
+        "model": "model.py",
+        "train": "train.py",
+        "loss": "loss.py",
+        "optimizer": "optimizer.py"
+      },
+      "candidate_id": "x_1700cf2753"
+    },
+    "model_source": "\"\"\"Causal unidirectional GRU language model.\"\"\"\nfrom __future__ import annotations\n\nimport torch\nimport torch.nn as nn\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.context_length = 24\n        self.token_embed = nn.Embedding(32, 64)\n        self.gru = nn.GRU(\n            input_size=64,\n            hidden_size=64,\n            num_layers=2,\n            batch_first=True,\n            dropout=0.0,\n        )\n        self.head = nn.Linear(64, 32)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.token_embed(x)\n        h, _ = self.gru(h)\n        return self.head(h)\n",
+    "train_source": "\"\"\"Training loop for this candidate \u2014 executed by the ground-truth runner.\"\"\"\nfrom __future__ import annotations\n\nimport math\n\nimport torch\nimport torch.nn.functional as F\n\nfrom loss import loss_fn\nfrom model import Model\nfrom optimizer import build_optimizer\n\n\ndef _resolve_device(device: str) -> torch.device:\n    if device not in {\"cpu\", \"cuda\"}:\n        raise ValueError(f\"Unsupported execution device {device!r}; choose 'cpu' or 'cuda'\")\n    if device == \"cuda\" and not torch.cuda.is_available():\n        raise RuntimeError(\n            \"CUDA was requested but is unavailable \"\n            f\"(torch={torch.__version__}, torch.version.cuda={torch.version.cuda!r})\"\n        )\n    return torch.device(device)\n\n\ndef _test_ce(model: torch.nn.Module, test_x: torch.Tensor, test_y: torch.Tensor) -> float:\n    model.eval()\n    with torch.inference_mode():\n        pred = model(test_x)\n        if pred.ndim == 3:\n            vocab = pred.shape[-1]\n            loss = F.cross_entropy(pred.reshape(-1, vocab), test_y.reshape(-1))\n        else:\n            loss = F.cross_entropy(pred, test_y.reshape(-1))\n        return float(loss.item())\n\n\ndef train_and_eval(\n    train_x: torch.Tensor,\n    train_y: torch.Tensor,\n    test_x: torch.Tensor,\n    test_y: torch.Tensor,\n    *,\n    steps: int,\n    batch_size: int,\n    seed: int = 0,\n    fail_threshold: float = float(\"inf\"),\n    device: str = \"cpu\",\n    progress_callback=None,\n) -> dict:\n    torch.manual_seed(seed)\n    run_device = _resolve_device(device)\n    if run_device.type == \"cuda\":\n        torch.cuda.manual_seed_all(seed)\n    model = Model().to(run_device)\n    optimizer = build_optimizer(model)\n    train_x = train_x.to(run_device)\n    train_y = train_y.to(run_device)\n    test_x = test_x.to(run_device)\n    test_y = test_y.to(run_device)\n    n = train_x.shape[0]\n    step_metrics: list[float] = []\n    eval_samples: list[int] = []\n    failed = False\n    progress_interval = max(1, steps // 100)\n\n    for step in range(1, steps + 1):\n        model.train()\n        idx = torch.randint(0, n, (batch_size,), device=run_device)\n        pred = model(train_x[idx])\n        loss = loss_fn(model, pred, train_y[idx])\n        if not torch.isfinite(loss):\n            failed = True\n            break\n        optimizer.zero_grad(set_to_none=True)\n        loss.backward()\n        optimizer.step()\n\n        metric = _test_ce(model, test_x, test_y)\n        if not math.isfinite(metric):\n            failed = True\n            break\n        eval_samples.append(step * batch_size)\n        step_metrics.append(metric)\n        if progress_callback is not None and (\n            step == 1 or step % progress_interval == 0 or step == steps\n        ):\n            progress_callback(\n                {\n                    \"step\": step,\n                    \"training_steps\": steps,\n                    \"samples_seen\": step * batch_size,\n                    \"total_samples_seen\": steps * batch_size,\n                    \"metric\": metric,\n                }\n            )\n\n    final_metric = step_metrics[-1] if step_metrics else float(\"inf\")\n    if final_metric > fail_threshold:\n        failed = True\n\n    return {\n        \"failed\": failed,\n        \"final_test_ce\": final_metric,\n        \"eval_samples\": eval_samples,\n        \"step_metrics\": step_metrics,\n    }\n",
+    "optimizer_source": "\"\"\"Optimizer factory for this candidate.\"\"\"\nfrom __future__ import annotations\n\nimport torch\nimport torch.nn as nn\n\n\ndef build_optimizer(model: nn.Module) -> torch.optim.Optimizer:\n    params = model.parameters()\n    return torch.optim.AdamW(params, lr=0.003, betas=(0.9, 0.95), weight_decay=0.001)\n",
+    "source_hashes": {
+      "model_source": "1483ff666792a074929122ec41e50d4314f3c0ea97926a6c0c963b183afa040a",
+      "train_source": "c7c6188e0aad5362c2effe513374adbd21d4ce01d72a727497a49fca30e5fa2a",
+      "optimizer_source": "eb8e7c364a7defefbbf9ac4b032377fdc75f8d9f6c25c683b888aedcadd0d9c3"
+    }
+  },
+  {
+    "row": {
+      "family": "bigram_lm",
+      "dataset_id": "bg_1d9caf",
+      "set_id": "exp:2ba2012e9989",
+      "candidate_id": "5131c830",
+      "dataset": {
+        "instance_seed": 100064931980,
+        "vocab_size": 24,
+        "context_length": 24,
+        "train_size": 800,
+        "test_size": 200,
+        "alpha": 0.8,
+        "layout": "lm",
+        "sequence_seed": 100064931980,
+        "table_seed": 100064941980
+      },
+      "budget": {
+        "training_steps": 1024,
+        "batch_size": 32,
+        "total_samples_seen": 32768
+      },
+      "params": null,
+      "model_type": "transformer_lm",
+      "d_model": 32,
+      "num_layers": 3,
+      "num_heads": 2,
+      "d_ff": 256,
+      "model": {
+        "type": "transformer_lm",
+        "vocab_size": 32,
+        "context_length": 24,
+        "d_model": 32,
+        "num_layers": 3,
+        "layer_residual": false,
+        "num_heads": 2,
+        "d_ff": 256
+      },
+      "optimizer": {
+        "type": "Adagrad",
+        "lr": 3e-05,
+        "weight_decay": 0.0001,
+        "momentum": 0.9
+      },
+      "loss": {
+        "loss_id": "cross_entropy"
+      },
+      "metric": "test_ce",
+      "mean": 3.5371397972106933,
+      "std": 0.034279363565874875,
+      "source": "experiment",
+      "epoch": 1,
+      "origin_epoch": 1,
+      "why": "Preregistered provenance repair in R9d96d388c9: explicit V24/context24 vs matching V32/context24, seeds0..9. At T1024 predict GRU .003 CE worse than .0003 and weak SGD; Adagrad reversal not guaranteed. No directional V effect predicted. Need runtime embedding/head dimensions or constructor provenance to determine whether prior exp:59726980c70d used32 or transport overrides24; metadata alone is not proof. Training-visible bg_1d9caf only, not q_7dbb0e evaluation data. Return actual dimensions, seed counts/failures if available."
+    },
+    "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/bigram_lm/bg_1d9caf/x_911b833d8e",
+    "summary": {
+      "schema_version": "1.0",
+      "candidate_id": "x_911b833d8e",
+      "selection_metric": "test_ce",
+      "execution": "candidate_py_files",
+      "n_seeds": 10,
+      "base_seed": 0,
+      "failed_seeds": 0,
+      "excluded": false,
+      "mean_test_ce": 3.5371397972106933,
+      "std_test_ce": 0.034279363565874875,
+      "seed_results": [
+        {
+          "seed": 0,
+          "failed": false,
+          "final_test_ce": 3.5907788276672363
+        },
+        {
+          "seed": 1,
+          "failed": false,
+          "final_test_ce": 3.564729928970337
+        },
+        {
+          "seed": 2,
+          "failed": false,
+          "final_test_ce": 3.5307393074035645
+        },
+        {
+          "seed": 3,
+          "failed": false,
+          "final_test_ce": 3.5087008476257324
+        },
+        {
+          "seed": 4,
+          "failed": false,
+          "final_test_ce": 3.5602824687957764
+        },
+        {
+          "seed": 5,
+          "failed": false,
+          "final_test_ce": 3.5638866424560547
+        },
+        {
+          "seed": 6,
+          "failed": false,
+          "final_test_ce": 3.5395703315734863
+        },
+        {
+          "seed": 7,
+          "failed": false,
+          "final_test_ce": 3.531710624694824
+        },
+        {
+          "seed": 8,
+          "failed": false,
+          "final_test_ce": 3.519009590148926
+        },
+        {
+          "seed": 9,
+          "failed": false,
+          "final_test_ce": 3.461989402770996
+        }
+      ],
+      "environment": {
+        "python": "3.10.9 (main, Jan 11 2023, 09:18:18) [Clang 14.0.6 ]",
+        "platform": "macOS-26.5.1-arm64-arm-64bit",
+        "torch": "2.13.0",
+        "requested_device": "cpu",
+        "device": "cpu",
+        "cuda_available": false,
+        "cuda_runtime": null,
+        "cuda_device_name": null,
+        "cuda_device_capability": null,
+        "deterministic_algorithms": false,
+        "seed_workers": 1,
+        "torch_threads_per_seed": 1,
+        "git_commit": null
+      }
+    },
+    "spec": {
+      "schema_version": "1.0",
+      "profile": "v1.5",
+      "dataset_id": "bg_1d9caf",
+      "family": "bigram_lm",
+      "budget": {
+        "training_steps": 1024,
+        "batch_size": 32,
+        "total_samples_seen": 32768
+      },
+      "model": {
+        "type": "transformer_lm",
+        "vocab_size": 32,
+        "context_length": 24,
+        "d_model": 32,
+        "num_layers": 3,
+        "layer_residual": false,
+        "num_heads": 2,
+        "d_ff": 256
+      },
+      "optimizer": {
+        "type": "Adagrad",
+        "lr": 3e-05,
+        "weight_decay": 0.0001,
+        "momentum": 0.9
+      },
+      "loss": {
+        "loss_id": "cross_entropy"
+      },
+      "execution": {
+        "device": "cpu"
+      },
+      "files": {
+        "model": "model.py",
+        "train": "train.py",
+        "loss": "loss.py",
+        "optimizer": "optimizer.py"
+      },
+      "candidate_id": "x_911b833d8e"
+    },
+    "model_source": "\"\"\"Causal transformer language model.\"\"\"\nfrom __future__ import annotations\n\nimport torch\nimport torch.nn as nn\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.context_length = 24\n        self.token_embed = nn.Embedding(32, 32)\n        self.pos_embed = nn.Embedding(24, 32)\n        layer = nn.TransformerEncoderLayer(\n            d_model=32,\n            nhead=2,\n            dim_feedforward=256,\n            dropout=0.0,\n            batch_first=True,\n            activation=\"gelu\",\n        )\n        self.encoder = nn.TransformerEncoder(layer, num_layers=3)\n        self.head = nn.Linear(32, 32)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        b, seq_len = x.shape\n        positions = torch.arange(seq_len, device=x.device).unsqueeze(0).expand(b, -1)\n        h = self.token_embed(x) + self.pos_embed(positions)\n        mask = torch.triu(torch.ones(seq_len, seq_len, device=x.device), diagonal=1).bool()\n        h = self.encoder(h, mask=mask)\n        return self.head(h)\n",
+    "train_source": "\"\"\"Training loop for this candidate \u2014 executed by the ground-truth runner.\"\"\"\nfrom __future__ import annotations\n\nimport math\n\nimport torch\nimport torch.nn.functional as F\n\nfrom loss import loss_fn\nfrom model import Model\nfrom optimizer import build_optimizer\n\n\ndef _resolve_device(device: str) -> torch.device:\n    if device not in {\"cpu\", \"cuda\"}:\n        raise ValueError(f\"Unsupported execution device {device!r}; choose 'cpu' or 'cuda'\")\n    if device == \"cuda\" and not torch.cuda.is_available():\n        raise RuntimeError(\n            \"CUDA was requested but is unavailable \"\n            f\"(torch={torch.__version__}, torch.version.cuda={torch.version.cuda!r})\"\n        )\n    return torch.device(device)\n\n\ndef _test_ce(model: torch.nn.Module, test_x: torch.Tensor, test_y: torch.Tensor) -> float:\n    model.eval()\n    with torch.inference_mode():\n        pred = model(test_x)\n        if pred.ndim == 3:\n            vocab = pred.shape[-1]\n            loss = F.cross_entropy(pred.reshape(-1, vocab), test_y.reshape(-1))\n        else:\n            loss = F.cross_entropy(pred, test_y.reshape(-1))\n        return float(loss.item())\n\n\ndef train_and_eval(\n    train_x: torch.Tensor,\n    train_y: torch.Tensor,\n    test_x: torch.Tensor,\n    test_y: torch.Tensor,\n    *,\n    steps: int,\n    batch_size: int,\n    seed: int = 0,\n    fail_threshold: float = float(\"inf\"),\n    device: str = \"cpu\",\n    progress_callback=None,\n) -> dict:\n    torch.manual_seed(seed)\n    run_device = _resolve_device(device)\n    if run_device.type == \"cuda\":\n        torch.cuda.manual_seed_all(seed)\n    model = Model().to(run_device)\n    optimizer = build_optimizer(model)\n    train_x = train_x.to(run_device)\n    train_y = train_y.to(run_device)\n    test_x = test_x.to(run_device)\n    test_y = test_y.to(run_device)\n    n = train_x.shape[0]\n    step_metrics: list[float] = []\n    eval_samples: list[int] = []\n    failed = False\n    progress_interval = max(1, steps // 100)\n\n    for step in range(1, steps + 1):\n        model.train()\n        idx = torch.randint(0, n, (batch_size,), device=run_device)\n        pred = model(train_x[idx])\n        loss = loss_fn(model, pred, train_y[idx])\n        if not torch.isfinite(loss):\n            failed = True\n            break\n        optimizer.zero_grad(set_to_none=True)\n        loss.backward()\n        optimizer.step()\n\n        metric = _test_ce(model, test_x, test_y)\n        if not math.isfinite(metric):\n            failed = True\n            break\n        eval_samples.append(step * batch_size)\n        step_metrics.append(metric)\n        if progress_callback is not None and (\n            step == 1 or step % progress_interval == 0 or step == steps\n        ):\n            progress_callback(\n                {\n                    \"step\": step,\n                    \"training_steps\": steps,\n                    \"samples_seen\": step * batch_size,\n                    \"total_samples_seen\": steps * batch_size,\n                    \"metric\": metric,\n                }\n            )\n\n    final_metric = step_metrics[-1] if step_metrics else float(\"inf\")\n    if final_metric > fail_threshold:\n        failed = True\n\n    return {\n        \"failed\": failed,\n        \"final_test_ce\": final_metric,\n        \"eval_samples\": eval_samples,\n        \"step_metrics\": step_metrics,\n    }\n",
+    "optimizer_source": "\"\"\"Optimizer factory for this candidate.\"\"\"\nfrom __future__ import annotations\n\nimport torch\nimport torch.nn as nn\n\n\ndef build_optimizer(model: nn.Module) -> torch.optim.Optimizer:\n    params = model.parameters()\n    return torch.optim.Adagrad(params, lr=3e-05, weight_decay=0.0001)\n",
+    "source_hashes": {
+      "model_source": "b021087037a0dd3462a680317a37e47bbde6d8c2948985fb8365062ef0c6e6b8",
+      "train_source": "c7c6188e0aad5362c2effe513374adbd21d4ce01d72a727497a49fca30e5fa2a",
+      "optimizer_source": "bd37454c125b9c9dd201cf5eb1fde83c38429e50860432e551c3e02cc0084b00"
+    }
+  },
+  {
+    "row": {
+      "family": "bigram_lm",
+      "dataset_id": "bg_1d9caf",
+      "set_id": "exp:2ba2012e9989",
+      "candidate_id": "f5c1fe44",
+      "dataset": {
+        "instance_seed": 100064931980,
+        "vocab_size": 24,
+        "context_length": 24,
+        "train_size": 800,
+        "test_size": 200,
+        "alpha": 0.8,
+        "layout": "lm",
+        "sequence_seed": 100064931980,
+        "table_seed": 100064941980
+      },
+      "budget": {
+        "training_steps": 1024,
+        "batch_size": 32,
+        "total_samples_seen": 32768
+      },
+      "params": null,
+      "model_type": "gru_lm",
+      "d_model": 64,
+      "num_layers": 2,
+      "model": {
+        "type": "gru_lm",
+        "vocab_size": 24,
+        "context_length": 24,
+        "d_model": 64,
+        "num_layers": 2,
+        "layer_residual": false
+      },
+      "optimizer": {
+        "type": "AdamW",
+        "lr": 0.0003,
+        "weight_decay": 0.001,
+        "momentum": 0.9,
+        "betas": [
+          0.9,
+          0.95
+        ]
+      },
+      "loss": {
+        "loss_id": "cross_entropy"
+      },
+      "metric": "test_ce",
+      "mean": 2.8957297801971436,
+      "std": 0.0022380260889167105,
+      "source": "experiment",
+      "epoch": 1,
+      "origin_epoch": 1,
+      "why": "Preregistered provenance repair in R9d96d388c9: explicit V24/context24 vs matching V32/context24, seeds0..9. At T1024 predict GRU .003 CE worse than .0003 and weak SGD; Adagrad reversal not guaranteed. No directional V effect predicted. Need runtime embedding/head dimensions or constructor provenance to determine whether prior exp:59726980c70d used32 or transport overrides24; metadata alone is not proof. Training-visible bg_1d9caf only, not q_7dbb0e evaluation data. Return actual dimensions, seed counts/failures if available."
+    },
+    "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/bigram_lm/bg_1d9caf/x_84ababe610",
+    "summary": {
+      "schema_version": "1.0",
+      "candidate_id": "x_84ababe610",
+      "selection_metric": "test_ce",
+      "execution": "candidate_py_files",
+      "n_seeds": 10,
+      "base_seed": 0,
+      "failed_seeds": 0,
+      "excluded": false,
+      "mean_test_ce": 2.8957297801971436,
+      "std_test_ce": 0.0022380260889167105,
+      "seed_results": [
+        {
+          "seed": 0,
+          "failed": false,
+          "final_test_ce": 2.8956263065338135
+        },
+        {
+          "seed": 1,
+          "failed": false,
+          "final_test_ce": 2.8942718505859375
+        },
+        {
+          "seed": 2,
+          "failed": false,
+          "final_test_ce": 2.8935797214508057
+        },
+        {
+          "seed": 3,
+          "failed": false,
+          "final_test_ce": 2.8932430744171143
+        },
+        {
+          "seed": 4,
+          "failed": false,
+          "final_test_ce": 2.8976404666900635
+        },
+        {
+          "seed": 5,
+          "failed": false,
+          "final_test_ce": 2.8939757347106934
+        },
+        {
+          "seed": 6,
+          "failed": false,
+          "final_test_ce": 2.9002792835235596
+        },
+        {
+          "seed": 7,
+          "failed": false,
+          "final_test_ce": 2.8985788822174072
+        },
+        {
+          "seed": 8,
+          "failed": false,
+          "final_test_ce": 2.89446759223938
+        },
+        {
+          "seed": 9,
+          "failed": false,
+          "final_test_ce": 2.895634889602661
+        }
+      ],
+      "environment": {
+        "python": "3.10.9 (main, Jan 11 2023, 09:18:18) [Clang 14.0.6 ]",
+        "platform": "macOS-26.5.1-arm64-arm-64bit",
+        "torch": "2.13.0",
+        "requested_device": "cpu",
+        "device": "cpu",
+        "cuda_available": false,
+        "cuda_runtime": null,
+        "cuda_device_name": null,
+        "cuda_device_capability": null,
+        "deterministic_algorithms": false,
+        "seed_workers": 1,
+        "torch_threads_per_seed": 1,
+        "git_commit": null
+      }
+    },
+    "spec": {
+      "schema_version": "1.0",
+      "profile": "v1.5",
+      "dataset_id": "bg_1d9caf",
+      "family": "bigram_lm",
+      "budget": {
+        "training_steps": 1024,
+        "batch_size": 32,
+        "total_samples_seen": 32768
+      },
+      "model": {
+        "type": "gru_lm",
+        "vocab_size": 24,
+        "context_length": 24,
+        "d_model": 64,
+        "num_layers": 2,
+        "layer_residual": false
+      },
+      "optimizer": {
+        "type": "AdamW",
+        "lr": 0.0003,
+        "weight_decay": 0.001,
+        "betas": [
+          0.9,
+          0.95
+        ]
+      },
+      "loss": {
+        "loss_id": "cross_entropy"
+      },
+      "execution": {
+        "device": "cpu"
+      },
+      "files": {
+        "model": "model.py",
+        "train": "train.py",
+        "loss": "loss.py",
+        "optimizer": "optimizer.py"
+      },
+      "candidate_id": "x_84ababe610"
+    },
+    "model_source": "\"\"\"Causal unidirectional GRU language model.\"\"\"\nfrom __future__ import annotations\n\nimport torch\nimport torch.nn as nn\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.context_length = 24\n        self.token_embed = nn.Embedding(24, 64)\n        self.gru = nn.GRU(\n            input_size=64,\n            hidden_size=64,\n            num_layers=2,\n            batch_first=True,\n            dropout=0.0,\n        )\n        self.head = nn.Linear(64, 24)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.token_embed(x)\n        h, _ = self.gru(h)\n        return self.head(h)\n",
+    "train_source": "\"\"\"Training loop for this candidate \u2014 executed by the ground-truth runner.\"\"\"\nfrom __future__ import annotations\n\nimport math\n\nimport torch\nimport torch.nn.functional as F\n\nfrom loss import loss_fn\nfrom model import Model\nfrom optimizer import build_optimizer\n\n\ndef _resolve_device(device: str) -> torch.device:\n    if device not in {\"cpu\", \"cuda\"}:\n        raise ValueError(f\"Unsupported execution device {device!r}; choose 'cpu' or 'cuda'\")\n    if device == \"cuda\" and not torch.cuda.is_available():\n        raise RuntimeError(\n            \"CUDA was requested but is unavailable \"\n            f\"(torch={torch.__version__}, torch.version.cuda={torch.version.cuda!r})\"\n        )\n    return torch.device(device)\n\n\ndef _test_ce(model: torch.nn.Module, test_x: torch.Tensor, test_y: torch.Tensor) -> float:\n    model.eval()\n    with torch.inference_mode():\n        pred = model(test_x)\n        if pred.ndim == 3:\n            vocab = pred.shape[-1]\n            loss = F.cross_entropy(pred.reshape(-1, vocab), test_y.reshape(-1))\n        else:\n            loss = F.cross_entropy(pred, test_y.reshape(-1))\n        return float(loss.item())\n\n\ndef train_and_eval(\n    train_x: torch.Tensor,\n    train_y: torch.Tensor,\n    test_x: torch.Tensor,\n    test_y: torch.Tensor,\n    *,\n    steps: int,\n    batch_size: int,\n    seed: int = 0,\n    fail_threshold: float = float(\"inf\"),\n    device: str = \"cpu\",\n    progress_callback=None,\n) -> dict:\n    torch.manual_seed(seed)\n    run_device = _resolve_device(device)\n    if run_device.type == \"cuda\":\n        torch.cuda.manual_seed_all(seed)\n    model = Model().to(run_device)\n    optimizer = build_optimizer(model)\n    train_x = train_x.to(run_device)\n    train_y = train_y.to(run_device)\n    test_x = test_x.to(run_device)\n    test_y = test_y.to(run_device)\n    n = train_x.shape[0]\n    step_metrics: list[float] = []\n    eval_samples: list[int] = []\n    failed = False\n    progress_interval = max(1, steps // 100)\n\n    for step in range(1, steps + 1):\n        model.train()\n        idx = torch.randint(0, n, (batch_size,), device=run_device)\n        pred = model(train_x[idx])\n        loss = loss_fn(model, pred, train_y[idx])\n        if not torch.isfinite(loss):\n            failed = True\n            break\n        optimizer.zero_grad(set_to_none=True)\n        loss.backward()\n        optimizer.step()\n\n        metric = _test_ce(model, test_x, test_y)\n        if not math.isfinite(metric):\n            failed = True\n            break\n        eval_samples.append(step * batch_size)\n        step_metrics.append(metric)\n        if progress_callback is not None and (\n            step == 1 or step % progress_interval == 0 or step == steps\n        ):\n            progress_callback(\n                {\n                    \"step\": step,\n                    \"training_steps\": steps,\n                    \"samples_seen\": step * batch_size,\n                    \"total_samples_seen\": steps * batch_size,\n                    \"metric\": metric,\n                }\n            )\n\n    final_metric = step_metrics[-1] if step_metrics else float(\"inf\")\n    if final_metric > fail_threshold:\n        failed = True\n\n    return {\n        \"failed\": failed,\n        \"final_test_ce\": final_metric,\n        \"eval_samples\": eval_samples,\n        \"step_metrics\": step_metrics,\n    }\n",
+    "optimizer_source": "\"\"\"Optimizer factory for this candidate.\"\"\"\nfrom __future__ import annotations\n\nimport torch\nimport torch.nn as nn\n\n\ndef build_optimizer(model: nn.Module) -> torch.optim.Optimizer:\n    params = model.parameters()\n    return torch.optim.AdamW(params, lr=0.0003, betas=(0.9, 0.95), weight_decay=0.001)\n",
+    "source_hashes": {
+      "model_source": "1d09dd38cb7b855777d46c12356fb08d8cc7d4e85ccb810c2219e452d93ff068",
+      "train_source": "c7c6188e0aad5362c2effe513374adbd21d4ce01d72a727497a49fca30e5fa2a",
+      "optimizer_source": "7195b04054edffd03084cad18e5127dd026f28fa4b07dd3348fd68e57c11822c"
+    }
+  },
+  {
+    "row": {
+      "family": "bigram_lm",
+      "dataset_id": "bg_1d9caf",
+      "set_id": "exp:2ba2012e9989",
+      "candidate_id": "9f2a8de1",
+      "dataset": {
+        "instance_seed": 100064931980,
+        "vocab_size": 24,
+        "context_length": 24,
+        "train_size": 800,
+        "test_size": 200,
+        "alpha": 0.8,
+        "layout": "lm",
+        "sequence_seed": 100064931980,
+        "table_seed": 100064941980
+      },
+      "budget": {
+        "training_steps": 256,
+        "batch_size": 32,
+        "total_samples_seen": 8192
+      },
+      "params": null,
+      "model_type": "gru_lm",
+      "d_model": 64,
+      "num_layers": 2,
+      "model": {
+        "type": "gru_lm",
+        "vocab_size": 24,
+        "context_length": 24,
+        "d_model": 64,
+        "num_layers": 2,
+        "layer_residual": false
+      },
+      "optimizer": {
+        "type": "AdamW",
+        "lr": 0.0003,
+        "weight_decay": 0.001,
+        "momentum": 0.9,
+        "betas": [
+          0.9,
+          0.95
+        ]
+      },
+      "loss": {
+        "loss_id": "cross_entropy"
+      },
+      "metric": "test_ce",
+      "mean": 2.9931451082229614,
+      "std": 0.005299630651104464,
+      "source": "experiment",
+      "epoch": 1,
+      "origin_epoch": 1,
+      "why": "Preregistered provenance repair in R9d96d388c9: explicit V24/context24 vs matching V32/context24, seeds0..9. At T1024 predict GRU .003 CE worse than .0003 and weak SGD; Adagrad reversal not guaranteed. No directional V effect predicted. Need runtime embedding/head dimensions or constructor provenance to determine whether prior exp:59726980c70d used32 or transport overrides24; metadata alone is not proof. Training-visible bg_1d9caf only, not q_7dbb0e evaluation data. Return actual dimensions, seed counts/failures if available."
+    },
+    "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/bigram_lm/bg_1d9caf/x_c11d700538",
+    "summary": {
+      "schema_version": "1.0",
+      "candidate_id": "x_c11d700538",
+      "selection_metric": "test_ce",
+      "execution": "candidate_py_files",
+      "n_seeds": 10,
+      "base_seed": 0,
+      "failed_seeds": 0,
+      "excluded": false,
+      "mean_test_ce": 2.9931451082229614,
+      "std_test_ce": 0.005299630651104464,
+      "seed_results": [
+        {
+          "seed": 0,
+          "failed": false,
+          "final_test_ce": 2.998615026473999
+        },
+        {
+          "seed": 1,
+          "failed": false,
+          "final_test_ce": 2.990710735321045
+        },
+        {
+          "seed": 2,
+          "failed": false,
+          "final_test_ce": 2.99066162109375
+        },
+        {
+          "seed": 3,
+          "failed": false,
+          "final_test_ce": 2.9907641410827637
+        },
+        {
+          "seed": 4,
+          "failed": false,
+          "final_test_ce": 2.992597818374634
+        },
+        {
+          "seed": 5,
+          "failed": false,
+          "final_test_ce": 3.0061287879943848
+        },
+        {
+          "seed": 6,
+          "failed": false,
+          "final_test_ce": 2.9871716499328613
+        },
+        {
+          "seed": 7,
+          "failed": false,
+          "final_test_ce": 2.9953830242156982
+        },
+        {
+          "seed": 8,
+          "failed": false,
+          "final_test_ce": 2.989720344543457
+        },
+        {
+          "seed": 9,
+          "failed": false,
+          "final_test_ce": 2.9896979331970215
+        }
+      ],
+      "environment": {
+        "python": "3.10.9 (main, Jan 11 2023, 09:18:18) [Clang 14.0.6 ]",
+        "platform": "macOS-26.5.1-arm64-arm-64bit",
+        "torch": "2.13.0",
+        "requested_device": "cpu",
+        "device": "cpu",
+        "cuda_available": false,
+        "cuda_runtime": null,
+        "cuda_device_name": null,
+        "cuda_device_capability": null,
+        "deterministic_algorithms": false,
+        "seed_workers": 1,
+        "torch_threads_per_seed": 1,
+        "git_commit": null
+      }
+    },
+    "spec": {
+      "schema_version": "1.0",
+      "profile": "v1.5",
+      "dataset_id": "bg_1d9caf",
+      "family": "bigram_lm",
+      "budget": {
+        "training_steps": 256,
+        "batch_size": 32,
+        "total_samples_seen": 8192
+      },
+      "model": {
+        "type": "gru_lm",
+        "vocab_size": 24,
+        "context_length": 24,
+        "d_model": 64,
+        "num_layers": 2,
+        "layer_residual": false
+      },
+      "optimizer": {
+        "type": "AdamW",
+        "lr": 0.0003,
+        "weight_decay": 0.001,
+        "betas": [
+          0.9,
+          0.95
+        ]
+      },
+      "loss": {
+        "loss_id": "cross_entropy"
+      },
+      "execution": {
+        "device": "cpu"
+      },
+      "files": {
+        "model": "model.py",
+        "train": "train.py",
+        "loss": "loss.py",
+        "optimizer": "optimizer.py"
+      },
+      "candidate_id": "x_c11d700538"
+    },
+    "model_source": "\"\"\"Causal unidirectional GRU language model.\"\"\"\nfrom __future__ import annotations\n\nimport torch\nimport torch.nn as nn\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.context_length = 24\n        self.token_embed = nn.Embedding(24, 64)\n        self.gru = nn.GRU(\n            input_size=64,\n            hidden_size=64,\n            num_layers=2,\n            batch_first=True,\n            dropout=0.0,\n        )\n        self.head = nn.Linear(64, 24)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.token_embed(x)\n        h, _ = self.gru(h)\n        return self.head(h)\n",
+    "train_source": "\"\"\"Training loop for this candidate \u2014 executed by the ground-truth runner.\"\"\"\nfrom __future__ import annotations\n\nimport math\n\nimport torch\nimport torch.nn.functional as F\n\nfrom loss import loss_fn\nfrom model import Model\nfrom optimizer import build_optimizer\n\n\ndef _resolve_device(device: str) -> torch.device:\n    if device not in {\"cpu\", \"cuda\"}:\n        raise ValueError(f\"Unsupported execution device {device!r}; choose 'cpu' or 'cuda'\")\n    if device == \"cuda\" and not torch.cuda.is_available():\n        raise RuntimeError(\n            \"CUDA was requested but is unavailable \"\n            f\"(torch={torch.__version__}, torch.version.cuda={torch.version.cuda!r})\"\n        )\n    return torch.device(device)\n\n\ndef _test_ce(model: torch.nn.Module, test_x: torch.Tensor, test_y: torch.Tensor) -> float:\n    model.eval()\n    with torch.inference_mode():\n        pred = model(test_x)\n        if pred.ndim == 3:\n            vocab = pred.shape[-1]\n            loss = F.cross_entropy(pred.reshape(-1, vocab), test_y.reshape(-1))\n        else:\n            loss = F.cross_entropy(pred, test_y.reshape(-1))\n        return float(loss.item())\n\n\ndef train_and_eval(\n    train_x: torch.Tensor,\n    train_y: torch.Tensor,\n    test_x: torch.Tensor,\n    test_y: torch.Tensor,\n    *,\n    steps: int,\n    batch_size: int,\n    seed: int = 0,\n    fail_threshold: float = float(\"inf\"),\n    device: str = \"cpu\",\n    progress_callback=None,\n) -> dict:\n    torch.manual_seed(seed)\n    run_device = _resolve_device(device)\n    if run_device.type == \"cuda\":\n        torch.cuda.manual_seed_all(seed)\n    model = Model().to(run_device)\n    optimizer = build_optimizer(model)\n    train_x = train_x.to(run_device)\n    train_y = train_y.to(run_device)\n    test_x = test_x.to(run_device)\n    test_y = test_y.to(run_device)\n    n = train_x.shape[0]\n    step_metrics: list[float] = []\n    eval_samples: list[int] = []\n    failed = False\n    progress_interval = max(1, steps // 100)\n\n    for step in range(1, steps + 1):\n        model.train()\n        idx = torch.randint(0, n, (batch_size,), device=run_device)\n        pred = model(train_x[idx])\n        loss = loss_fn(model, pred, train_y[idx])\n        if not torch.isfinite(loss):\n            failed = True\n            break\n        optimizer.zero_grad(set_to_none=True)\n        loss.backward()\n        optimizer.step()\n\n        metric = _test_ce(model, test_x, test_y)\n        if not math.isfinite(metric):\n            failed = True\n            break\n        eval_samples.append(step * batch_size)\n        step_metrics.append(metric)\n        if progress_callback is not None and (\n            step == 1 or step % progress_interval == 0 or step == steps\n        ):\n            progress_callback(\n                {\n                    \"step\": step,\n                    \"training_steps\": steps,\n                    \"samples_seen\": step * batch_size,\n                    \"total_samples_seen\": steps * batch_size,\n                    \"metric\": metric,\n                }\n            )\n\n    final_metric = step_metrics[-1] if step_metrics else float(\"inf\")\n    if final_metric > fail_threshold:\n        failed = True\n\n    return {\n        \"failed\": failed,\n        \"final_test_ce\": final_metric,\n        \"eval_samples\": eval_samples,\n        \"step_metrics\": step_metrics,\n    }\n",
+    "optimizer_source": "\"\"\"Optimizer factory for this candidate.\"\"\"\nfrom __future__ import annotations\n\nimport torch\nimport torch.nn as nn\n\n\ndef build_optimizer(model: nn.Module) -> torch.optim.Optimizer:\n    params = model.parameters()\n    return torch.optim.AdamW(params, lr=0.0003, betas=(0.9, 0.95), weight_decay=0.001)\n",
+    "source_hashes": {
+      "model_source": "1d09dd38cb7b855777d46c12356fb08d8cc7d4e85ccb810c2219e452d93ff068",
+      "train_source": "c7c6188e0aad5362c2effe513374adbd21d4ce01d72a727497a49fca30e5fa2a",
+      "optimizer_source": "7195b04054edffd03084cad18e5127dd026f28fa4b07dd3348fd68e57c11822c"
+    }
+  },
+  {
+    "row": {
+      "family": "bigram_lm",
+      "dataset_id": "bg_1d9caf",
+      "set_id": "exp:2ba2012e9989",
+      "candidate_id": "6afca670",
+      "dataset": {
+        "instance_seed": 100064931980,
+        "vocab_size": 24,
+        "context_length": 24,
+        "train_size": 800,
+        "test_size": 200,
+        "alpha": 0.8,
+        "layout": "lm",
+        "sequence_seed": 100064931980,
+        "table_seed": 100064941980
+      },
+      "budget": {
+        "training_steps": 256,
+        "batch_size": 32,
+        "total_samples_seen": 8192
+      },
+      "params": null,
+      "model_type": "gru_lm",
+      "d_model": 64,
+      "num_layers": 2,
+      "model": {
+        "type": "gru_lm",
+        "vocab_size": 24,
+        "context_length": 24,
+        "d_model": 64,
+        "num_layers": 2,
+        "layer_residual": false
+      },
+      "optimizer": {
+        "type": "AdamW",
+        "lr": 0.003,
+        "weight_decay": 0.001,
+        "momentum": 0.9,
+        "betas": [
+          0.9,
+          0.95
+        ]
+      },
+      "loss": {
+        "loss_id": "cross_entropy"
+      },
+      "metric": "test_ce",
+      "mean": 2.9467570781707764,
+      "std": 0.003549399408685298,
+      "source": "experiment",
+      "epoch": 1,
+      "origin_epoch": 1,
+      "why": "Preregistered provenance repair in R9d96d388c9: explicit V24/context24 vs matching V32/context24, seeds0..9. At T1024 predict GRU .003 CE worse than .0003 and weak SGD; Adagrad reversal not guaranteed. No directional V effect predicted. Need runtime embedding/head dimensions or constructor provenance to determine whether prior exp:59726980c70d used32 or transport overrides24; metadata alone is not proof. Training-visible bg_1d9caf only, not q_7dbb0e evaluation data. Return actual dimensions, seed counts/failures if available."
+    },
+    "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/bigram_lm/bg_1d9caf/x_63181f13e4",
+    "summary": {
+      "schema_version": "1.0",
+      "candidate_id": "x_63181f13e4",
+      "selection_metric": "test_ce",
+      "execution": "candidate_py_files",
+      "n_seeds": 10,
+      "base_seed": 0,
+      "failed_seeds": 0,
+      "excluded": false,
+      "mean_test_ce": 2.9467570781707764,
+      "std_test_ce": 0.003549399408685298,
+      "seed_results": [
+        {
+          "seed": 0,
+          "failed": false,
+          "final_test_ce": 2.9459493160247803
+        },
+        {
+          "seed": 1,
+          "failed": false,
+          "final_test_ce": 2.9470365047454834
+        },
+        {
+          "seed": 2,
+          "failed": false,
+          "final_test_ce": 2.946408987045288
+        },
+        {
+          "seed": 3,
+          "failed": false,
+          "final_test_ce": 2.942173957824707
+        },
+        {
+          "seed": 4,
+          "failed": false,
+          "final_test_ce": 2.943709135055542
+        },
+        {
+          "seed": 5,
+          "failed": false,
+          "final_test_ce": 2.947819232940674
+        },
+        {
+          "seed": 6,
+          "failed": false,
+          "final_test_ce": 2.946200370788574
+        },
+        {
+          "seed": 7,
+          "failed": false,
+          "final_test_ce": 2.9561855792999268
+        },
+        {
+          "seed": 8,
+          "failed": false,
+          "final_test_ce": 2.9447240829467773
+        },
+        {
+          "seed": 9,
+          "failed": false,
+          "final_test_ce": 2.9473636150360107
+        }
+      ],
+      "environment": {
+        "python": "3.10.9 (main, Jan 11 2023, 09:18:18) [Clang 14.0.6 ]",
+        "platform": "macOS-26.5.1-arm64-arm-64bit",
+        "torch": "2.13.0",
+        "requested_device": "cpu",
+        "device": "cpu",
+        "cuda_available": false,
+        "cuda_runtime": null,
+        "cuda_device_name": null,
+        "cuda_device_capability": null,
+        "deterministic_algorithms": false,
+        "seed_workers": 1,
+        "torch_threads_per_seed": 1,
+        "git_commit": null
+      }
+    },
+    "spec": {
+      "schema_version": "1.0",
+      "profile": "v1.5",
+      "dataset_id": "bg_1d9caf",
+      "family": "bigram_lm",
+      "budget": {
+        "training_steps": 256,
+        "batch_size": 32,
+        "total_samples_seen": 8192
+      },
+      "model": {
+        "type": "gru_lm",
+        "vocab_size": 24,
+        "context_length": 24,
+        "d_model": 64,
+        "num_layers": 2,
+        "layer_residual": false
+      },
+      "optimizer": {
+        "type": "AdamW",
+        "lr": 0.003,
+        "weight_decay": 0.001,
+        "betas": [
+          0.9,
+          0.95
+        ]
+      },
+      "loss": {
+        "loss_id": "cross_entropy"
+      },
+      "execution": {
+        "device": "cpu"
+      },
+      "files": {
+        "model": "model.py",
+        "train": "train.py",
+        "loss": "loss.py",
+        "optimizer": "optimizer.py"
+      },
+      "candidate_id": "x_63181f13e4"
+    },
+    "model_source": "\"\"\"Causal unidirectional GRU language model.\"\"\"\nfrom __future__ import annotations\n\nimport torch\nimport torch.nn as nn\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.context_length = 24\n        self.token_embed = nn.Embedding(24, 64)\n        self.gru = nn.GRU(\n            input_size=64,\n            hidden_size=64,\n            num_layers=2,\n            batch_first=True,\n            dropout=0.0,\n        )\n        self.head = nn.Linear(64, 24)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.token_embed(x)\n        h, _ = self.gru(h)\n        return self.head(h)\n",
+    "train_source": "\"\"\"Training loop for this candidate \u2014 executed by the ground-truth runner.\"\"\"\nfrom __future__ import annotations\n\nimport math\n\nimport torch\nimport torch.nn.functional as F\n\nfrom loss import loss_fn\nfrom model import Model\nfrom optimizer import build_optimizer\n\n\ndef _resolve_device(device: str) -> torch.device:\n    if device not in {\"cpu\", \"cuda\"}:\n        raise ValueError(f\"Unsupported execution device {device!r}; choose 'cpu' or 'cuda'\")\n    if device == \"cuda\" and not torch.cuda.is_available():\n        raise RuntimeError(\n            \"CUDA was requested but is unavailable \"\n            f\"(torch={torch.__version__}, torch.version.cuda={torch.version.cuda!r})\"\n        )\n    return torch.device(device)\n\n\ndef _test_ce(model: torch.nn.Module, test_x: torch.Tensor, test_y: torch.Tensor) -> float:\n    model.eval()\n    with torch.inference_mode():\n        pred = model(test_x)\n        if pred.ndim == 3:\n            vocab = pred.shape[-1]\n            loss = F.cross_entropy(pred.reshape(-1, vocab), test_y.reshape(-1))\n        else:\n            loss = F.cross_entropy(pred, test_y.reshape(-1))\n        return float(loss.item())\n\n\ndef train_and_eval(\n    train_x: torch.Tensor,\n    train_y: torch.Tensor,\n    test_x: torch.Tensor,\n    test_y: torch.Tensor,\n    *,\n    steps: int,\n    batch_size: int,\n    seed: int = 0,\n    fail_threshold: float = float(\"inf\"),\n    device: str = \"cpu\",\n    progress_callback=None,\n) -> dict:\n    torch.manual_seed(seed)\n    run_device = _resolve_device(device)\n    if run_device.type == \"cuda\":\n        torch.cuda.manual_seed_all(seed)\n    model = Model().to(run_device)\n    optimizer = build_optimizer(model)\n    train_x = train_x.to(run_device)\n    train_y = train_y.to(run_device)\n    test_x = test_x.to(run_device)\n    test_y = test_y.to(run_device)\n    n = train_x.shape[0]\n    step_metrics: list[float] = []\n    eval_samples: list[int] = []\n    failed = False\n    progress_interval = max(1, steps // 100)\n\n    for step in range(1, steps + 1):\n        model.train()\n        idx = torch.randint(0, n, (batch_size,), device=run_device)\n        pred = model(train_x[idx])\n        loss = loss_fn(model, pred, train_y[idx])\n        if not torch.isfinite(loss):\n            failed = True\n            break\n        optimizer.zero_grad(set_to_none=True)\n        loss.backward()\n        optimizer.step()\n\n        metric = _test_ce(model, test_x, test_y)\n        if not math.isfinite(metric):\n            failed = True\n            break\n        eval_samples.append(step * batch_size)\n        step_metrics.append(metric)\n        if progress_callback is not None and (\n            step == 1 or step % progress_interval == 0 or step == steps\n        ):\n            progress_callback(\n                {\n                    \"step\": step,\n                    \"training_steps\": steps,\n                    \"samples_seen\": step * batch_size,\n                    \"total_samples_seen\": steps * batch_size,\n                    \"metric\": metric,\n                }\n            )\n\n    final_metric = step_metrics[-1] if step_metrics else float(\"inf\")\n    if final_metric > fail_threshold:\n        failed = True\n\n    return {\n        \"failed\": failed,\n        \"final_test_ce\": final_metric,\n        \"eval_samples\": eval_samples,\n        \"step_metrics\": step_metrics,\n    }\n",
+    "optimizer_source": "\"\"\"Optimizer factory for this candidate.\"\"\"\nfrom __future__ import annotations\n\nimport torch\nimport torch.nn as nn\n\n\ndef build_optimizer(model: nn.Module) -> torch.optim.Optimizer:\n    params = model.parameters()\n    return torch.optim.AdamW(params, lr=0.003, betas=(0.9, 0.95), weight_decay=0.001)\n",
+    "source_hashes": {
+      "model_source": "1d09dd38cb7b855777d46c12356fb08d8cc7d4e85ccb810c2219e452d93ff068",
+      "train_source": "c7c6188e0aad5362c2effe513374adbd21d4ce01d72a727497a49fca30e5fa2a",
+      "optimizer_source": "eb8e7c364a7defefbbf9ac4b032377fdc75f8d9f6c25c683b888aedcadd0d9c3"
+    }
+  },
+  {
+    "row": {
+      "family": "bigram_lm",
+      "dataset_id": "bg_1d9caf",
+      "set_id": "exp:2ba2012e9989",
+      "candidate_id": "24117cfb",
+      "dataset": {
+        "instance_seed": 100064931980,
+        "vocab_size": 24,
+        "context_length": 24,
+        "train_size": 800,
+        "test_size": 200,
+        "alpha": 0.8,
+        "layout": "lm",
+        "sequence_seed": 100064931980,
+        "table_seed": 100064941980
+      },
+      "budget": {
+        "training_steps": 1024,
+        "batch_size": 32,
+        "total_samples_seen": 32768
+      },
+      "params": null,
+      "model_type": "gru_lm",
+      "d_model": 64,
+      "num_layers": 2,
+      "model": {
+        "type": "gru_lm",
+        "vocab_size": 24,
+        "context_length": 24,
+        "d_model": 64,
+        "num_layers": 2,
+        "layer_residual": false
+      },
+      "optimizer": {
+        "type": "AdamW",
+        "lr": 0.003,
+        "weight_decay": 0.001,
+        "momentum": 0.9,
+        "betas": [
+          0.9,
+          0.95
+        ]
+      },
+      "loss": {
+        "loss_id": "cross_entropy"
+      },
+      "metric": "test_ce",
+      "mean": 3.961415708065033,
+      "std": 0.01709271506763818,
+      "source": "experiment",
+      "epoch": 1,
+      "origin_epoch": 1,
+      "why": "Preregistered provenance repair in R9d96d388c9: explicit V24/context24 vs matching V32/context24, seeds0..9. At T1024 predict GRU .003 CE worse than .0003 and weak SGD; Adagrad reversal not guaranteed. No directional V effect predicted. Need runtime embedding/head dimensions or constructor provenance to determine whether prior exp:59726980c70d used32 or transport overrides24; metadata alone is not proof. Training-visible bg_1d9caf only, not q_7dbb0e evaluation data. Return actual dimensions, seed counts/failures if available."
+    },
+    "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/bigram_lm/bg_1d9caf/x_4abf85fe7b",
+    "summary": {
+      "schema_version": "1.0",
+      "candidate_id": "x_4abf85fe7b",
+      "selection_metric": "test_ce",
+      "execution": "candidate_py_files",
+      "n_seeds": 10,
+      "base_seed": 0,
+      "failed_seeds": 6,
+      "excluded": true,
+      "mean_test_ce": 3.961415708065033,
+      "std_test_ce": 0.01709271506763818,
+      "seed_results": [
+        {
+          "seed": 0,
+          "failed": true,
+          "final_test_ce": 4.017233371734619
+        },
+        {
+          "seed": 1,
+          "failed": false,
+          "final_test_ce": 3.964806318283081
+        },
+        {
+          "seed": 2,
+          "failed": false,
+          "final_test_ce": 3.9325647354125977
+        },
+        {
+          "seed": 3,
+          "failed": false,
+          "final_test_ce": 3.974717617034912
+        },
+        {
+          "seed": 4,
+          "failed": true,
+          "final_test_ce": 4.015845775604248
+        },
+        {
+          "seed": 5,
+          "failed": true,
+          "final_test_ce": 4.008522033691406
+        },
+        {
+          "seed": 6,
+          "failed": true,
+          "final_test_ce": 4.017933368682861
+        },
+        {
+          "seed": 7,
+          "failed": true,
+          "final_test_ce": 4.043257713317871
+        },
+        {
+          "seed": 8,
+          "failed": true,
+          "final_test_ce": 4.01801872253418
+        },
+        {
+          "seed": 9,
+          "failed": false,
+          "final_test_ce": 3.973574161529541
+        }
+      ],
+      "environment": {
+        "python": "3.10.9 (main, Jan 11 2023, 09:18:18) [Clang 14.0.6 ]",
+        "platform": "macOS-26.5.1-arm64-arm-64bit",
+        "torch": "2.13.0",
+        "requested_device": "cpu",
+        "device": "cpu",
+        "cuda_available": false,
+        "cuda_runtime": null,
+        "cuda_device_name": null,
+        "cuda_device_capability": null,
+        "deterministic_algorithms": false,
+        "seed_workers": 1,
+        "torch_threads_per_seed": 1,
+        "git_commit": null
+      }
+    },
+    "spec": {
+      "schema_version": "1.0",
+      "profile": "v1.5",
+      "dataset_id": "bg_1d9caf",
+      "family": "bigram_lm",
+      "budget": {
+        "training_steps": 1024,
+        "batch_size": 32,
+        "total_samples_seen": 32768
+      },
+      "model": {
+        "type": "gru_lm",
+        "vocab_size": 24,
+        "context_length": 24,
+        "d_model": 64,
+        "num_layers": 2,
+        "layer_residual": false
+      },
+      "optimizer": {
+        "type": "AdamW",
+        "lr": 0.003,
+        "weight_decay": 0.001,
+        "betas": [
+          0.9,
+          0.95
+        ]
+      },
+      "loss": {
+        "loss_id": "cross_entropy"
+      },
+      "execution": {
+        "device": "cpu"
+      },
+      "files": {
+        "model": "model.py",
+        "train": "train.py",
+        "loss": "loss.py",
+        "optimizer": "optimizer.py"
+      },
+      "candidate_id": "x_4abf85fe7b"
+    },
+    "model_source": "\"\"\"Causal unidirectional GRU language model.\"\"\"\nfrom __future__ import annotations\n\nimport torch\nimport torch.nn as nn\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.context_length = 24\n        self.token_embed = nn.Embedding(24, 64)\n        self.gru = nn.GRU(\n            input_size=64,\n            hidden_size=64,\n            num_layers=2,\n            batch_first=True,\n            dropout=0.0,\n        )\n        self.head = nn.Linear(64, 24)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.token_embed(x)\n        h, _ = self.gru(h)\n        return self.head(h)\n",
+    "train_source": "\"\"\"Training loop for this candidate \u2014 executed by the ground-truth runner.\"\"\"\nfrom __future__ import annotations\n\nimport math\n\nimport torch\nimport torch.nn.functional as F\n\nfrom loss import loss_fn\nfrom model import Model\nfrom optimizer import build_optimizer\n\n\ndef _resolve_device(device: str) -> torch.device:\n    if device not in {\"cpu\", \"cuda\"}:\n        raise ValueError(f\"Unsupported execution device {device!r}; choose 'cpu' or 'cuda'\")\n    if device == \"cuda\" and not torch.cuda.is_available():\n        raise RuntimeError(\n            \"CUDA was requested but is unavailable \"\n            f\"(torch={torch.__version__}, torch.version.cuda={torch.version.cuda!r})\"\n        )\n    return torch.device(device)\n\n\ndef _test_ce(model: torch.nn.Module, test_x: torch.Tensor, test_y: torch.Tensor) -> float:\n    model.eval()\n    with torch.inference_mode():\n        pred = model(test_x)\n        if pred.ndim == 3:\n            vocab = pred.shape[-1]\n            loss = F.cross_entropy(pred.reshape(-1, vocab), test_y.reshape(-1))\n        else:\n            loss = F.cross_entropy(pred, test_y.reshape(-1))\n        return float(loss.item())\n\n\ndef train_and_eval(\n    train_x: torch.Tensor,\n    train_y: torch.Tensor,\n    test_x: torch.Tensor,\n    test_y: torch.Tensor,\n    *,\n    steps: int,\n    batch_size: int,\n    seed: int = 0,\n    fail_threshold: float = float(\"inf\"),\n    device: str = \"cpu\",\n    progress_callback=None,\n) -> dict:\n    torch.manual_seed(seed)\n    run_device = _resolve_device(device)\n    if run_device.type == \"cuda\":\n        torch.cuda.manual_seed_all(seed)\n    model = Model().to(run_device)\n    optimizer = build_optimizer(model)\n    train_x = train_x.to(run_device)\n    train_y = train_y.to(run_device)\n    test_x = test_x.to(run_device)\n    test_y = test_y.to(run_device)\n    n = train_x.shape[0]\n    step_metrics: list[float] = []\n    eval_samples: list[int] = []\n    failed = False\n    progress_interval = max(1, steps // 100)\n\n    for step in range(1, steps + 1):\n        model.train()\n        idx = torch.randint(0, n, (batch_size,), device=run_device)\n        pred = model(train_x[idx])\n        loss = loss_fn(model, pred, train_y[idx])\n        if not torch.isfinite(loss):\n            failed = True\n            break\n        optimizer.zero_grad(set_to_none=True)\n        loss.backward()\n        optimizer.step()\n\n        metric = _test_ce(model, test_x, test_y)\n        if not math.isfinite(metric):\n            failed = True\n            break\n        eval_samples.append(step * batch_size)\n        step_metrics.append(metric)\n        if progress_callback is not None and (\n            step == 1 or step % progress_interval == 0 or step == steps\n        ):\n            progress_callback(\n                {\n                    \"step\": step,\n                    \"training_steps\": steps,\n                    \"samples_seen\": step * batch_size,\n                    \"total_samples_seen\": steps * batch_size,\n                    \"metric\": metric,\n                }\n            )\n\n    final_metric = step_metrics[-1] if step_metrics else float(\"inf\")\n    if final_metric > fail_threshold:\n        failed = True\n\n    return {\n        \"failed\": failed,\n        \"final_test_ce\": final_metric,\n        \"eval_samples\": eval_samples,\n        \"step_metrics\": step_metrics,\n    }\n",
+    "optimizer_source": "\"\"\"Optimizer factory for this candidate.\"\"\"\nfrom __future__ import annotations\n\nimport torch\nimport torch.nn as nn\n\n\ndef build_optimizer(model: nn.Module) -> torch.optim.Optimizer:\n    params = model.parameters()\n    return torch.optim.AdamW(params, lr=0.003, betas=(0.9, 0.95), weight_decay=0.001)\n",
+    "source_hashes": {
+      "model_source": "1d09dd38cb7b855777d46c12356fb08d8cc7d4e85ccb810c2219e452d93ff068",
+      "train_source": "c7c6188e0aad5362c2effe513374adbd21d4ce01d72a727497a49fca30e5fa2a",
+      "optimizer_source": "eb8e7c364a7defefbbf9ac4b032377fdc75f8d9f6c25c683b888aedcadd0d9c3"
+    }
+  }
+]
