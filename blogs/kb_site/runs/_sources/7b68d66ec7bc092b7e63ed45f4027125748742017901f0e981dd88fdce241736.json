@@ -1,0 +1,189 @@
+{
+  "origin_epoch": 5,
+  "job_id": "J2f08a8f1642c",
+  "why": "Instrumentation pilot for preregistered parity study. Need actual paired seeds and gradient RMS/accumulator/effective lr/output motion/train-test curves; identify available diagnostics before causal claims.",
+  "input": {
+    "dataset": "multivariate_regression/mvar_05883d",
+    "candidates": [
+      {
+        "model": {
+          "type": "mlp",
+          "depth": 3,
+          "width": 32,
+          "residual": false,
+          "activation": "silu",
+          "layer_norm": [
+            true,
+            true,
+            true
+          ],
+          "leaky_relu_slope": 0.01,
+          "input_dim": 5,
+          "output_dim": 1
+        },
+        "optimizer": {
+          "type": "AdamW",
+          "lr": 0.0001,
+          "weight_decay": 0,
+          "momentum": 0.9
+        },
+        "loss": {
+          "loss_id": "mse",
+          "lambda": 0.001
+        },
+        "budget": {
+          "training_steps": 256,
+          "batch_size": 32
+        }
+      }
+    ]
+  },
+  "dataset_params": {
+    "instance_seed": 100000733103,
+    "input_dim": 5,
+    "sampler": {
+      "id": "symbolic_expr_mv",
+      "seed": 100000733103,
+      "max_depth": 3,
+      "retry": 0
+    },
+    "expression": "x1*x2 - 4*x1**2 + cos(2*pi*sin(2*pi*x0)) + sin(2*pi*x3**2) - 2*sin(2*pi*x2) + tanh(2*x3) + 2*x4 + 0.5",
+    "domain": [
+      0.0,
+      1.0
+    ],
+    "train_size": 256,
+    "test_size": 256
+  },
+  "profile": "v1.5",
+  "result": {
+    "dataset": "multivariate_regression/mvar_05883d",
+    "family": "multivariate_regression",
+    "results": [
+      {
+        "mean": Infinity,
+        "std": Infinity,
+        "metric": "test_mse",
+        "cached": false,
+        "failed_seeds": 10,
+        "excluded": true,
+        "n_seeds": 10,
+        "base_seed": 0,
+        "seed_results": [
+          {
+            "seed": 0,
+            "failed": true,
+            "final_test_mse": 3.069070816040039,
+            "mean_test_mse": 3.069070816040039
+          },
+          {
+            "seed": 1,
+            "failed": true,
+            "final_test_mse": 3.353929042816162,
+            "mean_test_mse": 3.353929042816162
+          },
+          {
+            "seed": 2,
+            "failed": true,
+            "final_test_mse": 3.158101797103882,
+            "mean_test_mse": 3.158101797103882
+          },
+          {
+            "seed": 3,
+            "failed": true,
+            "final_test_mse": 2.8370604515075684,
+            "mean_test_mse": 2.8370604515075684
+          },
+          {
+            "seed": 4,
+            "failed": true,
+            "final_test_mse": 2.9466488361358643,
+            "mean_test_mse": 2.9466488361358643
+          },
+          {
+            "seed": 5,
+            "failed": true,
+            "final_test_mse": 2.4622583389282227,
+            "mean_test_mse": 2.4622583389282227
+          },
+          {
+            "seed": 6,
+            "failed": true,
+            "final_test_mse": 3.3791887760162354,
+            "mean_test_mse": 3.3791887760162354
+          },
+          {
+            "seed": 7,
+            "failed": true,
+            "final_test_mse": 3.3322017192840576,
+            "mean_test_mse": 3.3322017192840576
+          },
+          {
+            "seed": 8,
+            "failed": true,
+            "final_test_mse": 3.0179741382598877,
+            "mean_test_mse": 3.0179741382598877
+          },
+          {
+            "seed": 9,
+            "failed": true,
+            "final_test_mse": 2.905636787414551,
+            "mean_test_mse": 2.905636787414551
+          }
+        ],
+        "measurement_files": {
+          "candidate_spec.json": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/multivariate_regression/mvar_05883d/x_73ee62154c/candidate_spec.json",
+            "sha256": "7ac540ec012c33f4fcc550ab667bd16ccf1e9df1618b3d9f239af14a58e7fbbc",
+            "bytes": 833,
+            "repo_path": "measurements/7ac540ec012c33f4fcc550ab667bd16ccf1e9df1618b3d9f239af14a58e7fbbc.json"
+          },
+          "results/summary.json": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/multivariate_regression/mvar_05883d/x_73ee62154c/results/summary.json",
+            "sha256": "acf3f42421b71cf9cb89f7cd7d1ebdee8fc58d0de8a714690a4913936a4bac2f",
+            "bytes": 2121,
+            "repo_path": "measurements/acf3f42421b71cf9cb89f7cd7d1ebdee8fc58d0de8a714690a4913936a4bac2f.json"
+          },
+          "results/curves.npz": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/multivariate_regression/mvar_05883d/x_73ee62154c/results/curves.npz",
+            "sha256": "be8a3529e3fbb582c8d8cd93b9e559ee6697bbe96aded1b49c3e7bf1de8df398",
+            "bytes": 772,
+            "repo_path": "measurements/be8a3529e3fbb582c8d8cd93b9e559ee6697bbe96aded1b49c3e7bf1de8df398.npz"
+          }
+        },
+        "secs": 1.4,
+        "candidate": {
+          "model": {
+            "type": "mlp",
+            "depth": 3,
+            "width": 32,
+            "residual": false,
+            "activation": "silu",
+            "layer_norm": [
+              true,
+              true,
+              true
+            ],
+            "leaky_relu_slope": 0.01,
+            "input_dim": 5,
+            "output_dim": 1
+          },
+          "optimizer": {
+            "type": "AdamW",
+            "lr": 0.0001,
+            "weight_decay": 0,
+            "momentum": 0.9
+          },
+          "loss": {
+            "loss_id": "mse",
+            "lambda": 0.001
+          },
+          "budget": {
+            "training_steps": 256,
+            "batch_size": 32
+          }
+        }
+      }
+    ]
+  }
+}
