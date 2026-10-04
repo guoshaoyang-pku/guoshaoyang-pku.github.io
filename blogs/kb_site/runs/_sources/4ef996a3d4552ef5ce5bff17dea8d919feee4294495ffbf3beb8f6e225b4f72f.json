@@ -1,0 +1,698 @@
+{
+  "origin_epoch": 6,
+  "job_id": "Ja412e95637cf",
+  "why": "R8c0e331e4c preregistered full q B/C controls on comparable five-input mixed symbolic target, predict C short B long. New recipes, not repeated endpoint rate grids.",
+  "input": {
+    "dataset": "multivariate_regression/mvar_05883d",
+    "candidates": [
+      {
+        "model": {
+          "type": "mlp",
+          "depth": 4,
+          "width": 128,
+          "residual": false,
+          "activation": "gelu",
+          "layer_norm": [
+            true,
+            true,
+            false,
+            true
+          ],
+          "leaky_relu_slope": 0.01,
+          "input_dim": 5,
+          "output_dim": 1,
+          "init": "default"
+        },
+        "optimizer": {
+          "type": "SGD",
+          "lr": 0.0003,
+          "weight_decay": 0,
+          "betas": [
+            0.9,
+            0.999
+          ],
+          "momentum": 0.9
+        },
+        "loss": {
+          "loss_id": "mse"
+        },
+        "budget": {
+          "training_steps": 256,
+          "batch_size": 32
+        }
+      },
+      {
+        "model": {
+          "type": "mlp",
+          "depth": 5,
+          "width": 96,
+          "residual": true,
+          "activation": "gelu",
+          "layer_norm": [
+            false,
+            true,
+            true,
+            true,
+            true
+          ],
+          "leaky_relu_slope": 0.01,
+          "input_dim": 5,
+          "output_dim": 1,
+          "init": "default"
+        },
+        "optimizer": {
+          "type": "AdamW",
+          "lr": 0.001,
+          "weight_decay": 0.0001,
+          "betas": [
+            0.9,
+            0.95
+          ],
+          "momentum": 0
+        },
+        "loss": {
+          "loss_id": "mse"
+        },
+        "budget": {
+          "training_steps": 256,
+          "batch_size": 32
+        }
+      },
+      {
+        "model": {
+          "type": "mlp",
+          "depth": 4,
+          "width": 128,
+          "residual": false,
+          "activation": "gelu",
+          "layer_norm": [
+            true,
+            true,
+            false,
+            true
+          ],
+          "leaky_relu_slope": 0.01,
+          "input_dim": 5,
+          "output_dim": 1,
+          "init": "default"
+        },
+        "optimizer": {
+          "type": "SGD",
+          "lr": 0.0003,
+          "weight_decay": 0,
+          "betas": [
+            0.9,
+            0.999
+          ],
+          "momentum": 0.9
+        },
+        "loss": {
+          "loss_id": "mse"
+        },
+        "budget": {
+          "training_steps": 1024,
+          "batch_size": 32
+        }
+      },
+      {
+        "model": {
+          "type": "mlp",
+          "depth": 5,
+          "width": 96,
+          "residual": true,
+          "activation": "gelu",
+          "layer_norm": [
+            false,
+            true,
+            true,
+            true,
+            true
+          ],
+          "leaky_relu_slope": 0.01,
+          "input_dim": 5,
+          "output_dim": 1,
+          "init": "default"
+        },
+        "optimizer": {
+          "type": "AdamW",
+          "lr": 0.001,
+          "weight_decay": 0.0001,
+          "betas": [
+            0.9,
+            0.95
+          ],
+          "momentum": 0
+        },
+        "loss": {
+          "loss_id": "mse"
+        },
+        "budget": {
+          "training_steps": 1024,
+          "batch_size": 32
+        }
+      }
+    ]
+  },
+  "dataset_params": {
+    "instance_seed": 100000733103,
+    "input_dim": 5,
+    "sampler": {
+      "id": "symbolic_expr_mv",
+      "seed": 100000733103,
+      "max_depth": 3,
+      "retry": 0
+    },
+    "expression": "x1*x2 - 4*x1**2 + cos(2*pi*sin(2*pi*x0)) + sin(2*pi*x3**2) - 2*sin(2*pi*x2) + tanh(2*x3) + 2*x4 + 0.5",
+    "domain": [
+      0.0,
+      1.0
+    ],
+    "train_size": 256,
+    "test_size": 256
+  },
+  "profile": "v1.5",
+  "result": {
+    "dataset": "multivariate_regression/mvar_05883d",
+    "family": "multivariate_regression",
+    "results": [
+      {
+        "mean": 1.1699244379997253,
+        "std": 0.09292031271009916,
+        "metric": "test_mse",
+        "cached": false,
+        "failed_seeds": 0,
+        "excluded": false,
+        "n_seeds": 10,
+        "base_seed": 0,
+        "seed_results": [
+          {
+            "seed": 0,
+            "failed": false,
+            "final_test_mse": 1.3729753494262695,
+            "mean_test_mse": 1.3729753494262695
+          },
+          {
+            "seed": 1,
+            "failed": false,
+            "final_test_mse": 1.0653879642486572,
+            "mean_test_mse": 1.0653879642486572
+          },
+          {
+            "seed": 2,
+            "failed": false,
+            "final_test_mse": 1.0621731281280518,
+            "mean_test_mse": 1.0621731281280518
+          },
+          {
+            "seed": 3,
+            "failed": false,
+            "final_test_mse": 1.2633495330810547,
+            "mean_test_mse": 1.2633495330810547
+          },
+          {
+            "seed": 4,
+            "failed": false,
+            "final_test_mse": 1.1772232055664062,
+            "mean_test_mse": 1.1772232055664062
+          },
+          {
+            "seed": 5,
+            "failed": false,
+            "final_test_mse": 1.1219035387039185,
+            "mean_test_mse": 1.1219035387039185
+          },
+          {
+            "seed": 6,
+            "failed": false,
+            "final_test_mse": 1.1359344720840454,
+            "mean_test_mse": 1.1359344720840454
+          },
+          {
+            "seed": 7,
+            "failed": false,
+            "final_test_mse": 1.1860082149505615,
+            "mean_test_mse": 1.1860082149505615
+          },
+          {
+            "seed": 8,
+            "failed": false,
+            "final_test_mse": 1.2269505262374878,
+            "mean_test_mse": 1.2269505262374878
+          },
+          {
+            "seed": 9,
+            "failed": false,
+            "final_test_mse": 1.0873384475708008,
+            "mean_test_mse": 1.0873384475708008
+          }
+        ],
+        "measurement_files": {
+          "candidate_spec.json": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/multivariate_regression/mvar_05883d/x_0c37d553b9/candidate_spec.json",
+            "sha256": "a02606b60ec42d9a58f745655211e2d9da4c179a5d5c2af560899e0f4c81cc74",
+            "bytes": 892,
+            "repo_path": "measurements/a02606b60ec42d9a58f745655211e2d9da4c179a5d5c2af560899e0f4c81cc74.json"
+          },
+          "results/summary.json": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/multivariate_regression/mvar_05883d/x_0c37d553b9/results/summary.json",
+            "sha256": "69290f2a4ddf6f0f5ae2673564414f56a774031ecb64fcffb90834042cab87d8",
+            "bytes": 2160,
+            "repo_path": "measurements/69290f2a4ddf6f0f5ae2673564414f56a774031ecb64fcffb90834042cab87d8.json"
+          },
+          "results/curves.npz": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/multivariate_regression/mvar_05883d/x_0c37d553b9/results/curves.npz",
+            "sha256": "9f1d76d99531e789b73f3e58c0f39b23dfc3d2a5fbd87af7ab2a8adc9612cbba",
+            "bytes": 23300,
+            "repo_path": "measurements/9f1d76d99531e789b73f3e58c0f39b23dfc3d2a5fbd87af7ab2a8adc9612cbba.npz"
+          }
+        },
+        "secs": 2.1,
+        "candidate": {
+          "model": {
+            "type": "mlp",
+            "depth": 4,
+            "width": 128,
+            "residual": false,
+            "activation": "gelu",
+            "layer_norm": [
+              true,
+              true,
+              false,
+              true
+            ],
+            "leaky_relu_slope": 0.01,
+            "input_dim": 5,
+            "output_dim": 1,
+            "init": "default"
+          },
+          "optimizer": {
+            "type": "SGD",
+            "lr": 0.0003,
+            "weight_decay": 0,
+            "betas": [
+              0.9,
+              0.999
+            ],
+            "momentum": 0.9
+          },
+          "loss": {
+            "loss_id": "mse"
+          },
+          "budget": {
+            "training_steps": 256,
+            "batch_size": 32
+          }
+        }
+      },
+      {
+        "mean": 0.9026575922966004,
+        "std": 0.06444474421366367,
+        "metric": "test_mse",
+        "cached": false,
+        "failed_seeds": 0,
+        "excluded": false,
+        "n_seeds": 10,
+        "base_seed": 0,
+        "seed_results": [
+          {
+            "seed": 0,
+            "failed": false,
+            "final_test_mse": 0.9642289280891418,
+            "mean_test_mse": 0.9642289280891418
+          },
+          {
+            "seed": 1,
+            "failed": false,
+            "final_test_mse": 0.8600338697433472,
+            "mean_test_mse": 0.8600338697433472
+          },
+          {
+            "seed": 2,
+            "failed": false,
+            "final_test_mse": 0.9074827432632446,
+            "mean_test_mse": 0.9074827432632446
+          },
+          {
+            "seed": 3,
+            "failed": false,
+            "final_test_mse": 0.9347736239433289,
+            "mean_test_mse": 0.9347736239433289
+          },
+          {
+            "seed": 4,
+            "failed": false,
+            "final_test_mse": 0.9507757425308228,
+            "mean_test_mse": 0.9507757425308228
+          },
+          {
+            "seed": 5,
+            "failed": false,
+            "final_test_mse": 0.8616906404495239,
+            "mean_test_mse": 0.8616906404495239
+          },
+          {
+            "seed": 6,
+            "failed": false,
+            "final_test_mse": 0.8495198488235474,
+            "mean_test_mse": 0.8495198488235474
+          },
+          {
+            "seed": 7,
+            "failed": false,
+            "final_test_mse": 1.0333428382873535,
+            "mean_test_mse": 1.0333428382873535
+          },
+          {
+            "seed": 8,
+            "failed": false,
+            "final_test_mse": 0.8090143799781799,
+            "mean_test_mse": 0.8090143799781799
+          },
+          {
+            "seed": 9,
+            "failed": false,
+            "final_test_mse": 0.8557133078575134,
+            "mean_test_mse": 0.8557133078575134
+          }
+        ],
+        "measurement_files": {
+          "candidate_spec.json": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/multivariate_regression/mvar_05883d/x_e5f04b272c/candidate_spec.json",
+            "sha256": "fa80339e6bc01cb9e2337f234a99aacccece6cfe63772c90c2f31867d2d98102",
+            "bytes": 905,
+            "repo_path": "measurements/fa80339e6bc01cb9e2337f234a99aacccece6cfe63772c90c2f31867d2d98102.json"
+          },
+          "results/summary.json": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/multivariate_regression/mvar_05883d/x_e5f04b272c/results/summary.json",
+            "sha256": "52f70bc69da16824822f505863fe3ce2ae2d12f150fafe898cd93996bb9d3073",
+            "bytes": 2160,
+            "repo_path": "measurements/52f70bc69da16824822f505863fe3ce2ae2d12f150fafe898cd93996bb9d3073.json"
+          },
+          "results/curves.npz": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/multivariate_regression/mvar_05883d/x_e5f04b272c/results/curves.npz",
+            "sha256": "5df6b24fbffbb7124e9eba620c3d9421e1d638a565184b459be1c14a6d8b2a6a",
+            "bytes": 23300,
+            "repo_path": "measurements/5df6b24fbffbb7124e9eba620c3d9421e1d638a565184b459be1c14a6d8b2a6a.npz"
+          }
+        },
+        "secs": 2.8,
+        "candidate": {
+          "model": {
+            "type": "mlp",
+            "depth": 5,
+            "width": 96,
+            "residual": true,
+            "activation": "gelu",
+            "layer_norm": [
+              false,
+              true,
+              true,
+              true,
+              true
+            ],
+            "leaky_relu_slope": 0.01,
+            "input_dim": 5,
+            "output_dim": 1,
+            "init": "default"
+          },
+          "optimizer": {
+            "type": "AdamW",
+            "lr": 0.001,
+            "weight_decay": 0.0001,
+            "betas": [
+              0.9,
+              0.95
+            ],
+            "momentum": 0
+          },
+          "loss": {
+            "loss_id": "mse"
+          },
+          "budget": {
+            "training_steps": 256,
+            "batch_size": 32
+          }
+        }
+      },
+      {
+        "mean": 0.8823073506355286,
+        "std": 0.032842047969264744,
+        "metric": "test_mse",
+        "cached": false,
+        "failed_seeds": 0,
+        "excluded": false,
+        "n_seeds": 10,
+        "base_seed": 0,
+        "seed_results": [
+          {
+            "seed": 0,
+            "failed": false,
+            "final_test_mse": 0.8712285757064819,
+            "mean_test_mse": 0.8712285757064819
+          },
+          {
+            "seed": 1,
+            "failed": false,
+            "final_test_mse": 0.8880351781845093,
+            "mean_test_mse": 0.8880351781845093
+          },
+          {
+            "seed": 2,
+            "failed": false,
+            "final_test_mse": 0.8542919158935547,
+            "mean_test_mse": 0.8542919158935547
+          },
+          {
+            "seed": 3,
+            "failed": false,
+            "final_test_mse": 0.8628242611885071,
+            "mean_test_mse": 0.8628242611885071
+          },
+          {
+            "seed": 4,
+            "failed": false,
+            "final_test_mse": 0.8464563488960266,
+            "mean_test_mse": 0.8464563488960266
+          },
+          {
+            "seed": 5,
+            "failed": false,
+            "final_test_mse": 0.8713282942771912,
+            "mean_test_mse": 0.8713282942771912
+          },
+          {
+            "seed": 6,
+            "failed": false,
+            "final_test_mse": 0.9435494542121887,
+            "mean_test_mse": 0.9435494542121887
+          },
+          {
+            "seed": 7,
+            "failed": false,
+            "final_test_mse": 0.9357101917266846,
+            "mean_test_mse": 0.9357101917266846
+          },
+          {
+            "seed": 8,
+            "failed": false,
+            "final_test_mse": 0.9007642269134521,
+            "mean_test_mse": 0.9007642269134521
+          },
+          {
+            "seed": 9,
+            "failed": false,
+            "final_test_mse": 0.8488850593566895,
+            "mean_test_mse": 0.8488850593566895
+          }
+        ],
+        "measurement_files": {
+          "candidate_spec.json": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/multivariate_regression/mvar_05883d/x_4a7cd8eb7b/candidate_spec.json",
+            "sha256": "b38ef91706167c191bb7b7dd72bfdfe0be432115ab90a144fb5379ac2e5f4879",
+            "bytes": 894,
+            "repo_path": "measurements/b38ef91706167c191bb7b7dd72bfdfe0be432115ab90a144fb5379ac2e5f4879.json"
+          },
+          "results/summary.json": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/multivariate_regression/mvar_05883d/x_4a7cd8eb7b/results/summary.json",
+            "sha256": "4645fe8fe6a1ea54dd42581f1811b1da118f46dee5ed3c341a3dbcda44cb3a05",
+            "bytes": 2161,
+            "repo_path": "measurements/4645fe8fe6a1ea54dd42581f1811b1da118f46dee5ed3c341a3dbcda44cb3a05.json"
+          },
+          "results/curves.npz": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/multivariate_regression/mvar_05883d/x_4a7cd8eb7b/results/curves.npz",
+            "sha256": "64cb2f99e5719b6041332ea92a272e13a04d006e02ceeb13faae65fb51697c83",
+            "bytes": 90884,
+            "repo_path": "measurements/64cb2f99e5719b6041332ea92a272e13a04d006e02ceeb13faae65fb51697c83.npz"
+          }
+        },
+        "secs": 6.6,
+        "candidate": {
+          "model": {
+            "type": "mlp",
+            "depth": 4,
+            "width": 128,
+            "residual": false,
+            "activation": "gelu",
+            "layer_norm": [
+              true,
+              true,
+              false,
+              true
+            ],
+            "leaky_relu_slope": 0.01,
+            "input_dim": 5,
+            "output_dim": 1,
+            "init": "default"
+          },
+          "optimizer": {
+            "type": "SGD",
+            "lr": 0.0003,
+            "weight_decay": 0,
+            "betas": [
+              0.9,
+              0.999
+            ],
+            "momentum": 0.9
+          },
+          "loss": {
+            "loss_id": "mse"
+          },
+          "budget": {
+            "training_steps": 1024,
+            "batch_size": 32
+          }
+        }
+      },
+      {
+        "mean": 1.0466193377971649,
+        "std": 0.06462687220485223,
+        "metric": "test_mse",
+        "cached": false,
+        "failed_seeds": 0,
+        "excluded": false,
+        "n_seeds": 10,
+        "base_seed": 0,
+        "seed_results": [
+          {
+            "seed": 0,
+            "failed": false,
+            "final_test_mse": 1.0612373352050781,
+            "mean_test_mse": 1.0612373352050781
+          },
+          {
+            "seed": 1,
+            "failed": false,
+            "final_test_mse": 1.0064042806625366,
+            "mean_test_mse": 1.0064042806625366
+          },
+          {
+            "seed": 2,
+            "failed": false,
+            "final_test_mse": 1.123149037361145,
+            "mean_test_mse": 1.123149037361145
+          },
+          {
+            "seed": 3,
+            "failed": false,
+            "final_test_mse": 0.9655688405036926,
+            "mean_test_mse": 0.9655688405036926
+          },
+          {
+            "seed": 4,
+            "failed": false,
+            "final_test_mse": 1.1128365993499756,
+            "mean_test_mse": 1.1128365993499756
+          },
+          {
+            "seed": 5,
+            "failed": false,
+            "final_test_mse": 0.9701640605926514,
+            "mean_test_mse": 0.9701640605926514
+          },
+          {
+            "seed": 6,
+            "failed": false,
+            "final_test_mse": 1.132920742034912,
+            "mean_test_mse": 1.132920742034912
+          },
+          {
+            "seed": 7,
+            "failed": false,
+            "final_test_mse": 0.958795428276062,
+            "mean_test_mse": 0.958795428276062
+          },
+          {
+            "seed": 8,
+            "failed": false,
+            "final_test_mse": 1.0426446199417114,
+            "mean_test_mse": 1.0426446199417114
+          },
+          {
+            "seed": 9,
+            "failed": false,
+            "final_test_mse": 1.0924724340438843,
+            "mean_test_mse": 1.0924724340438843
+          }
+        ],
+        "measurement_files": {
+          "candidate_spec.json": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/multivariate_regression/mvar_05883d/x_2239c3562d/candidate_spec.json",
+            "sha256": "d16473307022a03f1067c96dd3e06fa19634a2265cc75b8c952145cd67eb0ac1",
+            "bytes": 907,
+            "repo_path": "measurements/d16473307022a03f1067c96dd3e06fa19634a2265cc75b8c952145cd67eb0ac1.json"
+          },
+          "results/summary.json": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/multivariate_regression/mvar_05883d/x_2239c3562d/results/summary.json",
+            "sha256": "de3a341db35d74fff6800dea2fd8644a281a40a822f16ac2655e51519c163a76",
+            "bytes": 2154,
+            "repo_path": "measurements/de3a341db35d74fff6800dea2fd8644a281a40a822f16ac2655e51519c163a76.json"
+          },
+          "results/curves.npz": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/multivariate_regression/mvar_05883d/x_2239c3562d/results/curves.npz",
+            "sha256": "c310c7e2cfa78fbb71d960e394d205eee2d8a795596f7ac9d33533fcbe231fb8",
+            "bytes": 90884,
+            "repo_path": "measurements/c310c7e2cfa78fbb71d960e394d205eee2d8a795596f7ac9d33533fcbe231fb8.npz"
+          }
+        },
+        "secs": 8.8,
+        "candidate": {
+          "model": {
+            "type": "mlp",
+            "depth": 5,
+            "width": 96,
+            "residual": true,
+            "activation": "gelu",
+            "layer_norm": [
+              false,
+              true,
+              true,
+              true,
+              true
+            ],
+            "leaky_relu_slope": 0.01,
+            "input_dim": 5,
+            "output_dim": 1,
+            "init": "default"
+          },
+          "optimizer": {
+            "type": "AdamW",
+            "lr": 0.001,
+            "weight_decay": 0.0001,
+            "betas": [
+              0.9,
+              0.95
+            ],
+            "momentum": 0
+          },
+          "loss": {
+            "loss_id": "mse"
+          },
+          "budget": {
+            "training_steps": 1024,
+            "batch_size": 32
+          }
+        }
+      }
+    ]
+  }
+}

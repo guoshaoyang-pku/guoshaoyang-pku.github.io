@@ -1,0 +1,493 @@
+{
+  "origin_epoch": 6,
+  "job_id": "Jc60aaee7d435",
+  "why": "Preregistered R69689e7876: full Adagrad recipes A/B/C on new positive-baseline additive target; predict A<B. No repeated prior controls.",
+  "input": {
+    "dataset": "multivariate_regression/mvar_08cb38",
+    "candidates": [
+      {
+        "model": {
+          "type": "mlp",
+          "depth": 2,
+          "width": 192,
+          "residual": false,
+          "activation": "silu",
+          "layer_norm": [
+            true,
+            true
+          ],
+          "input_dim": 8,
+          "output_dim": 1
+        },
+        "optimizer": {
+          "type": "Adagrad",
+          "lr": 0.001,
+          "weight_decay": 0.001,
+          "momentum": 0
+        },
+        "loss": {
+          "loss_id": "mse",
+          "lambda": 10.0
+        },
+        "budget": {
+          "training_steps": 256,
+          "batch_size": 64,
+          "total_samples_seen": 16384
+        }
+      },
+      {
+        "model": {
+          "type": "mlp",
+          "depth": 1,
+          "width": 192,
+          "residual": true,
+          "activation": "leaky_relu",
+          "layer_norm": [
+            true
+          ],
+          "input_dim": 8,
+          "output_dim": 1,
+          "leaky_relu_slope": 0.01
+        },
+        "optimizer": {
+          "type": "Adagrad",
+          "lr": 0.001,
+          "weight_decay": 0.001,
+          "momentum": 0
+        },
+        "loss": {
+          "loss_id": "mse",
+          "lambda": 10.0
+        },
+        "budget": {
+          "training_steps": 256,
+          "batch_size": 64,
+          "total_samples_seen": 16384
+        }
+      },
+      {
+        "model": {
+          "type": "mlp",
+          "depth": 1,
+          "width": 256,
+          "residual": true,
+          "activation": "leaky_relu",
+          "layer_norm": [
+            false
+          ],
+          "input_dim": 8,
+          "output_dim": 1,
+          "leaky_relu_slope": 0.01
+        },
+        "optimizer": {
+          "type": "Adagrad",
+          "lr": 0.001,
+          "weight_decay": 0.001,
+          "momentum": 0
+        },
+        "loss": {
+          "loss_id": "mse",
+          "lambda": 10.0
+        },
+        "budget": {
+          "training_steps": 256,
+          "batch_size": 64,
+          "total_samples_seen": 16384
+        }
+      }
+    ]
+  },
+  "dataset_params": {
+    "instance_seed": 95804399,
+    "input_dim": 8,
+    "sampler": {
+      "id": "symbolic_expr_mv",
+      "seed": 95804399,
+      "max_depth": 3,
+      "retry": 32
+    },
+    "expression": "0.125*tanh(2*x5)**3 + x5**2*x7 + cos(2*pi*x4)*sin(2*pi*x7) + x3**2 + tanh(2*tanh(2*x7)) + tanh(2*x2) + x0 + x1 + x4 + x6 + 5.5",
+    "domain": [
+      0.0,
+      1.0
+    ],
+    "train_size": 256,
+    "test_size": 256
+  },
+  "profile": "v1.5",
+  "result": {
+    "dataset": "multivariate_regression/mvar_08cb38",
+    "family": "multivariate_regression",
+    "results": [
+      {
+        "mean": 0.34439976811408995,
+        "std": 0.010089364675253107,
+        "metric": "test_mse",
+        "cached": false,
+        "failed_seeds": 0,
+        "excluded": false,
+        "n_seeds": 10,
+        "base_seed": 0,
+        "seed_results": [
+          {
+            "seed": 0,
+            "failed": false,
+            "final_test_mse": 0.34111928939819336,
+            "mean_test_mse": 0.34111928939819336
+          },
+          {
+            "seed": 1,
+            "failed": false,
+            "final_test_mse": 0.33927857875823975,
+            "mean_test_mse": 0.33927857875823975
+          },
+          {
+            "seed": 2,
+            "failed": false,
+            "final_test_mse": 0.3352966010570526,
+            "mean_test_mse": 0.3352966010570526
+          },
+          {
+            "seed": 3,
+            "failed": false,
+            "final_test_mse": 0.32897573709487915,
+            "mean_test_mse": 0.32897573709487915
+          },
+          {
+            "seed": 4,
+            "failed": false,
+            "final_test_mse": 0.3678950071334839,
+            "mean_test_mse": 0.3678950071334839
+          },
+          {
+            "seed": 5,
+            "failed": false,
+            "final_test_mse": 0.34248173236846924,
+            "mean_test_mse": 0.34248173236846924
+          },
+          {
+            "seed": 6,
+            "failed": false,
+            "final_test_mse": 0.35395127534866333,
+            "mean_test_mse": 0.35395127534866333
+          },
+          {
+            "seed": 7,
+            "failed": false,
+            "final_test_mse": 0.345566064119339,
+            "mean_test_mse": 0.345566064119339
+          },
+          {
+            "seed": 8,
+            "failed": false,
+            "final_test_mse": 0.3471352458000183,
+            "mean_test_mse": 0.3471352458000183
+          },
+          {
+            "seed": 9,
+            "failed": false,
+            "final_test_mse": 0.34229815006256104,
+            "mean_test_mse": 0.34229815006256104
+          }
+        ],
+        "measurement_files": {
+          "candidate_spec.json": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/multivariate_regression/mvar_08cb38/x_ae9ba8470f/candidate_spec.json",
+            "sha256": "ab285eb2e02b28b2e8c1eeed42f3e698f7a27c035b477cade14b95323fee4e57",
+            "bytes": 795,
+            "repo_path": "measurements/ab285eb2e02b28b2e8c1eeed42f3e698f7a27c035b477cade14b95323fee4e57.json"
+          },
+          "results/summary.json": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/multivariate_regression/mvar_08cb38/x_ae9ba8470f/results/summary.json",
+            "sha256": "12784a863310b80aab049fc30704f5da8da9666018fe7836f00f6ca402559409",
+            "bytes": 2172,
+            "repo_path": "measurements/12784a863310b80aab049fc30704f5da8da9666018fe7836f00f6ca402559409.json"
+          },
+          "results/curves.npz": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/multivariate_regression/mvar_08cb38/x_ae9ba8470f/results/curves.npz",
+            "sha256": "afce7e1f1bc972739b4afbcb0254257b226c99939d8a3b4d2c96b5d739fcf3fa",
+            "bytes": 23300,
+            "repo_path": "measurements/afce7e1f1bc972739b4afbcb0254257b226c99939d8a3b4d2c96b5d739fcf3fa.npz"
+          }
+        },
+        "secs": 2.0,
+        "candidate": {
+          "model": {
+            "type": "mlp",
+            "depth": 2,
+            "width": 192,
+            "residual": false,
+            "activation": "silu",
+            "layer_norm": [
+              true,
+              true
+            ],
+            "input_dim": 8,
+            "output_dim": 1
+          },
+          "optimizer": {
+            "type": "Adagrad",
+            "lr": 0.001,
+            "weight_decay": 0.001,
+            "momentum": 0
+          },
+          "loss": {
+            "loss_id": "mse",
+            "lambda": 10.0
+          },
+          "budget": {
+            "training_steps": 256,
+            "batch_size": 64,
+            "total_samples_seen": 16384
+          }
+        }
+      },
+      {
+        "mean": 0.5363911598920822,
+        "std": 0.0341372010485704,
+        "metric": "test_mse",
+        "cached": false,
+        "failed_seeds": 0,
+        "excluded": false,
+        "n_seeds": 10,
+        "base_seed": 0,
+        "seed_results": [
+          {
+            "seed": 0,
+            "failed": false,
+            "final_test_mse": 0.5978280305862427,
+            "mean_test_mse": 0.5978280305862427
+          },
+          {
+            "seed": 1,
+            "failed": false,
+            "final_test_mse": 0.495187371969223,
+            "mean_test_mse": 0.495187371969223
+          },
+          {
+            "seed": 2,
+            "failed": false,
+            "final_test_mse": 0.5784355998039246,
+            "mean_test_mse": 0.5784355998039246
+          },
+          {
+            "seed": 3,
+            "failed": false,
+            "final_test_mse": 0.5503618717193604,
+            "mean_test_mse": 0.5503618717193604
+          },
+          {
+            "seed": 4,
+            "failed": false,
+            "final_test_mse": 0.523598849773407,
+            "mean_test_mse": 0.523598849773407
+          },
+          {
+            "seed": 5,
+            "failed": false,
+            "final_test_mse": 0.5094166994094849,
+            "mean_test_mse": 0.5094166994094849
+          },
+          {
+            "seed": 6,
+            "failed": false,
+            "final_test_mse": 0.5239997506141663,
+            "mean_test_mse": 0.5239997506141663
+          },
+          {
+            "seed": 7,
+            "failed": false,
+            "final_test_mse": 0.5554523468017578,
+            "mean_test_mse": 0.5554523468017578
+          },
+          {
+            "seed": 8,
+            "failed": false,
+            "final_test_mse": 0.5454682111740112,
+            "mean_test_mse": 0.5454682111740112
+          },
+          {
+            "seed": 9,
+            "failed": false,
+            "final_test_mse": 0.4841628670692444,
+            "mean_test_mse": 0.4841628670692444
+          }
+        ],
+        "measurement_files": {
+          "candidate_spec.json": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/multivariate_regression/mvar_08cb38/x_2d528896ec/candidate_spec.json",
+            "sha256": "73381cc3edbc6db5ea57189ac3bdb47ad12551cdfbf3c5d77ae8bc26b30899ea",
+            "bytes": 818,
+            "repo_path": "measurements/73381cc3edbc6db5ea57189ac3bdb47ad12551cdfbf3c5d77ae8bc26b30899ea.json"
+          },
+          "results/summary.json": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/multivariate_regression/mvar_08cb38/x_2d528896ec/results/summary.json",
+            "sha256": "e71386555d2dcfe3f346dc9396972a44648e2642fa1929bd80d7aa7d104ec845",
+            "bytes": 2155,
+            "repo_path": "measurements/e71386555d2dcfe3f346dc9396972a44648e2642fa1929bd80d7aa7d104ec845.json"
+          },
+          "results/curves.npz": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/multivariate_regression/mvar_08cb38/x_2d528896ec/results/curves.npz",
+            "sha256": "49b87a6ff04bf1e621b2a337413fc7512e670324b3204a5e0471b01f98eed8be",
+            "bytes": 23300,
+            "repo_path": "measurements/49b87a6ff04bf1e621b2a337413fc7512e670324b3204a5e0471b01f98eed8be.npz"
+          }
+        },
+        "secs": 1.3,
+        "candidate": {
+          "model": {
+            "type": "mlp",
+            "depth": 1,
+            "width": 192,
+            "residual": true,
+            "activation": "leaky_relu",
+            "layer_norm": [
+              true
+            ],
+            "input_dim": 8,
+            "output_dim": 1,
+            "leaky_relu_slope": 0.01
+          },
+          "optimizer": {
+            "type": "Adagrad",
+            "lr": 0.001,
+            "weight_decay": 0.001,
+            "momentum": 0
+          },
+          "loss": {
+            "loss_id": "mse",
+            "lambda": 10.0
+          },
+          "budget": {
+            "training_steps": 256,
+            "batch_size": 64,
+            "total_samples_seen": 16384
+          }
+        }
+      },
+      {
+        "mean": 0.6358049213886261,
+        "std": 0.09201343952721472,
+        "metric": "test_mse",
+        "cached": false,
+        "failed_seeds": 0,
+        "excluded": false,
+        "n_seeds": 10,
+        "base_seed": 0,
+        "seed_results": [
+          {
+            "seed": 0,
+            "failed": false,
+            "final_test_mse": 0.7294448018074036,
+            "mean_test_mse": 0.7294448018074036
+          },
+          {
+            "seed": 1,
+            "failed": false,
+            "final_test_mse": 0.6930031776428223,
+            "mean_test_mse": 0.6930031776428223
+          },
+          {
+            "seed": 2,
+            "failed": false,
+            "final_test_mse": 0.5159691572189331,
+            "mean_test_mse": 0.5159691572189331
+          },
+          {
+            "seed": 3,
+            "failed": false,
+            "final_test_mse": 0.5750365257263184,
+            "mean_test_mse": 0.5750365257263184
+          },
+          {
+            "seed": 4,
+            "failed": false,
+            "final_test_mse": 0.7466570734977722,
+            "mean_test_mse": 0.7466570734977722
+          },
+          {
+            "seed": 5,
+            "failed": false,
+            "final_test_mse": 0.5243213176727295,
+            "mean_test_mse": 0.5243213176727295
+          },
+          {
+            "seed": 6,
+            "failed": false,
+            "final_test_mse": 0.7202500700950623,
+            "mean_test_mse": 0.7202500700950623
+          },
+          {
+            "seed": 7,
+            "failed": false,
+            "final_test_mse": 0.5185049772262573,
+            "mean_test_mse": 0.5185049772262573
+          },
+          {
+            "seed": 8,
+            "failed": false,
+            "final_test_mse": 0.726438581943512,
+            "mean_test_mse": 0.726438581943512
+          },
+          {
+            "seed": 9,
+            "failed": false,
+            "final_test_mse": 0.6084235310554504,
+            "mean_test_mse": 0.6084235310554504
+          }
+        ],
+        "measurement_files": {
+          "candidate_spec.json": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/multivariate_regression/mvar_08cb38/x_8490517b9d/candidate_spec.json",
+            "sha256": "b3ce68ea9df32902497dd60f41a139dde3db7857ad27d8af5f48111cdad2345a",
+            "bytes": 819,
+            "repo_path": "measurements/b3ce68ea9df32902497dd60f41a139dde3db7857ad27d8af5f48111cdad2345a.json"
+          },
+          "results/summary.json": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/multivariate_regression/mvar_08cb38/x_8490517b9d/results/summary.json",
+            "sha256": "2a522740a8ef3bf321dbf4f76e5ac9e8d1f3741e4260c40540f125d5a814fb65",
+            "bytes": 2158,
+            "repo_path": "measurements/2a522740a8ef3bf321dbf4f76e5ac9e8d1f3741e4260c40540f125d5a814fb65.json"
+          },
+          "results/curves.npz": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/multivariate_regression/mvar_08cb38/x_8490517b9d/results/curves.npz",
+            "sha256": "7fa6b91dd4e6839f59e5b702aff1b92ee6af0acac4c1880e2deec00b83778066",
+            "bytes": 23300,
+            "repo_path": "measurements/7fa6b91dd4e6839f59e5b702aff1b92ee6af0acac4c1880e2deec00b83778066.npz"
+          }
+        },
+        "secs": 1.3,
+        "candidate": {
+          "model": {
+            "type": "mlp",
+            "depth": 1,
+            "width": 256,
+            "residual": true,
+            "activation": "leaky_relu",
+            "layer_norm": [
+              false
+            ],
+            "input_dim": 8,
+            "output_dim": 1,
+            "leaky_relu_slope": 0.01
+          },
+          "optimizer": {
+            "type": "Adagrad",
+            "lr": 0.001,
+            "weight_decay": 0.001,
+            "momentum": 0
+          },
+          "loss": {
+            "loss_id": "mse",
+            "lambda": 10.0
+          },
+          "budget": {
+            "training_steps": 256,
+            "batch_size": 64,
+            "total_samples_seen": 16384
+          }
+        }
+      }
+    ]
+  }
+}

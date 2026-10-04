@@ -1,0 +1,30 @@
+[
+  {
+    "op": "add",
+    "source_question_ids": [
+      "q_9e25f3"
+    ],
+    "text": "Dim16 sparse CE,1024/2048 rows,default plain d2w192 Leaky(.01),LN10,T2048/b16: full A=AdamW(.001,beta2.999,wd.001), B=AdamW(3e-5,.95,1e-5), C=Adam(.003,.95,0),beta1.9. Two allowed instances stabcls_254b70/3ba70f give A/B/C CE .413544/.416901/.807531 and .325835/.407879/.537058;A-B=-.003357/-.082044,paired95%[-.026824,.023157]/[-.096987,-.067933],A wins6/10 and10/10 seeds. C loses to both40/40 paired comparisons;zero failures. Rc093b78e4e: A wins both means,but first lead uncertain;not rate-only or a depth/rule-wide law.",
+    "reason": "New exact-history full-recipe controls; preserves seed uncertainty instead of using non-exact shallow/deep counts."
+  },
+  {
+    "op": "add",
+    "source_question_ids": [
+      "q_9be108"
+    ],
+    "text": "Dim16 piecewise CE,1024/2048 rows,default plain d2w192 Leaky(.01),LN10,T2048/b16: A=AdamW(.001,beta2.999,wd.001),B=AdamW(3e-5,.95,1e-5),C=Adam(.003,.95,0),beta1.9. stabcls_06550f/0a47cf give A/B/C CE .325305/.378657/.637561 and .408881/.403906/.798934. A-B=-.053352/+.004974,paired95%[-.076951,-.028471]/[-.017986,.028225],A wins8/10 and5/10 seeds. Predicted B transfer failed first instance;second mean lead uncertain. C loses to both40/40 pairs;zero failures. Rc093b78e4e: rule label does not guarantee B;no rate-only/calibration mechanism.",
+    "reason": "Retain failed historical winner transfer and narrower condition-first measurements."
+  },
+  {
+    "op": "annotate",
+    "claim_ids": [
+      "K1073"
+    ],
+    "source_question_ids": [
+      "q_9e25f3",
+      "q_9be108"
+    ],
+    "text": "Rc093b78e4e verifies byte-identical corresponding model/optimizer/loss code in q_9e25f3(A sparse) and q_9be108(B piecewise). Exact d2w192 plain Leaky(.01),LN10,T2048/b16 full A/B/C controls on2dim16 instances/rule: sparse A wins2/2 means (one uncertain);piecewise A then B (B lead uncertain),so B-by-piecewise prediction fails1/2. C loses all80 paired CE comparisons. Different rate,beta2,decay and Adam/AdamW preclude rate-only interpretation. No epoch/alpha threshold or confidence/distractor mechanism;non-exact shallow5/5/deep0/4 comments remain unvalidated.",
+    "reason": "Attach new exact-recipe evidence without rewriting existing local rate controls or merging claims."
+  }
+]
