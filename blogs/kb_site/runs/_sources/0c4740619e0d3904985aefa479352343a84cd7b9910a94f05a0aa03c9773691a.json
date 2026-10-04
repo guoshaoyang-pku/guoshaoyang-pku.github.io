@@ -1,0 +1,120 @@
+{
+  "data_version": "J8220c96c845b_research_e0009_v000001_12708e177a3a",
+  "claims": [
+    {
+      "id": "K1059",
+      "text": "Classification comparisons with BOTH MLPs NONRESIDUAL,d>=2,shared SGD/lr/T: terminal-block pre-LN is a preference,NOT a rank against residual rivals. Legacy31/31 labpairs(14sets,CEratio.69),including fewer-totalLN11/11(.76),used an underidentified filter. Reb8454abdf explicit plainCE base audit:equal type/lr SGD5/5,Adam6/12;zero full-config SGD pairs. Older Adam70/102(.92),Adagrad21/35(~.99) are separate filters. q_448af0's residuals beat terminal-LN plain C,outside this condition. TerminalLN precedes the last hidden Linear/activation,NOT direct head-input normalization. No unvalidated MSE transfer or measured attenuation/frozen motion.",
+      "support_count": 3.5,
+      "failure_count": 2.5,
+      "credibility": 0.5625,
+      "created_epoch": 0,
+      "sources": [],
+      "merged_from": [],
+      "origin": "c000006",
+      "mechanism": "Block=act(Linear(LN(x))); terminal LN normalizes the input to the final hidden block,not head input. Feature/gradient attenuation versus normalization geometry is unresolved. Endpoint CE cannot establish head-scale restoration,barely moving parameters or cancellation by adaptive optimizers. Scalar-tail rescaling without LN remains an unexecuted discriminator;instrumentation unavailable.",
+      "regime": {
+        "family": [
+          "synthetic_tabular_classification",
+          "xor_classification",
+          "spiral_classification"
+        ],
+        "model_type": [
+          "mlp"
+        ],
+        "optimizer": [
+          "SGD"
+        ],
+        "residual": [
+          false
+        ],
+        "depth": [
+          2,
+          5
+        ],
+        "steps": [
+          256,
+          2048
+        ],
+        "note": "Terminal preLN at input to final hidden block;shared optimizer/lr/T;legacy filter underidentified;controlled scale/geometry theory untested."
+      },
+      "phase": "q448 C is terminal-LN plain but E/B are residual:excluded comparison. The supplied52/54 residual>=LN/terminalplain backtest is controlled width24 SiLU XOR4,T256/b16,SGDwd0 on TWO datasets063fc1/4779bd across10 reused experimentsets,medianratio.978;not q448XOR8/w256/b64 evidence. Base same-type/lr7/13,7sets,zerofull-configpairs. J8220c96c845b tests transfer.",
+      "refines": "K1022",
+      "last_evaluated_epoch": 9,
+      "report_ids": [
+        "Reb8454abdf",
+        "Refa052dfdc"
+      ]
+    },
+    {
+      "id": "K1061",
+      "text": "Classification MLPs,shared SGD/lr/T,Delta<.1: residual beats depth>=4 plain with MORE LN and an unnormalized last block (lab16/16,CE ratio.72). NOT an adaptive ranking rule (lab5/9); extra plain LNs still count. Old corpus residual5/5 is recipe-confounded. Plain last-block LN: XOR+SGD plain9/10; spiral+Adam-family plain22/23 (residual/plain CE1.3-1.4); spiral+SGD residual3/3 plus controlled2/2 (ratio.3-.8); tabular plain12/27 lab,6/6 corpus. Moving plain LN to last block lowered CE6/6 controlled cells,not a universal tail penalty. Equal-LN rivals and Delta>=.1 are outside scope. q_fba153/q_99babc expose adaptive overuse.",
+      "support_count": 11.0,
+      "failure_count": 10.0,
+      "credibility": 0.5217391304347826,
+      "created_epoch": 0,
+      "sources": [],
+      "merged_from": [],
+      "origin": "c000010",
+      "mechanism": "Terminal normalization and residual propagation are plausible explanations; these ranking subsets do not isolate attenuation, motion or causal feature learning. Strong SGD and mixed adaptive evidence must remain separate.",
+      "regime": {
+        "family": [
+          "xor_classification",
+          "spiral_classification",
+          "synthetic_tabular_classification"
+        ],
+        "model_type": [
+          "mlp"
+        ],
+        "optimizer": [
+          "SGD",
+          "Adam",
+          "AdamW",
+          "RMSprop",
+          "Adagrad"
+        ],
+        "delta": [
+          0,
+          0.1
+        ],
+        "note": "Same optimizer configuration/lr/T, residual vs nonresidual depth>=4 with moreLN. Strong unnormalized-tail evidence SGD only; adaptive5/9 inconclusive. Equal-LN rivals excluded."
+      },
+      "phase": "Last-noLN plain vs residual with fewerLN: SGD residual16/16 ratio.72; adaptive5/9; older corpus5/5 confounded. Last-LN plain: XOR-SGD9/10; spiral-adaptive22/23; spiral-SGD residual3/3 and controlled2/2. Epoch3 adaptive/equalLN failures do not imply opposite universal preference.",
+      "refines": "K1059",
+      "last_evaluated_epoch": 9,
+      "report_ids": [
+        "R5e6506510f",
+        "Reb8454abdf",
+        "Refa052dfdc"
+      ]
+    }
+  ],
+  "later_relevant": [
+    {
+      "question_id": "q_d6486e",
+      "epoch": 9,
+      "source": "ranking_v3",
+      "task": "ranking",
+      "type": "architecture_only",
+      "family": "xor_classification",
+      "question": "You are taking the ArchitectureIQ benchmark.\n\nEach question describes one **dataset instance** and several **choices** (each choice is one **candidate**: model, optimizer, loss, and training budget). All choices use the same materialized dataset instance. Depending on the question, one or more training axes may vary; read each choice's complete setup and code rather than assuming an axis is shared.\n\nYour task is to **rank every choice** by its held-out test metric, from lowest to highest (a lower loss is better), using architecture and learning-mechanics reasoning only \u2014 no training results are provided.\n\nThe reply format is defined once, in the final \"Your answer\" section.\n\n## Dataset\nXOR binary classification on tabular features. Features are drawn i.i.d. from a standard normal; the label depends on the *sign agreement* of two active coordinates, so no linear function of the inputs separates the classes at all \u2014 a model must compose the two coordinates multiplicatively. Any remaining coordinates are pure distractors. The dataset card below states the active coordinates and the exact label rule. Every candidate trains on the same materialized train/test splits.\n\n### Data-generating and classification rule\n- Rule family: `xor`; active coordinates: `x_2`, `x_8`\n- Feature distribution: every coordinate is sampled independently from `Normal(0, 1)`.\n- Latent score:\n  - `s(x) = -x_2\u00b7x_8`\n- Label rule: `y = 1` exactly when `s(x) > 0`; otherwise `y = 0`.\n- XOR interpretation: `x` is class 1 exactly when its two active coordinates have opposite signs, and class 0 when they share a sign.\n- Bayes decision boundary: `s(x) = 0`; labels are an exact function of `x`, so this boundary is attainable.\n- Threshold calibration: `0` was chosen from 4096 independent calibration rows as the closest round value to the 50% quantile of `s(x)`; on those 4096 rows it labels 50.3% of them class 1.\n- Reproducibility: point seed `1886767660`, calibration seed `1886768660`.\n\n### Data splits and training protocol\n- Task: binary classification on one fixed synthetic tabular train/test split.\n- Input shape: float32 `[N, 16]`; labels: int64 `[N]` in `{0, 1}`.\n- Train rows: 1024; held-out test rows: 2048.\n- Every choice receives the same materialized split; minibatches sample train indices uniformly with replacement.\n- Evaluation: **test cross-entropy** is primary; test accuracy is auxiliary only.\n- Reference device: cpu\n\n## Sample budget (same for all choices)\n- training_steps: 1024\n- batch_size: 32\n- total_samples_seen: 32768 (= training_steps \u00d7 batch_size)\n\n## Evaluation metric\n- Ground-truth ranking uses **test_ce** on the held-out test split.\n- Each choice is trained independently for **10** seeds (`0`..`9`), one `torch.manual_seed(seed)` per run.\n- Execution device: cpu.\n- Rank all candidates by their mean test_ce over seeds; lower is better, so write the order from lowest to highest.\n\n## Choices\n\n### Choice B\n\n**Model (natural language)**\n- Type: MLP\n- Input dimension: 16\n- Output logits: 2\n- Depth: 5 hidden Linear layers of width 48, between the input projection and the output head (7 nn.Linear layers in total)\n- Width: 48 (all hidden layers)\n- Residual connections: True\n- Layer norm per layer: [False, False, False, True, False]\n- Activation: leaky_relu (one activation, shared by every layer)\n- LeakyReLU negative slope: 0.01\n- Initialization: PyTorch Linear defaults\n\n**Model code**\n```python\nclass MLPBlock(nn.Module):\n    \"\"\"One hidden layer: leaky_relu(x + Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.LeakyReLU(0.01)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        h = h + x\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(16, 48),\n            nn.LeakyReLU(0.01),\n            MLPBlock(width=48, use_layer_norm=False),\n            MLPBlock(width=48, use_layer_norm=False),\n            MLPBlock(width=48, use_layer_norm=False),\n            MLPBlock(width=48, use_layer_norm=True),\n            MLPBlock(width=48, use_layer_norm=False),\n            nn.Linear(48, 2),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)\n```\n\n**Optimizer**\n- Optimizer: SGD\n- Learning rate: 0.003\n- Weight decay: 0.001\n- Momentum: 0.9\n\n```python\ndef build_optimizer(model: nn.Module) -> torch.optim.Optimizer:\n    params = model.parameters()\n    return torch.optim.SGD(params, lr=0.003, momentum=0.9, weight_decay=0.001)\n```\n\n**Loss**\n- Loss: cross-entropy on minibatch target labels\n\n```python\ndef loss_fn(model: nn.Module, pred: torch.Tensor, target: torch.Tensor) -> torch.Tensor:\n    if pred.ndim == 3:\n        vocab = pred.shape[-1]\n        return torch.nn.functional.cross_entropy(pred.reshape(-1, vocab), target.reshape(-1))\n    return torch.nn.functional.cross_entropy(pred, target.reshape(-1))\n```\n\n### Choice E\n\n**Model (natural language)**\n- Type: MLP\n- Input dimension: 16\n- Output logits: 2\n- Depth: 4 hidden Linear layers of width 48, between the input projection and the output head (6 nn.Linear layers in total)\n- Width: 48 (all hidden layers)\n- Residual connections: True\n- Layer norm per layer: [False, True, False, True]\n- Activation: leaky_relu (one activation, shared by every layer)\n- LeakyReLU negative slope: 0.01\n- Initialization: PyTorch Linear defaults\n\n**Model code**\n```python\nclass MLPBlock(nn.Module):\n    \"\"\"One hidden layer: leaky_relu(x + Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.LeakyReLU(0.01)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        h = h + x\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(16, 48),\n            nn.LeakyReLU(0.01),\n            MLPBlock(width=48, use_layer_norm=False),\n            MLPBlock(width=48, use_layer_norm=True),\n            MLPBlock(width=48, use_layer_norm=False),\n            MLPBlock(width=48, use_layer_norm=True),\n            nn.Linear(48, 2),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)\n```\n\n**Optimizer**\n- Optimizer: SGD\n- Learning rate: 0.003\n- Weight decay: 0.001\n- Momentum: 0.9\n\n```python\ndef build_optimizer(model: nn.Module) -> torch.optim.Optimizer:\n    params = model.parameters()\n    return torch.optim.SGD(params, lr=0.003, momentum=0.9, weight_decay=0.001)\n```\n\n**Loss**\n- Loss: cross-entropy on minibatch target labels\n\n```python\ndef loss_fn(model: nn.Module, pred: torch.Tensor, target: torch.Tensor) -> torch.Tensor:\n    if pred.ndim == 3:\n        vocab = pred.shape[-1]\n        return torch.nn.functional.cross_entropy(pred.reshape(-1, vocab), target.reshape(-1))\n    return torch.nn.functional.cross_entropy(pred, target.reshape(-1))\n```\n\n### Choice D\n\n**Model (natural language)**\n- Type: MLP\n- Input dimension: 16\n- Output logits: 2\n- Depth: 4 hidden Linear layers of width 64, between the input projection and the output head (6 nn.Linear layers in total)\n- Width: 64 (all hidden layers)\n- Residual connections: False\n- Layer norm per layer: [True, False, True, True]\n- Activation: leaky_relu (one activation, shared by every layer)\n- LeakyReLU negative slope: 0.01\n- Initialization: PyTorch Linear defaults\n\n**Model code**\n```python\nclass MLPBlock(nn.Module):\n    \"\"\"One hidden layer: leaky_relu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.LeakyReLU(0.01)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(16, 64),\n            nn.LeakyReLU(0.01),\n            MLPBlock(width=64, use_layer_norm=True),\n            MLPBlock(width=64, use_layer_norm=False),\n            MLPBlock(width=64, use_layer_norm=True),\n            MLPBlock(width=64, use_layer_norm=True),\n            nn.Linear(64, 2),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)\n```\n\n**Optimizer**\n- Optimizer: SGD\n- Learning rate: 0.003\n- Weight decay: 0.001\n- Momentum: 0.9\n\n```python\ndef build_optimizer(model: nn.Module) -> torch.optim.Optimizer:\n    params = model.parameters()\n    return torch.optim.SGD(params, lr=0.003, momentum=0.9, weight_decay=0.001)\n```\n\n**Loss**\n- Loss: cross-entropy on minibatch target labels\n\n```python\ndef loss_fn(model: nn.Module, pred: torch.Tensor, target: torch.Tensor) -> torch.Tensor:\n    if pred.ndim == 3:\n        vocab = pred.shape[-1]\n        return torch.nn.functional.cross_entropy(pred.reshape(-1, vocab), target.reshape(-1))\n    return torch.nn.functional.cross_entropy(pred, target.reshape(-1))\n```\n\n### Choice C\n\n**Model (natural language)**\n- Type: MLP\n- Input dimension: 16\n- Output logits: 2\n- Depth: 1 hidden Linear layer of width 96, between the input projection and the output head (3 nn.Linear layers in total)\n- Width: 96 (all hidden layers)\n- Residual connections: False\n- Layer norm per layer: [True]\n- Activation: relu (one activation, shared by every layer)\n- Initialization: PyTorch Linear defaults\n\n**Model code**\n```python\nclass MLPBlock(nn.Module):\n    \"\"\"One hidden layer: relu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.ReLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(16, 96),\n            nn.ReLU(),\n            MLPBlock(width=96, use_layer_norm=True),\n            nn.Linear(96, 2),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)\n```\n\n**Optimizer**\n- Optimizer: SGD\n- Learning rate: 0.003\n- Weight decay: 0.001\n- Momentum: 0.9\n\n```python\ndef build_optimizer(model: nn.Module) -> torch.optim.Optimizer:\n    params = model.parameters()\n    return torch.optim.SGD(params, lr=0.003, momentum=0.9, weight_decay=0.001)\n```\n\n**Loss**\n- Loss: cross-entropy on minibatch target labels\n\n```python\ndef loss_fn(model: nn.Module, pred: torch.Tensor, target: torch.Tensor) -> torch.Tensor:\n    if pred.ndim == 3:\n        vocab = pred.shape[-1]\n        return torch.nn.functional.cross_entropy(pred.reshape(-1, vocab), target.reshape(-1))\n    return torch.nn.functional.cross_entropy(pred, target.reshape(-1))\n```\n\n### Choice A\n\n**Model (natural language)**\n- Type: MLP\n- Input dimension: 16\n- Output logits: 2\n- Depth: 5 hidden Linear layers of width 48, between the input projection and the output head (7 nn.Linear layers in total)\n- Width: 48 (all hidden layers)\n- Residual connections: False\n- Layer norm per layer: [True, False, False, False, True]\n- Activation: relu (one activation, shared by every layer)\n- Initialization: PyTorch Linear defaults\n\n**Model code**\n```python\nclass MLPBlock(nn.Module):\n    \"\"\"One hidden layer: relu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.ReLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(16, 48),\n            nn.ReLU(),\n            MLPBlock(width=48, use_layer_norm=True),\n            MLPBlock(width=48, use_layer_norm=False),\n            MLPBlock(width=48, use_layer_norm=False),\n            MLPBlock(width=48, use_layer_norm=False),\n            MLPBlock(width=48, use_layer_norm=True),\n            nn.Linear(48, 2),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)\n```\n\n**Optimizer**\n- Optimizer: SGD\n- Learning rate: 0.003\n- Weight decay: 0.001\n- Momentum: 0.9\n\n```python\ndef build_optimizer(model: nn.Module) -> torch.optim.Optimizer:\n    params = model.parameters()\n    return torch.optim.SGD(params, lr=0.003, momentum=0.9, weight_decay=0.001)\n```\n\n**Loss**\n- Loss: cross-entropy on minibatch target labels\n\n```python\ndef loss_fn(model: nn.Module, pred: torch.Tensor, target: torch.Tensor) -> torch.Tensor:\n    if pred.ndim == 3:\n        vocab = pred.shape[-1]\n        return torch.nn.functional.cross_entropy(pred.reshape(-1, vocab), target.reshape(-1))\n    return torch.nn.functional.cross_entropy(pred, target.reshape(-1))\n```\n\n## Your answer\nRank all five choices from lowest to highest held-out loss, using each letter exactly once. Write the complete order inside a single `<answer>` tag, as the letters joined by `<`, and put nothing after the tag, for example `<answer>B<C<D<E<A</answer>`. The grader reads only the **final** `<answer>` tag in your reply.",
+      "answer": "C<B<E<A<D",
+      "prediction": "D<C<A<E<B",
+      "score": 0.0,
+      "inversions": 7,
+      "cited": [
+        "K1015",
+        "K1016",
+        "K1059",
+        "K1061"
+      ],
+      "explanation": "<cited>K1059,K1061,K1015,K1016</cited>\n<answer>D<C<A<E<B</answer>",
+      "comment": "I over-weighted LN count and terminal placement. C\u2019s shallow normalized network won; residual B/E beat deep plain A/D, and extra LN did not help within either deep pair. Shorter optimization paths and residual signal preservation are plausible explanations, not measured mechanisms. I overextended K1059/K1061; K1015\u2019s warning against universal architectural rankings should have constrained me. Backtesting \u22658-feature, shared-rate/momentum SGD history: at calibrated \u0394\u22650.1, shallow-over-deep won 4/4 comparisons in one question; residual-over-terminal-LN plain won 4/4 in another. Below 0.1, those tendencies won 0/1 and 4/10 respectively. Lab coverage supplied only two low-progress shallow/deep comparisons, both misses, and no eligible high-progress comparisons. This does not validate a rule predicting the complete order.",
+      "hypothesis": null,
+      "imported_from": null,
+      "question_provenance": {
+        "kind": "current_pool",
+        "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_bench_repo/releases/kb_science_pool_v3/questions.jsonl"
+      }
+    }
+  ]
+}

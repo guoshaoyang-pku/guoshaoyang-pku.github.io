@@ -1,0 +1,509 @@
+{
+  "origin_epoch": 8,
+  "job_id": "J8220c96c845b",
+  "why": "Preregistered q448 exact E/B/C transfer #1; variant order E,B,C. XOR8/w256/b64; predict E<B<C and B<C >=7/10 seeds. No deterministic skip/LN rule.",
+  "input": {
+    "dataset": "xor_classification/xorcls_02a6e3",
+    "candidates": [
+      {
+        "model": {
+          "type": "mlp",
+          "depth": 5,
+          "width": 256,
+          "residual": true,
+          "activation": "gelu",
+          "layer_norm": [
+            true,
+            false,
+            false,
+            true,
+            true
+          ],
+          "input_dim": 8,
+          "output_dim": 2,
+          "init": "default"
+        },
+        "optimizer": {
+          "type": "SGD",
+          "lr": 0.0003,
+          "weight_decay": 0.0001,
+          "momentum": 0.9
+        },
+        "loss": {
+          "loss_id": "cross_entropy"
+        },
+        "budget": {
+          "training_steps": 256,
+          "batch_size": 64
+        }
+      },
+      {
+        "model": {
+          "type": "mlp",
+          "depth": 3,
+          "width": 256,
+          "residual": true,
+          "activation": "leaky_relu",
+          "layer_norm": [
+            true,
+            true,
+            false
+          ],
+          "input_dim": 8,
+          "output_dim": 2,
+          "init": "default",
+          "leaky_relu_slope": 0.01
+        },
+        "optimizer": {
+          "type": "SGD",
+          "lr": 0.0003,
+          "weight_decay": 0.0001,
+          "momentum": 0.9
+        },
+        "loss": {
+          "loss_id": "cross_entropy"
+        },
+        "budget": {
+          "training_steps": 256,
+          "batch_size": 64
+        }
+      },
+      {
+        "model": {
+          "type": "mlp",
+          "depth": 3,
+          "width": 256,
+          "residual": false,
+          "activation": "leaky_relu",
+          "layer_norm": [
+            true,
+            true,
+            true
+          ],
+          "input_dim": 8,
+          "output_dim": 2,
+          "init": "default",
+          "leaky_relu_slope": 0.01
+        },
+        "optimizer": {
+          "type": "SGD",
+          "lr": 0.0003,
+          "weight_decay": 0.0001,
+          "momentum": 0.9
+        },
+        "loss": {
+          "loss_id": "cross_entropy"
+        },
+        "budget": {
+          "training_steps": 256,
+          "batch_size": 64
+        }
+      }
+    ]
+  },
+  "dataset_params": {
+    "instance_seed": 100196859,
+    "input_dim": 8,
+    "num_classes": 2,
+    "rule_family": "xor",
+    "active_features": [
+      2,
+      5
+    ],
+    "interaction_order": 2,
+    "interaction_pairs": [
+      [
+        2,
+        5
+      ]
+    ],
+    "rule_weights": [
+      -1.0
+    ],
+    "piecewise_breakpoint": 0.0,
+    "spiral_turns": 2.0,
+    "decision_threshold": 0.0,
+    "train_size": 1024,
+    "test_size": 2048
+  },
+  "profile": "v1.5",
+  "result": {
+    "dataset": "xor_classification/xorcls_02a6e3",
+    "family": "xor_classification",
+    "results": [
+      {
+        "mean": 0.3657259166240692,
+        "std": 0.016027700214533445,
+        "metric": "test_ce",
+        "cached": false,
+        "failed_seeds": 0,
+        "excluded": false,
+        "n_seeds": 10,
+        "base_seed": 0,
+        "seed_results": [
+          {
+            "seed": 0,
+            "failed": false,
+            "final_test_ce": 0.3697274327278137,
+            "final_test_accuracy": 0.849609375
+          },
+          {
+            "seed": 1,
+            "failed": false,
+            "final_test_ce": 0.3335137963294983,
+            "final_test_accuracy": 0.873046875
+          },
+          {
+            "seed": 2,
+            "failed": false,
+            "final_test_ce": 0.3578937351703644,
+            "final_test_accuracy": 0.84765625
+          },
+          {
+            "seed": 3,
+            "failed": false,
+            "final_test_ce": 0.34771063923835754,
+            "final_test_accuracy": 0.85546875
+          },
+          {
+            "seed": 4,
+            "failed": false,
+            "final_test_ce": 0.384980171918869,
+            "final_test_accuracy": 0.845703125
+          },
+          {
+            "seed": 5,
+            "failed": false,
+            "final_test_ce": 0.3889458179473877,
+            "final_test_accuracy": 0.837890625
+          },
+          {
+            "seed": 6,
+            "failed": false,
+            "final_test_ce": 0.3790733218193054,
+            "final_test_accuracy": 0.82666015625
+          },
+          {
+            "seed": 7,
+            "failed": false,
+            "final_test_ce": 0.36220988631248474,
+            "final_test_accuracy": 0.85498046875
+          },
+          {
+            "seed": 8,
+            "failed": false,
+            "final_test_ce": 0.3629005551338196,
+            "final_test_accuracy": 0.8583984375
+          },
+          {
+            "seed": 9,
+            "failed": false,
+            "final_test_ce": 0.37030380964279175,
+            "final_test_accuracy": 0.84912109375
+          }
+        ],
+        "measurement_files": {
+          "candidate_spec.json": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/xor_classification/xorcls_02a6e3/x_a1436253af/candidate_spec.json",
+            "sha256": "b708032f7620bd271947c20bd1f0d8aa71187dac955c5c2d7cc1264c6339d4a8",
+            "bytes": 842,
+            "repo_path": "measurements/b708032f7620bd271947c20bd1f0d8aa71187dac955c5c2d7cc1264c6339d4a8.json"
+          },
+          "results/summary.json": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/xor_classification/xorcls_02a6e3/x_a1436253af/results/summary.json",
+            "sha256": "b444350cd6a6eef0350770ada0ec5443a92784cce3d9905891bbbf0f8b1a3e63",
+            "bytes": 2230,
+            "repo_path": "measurements/b444350cd6a6eef0350770ada0ec5443a92784cce3d9905891bbbf0f8b1a3e63.json"
+          },
+          "results/curves.npz": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/xor_classification/xorcls_02a6e3/x_a1436253af/results/curves.npz",
+            "sha256": "f1a4ca68e492aacc48cf3fb534f8c89314b2ec6adcce72b2755a876c0e4ec037",
+            "bytes": 23300,
+            "repo_path": "measurements/f1a4ca68e492aacc48cf3fb534f8c89314b2ec6adcce72b2755a876c0e4ec037.npz"
+          }
+        },
+        "secs": 19.9,
+        "candidate": {
+          "model": {
+            "type": "mlp",
+            "depth": 5,
+            "width": 256,
+            "residual": true,
+            "activation": "gelu",
+            "layer_norm": [
+              true,
+              false,
+              false,
+              true,
+              true
+            ],
+            "input_dim": 8,
+            "output_dim": 2,
+            "init": "default"
+          },
+          "optimizer": {
+            "type": "SGD",
+            "lr": 0.0003,
+            "weight_decay": 0.0001,
+            "momentum": 0.9
+          },
+          "loss": {
+            "loss_id": "cross_entropy"
+          },
+          "budget": {
+            "training_steps": 256,
+            "batch_size": 64
+          }
+        }
+      },
+      {
+        "mean": 0.4708485871553421,
+        "std": 0.019529231941955848,
+        "metric": "test_ce",
+        "cached": false,
+        "failed_seeds": 0,
+        "excluded": false,
+        "n_seeds": 10,
+        "base_seed": 0,
+        "seed_results": [
+          {
+            "seed": 0,
+            "failed": false,
+            "final_test_ce": 0.4566168487071991,
+            "final_test_accuracy": 0.79833984375
+          },
+          {
+            "seed": 1,
+            "failed": false,
+            "final_test_ce": 0.46726343035697937,
+            "final_test_accuracy": 0.82470703125
+          },
+          {
+            "seed": 2,
+            "failed": false,
+            "final_test_ce": 0.49557554721832275,
+            "final_test_accuracy": 0.7900390625
+          },
+          {
+            "seed": 3,
+            "failed": false,
+            "final_test_ce": 0.49697989225387573,
+            "final_test_accuracy": 0.79541015625
+          },
+          {
+            "seed": 4,
+            "failed": false,
+            "final_test_ce": 0.47277936339378357,
+            "final_test_accuracy": 0.8095703125
+          },
+          {
+            "seed": 5,
+            "failed": false,
+            "final_test_ce": 0.45623359084129333,
+            "final_test_accuracy": 0.81201171875
+          },
+          {
+            "seed": 6,
+            "failed": false,
+            "final_test_ce": 0.4705493152141571,
+            "final_test_accuracy": 0.8076171875
+          },
+          {
+            "seed": 7,
+            "failed": false,
+            "final_test_ce": 0.4357602596282959,
+            "final_test_accuracy": 0.82568359375
+          },
+          {
+            "seed": 8,
+            "failed": false,
+            "final_test_ce": 0.49763402342796326,
+            "final_test_accuracy": 0.779296875
+          },
+          {
+            "seed": 9,
+            "failed": false,
+            "final_test_ce": 0.4590936005115509,
+            "final_test_accuracy": 0.81982421875
+          }
+        ],
+        "measurement_files": {
+          "candidate_spec.json": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/xor_classification/xorcls_02a6e3/x_c7506d6cd5/candidate_spec.json",
+            "sha256": "75e1d37ca0627ddae4ffd40c1475d3a9063e58e3caaf8c0dd225e809ec4bec61",
+            "bytes": 853,
+            "repo_path": "measurements/75e1d37ca0627ddae4ffd40c1475d3a9063e58e3caaf8c0dd225e809ec4bec61.json"
+          },
+          "results/summary.json": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/xor_classification/xorcls_02a6e3/x_c7506d6cd5/results/summary.json",
+            "sha256": "b0ee767f5717e3ab74cf56916e286d949f85ddfe06c78c1c938fd1cb5cbb72ee",
+            "bytes": 2237,
+            "repo_path": "measurements/b0ee767f5717e3ab74cf56916e286d949f85ddfe06c78c1c938fd1cb5cbb72ee.json"
+          },
+          "results/curves.npz": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/xor_classification/xorcls_02a6e3/x_c7506d6cd5/results/curves.npz",
+            "sha256": "c7fe5859b32760206f0d33343410ec363558e3d9e1cae2d04cea3310eef29403",
+            "bytes": 23300,
+            "repo_path": "measurements/c7fe5859b32760206f0d33343410ec363558e3d9e1cae2d04cea3310eef29403.npz"
+          }
+        },
+        "secs": 11.2,
+        "candidate": {
+          "model": {
+            "type": "mlp",
+            "depth": 3,
+            "width": 256,
+            "residual": true,
+            "activation": "leaky_relu",
+            "layer_norm": [
+              true,
+              true,
+              false
+            ],
+            "input_dim": 8,
+            "output_dim": 2,
+            "init": "default",
+            "leaky_relu_slope": 0.01
+          },
+          "optimizer": {
+            "type": "SGD",
+            "lr": 0.0003,
+            "weight_decay": 0.0001,
+            "momentum": 0.9
+          },
+          "loss": {
+            "loss_id": "cross_entropy"
+          },
+          "budget": {
+            "training_steps": 256,
+            "batch_size": 64
+          }
+        }
+      },
+      {
+        "mean": 0.4881305456161499,
+        "std": 0.024742927773509442,
+        "metric": "test_ce",
+        "cached": false,
+        "failed_seeds": 0,
+        "excluded": false,
+        "n_seeds": 10,
+        "base_seed": 0,
+        "seed_results": [
+          {
+            "seed": 0,
+            "failed": false,
+            "final_test_ce": 0.48381590843200684,
+            "final_test_accuracy": 0.80615234375
+          },
+          {
+            "seed": 1,
+            "failed": false,
+            "final_test_ce": 0.4778129756450653,
+            "final_test_accuracy": 0.83837890625
+          },
+          {
+            "seed": 2,
+            "failed": false,
+            "final_test_ce": 0.49414363503456116,
+            "final_test_accuracy": 0.796875
+          },
+          {
+            "seed": 3,
+            "failed": false,
+            "final_test_ce": 0.48952773213386536,
+            "final_test_accuracy": 0.8017578125
+          },
+          {
+            "seed": 4,
+            "failed": false,
+            "final_test_ce": 0.5165751576423645,
+            "final_test_accuracy": 0.77734375
+          },
+          {
+            "seed": 5,
+            "failed": false,
+            "final_test_ce": 0.4551900029182434,
+            "final_test_accuracy": 0.826171875
+          },
+          {
+            "seed": 6,
+            "failed": false,
+            "final_test_ce": 0.5286154747009277,
+            "final_test_accuracy": 0.76611328125
+          },
+          {
+            "seed": 7,
+            "failed": false,
+            "final_test_ce": 0.4432380199432373,
+            "final_test_accuracy": 0.84130859375
+          },
+          {
+            "seed": 8,
+            "failed": false,
+            "final_test_ce": 0.5080336332321167,
+            "final_test_accuracy": 0.7958984375
+          },
+          {
+            "seed": 9,
+            "failed": false,
+            "final_test_ce": 0.4843529164791107,
+            "final_test_accuracy": 0.81103515625
+          }
+        ],
+        "measurement_files": {
+          "candidate_spec.json": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/xor_classification/xorcls_02a6e3/x_2902c15914/candidate_spec.json",
+            "sha256": "bae76bafdf426c5b23b31def317d6cf400d0a03e89a5b7cdb96cba9ee470f626",
+            "bytes": 853,
+            "repo_path": "measurements/bae76bafdf426c5b23b31def317d6cf400d0a03e89a5b7cdb96cba9ee470f626.json"
+          },
+          "results/summary.json": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/xor_classification/xorcls_02a6e3/x_2902c15914/results/summary.json",
+            "sha256": "71db79746b2ba6ec786a599ff387b430622bd7d3f40b17dc5362ed9f787d3562",
+            "bytes": 2234,
+            "repo_path": "measurements/71db79746b2ba6ec786a599ff387b430622bd7d3f40b17dc5362ed9f787d3562.json"
+          },
+          "results/curves.npz": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/xor_classification/xorcls_02a6e3/x_2902c15914/results/curves.npz",
+            "sha256": "18efba82db07d03fbd64af7f563ae0d5d3e57d7e5f6d854f23a8bfe6e6a226e5",
+            "bytes": 23300,
+            "repo_path": "measurements/18efba82db07d03fbd64af7f563ae0d5d3e57d7e5f6d854f23a8bfe6e6a226e5.npz"
+          }
+        },
+        "secs": 10.5,
+        "candidate": {
+          "model": {
+            "type": "mlp",
+            "depth": 3,
+            "width": 256,
+            "residual": false,
+            "activation": "leaky_relu",
+            "layer_norm": [
+              true,
+              true,
+              true
+            ],
+            "input_dim": 8,
+            "output_dim": 2,
+            "init": "default",
+            "leaky_relu_slope": 0.01
+          },
+          "optimizer": {
+            "type": "SGD",
+            "lr": 0.0003,
+            "weight_decay": 0.0001,
+            "momentum": 0.9
+          },
+          "loss": {
+            "loss_id": "cross_entropy"
+          },
+          "budget": {
+            "training_steps": 256,
+            "batch_size": 64
+          }
+        }
+      }
+    ]
+  }
+}
