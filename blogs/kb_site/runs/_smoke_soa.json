@@ -1,0 +1,1787 @@
+{
+  "availability": "已载入现场保存的完整 KB、逐题记录、工具轨迹与评测；缺失内容在对应位置注明。",
+  "commits": [
+    {
+      "author": {
+        "harness": "7e5846daab",
+        "model": "distilled",
+        "role": "seed"
+      },
+      "base_snapshot": null,
+      "commit": "c000001",
+      "epoch": 0,
+      "op": "seed",
+      "payload": {
+        "claims": 19,
+        "source": "data/kb_scratch/kb_science_loop/sol_tool/kb/kb_0001.json"
+      },
+      "time": "2026-10-03T17:00:31+00:00"
+    },
+    {
+      "author": {
+        "backend": "claude_code",
+        "harness": "7e5846daab",
+        "model": "claude-opus-5-5",
+        "role": "summarizer"
+      },
+      "base_snapshot": "kb_0000",
+      "claim_ids": [
+        "K1001"
+      ],
+      "commit": "c000002",
+      "epoch": 1,
+      "op": "revise",
+      "payload": {
+        "counts": [
+          0.0,
+          0.0
+        ],
+        "mechanism": "Under-trained regime: loss falls monotonically with distance travelled from init; adaptive optimizers normalise per-parameter steps to ~lr, so displacement ≈ lr·T (Adagrad decays as 1/√t; SGD scales with raw |g|). Predicts where it breaks: (i) too-large steps overshoot (lr ceiling, K1004), (ii) near-equal Δ (<1.5×) lets architecture conditioning dominate, (iii) saturated tasks (tabular Δ≥0.1, K1009) where overfitting/overconfidence decides.",
+        "old_text": "CORE RULE (all families, T=256-2048 steps; every task here is under-trained): rank choices by cumulative per-parameter displacement Δ. Adam/AdamW/RMSprop: Δ≈lr·T. Adagrad (zero-init accumulator, steps decay ~lr/√t): Δ≈2·lr·√T. SGD: Δ≈lr·T·|g|/(1−m) with raw grad |g|≈0.01 (bigram LM 0.003, MSE regression with momentum 0.03 — K1019), i.e. plain SGD ≈ Adam at lr/100, SGD m=0.9 ≈ Adam at lr/10. The largest-Δ choice wins 85% of optimizer-only and ~85% of mixed questions (after the lr-ceiling exceptions); a 1.5-3× Δ edge usually beats any architecture advantage. Use architecture rules only to break Δ ties (same optimizer+lr) or in architecture-only questions.",
+        "phase": "Δ-order pairwise hit: ratio≥4×: opt-only 328/355, mixed 268/291; 1.5-4×: opt-only 88/98, mixed 91/125; <1.5×: 35/51 → within 1.5× defer to architecture rules.",
+        "regime": {
+          "note": "all families; pairwise backtest on 490-question corpus",
+          "optimizer": [
+            "Adam",
+            "AdamW",
+            "RMSprop",
+            "Adagrad",
+            "SGD"
+          ],
+          "steps": [
+            256,
+            2048
+          ],
+          "type": [
+            "optimizer_only",
+            "mixed"
+          ]
+        },
+        "text": "CORE RULE (all families, T=256-2048; every task is under-trained): rank choices by cumulative per-parameter displacement Δ. Adam/AdamW/RMSprop: Δ≈lr·T. Adagrad: Δ≈2·lr·√T. SGD: Δ≈lr·T·|g|/(1−m), |g|≈0.01 (bigram LM 0.003; MSE+momentum 0.03, K1019). For RANKING questions sort ALL choices by Δ (largest Δ = lowest loss); break Δ ties with architecture rules (MLP: LN/residual score K1006; bigram: GRU>transformer K1011). Corpus pairwise accuracy of Δ order: ratio ≥4× 92% (596/646); 1.5-4× 90% optimizer-only, 73% mixed; <1.5× only 69%. Largest-Δ wins ~85% of optimizer-only/mixed selects (after lr-ceiling exceptions K1004)."
+      },
+      "reason": "Epoch 1: q_aa66e7 (bigram ranking) gold E<A<B<D<C equals exact Δ order (RMSprop 3e-4·512=0.154 ×2, Adagrad 2·0.003·√512=0.136, AdamW 1e-4→0.051, 3e-5→0.015) with GRU>transformer at the tie — solver didn't retrieve the KB. Rewrote to add explicit RANKING usage + corpus pairwise accuracy by Δ ratio (backtest over 490-question corpus, opt-only/mixed pairs).",
+      "time": "2026-10-03T17:10:05+00:00"
+    },
+    {
+      "author": {
+        "backend": "claude_code",
+        "harness": "7e5846daab",
+        "model": "claude-opus-5-5",
+        "role": "summarizer"
+      },
+      "base_snapshot": "kb_0000",
+      "claim_ids": [
+        "K1006"
+      ],
+      "commit": "c000003",
+      "epoch": 1,
+      "op": "revise",
+      "payload": {
+        "counts": [
+          0.0,
+          1.0
+        ],
+        "mechanism": "With PyTorch default init each unnormalised layer shrinks hidden RMS ~0.5×, so deep plain stacks pass tiny signals/gradients and train slowly; LN restores unit scale at every block (fixes scale more completely than one identity path), residuals preserve signal. Under-trained nets gain 2-3× speed. Predicts breaks: once trained (tabular Δ≥0.1, K1009) the edge reverses; equal-score depth adds no conditioning benefit, so depth only helps where composition is needed.",
+        "old_text": "MLP architecture default (regression, XOR, spiral, tabular when Δ<0.1): score each MLP = (number of LayerNorm'd blocks) + 1 if residual; pick the highest; break ties by activation on regression (ReLU/LeakyReLU > GELU > SiLU), then greater depth. Picks 91/118 arch-only winners (univariate 28/31, multivariate 28/33). Pairwise more-LN beats less-LN 61-11 (multivariate), 57-12 (univariate), 41-4 (tabular Δ<0.1); on regression LN outranks activation (smooth+more-LN beats ReLU+less-LN 30/41). Mechanism: each unnormalized layer shrinks hidden RMS ~0.5×; LN + identity paths speed an under-trained net 2-3×. Exception: XOR with ≥8 input features at Δ≥0.05 — smooth activation decides (K1018).",
+        "phase": "score gap≥2: regression 67/76, spiral 14/15; gap 1: regression 61/74, tabular only 19/32 (weak); tie → depth: regression 16/32, tabular+spiral shallower 24/34.",
+        "regime": {
+          "family": [
+            "univariate_regression",
+            "multivariate_regression",
+            "spiral_classification",
+            "xor_classification",
+            "synthetic_tabular_classification"
+          ],
+          "model_type": [
+            "mlp"
+          ],
+          "note": "pairs with identical optimizer/lr/T; tabular only when shared Δ<0.1",
+          "steps": [
+            256,
+            2048
+          ],
+          "type": [
+            "architecture_only",
+            "mixed"
+          ]
+        },
+        "text": "MLP architecture default (regression, XOR, spiral; tabular only when Δ<0.1), same optimizer/lr/T: score each MLP = (# LayerNorm'd blocks) + 1 if residual; higher score = lower loss. Use it as a FULL RANKING rule. Corpus same-optimizer MLP pairs ordered by score: regression 128/150 (85%; gap 1: 61/74, gap≥2: 67/76), spiral 25/31, XOR 25/36, tabular 47/68. A plain stack with ≥2 LN blocks beats a residual no-LN MLP 9/9 (q_33b2d1 exact: 3-LN plain > residual LeakyReLU > 1-LN SiLU > residual SiLU > plain 0-LN). Score ties: on regression break by activation (ReLU/LeakyReLU > GELU > SiLU); depth is a weak tie-break (regression deeper 16/32; tabular/spiral SHALLOWER wins 24/34; XOR deeper 7/10)."
+      },
+      "reason": "q_33b2d1 (only miss this epoch, score 0.5) would have been ranked exactly by K1006's score+activation tie-break; solver didn't retrieve it. Rewrote with ranking keywords, per-family pairwise backtest (corpus same-optimizer MLP pairs), the LN≥2-plain vs residual-noLN 9/9 case, and corrected the depth tie-break (it is a coin flip on regression and reversed on tabular/spiral).",
+      "time": "2026-10-03T17:10:13+00:00"
+    },
+    {
+      "author": {
+        "backend": "claude_code",
+        "harness": "7e5846daab",
+        "model": "claude-opus-5-5",
+        "role": "summarizer"
+      },
+      "base_snapshot": "kb_0000",
+      "claim_ids": [
+        "K1001"
+      ],
+      "commit": "c000004",
+      "epoch": 1,
+      "op": "adjust",
+      "payload": {
+        "new": [
+          1.0,
+          0.0
+        ],
+        "old": [
+          0.0,
+          0.0
+        ],
+        "total_changed": true
+      },
+      "reason": "q_aa66e7 gold ranking equals exact Δ order (0.154,0.154,0.136,0.051,0.015).",
+      "time": "2026-10-03T17:10:18+00:00"
+    },
+    {
+      "author": {
+        "backend": "claude_code",
+        "harness": "7e5846daab",
+        "model": "claude-opus-5-5",
+        "role": "summarizer"
+      },
+      "base_snapshot": "kb_0000",
+      "claim_ids": [
+        "K1006"
+      ],
+      "commit": "c000005",
+      "epoch": 1,
+      "op": "adjust",
+      "payload": {
+        "new": [
+          2.0,
+          1.0
+        ],
+        "old": [
+          0.0,
+          1.0
+        ],
+        "total_changed": true
+      },
+      "reason": "q_33b2d1 gold E<C<A<D<B equals K1006 score+activation ordering exactly; q_039379 retrieved K1006 and its Δ<0.1 LN/residual preference picked gold C.",
+      "time": "2026-10-03T17:10:19+00:00"
+    },
+    {
+      "author": {
+        "backend": "claude_code",
+        "harness": "7e5846daab",
+        "model": "claude-opus-5-5",
+        "role": "summarizer"
+      },
+      "base_snapshot": "kb_0000",
+      "claim_ids": [
+        "K1011"
+      ],
+      "commit": "c000006",
+      "epoch": 1,
+      "op": "adjust",
+      "payload": {
+        "new": [
+          1.25,
+          0.75
+        ],
+        "old": [
+          0.25,
+          0.75
+        ],
+        "total_changed": true
+      },
+      "reason": "q_aa66e7: GRU (E) beat transformer (A) at identical RMSprop 3e-4, T=512, as the claim predicts.",
+      "time": "2026-10-03T17:10:20+00:00"
+    },
+    {
+      "author": {
+        "backend": "claude_code",
+        "harness": "7e5846daab",
+        "model": "claude-opus-5-5",
+        "role": "summarizer"
+      },
+      "base_snapshot": "kb_0000",
+      "claim_ids": [
+        "K1014"
+      ],
+      "commit": "c000007",
+      "epoch": 1,
+      "op": "adjust",
+      "payload": {
+        "new": [
+          1.0,
+          1.0
+        ],
+        "old": [
+          0.0,
+          1.0
+        ],
+        "total_changed": true
+      },
+      "reason": "q_039379 (tabular smooth_additive, Δ=0.077<0.1): retrieved, deeper residual/LN choice won as K1014 predicts for smooth_additive.",
+      "time": "2026-10-03T17:10:21+00:00"
+    }
+  ],
+  "comparisons": [],
+  "config": {
+    "batch_size": 4,
+    "concurrency": 4,
+    "discover_wrong_backend": "api",
+    "discover_wrong_model": null,
+    "epochs": 1,
+    "eval_every": 3,
+    "gate_repeats": 2,
+    "harness": "c3032484c8",
+    "lab_workers": 12,
+    "model": "gpt-6.1-sol",
+    "provider": "cctq",
+    "render": "tool",
+    "research_calls": 1,
+    "research_effort": "medium",
+    "research_max_cands": 12,
+    "run_name": "_smoke_soa",
+    "science": true,
+    "seed": 20261003,
+    "solve_effort": "low",
+    "solver_backend": "codex",
+    "sources": [
+      "arch170",
+      "ranking_v2",
+      "ranking_v3",
+      "dataflip500"
+    ],
+    "summ_backend": "claude_code",
+    "summ_effort": "high",
+    "summ_model": "claude-opus-5-5",
+    "test_repeats": 0,
+    "updated_at": "2026-10-03T17:00:31+00:00"
+  },
+  "defaultSnap": "kb_0001",
+  "epochs": [
+    {
+      "epoch": 1,
+      "jobs": [],
+      "metrics": {
+        "by_source": {
+          "arch170": 1.0,
+          "dataflip500": 1.0,
+          "ranking_v2": 1.0,
+          "ranking_v3": 0.5
+        },
+        "cc_cost_usd": 0.4009,
+        "citations": 0,
+        "epoch": 1,
+        "hypotheses": 0,
+        "kb_after": 19,
+        "kb_before": 19,
+        "mean_score": 0.875,
+        "n": 4,
+        "ops": {
+          "adjust": 4,
+          "revise": 2
+        },
+        "secs": 609,
+        "skipped": 0,
+        "soa": {
+          "conditional_claims": 2,
+          "epoch": 1,
+          "global_claims": 17,
+          "growth": {
+            "commits_by_op": {
+              "adjust": 4,
+              "revise": 2,
+              "seed": 1
+            },
+            "experiment_candidates": 0,
+            "experiments": 0,
+            "research_tasks": 0
+          },
+          "mechanism_coverage": 0.105,
+          "mechanism_coverage_veteran": 0.333,
+          "n_claims": 19,
+          "phase_mapped": 0.105,
+          "refinement_depth_max": 1,
+          "regime_annotation": 0.105,
+          "regime_completeness_activation": 0.0,
+          "regime_completeness_cells": 0.538,
+          "regime_completeness_optimizer": 1.0
+        },
+        "usage": {},
+        "usage_wrong": null
+      },
+      "records": [
+        {
+          "answer": "C",
+          "cited": [],
+          "codex_thread": "01a102b5-cce8-7002-94cd-5081ffaf774b",
+          "comment": "Choice C was decided by the low effective budget (lr × steps = 0.0768), where the deeper, residual, partially LayerNorm-equipped GELU network is better optimized and more expressive for the smooth nonlinear boundary. K1006 and K1014 supported the under-trained preference for normalization/residual depth; K1009 was potentially misleading because its shallow-wide reversal applies when the effective budget reaches the higher regime (Δ ≥ 0.1), which this question does not.",
+          "correct": true,
+          "discover_effort": "low",
+          "discover_final": "<comment>Choice C was decided by the low effective budget (lr × steps = 0.0768), where the deeper, residual, partially LayerNorm-equipped GELU network is better optimized and more expressive for the smooth nonlinear boundary. K1006 and K1014 supported the under-trained preference for normalization/residual depth; K1009 was potentially misleading because its shallow-wide reversal applies when the effective budget reaches the higher regime (Δ ≥ 0.1), which this question does not.</comment>",
+          "discover_model": "gpt-6.1-sol",
+          "discover_reasoning": "**Confirming delta threshold met without backtest**",
+          "discover_secs": 308.1,
+          "discover_trace": [
+            {
+              "calls": [],
+              "content": "<comment>Choice C was decided by the low effective budget (lr × steps = 0.0768), where the deeper, residual, partially LayerNorm-equipped GELU network is better optimized and more expressive for the smooth nonlinear boundary. K1006 and K1014 supported the under-trained preference for normalization/residual depth; K1009 was potentially misleading because its shallow-wide reversal applies when the effective budget reaches the higher regime (Δ ≥ 0.1), which this question does not.</comment>",
+              "reasoning": "**Confirming delta threshold met without backtest**",
+              "results": [],
+              "secs": 308.1,
+              "turn": 0,
+              "usage": {
+                "cache_write_input_tokens": 0,
+                "cached_input_tokens": 11264,
+                "input_tokens": 18482,
+                "output_tokens": 379,
+                "reasoning_output_tokens": 121
+              }
+            }
+          ],
+          "discover_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 11264,
+            "input_tokens": 18482,
+            "output_tokens": 379,
+            "reasoning_output_tokens": 121
+          },
+          "epoch": 1,
+          "experiments": [],
+          "explanation": "Choice C best matches the smooth nonlinear boundary while remaining trainable at the limited budget: its additional hidden layer provides greater compositional capacity, and the LayerNorm plus residual path improves optimization and signal propagation. Choice B is shallower and lacks both normalization and residual stabilization, while A has a residual path but uses less-smooth LeakyReLU and no LayerNorm, making it less effective for this smooth additive rule.",
+          "family": "synthetic_tabular_classification",
+          "finish": "stop",
+          "group": "datasets/synthetic_tabular_classification/stabcls_daa12b",
+          "hypothesis": null,
+          "inversions": null,
+          "kb_explained": [],
+          "kb_queries": [
+            "smooth additive tabular binary classification shallow MLP gelu residual layer norm short low learning rate cross entropy test CE"
+          ],
+          "kb_retrieved": [
+            "K1006",
+            "K1009",
+            "K1014"
+          ],
+          "prediction": "C",
+          "question": "## user\nYou are taking the ArchitectureIQ benchmark.\n\nEach question describes one **dataset instance** and several **choices** (each choice is one **candidate**: model, optimizer, loss, and training budget). All choices train on the same dataset instance. Each choice's training budget (`total_samples_seen`) is stated in the prompt — either shared across all choices or specified per choice in the Sample budget section. Your task is to identify which choice will achieve the **best test metric** on the held-out test set after its stated training budget — using architecture and learning-mechanics reasoning only (no training results are provided).\n\nAnswer format is specified in the final section (\"Your answer\"): end your reply with a short `<explanation></explanation>` paragraph followed by a single letter in `<answer></answer>` tags.\n\n## Dataset\nSynthetic tabular binary classification. Features are drawn i.i.d. from a standard normal; a latent score `s(x)` over a few active coordinates is thresholded at a fixed cut-off chosen near the median of `s(x)`, so the two classes are close to balanced. The score is non-linear in the features, so no linear function of the inputs reproduces the boundary. The dataset card below states the exact rule family, active coordinates, weights, threshold, and the class balance it produces. Every candidate trains on the same materialized train/test splits.\n\n### Data-generating and classification rule\n- Rule family: `smooth_additive`; active coordinates: `x_0`, `x_1`\n- Feature distribution: every coordinate is sampled independently from `Normal(0, 1)`.\n- Latent score:\n  - `s(x) = -0.625·[sin(x_0) + 0.25·x_0²] + 1.25·[sin(x_1) + 0.25·x_1²]`\n- Label rule: `y = 1` exactly when `s(x) > 0`; otherwise `y = 0`.\n- Bayes decision boundary: `s(x) = 0`; labels are an exact function of `x`, so this boundary is attainable.\n- Threshold calibration: `0` was chosen from 4096 independent calibration rows as the closest round value to the 50% quantile of `s(x)`; on those 4096 rows it labels 48.6% of them class 1.\n- Reproducibility: point seed `403664`, calibration seed `404664`.\n\n### Data splits and training protocol\n- Task: binary classification on one fixed synthetic tabular train/test split.\n- Input shape: float32 `[N, 2]`; labels: int64 `[N]` in `{0, 1}`.\n- Train rows: 1024; held-out test rows: 2048.\n- Every choice receives the same materialized split; minibatches sample train indices uniformly with replacement.\n- Evaluation: **test cross-entropy** is primary; test accuracy is auxiliary only.\n- Reference device: cpu\n\n## Sample budget (same for all choices)\n- training_steps: 256\n- batch_size: 16\n- total_samples_seen: 4096 (= training_steps × batch_size)\n\n## Evaluation metric\n- Ground-truth ranking uses **test_ce** on the held-out test split.\n- Each choice is trained independently for **10** seeds (`0`..`9`), one `torch.manual_seed(seed)` per run.\n- Execution device: cpu.\n- The correct choice has the lowest **mean** test_ce across seeds.\n\n## Choices\n\n### Choice A\n\n**Model (natural language)**\n- Type: MLP\n- Input dimension: 2\n- Output logits: 2\n- Depth: 1 hidden Linear layer of width 96, between the input projection and the output head (3 nn.Linear layers in total)\n- Width: 96 (all hidden layers)\n- Residual connections: True\n- Layer norm per layer: [False]\n- Activation: leaky_relu (one activation, shared by every layer)\n- LeakyReLU negative slope: 0.01\n- Initialization: PyTorch Linear defaults\n\n**Model code**\n```python\nclass MLPBlock(nn.Module):\n    \"\"\"One hidden layer: leaky_relu(x + Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.LeakyReLU(0.01)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        h = h + x\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(2, 96),\n            nn.LeakyReLU(0.01),\n            MLPBlock(width=96, use_layer_norm=False),\n            nn.Linear(96, 2),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)\n```\n\n**Optimizer**\n- Optimizer: Adam\n- Learning rate: 0.0003\n- Weight decay: 0.001\n- Betas: [0.9, 0.95]\n\n```python\ndef build_optimizer(model: nn.Module) -> torch.optim.Optimizer:\n    params = model.parameters()\n    return torch.optim.Adam(params, lr=0.0003, betas=(0.9, 0.95), weight_decay=0.001)\n```\n\n**Loss**\n- Loss: cross-entropy on minibatch target labels\n\n```python\ndef loss_fn(model: nn.Module, pred: torch.Tensor, target: torch.Tensor) -> torch.Tensor:\n    if pred.ndim == 3:\n        vocab = pred.shape[-1]\n        return torch.nn.functional.cross_entropy(pred.reshape(-1, vocab), target.reshape(-1))\n    return torch.nn.functional.cross_entropy(pred, target.reshape(-1))\n```\n\n### Choice B\n\n**Model (natural language)**\n- Type: MLP\n- Input dimension: 2\n- Output logits: 2\n- Depth: 1 hidden Linear layer of width 96, between the input projection and the output head (3 nn.Linear layers in total)\n- Width: 96 (all hidden layers)\n- Residual connections: False\n- Layer norm per layer: [False]\n- Activation: gelu (one activation, shared by every layer)\n- Initialization: PyTorch Linear defaults\n\n**Model code**\n```python\nclass MLPBlock(nn.Module):\n    \"\"\"One hidden layer: gelu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.GELU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(2, 96),\n            nn.GELU(),\n            MLPBlock(width=96, use_layer_norm=False),\n            nn.Linear(96, 2),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)\n```\n\n**Optimizer**\n- Optimizer: Adam\n- Learning rate: 0.0003\n- Weight decay: 0.001\n- Betas: [0.9, 0.95]\n\n```python\ndef build_optimizer(model: nn.Module) -> torch.optim.Optimizer:\n    params = model.parameters()\n    return torch.optim.Adam(params, lr=0.0003, betas=(0.9, 0.95), weight_decay=0.001)\n```\n\n**Loss**\n- Loss: cross-entropy on minibatch target labels\n\n```python\ndef loss_fn(model: nn.Module, pred: torch.Tensor, target: torch.Tensor) -> torch.Tensor:\n    if pred.ndim == 3:\n        vocab = pred.shape[-1]\n        return torch.nn.functional.cross_entropy(pred.reshape(-1, vocab), target.reshape(-1))\n    return torch.nn.functional.cross_entropy(pred, target.reshape(-1))\n```\n\n### Choice C\n\n**Model (natural language)**\n- Type: MLP\n- Input dimension: 2\n- Output logits: 2\n- Depth: 2 hidden Linear layers of width 64, between the input projection and the output head (4 nn.Linear layers in total)\n- Width: 64 (all hidden layers)\n- Residual connections: True\n- Layer norm per layer: [True, False]\n- Activation: gelu (one activation, shared by every layer)\n- Initialization: PyTorch Linear defaults\n\n**Model code**\n```python\nclass MLPBlock(nn.Module):\n    \"\"\"One hidden layer: gelu(x + Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.GELU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        h = h + x\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(2, 64),\n            nn.GELU(),\n            MLPBlock(width=64, use_layer_norm=True),\n            MLPBlock(width=64, use_layer_norm=False),\n            nn.Linear(64, 2),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)\n```\n\n**Optimizer**\n- Optimizer: Adam\n- Learning rate: 0.0003\n- Weight decay: 0.001\n- Betas: [0.9, 0.95]\n\n```python\ndef build_optimizer(model: nn.Module) -> torch.optim.Optimizer:\n    params = model.parameters()\n    return torch.optim.Adam(params, lr=0.0003, betas=(0.9, 0.95), weight_decay=0.001)\n```\n\n**Loss**\n- Loss: cross-entropy on minibatch target labels\n\n```python\ndef loss_fn(model: nn.Module, pred: torch.Tensor, target: torch.Tensor) -> torch.Tensor:\n    if pred.ndim == 3:\n        vocab = pred.shape[-1]\n        return torch.nn.functional.cross_entropy(pred.reshape(-1, vocab), target.reshape(-1))\n    return torch.nn.functional.cross_entropy(pred, target.reshape(-1))\n```\n\n## Your answer\nChoose exactly one of A, B, C. End your reply with exactly two tagged fields, in this order and with nothing after them:\n\n<explanation>One short paragraph: the mechanism that decides the winner, and why each other choice loses.</explanation>\n<answer>A</answer>\n\nRules: `<answer>` must contain exactly one letter from {A, B, C}. The grader reads only the **final** `<answer>` tag in your reply; everything else is treated as reasoning. A reply with no `<answer>` tag, or a letter outside the choices, scores zero.",
+          "question_id": "q_039379",
+          "score": 1.0,
+          "skipped": false,
+          "solution": "<explanation>Choice C best matches the smooth nonlinear boundary while remaining trainable at the limited budget: its additional hidden layer provides greater compositional capacity, and the LayerNorm plus residual path improves optimization and signal propagation. Choice B is shallower and lacks both normalization and residual stabilization, while A has a residual path but uses less-smooth LeakyReLU and no LayerNorm, making it less effective for this smooth additive rule.</explanation>\n<answer>C</answer>",
+          "solve_refused_tool_calls": 1,
+          "solve_secs": 187.5,
+          "solve_trace": [],
+          "solve_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 4608,
+            "input_tokens": 11694,
+            "output_tokens": 243,
+            "reasoning_output_tokens": 93
+          },
+          "solver_backend": "codex",
+          "solver_reasoning": "**Considering knowledge base search**\n**Deciding final normalization tags**",
+          "source": "arch170",
+          "task": "select",
+          "type": "architecture_only"
+        },
+        {
+          "answer": "E<A<B<D<C",
+          "cited": [],
+          "codex_thread": "01a102b5-cce8-7d10-bb63-7926920249d9",
+          "comment": "The decisive factor was optimization speed on a memoryless bigram target, rather than architectural capacity. RMSprop at 3e-4 gave both models enough progress within 512 updates; the GRU avoided irrelevant positional and attention structure, placing E ahead of A. Transformer Adagrad at 0.003 was expected to make more early progress than the GRU’s AdamW at 1e-4, yielding B ahead of D. The deeper transformer’s AdamW rate of 3e-5 was too conservative for this budget, making C last. No KB claims were consulted. This is an explanation of this instance, not a backtested general optimizer ranking.",
+          "correct": true,
+          "discover_effort": "low",
+          "discover_final": "<comment>The decisive factor was optimization speed on a memoryless bigram target, rather than architectural capacity. RMSprop at 3e-4 gave both models enough progress within 512 updates; the GRU avoided irrelevant positional and attention structure, placing E ahead of A. Transformer Adagrad at 0.003 was expected to make more early progress than the GRU’s AdamW at 1e-4, yielding B ahead of D. The deeper transformer’s AdamW rate of 3e-5 was too conservative for this budget, making C last. No KB claims were consulted. This is an explanation of this instance, not a backtested general optimizer ranking.</comment>",
+          "discover_model": "gpt-6.1-sol",
+          "discover_reasoning": null,
+          "discover_secs": 12.4,
+          "discover_trace": [
+            {
+              "calls": [],
+              "content": "<comment>The decisive factor was optimization speed on a memoryless bigram target, rather than architectural capacity. RMSprop at 3e-4 gave both models enough progress within 512 updates; the GRU avoided irrelevant positional and attention structure, placing E ahead of A. Transformer Adagrad at 0.003 was expected to make more early progress than the GRU’s AdamW at 1e-4, yielding B ahead of D. The deeper transformer’s AdamW rate of 3e-5 was too conservative for this budget, making C last. No KB claims were consulted. This is an explanation of this instance, not a backtested general optimizer ranking.</comment>",
+              "reasoning": null,
+              "results": [],
+              "secs": 12.4,
+              "turn": 0,
+              "usage": {
+                "cache_write_input_tokens": 0,
+                "cached_input_tokens": 6656,
+                "input_tokens": 14065,
+                "output_tokens": 331,
+                "reasoning_output_tokens": 173
+              }
+            }
+          ],
+          "discover_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 6656,
+            "input_tokens": 14065,
+            "output_tokens": 331,
+            "reasoning_output_tokens": 173
+          },
+          "epoch": 1,
+          "experiments": [],
+          "explanation": "<answer>E<A<B<D<C</answer>",
+          "family": "bigram_lm",
+          "finish": "stop",
+          "group": "datasets/bigram_lm/bg_4ee47b",
+          "hypothesis": null,
+          "inversions": 0,
+          "kb_explained": [],
+          "kb_queries": [],
+          "kb_retrieved": [],
+          "prediction": "E<A<B<D<C",
+          "question": "## system\nYou are solving an ArchitectureIQ benchmark question. Rank the five candidate settings from lowest to highest held-out selection metric using the required format.\n\n## user\nYou are taking the ArchitectureIQ benchmark.\n\nEach question describes one **dataset instance** and several **choices** (each choice is one **candidate**: model, optimizer, loss, and training budget). All choices use the same materialized dataset instance. Depending on the question, one or more training axes may vary; read each choice's complete setup and code rather than assuming an axis is shared.\n\nYour task is to **rank every choice** by its held-out test metric, from lowest to highest (a lower loss is better), using architecture and learning-mechanics reasoning only — no training results are provided.\n\nThe reply format is defined once, in the final \"Your answer\" section.\n\n## Dataset\nBigram language modeling: each example is a length-`L` window of token IDs. Labels are the next token at each position, sampled from a **single fixed** bigram law `P(y|x)` shared by train and test. Only the random windows differ between splits.\n\n### Synthesis (PyTorch)\n```python\ndef target(seq: torch.Tensor) -> torch.Tensor:\n    \"\"\"Next-token labels: input sequence shifted by one (seq shape [N, L+1] -> [N, L]).\"\"\"\n    return seq[:, 1:].to(torch.int64)\n\n\ndef build_transition(\n    *,\n    table_seed: int = 14000655272906,\n    vocab_size: int = 24,\n    alpha: float = 0.8,\n) -> tuple[np.ndarray, np.ndarray]:\n    rng = np.random.default_rng(table_seed)\n    logits = rng.standard_normal((vocab_size, vocab_size)) * alpha\n    logits -= logits.max(axis=1, keepdims=True)\n    probs = np.exp(logits)\n    probs = (probs / probs.sum(axis=1, keepdims=True)).astype(np.float64)\n\n    pi = np.full(vocab_size, 1.0 / vocab_size, dtype=np.float64)\n    for _ in range(256):\n        pi = pi @ probs\n        pi /= pi.sum()\n    return probs, pi\n\n\ndef synthesize(\n    *,\n    train_size: int = 800,\n    test_size: int = 200,\n    sequence_seed: int = 14000655262906,\n    table_seed: int = 14000655272906,\n    vocab_size: int = 24,\n    context_length: int = 16,\n    alpha: float = 0.8,\n    layout: str = 'lm',\n) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:\n    def _sample_sequences(n: int, length: int, probs: np.ndarray, pi: np.ndarray, seed: int):\n        rng = np.random.default_rng(seed)\n        v = probs.shape[0]\n        seq = np.empty((n, length), dtype=np.int64)\n        for i in range(n):\n            s = [int(rng.choice(v, p=pi))]\n            while len(s) < length:\n                s.append(int(rng.choice(v, p=probs[s[-1]])))\n            seq[i] = np.asarray(s, dtype=np.int64)\n        return seq\n\n    probs, pi = build_transition(\n        table_seed=table_seed,\n        vocab_size=vocab_size,\n        alpha=alpha,\n    )\n    if layout == \"lm\":\n        seq_train = _sample_sequences(train_size, context_length + 1, probs, pi, sequence_seed)\n        seq_test = _sample_sequences(test_size, context_length + 1, probs, pi, sequence_seed + 1)\n    else:\n        raise ValueError(\"Only layout='lm' is supported in generated synthesize.py\")\n\n    train_seq = torch.from_numpy(seq_train)\n    test_seq = torch.from_numpy(seq_test)\n    x_train = train_seq[:, :-1].to(torch.int64)\n    y_train = target(train_seq)\n    x_test = test_seq[:, :-1].to(torch.int64)\n    y_test = target(test_seq)\n    return x_train, y_train, x_test, y_test\n```\n\n### Data splits and training protocol\n- Vocab size: 24\n- Context length: 16\n- Layout: causal LM windows (`x` shape `[N, L]`, `y` shape `[N, L]`)\n- One fixed bigram transition matrix `P(y|x)` shared by train and test\n- Train rows: 800; test rows: 200\n- Sequence seed: 14000655262906; table seed: 14000655272906\n- Evaluation: **test cross-entropy** on held-out windows\n- Reference device: cpu\n\n## Sample budget (same for all choices)\n- total_samples_seen: 16384\n\nEach choice specifies its own `training_steps` and `batch_size` below; they must satisfy `training_steps × batch_size = total_samples_seen`.\n\n## Evaluation metric\n- Ground-truth ranking uses **test_ce** on the held-out test split.\n- Each choice is trained independently for **10** seeds (`0`..`9`), one `torch.manual_seed(seed)` per run.\n- Execution device: cpu.\n- Rank all candidates by their mean test_ce over seeds; lower is better, so write the order from lowest to highest.\n\n## Choices\n\n### Choice C\n\n**Training schedule**\n- training_steps: 512\n- batch_size: 32\n- total_samples_seen: 16384 (= training_steps × batch_size)\n\n**Model (natural language)**\n- Type: causal transformer LM\n- Vocab size: 24\n- Context length: 16\n- d_model: 32\n- num_layers: 3\n- num_heads: 2\n- d_ff: 64\n- Positional encoding: learned embedding (nn.Embedding over positions)\n\n**Model code**\n```python\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.context_length = 16\n        self.token_embed = nn.Embedding(24, 32)\n        self.pos_embed = nn.Embedding(16, 32)\n        layer = nn.TransformerEncoderLayer(\n            d_model=32,\n            nhead=2,\n            dim_feedforward=64,\n            dropout=0.0,\n            batch_first=True,\n            activation=\"gelu\",\n        )\n        self.encoder = nn.TransformerEncoder(layer, num_layers=3)\n        self.head = nn.Linear(32, 24)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        b, seq_len = x.shape\n        positions = torch.arange(seq_len, device=x.device).unsqueeze(0).expand(b, -1)\n        h = self.token_embed(x) + self.pos_embed(positions)\n        mask = torch.triu(torch.ones(seq_len, seq_len, device=x.device), diagonal=1).bool()\n        h = self.encoder(h, mask=mask)\n        return self.head(h)\n```\n\n**Optimizer**\n- Optimizer: AdamW\n- Learning rate: 3e-05\n- Weight decay: 1e-05\n- Betas: [0.9, 0.999]\n\n```python\ndef build_optimizer(model: nn.Module) -> torch.optim.Optimizer:\n    params = model.parameters()\n    return torch.optim.AdamW(params, lr=3e-05, betas=(0.9, 0.999), weight_decay=1e-05)\n```\n\n**Loss**\n- Loss: cross-entropy on minibatch target labels\n\n```python\ndef loss_fn(model: nn.Module, pred: torch.Tensor, target: torch.Tensor) -> torch.Tensor:\n    if pred.ndim == 3:\n        vocab = pred.shape[-1]\n        return torch.nn.functional.cross_entropy(pred.reshape(-1, vocab), target.reshape(-1))\n    return torch.nn.functional.cross_entropy(pred, target.reshape(-1))\n```\n\n### Choice B\n\n**Training schedule**\n- training_steps: 512\n- batch_size: 32\n- total_samples_seen: 16384 (= training_steps × batch_size)\n\n**Model (natural language)**\n- Type: causal transformer LM\n- Vocab size: 24\n- Context length: 16\n- d_model: 32\n- num_layers: 2\n- num_heads: 2\n- d_ff: 128\n- Positional encoding: learned embedding (nn.Embedding over positions)\n\n**Model code**\n```python\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.context_length = 16\n        self.token_embed = nn.Embedding(24, 32)\n        self.pos_embed = nn.Embedding(16, 32)\n        layer = nn.TransformerEncoderLayer(\n            d_model=32,\n            nhead=2,\n            dim_feedforward=128,\n            dropout=0.0,\n            batch_first=True,\n            activation=\"gelu\",\n        )\n        self.encoder = nn.TransformerEncoder(layer, num_layers=2)\n        self.head = nn.Linear(32, 24)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        b, seq_len = x.shape\n        positions = torch.arange(seq_len, device=x.device).unsqueeze(0).expand(b, -1)\n        h = self.token_embed(x) + self.pos_embed(positions)\n        mask = torch.triu(torch.ones(seq_len, seq_len, device=x.device), diagonal=1).bool()\n        h = self.encoder(h, mask=mask)\n        return self.head(h)\n```\n\n**Optimizer**\n- Optimizer: Adagrad\n- Learning rate: 0.003\n- Weight decay: 0\n\n```python\ndef build_optimizer(model: nn.Module) -> torch.optim.Optimizer:\n    params = model.parameters()\n    return torch.optim.Adagrad(params, lr=0.003, weight_decay=0)\n```\n\n**Loss**\n- Loss: cross-entropy on minibatch target labels\n\n```python\ndef loss_fn(model: nn.Module, pred: torch.Tensor, target: torch.Tensor) -> torch.Tensor:\n    if pred.ndim == 3:\n        vocab = pred.shape[-1]\n        return torch.nn.functional.cross_entropy(pred.reshape(-1, vocab), target.reshape(-1))\n    return torch.nn.functional.cross_entropy(pred, target.reshape(-1))\n```\n\n### Choice A\n\n**Training schedule**\n- training_steps: 512\n- batch_size: 32\n- total_samples_seen: 16384 (= training_steps × batch_size)\n\n**Model (natural language)**\n- Type: causal transformer LM\n- Vocab size: 24\n- Context length: 16\n- d_model: 32\n- num_layers: 2\n- num_heads: 2\n- d_ff: 128\n- Positional encoding: learned embedding (nn.Embedding over positions)\n\n**Model code**\n```python\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.context_length = 16\n        self.token_embed = nn.Embedding(24, 32)\n        self.pos_embed = nn.Embedding(16, 32)\n        layer = nn.TransformerEncoderLayer(\n            d_model=32,\n            nhead=2,\n            dim_feedforward=128,\n            dropout=0.0,\n            batch_first=True,\n            activation=\"gelu\",\n        )\n        self.encoder = nn.TransformerEncoder(layer, num_layers=2)\n        self.head = nn.Linear(32, 24)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        b, seq_len = x.shape\n        positions = torch.arange(seq_len, device=x.device).unsqueeze(0).expand(b, -1)\n        h = self.token_embed(x) + self.pos_embed(positions)\n        mask = torch.triu(torch.ones(seq_len, seq_len, device=x.device), diagonal=1).bool()\n        h = self.encoder(h, mask=mask)\n        return self.head(h)\n```\n\n**Optimizer**\n- Optimizer: RMSprop\n- Learning rate: 0.0003\n- Weight decay: 0\n\n```python\ndef build_optimizer(model: nn.Module) -> torch.optim.Optimizer:\n    params = model.parameters()\n    return torch.optim.RMSprop(params, lr=0.0003, weight_decay=0)\n```\n\n**Loss**\n- Loss: cross-entropy on minibatch target labels\n\n```python\ndef loss_fn(model: nn.Module, pred: torch.Tensor, target: torch.Tensor) -> torch.Tensor:\n    if pred.ndim == 3:\n        vocab = pred.shape[-1]\n        return torch.nn.functional.cross_entropy(pred.reshape(-1, vocab), target.reshape(-1))\n    return torch.nn.functional.cross_entropy(pred, target.reshape(-1))\n```\n\n### Choice E\n\n**Training schedule**\n- training_steps: 512\n- batch_size: 32\n- total_samples_seen: 16384 (= training_steps × batch_size)\n\n**Model (natural language)**\n- Type: causal unidirectional GRU LM\n- Vocab size: 24\n- Context length: 16\n- d_model (embedding and hidden size): 64\n- num_layers: 1\n- Layer residual connections: disabled\n- No attention, position embedding, or dropout\n\n**Model code**\n```python\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.context_length = 16\n        self.token_embed = nn.Embedding(24, 64)\n        self.gru = nn.GRU(\n            input_size=64,\n            hidden_size=64,\n            num_layers=1,\n            batch_first=True,\n            dropout=0.0,\n        )\n        self.head = nn.Linear(64, 24)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.token_embed(x)\n        h, _ = self.gru(h)\n        return self.head(h)\n```\n\n**Optimizer**\n- Optimizer: RMSprop\n- Learning rate: 0.0003\n- Weight decay: 0\n\n```python\ndef build_optimizer(model: nn.Module) -> torch.optim.Optimizer:\n    params = model.parameters()\n    return torch.optim.RMSprop(params, lr=0.0003, weight_decay=0)\n```\n\n**Loss**\n- Loss: cross-entropy on minibatch target labels\n\n```python\ndef loss_fn(model: nn.Module, pred: torch.Tensor, target: torch.Tensor) -> torch.Tensor:\n    if pred.ndim == 3:\n        vocab = pred.shape[-1]\n        return torch.nn.functional.cross_entropy(pred.reshape(-1, vocab), target.reshape(-1))\n    return torch.nn.functional.cross_entropy(pred, target.reshape(-1))\n```\n\n### Choice D\n\n**Training schedule**\n- training_steps: 512\n- batch_size: 32\n- total_samples_seen: 16384 (= training_steps × batch_size)\n\n**Model (natural language)**\n- Type: causal unidirectional GRU LM\n- Vocab size: 24\n- Context length: 16\n- d_model (embedding and hidden size): 64\n- num_layers: 1\n- Layer residual connections: disabled\n- No attention, position embedding, or dropout\n\n**Model code**\n```python\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.context_length = 16\n        self.token_embed = nn.Embedding(24, 64)\n        self.gru = nn.GRU(\n            input_size=64,\n            hidden_size=64,\n            num_layers=1,\n            batch_first=True,\n            dropout=0.0,\n        )\n        self.head = nn.Linear(64, 24)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.token_embed(x)\n        h, _ = self.gru(h)\n        return self.head(h)\n```\n\n**Optimizer**\n- Optimizer: AdamW\n- Learning rate: 0.0001\n- Weight decay: 1e-05\n- Betas: [0.9, 0.95]\n\n```python\ndef build_optimizer(model: nn.Module) -> torch.optim.Optimizer:\n    params = model.parameters()\n    return torch.optim.AdamW(params, lr=0.0001, betas=(0.9, 0.95), weight_decay=1e-05)\n```\n\n**Loss**\n- Loss: cross-entropy on minibatch target labels\n\n```python\ndef loss_fn(model: nn.Module, pred: torch.Tensor, target: torch.Tensor) -> torch.Tensor:\n    if pred.ndim == 3:\n        vocab = pred.shape[-1]\n        return torch.nn.functional.cross_entropy(pred.reshape(-1, vocab), target.reshape(-1))\n    return torch.nn.functional.cross_entropy(pred, target.reshape(-1))\n```\n\n## Your answer\nRank all five choices from lowest to highest held-out loss, using each letter exactly once. Write the complete order inside a single `<answer>` tag, as the letters joined by `<`, and put nothing after the tag, for example `<answer>B<C<D<E<A</answer>`. The grader reads only the **final** `<answer>` tag in your reply.",
+          "question_id": "q_aa66e7",
+          "score": 1.0,
+          "skipped": false,
+          "solution": "<answer>E<A<B<D<C</answer>",
+          "solve_refused_tool_calls": 0,
+          "solve_secs": 19.4,
+          "solve_trace": [],
+          "solve_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 0,
+            "input_tokens": 6739,
+            "output_tokens": 189,
+            "reasoning_output_tokens": 173
+          },
+          "solver_backend": "codex",
+          "solver_reasoning": "**Evaluating model performance**\n\nI'm thinking about why model E converges faster than GRU, while the transformer models (like A) are slower yet still decent. Model D with Adam at a slow learning rate of 0.0001 has decent performance too. It seems both A and B yield similar results around 3.02, but B's cumulative step is better overall. Considering GRU's simplicity and model D's learning speed, I'm debating between these approaches. Ultimately, I’m leaning toward E, A, B, D, and C in that order.",
+          "source": "ranking_v2",
+          "task": "ranking",
+          "type": "mixed"
+        },
+        {
+          "answer": "E<C<A<D<B",
+          "cited": [],
+          "codex_thread": "01a102b5-cce8-7f23-b6c2-d261380fd776",
+          "comment": "I underestimated normalization-assisted depth in E and overestimated unnormalized depth in B. E’s three late LayerNorm blocks restore feature scale and support nonlinear refinement of the cosine interaction and absolute-cosine term; C’s residual path helps optimization but supplies less compositional depth. D preserves signals through its shallow residual block, whereas B repeatedly contracts them through default-initialized GELU layers. No KB claim influenced my original answer; K1006–K1008 describe these mechanisms. A matched-optimizer/LR/budget corpus backtest supported normalized-deep over shallow-residual in 2/2 comparisons and shallow-residual over unnormalized-deep in 1/1. Lab evidence was sparse and mixed, so these checks do not establish a reliable general rule.",
+          "correct": false,
+          "discover_effort": "medium",
+          "discover_final": "<comment>I underestimated normalization-assisted depth in E and overestimated unnormalized depth in B. E’s three late LayerNorm blocks restore feature scale and support nonlinear refinement of the cosine interaction and absolute-cosine term; C’s residual path helps optimization but supplies less compositional depth. D preserves signals through its shallow residual block, whereas B repeatedly contracts them through default-initialized GELU layers. No KB claim influenced my original answer; K1006–K1008 describe these mechanisms. A matched-optimizer/LR/budget corpus backtest supported normalized-deep over shallow-residual in 2/2 comparisons and shallow-residual over unnormalized-deep in 1/1. Lab evidence was sparse and mixed, so these checks do not establish a reliable general rule.</comment>",
+          "discover_model": "gpt-6.1-sol",
+          "discover_reasoning": "**Evaluating test strategies**\n\nI think I need paired tests that are aimed at broad architecture groups rather than trying to find causal links which may not be precise enough. It seems like focusing on broader groupings could yield more relevant insights. I wonder how I can implement this more effectively or what specific tests will yield the best results. It’s definitely worth exploring this direction further!",
+          "discover_secs": 88.6,
+          "discover_trace": [
+            {
+              "calls": [
+                {
+                  "arguments": "{\"code\": \"lab=load_lab(); corpus=load_corpus(); kb=load_kb(); print(len(lab),len(corpus)); print(lab[0]); print(corpus[0]); print(kb)\"}",
+                  "name": "python"
+                }
+              ],
+              "content": null,
+              "reasoning": null,
+              "results": [
+                "11206 490\n{'family': 'bigram_lm', 'dataset_id': 'bg_013a4e', 'set_id': 'bg_013a4e/set_4096_fix_fix_var_f31ac4', 'candidate_id': 'c_959ed5', 'dataset': {'instance_seed': 100089438566, 'vocab_size': 32, 'context_length': 16, 'train_size': 800, 'test_size': 200, 'alpha': 1.4, 'layout': 'lm', 'sequence_seed': 100089438566, 'table_seed': 100089448566}, 'budget': {'training_steps': 256, 'batch_size': 16, 'total_samples_seen': 4096}, 'params': 53408, 'model_type': 'transformer_lm', 'd_model': 32, 'num_layers': 4, 'num_heads': 4, 'd_ff': 128, 'model': {'type': 'transformer_lm', 'vocab_size': 32, 'context_length': 16, 'd_model': 32, 'num_layers': 4, 'num_heads': 4, 'd_ff': 128}, 'optimizer': {'type': 'Adam', 'lr': 0.003, 'weight_decay': 0.0, 'betas': [0.9, 0.999]}, 'loss': {'loss_id': 'cross_entropy_l1', 'lambda': 0.01}, 'metric': 'test_ce', 'mean': 2.90496289730072, 'std': 0.010197493429422815, 'failed_seeds': 0, 'excluded': False}\n{'question_id': 'q_8f876c', 'family': 'univariate_regression', 'type': 'architecture_only', 'budget_tier': 32768, 'metric': 'test_mse', 'correct_letter': 'C', 'gap': 0.07109777610749006, 'choices': [{'letter': 'A', 'model_type': 'mlp', 'depth': 5, 'width': 128, 'd_model': None, 'num_layers': None, 'heads': None, 'd_ff': None, 'residual': True, 'layer_norm': [True, False, False, False, False], 'activations': None, 'optimizer': 'SGD', 'lr': 0.001, 'momentum': 0, 'weight_decay': 0.001, 'betas': None, 'loss': 'mse', 'batch_size': 64, 'training_steps': 512, 'total_samples_seen': 32768, 'params': 83201, 'mean_test_ce': None, 'mean_test_mse': 0.12958194091916084, 'std_test_ce': None, 'std_test_mse': 0.00707318254926581}, {'letter': 'B', 'model_type': 'mlp', 'depth': 3, 'width': 128, 'd_model': None, 'num_layers': None, 'heads': None, 'd_ff': None, 'residual': True, 'layer_norm': [False, False, False], 'activations': None, 'optimizer': 'SGD', 'lr': 0.001, 'momentum': 0, 'weight_decay': 0.001, 'betas': None, 'loss': 'mse', 'batch_size': 64, 'training_steps': 512, 'total_samples_seen': 32768, 'params': 49921, 'mean_test_ce': None, 'mean_test_mse': 0.11623454615473747, 'std_test_ce': None, 'std_test_mse': 0.007376796782091345}, {'letter': 'C', 'model_type': 'mlp', 'depth': 3, 'width': 128, 'd_model': None, 'num_layers': None, 'heads': None, 'd_ff': None, 'residual': True, 'layer_norm': [False, True, True], 'activations': None, 'optimizer': 'SGD', 'lr': 0.001, 'momentum': 0, 'weight_decay': 0.001, 'betas': None, 'loss': 'mse', 'batch_size': 64, 'training_steps': 512, 'total_samples_seen': 32768, 'params': 50433, 'mean_test_ce': None, 'mean_test_mse': 0.04513677004724741, 'std_test_ce': None, 'std_test_mse': 0.007576420451005903}], 'prompt': 'You are taking the ArchitectureIQ benchmark.\\n\\nEach question describes one **dataset instance** and several **choices** (each choice is one **candidate**: model, optimizer, loss, and training budget). All choices train on the same dataset instance. Each choice\\'s training budget (`total_samples_seen`) is stated in the prompt — either shared across all choices or specified per choice in the Sample budget section. Your task is to identify which choice will achieve the **best test metric** on the held-out test set after its stated training budget — using architecture and learning-mechanics reasoning only (no training results are provided).\\n\\nAnswer format is specified in the final section (\"Your answer\"): end your reply with a short `<explanation></explanation>` paragraph followed by a single letter in `<answer></answer>` tags.\\n\\n## Dataset\\n**Family:** univariate regression on `[0, 1]`.\\n\\n- Input and target are 1-D scalars.\\n- Training and test points are sampled uniformly on the domain.\\n- The target is a symbolic expression of `x`, and `y` is its exact evaluation.\\n\\n### Synthesis (PyTorch)\\n```python\\ndef target(x: torch.Tensor) -> torch.Tensor:\\n    return torch.sin(2 * torch.pi * x) - torch.tanh(2 * torch.tanh(2 * x))\\n\\n\\ndef synthesize(\\n    *,\\n    train_size: int = 256,\\"
+              ],
+              "secs": null,
+              "turn": 0,
+              "usage": {}
+            },
+            {
+              "calls": [
+                {
+                  "arguments": "{\"code\": \"from collections import Counter\\nprint(Counter(r['family'] for r in lab))\\nr=next(r for r in lab if r['family']=='multivariate_regression'); print(r)\\nfor c in kb: print(c.get('id'), c.get('claim',c.get('text')))\"}",
+                  "name": "python"
+                }
+              ],
+              "content": null,
+              "reasoning": null,
+              "results": [
+                "[stderr]\nTraceback (most recent call last):\n  File \"/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_science_loop/_smoke_soa/sandbox/e0001/q_33b2d1/_cell.py\", line 62, in <module>\n    print(Counter(r['family'] for r in lab))\nNameError: name 'lab' is not defined\n\n[exit code 1]"
+              ],
+              "secs": null,
+              "turn": 1,
+              "usage": {}
+            },
+            {
+              "calls": [
+                {
+                  "arguments": "{\"code\": \"from collections import Counter\\nlab=load_lab(); print(Counter(r['family'] for r in lab)); print(next(r for r in lab if 'multivariate' in r['family']))\\nfor c in load_kb(): print(c.get('id'),c.get('claim',c.get('text')))\"}",
+                  "name": "python"
+                }
+              ],
+              "content": null,
+              "reasoning": null,
+              "results": [
+                "Counter({'multivariate_regression': 3704, 'bigram_lm': 1880, 'spiral_classification': 1700, 'synthetic_tabular_classification': 1610, 'xor_classification': 1403, 'univariate_regression': 909})\n{'family': 'multivariate_regression', 'dataset_id': 'mvar_000e80', 'set_id': 'mvar_000e80/set_4096_var_var_fix_c6e42d', 'candidate_id': 'c_028f30', 'dataset': {'instance_seed': 75196781, 'input_dim': 3, 'sampler': {'id': 'symbolic_expr_mv', 'seed': 75196781, 'max_depth': 3, 'retry': 1}, 'expression': 'cos(2*pi*x2)*x1 + abs(sin(2*pi*cos(2*pi*x0))) + cos(2*pi*sin(2*pi*x1)**2) + cos(2*pi*x2) - 1', 'domain': [0.0, 1.0], 'train_size': 256, 'test_size': 256, 'point_sampling': {'distribution': 'uniform', 'seed': 75197781}}, 'budget': {'training_steps': 256, 'batch_size': 16, 'total_samples_seen': 4096}, 'params': 5041, 'model_type': 'mlp', 'depth': 2, 'width': 48, 'residual': False, 'activation': 'relu', 'layer_norm': [False, True], 'n_ln': 1, 'leaky_slope': None, 'init': 'default', 'model': {'type': 'mlp', 'depth': 2, 'width': 48, 'residual': False, 'activation': 'relu', 'layer_norm': [False, True], 'input_dim': 3, 'output_dim': 1}, 'optimizer': {'type': 'Adagrad', 'lr': 0.0003, 'weight_decay': 0}, 'loss': {'loss_id': 'mse'}, 'metric': 'test_mse', 'mean': 1.5290504455566407, 'std': 0.04051938935014594, 'failed_seeds': 0, 'excluded': False}\nK1001 CORE RULE (all families, T=256-2048 steps; every task here is under-trained): rank choices by cumulative per-parameter displacement Δ. Adam/AdamW/RMSprop: Δ≈lr·T. Adagrad (zero-init accumulator, steps decay ~lr/√t): Δ≈2·lr·√T. SGD: Δ≈lr·T·|g|/(1−m) with raw grad |g|≈0.01 (bigram LM 0.003, MSE regression with momentum 0.03 — K1019), i.e. plain SGD ≈ Adam at lr/100, SGD m=0.9 ≈ Adam at lr/10. The largest-Δ choice wins 85% of optimizer-only and ~85% of mixed questions (after the lr-ceiling exceptions); a 1.5-3× Δ edge usually beats any architecture advantage. Use architecture rules only to break Δ ties (same optimizer+lr) or in architecture-only questions.\nK1002 Adagrad conversion (any family): because Adagrad's step decays as lr/√t, it matches Adam only when its lr is ~√T/2 (8-23×) larger. Same architecture, lr_Adagrad/lr_Adam ≤3× → Adam/AdamW wins 65/70; =10× → coin flip (4-3); ≥30× → Adagrad wins 9/9. Within Adagrad the larger lr always wins (40/41 pairs; lr=3e-3 is never too big — the decay is a built-in anneal). Adagrad at lr≤1e-4 is effectively frozen (Δ≤0.01) and loses to almost any adaptive choice with lr≥3e-5·√T/2.\nK1003 SGD (all families): plain SGD (momentum 0) at lr≤3e-3 is nearly frozen (wins ~8% of its appearances; in LMs embedding rows barely move, CE stays ≈ln V). SGD momentum 0.9 behaves like Adam at ~lr/10: so SGD m=0.9 lr 1e-3-3e-3 ≈ Adam 1e-4-3e-4 and is a real contender — it beats Adagrad ≤1e-3, Adam/RMSprop ≤3e-5-1e-4 and unstable RMSprop 3e-3 (e.g. univariate MSE 6e-5 vs 0.03) — but SGD m=0.9 at lr≤3e-4 loses to Adam/RMSprop at the same lr (10× smaller Δ). Family calibration (SGD calibration rule): bigram LM ≈ Adam at lr/30 (weaker), MSE regression ≈ Adam at lr/3 (stronger). Compute Δ with momentum.\nK1004 LR-ceiling exceptions to the Δ rule: (a) RMSprop at lr≥1e-3 on MSE regression (no momentum averaging, zero-init square-avg inflates early steps up to ~10×) is noisy/unstable: vs choices with ≥3× smaller Δ it loses 12/27 at 3e-3 and 3/4 at 1e-3 (univariate); prefer Adam/AdamW at the same lr (Adam 3e-3 loses only 2/35) or RMSprop ≤3e-4. (b) Post-LN transformer LMs (nn.TransformerEncoderLayer default, no warmup) with Adam/AdamW/RMSprop lr≥1e-3 lose 14/25 to lr 1e-4-3e-4, worst for d_model=128 or T≥1024; GRU LMs tolerate 1e-3-3e-3 (high lr wins 12/17). (c) On MLP classification and Adam regression, lr 3e-3 is safe — take the larger Δ.\nK1005 Second-order optimizer knobs are noise at these budgets: weight decay 0-1e-3 changes loss <1% (same-arch pairs: higher wd 3 wins/10 losses, all within 1%); Adam vs AdamW at equal lr/betas is a coin flip (5-5); beta2 0.95 vs 0.999 is ~even (7-4). Nev"
+              ],
+              "secs": null,
+              "turn": 2,
+              "usage": {}
+            },
+            {
+              "calls": [
+                {
+                  "arguments": "{\"code\": \"from collections import defaultdict,Counter\\nlab=load_lab(); groups=defaultdict(list)\\nfor r in lab:\\n if r['family']=='multivariate_regression' and r['optimizer']['type'] in ['Adam','AdamW'] and r['optimizer']['lr']==0.0003 and r['loss']['loss_id']=='mse': groups[r['set_id']].append(r)\\ncounts=Counter(); examples=[]\\nfor sid,rs in groups.items():\\n E=[r for r in rs if r['depth']>=3 and not r['residual'] and r['n_ln']>=2 and r['activation'] in ['relu','leaky_relu']]\\n C=[r for r in rs if r['depth']<=2 and r['residual'] and r['n_ln']==0 and r['activation'] in ['relu','leaky_relu']]\\n D=[r for r in rs if r['depth']<=2 and r['residual'] and r['n_ln']==0 and r['activation']=='silu']\\n B=[r for r in rs if r['depth']>=3 and not r['residual'] and r['n_ln']==0 and r['activation']=='gelu']\\n for label,a,b in [('E<C',E,C),('D<B',D,B)]:\\n  for x in a:\\n   for y in b:\\n    counts[(label,'wins' if x['mean']<y['mean'] else 'losses')]+=1\\n    examples.append((label,sid,x['candidate_id'],y['candidate_id'],x['mean'],y['mean'],x['budget']['training_steps']))\\nprint(counts); print(examples[:20]); print('sets',len(groups))\"}",
+                  "name": "python"
+                }
+              ],
+              "content": null,
+              "reasoning": null,
+              "results": [
+                "Counter()\n[]\nsets 114"
+              ],
+              "secs": null,
+              "turn": 3,
+              "usage": {}
+            },
+            {
+              "calls": [
+                {
+                  "arguments": "{\"code\": \"from collections import defaultdict,Counter\\nlab=load_lab(); g=defaultdict(list)\\nfor r in lab:\\n if r['family'] in ['multivariate_regression','univariate_regression'] and r['optimizer']['type'] in ['Adam','AdamW'] and r['loss']['loss_id']=='mse':g[(r['set_id'],r['optimizer']['lr'])].append(r)\\nc=Counter(); ex=[]\\nfor (sid,lr),rs in g.items():\\n for x in rs:\\n  for y in rs:\\n   if x['depth']>=3 and x['n_ln']>=2 and not x['residual'] and y['depth']<=2 and y['n_ln']==0 and y['residual']:\\n    c[('normdeep_vs_shallowres',x['family'],x['mean']<y['mean'])]+=1;ex.append((x,y))\\n   if x['depth']<=2 and x['residual'] and x['n_ln']==0 and x['activation'] in ['silu','gelu'] and y['depth']>=3 and not y['residual'] and y['n_ln']==0 and y['activation'] in ['silu','gelu']:\\n    c[('smoothres_vs_smoothdeep',x['family'],x['mean']<y['mean'])]+=1\\nprint(c); print('example',[(x['set_id'],x['candidate_id'],x['model'],x['optimizer'],x['mean'],y['model'],y['mean']) for x,y in ex[:3]])\"}",
+                  "name": "python"
+                }
+              ],
+              "content": null,
+              "reasoning": null,
+              "results": [
+                "Counter({('normdeep_vs_shallowres', 'multivariate_regression', False): 3, ('normdeep_vs_shallowres', 'multivariate_regression', True): 1})\nexample [('mvar_54e3a3/set_8192_var_var_var_ac9308', 'c_9f4555', {'type': 'mlp', 'depth': 4, 'width': 24, 'residual': False, 'activation': 'gelu', 'layer_norm': [True, True, True, True], 'input_dim': 3, 'output_dim': 1}, {'type': 'Adam', 'lr': 3e-05, 'weight_decay': 1e-05, 'betas': [0.9, 0.999]}, inf, {'type': 'mlp', 'depth': 1, 'width': 48, 'residual': True, 'activation': 'gelu', 'layer_norm': [False], 'input_dim': 3, 'output_dim': 1}, inf), ('mvar_805235/set_4096_var_var_fix_95e1c9', 'c_c5442f', {'type': 'mlp', 'depth': 5, 'width': 24, 'residual': False, 'activation': 'leaky_relu', 'layer_norm': [False, False, True, True, False], 'leaky_relu_slope': 0.01, 'input_dim': 2, 'output_dim': 1}, {'type': 'AdamW', 'lr': 0.0001, 'weight_decay': 1e-05, 'betas': [0.9, 0.95]}, 0.8950589299201965, {'type': 'mlp', 'depth': 1, 'width': 64, 'residual': True, 'activation': 'gelu', 'layer_norm': [False], 'input_dim': 2, 'output_dim': 1}, 0.8926491796970367), ('mvar_c5c662/set_4096_var_var_fix_dfeb27', 'c_002efd', {'type': 'mlp', 'depth': 5, 'width': 24, 'residual': False, 'activation': 'leaky_relu', 'layer_norm': [False, False, True, True, False], 'leaky_relu_slope': 0.01, 'input_dim': 2, 'output_dim': 1}, {'type': 'AdamW', 'lr': 0.0001, 'weight_decay': 1e-05, 'betas': [0.9, 0.95]}, inf, {'type': 'mlp', 'depth': 1, 'width': 64, 'residual': True, 'activation': 'gelu', 'layer_norm': [False], 'input_dim': 2, 'output_dim': 1}, inf)]"
+              ],
+              "secs": null,
+              "turn": 4,
+              "usage": {}
+            },
+            {
+              "calls": [
+                {
+                  "arguments": "{\"code\": \"import re,math\\nfrom collections import Counter\\ncounts=Counter()\\nfor q in load_corpus():\\n if q['family'] not in ['multivariate_regression','univariate_regression']:continue\\n acts={}\\n for letter,part in re.findall(r'### Choice ([A-Z])(.*?)(?=### Choice|## Your answer|\\\\Z)',q['prompt'],re.S):\\n  m=re.search(r'Activation: (\\\\w+)',part); acts[letter]=m.group(1) if m else ''\\n for a in q['choices']:\\n  for b in q['choices']:\\n   if a['optimizer'] not in ['Adam','AdamW'] or b['optimizer'] not in ['Adam','AdamW'] or a['lr']!=b['lr'] or a['training_steps']!=b['training_steps']:continue\\n   x=a['mean_test_mse'];y=b['mean_test_mse']\\n   if x is None or y is None or not math.isfinite(x+y):continue\\n   if a['depth']>=3 and sum(a['layer_norm'])>=2 and not a['residual'] and b['depth']<=2 and b['residual'] and sum(b['layer_norm'])==0:\\n    counts[('normdeep',x<y)]+=1\\n   if a['depth']<=2 and a['residual'] and sum(a['layer_norm'])==0 and b['depth']>=3 and not b['residual'] and sum(b['layer_norm'])==0:\\n    counts[('shallowres',x<y)]+=1\\nprint(counts)\"}",
+                  "name": "python"
+                }
+              ],
+              "content": null,
+              "reasoning": null,
+              "results": [
+                "Counter({('normdeep', True): 2, ('shallowres', True): 1})"
+              ],
+              "secs": null,
+              "turn": 5,
+              "usage": {}
+            },
+            {
+              "calls": [],
+              "content": "<comment>I underestimated normalization-assisted depth in E and overestimated unnormalized depth in B. E’s three late LayerNorm blocks restore feature scale and support nonlinear refinement of the cosine interaction and absolute-cosine term; C’s residual path helps optimization but supplies less compositional depth. D preserves signals through its shallow residual block, whereas B repeatedly contracts them through default-initialized GELU layers. No KB claim influenced my original answer; K1006–K1008 describe these mechanisms. A matched-optimizer/LR/budget corpus backtest supported normalized-deep over shallow-residual in 2/2 comparisons and shallow-residual over unnormalized-deep in 1/1. Lab evidence was sparse and mixed, so these checks do not establish a reliable general rule.</comment>",
+              "reasoning": "**Evaluating test strategies**\n\nI think I need paired tests that are aimed at broad architecture groups rather than trying to find causal links which may not be precise enough. It seems like focusing on broader groupings could yield more relevant insights. I wonder how I can implement this more effectively or what specific tests will yield the best results. It’s definitely worth exploring this direction further!",
+              "results": [],
+              "secs": 88.6,
+              "turn": 6,
+              "usage": {
+                "cache_write_input_tokens": 0,
+                "cached_input_tokens": 39680,
+                "input_tokens": 81088,
+                "output_tokens": 1798,
+                "reasoning_output_tokens": 244
+              }
+            }
+          ],
+          "discover_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 39680,
+            "input_tokens": 81088,
+            "output_tokens": 1798,
+            "reasoning_output_tokens": 244
+          },
+          "epoch": 1,
+          "experiments": [],
+          "explanation": "<answer>C<E<A<B<D</answer>",
+          "family": "multivariate_regression",
+          "finish": "stop",
+          "group": "datasets/multivariate_regression/mvar_8f2412",
+          "hypothesis": null,
+          "inversions": 2,
+          "kb_explained": [],
+          "kb_queries": [],
+          "kb_retrieved": [],
+          "prediction": "C<E<A<B<D",
+          "question": "## system\nYou are solving an ArchitectureIQ benchmark question. Rank the five candidate settings from lowest to highest held-out selection metric using the required format.\n\n## user\nYou are taking the ArchitectureIQ benchmark.\n\nEach question describes one **dataset instance** and several **choices** (each choice is one **candidate**: model, optimizer, loss, and training budget). All choices use the same materialized dataset instance. Depending on the question, one or more training axes may vary; read each choice's complete setup and code rather than assuming an axis is shared.\n\nYour task is to **rank every choice** by its held-out test metric, from lowest to highest (a lower loss is better), using architecture and learning-mechanics reasoning only — no training results are provided.\n\nThe reply format is defined once, in the final \"Your answer\" section.\n\n## Dataset\nMultivariate regression on `[0, 1]^n`: input is a vector `x ∈ R^n`, target is a scalar `y ∈ R` from a fixed symbolic expression. Train and test splits are fixed before any candidate training.\n\n### Synthesis (PyTorch)\n```python\ndef target(x: torch.Tensor) -> torch.Tensor:\n    return x[:, 3] ** 6 + torch.cos(2 * torch.pi * x[:, 1]) * x[:, 3] + torch.abs(torch.cos(2 * torch.pi * x[:, 2])) + torch.cos(2 * torch.pi * x[:, 1]) + x[:, 0]\n\n\ndef synthesize(\n    *,\n    train_size: int = 256,\n    test_size: int = 256,\n    point_seed: int = 2852770558,\n    input_dim: int = 4,\n    domain_low: float = 0.0,\n    domain_high: float = 1.0,\n) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:\n    gen = torch.Generator().manual_seed(point_seed)\n    train_x = torch.rand(train_size, input_dim, generator=gen) * (domain_high - domain_low) + domain_low\n    test_x = torch.rand(test_size, input_dim, generator=gen) * (domain_high - domain_low) + domain_low\n    train_y = target(train_x)\n    test_y = target(test_x)\n    return train_x, train_y.unsqueeze(-1), test_x, test_y.unsqueeze(-1)\n```\n\n### Data splits and training protocol\n- Target expression (canonical): `x3**6 + cos(2*pi*x1)*x3 + abs(cos(2*pi*x2)) + cos(2*pi*x1) + x0`\n- Input dimension: 4\n- Train split size: 256 fixed `(x, y)` pairs\n- Test split size: 256 fixed `(x, y)` pairs (held out)\n- Input domain: [0.0, 1.0] per coordinate, uniform sampling\n- Point-sampling seed: 2852770558\n- Evaluation: **test MSE** on the held-out split\n- Reference device: cpu\n\n## Sample budget (same for all choices)\n- training_steps: 512\n- batch_size: 16\n- total_samples_seen: 8192 (= training_steps × batch_size)\n\n## Evaluation metric\n- Ground-truth ranking uses **test_mse** on the held-out test split.\n- Each choice is trained independently for **10** seeds (`0`..`9`), one `torch.manual_seed(seed)` per run.\n- Execution device: cpu.\n- Rank all candidates by their mean test_mse over seeds; lower is better, so write the order from lowest to highest.\n\n## Choices\n\n### Choice E\n\n**Model (natural language)**\n- Type: MLP\n- Input dimension: 4\n- Depth: 5 hidden Linear layers of width 48, between the input projection and the output head (7 nn.Linear layers in total)\n- Width: 48 (all hidden layers)\n- Residual connections: False\n- Layer norm per layer: [False, False, True, True, True]\n- Activation: leaky_relu (one activation, shared by every layer)\n- LeakyReLU negative slope: 0.01\n- Initialization: PyTorch Linear defaults\n\n**Model code**\n```python\nclass MLPBlock(nn.Module):\n    \"\"\"One hidden layer: leaky_relu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.LeakyReLU(0.01)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(4, 48),\n            nn.LeakyReLU(0.01),\n            MLPBlock(width=48, use_layer_norm=False),\n            MLPBlock(width=48, use_layer_norm=False),\n            MLPBlock(width=48, use_layer_norm=True),\n            MLPBlock(width=48, use_layer_norm=True),\n            MLPBlock(width=48, use_layer_norm=True),\n            nn.Linear(48, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)\n```\n\n**Optimizer**\n- Optimizer: AdamW\n- Learning rate: 0.0003\n- Weight decay: 0\n- Betas: [0.9, 0.999]\n\n```python\ndef build_optimizer(model: nn.Module) -> torch.optim.Optimizer:\n    params = model.parameters()\n    return torch.optim.AdamW(params, lr=0.0003, betas=(0.9, 0.999), weight_decay=0)\n```\n\n**Loss**\n- Loss: mean squared error (MSE) on the minibatch\n\n```python\ndef loss_fn(model: nn.Module, pred: torch.Tensor, target: torch.Tensor) -> torch.Tensor:\n    return torch.mean((pred - target) ** 2)\n```\n\n### Choice A\n\n**Model (natural language)**\n- Type: MLP\n- Input dimension: 4\n- Depth: 1 hidden Linear layer of width 96, between the input projection and the output head (3 nn.Linear layers in total)\n- Width: 96 (all hidden layers)\n- Residual connections: False\n- Layer norm per layer: [True]\n- Activation: silu (one activation, shared by every layer)\n- Initialization: PyTorch Linear defaults\n\n**Model code**\n```python\nclass MLPBlock(nn.Module):\n    \"\"\"One hidden layer: silu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.SiLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(4, 96),\n            nn.SiLU(),\n            MLPBlock(width=96, use_layer_norm=True),\n            nn.Linear(96, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)\n```\n\n**Optimizer**\n- Optimizer: AdamW\n- Learning rate: 0.0003\n- Weight decay: 0\n- Betas: [0.9, 0.999]\n\n```python\ndef build_optimizer(model: nn.Module) -> torch.optim.Optimizer:\n    params = model.parameters()\n    return torch.optim.AdamW(params, lr=0.0003, betas=(0.9, 0.999), weight_decay=0)\n```\n\n**Loss**\n- Loss: mean squared error (MSE) on the minibatch\n\n```python\ndef loss_fn(model: nn.Module, pred: torch.Tensor, target: torch.Tensor) -> torch.Tensor:\n    return torch.mean((pred - target) ** 2)\n```\n\n### Choice D\n\n**Model (natural language)**\n- Type: MLP\n- Input dimension: 4\n- Depth: 1 hidden Linear layer of width 128, between the input projection and the output head (3 nn.Linear layers in total)\n- Width: 128 (all hidden layers)\n- Residual connections: True\n- Layer norm per layer: [False]\n- Activation: silu (one activation, shared by every layer)\n- Initialization: PyTorch Linear defaults\n\n**Model code**\n```python\nclass MLPBlock(nn.Module):\n    \"\"\"One hidden layer: silu(x + Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.SiLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        h = h + x\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(4, 128),\n            nn.SiLU(),\n            MLPBlock(width=128, use_layer_norm=False),\n            nn.Linear(128, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)\n```\n\n**Optimizer**\n- Optimizer: AdamW\n- Learning rate: 0.0003\n- Weight decay: 0\n- Betas: [0.9, 0.999]\n\n```python\ndef build_optimizer(model: nn.Module) -> torch.optim.Optimizer:\n    params = model.parameters()\n    return torch.optim.AdamW(params, lr=0.0003, betas=(0.9, 0.999), weight_decay=0)\n```\n\n**Loss**\n- Loss: mean squared error (MSE) on the minibatch\n\n```python\ndef loss_fn(model: nn.Module, pred: torch.Tensor, target: torch.Tensor) -> torch.Tensor:\n    return torch.mean((pred - target) ** 2)\n```\n\n### Choice B\n\n**Model (natural language)**\n- Type: MLP\n- Input dimension: 4\n- Depth: 3 hidden Linear layers of width 64, between the input projection and the output head (5 nn.Linear layers in total)\n- Width: 64 (all hidden layers)\n- Residual connections: False\n- Layer norm per layer: [False, False, False]\n- Activation: gelu (one activation, shared by every layer)\n- Initialization: PyTorch Linear defaults\n\n**Model code**\n```python\nclass MLPBlock(nn.Module):\n    \"\"\"One hidden layer: gelu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.GELU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(4, 64),\n            nn.GELU(),\n            MLPBlock(width=64, use_layer_norm=False),\n            MLPBlock(width=64, use_layer_norm=False),\n            MLPBlock(width=64, use_layer_norm=False),\n            nn.Linear(64, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)\n```\n\n**Optimizer**\n- Optimizer: AdamW\n- Learning rate: 0.0003\n- Weight decay: 0\n- Betas: [0.9, 0.999]\n\n```python\ndef build_optimizer(model: nn.Module) -> torch.optim.Optimizer:\n    params = model.parameters()\n    return torch.optim.AdamW(params, lr=0.0003, betas=(0.9, 0.999), weight_decay=0)\n```\n\n**Loss**\n- Loss: mean squared error (MSE) on the minibatch\n\n```python\ndef loss_fn(model: nn.Module, pred: torch.Tensor, target: torch.Tensor) -> torch.Tensor:\n    return torch.mean((pred - target) ** 2)\n```\n\n### Choice C\n\n**Model (natural language)**\n- Type: MLP\n- Input dimension: 4\n- Depth: 1 hidden Linear layer of width 128, between the input projection and the output head (3 nn.Linear layers in total)\n- Width: 128 (all hidden layers)\n- Residual connections: True\n- Layer norm per layer: [False]\n- Activation: leaky_relu (one activation, shared by every layer)\n- LeakyReLU negative slope: 0.01\n- Initialization: PyTorch Linear defaults\n\n**Model code**\n```python\nclass MLPBlock(nn.Module):\n    \"\"\"One hidden layer: leaky_relu(x + Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.LeakyReLU(0.01)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        h = h + x\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(4, 128),\n            nn.LeakyReLU(0.01),\n            MLPBlock(width=128, use_layer_norm=False),\n            nn.Linear(128, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)\n```\n\n**Optimizer**\n- Optimizer: AdamW\n- Learning rate: 0.0003\n- Weight decay: 0\n- Betas: [0.9, 0.999]\n\n```python\ndef build_optimizer(model: nn.Module) -> torch.optim.Optimizer:\n    params = model.parameters()\n    return torch.optim.AdamW(params, lr=0.0003, betas=(0.9, 0.999), weight_decay=0)\n```\n\n**Loss**\n- Loss: mean squared error (MSE) on the minibatch\n\n```python\ndef loss_fn(model: nn.Module, pred: torch.Tensor, target: torch.Tensor) -> torch.Tensor:\n    return torch.mean((pred - target) ** 2)\n```\n\n## Your answer\nRank all five choices from lowest to highest held-out loss, using each letter exactly once. Write the complete order inside a single `<answer>` tag, as the letters joined by `<`, and put nothing after the tag, for example `<answer>B<C<D<E<A</answer>`. The grader reads only the **final** `<answer>` tag in your reply.",
+          "question_id": "q_33b2d1",
+          "score": 0.5,
+          "skipped": false,
+          "solution": "<answer>C<E<A<B<D</answer>",
+          "solve_refused_tool_calls": 0,
+          "solve_secs": 19.4,
+          "solve_trace": [],
+          "solve_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 0,
+            "input_tokens": 6423,
+            "output_tokens": 140,
+            "reasoning_output_tokens": 124
+          },
+          "solver_backend": "codex",
+          "solver_reasoning": null,
+          "source": "ranking_v3",
+          "task": "ranking",
+          "type": "architecture_only"
+        },
+        {
+          "answer": "B",
+          "cited": [],
+          "codex_thread": "01a102b5-cce8-7382-be50-7a4dc383afae",
+          "comment": "B won with a deeper residual SiLU network under the small-learning-rate SGD budget. Its smooth, magnitude-dependent features and residual gradient paths plausibly help learn a boundary depending jointly on angle and radius. A has fewer nonlinear stages; C’s early LayerNorm may weaken radial information and lacks residual paths. These are explanatory hypotheses, not isolated causal findings: activation, depth, normalization, width, and residual structure differ across choices. No KB claims were consulted, and no new general rule was backtested.",
+          "correct": true,
+          "discover_effort": "low",
+          "discover_final": "<comment>B won with a deeper residual SiLU network under the small-learning-rate SGD budget. Its smooth, magnitude-dependent features and residual gradient paths plausibly help learn a boundary depending jointly on angle and radius. A has fewer nonlinear stages; C’s early LayerNorm may weaken radial information and lacks residual paths. These are explanatory hypotheses, not isolated causal findings: activation, depth, normalization, width, and residual structure differ across choices. No KB claims were consulted, and no new general rule was backtested.</comment>",
+          "discover_model": "gpt-6.1-sol",
+          "discover_reasoning": null,
+          "discover_secs": 12.1,
+          "discover_trace": [
+            {
+              "calls": [],
+              "content": "<comment>B won with a deeper residual SiLU network under the small-learning-rate SGD budget. Its smooth, magnitude-dependent features and residual gradient paths plausibly help learn a boundary depending jointly on angle and radius. A has fewer nonlinear stages; C’s early LayerNorm may weaken radial information and lacks residual paths. These are explanatory hypotheses, not isolated causal findings: activation, depth, normalization, width, and residual structure differ across choices. No KB claims were consulted, and no new general rule was backtested.</comment>",
+              "reasoning": null,
+              "results": [],
+              "secs": 12.1,
+              "turn": 0,
+              "usage": {
+                "cache_write_input_tokens": 0,
+                "cached_input_tokens": 5376,
+                "input_tokens": 11584,
+                "output_tokens": 315,
+                "reasoning_output_tokens": 69
+              }
+            }
+          ],
+          "discover_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 5376,
+            "input_tokens": 11584,
+            "output_tokens": 315,
+            "reasoning_output_tokens": 69
+          },
+          "epoch": 1,
+          "experiments": [],
+          "explanation": "B is the best fit for this finite-budget spiral task: its three nonlinear stages provide capacity to model the interleaving arms, while residual connections support gradient flow at the small SGD learning rate. SiLU also supplies smooth, magnitude-dependent nonlinearities useful for a boundary that varies with both angle and radius. A preserves radial information but has fewer nonlinear stages, making the winding boundary harder to learn within 2048 updates. C adds depth, but its early LayerNorm suppresses feature magnitude—an important cue for distinguishing successive spiral turns—and its non-residual stack makes recovering and learning that dependence harder.",
+          "family": "spiral_classification",
+          "finish": "stop",
+          "group": "flip_pair/8c1b1ca3c1e9",
+          "hypothesis": null,
+          "inversions": null,
+          "kb_explained": [],
+          "kb_queries": [],
+          "kb_retrieved": [],
+          "prediction": "B",
+          "question": "## system\nYou are solving an ArchitectureIQ multiple-choice question. Reason carefully about the dataset and the candidate training recipes, then answer in the required format.\n\n## user\nYou are taking the ArchitectureIQ benchmark.\n\nEach question describes one **dataset instance** and several **choices** (each choice is one **candidate**: model, optimizer, loss, and training budget). All choices train on the same dataset instance. Each choice's training budget (`total_samples_seen`) is stated in the prompt — either shared across all choices or specified per choice in the Sample budget section. Your task is to identify which choice will achieve the **best test metric** on the held-out test set after its stated training budget — using architecture and learning-mechanics reasoning only (no training results are provided).\n\nAnswer format is specified in the final section (\"Your answer\"): end your reply with a short `<explanation></explanation>` paragraph followed by a single letter in `<answer></answer>` tags.\n\n## Dataset\nTwo-spirals binary classification. The input is 2-dimensional by construction. Points are drawn along one of two interleaved Archimedean arms that differ by a half-turn phase; the label *is* the arm a point came from, so the classes are exactly balanced and there is no threshold to calibrate. The decision boundary spirals outward, so its complexity grows with the number of turns — stated in the dataset card below. Every candidate trains on the same materialized train/test splits.\n\n### Data-generating and classification rule\n- Rule family: `spiral`; active coordinates: `x_0`, `x_1` (input is 2-dimensional).\n- Point distribution: classic interleaved two-spirals. Each point is drawn along one of two Archimedean arms: with `t` uniform on `[0.5, 0.5 + 3π]` (1.5 full turns), radius `r = t`, coordinates `(r·cos(t + phase), r·sin(t + phase))` with `phase ∈ {0, π}`.\n- Label rule: `y = 0` for points drawn from the `phase = 0` arm and `y = 1` for points from the `phase = π` arm; both arms are equally likely, so classes are balanced.\n- Nominal soft score (intuition only): `s(x) = sin(atan2(x_1, x_0) − ‖x‖₂)`; its zero level sets trace the two arms, but labels come from the generative arm, not from thresholding `s(x)`.\n- Bayes decision boundary: assign each point to the nearer of the two arms (up to label-flip symmetry); with 1.5 full turns the arms interleave, so the boundary is highly non-linear.\n- Reproducibility: point seed `792884496`, spiral turns `1.5`.\n\n### Data splits and training protocol\n- Task: binary classification on one fixed synthetic tabular train/test split.\n- Input shape: float32 `[N, 2]`; labels: int64 `[N]` in `{0, 1}`.\n- Train rows: 1024; held-out test rows: 2048.\n- Every choice receives the same materialized split; minibatches sample train indices uniformly with replacement.\n- Evaluation: **test cross-entropy** is primary; test accuracy is auxiliary only.\n- Reference device: cpu\n\n## Sample budget (same for all choices)\n- training_steps: 2048\n- batch_size: 16\n- total_samples_seen: 32768 (= training_steps × batch_size)\n\n## Evaluation metric\n- Ground-truth ranking uses **test_ce** on the held-out test split.\n- Each choice is trained independently for **10** seeds (`0`..`9`), one `torch.manual_seed(seed)` per run.\n- Execution device: cpu.\n- The correct choice has the lowest **mean** test_ce across seeds.\n\n## Choices\n\n### Choice A\n\n**Model (natural language)**\n- Type: MLP\n- Input dimension: 2\n- Output logits: 2\n- Depth: 1 hidden Linear layer of width 64, between the input projection and the output head (3 nn.Linear layers in total)\n- Width: 64 (all hidden layers)\n- Residual connections: False\n- Layer norm per layer: [False]\n- Activation: leaky_relu (one activation, shared by every layer)\n- LeakyReLU negative slope: 0.01\n- Initialization: PyTorch Linear defaults\n\n**Model code**\n```python\nclass MLPBlock(nn.Module):\n    \"\"\"One hidden layer: leaky_relu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.LeakyReLU(0.01)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(2, 64),\n            nn.LeakyReLU(0.01),\n            MLPBlock(width=64, use_layer_norm=False),\n            nn.Linear(64, 2),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)\n```\n\n**Optimizer**\n- Optimizer: SGD\n- Learning rate: 0.001\n- Weight decay: 0\n- Momentum: 0.9\n\n```python\ndef build_optimizer(model: nn.Module) -> torch.optim.Optimizer:\n    params = model.parameters()\n    return torch.optim.SGD(params, lr=0.001, momentum=0.9, weight_decay=0)\n```\n\n**Loss**\n- Loss: cross-entropy on minibatch target labels\n\n```python\ndef loss_fn(model: nn.Module, pred: torch.Tensor, target: torch.Tensor) -> torch.Tensor:\n    if pred.ndim == 3:\n        vocab = pred.shape[-1]\n        return torch.nn.functional.cross_entropy(pred.reshape(-1, vocab), target.reshape(-1))\n    return torch.nn.functional.cross_entropy(pred, target.reshape(-1))\n```\n\n### Choice B\n\n**Model (natural language)**\n- Type: MLP\n- Input dimension: 2\n- Output logits: 2\n- Depth: 2 hidden Linear layers of width 48, between the input projection and the output head (4 nn.Linear layers in total)\n- Width: 48 (all hidden layers)\n- Residual connections: True\n- Layer norm per layer: [False, False]\n- Activation: silu (one activation, shared by every layer)\n- Initialization: PyTorch Linear defaults\n\n**Model code**\n```python\nclass MLPBlock(nn.Module):\n    \"\"\"One hidden layer: silu(x + Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.SiLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        h = h + x\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(2, 48),\n            nn.SiLU(),\n            MLPBlock(width=48, use_layer_norm=False),\n            MLPBlock(width=48, use_layer_norm=False),\n            nn.Linear(48, 2),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)\n```\n\n**Optimizer**\n- Optimizer: SGD\n- Learning rate: 0.001\n- Weight decay: 0\n- Momentum: 0.9\n\n```python\ndef build_optimizer(model: nn.Module) -> torch.optim.Optimizer:\n    params = model.parameters()\n    return torch.optim.SGD(params, lr=0.001, momentum=0.9, weight_decay=0)\n```\n\n**Loss**\n- Loss: cross-entropy on minibatch target labels\n\n```python\ndef loss_fn(model: nn.Module, pred: torch.Tensor, target: torch.Tensor) -> torch.Tensor:\n    if pred.ndim == 3:\n        vocab = pred.shape[-1]\n        return torch.nn.functional.cross_entropy(pred.reshape(-1, vocab), target.reshape(-1))\n    return torch.nn.functional.cross_entropy(pred, target.reshape(-1))\n```\n\n### Choice C\n\n**Model (natural language)**\n- Type: MLP\n- Input dimension: 2\n- Output logits: 2\n- Depth: 2 hidden Linear layers of width 48, between the input projection and the output head (4 nn.Linear layers in total)\n- Width: 48 (all hidden layers)\n- Residual connections: False\n- Layer norm per layer: [True, False]\n- Activation: leaky_relu (one activation, shared by every layer)\n- LeakyReLU negative slope: 0.01\n- Initialization: PyTorch Linear defaults\n\n**Model code**\n```python\nclass MLPBlock(nn.Module):\n    \"\"\"One hidden layer: leaky_relu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.LeakyReLU(0.01)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(2, 48),\n            nn.LeakyReLU(0.01),\n            MLPBlock(width=48, use_layer_norm=True),\n            MLPBlock(width=48, use_layer_norm=False),\n            nn.Linear(48, 2),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)\n```\n\n**Optimizer**\n- Optimizer: SGD\n- Learning rate: 0.001\n- Weight decay: 0\n- Momentum: 0.9\n\n```python\ndef build_optimizer(model: nn.Module) -> torch.optim.Optimizer:\n    params = model.parameters()\n    return torch.optim.SGD(params, lr=0.001, momentum=0.9, weight_decay=0)\n```\n\n**Loss**\n- Loss: cross-entropy on minibatch target labels\n\n```python\ndef loss_fn(model: nn.Module, pred: torch.Tensor, target: torch.Tensor) -> torch.Tensor:\n    if pred.ndim == 3:\n        vocab = pred.shape[-1]\n        return torch.nn.functional.cross_entropy(pred.reshape(-1, vocab), target.reshape(-1))\n    return torch.nn.functional.cross_entropy(pred, target.reshape(-1))\n```\n\n## Your answer\nChoose exactly one of A, B, C. End your reply with exactly two tagged fields, in this order and with nothing after them:\n\n<explanation>The mechanism that decides the winner, and why each other choice loses.</explanation>\n<answer>the letter of your chosen option</answer>\n\nRules: `<answer>` must contain exactly one letter from {A, B, C}. The grader reads only the **final** `<answer>` tag in your reply.",
+          "question_id": "q_7476fe",
+          "score": 1.0,
+          "skipped": false,
+          "solution": "<explanation>B is the best fit for this finite-budget spiral task: its three nonlinear stages provide capacity to model the interleaving arms, while residual connections support gradient flow at the small SGD learning rate. SiLU also supplies smooth, magnitude-dependent nonlinearities useful for a boundary that varies with both angle and radius. A preserves radial information but has fewer nonlinear stages, making the winding boundary harder to learn within 2048 updates. C adds depth, but its early LayerNorm suppresses feature magnitude—an important cue for distinguishing successive spiral turns—and its non-residual stack makes recovering and learning that dependence harder.</explanation>\n<answer>B</answer>",
+          "solve_refused_tool_calls": 0,
+          "solve_secs": 19.5,
+          "solve_trace": [],
+          "solve_usage": {
+            "cache_write_input_tokens": 0,
+            "cached_input_tokens": 0,
+            "input_tokens": 5498,
+            "output_tokens": 207,
+            "reasoning_output_tokens": 69
+          },
+          "solver_backend": "codex",
+          "solver_reasoning": "**Choosing between options**\n\nI’m weighing the reasons for choosing B over A. It seems like B has a smoother learning curve but might slow things down compared to A, which has a low learning rate and better depth. Usually, the spiral structure benefits from smooth radial versus ReLU. B’s residuals are strong and have non-linear advantages, while A might introduce some spectral bias due to the low rate. Overall, it looks like I’m leaning toward B for this decision.",
+          "source": "dataflip500",
+          "task": "select",
+          "type": "architecture_only"
+        }
+      ],
+      "research": [],
+      "science": "# Science digest, epoch 1\n\nStrongest current laws:\n1. Under-training law (K1001): rank by displacement Δ (Adam-family lr·T, Adagrad 2·lr·√T, SGD lr·T·|g|/(1−m)). Δ order is right in 92% of corpus pairs at ratio ≥4×, 73-90% at 1.5-4×, and only 69% below 1.5×; below that, architecture decides. Ranking questions: sort every choice by Δ.\n2. MLP conditioning score (K1006): #LN blocks + 1 if residual, higher is better, at the same optimizer, lr and T. It orders 85% of regression MLP pairs (128/150), spiral 25/31, XOR 25/36 and tabular 47/68 (Δ<0.1 only). A plain stack with ≥2 LN blocks beat a residual no-LN MLP 9/9. When scores tie, depth is a coin flip on regression (16/32), and on tabular and spiral the shallower net wins (24/34).\n3. Saturation reversal on tabular data (K1009): when Δ≥0.1, the shallow, wide, less-LN, smooth-activation net wins (shallower 21-5); when Δ<0.1 the conditioning score holds (more-LN 41-4).\n4. Bigram LM (K1011, K1013, K1017): a GRU beats a post-LN transformer at the same optimizer; transformer shape depends on Δ.\nWhat changed this epoch: 4 records, mean score 0.875. The one miss (q_33b2d1, score 0.5) and a solved bigram ranking (q_aa66e7) each match an existing claim exactly (K1006 and K1001+K1011), but solvers did not retrieve the KB in 3 of 4 questions. So nothing new was added. I rewrote K1001 and K1006 so they are easier to find (wording about RANKING / full ordering) and filled in their mechanism, regime and phase fields from corpus pairwise backtests. I also corrected K1006's depth tie-break, which the corpus shows doesn't work. Support counts were updated for K1001, K1006, K1011 and K1014. The main open problem is getting solvers to query the KB, not missing laws.\n",
+      "scienceError": "",
+      "summarizer": [
+        {
+          "calls": [
+            {
+              "arguments": "{\"ids\": [\"K1001\", \"K1006\", \"K1007\", \"K1014\", \"K1015\", \"K1009\", \"K1011\"]}",
+              "name": "kb_view"
+            },
+            {
+              "arguments": "{\"question_id\": \"q_33b2d1\", \"fields\": [\"question\", \"answer\", \"prediction\"]}",
+              "name": "read_record"
+            }
+          ],
+          "content": null,
+          "reasoning": null,
+          "results": [
+            "[K1001] cred=0.500 s=0.00 f=0.00 ep=0 src=[]\nCORE RULE (all families, T=256-2048 steps; every task here is under-trained): rank choices by cumulative per-parameter displacement Δ. Adam/AdamW/RMSprop: Δ≈lr·T. Adagrad (zero-init accumulator, steps decay ~lr/√t): Δ≈2·lr·√T. SGD: Δ≈lr·T·|g|/(1−m) with raw grad |g|≈0.01 (bigram LM 0.003, MSE regression with momentum 0.03 — K1019), i.e. plain SGD ≈ Adam at lr/100, SGD m=0.9 ≈ Adam at lr/10. The largest-Δ choice wins 85% of optimizer-only and ~85% of mixed questions (after the lr-ceiling exceptions); a 1.5-3× Δ edge usually beats any architecture advantage. Use architecture rules only to break Δ ties (same optimizer+lr) or in architecture-only questions.\n[K1007] cred=0.500 s=0.00 f=0.00 ep=0 src=[]\nRegression depth × residual (uni/multivariate MSE, any budget): a deeper residual MLP beats a shallower non-residual one 32-2; deep-narrow beats shallow-wide at similar params 70-32 (51-19 when lr·T<0.1); at equal depth extra width is a coin flip (5-5). Oscillatory/composite targets (sin(2πx)…, cos(2π sin…)) amplify the depth advantage: composition of 4-5 normalized residual blocks generates high-frequency curvature that 1-2 layer nets cannot reach within the budget. Non-residual deep stacks without LN are the exception: they attenuate signal and usually lose.\n[K1015] cred=0.500 s=0.00 f=0.00 ep=0 src=[]\nResidual × depth × task: on regression, depth helps even without residuals (deeper plain beats shallower residual 24-15) because composed nonlinearities are needed for curvature; on classification, depth WITHOUT residual hurts (shallower residual beats deeper plain 19-13) while deeper residual beats shallower plain 33-14. So for CE tasks never pick a deep (≥4) plain stack over a residual one at the same optimizer; for MSE tasks a deep plain stack with ≥2 LN blocks is still competitive. Deep residual MLPs win 53% of their appearances vs 29% for deep plain.\n[K1009] cred=0.500 s=0.00 f=0.00 ep=0 src=[]\nBudget × depth reversal on synthetic TABULAR classification (1024 train rows, 2-16 Gaussian features, smooth_additive / piecewise / sparse_interaction rules): when the shared Δ≥0.1 (Δ from the core rule: Adam/RMSprop lr·T, Adagrad 2·lr·√T, SGD ~lr·T/(1−m)/100 — NOT raw lr·T for SGD/Adagrad), the boundary is already learned and test CE is set by overconfidence — prefer SHALLOW (1-3 layers), wider nets with GELU/SiLU and fewer LN: shallower wins 21-5, less-LN 17-6, smooth activation 16/16. When Δ<0.1 the normal rule holds (more LN 41-4, deeper 35-17). This 2-regime rule picks 26/32 tabular arch-only winners. XOR/spiral do NOT reverse.\n[K1011] cred=0.417 s=0.25 f=0.75 ep=0 src=[]\nBigram LM architecture (same optimizer): a GRU LM beats a post-LN causal transformer in 20 of 21 same-optimizer pairs, at both weak and strong Δ — rank the GRU first. Mechanism: the task is a first-order lookup P(y|x_t); the GRU maps the current token straight to its output state and its tanh-bounded hidden state gives near-uniform initial logits (CE≈ln V), while the post-LN transformer feeds unit-RMS features to the head (logit std ~0.6, initial CE ~ln V+0.1-0.2) and must learn to ignore attention mixing. Transformer-vs-transformer shape is Δ-dependent (see bigram transformer shape rule): fewer layers only reliably wins at 0.02≤Δ<0.1 (21/21); at Δ≥0.5 prefer smaller d_model.\n[K1006] cred=0.333 s=0.00 f=1.00 ep=0 src=[]\nMLP architecture default (regression, XOR, spiral, tabular when Δ<0.1): score each MLP = (number of LayerNorm'd blocks) + 1 if residual; pick the highest; break ties by activation on regression (ReLU/LeakyReLU > GELU > SiLU), then greater depth. Picks 91/118 arch-only winners (univariate 28/31, multivariate 28/33). Pairwise more-LN beats less-LN 61-11 (multivariate), 57-12 (univariate), 41-4 (tabular Δ<0.1); on regression LN outranks activation (smooth+more-LN beats ReLU+less-LN 30/41). Mechanism: each unnormalized layer shrinks hidden RMS ~0.5×; LN + identity paths speed an under-trained net 2-3×. Excepti",
+            "{\n \"question_id\": \"q_33b2d1\",\n \"epoch\": 1,\n \"source\": \"ranking_v3\",\n \"task\": \"ranking\",\n \"family\": \"multivariate_regression\",\n \"question\": \"You are taking the ArchitectureIQ benchmark.\\n\\nEach question describes one **dataset instance** and several **choices** (each choice is one **candidate**: model, optimizer, loss, and training budget). All choices use the same materialized dataset instance. Depending on the question, one or more training axes may vary; read each choice's complete setup and code rather than assuming an axis is shared.\\n\\nYour task is to **rank every choice** by its held-out test metric, from lowest to highest (a lower loss is better), using architecture and learning-mechanics reasoning only — no training results are provided.\\n\\nThe reply format is defined once, in the final \\\"Your answer\\\" section.\\n\\n## Dataset\\nMultivariate regression on `[0, 1]^n`: input is a vector `x ∈ R^n`, target is a scalar `y ∈ R` from a fixed symbolic expression. Train and test splits are fixed before any candidate training.\\n\\n### Synthesis (PyTorch)\\n```python\\ndef target(x: torch.Tensor) -> torch.Tensor:\\n    return x[:, 3] ** 6 + torch.cos(2 * torch.pi * x[:, 1]) * x[:, 3] + torch.abs(torch.cos(2 * torch.pi * x[:, 2])) + torch.cos(2 * torch.pi * x[:, 1]) + x[:, 0]\\n\\n\\ndef synthesize(\\n    *,\\n    train_size: int = 256,\\n    test_size: int = 256,\\n    point_seed: int = 2852770558,\\n    input_dim: int = 4,\\n    domain_low: float = 0.0,\\n    domain_high: float = 1.0,\\n) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:\\n    gen = torch.Generator().manual_seed(point_seed)\\n    train_x = torch.rand(train_size, input_dim, generator=gen) * (domain_high - domain_low) + domain_low\\n    test_x = torch.rand(test_size, input_dim, generator=gen) * (domain_high - domain_low) + domain_low\\n    train_y = target(train_x)\\n    test_y = target(test_x)\\n    return train_x, train_y.unsqueeze(-1), test_x, test_y.unsqueeze(-1)\\n```\\n\\n### Data splits and training protocol\\n- Target expression (canonical): `x3**6 + cos(2*pi*x1)*x3 + abs(cos(2*pi*x2)) + cos(2*pi*x1) + x0`\\n- Input dimension: 4\\n- Train split size: 256 fixed `(x, y)` pairs\\n- Test split size: 256 fixed `(x, y)` pairs (held out)\\n- Input domain: [0.0, 1.0] per coordinate, uniform sampling\\n- Point-sampling seed: 2852770558\\n- Evaluation: **test MSE** on the held-out split\\n- Reference device: cpu\\n\\n## Sample budget (same for all choices)\\n- training_steps: 512\\n- batch_size: 16\\n- total_samples_seen: 8192 (= training_steps × batch_size)\\n\\n## Evaluation metric\\n- Ground-truth ranking uses **test_mse** on the held-out test split.\\n- Each choice is trained independently for **10** seeds (`0`..`9`), one `torch.manual_seed(seed)` per run.\\n- Execution device: cpu.\\n- Rank all candidates by their mean test_mse over seeds; lower is better, so write the order from lowest to highest.\\n\\n## Choices\\n\\n### Choice E\\n\\n**Model (natural language)**\\n- Type: MLP\\n- Input dimension: 4\\n- Depth: 5 hidden Linear layers of width 48, between the input projection and the output head (7 nn.Linear layers in total)\\n- Width: 48 (all hidden layers)\\n- Residual connections: False\\n- Layer norm per layer: [False, False, True, True, True]\\n- Activation: leaky_relu (one activation, shared by every layer)\\n- LeakyReLU negative slope: 0.01\\n- Initialization: PyTorch Linear defaults\\n\\n**Model code**\\n```python\\nclass MLPBlock(nn.Module):\\n    \\\"\\\"\\\"One hidden layer: leaky_relu(Linear(norm(x))).\\\"\\\"\\\"\\n\\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\\n        super().__init__()\\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\\n        self.linear = nn.Linear(width, width)\\n        self.act = nn.LeakyReLU(0.01)\\n\\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\\n        h = self.linear(self.norm(x))\\n        return self.act(h)\\n\\n\\nclass Model(nn.Module):\\n    def __init__(self) -> None:\\n        super().__init__()\\n        self.net = nn.Seque"
+          ],
+          "secs": null,
+          "turn": 0,
+          "usage": {
+            "cache_creation": {
+              "ephemeral_1h_input_tokens": 0,
+              "ephemeral_5m_input_tokens": 7814
+            },
+            "cache_creation_input_tokens": 7814,
+            "cache_read_input_tokens": 0,
+            "inference_geo": "not_available",
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "service_tier": "standard"
+          }
+        },
+        {
+          "calls": [
+            {
+              "arguments": "{\"code\": \"\\nc=load_corpus(); print(len(c)); import json\\nprint(json.dumps(c[0],default=str)[:2500])\\nfrom collections import Counter\\nprint(Counter((r.get('family'),r.get('type')) for r in c))\\n\"}",
+              "name": "python"
+            }
+          ],
+          "content": null,
+          "reasoning": null,
+          "results": [
+            "490\n{\"question_id\": \"q_8f876c\", \"family\": \"univariate_regression\", \"type\": \"architecture_only\", \"budget_tier\": 32768, \"metric\": \"test_mse\", \"correct_letter\": \"C\", \"gap\": 0.07109777610749006, \"choices\": [{\"letter\": \"A\", \"model_type\": \"mlp\", \"depth\": 5, \"width\": 128, \"d_model\": null, \"num_layers\": null, \"heads\": null, \"d_ff\": null, \"residual\": true, \"layer_norm\": [true, false, false, false, false], \"activations\": null, \"optimizer\": \"SGD\", \"lr\": 0.001, \"momentum\": 0, \"weight_decay\": 0.001, \"betas\": null, \"loss\": \"mse\", \"batch_size\": 64, \"training_steps\": 512, \"total_samples_seen\": 32768, \"params\": 83201, \"mean_test_ce\": null, \"mean_test_mse\": 0.12958194091916084, \"std_test_ce\": null, \"std_test_mse\": 0.00707318254926581}, {\"letter\": \"B\", \"model_type\": \"mlp\", \"depth\": 3, \"width\": 128, \"d_model\": null, \"num_layers\": null, \"heads\": null, \"d_ff\": null, \"residual\": true, \"layer_norm\": [false, false, false], \"activations\": null, \"optimizer\": \"SGD\", \"lr\": 0.001, \"momentum\": 0, \"weight_decay\": 0.001, \"betas\": null, \"loss\": \"mse\", \"batch_size\": 64, \"training_steps\": 512, \"total_samples_seen\": 32768, \"params\": 49921, \"mean_test_ce\": null, \"mean_test_mse\": 0.11623454615473747, \"std_test_ce\": null, \"std_test_mse\": 0.007376796782091345}, {\"letter\": \"C\", \"model_type\": \"mlp\", \"depth\": 3, \"width\": 128, \"d_model\": null, \"num_layers\": null, \"heads\": null, \"d_ff\": null, \"residual\": true, \"layer_norm\": [false, true, true], \"activations\": null, \"optimizer\": \"SGD\", \"lr\": 0.001, \"momentum\": 0, \"weight_decay\": 0.001, \"betas\": null, \"loss\": \"mse\", \"batch_size\": 64, \"training_steps\": 512, \"total_samples_seen\": 32768, \"params\": 50433, \"mean_test_ce\": null, \"mean_test_mse\": 0.04513677004724741, \"std_test_ce\": null, \"std_test_mse\": 0.007576420451005903}], \"prompt\": \"You are taking the ArchitectureIQ benchmark.\\n\\nEach question describes one **dataset instance** and several **choices** (each choice is one **candidate**: model, optimizer, loss, and training budget). All choices train on the same dataset instance. Each choice's training budget (`total_samples_seen`) is stated in the prompt \\u2014 either shared across all choices or specified per choice in the Sample budget section. Your task is to identify which choice will achieve the **best test metric** on the held-out test set after its stated training budget \\u2014 using architecture and learning-mechanics reasoning only (no training results are provided).\\n\\nAnswer format is specified in the final section (\\\"Your answer\\\"): end your reply \nCounter({('bigram_lm', 'optimizer_only'): 35, ('multivariate_regression', 'architecture_only'): 33, ('univariate_regression', 'optimizer_only'): 33, ('univariate_regression', 'mixed'): 33, ('multivariate_regression', 'mixed'): 33, ('multivariate_regression', 'optimizer_only'): 33, ('synthetic_tabular_classification', 'optimizer_only'): 33, ('synthetic_tabular_classification', 'mixed'): 33, ('synthetic_tabular_classification', 'architecture_only'): 32, ('bigram_lm', 'architecture_only'): 32, ('univariate_regression', 'architecture_only'): 31, ('bigram_lm', 'mixed'): 31, ('xor_classification', 'optimizer_only'): 17, ('spiral_classification', 'optimizer_only'): 17, ('spiral_classification', 'architecture_only'): 16, ('xor_classification', 'mixed'): 16, ('xor_classification', 'architecture_only'): 16, ('spiral_classification', 'mixed'): 16})"
+          ],
+          "secs": null,
+          "turn": 1,
+          "usage": {
+            "cache_creation": {
+              "ephemeral_1h_input_tokens": 0,
+              "ephemeral_5m_input_tokens": 8565
+            },
+            "cache_creation_input_tokens": 8565,
+            "cache_read_input_tokens": 7814,
+            "inference_geo": "not_available",
+            "input_tokens": 2,
+            "output_tokens": 8,
+            "service_tier": "standard"
+          }
+        },
+        {
+          "calls": [
+            {
+              "arguments": "{\"code\": \"\\nimport itertools, re\\nfrom collections import defaultdict\\ndef loss(ch): return ch['mean_test_mse'] if ch['mean_test_mse'] is not None else ch['mean_test_ce']\\ndef score(ch): return sum(ch['layer_norm'] or [])+ (1 if ch['residual'] else 0)\\nres=defaultdict(lambda:[0,0]); res2=defaultdict(lambda:[0,0])\\nfor q in c:\\n    if q['family'] not in ('univariate_regression','multivariate_regression'): continue\\n    ch=[x for x in q['choices'] if x['model_type']=='mlp']\\n    for a,b in itertools.combinations(ch,2):\\n        if (a['optimizer'],a['lr'],a['training_steps'],a.get('momentum'))!=(b['optimizer'],b['lr'],b['training_steps'],b.get('momentum')): continue\\n        d=score(a)-score(b)\\n        if d==0:\\n            dd=a['depth']-b['depth']\\n            if dd==0: continue\\n            w = (loss(a)<loss(b))==(dd>0); res2[min(abs(dd),3)][0 if w else 1]+=1; continue\\n        w=(loss(a)<loss(b))==(d>0)\\n        res[min(abs(d),4)][0 if w else 1]+=1\\nprint('score diff -> [hit,miss]',dict(res)); print('ties, depth diff ->',dict(res2))\\n# specific: LN-heavy non-residual (>=2 LN, no res) vs residual no-LN\\nr=[0,0]\\nfor q in c:\\n    if 'regression' not in q['family']: continue\\n    ch=[x for x in q['choices'] if x['model_type']=='mlp']\\n    for a,b in itertools.permutations(ch,2):\\n        if (a['optimizer'],a['lr'],a['training_steps'])!=(b['optimizer'],b['lr'],b['training_steps']): continue\\n        if sum(a['layer_norm'])>=2 and not a['residual'] and b['residual'] and sum(b['layer_norm'])==0:\\n            r[0 if loss(a)<loss(b) else 1]+=1\\nprint('LN>=2 plain vs residual noLN',r)\\n\"}",
+              "name": "python"
+            }
+          ],
+          "content": null,
+          "reasoning": null,
+          "results": [
+            "[stderr]\nTraceback (most recent call last):\n  File \"/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_science_loop/_smoke_soa/sandbox/e0001/_summarizer/_cell.py\", line 67, in <module>\n    for q in c:\nNameError: name 'c' is not defined\n\n[exit code 1]"
+          ],
+          "secs": null,
+          "turn": 2,
+          "usage": {
+            "cache_creation": {
+              "ephemeral_1h_input_tokens": 0,
+              "ephemeral_5m_input_tokens": 1983
+            },
+            "cache_creation_input_tokens": 1983,
+            "cache_read_input_tokens": 16379,
+            "inference_geo": "not_available",
+            "input_tokens": 2,
+            "output_tokens": 5,
+            "service_tier": "standard"
+          }
+        },
+        {
+          "calls": [
+            {
+              "arguments": "{\"code\": \"\\nimport itertools\\nfrom collections import defaultdict\\nc=load_corpus()\\ndef loss(ch): return ch['mean_test_mse'] if ch['mean_test_mse'] is not None else ch['mean_test_ce']\\ndef score(ch): return sum(ch['layer_norm'] or [])+ (1 if ch['residual'] else 0)\\ndef same(a,b): return (a['optimizer'],a['lr'],a['training_steps'],a.get('momentum'))==(b['optimizer'],b['lr'],b['training_steps'],b.get('momentum'))\\nfor fam in ['univariate_regression','multivariate_regression','synthetic_tabular_classification','xor_classification','spiral_classification']:\\n    res=defaultdict(lambda:[0,0]); res2=defaultdict(lambda:[0,0]); r=[0,0]\\n    for q in c:\\n        if q['family']!=fam: continue\\n        ch=[x for x in q['choices'] if x['model_type']=='mlp']\\n        for a,b in itertools.combinations(ch,2):\\n            if not same(a,b): continue\\n            d=score(a)-score(b)\\n            if d==0:\\n                dd=a['depth']-b['depth']\\n                if dd==0: continue\\n                w=(loss(a)<loss(b))==(dd>0); res2[min(abs(dd),3)][0 if w else 1]+=1; continue\\n            w=(loss(a)<loss(b))==(d>0); res[min(abs(d),4)][0 if w else 1]+=1\\n        for a,b in itertools.permutations(ch,2):\\n            if same(a,b) and sum(a['layer_norm'])>=2 and not a['residual'] and b['residual'] and sum(b['layer_norm'])==0:\\n                r[0 if loss(a)<loss(b) else 1]+=1\\n    print(fam,'scorediff',dict(res),'tie-depth',dict(res2),'LN>=2plain vs resNoLN',r)\\n\"}",
+              "name": "python"
+            }
+          ],
+          "content": null,
+          "reasoning": null,
+          "results": [
+            "univariate_regression scorediff {1: [30, 5], 2: [21, 5], 4: [7, 0], 3: [4, 0]} tie-depth {2: [1, 1], 1: [4, 2], 3: [0, 2]} LN>=2plain vs resNoLN [2, 0]\nmultivariate_regression scorediff {2: [25, 3], 1: [31, 8], 3: [9, 1], 4: [1, 0]} tie-depth {1: [8, 4], 2: [1, 4], 3: [2, 1]} LN>=2plain vs resNoLN [5, 0]\nsynthetic_tabular_classification scorediff {4: [5, 2], 1: [19, 13], 2: [19, 3], 3: [4, 3]} tie-depth {1: [4, 8], 3: [0, 3], 2: [1, 5]} LN>=2plain vs resNoLN [2, 0]\nxor_classification scorediff {2: [5, 5], 1: [12, 6], 4: [3, 0], 3: [5, 0]} tie-depth {1: [2, 1], 3: [2, 2], 2: [3, 0]} LN>=2plain vs resNoLN [0, 0]\nspiral_classification scorediff {2: [8, 1], 4: [1, 0], 1: [11, 5], 3: [5, 0]} tie-depth {1: [5, 2], 3: [0, 4], 2: [0, 2]} LN>=2plain vs resNoLN [0, 0]"
+          ],
+          "secs": null,
+          "turn": 3,
+          "usage": {
+            "cache_creation": {
+              "ephemeral_1h_input_tokens": 0,
+              "ephemeral_5m_input_tokens": 1164
+            },
+            "cache_creation_input_tokens": 1164,
+            "cache_read_input_tokens": 18362,
+            "inference_geo": "not_available",
+            "input_tokens": 2,
+            "output_tokens": 24,
+            "service_tier": "standard"
+          }
+        },
+        {
+          "calls": [
+            {
+              "arguments": "{\"code\": \"\\nimport itertools, math\\nfrom collections import defaultdict\\nc=load_corpus()\\ndef loss(ch): return ch['mean_test_mse'] if ch['mean_test_mse'] is not None else ch['mean_test_ce']\\ndef delta(ch):\\n    o=ch['optimizer']; lr=ch['lr']; T=ch['training_steps']; m=ch.get('momentum') or 0\\n    if o in ('Adam','AdamW','RMSprop'): return lr*T\\n    if o=='Adagrad': return 2*lr*math.sqrt(T)\\n    if o=='SGD':\\n        g=0.003 if 'bigram' in ch.get('_fam','') else (0.03 if ch['loss']=='mse' and m>0 else 0.01)\\n        return lr*T*g/(1-m)\\n    return None\\nres=defaultdict(lambda:[0,0])\\nfor q in c:\\n    if q['type']=='architecture_only': continue\\n    for x in q['choices']: x['_fam']=q['family']\\n    for a,b in itertools.combinations(q['choices'],2):\\n        da,db=delta(a),delta(b)\\n        if not da or not db or da==db: continue\\n        r=max(da,db)/min(da,db)\\n        k='1-1.5' if r<1.5 else '1.5-4' if r<4 else '>=4'\\n        w=(loss(a)<loss(b))==(da>db); res[(q['type'],k)][0 if w else 1]+=1\\nfor k in sorted(res): print(k,res[k], round(res[k][0]/sum(res[k]),2))\\n\"}",
+              "name": "python"
+            }
+          ],
+          "content": null,
+          "reasoning": null,
+          "results": [
+            "('mixed', '1-1.5') [18, 8] 0.69\n('mixed', '1.5-4') [91, 34] 0.73\n('mixed', '>=4') [268, 23] 0.92\n('optimizer_only', '1-1.5') [17, 8] 0.68\n('optimizer_only', '1.5-4') [88, 10] 0.9\n('optimizer_only', '>=4') [328, 27] 0.92"
+          ],
+          "secs": null,
+          "turn": 4,
+          "usage": {
+            "cache_creation": {
+              "ephemeral_1h_input_tokens": 0,
+              "ephemeral_5m_input_tokens": 1223
+            },
+            "cache_creation_input_tokens": 1223,
+            "cache_read_input_tokens": 19526,
+            "inference_geo": "not_available",
+            "input_tokens": 2,
+            "output_tokens": 8,
+            "service_tier": "standard"
+          }
+        },
+        {
+          "calls": [
+            {
+              "arguments": "{\"claim_ids\": [\"K1001\"], \"text\": \"CORE RULE (all families, T=256-2048; every task is under-trained): rank choices by cumulative per-parameter displacement Δ. Adam/AdamW/RMSprop: Δ≈lr·T. Adagrad: Δ≈2·lr·√T. SGD: Δ≈lr·T·|g|/(1−m), |g|≈0.01 (bigram LM 0.003; MSE+momentum 0.03, K1019). For RANKING questions sort ALL choices by Δ (largest Δ = lowest loss); break Δ ties with architecture rules (MLP: LN/residual score K1006; bigram: GRU>transformer K1011). Corpus pairwise accuracy of Δ order: ratio ≥4× 92% (596/646); 1.5-4× 90% optimizer-only, 73% mixed; <1.5× only 69%. Largest-Δ wins ~85% of optimizer-only/mixed selects (after lr-ceiling exceptions K1004).\", \"reason\": \"Epoch 1: q_aa66e7 (bigram ranking) gold E<A<B<D<C equals exact Δ order (RMSprop 3e-4·512=0.154 ×2, Adagrad 2·0.003·√512=0.136, AdamW 1e-4→0.051, 3e-5→0.015) with GRU>transformer at the tie — solver didn't retrieve the KB. Rewrote to add explicit RANKING usage + corpus pairwise accuracy by Δ ratio (backtest over 490-question corpus, opt-only/mixed pairs).\", \"mechanism\": \"Under-trained regime: loss falls monotonically with distance travelled from init; adaptive optimizers normalise per-parameter steps to ~lr, so displacement ≈ lr·T (Adagrad decays as 1/√t; SGD scales with raw |g|). Predicts where it breaks: (i) too-large steps overshoot (lr ceiling, K1004), (ii) near-equal Δ (<1.5×) lets architecture conditioning dominate, (iii) saturated tasks (tabular Δ≥0.1, K1009) where overfitting/overconfidence decides.\", \"regime\": {\"type\": [\"optimizer_only\", \"mixed\"], \"steps\": [256, 2048], \"optimizer\": [\"Adam\", \"AdamW\", \"RMSprop\", \"Adagrad\", \"SGD\"], \"note\": \"all families; pairwise backtest on 490-question corpus\"}, \"phase\": \"Δ-order pairwise hit: ratio≥4×: opt-only 328/355, mixed 268/291; 1.5-4×: opt-only 88/98, mixed 91/125; <1.5×: 35/51 → within 1.5× defer to architecture rules.\"}",
+              "name": "merge_claims"
+            },
+            {
+              "arguments": "{\"claim_ids\": [\"K1006\"], \"text\": \"MLP architecture default (regression, XOR, spiral; tabular only when Δ<0.1), same optimizer/lr/T: score each MLP = (# LayerNorm'd blocks) + 1 if residual; higher score = lower loss. Use it as a FULL RANKING rule. Corpus same-optimizer MLP pairs ordered by score: regression 128/150 (85%; gap 1: 61/74, gap≥2: 67/76), spiral 25/31, XOR 25/36, tabular 47/68. A plain stack with ≥2 LN blocks beats a residual no-LN MLP 9/9 (q_33b2d1 exact: 3-LN plain > residual LeakyReLU > 1-LN SiLU > residual SiLU > plain 0-LN). Score ties: on regression break by activation (ReLU/LeakyReLU > GELU > SiLU); depth is a weak tie-break (regression deeper 16/32; tabular/spiral SHALLOWER wins 24/34; XOR deeper 7/10).\", \"reason\": \"q_33b2d1 (only miss this epoch, score 0.5) would have been ranked exactly by K1006's score+activation tie-break; solver didn't retrieve it. Rewrote with ranking keywords, per-family pairwise backtest (corpus same-optimizer MLP pairs), the LN≥2-plain vs residual-noLN 9/9 case, and corrected the depth tie-break (it is a coin flip on regression and reversed on tabular/spiral).\", \"mechanism\": \"With PyTorch default init each unnormalised layer shrinks hidden RMS ~0.5×, so deep plain stacks pass tiny signals/gradients and train slowly; LN restores unit scale at every block (fixes scale more completely than one identity path), residuals preserve signal. Under-trained nets gain 2-3× speed. Predicts breaks: once trained (tabular Δ≥0.1, K1009) the edge reverses; equal-score depth adds no conditioning benefit, so depth only helps where composition is needed.\", \"regime\": {\"family\": [\"univariate_regression\", \"multivariate_regression\", \"spiral_classification\", \"xor_classification\", \"synthetic_tabular_classification\"], \"type\": [\"architecture_only\", \"mixed\"], \"model_type\": [\"mlp\"], \"steps\": [256, 2048], \"note\": \"pairs with identical optimizer/lr/T; tabular only when shared Δ<0.1\"}, \"phase\": \"score gap≥2: regression 67/76, spiral 14/15; gap 1: regression 61/74, tabular only 19/32 (weak); tie → depth: regression 16/32, tabular+spiral shallower 24/34.\"}",
+              "name": "merge_claims"
+            }
+          ],
+          "content": null,
+          "reasoning": null,
+          "results": [
+            "merged into K1001 (s=0.00, f=0.00)",
+            "merged into K1006 (s=0.00, f=1.00)"
+          ],
+          "secs": null,
+          "turn": 5,
+          "usage": {
+            "cache_creation": {
+              "ephemeral_1h_input_tokens": 0,
+              "ephemeral_5m_input_tokens": 1882
+            },
+            "cache_creation_input_tokens": 1882,
+            "cache_read_input_tokens": 20749,
+            "inference_geo": "not_available",
+            "input_tokens": 2,
+            "output_tokens": 4,
+            "service_tier": "standard"
+          }
+        },
+        {
+          "calls": [
+            {
+              "arguments": "{\"claim_id\": \"K1001\", \"support\": 1, \"failure\": 0, \"reason\": \"q_aa66e7 gold ranking equals exact Δ order (0.154,0.154,0.136,0.051,0.015).\"}",
+              "name": "adjust_counts"
+            },
+            {
+              "arguments": "{\"claim_id\": \"K1006\", \"support\": 2, \"failure\": 1, \"reason\": \"q_33b2d1 gold E<C<A<D<B equals K1006 score+activation ordering exactly; q_039379 retrieved K1006 and its Δ<0.1 LN/residual preference picked gold C.\"}",
+              "name": "adjust_counts"
+            },
+            {
+              "arguments": "{\"claim_id\": \"K1011\", \"support\": 1.25, \"failure\": 0.75, \"reason\": \"q_aa66e7: GRU (E) beat transformer (A) at identical RMSprop 3e-4, T=512, as the claim predicts.\"}",
+              "name": "adjust_counts"
+            },
+            {
+              "arguments": "{\"claim_id\": \"K1014\", \"support\": 1, \"failure\": 1, \"reason\": \"q_039379 (tabular smooth_additive, Δ=0.077<0.1): retrieved, deeper residual/LN choice won as K1014 predicts for smooth_additive.\"}",
+              "name": "adjust_counts"
+            }
+          ],
+          "content": null,
+          "reasoning": null,
+          "results": [
+            "adjusted K1001\n[budget] 5 tool call(s) left: if you have backtested operations, issue them now; otherwise finish (no edit is a valid outcome).",
+            "adjusted K1006\n[budget] 4 tool call(s) left: if you have backtested operations, issue them now; otherwise finish (no edit is a valid outcome).",
+            "adjusted K1011\n[budget] 3 tool call(s) left: if you have backtested operations, issue them now; otherwise finish (no edit is a valid outcome).",
+            "adjusted K1014\n[budget] 2 tool call(s) left: if you have backtested operations, issue them now; otherwise finish (no edit is a valid outcome)."
+          ],
+          "secs": null,
+          "turn": 6,
+          "usage": {
+            "cache_creation": {
+              "ephemeral_1h_input_tokens": 0,
+              "ephemeral_5m_input_tokens": 4455
+            },
+            "cache_creation_input_tokens": 4455,
+            "cache_read_input_tokens": 22631,
+            "inference_geo": "not_available",
+            "input_tokens": 2,
+            "output_tokens": 8,
+            "service_tier": "standard"
+          }
+        },
+        {
+          "calls": [
+            {
+              "arguments": "{\"science\": \"Strongest current laws:\\n1. Under-training law (K1001): rank by displacement Δ (Adam-family lr·T, Adagrad 2·lr·√T, SGD lr·T·|g|/(1−m)). Δ order is right in 92% of corpus pairs at ratio ≥4×, 73-90% at 1.5-4×, and only 69% below 1.5×; below that, architecture decides. Ranking questions: sort every choice by Δ.\\n2. MLP conditioning score (K1006): #LN blocks + 1 if residual, higher is better, at the same optimizer, lr and T. It orders 85% of regression MLP pairs (128/150), spiral 25/31, XOR 25/36 and tabular 47/68 (Δ<0.1 only). A plain stack with ≥2 LN blocks beat a residual no-LN MLP 9/9. When scores tie, depth is a coin flip on regression (16/32), and on tabular and spiral the shallower net wins (24/34).\\n3. Saturation reversal on tabular data (K1009): when Δ≥0.1, the shallow, wide, less-LN, smooth-activation net wins (shallower 21-5); when Δ<0.1 the conditioning score holds (more-LN 41-4).\\n4. Bigram LM (K1011, K1013, K1017): a GRU beats a post-LN transformer at the same optimizer; transformer shape depends on Δ.\\nWhat changed this epoch: 4 records, mean score 0.875. The one miss (q_33b2d1, score 0.5) and a solved bigram ranking (q_aa66e7) each match an existing claim exactly (K1006 and K1001+K1011), but solvers did not retrieve the KB in 3 of 4 questions. So nothing new was added. I rewrote K1001 and K1006 so they are easier to find (wording about RANKING / full ordering) and filled in their mechanism, regime and phase fields from corpus pairwise backtests. I also corrected K1006's depth tie-break, which the corpus shows doesn't work. Support counts were updated for K1001, K1006, K1011 and K1014. The main open problem is getting solvers to query the KB, not missing laws.\"}",
+              "name": "finish"
+            }
+          ],
+          "content": null,
+          "reasoning": null,
+          "results": [
+            "ok"
+          ],
+          "secs": null,
+          "turn": 7,
+          "usage": {
+            "cache_creation": {
+              "ephemeral_1h_input_tokens": 0,
+              "ephemeral_5m_input_tokens": 1258
+            },
+            "cache_creation_input_tokens": 1258,
+            "cache_read_input_tokens": 27086,
+            "inference_geo": "not_available",
+            "input_tokens": 2,
+            "output_tokens": 24,
+            "service_tier": "standard"
+          }
+        },
+        {
+          "calls": [],
+          "content": "I made no new claims this epoch. The one miss was a retrieval problem, not a missing law. I rewrote two claims so solvers are more likely to find them and corrected one weak tie-break rule.\n\n**What happened:** 4 questions, mean score 0.875. The only miss was q_33b2d1 (multivariate regression ranking, score 0.5). Existing claim K1006 would have ranked it exactly (E<C<A<D<B), but the solver never looked at the knowledge base. In the bigram ranking q_aa66e7, which the solver got right, the gold order also matched K1001's displacement rule (Δ, roughly how far each parameter moves during training) exactly, with K1011's \"GRU beats transformer\" breaking the tie. Solvers retrieved nothing from the knowledge base in 3 of the 4 questions.\n\n**Edits:**\n- **K1001 (rank by Δ), rewritten:** it now says to sort every choice by Δ in ranking questions. I backtested it on the corpus of 490 older questions, comparing pairs of choices. Δ order is right 92% of the time when one Δ is at least 4× the other, 73–90% at 1.5–4×, and only 69% below 1.5×. Below that, architecture decides. I also filled in the mechanism, regime and phase fields.\n- **K1006 (MLP score = number of LayerNorm blocks, plus 1 if residual), rewritten as a full ranking rule:** comparing pairs with the same optimizer, it orders regression 128/150 (85%), spiral 25/31, XOR 25/36 and tabular 47/68. A plain stack with at least 2 LayerNorm blocks beat a residual MLP with none in 9/9 pairs.\n- **K1006 tie-break fixed:** the old \"prefer the deeper net when scores tie\" rule doesn't hold. On regression it is a coin flip (16/32), and on tabular and spiral data the shallower net wins 24/34.\n- **Support counts raised** for K1001, K1006, K1011 and K1014, citing this epoch's questions.\n\nI spent nothing on the research assistant and added no claims, because the evidence pointed to retrieval rather than knowledge gaps. The biggest open problem is that solvers often don't query the knowledge base at all. The rewrites only make claims easier to find when they do search; they can't make solvers search.",
+          "reasoning": null,
+          "results": [],
+          "secs": null,
+          "turn": 8,
+          "usage": {
+            "cache_creation": {
+              "ephemeral_1h_input_tokens": 0,
+              "ephemeral_5m_input_tokens": 792
+            },
+            "cache_creation_input_tokens": 792,
+            "cache_read_input_tokens": 28344,
+            "inference_geo": "not_available",
+            "input_tokens": 2,
+            "output_tokens": 3,
+            "service_tier": "standard"
+          }
+        }
+      ],
+      "summarizer_input": "Epoch 1: 4 records, mean score 0.875.\n\n### q_039379 (arch170, select, synthetic_tabular_classification) score=1.00 gold=C pred=C cited=none retrieved=K1006,K1009,K1014\nexplanation: Choice C best matches the smooth nonlinear boundary while remaining trainable at the limited budget: its additional hidden layer provides greater compositional capacity, and the LayerNorm plus residual path improves optimization and signal propagation. Choice B is shallower and lacks both normalization and residual stabilization, while A has a residual path but uses less-smooth LeakyReLU and no LayerNorm, making it less effective for this smooth additive rule.\ncomment: Choice C was decided by the low effective budget (lr × steps = 0.0768), where the deeper, residual, partially LayerNorm-equipped GELU network is better optimized and more expressive for the smooth nonlinear boundary. K1006 and K1014 supported the under-trained preference for normalization/residual depth; K1009 was potentially misleading because its shallow-wide reversal applies when the effective budget reaches the higher regime (Δ ≥ 0.1), which this question does not.\nhypothesis: -\n\n### q_aa66e7 (ranking_v2, ranking, bigram_lm) score=1.00 gold=E<A<B<D<C pred=E<A<B<D<C cited=none retrieved=none\nexplanation: <answer>E<A<B<D<C</answer>\ncomment: The decisive factor was optimization speed on a memoryless bigram target, rather than architectural capacity. RMSprop at 3e-4 gave both models enough progress within 512 updates; the GRU avoided irrelevant positional and attention structure, placing E ahead of A. Transformer Adagrad at 0.003 was expected to make more early progress than the GRU’s AdamW at 1e-4, yielding B ahead of D. The deeper transformer’s AdamW rate of 3e-5 was too conservative for this budget, making C last. No KB claims were consulted. This is an explanation of this instance, not a backtested general optimizer ranking.\nhypothesis: -\n\n### q_33b2d1 (ranking_v3, ranking, multivariate_regression) score=0.50 gold=E<C<A<D<B pred=C<E<A<B<D cited=none retrieved=none\nexplanation: <answer>C<E<A<B<D</answer>\ncomment: I underestimated normalization-assisted depth in E and overestimated unnormalized depth in B. E’s three late LayerNorm blocks restore feature scale and support nonlinear refinement of the cosine interaction and absolute-cosine term; C’s residual path helps optimization but supplies less compositional depth. D preserves signals through its shallow residual block, whereas B repeatedly contracts them through default-initialized GELU layers. No KB claim influenced my original answer; K1006–K1008 describe these mechanisms. A matched-optimizer/LR/budget corpus backtest supported normalized-deep over shallow-residual in 2/2 comparisons and shallow-residual over unnormalized-deep in 1/1. Lab evidence was sparse and mixed, so these checks do not establish a reliable general rule.\nhypothesis: -\n\n### q_7476fe (dataflip500, select, spiral_classification) score=1.00 gold=B pred=B cited=none retrieved=none\nexplanation: B is the best fit for this finite-budget spiral task: its three nonlinear stages provide capacity to model the interleaving arms, while residual connections support gradient flow at the small SGD learning rate. SiLU also supplies smooth, magnitude-dependent nonlinearities useful for a boundary that varies with both angle and radius. A preserves radial information but has fewer nonlinear stages, making the winding boundary harder to learn within 2048 updates. C adds depth, but its early LayerNorm suppresses feature magnitude—an important cue for distinguishing successive spiral turns—and its non-residual stack makes recovering and learning that dependence harder.\ncomment: B won with a deeper residual SiLU network under the small-learning-rate SGD budget. Its smooth, magnitude-dependent features and residual gradient paths plausibly help learn a boundary depending jointly on angle and radius. A has fewer nonlinear stages; C’s early LayerNorm may weaken radial information and lacks residual paths. These are explanatory hypotheses, not isolated causal findings: activation, depth, normalization, width, and residual structure differ across choices. No KB claims were consulted, and no new general rule was backtested.\nhypothesis: -\n\n## Claims cited this epoch (count)\n{}\n\n## Low-credibility candidates (cred<0.45, evidence>=3)\nnone\n\n## KB index (19 claims; use kb_view for full text; [MRPR] = has mechanism/regime/phase/refines)\nK1001 cred=0.50 s=0.0 f=0.0 ep=0 | CORE RULE (all families, T=256-2048 steps; every task here is under-trained): rank choices by cumulative per-p\nK1002 cred=0.50 s=0.0 f=0.0 ep=0 | Adagrad conversion (any family): because Adagrad's step decays as lr/√t, it matches Adam only when its lr is ~\nK1003 cred=0.50 s=0.0 f=0.0 ep=0 | SGD (all families): plain SGD (momentum 0) at lr≤3e-3 is nearly frozen (wins ~8% of its appearances; in LMs em\nK1004 cred=0.50 s=0.0 f=0.0 ep=0 | LR-ceiling exceptions to the Δ rule: (a) RMSprop at lr≥1e-3 on MSE regression (no momentum averaging, zero-ini\nK1005 cred=0.50 s=0.0 f=0.0 ep=0 | Second-order optimizer knobs are noise at these budgets: weight decay 0-1e-3 changes loss <1% (same-arch pairs\nK1006 cred=0.33 s=0.0 f=1.0 ep=0 | MLP architecture default (regression, XOR, spiral, tabular when Δ<0.1): score each MLP = (number of LayerNorm'\nK1007 cred=0.50 s=0.0 f=0.0 ep=0 | Regression depth × residual (uni/multivariate MSE, any budget): a deeper residual MLP beats a shallower non-re\nK1008 cred=0.50 s=0.0 f=0.0 ep=0 | Activation × task: on MSE regression prefer ReLU/LeakyReLU > GELU > SiLU. Pairwise vs other activations (same \nK1009 cred=0.50 s=0.0 f=0.0 ep=0 | Budget × depth reversal on synthetic TABULAR classification (1024 train rows, 2-16 Gaussian features, smooth_a\nK1010 cred=0.50 s=0.0 f=0.0 ep=0 | XOR and two-spiral classification (zero linear signal, chance CE=ln2≈0.693): loss stays on the chance plateau \nK1011 cred=0.42 s=0.2 f=0.8 ep=0 | Bigram LM architecture (same optimizer): a GRU LM beats a post-LN causal transformer in 20 of 21 same-optimize\nK1012 cred=0.50 s=0.0 f=0.0 ep=0 | When Δs are close (mixed questions, rankings): a ≥4× Δ gap beats architecture (higher Δ wins 35/40 even vs a n\nK1013 cred=0.50 s=0.0 f=0.0 ep=0 | Bigram LM optimizer sweet spot: labels are sampled from P(y|x), so gradients carry irreducible noise and the a\nK1014 cred=0.33 s=0.0 f=1.0 ep=0 | Dataset structure × depth (data-flip cue): the deeper-is-better preference (under Δ<0.1) is strong for smooth/\nK1015 cred=0.50 s=0.0 f=0.0 ep=0 | Residual × depth × task: on regression, depth helps even without residuals (deeper plain beats shallower resid\nK1016 cred=0.50 s=0.0 f=0.0 ep=0 | Capacity is not the bottleneck: at these budgets parameter count and width barely predict the winner — do not \nK1017 cred=0.50 s=0.0 f=0.0 ep=0 | Bigram LM transformer SHAPE (transformer vs transformer, same optimizer/lr/T) flips with Δ (core-rule units). \nK1018 cred=0.50 s=0.0 f=0.0 ep=0 | XOR with ≥8 input features (≥6 pure-noise distractors) once trained (shared Δ≥0.05, e.g. Adam-family lr·T≥0.05\nK1019 cred=0.50 s=0.0 f=0.0 ep=0 | SGD gradient-scale calibration for the Δ rule (K1001 assumes raw |g|≈0.01), fit on 368 SGD-vs-adaptive pairs. \n\n## SoA readout of the current KB (diagnostic, not a target)\nn_claims=19, mechanism_coverage=0.0, regime_annotation=0.0, regime_completeness_cells=0.0, regime_completeness_optimizer=0.0, regime_completeness_activation=0.0, global_claims=19, conditional_claims=0, refinement_depth_max=1, phase_mapped=0.0\nuncovered (family/type) cells: bigram_lm/architecture_only, bigram_lm/mixed, bigram_lm/optimizer_only, multivariate_regression/architecture_only, multivariate_regression/mixed, multivariate_regression/optimizer_only, spiral_classification/architecture_only, spiral_classification/mixed, spiral_classification/optimizer_only, synthetic_tabular_classification/architecture_only, synthetic_tabular_classification/mixed, synthetic_tabular_classification/optimizer_only, univariate_regression/architecture_only, univariate_regression/mixed, univariate_regression/optimizer_only, xor_classification/architecture_only, xor_classification/mixed, xor_classification/optimizer_only"
+    }
+  ],
+  "evalNote": "功能验证或未完成运行不用于推断收益。",
+  "evals": {},
+  "flow": [
+    "① 解题：题目 + 可选 KB 工具；每题使用冻结版本，答案尚未揭示。",
+    "② 发现：揭示答案，提出可检查的规律与研究问题。",
+    "③ 总结与研究：整理本轮记录，修订、增加、合并与撤回 claim。",
+    "④ KB 快照：依据保存的评测记录选择候选或现任版本。"
+  ],
+  "home": "../index.html",
+  "job_traces": {},
+  "jobs": [],
+  "latest_saved_science": {},
+  "prompts": {},
+  "reports": {},
+  "run": "_smoke_soa",
+  "snaps": [
+    {
+      "base": "kb_0000",
+      "candidate": false,
+      "claimDetails": {
+        "K1001": {
+          "created_epoch": 0,
+          "merged_from": [
+            "K0019",
+            "K0009",
+            "K0031",
+            "K0016",
+            "K0124",
+            "K0010",
+            "K0073",
+            "K0101",
+            "K0212",
+            "K0228",
+            "K0138",
+            "K0166",
+            "K0020",
+            "K0184"
+          ],
+          "origin": "seed:seed_distill_v1",
+          "sources": []
+        },
+        "K1002": {
+          "created_epoch": 0,
+          "merged_from": [
+            "K0156",
+            "K0070",
+            "K0069",
+            "K0132",
+            "K0198"
+          ],
+          "origin": "seed:seed_distill_v1",
+          "sources": []
+        },
+        "K1003": {
+          "created_epoch": 0,
+          "merged_from": [
+            "K0012",
+            "K0174"
+          ],
+          "origin": "seed:seed_distill_v1",
+          "sources": []
+        },
+        "K1004": {
+          "created_epoch": 0,
+          "merged_from": [
+            "K0139"
+          ],
+          "origin": "seed:seed_distill_v1",
+          "sources": []
+        },
+        "K1005": {
+          "created_epoch": 0,
+          "merged_from": [
+            "K0022",
+            "K0015"
+          ],
+          "origin": "seed:seed_distill_v1",
+          "sources": []
+        },
+        "K1006": {
+          "created_epoch": 0,
+          "merged_from": [
+            "K0002",
+            "K0078",
+            "K0268",
+            "K0249",
+            "K0256"
+          ],
+          "origin": "seed:seed_distill_v1",
+          "sources": []
+        },
+        "K1007": {
+          "created_epoch": 0,
+          "merged_from": [
+            "K0214",
+            "K0236",
+            "K0290"
+          ],
+          "origin": "seed:seed_distill_v1",
+          "sources": []
+        },
+        "K1008": {
+          "created_epoch": 0,
+          "merged_from": [],
+          "origin": "seed:seed_distill_v1",
+          "sources": []
+        },
+        "K1009": {
+          "created_epoch": 0,
+          "merged_from": [
+            "K0259",
+            "K0126"
+          ],
+          "origin": "seed:seed_distill_v1",
+          "sources": []
+        },
+        "K1010": {
+          "created_epoch": 0,
+          "merged_from": [
+            "K0044",
+            "K0030",
+            "K0038",
+            "K0032",
+            "K0164"
+          ],
+          "origin": "seed:seed_distill_v1",
+          "sources": []
+        },
+        "K1011": {
+          "created_epoch": 0,
+          "merged_from": [
+            "K0238",
+            "K0181",
+            "K0077",
+            "K0232",
+            "K0052",
+            "K0104"
+          ],
+          "origin": "seed:seed_distill_v1",
+          "sources": []
+        },
+        "K1012": {
+          "created_epoch": 0,
+          "merged_from": [],
+          "origin": "seed:seed_distill_v1",
+          "sources": []
+        },
+        "K1013": {
+          "created_epoch": 0,
+          "merged_from": [],
+          "origin": "seed:seed_distill_v1",
+          "sources": []
+        },
+        "K1014": {
+          "created_epoch": 0,
+          "merged_from": [],
+          "origin": "seed:seed_distill_v1",
+          "sources": []
+        },
+        "K1015": {
+          "created_epoch": 0,
+          "merged_from": [],
+          "origin": "seed:seed_distill_v1",
+          "sources": []
+        },
+        "K1016": {
+          "created_epoch": 0,
+          "merged_from": [],
+          "origin": "seed:seed_distill_v1",
+          "sources": []
+        },
+        "K1017": {
+          "created_epoch": 0,
+          "merged_from": [],
+          "origin": "c000004",
+          "sources": []
+        },
+        "K1018": {
+          "created_epoch": 0,
+          "merged_from": [],
+          "origin": "c000005",
+          "sources": []
+        },
+        "K1019": {
+          "created_epoch": 0,
+          "merged_from": [],
+          "origin": "c000006",
+          "sources": []
+        }
+      },
+      "claims": [
+        [
+          "K1001",
+          0.0,
+          0.0,
+          0.5,
+          0,
+          0,
+          0,
+          "seed:seed_distill_v1"
+        ],
+        [
+          "K1002",
+          0.0,
+          0.0,
+          0.5,
+          1,
+          0,
+          0,
+          "seed:seed_distill_v1"
+        ],
+        [
+          "K1003",
+          0.0,
+          0.0,
+          0.5,
+          2,
+          0,
+          0,
+          "seed:seed_distill_v1"
+        ],
+        [
+          "K1004",
+          0.0,
+          0.0,
+          0.5,
+          3,
+          0,
+          0,
+          "seed:seed_distill_v1"
+        ],
+        [
+          "K1005",
+          0.0,
+          0.0,
+          0.5,
+          4,
+          0,
+          0,
+          "seed:seed_distill_v1"
+        ],
+        [
+          "K1006",
+          0.0,
+          1.0,
+          0.3333333333333333,
+          5,
+          0,
+          0,
+          "seed:seed_distill_v1"
+        ],
+        [
+          "K1007",
+          0.0,
+          0.0,
+          0.5,
+          6,
+          0,
+          0,
+          "seed:seed_distill_v1"
+        ],
+        [
+          "K1008",
+          0.0,
+          0.0,
+          0.5,
+          7,
+          0,
+          0,
+          "seed:seed_distill_v1"
+        ],
+        [
+          "K1009",
+          0.0,
+          0.0,
+          0.5,
+          8,
+          0,
+          0,
+          "seed:seed_distill_v1"
+        ],
+        [
+          "K1010",
+          0.0,
+          0.0,
+          0.5,
+          9,
+          0,
+          0,
+          "seed:seed_distill_v1"
+        ],
+        [
+          "K1011",
+          0.25,
+          0.75,
+          0.4166666666666667,
+          10,
+          0,
+          0,
+          "seed:seed_distill_v1"
+        ],
+        [
+          "K1012",
+          0.0,
+          0.0,
+          0.5,
+          11,
+          0,
+          0,
+          "seed:seed_distill_v1"
+        ],
+        [
+          "K1013",
+          0.0,
+          0.0,
+          0.5,
+          12,
+          0,
+          0,
+          "seed:seed_distill_v1"
+        ],
+        [
+          "K1014",
+          0.0,
+          1.0,
+          0.3333333333333333,
+          13,
+          0,
+          0,
+          "seed:seed_distill_v1"
+        ],
+        [
+          "K1015",
+          0.0,
+          0.0,
+          0.5,
+          14,
+          0,
+          0,
+          "seed:seed_distill_v1"
+        ],
+        [
+          "K1016",
+          0.0,
+          0.0,
+          0.5,
+          15,
+          0,
+          0,
+          "seed:seed_distill_v1"
+        ],
+        [
+          "K1017",
+          0.0,
+          0.0,
+          0.5,
+          16,
+          0,
+          0,
+          "c000004"
+        ],
+        [
+          "K1018",
+          0.0,
+          0.0,
+          0.5,
+          17,
+          0,
+          0,
+          "c000005"
+        ],
+        [
+          "K1019",
+          0.0,
+          0.0,
+          0.5,
+          18,
+          0,
+          0,
+          "c000006"
+        ]
+      ],
+      "complete": true,
+      "epoch": 0,
+      "label": "kb_0000",
+      "render": "[K1001] CORE RULE (all families, T=256-2048 steps; every task here is under-trained): rank choices by cumulative per-parameter displacement Δ. Adam/AdamW/RMSprop: Δ≈lr·T. Adagrad (zero-init accumulator, steps decay ~lr/√t): Δ≈2·lr·√T. SGD: Δ≈lr·T·|g|/(1−m) with raw grad |g|≈0.01 (bigram LM 0.003, MSE regression with momentum 0.03 — K1019), i.e. plain SGD ≈ Adam at lr/100, SGD m=0.9 ≈ Adam at lr/10. The largest-Δ choice wins 85% of optimizer-only and ~85% of mixed questions (after the lr-ceiling exceptions); a 1.5-3× Δ edge usually beats any architecture advantage. Use architecture rules only to break Δ ties (same optimizer+lr) or in architecture-only questions.\n[K1002] Adagrad conversion (any family): because Adagrad's step decays as lr/√t, it matches Adam only when its lr is ~√T/2 (8-23×) larger. Same architecture, lr_Adagrad/lr_Adam ≤3× → Adam/AdamW wins 65/70; =10× → coin flip (4-3); ≥30× → Adagrad wins 9/9. Within Adagrad the larger lr always wins (40/41 pairs; lr=3e-3 is never too big — the decay is a built-in anneal). Adagrad at lr≤1e-4 is effectively frozen (Δ≤0.01) and loses to almost any adaptive choice with lr≥3e-5·√T/2.\n[K1003] SGD (all families): plain SGD (momentum 0) at lr≤3e-3 is nearly frozen (wins ~8% of its appearances; in LMs embedding rows barely move, CE stays ≈ln V). SGD momentum 0.9 behaves like Adam at ~lr/10: so SGD m=0.9 lr 1e-3-3e-3 ≈ Adam 1e-4-3e-4 and is a real contender — it beats Adagrad ≤1e-3, Adam/RMSprop ≤3e-5-1e-4 and unstable RMSprop 3e-3 (e.g. univariate MSE 6e-5 vs 0.03) — but SGD m=0.9 at lr≤3e-4 loses to Adam/RMSprop at the same lr (10× smaller Δ). Family calibration (SGD calibration rule): bigram LM ≈ Adam at lr/30 (weaker), MSE regression ≈ Adam at lr/3 (stronger). Compute Δ with momentum.\n[K1004] LR-ceiling exceptions to the Δ rule: (a) RMSprop at lr≥1e-3 on MSE regression (no momentum averaging, zero-init square-avg inflates early steps up to ~10×) is noisy/unstable: vs choices with ≥3× smaller Δ it loses 12/27 at 3e-3 and 3/4 at 1e-3 (univariate); prefer Adam/AdamW at the same lr (Adam 3e-3 loses only 2/35) or RMSprop ≤3e-4. (b) Post-LN transformer LMs (nn.TransformerEncoderLayer default, no warmup) with Adam/AdamW/RMSprop lr≥1e-3 lose 14/25 to lr 1e-4-3e-4, worst for d_model=128 or T≥1024; GRU LMs tolerate 1e-3-3e-3 (high lr wins 12/17). (c) On MLP classification and Adam regression, lr 3e-3 is safe — take the larger Δ.\n[K1005] Second-order optimizer knobs are noise at these budgets: weight decay 0-1e-3 changes loss <1% (same-arch pairs: higher wd 3 wins/10 losses, all within 1%); Adam vs AdamW at equal lr/betas is a coin flip (5-5); beta2 0.95 vs 0.999 is ~even (7-4). Never let these override a lr·T difference; in rankings, order such near-twins by architecture or leave them adjacent.\n[K1006] MLP architecture default (regression, XOR, spiral, tabular when Δ<0.1): score each MLP = (number of LayerNorm'd blocks) + 1 if residual; pick the highest; break ties by activation on regression (ReLU/LeakyReLU > GELU > SiLU), then greater depth. Picks 91/118 arch-only winners (univariate 28/31, multivariate 28/33). Pairwise more-LN beats less-LN 61-11 (multivariate), 57-12 (univariate), 41-4 (tabular Δ<0.1); on regression LN outranks activation (smooth+more-LN beats ReLU+less-LN 30/41). Mechanism: each unnormalized layer shrinks hidden RMS ~0.5×; LN + identity paths speed an under-trained net 2-3×. Exception: XOR with ≥8 input features at Δ≥0.05 — smooth activation decides (K1018).\n[K1007] Regression depth × residual (uni/multivariate MSE, any budget): a deeper residual MLP beats a shallower non-residual one 32-2; deep-narrow beats shallow-wide at similar params 70-32 (51-19 when lr·T<0.1); at equal depth extra width is a coin flip (5-5). Oscillatory/composite targets (sin(2πx)…, cos(2π sin…)) amplify the depth advantage: composition of 4-5 normalized residual blocks generates high-frequency curvature that 1-2 layer nets cannot reach within the budget. Non-residual deep stacks without LN are the exception: they attenuate signal and usually lose.\n[K1008] Activation × task: on MSE regression prefer ReLU/LeakyReLU > GELU > SiLU. Pairwise vs other activations (same optimizer): LeakyReLU wins 51/77, ReLU 42/67, GELU 30/64, SiLU only 29/96. SiLU/GELU have slope ~0.5 near 0 (silu(x)≈x/2), so stacked blocks attenuate signal/gradient and fit kinks/polynomials less precisely. The ranking flips for tabular classification once well-trained (see tabular rule): there GELU/SiLU win 16/16 vs ReLU-family. On XOR/spiral activation is a weak factor — decide by LN/residual/depth.\n[K1009] Budget × depth reversal on synthetic TABULAR classification (1024 train rows, 2-16 Gaussian features, smooth_additive / piecewise / sparse_interaction rules): when the shared Δ≥0.1 (Δ from the core rule: Adam/RMSprop lr·T, Adagrad 2·lr·√T, SGD ~lr·T/(1−m)/100 — NOT raw lr·T for SGD/Adagrad), the boundary is already learned and test CE is set by overconfidence — prefer SHALLOW (1-3 layers), wider nets with GELU/SiLU and fewer LN: shallower wins 21-5, less-LN 17-6, smooth activation 16/16. When Δ<0.1 the normal rule holds (more LN 41-4, deeper 35-17). This 2-regime rule picks 26/32 tabular arch-only winners. XOR/spiral do NOT reverse.\n[K1010] XOR and two-spiral classification (zero linear signal, chance CE=ln2≈0.693): loss stays on the chance plateau until weights move well beyond init, so (i) Δ is decisive — choices with Δ≲0.01 sit at 0.65-0.70 and are near-tied; (ii) among equal optimizers, deep RESIDUAL blocks with LN win: deeper+residual beats shallower plain 33-14 on classification, more-LN wins 20-5 on spiral (Δ≥0.01), deeper wins XOR at every budget (26-11). A 1-2 layer plain net rarely escapes the plateau in 256-512 steps. Spiral difficulty scales with turns: 1 turn best CE ~0.001-0.03, 2-2.5 turns ~0.45-0.6, 3 turns ~0.52-0.69 (nearly everything stuck → pick largest Δ).\n[K1011] Bigram LM architecture (same optimizer): a GRU LM beats a post-LN causal transformer in 20 of 21 same-optimizer pairs, at both weak and strong Δ — rank the GRU first. Mechanism: the task is a first-order lookup P(y|x_t); the GRU maps the current token straight to its output state and its tanh-bounded hidden state gives near-uniform initial logits (CE≈ln V), while the post-LN transformer feeds unit-RMS features to the head (logit std ~0.6, initial CE ~ln V+0.1-0.2) and must learn to ignore attention mixing. Transformer-vs-transformer shape is Δ-dependent (see bigram transformer shape rule): fewer layers only reliably wins at 0.02≤Δ<0.1 (21/21); at Δ≥0.5 prefer smaller d_model.\n[K1012] When Δs are close (mixed questions, rankings): a ≥4× Δ gap beats architecture (higher Δ wins 35/40 even vs a net with 2+ more LN/residual). Within ~3×, a clearly better MLP (≥2 more LN blocks/residual) wins 11/19 — treat as a toss-up leaning architecture. Δ also saturates: once both Δ≳0.3, extra Δ wins only ~62% (then use lr-ceiling, tabular-overfit and architecture rules). Rankings: sort by log Δ, then architecture; near-chance choices (Δ<~0.005: CE≈ln2 / ln V, MSE≈Var(y)) form a tied bottom block — order them by architecture, not small lr differences.\n[K1013] Bigram LM optimizer sweet spot: labels are sampled from P(y|x), so gradients carry irreducible noise and the achievable gain is only ~0.1-0.8 nats below ln V. Among choices with Δ≥0.1, prefer the one with Δ nearest ~0.3 (e.g. Adam/AdamW/RMSprop 3e-4 at T=512-1024, Adagrad 3e-3); treat Δ≥1 (lr≥1e-3 at T≥1024, lr 3e-3 at T≥512) as likely overshoot. Below Δ≈0.1 ordinary max-Δ still applies. This 'nearest 0.3' scoring picks 52/66 bigram optimizer/mixed winners vs 47/66 for plain max-Δ; adaptive-transformer winners are mostly lr 3e-4 (22/52). If all Δ<0.02 every LM stays ≈ln V and the GRU wins ties.\n[K1014] Dataset structure × depth (data-flip cue): the deeper-is-better preference (under Δ<0.1) is strong for smooth/compositional targets — tabular smooth_additive (deeper 24-8), XOR with ≤4 input features (15-4), oscillatory univariate targets — but weak or absent when the rule is piecewise_boundary (5-6) or sparse_interaction (6-3) or XOR has 8-16 distractor features (11-7); there prefer the most-LN candidate regardless of depth, EXCEPT XOR with ≥8 features at Δ≥0.05, where more-LN wins only 5/11 and GELU/SiLU decides (6/6; see XOR-distractor rule). Polynomial/low-frequency univariate targets reach MSE 1e-4-1e-5, so stability (Adam over RMSprop at high lr) decides.\n[K1015] Residual × depth × task: on regression, depth helps even without residuals (deeper plain beats shallower residual 24-15) because composed nonlinearities are needed for curvature; on classification, depth WITHOUT residual hurts (shallower residual beats deeper plain 19-13) while deeper residual beats shallower plain 33-14. So for CE tasks never pick a deep (≥4) plain stack over a residual one at the same optimizer; for MSE tasks a deep plain stack with ≥2 LN blocks is still competitive. Deep residual MLPs win 53% of their appearances vs 29% for deep plain.\n[K1016] Capacity is not the bottleneck: at these budgets parameter count and width barely predict the winner — do not pick the 'biggest model'. Pairwise larger-params wins only 37/76 on bigram LMs, ~50% on univariate regression; at equal depth wider MLPs are a coin flip on regression (5-5) and only mildly better on classification (7-2). Datasets are tiny but noiseless (256-1024 rows), and every candidate has ample capacity; what differs is how fast the parameters move (Δ) and how well signal propagates (LN, residual, activation). Use width/params only as the last tie-breaker (and prefer wider only in the tabular Δ≥0.1 regime).\n[K1017] Bigram LM transformer SHAPE (transformer vs transformer, same optimizer/lr/T) flips with Δ (core-rule units). 0.02≤Δ<0.1: fewest layers wins 21/21 pairs and the larger d_model wins 15/15 (d_model 128 × 1-2 layers, d_ff 256 won 10/10 questions). 0.1≤Δ<0.5: weak (fewer layers 10/17, smaller d_model 9/13). Δ≥0.5 (lr 3e-3 at T≥256, 1e-3 at T≥512): smaller d_model wins 5/6 and fewer layers only 3/10 — wide post-LN overshoots (cf. K1004b); order by d_model ascending, then layers (q_17f213: 32×3<32×4<64×1<64×2). Δ<0.02: all ≈ln V, deeper wins 10/17 (deeper-32 beat 64×1 in q_b66719). Winner-level 20/31 vs 18/31 for pooled 'fewer layers'. GRU still beats all (K1011).\n[K1018] XOR with ≥8 input features (≥6 pure-noise distractors) once trained (shared Δ≥0.05, e.g. Adam-family lr·T≥0.05): tabular-style reversal — GELU/SiLU beats ReLU/LeakyReLU in 6/6 same-optimizer pairs (3 questions; q_e914b6: 2-layer SiLU w192 1 LN CE 0.11 beat 5-layer 3-LN SiLU 0.17 and residual 2-LN ReLU 0.17), while more-LN wins only 5/11 and deeper 5/10. With ≤4 features keep deeper/more-LN (7/7, 6/7 pairs); for Δ<0.05 the LN/depth rule holds for all XOR (more-LN 7/9 even with distractors). Larger Δ still wins on XOR (6/7 pairs at Δ≥0.05). Small n — use as a tie-breaker override of K1006/K1014 only in this scope.\n[K1019] SGD gradient-scale calibration for the Δ rule (K1001 assumes raw |g|≈0.01), fit on 368 SGD-vs-adaptive pairs. Bigram LM: use |g|≈0.003 (SGD m=0.9 ≈ Adam at lr/30, plain ≈ lr/300): larger-Δ correct 68/70 vs 63/70 at 0.01; SGD m=0.9 beat Adam/AdamW/RMSprop in only 1/18 LM pairs (1/4 even at nominal Δ parity). MSE regression with momentum 0.9: use |g|≈0.03 (SGD m=0.9 ≈ Adam at lr/3): 59/71 vs 54/71; it wins 11/19 when the adaptive Δ is ≤4× its 0.01-estimate. Classification (131/146) and plain-SGD regression: keep 0.01. Plain SGD wins only 3/141 pairs when the adaptive Δ is >15× larger.",
+      "reports": {}
+    },
+    {
+      "base": "kb_0001",
+      "candidate": false,
+      "claimDetails": {
+        "K1001": {
+          "created_epoch": 0,
+          "mechanism": "Under-trained regime: loss falls monotonically with distance travelled from init; adaptive optimizers normalise per-parameter steps to ~lr, so displacement ≈ lr·T (Adagrad decays as 1/√t; SGD scales with raw |g|). Predicts where it breaks: (i) too-large steps overshoot (lr ceiling, K1004), (ii) near-equal Δ (<1.5×) lets architecture conditioning dominate, (iii) saturated tasks (tabular Δ≥0.1, K1009) where overfitting/overconfidence decides.",
+          "merged_from": [
+            "K0019",
+            "K0009",
+            "K0031",
+            "K0016",
+            "K0124",
+            "K0010",
+            "K0073",
+            "K0101",
+            "K0212",
+            "K0228",
+            "K0138",
+            "K0166",
+            "K0020",
+            "K0184"
+          ],
+          "origin": "seed:seed_distill_v1",
+          "phase": "Δ-order pairwise hit: ratio≥4×: opt-only 328/355, mixed 268/291; 1.5-4×: opt-only 88/98, mixed 91/125; <1.5×: 35/51 → within 1.5× defer to architecture rules.",
+          "regime": {
+            "note": "all families; pairwise backtest on 490-question corpus",
+            "optimizer": [
+              "Adam",
+              "AdamW",
+              "RMSprop",
+              "Adagrad",
+              "SGD"
+            ],
+            "steps": [
+              256,
+              2048
+            ],
+            "type": [
+              "optimizer_only",
+              "mixed"
+            ]
+          },
+          "sources": []
+        },
+        "K1002": {
+          "created_epoch": 0,
+          "merged_from": [
+            "K0156",
+            "K0070",
+            "K0069",
+            "K0132",
+            "K0198"
+          ],
+          "origin": "seed:seed_distill_v1",
+          "sources": []
+        },
+        "K1003": {
+          "created_epoch": 0,
+          "merged_from": [
+            "K0012",
+            "K0174"
+          ],
+          "origin": "seed:seed_distill_v1",
+          "sources": []
+        },
+        "K1004": {
+          "created_epoch": 0,
+          "merged_from": [
+            "K0139"
+          ],
+          "origin": "seed:seed_distill_v1",
+          "sources": []
+        },
+        "K1005": {
+          "created_epoch": 0,
+          "merged_from": [
+            "K0022",
+            "K0015"
+          ],
+          "origin": "seed:seed_distill_v1",
+          "sources": []
+        },
+        "K1006": {
+          "created_epoch": 0,
+          "mechanism": "With PyTorch default init each unnormalised layer shrinks hidden RMS ~0.5×, so deep plain stacks pass tiny signals/gradients and train slowly; LN restores unit scale at every block (fixes scale more completely than one identity path), residuals preserve signal. Under-trained nets gain 2-3× speed. Predicts breaks: once trained (tabular Δ≥0.1, K1009) the edge reverses; equal-score depth adds no conditioning benefit, so depth only helps where composition is needed.",
+          "merged_from": [
+            "K0002",
+            "K0078",
+            "K0268",
+            "K0249",
+            "K0256"
+          ],
+          "origin": "seed:seed_distill_v1",
+          "phase": "score gap≥2: regression 67/76, spiral 14/15; gap 1: regression 61/74, tabular only 19/32 (weak); tie → depth: regression 16/32, tabular+spiral shallower 24/34.",
+          "regime": {
+            "family": [
+              "univariate_regression",
+              "multivariate_regression",
+              "spiral_classification",
+              "xor_classification",
+              "synthetic_tabular_classification"
+            ],
+            "model_type": [
+              "mlp"
+            ],
+            "note": "pairs with identical optimizer/lr/T; tabular only when shared Δ<0.1",
+            "steps": [
+              256,
+              2048
+            ],
+            "type": [
+              "architecture_only",
+              "mixed"
+            ]
+          },
+          "sources": []
+        },
+        "K1007": {
+          "created_epoch": 0,
+          "merged_from": [
+            "K0214",
+            "K0236",
+            "K0290"
+          ],
+          "origin": "seed:seed_distill_v1",
+          "sources": []
+        },
+        "K1008": {
+          "created_epoch": 0,
+          "merged_from": [],
+          "origin": "seed:seed_distill_v1",
+          "sources": []
+        },
+        "K1009": {
+          "created_epoch": 0,
+          "merged_from": [
+            "K0259",
+            "K0126"
+          ],
+          "origin": "seed:seed_distill_v1",
+          "sources": []
+        },
+        "K1010": {
+          "created_epoch": 0,
+          "merged_from": [
+            "K0044",
+            "K0030",
+            "K0038",
+            "K0032",
+            "K0164"
+          ],
+          "origin": "seed:seed_distill_v1",
+          "sources": []
+        },
+        "K1011": {
+          "created_epoch": 0,
+          "merged_from": [
+            "K0238",
+            "K0181",
+            "K0077",
+            "K0232",
+            "K0052",
+            "K0104"
+          ],
+          "origin": "seed:seed_distill_v1",
+          "sources": []
+        },
+        "K1012": {
+          "created_epoch": 0,
+          "merged_from": [],
+          "origin": "seed:seed_distill_v1",
+          "sources": []
+        },
+        "K1013": {
+          "created_epoch": 0,
+          "merged_from": [],
+          "origin": "seed:seed_distill_v1",
+          "sources": []
+        },
+        "K1014": {
+          "created_epoch": 0,
+          "merged_from": [],
+          "origin": "seed:seed_distill_v1",
+          "sources": []
+        },
+        "K1015": {
+          "created_epoch": 0,
+          "merged_from": [],
+          "origin": "seed:seed_distill_v1",
+          "sources": []
+        },
+        "K1016": {
+          "created_epoch": 0,
+          "merged_from": [],
+          "origin": "seed:seed_distill_v1",
+          "sources": []
+        },
+        "K1017": {
+          "created_epoch": 0,
+          "merged_from": [],
+          "origin": "c000004",
+          "sources": []
+        },
+        "K1018": {
+          "created_epoch": 0,
+          "merged_from": [],
+          "origin": "c000005",
+          "sources": []
+        },
+        "K1019": {
+          "created_epoch": 0,
+          "merged_from": [],
+          "origin": "c000006",
+          "sources": []
+        }
+      },
+      "claims": [
+        [
+          "K1001",
+          1.0,
+          0.0,
+          0.6666666666666666,
+          19,
+          0,
+          0,
+          "seed:seed_distill_v1"
+        ],
+        [
+          "K1002",
+          0.0,
+          0.0,
+          0.5,
+          1,
+          0,
+          0,
+          "seed:seed_distill_v1"
+        ],
+        [
+          "K1003",
+          0.0,
+          0.0,
+          0.5,
+          2,
+          0,
+          0,
+          "seed:seed_distill_v1"
+        ],
+        [
+          "K1004",
+          0.0,
+          0.0,
+          0.5,
+          3,
+          0,
+          0,
+          "seed:seed_distill_v1"
+        ],
+        [
+          "K1005",
+          0.0,
+          0.0,
+          0.5,
+          4,
+          0,
+          0,
+          "seed:seed_distill_v1"
+        ],
+        [
+          "K1006",
+          2.0,
+          1.0,
+          0.6,
+          20,
+          0,
+          0,
+          "seed:seed_distill_v1"
+        ],
+        [
+          "K1007",
+          0.0,
+          0.0,
+          0.5,
+          6,
+          0,
+          0,
+          "seed:seed_distill_v1"
+        ],
+        [
+          "K1008",
+          0.0,
+          0.0,
+          0.5,
+          7,
+          0,
+          0,
+          "seed:seed_distill_v1"
+        ],
+        [
+          "K1009",
+          0.0,
+          0.0,
+          0.5,
+          8,
+          0,
+          0,
+          "seed:seed_distill_v1"
+        ],
+        [
+          "K1010",
+          0.0,
+          0.0,
+          0.5,
+          9,
+          0,
+          0,
+          "seed:seed_distill_v1"
+        ],
+        [
+          "K1011",
+          1.25,
+          0.75,
+          0.5625,
+          10,
+          0,
+          0,
+          "seed:seed_distill_v1"
+        ],
+        [
+          "K1012",
+          0.0,
+          0.0,
+          0.5,
+          11,
+          0,
+          0,
+          "seed:seed_distill_v1"
+        ],
+        [
+          "K1013",
+          0.0,
+          0.0,
+          0.5,
+          12,
+          0,
+          0,
+          "seed:seed_distill_v1"
+        ],
+        [
+          "K1014",
+          1.0,
+          1.0,
+          0.5,
+          13,
+          0,
+          0,
+          "seed:seed_distill_v1"
+        ],
+        [
+          "K1015",
+          0.0,
+          0.0,
+          0.5,
+          14,
+          0,
+          0,
+          "seed:seed_distill_v1"
+        ],
+        [
+          "K1016",
+          0.0,
+          0.0,
+          0.5,
+          15,
+          0,
+          0,
+          "seed:seed_distill_v1"
+        ],
+        [
+          "K1017",
+          0.0,
+          0.0,
+          0.5,
+          16,
+          0,
+          0,
+          "c000004"
+        ],
+        [
+          "K1018",
+          0.0,
+          0.0,
+          0.5,
+          17,
+          0,
+          0,
+          "c000005"
+        ],
+        [
+          "K1019",
+          0.0,
+          0.0,
+          0.5,
+          18,
+          0,
+          0,
+          "c000006"
+        ]
+      ],
+      "complete": true,
+      "epoch": 1,
+      "label": "kb_0001",
+      "render": "[K1001] CORE RULE (all families, T=256-2048; every task is under-trained): rank choices by cumulative per-parameter displacement Δ. Adam/AdamW/RMSprop: Δ≈lr·T. Adagrad: Δ≈2·lr·√T. SGD: Δ≈lr·T·|g|/(1−m), |g|≈0.01 (bigram LM 0.003; MSE+momentum 0.03, K1019). For RANKING questions sort ALL choices by Δ (largest Δ = lowest loss); break Δ ties with architecture rules (MLP: LN/residual score K1006; bigram: GRU>transformer K1011). Corpus pairwise accuracy of Δ order: ratio ≥4× 92% (596/646); 1.5-4× 90% optimizer-only, 73% mixed; <1.5× only 69%. Largest-Δ wins ~85% of optimizer-only/mixed selects (after lr-ceiling exceptions K1004).\n[K1002] Adagrad conversion (any family): because Adagrad's step decays as lr/√t, it matches Adam only when its lr is ~√T/2 (8-23×) larger. Same architecture, lr_Adagrad/lr_Adam ≤3× → Adam/AdamW wins 65/70; =10× → coin flip (4-3); ≥30× → Adagrad wins 9/9. Within Adagrad the larger lr always wins (40/41 pairs; lr=3e-3 is never too big — the decay is a built-in anneal). Adagrad at lr≤1e-4 is effectively frozen (Δ≤0.01) and loses to almost any adaptive choice with lr≥3e-5·√T/2.\n[K1003] SGD (all families): plain SGD (momentum 0) at lr≤3e-3 is nearly frozen (wins ~8% of its appearances; in LMs embedding rows barely move, CE stays ≈ln V). SGD momentum 0.9 behaves like Adam at ~lr/10: so SGD m=0.9 lr 1e-3-3e-3 ≈ Adam 1e-4-3e-4 and is a real contender — it beats Adagrad ≤1e-3, Adam/RMSprop ≤3e-5-1e-4 and unstable RMSprop 3e-3 (e.g. univariate MSE 6e-5 vs 0.03) — but SGD m=0.9 at lr≤3e-4 loses to Adam/RMSprop at the same lr (10× smaller Δ). Family calibration (SGD calibration rule): bigram LM ≈ Adam at lr/30 (weaker), MSE regression ≈ Adam at lr/3 (stronger). Compute Δ with momentum.\n[K1004] LR-ceiling exceptions to the Δ rule: (a) RMSprop at lr≥1e-3 on MSE regression (no momentum averaging, zero-init square-avg inflates early steps up to ~10×) is noisy/unstable: vs choices with ≥3× smaller Δ it loses 12/27 at 3e-3 and 3/4 at 1e-3 (univariate); prefer Adam/AdamW at the same lr (Adam 3e-3 loses only 2/35) or RMSprop ≤3e-4. (b) Post-LN transformer LMs (nn.TransformerEncoderLayer default, no warmup) with Adam/AdamW/RMSprop lr≥1e-3 lose 14/25 to lr 1e-4-3e-4, worst for d_model=128 or T≥1024; GRU LMs tolerate 1e-3-3e-3 (high lr wins 12/17). (c) On MLP classification and Adam regression, lr 3e-3 is safe — take the larger Δ.\n[K1005] Second-order optimizer knobs are noise at these budgets: weight decay 0-1e-3 changes loss <1% (same-arch pairs: higher wd 3 wins/10 losses, all within 1%); Adam vs AdamW at equal lr/betas is a coin flip (5-5); beta2 0.95 vs 0.999 is ~even (7-4). Never let these override a lr·T difference; in rankings, order such near-twins by architecture or leave them adjacent.\n[K1006] MLP architecture default (regression, XOR, spiral; tabular only when Δ<0.1), same optimizer/lr/T: score each MLP = (# LayerNorm'd blocks) + 1 if residual; higher score = lower loss. Use it as a FULL RANKING rule. Corpus same-optimizer MLP pairs ordered by score: regression 128/150 (85%; gap 1: 61/74, gap≥2: 67/76), spiral 25/31, XOR 25/36, tabular 47/68. A plain stack with ≥2 LN blocks beats a residual no-LN MLP 9/9 (q_33b2d1 exact: 3-LN plain > residual LeakyReLU > 1-LN SiLU > residual SiLU > plain 0-LN). Score ties: on regression break by activation (ReLU/LeakyReLU > GELU > SiLU); depth is a weak tie-break (regression deeper 16/32; tabular/spiral SHALLOWER wins 24/34; XOR deeper 7/10).\n[K1007] Regression depth × residual (uni/multivariate MSE, any budget): a deeper residual MLP beats a shallower non-residual one 32-2; deep-narrow beats shallow-wide at similar params 70-32 (51-19 when lr·T<0.1); at equal depth extra width is a coin flip (5-5). Oscillatory/composite targets (sin(2πx)…, cos(2π sin…)) amplify the depth advantage: composition of 4-5 normalized residual blocks generates high-frequency curvature that 1-2 layer nets cannot reach within the budget. Non-residual deep stacks without LN are the exception: they attenuate signal and usually lose.\n[K1008] Activation × task: on MSE regression prefer ReLU/LeakyReLU > GELU > SiLU. Pairwise vs other activations (same optimizer): LeakyReLU wins 51/77, ReLU 42/67, GELU 30/64, SiLU only 29/96. SiLU/GELU have slope ~0.5 near 0 (silu(x)≈x/2), so stacked blocks attenuate signal/gradient and fit kinks/polynomials less precisely. The ranking flips for tabular classification once well-trained (see tabular rule): there GELU/SiLU win 16/16 vs ReLU-family. On XOR/spiral activation is a weak factor — decide by LN/residual/depth.\n[K1009] Budget × depth reversal on synthetic TABULAR classification (1024 train rows, 2-16 Gaussian features, smooth_additive / piecewise / sparse_interaction rules): when the shared Δ≥0.1 (Δ from the core rule: Adam/RMSprop lr·T, Adagrad 2·lr·√T, SGD ~lr·T/(1−m)/100 — NOT raw lr·T for SGD/Adagrad), the boundary is already learned and test CE is set by overconfidence — prefer SHALLOW (1-3 layers), wider nets with GELU/SiLU and fewer LN: shallower wins 21-5, less-LN 17-6, smooth activation 16/16. When Δ<0.1 the normal rule holds (more LN 41-4, deeper 35-17). This 2-regime rule picks 26/32 tabular arch-only winners. XOR/spiral do NOT reverse.\n[K1010] XOR and two-spiral classification (zero linear signal, chance CE=ln2≈0.693): loss stays on the chance plateau until weights move well beyond init, so (i) Δ is decisive — choices with Δ≲0.01 sit at 0.65-0.70 and are near-tied; (ii) among equal optimizers, deep RESIDUAL blocks with LN win: deeper+residual beats shallower plain 33-14 on classification, more-LN wins 20-5 on spiral (Δ≥0.01), deeper wins XOR at every budget (26-11). A 1-2 layer plain net rarely escapes the plateau in 256-512 steps. Spiral difficulty scales with turns: 1 turn best CE ~0.001-0.03, 2-2.5 turns ~0.45-0.6, 3 turns ~0.52-0.69 (nearly everything stuck → pick largest Δ).\n[K1011] Bigram LM architecture (same optimizer): a GRU LM beats a post-LN causal transformer in 20 of 21 same-optimizer pairs, at both weak and strong Δ — rank the GRU first. Mechanism: the task is a first-order lookup P(y|x_t); the GRU maps the current token straight to its output state and its tanh-bounded hidden state gives near-uniform initial logits (CE≈ln V), while the post-LN transformer feeds unit-RMS features to the head (logit std ~0.6, initial CE ~ln V+0.1-0.2) and must learn to ignore attention mixing. Transformer-vs-transformer shape is Δ-dependent (see bigram transformer shape rule): fewer layers only reliably wins at 0.02≤Δ<0.1 (21/21); at Δ≥0.5 prefer smaller d_model.\n[K1012] When Δs are close (mixed questions, rankings): a ≥4× Δ gap beats architecture (higher Δ wins 35/40 even vs a net with 2+ more LN/residual). Within ~3×, a clearly better MLP (≥2 more LN blocks/residual) wins 11/19 — treat as a toss-up leaning architecture. Δ also saturates: once both Δ≳0.3, extra Δ wins only ~62% (then use lr-ceiling, tabular-overfit and architecture rules). Rankings: sort by log Δ, then architecture; near-chance choices (Δ<~0.005: CE≈ln2 / ln V, MSE≈Var(y)) form a tied bottom block — order them by architecture, not small lr differences.\n[K1013] Bigram LM optimizer sweet spot: labels are sampled from P(y|x), so gradients carry irreducible noise and the achievable gain is only ~0.1-0.8 nats below ln V. Among choices with Δ≥0.1, prefer the one with Δ nearest ~0.3 (e.g. Adam/AdamW/RMSprop 3e-4 at T=512-1024, Adagrad 3e-3); treat Δ≥1 (lr≥1e-3 at T≥1024, lr 3e-3 at T≥512) as likely overshoot. Below Δ≈0.1 ordinary max-Δ still applies. This 'nearest 0.3' scoring picks 52/66 bigram optimizer/mixed winners vs 47/66 for plain max-Δ; adaptive-transformer winners are mostly lr 3e-4 (22/52). If all Δ<0.02 every LM stays ≈ln V and the GRU wins ties.\n[K1014] Dataset structure × depth (data-flip cue): the deeper-is-better preference (under Δ<0.1) is strong for smooth/compositional targets — tabular smooth_additive (deeper 24-8), XOR with ≤4 input features (15-4), oscillatory univariate targets — but weak or absent when the rule is piecewise_boundary (5-6) or sparse_interaction (6-3) or XOR has 8-16 distractor features (11-7); there prefer the most-LN candidate regardless of depth, EXCEPT XOR with ≥8 features at Δ≥0.05, where more-LN wins only 5/11 and GELU/SiLU decides (6/6; see XOR-distractor rule). Polynomial/low-frequency univariate targets reach MSE 1e-4-1e-5, so stability (Adam over RMSprop at high lr) decides.\n[K1015] Residual × depth × task: on regression, depth helps even without residuals (deeper plain beats shallower residual 24-15) because composed nonlinearities are needed for curvature; on classification, depth WITHOUT residual hurts (shallower residual beats deeper plain 19-13) while deeper residual beats shallower plain 33-14. So for CE tasks never pick a deep (≥4) plain stack over a residual one at the same optimizer; for MSE tasks a deep plain stack with ≥2 LN blocks is still competitive. Deep residual MLPs win 53% of their appearances vs 29% for deep plain.\n[K1016] Capacity is not the bottleneck: at these budgets parameter count and width barely predict the winner — do not pick the 'biggest model'. Pairwise larger-params wins only 37/76 on bigram LMs, ~50% on univariate regression; at equal depth wider MLPs are a coin flip on regression (5-5) and only mildly better on classification (7-2). Datasets are tiny but noiseless (256-1024 rows), and every candidate has ample capacity; what differs is how fast the parameters move (Δ) and how well signal propagates (LN, residual, activation). Use width/params only as the last tie-breaker (and prefer wider only in the tabular Δ≥0.1 regime).\n[K1017] Bigram LM transformer SHAPE (transformer vs transformer, same optimizer/lr/T) flips with Δ (core-rule units). 0.02≤Δ<0.1: fewest layers wins 21/21 pairs and the larger d_model wins 15/15 (d_model 128 × 1-2 layers, d_ff 256 won 10/10 questions). 0.1≤Δ<0.5: weak (fewer layers 10/17, smaller d_model 9/13). Δ≥0.5 (lr 3e-3 at T≥256, 1e-3 at T≥512): smaller d_model wins 5/6 and fewer layers only 3/10 — wide post-LN overshoots (cf. K1004b); order by d_model ascending, then layers (q_17f213: 32×3<32×4<64×1<64×2). Δ<0.02: all ≈ln V, deeper wins 10/17 (deeper-32 beat 64×1 in q_b66719). Winner-level 20/31 vs 18/31 for pooled 'fewer layers'. GRU still beats all (K1011).\n[K1018] XOR with ≥8 input features (≥6 pure-noise distractors) once trained (shared Δ≥0.05, e.g. Adam-family lr·T≥0.05): tabular-style reversal — GELU/SiLU beats ReLU/LeakyReLU in 6/6 same-optimizer pairs (3 questions; q_e914b6: 2-layer SiLU w192 1 LN CE 0.11 beat 5-layer 3-LN SiLU 0.17 and residual 2-LN ReLU 0.17), while more-LN wins only 5/11 and deeper 5/10. With ≤4 features keep deeper/more-LN (7/7, 6/7 pairs); for Δ<0.05 the LN/depth rule holds for all XOR (more-LN 7/9 even with distractors). Larger Δ still wins on XOR (6/7 pairs at Δ≥0.05). Small n — use as a tie-breaker override of K1006/K1014 only in this scope.\n[K1019] SGD gradient-scale calibration for the Δ rule (K1001 assumes raw |g|≈0.01), fit on 368 SGD-vs-adaptive pairs. Bigram LM: use |g|≈0.003 (SGD m=0.9 ≈ Adam at lr/30, plain ≈ lr/300): larger-Δ correct 68/70 vs 63/70 at 0.01; SGD m=0.9 beat Adam/AdamW/RMSprop in only 1/18 LM pairs (1/4 even at nominal Δ parity). MSE regression with momentum 0.9: use |g|≈0.03 (SGD m=0.9 ≈ Adam at lr/3): 59/71 vs 54/71; it wins 11/19 when the adaptive Δ is ≤4× its 0.01-estimate. Classification (131/146) and plain-SGD regression: keep 0.01. Plain SGD wins only 3/141 pairs when the adaptive Δ is >15× larger.",
+      "reports": {}
+    }
+  ],
+  "summary": "4 题功能验证；两份 KB 快照均为 19 条，不用于涨分结论。",
+  "test": {},
+  "texts": [
+    "CORE RULE (all families, T=256-2048 steps; every task here is under-trained): rank choices by cumulative per-parameter displacement Δ. Adam/AdamW/RMSprop: Δ≈lr·T. Adagrad (zero-init accumulator, steps decay ~lr/√t): Δ≈2·lr·√T. SGD: Δ≈lr·T·|g|/(1−m) with raw grad |g|≈0.01 (bigram LM 0.003, MSE regression with momentum 0.03 — K1019), i.e. plain SGD ≈ Adam at lr/100, SGD m=0.9 ≈ Adam at lr/10. The largest-Δ choice wins 85% of optimizer-only and ~85% of mixed questions (after the lr-ceiling exceptions); a 1.5-3× Δ edge usually beats any architecture advantage. Use architecture rules only to break Δ ties (same optimizer+lr) or in architecture-only questions.",
+    "Adagrad conversion (any family): because Adagrad's step decays as lr/√t, it matches Adam only when its lr is ~√T/2 (8-23×) larger. Same architecture, lr_Adagrad/lr_Adam ≤3× → Adam/AdamW wins 65/70; =10× → coin flip (4-3); ≥30× → Adagrad wins 9/9. Within Adagrad the larger lr always wins (40/41 pairs; lr=3e-3 is never too big — the decay is a built-in anneal). Adagrad at lr≤1e-4 is effectively frozen (Δ≤0.01) and loses to almost any adaptive choice with lr≥3e-5·√T/2.",
+    "SGD (all families): plain SGD (momentum 0) at lr≤3e-3 is nearly frozen (wins ~8% of its appearances; in LMs embedding rows barely move, CE stays ≈ln V). SGD momentum 0.9 behaves like Adam at ~lr/10: so SGD m=0.9 lr 1e-3-3e-3 ≈ Adam 1e-4-3e-4 and is a real contender — it beats Adagrad ≤1e-3, Adam/RMSprop ≤3e-5-1e-4 and unstable RMSprop 3e-3 (e.g. univariate MSE 6e-5 vs 0.03) — but SGD m=0.9 at lr≤3e-4 loses to Adam/RMSprop at the same lr (10× smaller Δ). Family calibration (SGD calibration rule): bigram LM ≈ Adam at lr/30 (weaker), MSE regression ≈ Adam at lr/3 (stronger). Compute Δ with momentum.",
+    "LR-ceiling exceptions to the Δ rule: (a) RMSprop at lr≥1e-3 on MSE regression (no momentum averaging, zero-init square-avg inflates early steps up to ~10×) is noisy/unstable: vs choices with ≥3× smaller Δ it loses 12/27 at 3e-3 and 3/4 at 1e-3 (univariate); prefer Adam/AdamW at the same lr (Adam 3e-3 loses only 2/35) or RMSprop ≤3e-4. (b) Post-LN transformer LMs (nn.TransformerEncoderLayer default, no warmup) with Adam/AdamW/RMSprop lr≥1e-3 lose 14/25 to lr 1e-4-3e-4, worst for d_model=128 or T≥1024; GRU LMs tolerate 1e-3-3e-3 (high lr wins 12/17). (c) On MLP classification and Adam regression, lr 3e-3 is safe — take the larger Δ.",
+    "Second-order optimizer knobs are noise at these budgets: weight decay 0-1e-3 changes loss <1% (same-arch pairs: higher wd 3 wins/10 losses, all within 1%); Adam vs AdamW at equal lr/betas is a coin flip (5-5); beta2 0.95 vs 0.999 is ~even (7-4). Never let these override a lr·T difference; in rankings, order such near-twins by architecture or leave them adjacent.",
+    "MLP architecture default (regression, XOR, spiral, tabular when Δ<0.1): score each MLP = (number of LayerNorm'd blocks) + 1 if residual; pick the highest; break ties by activation on regression (ReLU/LeakyReLU > GELU > SiLU), then greater depth. Picks 91/118 arch-only winners (univariate 28/31, multivariate 28/33). Pairwise more-LN beats less-LN 61-11 (multivariate), 57-12 (univariate), 41-4 (tabular Δ<0.1); on regression LN outranks activation (smooth+more-LN beats ReLU+less-LN 30/41). Mechanism: each unnormalized layer shrinks hidden RMS ~0.5×; LN + identity paths speed an under-trained net 2-3×. Exception: XOR with ≥8 input features at Δ≥0.05 — smooth activation decides (K1018).",
+    "Regression depth × residual (uni/multivariate MSE, any budget): a deeper residual MLP beats a shallower non-residual one 32-2; deep-narrow beats shallow-wide at similar params 70-32 (51-19 when lr·T<0.1); at equal depth extra width is a coin flip (5-5). Oscillatory/composite targets (sin(2πx)…, cos(2π sin…)) amplify the depth advantage: composition of 4-5 normalized residual blocks generates high-frequency curvature that 1-2 layer nets cannot reach within the budget. Non-residual deep stacks without LN are the exception: they attenuate signal and usually lose.",
+    "Activation × task: on MSE regression prefer ReLU/LeakyReLU > GELU > SiLU. Pairwise vs other activations (same optimizer): LeakyReLU wins 51/77, ReLU 42/67, GELU 30/64, SiLU only 29/96. SiLU/GELU have slope ~0.5 near 0 (silu(x)≈x/2), so stacked blocks attenuate signal/gradient and fit kinks/polynomials less precisely. The ranking flips for tabular classification once well-trained (see tabular rule): there GELU/SiLU win 16/16 vs ReLU-family. On XOR/spiral activation is a weak factor — decide by LN/residual/depth.",
+    "Budget × depth reversal on synthetic TABULAR classification (1024 train rows, 2-16 Gaussian features, smooth_additive / piecewise / sparse_interaction rules): when the shared Δ≥0.1 (Δ from the core rule: Adam/RMSprop lr·T, Adagrad 2·lr·√T, SGD ~lr·T/(1−m)/100 — NOT raw lr·T for SGD/Adagrad), the boundary is already learned and test CE is set by overconfidence — prefer SHALLOW (1-3 layers), wider nets with GELU/SiLU and fewer LN: shallower wins 21-5, less-LN 17-6, smooth activation 16/16. When Δ<0.1 the normal rule holds (more LN 41-4, deeper 35-17). This 2-regime rule picks 26/32 tabular arch-only winners. XOR/spiral do NOT reverse.",
+    "XOR and two-spiral classification (zero linear signal, chance CE=ln2≈0.693): loss stays on the chance plateau until weights move well beyond init, so (i) Δ is decisive — choices with Δ≲0.01 sit at 0.65-0.70 and are near-tied; (ii) among equal optimizers, deep RESIDUAL blocks with LN win: deeper+residual beats shallower plain 33-14 on classification, more-LN wins 20-5 on spiral (Δ≥0.01), deeper wins XOR at every budget (26-11). A 1-2 layer plain net rarely escapes the plateau in 256-512 steps. Spiral difficulty scales with turns: 1 turn best CE ~0.001-0.03, 2-2.5 turns ~0.45-0.6, 3 turns ~0.52-0.69 (nearly everything stuck → pick largest Δ).",
+    "Bigram LM architecture (same optimizer): a GRU LM beats a post-LN causal transformer in 20 of 21 same-optimizer pairs, at both weak and strong Δ — rank the GRU first. Mechanism: the task is a first-order lookup P(y|x_t); the GRU maps the current token straight to its output state and its tanh-bounded hidden state gives near-uniform initial logits (CE≈ln V), while the post-LN transformer feeds unit-RMS features to the head (logit std ~0.6, initial CE ~ln V+0.1-0.2) and must learn to ignore attention mixing. Transformer-vs-transformer shape is Δ-dependent (see bigram transformer shape rule): fewer layers only reliably wins at 0.02≤Δ<0.1 (21/21); at Δ≥0.5 prefer smaller d_model.",
+    "When Δs are close (mixed questions, rankings): a ≥4× Δ gap beats architecture (higher Δ wins 35/40 even vs a net with 2+ more LN/residual). Within ~3×, a clearly better MLP (≥2 more LN blocks/residual) wins 11/19 — treat as a toss-up leaning architecture. Δ also saturates: once both Δ≳0.3, extra Δ wins only ~62% (then use lr-ceiling, tabular-overfit and architecture rules). Rankings: sort by log Δ, then architecture; near-chance choices (Δ<~0.005: CE≈ln2 / ln V, MSE≈Var(y)) form a tied bottom block — order them by architecture, not small lr differences.",
+    "Bigram LM optimizer sweet spot: labels are sampled from P(y|x), so gradients carry irreducible noise and the achievable gain is only ~0.1-0.8 nats below ln V. Among choices with Δ≥0.1, prefer the one with Δ nearest ~0.3 (e.g. Adam/AdamW/RMSprop 3e-4 at T=512-1024, Adagrad 3e-3); treat Δ≥1 (lr≥1e-3 at T≥1024, lr 3e-3 at T≥512) as likely overshoot. Below Δ≈0.1 ordinary max-Δ still applies. This 'nearest 0.3' scoring picks 52/66 bigram optimizer/mixed winners vs 47/66 for plain max-Δ; adaptive-transformer winners are mostly lr 3e-4 (22/52). If all Δ<0.02 every LM stays ≈ln V and the GRU wins ties.",
+    "Dataset structure × depth (data-flip cue): the deeper-is-better preference (under Δ<0.1) is strong for smooth/compositional targets — tabular smooth_additive (deeper 24-8), XOR with ≤4 input features (15-4), oscillatory univariate targets — but weak or absent when the rule is piecewise_boundary (5-6) or sparse_interaction (6-3) or XOR has 8-16 distractor features (11-7); there prefer the most-LN candidate regardless of depth, EXCEPT XOR with ≥8 features at Δ≥0.05, where more-LN wins only 5/11 and GELU/SiLU decides (6/6; see XOR-distractor rule). Polynomial/low-frequency univariate targets reach MSE 1e-4-1e-5, so stability (Adam over RMSprop at high lr) decides.",
+    "Residual × depth × task: on regression, depth helps even without residuals (deeper plain beats shallower residual 24-15) because composed nonlinearities are needed for curvature; on classification, depth WITHOUT residual hurts (shallower residual beats deeper plain 19-13) while deeper residual beats shallower plain 33-14. So for CE tasks never pick a deep (≥4) plain stack over a residual one at the same optimizer; for MSE tasks a deep plain stack with ≥2 LN blocks is still competitive. Deep residual MLPs win 53% of their appearances vs 29% for deep plain.",
+    "Capacity is not the bottleneck: at these budgets parameter count and width barely predict the winner — do not pick the 'biggest model'. Pairwise larger-params wins only 37/76 on bigram LMs, ~50% on univariate regression; at equal depth wider MLPs are a coin flip on regression (5-5) and only mildly better on classification (7-2). Datasets are tiny but noiseless (256-1024 rows), and every candidate has ample capacity; what differs is how fast the parameters move (Δ) and how well signal propagates (LN, residual, activation). Use width/params only as the last tie-breaker (and prefer wider only in the tabular Δ≥0.1 regime).",
+    "Bigram LM transformer SHAPE (transformer vs transformer, same optimizer/lr/T) flips with Δ (core-rule units). 0.02≤Δ<0.1: fewest layers wins 21/21 pairs and the larger d_model wins 15/15 (d_model 128 × 1-2 layers, d_ff 256 won 10/10 questions). 0.1≤Δ<0.5: weak (fewer layers 10/17, smaller d_model 9/13). Δ≥0.5 (lr 3e-3 at T≥256, 1e-3 at T≥512): smaller d_model wins 5/6 and fewer layers only 3/10 — wide post-LN overshoots (cf. K1004b); order by d_model ascending, then layers (q_17f213: 32×3<32×4<64×1<64×2). Δ<0.02: all ≈ln V, deeper wins 10/17 (deeper-32 beat 64×1 in q_b66719). Winner-level 20/31 vs 18/31 for pooled 'fewer layers'. GRU still beats all (K1011).",
+    "XOR with ≥8 input features (≥6 pure-noise distractors) once trained (shared Δ≥0.05, e.g. Adam-family lr·T≥0.05): tabular-style reversal — GELU/SiLU beats ReLU/LeakyReLU in 6/6 same-optimizer pairs (3 questions; q_e914b6: 2-layer SiLU w192 1 LN CE 0.11 beat 5-layer 3-LN SiLU 0.17 and residual 2-LN ReLU 0.17), while more-LN wins only 5/11 and deeper 5/10. With ≤4 features keep deeper/more-LN (7/7, 6/7 pairs); for Δ<0.05 the LN/depth rule holds for all XOR (more-LN 7/9 even with distractors). Larger Δ still wins on XOR (6/7 pairs at Δ≥0.05). Small n — use as a tie-breaker override of K1006/K1014 only in this scope.",
+    "SGD gradient-scale calibration for the Δ rule (K1001 assumes raw |g|≈0.01), fit on 368 SGD-vs-adaptive pairs. Bigram LM: use |g|≈0.003 (SGD m=0.9 ≈ Adam at lr/30, plain ≈ lr/300): larger-Δ correct 68/70 vs 63/70 at 0.01; SGD m=0.9 beat Adam/AdamW/RMSprop in only 1/18 LM pairs (1/4 even at nominal Δ parity). MSE regression with momentum 0.9: use |g|≈0.03 (SGD m=0.9 ≈ Adam at lr/3): 59/71 vs 54/71; it wins 11/19 when the adaptive Δ is ≤4× its 0.01-estimate. Classification (131/146) and plain-SGD regression: keep 0.01. Plain SGD wins only 3/141 pairs when the adaptive Δ is >15× larger.",
+    "CORE RULE (all families, T=256-2048; every task is under-trained): rank choices by cumulative per-parameter displacement Δ. Adam/AdamW/RMSprop: Δ≈lr·T. Adagrad: Δ≈2·lr·√T. SGD: Δ≈lr·T·|g|/(1−m), |g|≈0.01 (bigram LM 0.003; MSE+momentum 0.03, K1019). For RANKING questions sort ALL choices by Δ (largest Δ = lowest loss); break Δ ties with architecture rules (MLP: LN/residual score K1006; bigram: GRU>transformer K1011). Corpus pairwise accuracy of Δ order: ratio ≥4× 92% (596/646); 1.5-4× 90% optimizer-only, 73% mixed; <1.5× only 69%. Largest-Δ wins ~85% of optimizer-only/mixed selects (after lr-ceiling exceptions K1004).",
+    "MLP architecture default (regression, XOR, spiral; tabular only when Δ<0.1), same optimizer/lr/T: score each MLP = (# LayerNorm'd blocks) + 1 if residual; higher score = lower loss. Use it as a FULL RANKING rule. Corpus same-optimizer MLP pairs ordered by score: regression 128/150 (85%; gap 1: 61/74, gap≥2: 67/76), spiral 25/31, XOR 25/36, tabular 47/68. A plain stack with ≥2 LN blocks beats a residual no-LN MLP 9/9 (q_33b2d1 exact: 3-LN plain > residual LeakyReLU > 1-LN SiLU > residual SiLU > plain 0-LN). Score ties: on regression break by activation (ReLU/LeakyReLU > GELU > SiLU); depth is a weak tie-break (regression deeper 16/32; tabular/spiral SHALLOWER wins 24/34; XOR deeper 7/10)."
+  ]
+}

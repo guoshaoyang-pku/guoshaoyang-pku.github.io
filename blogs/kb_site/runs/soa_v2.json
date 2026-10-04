@@ -1,0 +1,688 @@
+{
+  "availability": "已载入现场保存的完整 KB、逐题记录、工具轨迹与评测；缺失内容在对应位置注明。",
+  "commits": [
+    {
+      "author": {
+        "harness": "7e5846daab",
+        "model": "distilled",
+        "role": "seed"
+      },
+      "base_snapshot": null,
+      "commit": "c000001",
+      "epoch": 0,
+      "op": "seed",
+      "payload": {
+        "claims": 22,
+        "source": "data/kb_scratch/kb_science_loop/soa_v1/kb/kb_0001.json"
+      },
+      "time": "2026-10-04T01:12:17+00:00"
+    }
+  ],
+  "comparisons": [],
+  "config": {
+    "batch_size": 30,
+    "concurrency": 16,
+    "discover_wrong_backend": "api",
+    "discover_wrong_model": null,
+    "epochs": 10,
+    "eval_every": 1,
+    "gate_repeats": 4,
+    "harness": "9f8129d271",
+    "lab_workers": 12,
+    "model": "gpt-6.1-sol",
+    "provider": "cctq",
+    "render": "tool",
+    "research_calls": 3,
+    "research_effort": "medium",
+    "research_max_cands": 12,
+    "run_name": "soa_v2",
+    "science": true,
+    "seed": 20261003,
+    "solve_effort": "low",
+    "solver_backend": "codex",
+    "sources": [
+      "arch170",
+      "ranking_v2",
+      "ranking_v3",
+      "dataflip500"
+    ],
+    "summ_backend": "claude_code",
+    "summ_effort": "xhigh",
+    "summ_model": "claude-opus-5-5",
+    "test_repeats": 0,
+    "updated_at": "2026-10-04T01:12:17+00:00"
+  },
+  "defaultSnap": "kb_0000",
+  "epochs": [],
+  "evalNote": "功能验证或未完成运行不用于推断收益。",
+  "evals": {
+    "nokb": {
+      "by_source": {
+        "arch170": 0.8,
+        "dataflip500": 0.48,
+        "ranking_v2": 0.65,
+        "ranking_v3": 0.43
+      },
+      "errors": 0,
+      "label": "nokb",
+      "mean": 0.59,
+      "n": 100
+    },
+    "nokb_r2": {
+      "by_source": {
+        "arch170": 0.68,
+        "dataflip500": 0.44,
+        "ranking_v2": 0.67,
+        "ranking_v3": 0.51
+      },
+      "errors": 0,
+      "label": "nokb_r2",
+      "mean": 0.575,
+      "n": 100
+    },
+    "nokb_r3": {
+      "by_source": {
+        "arch170": 0.68,
+        "dataflip500": 0.52,
+        "ranking_v2": 0.65,
+        "ranking_v3": 0.53
+      },
+      "errors": 0,
+      "label": "nokb_r3",
+      "mean": 0.595,
+      "n": 100
+    }
+  },
+  "flow": [
+    "① 解题：题目 + 可选 KB 工具；每题使用冻结版本，答案尚未揭示。",
+    "② 发现：揭示答案，提出可检查的规律与研究问题。",
+    "③ 总结与研究：整理本轮记录，修订、增加、合并与撤回 claim。",
+    "④ KB 快照：依据保存的评测记录选择候选或现任版本。"
+  ],
+  "home": "../index.html",
+  "job_traces": {},
+  "jobs": [],
+  "latest_saved_science": {},
+  "prompts": {},
+  "reports": {},
+  "run": "soa_v2",
+  "snaps": [
+    {
+      "base": "kb_0000",
+      "candidate": false,
+      "claimDetails": {
+        "K1001": {
+          "created_epoch": 0,
+          "mechanism": "Every candidate is under-trained, so loss falls monotonically with how far parameters move from init; adaptive optimizers move ~lr per step regardless of gradient scale, so lr·T measures distance. Predicts the rule saturates once Δ is enough to fit the (tiny, noiseless) train set (~0.1-0.3), after which overconfidence/overshoot dominates - observed in the phase table.",
+          "merged_from": [
+            "K0019",
+            "K0009",
+            "K0031",
+            "K0016",
+            "K0124",
+            "K0010",
+            "K0073",
+            "K0101",
+            "K0212",
+            "K0228",
+            "K0138",
+            "K0166",
+            "K0020",
+            "K0184"
+          ],
+          "origin": "seed:seed_distill_v1",
+          "phase": "Largest-Δ (≥3× gap) win rate depends on the smaller Δ: <0.03 ~95% (tabular lab 2011/2135); 0.03-0.1 ~60-88%; once smaller Δ≥0.1 only 25-60% (bigram 25%, tabular 43%, spiral 54%, multivariate 56%, XOR 58%, univariate 60%; K1012, K1021). LR-ceiling breaks: K1004.",
+          "sources": []
+        },
+        "K1002": {
+          "created_epoch": 0,
+          "merged_from": [
+            "K0156",
+            "K0070",
+            "K0069",
+            "K0132",
+            "K0198"
+          ],
+          "origin": "seed:seed_distill_v1",
+          "sources": []
+        },
+        "K1003": {
+          "created_epoch": 0,
+          "merged_from": [
+            "K0012",
+            "K0174"
+          ],
+          "origin": "seed:seed_distill_v1",
+          "sources": []
+        },
+        "K1004": {
+          "created_epoch": 0,
+          "merged_from": [
+            "K0139"
+          ],
+          "origin": "seed:seed_distill_v1",
+          "sources": []
+        },
+        "K1005": {
+          "created_epoch": 0,
+          "merged_from": [
+            "K0022",
+            "K0015"
+          ],
+          "origin": "seed:seed_distill_v1",
+          "sources": []
+        },
+        "K1006": {
+          "created_epoch": 0,
+          "mechanism": "Each unnormalized pre-activation layer shrinks hidden RMS (~0.5x for SiLU/GELU at init), so an under-trained deep stack feeds a weak signal to the head; pre-LN restores unit scale and identity paths keep gradient flow, speeding an under-trained net 2-3x. Predicts the LN advantage shrinks once Δ is large enough to learn the scale (tabular Δ>=0.1 reverses, K1009) and where LN destroys label-relevant norm information (2-D spiral, K1020).",
+          "merged_from": [
+            "K0002",
+            "K0078",
+            "K0268",
+            "K0249",
+            "K0256"
+          ],
+          "origin": "seed:seed_distill_v1",
+          "phase": "LN-count win rate: multivariate 61-11, univariate 57-12, tabular Δ<0.1 41-4 but Δ>=0.1 less-LN 17-6 (K1009); spiral plain+LN vs residual: residual 7/9 (K1020); XOR plain+LN vs residual 6/10 (weak).",
+          "regime": {
+            "family": [
+              "univariate_regression",
+              "multivariate_regression",
+              "synthetic_tabular_classification",
+              "xor_classification"
+            ],
+            "model_type": [
+              "mlp"
+            ],
+            "note": "tabular only when Δ<0.1; spiral handled by K1020; same optimizer/lr/T",
+            "type": [
+              "architecture_only",
+              "mixed"
+            ]
+          },
+          "sources": []
+        },
+        "K1007": {
+          "created_epoch": 0,
+          "merged_from": [
+            "K0214",
+            "K0236",
+            "K0290"
+          ],
+          "origin": "seed:seed_distill_v1",
+          "sources": []
+        },
+        "K1008": {
+          "created_epoch": 0,
+          "merged_from": [],
+          "origin": "seed:seed_distill_v1",
+          "sources": []
+        },
+        "K1009": {
+          "created_epoch": 0,
+          "mechanism": "With 1024 rows and labels set by 2-4 coordinates, once Δ≥0.1 the decision boundary is already fit; test CE is then set by logit scale on misclassified points, so anything that speeds fitting (depth, LN, ReLU kinks, larger lr) inflates confidence. Predicts the same reversal for optimizer Δ (K1021) and no reversal on XOR/spiral where the boundary is still being learned.",
+          "merged_from": [
+            "K0259",
+            "K0126"
+          ],
+          "origin": "seed:seed_distill_v1",
+          "phase": "Δ_shared<0.1: more LN 41-4, deeper 35-17; Δ_shared≥0.1: shallower 21-5, less-LN 17-6, smooth act 16/16 (counterexample q_87182b: more early LN in residual LeakyReLU won). Across Δ (mixed questions) prefer Δ≈0.1-0.3 over ≥3× larger (K1021).",
+          "regime": {
+            "family": [
+              "synthetic_tabular_classification"
+            ],
+            "model_type": [
+              "mlp"
+            ],
+            "note": "1024 train rows, 2-16 Gaussian features; Δ per core rule",
+            "type": [
+              "architecture_only",
+              "mixed"
+            ]
+          },
+          "sources": []
+        },
+        "K1010": {
+          "created_epoch": 0,
+          "merged_from": [
+            "K0044",
+            "K0030",
+            "K0038",
+            "K0032",
+            "K0164"
+          ],
+          "origin": "seed:seed_distill_v1",
+          "sources": []
+        },
+        "K1011": {
+          "created_epoch": 0,
+          "merged_from": [
+            "K0238",
+            "K0181",
+            "K0077",
+            "K0232",
+            "K0052",
+            "K0104"
+          ],
+          "origin": "seed:seed_distill_v1",
+          "phase": "GRU-vs-post-LN-TF same optimizer: corpus GRU 20/21; Δ<0.01 GRU 8/10 (lab+corpus); 0.02-0.05 GRU 2/2 corpus but q_c135ee (V48, α1.4, Δ0.03) TF 64x2/64x1/32x3 beat GRU 64x2; 0.05-0.1 one lab set d128 TF beat GRU 12/12 (−0.28 nats); Δ>=0.1 GRU 7/8. Treat as ~85%, weaker for V>=48 or d_model 128.",
+          "regime": {
+            "family": [
+              "bigram_lm"
+            ],
+            "model_type": [
+              "gru_lm",
+              "transformer_lm"
+            ],
+            "note": "same optimizer/lr/T; post-LN nn.TransformerEncoderLayer, learned positions; GRU 64x2",
+            "type": [
+              "architecture_only",
+              "mixed"
+            ]
+          },
+          "sources": []
+        },
+        "K1012": {
+          "created_epoch": 0,
+          "merged_from": [],
+          "origin": "seed:seed_distill_v1",
+          "phase": "Saturation (smaller Δ>=0.1, larger >=3x; lab): larger-Δ wins bigram 25% (4/16), tabular 43% (63/146, K1021), spiral 54%, multivariate 56%, XOR 58% (Adam/AdamW same-opt 23/30), univariate 60%. Tabular: below Δ_small 0.03 the larger Δ wins ~95%, at 0.03-0.1 ~75%.",
+          "sources": []
+        },
+        "K1013": {
+          "created_epoch": 0,
+          "merged_from": [],
+          "origin": "seed:seed_distill_v1",
+          "sources": []
+        },
+        "K1014": {
+          "created_epoch": 0,
+          "merged_from": [],
+          "origin": "seed:seed_distill_v1",
+          "sources": []
+        },
+        "K1015": {
+          "created_epoch": 0,
+          "merged_from": [],
+          "origin": "seed:seed_distill_v1",
+          "sources": []
+        },
+        "K1016": {
+          "created_epoch": 0,
+          "merged_from": [],
+          "origin": "seed:seed_distill_v1",
+          "sources": []
+        },
+        "K1017": {
+          "created_epoch": 0,
+          "merged_from": [],
+          "origin": "c000004",
+          "phase": "0.02≤Δ<0.1: larger d_model wins corpus 11/11, lab 11/12 (robust); at FIXED d_model shallower wins corpus 7/7 (3 q) but deeper wins lab+controlled 9/9 on one V48 set at Δ 0.02-0.05 (q_c135ee: 64x2>64x1) - treat depth as a weak tie-break there. Δ<0.02: more params 12/16 corpus, larger d_ff 2/2, deeper at fixed d_model 5/7.",
+          "regime": {
+            "family": [
+              "bigram_lm"
+            ],
+            "model_type": [
+              "transformer_lm"
+            ],
+            "note": "post-LN TransformerEncoderLayer, learned positions, V 24-48; same optimizer/lr/T",
+            "optimizer": [
+              "Adam",
+              "AdamW",
+              "RMSprop",
+              "Adagrad"
+            ],
+            "steps": [
+              256,
+              2048
+            ]
+          },
+          "sources": []
+        },
+        "K1018": {
+          "created_epoch": 0,
+          "merged_from": [],
+          "origin": "c000005",
+          "sources": []
+        },
+        "K1019": {
+          "created_epoch": 0,
+          "merged_from": [],
+          "origin": "c000006",
+          "sources": []
+        },
+        "K1020": {
+          "created_epoch": 0,
+          "mechanism": "A 2-D spiral label depends jointly on angle and radius; pre-LN in a plain stack re-normalizes every hidden vector and so discards the per-sample norm (radius) signal, while an identity path carries it forward un-normalized, letting LN's conditioning benefit stack on top. Predicts an LN x residual sign interaction (seen in q_c64c90's controlled test) and that the effect fades with high-dimensional inputs where norm carries little label information (tabular 16-D: LN count wins again).",
+          "merged_from": [],
+          "origin": "c000004",
+          "phase": "res(<LN) vs plain(>LN): corpus res wins 5/6 at Δ<0.03, 2/3 at Δ>=0.03 (median ratio ~0.96, small); lab 1/3 at Δ<0.05, 1/1 at Δ>=0.05. res vs res: more-LN 11/12. plain vs plain: more-LN 3/5. Flip to LN-first on regression/tabular.",
+          "refines": "K1006",
+          "regime": {
+            "delta": [
+              0.003,
+              0.8
+            ],
+            "family": [
+              "spiral_classification"
+            ],
+            "model_type": [
+              "mlp"
+            ],
+            "note": "same optimizer/lr/T pairs; 1-3 turns; 3-turn near-chance choices (Δ<0.01) are ties",
+            "type": [
+              "architecture_only",
+              "mixed"
+            ]
+          },
+          "sources": []
+        },
+        "K1021": {
+          "created_epoch": 0,
+          "mechanism": "Labels are deterministic functions of 2-4 of 16 Gaussian coordinates with only 1024 train rows; by Δ≈0.1 the boundary is fit and further parameter movement mainly inflates logit scale (overconfident test errors) and fits distractor directions. Predicts the reversal is strongest where many noisy directions/interactions exist (sparse_interaction), weakest where a sharp boundary still benefits from more fitting (piecewise), and worst for un-annealed RMSprop/AdamW at 3e-3 — all observed.",
+          "merged_from": [],
+          "origin": "c000005",
+          "phase": "larger-Δ (≥3×) win rate by smaller Δ: <0.03 ~95% (ratio 0.33-0.58); 0.03-0.1 piecewise 88%, smooth 73%, sparse 63% (ratio ~0.8); >=0.1 piecewise 62% (0.93), smooth 40% (1.07), sparse 15% (1.44).",
+          "refines": "K1012",
+          "regime": {
+            "delta": [
+              0.1,
+              3
+            ],
+            "family": [
+              "synthetic_tabular_classification"
+            ],
+            "loss": [
+              "cross_entropy"
+            ],
+            "model_type": [
+              "mlp"
+            ],
+            "note": "lab pairs differ in architecture; 104 sets; corpus 5/9 agrees; Δ: Adam/RMSprop lr·T, Adagrad 2lr√T, SGD lr·T·0.01/(1-m)",
+            "steps": [
+              256,
+              2048
+            ]
+          },
+          "sources": []
+        },
+        "K1022": {
+          "created_epoch": 0,
+          "mechanism": "A pre-LN right before the last hidden Linear restores unit feature scale feeding the head, so tiny updates (Δ<0.1) move the output more; each unnormalized block after it shrinks hidden RMS (~0.5x for SiLU/GELU). Predicts the advantage fades once Δ≥0.1 (feature scale is learned) - observed 3/6. Why univariate/XOR don't follow is unexplained.",
+          "merged_from": [],
+          "origin": "c000006",
+          "phase": "late-LN wins: tabular Δ<0.1 corpus 6/7, lab 3/5; multivariate Δ<0.1 corpus 5/5, lab 1/2; any family Δ>=0.1 3/6; univariate 1/4 corpus + 1/4 controlled; XOR 1/4 corpus, 2/4 lab.",
+          "refines": "K1006",
+          "regime": {
+            "delta": [
+              0,
+              0.1
+            ],
+            "family": [
+              "synthetic_tabular_classification",
+              "multivariate_regression"
+            ],
+            "model_type": [
+              "mlp"
+            ],
+            "note": "equal LN count, equal residual, same optimizer/lr/T; small n, effect ~5-20%"
+          },
+          "sources": []
+        }
+      },
+      "claims": [
+        [
+          "K1001",
+          0.0,
+          0.0,
+          0.5,
+          0,
+          0,
+          0,
+          "seed:seed_distill_v1"
+        ],
+        [
+          "K1002",
+          0.0,
+          0.0,
+          0.5,
+          1,
+          0,
+          0,
+          "seed:seed_distill_v1"
+        ],
+        [
+          "K1003",
+          0.0,
+          0.0,
+          0.5,
+          2,
+          0,
+          0,
+          "seed:seed_distill_v1"
+        ],
+        [
+          "K1004",
+          0.0,
+          0.0,
+          0.5,
+          3,
+          0,
+          0,
+          "seed:seed_distill_v1"
+        ],
+        [
+          "K1005",
+          0.0,
+          0.0,
+          0.5,
+          4,
+          0,
+          0,
+          "seed:seed_distill_v1"
+        ],
+        [
+          "K1006",
+          0.0,
+          2.0,
+          0.25,
+          5,
+          0,
+          0,
+          "seed:seed_distill_v1"
+        ],
+        [
+          "K1007",
+          0.0,
+          0.0,
+          0.5,
+          6,
+          0,
+          0,
+          "seed:seed_distill_v1"
+        ],
+        [
+          "K1008",
+          0.0,
+          1.0,
+          0.3333333333333333,
+          7,
+          0,
+          0,
+          "seed:seed_distill_v1"
+        ],
+        [
+          "K1009",
+          0.0,
+          0.0,
+          0.5,
+          8,
+          0,
+          0,
+          "seed:seed_distill_v1"
+        ],
+        [
+          "K1010",
+          0.0,
+          1.0,
+          0.3333333333333333,
+          9,
+          0,
+          0,
+          "seed:seed_distill_v1"
+        ],
+        [
+          "K1011",
+          0.75,
+          1.25,
+          0.4375,
+          10,
+          0,
+          0,
+          "seed:seed_distill_v1"
+        ],
+        [
+          "K1012",
+          0.0,
+          0.0,
+          0.5,
+          11,
+          0,
+          0,
+          "seed:seed_distill_v1"
+        ],
+        [
+          "K1013",
+          0.0,
+          0.0,
+          0.5,
+          12,
+          0,
+          0,
+          "seed:seed_distill_v1"
+        ],
+        [
+          "K1014",
+          0.0,
+          1.0,
+          0.3333333333333333,
+          13,
+          0,
+          0,
+          "seed:seed_distill_v1"
+        ],
+        [
+          "K1015",
+          0.0,
+          0.0,
+          0.5,
+          14,
+          0,
+          0,
+          "seed:seed_distill_v1"
+        ],
+        [
+          "K1016",
+          0.0,
+          0.0,
+          0.5,
+          15,
+          0,
+          0,
+          "seed:seed_distill_v1"
+        ],
+        [
+          "K1017",
+          0.5,
+          0.5,
+          0.5,
+          16,
+          0,
+          0,
+          "c000004"
+        ],
+        [
+          "K1018",
+          0.0,
+          0.0,
+          0.5,
+          17,
+          0,
+          0,
+          "c000005"
+        ],
+        [
+          "K1019",
+          0.0,
+          0.0,
+          0.5,
+          18,
+          0,
+          0,
+          "c000006"
+        ],
+        [
+          "K1020",
+          0.0,
+          0.0,
+          0.5,
+          19,
+          0,
+          0,
+          "c000004"
+        ],
+        [
+          "K1021",
+          0.0,
+          0.0,
+          0.5,
+          20,
+          0,
+          0,
+          "c000005"
+        ],
+        [
+          "K1022",
+          0.0,
+          0.0,
+          0.5,
+          21,
+          0,
+          0,
+          "c000006"
+        ]
+      ],
+      "complete": true,
+      "epoch": 0,
+      "label": "kb_0000",
+      "render": "[K1001] CORE RULE (all families, T=256-2048 steps; every task here is under-trained): rank choices by cumulative per-parameter displacement Δ. Adam/AdamW/RMSprop: Δ≈lr·T. Adagrad (zero-init accumulator, steps decay ~lr/√t): Δ≈2·lr·√T. SGD: Δ≈lr·T·|g|/(1−m) with raw grad |g|≈0.01 (bigram LM 0.003, MSE regression with momentum 0.03 — K1019), i.e. plain SGD ≈ Adam at lr/100, SGD m=0.9 ≈ Adam at lr/10. The largest-Δ choice wins 85% of optimizer-only and ~85% of mixed questions (after the lr-ceiling exceptions); a 1.5-3× Δ edge usually beats any architecture advantage. Use architecture rules only to break Δ ties (same optimizer+lr) or in architecture-only questions.\n[K1002] Adagrad conversion (any family): because Adagrad's step decays as lr/√t, it matches Adam only when its lr is ~√T/2 (8-23×) larger. Same architecture, lr_Adagrad/lr_Adam ≤3× → Adam/AdamW wins 65/70; =10× → coin flip (4-3); ≥30× → Adagrad wins 9/9. Within Adagrad the larger lr always wins (40/41 pairs; lr=3e-3 is never too big — the decay is a built-in anneal). Adagrad at lr≤1e-4 is effectively frozen (Δ≤0.01) and loses to almost any adaptive choice with lr≥3e-5·√T/2.\n[K1003] SGD (all families): plain SGD (momentum 0) at lr≤3e-3 is nearly frozen (wins ~8% of its appearances; in LMs embedding rows barely move, CE stays ≈ln V). SGD momentum 0.9 behaves like Adam at ~lr/10: so SGD m=0.9 lr 1e-3-3e-3 ≈ Adam 1e-4-3e-4 and is a real contender — it beats Adagrad ≤1e-3, Adam/RMSprop ≤3e-5-1e-4 and unstable RMSprop 3e-3 (e.g. univariate MSE 6e-5 vs 0.03) — but SGD m=0.9 at lr≤3e-4 loses to Adam/RMSprop at the same lr (10× smaller Δ). Family calibration (SGD calibration rule): bigram LM ≈ Adam at lr/30 (weaker), MSE regression ≈ Adam at lr/3 (stronger). Compute Δ with momentum.\n[K1004] LR-ceiling exceptions to the Δ rule: (a) RMSprop at lr≥1e-3 on MSE regression (no momentum averaging, zero-init square-avg inflates early steps up to ~10×) is noisy/unstable: vs choices with ≥3× smaller Δ it loses 12/27 at 3e-3 and 3/4 at 1e-3 (univariate); prefer Adam/AdamW at the same lr (Adam 3e-3 loses only 2/35) or RMSprop ≤3e-4. (b) Post-LN transformer LMs (nn.TransformerEncoderLayer default, no warmup) with Adam/AdamW/RMSprop lr≥1e-3 lose 14/25 to lr 1e-4-3e-4, worst for d_model=128 or T≥1024; GRU LMs tolerate 1e-3-3e-3 (high lr wins 12/17). (c) On MLP classification and Adam regression, lr 3e-3 is safe — take the larger Δ.\n[K1005] Second-order optimizer knobs are noise at these budgets: weight decay 0-1e-3 changes loss <1% (same-arch pairs: higher wd 3 wins/10 losses, all within 1%); Adam vs AdamW at equal lr/betas is a coin flip (5-5); beta2 0.95 vs 0.999 is ~even (7-4). Never let these override a lr·T difference; in rankings, order such near-twins by architecture or leave them adjacent.\n[K1006] MLP architecture default (regression, XOR, tabular when Δ<0.1): score each MLP = (number of LayerNorm'd blocks) + 1 if residual; pick the highest; break ties by activation on regression (ReLU/LeakyReLU > GELU > SiLU), then (tabular/multivariate) later last-LN (K1022), then greater depth. Picks 92/128 arch-only winners (univariate 28/31, multivariate 28/33, tabular 17/32, XOR 10/16). More-LN beats less-LN 61-11 (multivariate), 57-12 (univariate), 41-4 (tabular Δ<0.1); on regression plain+more-LN beats residual+less-LN (13/17 multivariate, 14/20 univariate). Exceptions: SPIRAL: residual first, then LN (K1020); XOR ≥8 features at Δ≥0.05: smooth activation (K1018); tabular Δ≥0.1: K1009/K1021.\n[K1007] Regression depth × residual (uni/multivariate MSE, any budget): a deeper residual MLP beats a shallower non-residual one 32-2; deep-narrow beats shallow-wide at similar params 70-32 (51-19 when lr·T<0.1); at equal depth extra width is a coin flip (5-5). Oscillatory/composite targets (sin(2πx)…, cos(2π sin…)) amplify the depth advantage: composition of 4-5 normalized residual blocks generates high-frequency curvature that 1-2 layer nets cannot reach within the budget. Non-residual deep stacks without LN are the exception: they attenuate signal and usually lose.\n[K1008] Activation × task: on MSE regression prefer ReLU/LeakyReLU > GELU > SiLU. Pairwise vs other activations (same optimizer): LeakyReLU wins 51/77, ReLU 42/67, GELU 30/64, SiLU only 29/96. SiLU/GELU have slope ~0.5 near 0 (silu(x)≈x/2), so stacked blocks attenuate signal/gradient and fit kinks/polynomials less precisely. The ranking flips for tabular classification once well-trained (see tabular rule): there GELU/SiLU win 16/16 vs ReLU-family. On XOR/spiral activation is a weak factor — decide by LN/residual/depth.\n[K1009] Budget × depth reversal on synthetic TABULAR classification (1024 train rows, 2-16 Gaussian features, smooth_additive / piecewise / sparse_interaction rules): when the shared Δ≥0.1 (Δ from the core rule: Adam/RMSprop lr·T, Adagrad 2·lr·√T, SGD ~lr·T/(1−m)/100 — NOT raw lr·T for SGD/Adagrad), the boundary is already learned and test CE is set by overconfidence — prefer SHALLOW (1-3 layers), wider nets with GELU/SiLU and fewer LN: shallower wins 21-5, less-LN 17-6, smooth activation 16/16. When Δ<0.1 the normal rule holds (more LN 41-4, deeper 35-17). This 2-regime rule picks 26/32 tabular arch-only winners. XOR/spiral do NOT reverse.\n[K1010] XOR and two-spiral classification (zero linear signal, chance CE=ln2≈0.693): loss stays on the chance plateau until weights move well beyond init, so (i) Δ is decisive — choices with Δ≲0.01 sit at 0.65-0.70 and are near-tied; (ii) among equal optimizers, deep RESIDUAL blocks with LN win: deeper+residual beats shallower plain 33-14 on classification, more-LN wins 20-5 on spiral (Δ≥0.01), deeper wins XOR at every budget (26-11). A 1-2 layer plain net rarely escapes the plateau in 256-512 steps. Spiral difficulty scales with turns: 1 turn best CE ~0.001-0.03, 2-2.5 turns ~0.45-0.6, 3 turns ~0.52-0.69 (nearly everything stuck → pick largest Δ).\n[K1011] Bigram LM architecture (same optimizer): a GRU LM beats a post-LN causal transformer in 20 of 21 same-optimizer pairs, at both weak and strong Δ — rank the GRU first. Mechanism: the task is a first-order lookup P(y|x_t); the GRU maps the current token straight to its output state and its tanh-bounded hidden state gives near-uniform initial logits (CE≈ln V), while the post-LN transformer feeds unit-RMS features to the head (logit std ~0.6, initial CE ~ln V+0.1-0.2) and must learn to ignore attention mixing. Transformer-vs-transformer shape is Δ-dependent (see bigram transformer shape rule): fewer layers only reliably wins at 0.02≤Δ<0.1 (21/21); at Δ≥0.5 prefer smaller d_model.\n[K1012] When Δs are close (mixed questions, rankings): a ≥4× Δ gap beats architecture (higher Δ wins 35/40 even vs a net with 2+ more LN/residual). Within ~3×, a clearly better MLP (≥2 more LN blocks/residual) wins 11/19 — treat as a toss-up leaning architecture. Δ also saturates: once both Δ≳0.3, extra Δ wins only ~62% (then use lr-ceiling, tabular-overfit and architecture rules). Rankings: sort by log Δ, then architecture; near-chance choices (Δ<~0.005: CE≈ln2 / ln V, MSE≈Var(y)) form a tied bottom block — order them by architecture, not small lr differences.\n[K1013] Bigram LM optimizer sweet spot: labels are sampled from P(y|x), so gradients carry irreducible noise and the achievable gain is only ~0.1-0.8 nats below ln V. Among choices with Δ≥0.1, prefer the one with Δ nearest ~0.3 (e.g. Adam/AdamW/RMSprop 3e-4 at T=512-1024, Adagrad 3e-3); treat Δ≥1 (lr≥1e-3 at T≥1024, lr 3e-3 at T≥512) as likely overshoot. Below Δ≈0.1 ordinary max-Δ still applies. This 'nearest 0.3' scoring picks 52/66 bigram optimizer/mixed winners vs 47/66 for plain max-Δ; adaptive-transformer winners are mostly lr 3e-4 (22/52). If all Δ<0.02 every LM stays ≈ln V and the GRU wins ties.\n[K1014] Dataset structure × depth (data-flip cue): the deeper-is-better preference (under Δ<0.1) is strong for smooth/compositional targets — tabular smooth_additive (deeper 24-8), XOR with ≤4 input features (15-4), oscillatory univariate targets — but weak or absent when the rule is piecewise_boundary (5-6) or sparse_interaction (6-3) or XOR has 8-16 distractor features (11-7); there prefer the most-LN candidate regardless of depth, EXCEPT XOR with ≥8 features at Δ≥0.05, where more-LN wins only 5/11 and GELU/SiLU decides (6/6; see XOR-distractor rule). Polynomial/low-frequency univariate targets reach MSE 1e-4-1e-5, so stability (Adam over RMSprop at high lr) decides.\n[K1015] Residual × depth × task: on regression, depth helps even without residuals (deeper plain beats shallower residual 24-15) because composed nonlinearities are needed for curvature; on classification, depth WITHOUT residual hurts (shallower residual beats deeper plain 19-13) while deeper residual beats shallower plain 33-14. So for CE tasks never pick a deep (≥4) plain stack over a residual one at the same optimizer; for MSE tasks a deep plain stack with ≥2 LN blocks is still competitive. Deep residual MLPs win 53% of their appearances vs 29% for deep plain.\n[K1016] Capacity is not the bottleneck: at these budgets parameter count and width barely predict the winner — do not pick the 'biggest model'. Pairwise larger-params wins only 37/76 on bigram LMs, ~50% on univariate regression; at equal depth wider MLPs are a coin flip on regression (5-5) and only mildly better on classification (7-2). Datasets are tiny but noiseless (256-1024 rows), and every candidate has ample capacity; what differs is how fast the parameters move (Δ) and how well signal propagates (LN, residual, activation). Use width/params only as the last tie-breaker (and prefer wider only in the tabular Δ≥0.1 regime).\n[K1017] Bigram LM transformer SHAPE (transformer vs transformer, same optimizer/lr/T) flips with Δ (core-rule units). 0.02≤Δ<0.1: fewest layers wins 21/21 pairs and the larger d_model wins 15/15 (d_model 128 × 1-2 layers, d_ff 256 won 10/10 questions). 0.1≤Δ<0.5: weak (fewer layers 10/17, smaller d_model 9/13). Δ≥0.5 (lr 3e-3 at T≥256, 1e-3 at T≥512): smaller d_model wins 5/6 and fewer layers only 3/10 — wide post-LN overshoots (cf. K1004b); order by d_model ascending, then layers (q_17f213: 32×3<32×4<64×1<64×2). Δ<0.02: all ≈ln V, deeper wins 10/17 (deeper-32 beat 64×1 in q_b66719). Winner-level 20/31 vs 18/31 for pooled 'fewer layers'. GRU still beats all (K1011).\n[K1018] XOR with ≥8 input features (≥6 pure-noise distractors) once trained (shared Δ≥0.05, e.g. Adam-family lr·T≥0.05): tabular-style reversal — GELU/SiLU beats ReLU/LeakyReLU in 6/6 same-optimizer pairs (3 questions; q_e914b6: 2-layer SiLU w192 1 LN CE 0.11 beat 5-layer 3-LN SiLU 0.17 and residual 2-LN ReLU 0.17), while more-LN wins only 5/11 and deeper 5/10. With ≤4 features keep deeper/more-LN (7/7, 6/7 pairs); for Δ<0.05 the LN/depth rule holds for all XOR (more-LN 7/9 even with distractors). Larger Δ still wins on XOR (6/7 pairs at Δ≥0.05). Small n — use as a tie-breaker override of K1006/K1014 only in this scope.\n[K1019] SGD gradient-scale calibration for the Δ rule (K1001 assumes raw |g|≈0.01), fit on 368 SGD-vs-adaptive pairs. Bigram LM: use |g|≈0.003 (SGD m=0.9 ≈ Adam at lr/30, plain ≈ lr/300): larger-Δ correct 68/70 vs 63/70 at 0.01; SGD m=0.9 beat Adam/AdamW/RMSprop in only 1/18 LM pairs (1/4 even at nominal Δ parity). MSE regression with momentum 0.9: use |g|≈0.03 (SGD m=0.9 ≈ Adam at lr/3): 59/71 vs 54/71; it wins 11/19 when the adaptive Δ is ≤4× its 0.01-estimate. Classification (131/146) and plain-SGD regression: keep 0.01. Plain SGD wins only 3/141 pairs when the adaptive Δ is >15× larger.\n[K1020] Two-spiral classification MLPs (same optimizer/lr/T): residual status outranks LayerNorm count, the reverse of regression/tabular. Residual-with-fewer-LN beats plain-with-more-LN in 7/9 corpus pairs (8 q) + 2/2 this epoch (q_c64c90, q_7476fe); lab 2/4. Within residual nets more LN wins 11/12 (median CE ratio 0.62-0.84); plain-vs-plain more LN only 3/5. Score spiral MLPs lexicographically: residual first, then #LN, then depth (arch-only winner pick 10.5/16 vs 9.5/16 for the LN+residual sum). Contrast: on MSE regression and tabular, plain+more-LN beats residual (multivariate 13/17, univariate 14/20, tabular 11/16 pairs).\n[K1021] Synthetic TABULAR classification Δ overshoot (lab, 10-seed, within-set, mostly T=256): once the smaller-Δ choice already has Δ≥0.1 (core-rule Δ; e.g. Adam lr 1e-3 at T=256, 1e-4 at T=1024), a ≥3× larger Δ LOSES on average: sparse_interaction larger-Δ wins 5/33 (median CE ratio 1.44), smooth_additive 22/55 (1.07), piecewise_boundary 36/58 (0.93); all tabular 63/146; same-optimizer AdamW 2/9, RMSprop 4/18. For smaller Δ in 0.03-0.1 larger still wins 59-88%; below 0.03 ~95%. So target Δ≈0.1-0.3 and decide among those by architecture (K1009). E.g. q_86f129: GELU Adam 1e-4×1024 (Δ0.1) beat LeakyReLU AdamW 3e-3 (Δ3).\n[K1022] LN PLACEMENT tie-breaker (MLP pre-LN blocks): at equal LN count and equal residual status, prefer the net whose last LayerNorm is closer to the output head (fewer unnormalized blocks after the final LN). Holds on synthetic tabular classification and multivariate regression when Δ<0.1: corpus 11/12 pairs (median loss ratio ~0.80); lab 4/7 (ratio ~0.99); controlled smooth-additive test 2/2 (0.95); q_7ae5d3 (tabular, Adagrad ≤3e-4) agrees. Does NOT hold on univariate regression or XOR (corpus 2/8; controlled univariate 1/4) nor at Δ≥0.1 (3/6). Apply only after LN count + residual tie (K1006); whether late placement beats one extra early LN is untested.",
+      "reports": {}
+    }
+  ],
+  "summary": "只有种子 kb_0000 的 22 条完整正文，未保存完整 epoch 或有效评测。",
+  "test": {},
+  "texts": [
+    "CORE RULE (all families, T=256-2048 steps; every task here is under-trained): rank choices by cumulative per-parameter displacement Δ. Adam/AdamW/RMSprop: Δ≈lr·T. Adagrad (zero-init accumulator, steps decay ~lr/√t): Δ≈2·lr·√T. SGD: Δ≈lr·T·|g|/(1−m) with raw grad |g|≈0.01 (bigram LM 0.003, MSE regression with momentum 0.03 — K1019), i.e. plain SGD ≈ Adam at lr/100, SGD m=0.9 ≈ Adam at lr/10. The largest-Δ choice wins 85% of optimizer-only and ~85% of mixed questions (after the lr-ceiling exceptions); a 1.5-3× Δ edge usually beats any architecture advantage. Use architecture rules only to break Δ ties (same optimizer+lr) or in architecture-only questions.",
+    "Adagrad conversion (any family): because Adagrad's step decays as lr/√t, it matches Adam only when its lr is ~√T/2 (8-23×) larger. Same architecture, lr_Adagrad/lr_Adam ≤3× → Adam/AdamW wins 65/70; =10× → coin flip (4-3); ≥30× → Adagrad wins 9/9. Within Adagrad the larger lr always wins (40/41 pairs; lr=3e-3 is never too big — the decay is a built-in anneal). Adagrad at lr≤1e-4 is effectively frozen (Δ≤0.01) and loses to almost any adaptive choice with lr≥3e-5·√T/2.",
+    "SGD (all families): plain SGD (momentum 0) at lr≤3e-3 is nearly frozen (wins ~8% of its appearances; in LMs embedding rows barely move, CE stays ≈ln V). SGD momentum 0.9 behaves like Adam at ~lr/10: so SGD m=0.9 lr 1e-3-3e-3 ≈ Adam 1e-4-3e-4 and is a real contender — it beats Adagrad ≤1e-3, Adam/RMSprop ≤3e-5-1e-4 and unstable RMSprop 3e-3 (e.g. univariate MSE 6e-5 vs 0.03) — but SGD m=0.9 at lr≤3e-4 loses to Adam/RMSprop at the same lr (10× smaller Δ). Family calibration (SGD calibration rule): bigram LM ≈ Adam at lr/30 (weaker), MSE regression ≈ Adam at lr/3 (stronger). Compute Δ with momentum.",
+    "LR-ceiling exceptions to the Δ rule: (a) RMSprop at lr≥1e-3 on MSE regression (no momentum averaging, zero-init square-avg inflates early steps up to ~10×) is noisy/unstable: vs choices with ≥3× smaller Δ it loses 12/27 at 3e-3 and 3/4 at 1e-3 (univariate); prefer Adam/AdamW at the same lr (Adam 3e-3 loses only 2/35) or RMSprop ≤3e-4. (b) Post-LN transformer LMs (nn.TransformerEncoderLayer default, no warmup) with Adam/AdamW/RMSprop lr≥1e-3 lose 14/25 to lr 1e-4-3e-4, worst for d_model=128 or T≥1024; GRU LMs tolerate 1e-3-3e-3 (high lr wins 12/17). (c) On MLP classification and Adam regression, lr 3e-3 is safe — take the larger Δ.",
+    "Second-order optimizer knobs are noise at these budgets: weight decay 0-1e-3 changes loss <1% (same-arch pairs: higher wd 3 wins/10 losses, all within 1%); Adam vs AdamW at equal lr/betas is a coin flip (5-5); beta2 0.95 vs 0.999 is ~even (7-4). Never let these override a lr·T difference; in rankings, order such near-twins by architecture or leave them adjacent.",
+    "MLP architecture default (regression, XOR, tabular when Δ<0.1): score each MLP = (number of LayerNorm'd blocks) + 1 if residual; pick the highest; break ties by activation on regression (ReLU/LeakyReLU > GELU > SiLU), then (tabular/multivariate) later last-LN (K1022), then greater depth. Picks 92/128 arch-only winners (univariate 28/31, multivariate 28/33, tabular 17/32, XOR 10/16). More-LN beats less-LN 61-11 (multivariate), 57-12 (univariate), 41-4 (tabular Δ<0.1); on regression plain+more-LN beats residual+less-LN (13/17 multivariate, 14/20 univariate). Exceptions: SPIRAL: residual first, then LN (K1020); XOR ≥8 features at Δ≥0.05: smooth activation (K1018); tabular Δ≥0.1: K1009/K1021.",
+    "Regression depth × residual (uni/multivariate MSE, any budget): a deeper residual MLP beats a shallower non-residual one 32-2; deep-narrow beats shallow-wide at similar params 70-32 (51-19 when lr·T<0.1); at equal depth extra width is a coin flip (5-5). Oscillatory/composite targets (sin(2πx)…, cos(2π sin…)) amplify the depth advantage: composition of 4-5 normalized residual blocks generates high-frequency curvature that 1-2 layer nets cannot reach within the budget. Non-residual deep stacks without LN are the exception: they attenuate signal and usually lose.",
+    "Activation × task: on MSE regression prefer ReLU/LeakyReLU > GELU > SiLU. Pairwise vs other activations (same optimizer): LeakyReLU wins 51/77, ReLU 42/67, GELU 30/64, SiLU only 29/96. SiLU/GELU have slope ~0.5 near 0 (silu(x)≈x/2), so stacked blocks attenuate signal/gradient and fit kinks/polynomials less precisely. The ranking flips for tabular classification once well-trained (see tabular rule): there GELU/SiLU win 16/16 vs ReLU-family. On XOR/spiral activation is a weak factor — decide by LN/residual/depth.",
+    "Budget × depth reversal on synthetic TABULAR classification (1024 train rows, 2-16 Gaussian features, smooth_additive / piecewise / sparse_interaction rules): when the shared Δ≥0.1 (Δ from the core rule: Adam/RMSprop lr·T, Adagrad 2·lr·√T, SGD ~lr·T/(1−m)/100 — NOT raw lr·T for SGD/Adagrad), the boundary is already learned and test CE is set by overconfidence — prefer SHALLOW (1-3 layers), wider nets with GELU/SiLU and fewer LN: shallower wins 21-5, less-LN 17-6, smooth activation 16/16. When Δ<0.1 the normal rule holds (more LN 41-4, deeper 35-17). This 2-regime rule picks 26/32 tabular arch-only winners. XOR/spiral do NOT reverse.",
+    "XOR and two-spiral classification (zero linear signal, chance CE=ln2≈0.693): loss stays on the chance plateau until weights move well beyond init, so (i) Δ is decisive — choices with Δ≲0.01 sit at 0.65-0.70 and are near-tied; (ii) among equal optimizers, deep RESIDUAL blocks with LN win: deeper+residual beats shallower plain 33-14 on classification, more-LN wins 20-5 on spiral (Δ≥0.01), deeper wins XOR at every budget (26-11). A 1-2 layer plain net rarely escapes the plateau in 256-512 steps. Spiral difficulty scales with turns: 1 turn best CE ~0.001-0.03, 2-2.5 turns ~0.45-0.6, 3 turns ~0.52-0.69 (nearly everything stuck → pick largest Δ).",
+    "Bigram LM architecture (same optimizer): a GRU LM beats a post-LN causal transformer in 20 of 21 same-optimizer pairs, at both weak and strong Δ — rank the GRU first. Mechanism: the task is a first-order lookup P(y|x_t); the GRU maps the current token straight to its output state and its tanh-bounded hidden state gives near-uniform initial logits (CE≈ln V), while the post-LN transformer feeds unit-RMS features to the head (logit std ~0.6, initial CE ~ln V+0.1-0.2) and must learn to ignore attention mixing. Transformer-vs-transformer shape is Δ-dependent (see bigram transformer shape rule): fewer layers only reliably wins at 0.02≤Δ<0.1 (21/21); at Δ≥0.5 prefer smaller d_model.",
+    "When Δs are close (mixed questions, rankings): a ≥4× Δ gap beats architecture (higher Δ wins 35/40 even vs a net with 2+ more LN/residual). Within ~3×, a clearly better MLP (≥2 more LN blocks/residual) wins 11/19 — treat as a toss-up leaning architecture. Δ also saturates: once both Δ≳0.3, extra Δ wins only ~62% (then use lr-ceiling, tabular-overfit and architecture rules). Rankings: sort by log Δ, then architecture; near-chance choices (Δ<~0.005: CE≈ln2 / ln V, MSE≈Var(y)) form a tied bottom block — order them by architecture, not small lr differences.",
+    "Bigram LM optimizer sweet spot: labels are sampled from P(y|x), so gradients carry irreducible noise and the achievable gain is only ~0.1-0.8 nats below ln V. Among choices with Δ≥0.1, prefer the one with Δ nearest ~0.3 (e.g. Adam/AdamW/RMSprop 3e-4 at T=512-1024, Adagrad 3e-3); treat Δ≥1 (lr≥1e-3 at T≥1024, lr 3e-3 at T≥512) as likely overshoot. Below Δ≈0.1 ordinary max-Δ still applies. This 'nearest 0.3' scoring picks 52/66 bigram optimizer/mixed winners vs 47/66 for plain max-Δ; adaptive-transformer winners are mostly lr 3e-4 (22/52). If all Δ<0.02 every LM stays ≈ln V and the GRU wins ties.",
+    "Dataset structure × depth (data-flip cue): the deeper-is-better preference (under Δ<0.1) is strong for smooth/compositional targets — tabular smooth_additive (deeper 24-8), XOR with ≤4 input features (15-4), oscillatory univariate targets — but weak or absent when the rule is piecewise_boundary (5-6) or sparse_interaction (6-3) or XOR has 8-16 distractor features (11-7); there prefer the most-LN candidate regardless of depth, EXCEPT XOR with ≥8 features at Δ≥0.05, where more-LN wins only 5/11 and GELU/SiLU decides (6/6; see XOR-distractor rule). Polynomial/low-frequency univariate targets reach MSE 1e-4-1e-5, so stability (Adam over RMSprop at high lr) decides.",
+    "Residual × depth × task: on regression, depth helps even without residuals (deeper plain beats shallower residual 24-15) because composed nonlinearities are needed for curvature; on classification, depth WITHOUT residual hurts (shallower residual beats deeper plain 19-13) while deeper residual beats shallower plain 33-14. So for CE tasks never pick a deep (≥4) plain stack over a residual one at the same optimizer; for MSE tasks a deep plain stack with ≥2 LN blocks is still competitive. Deep residual MLPs win 53% of their appearances vs 29% for deep plain.",
+    "Capacity is not the bottleneck: at these budgets parameter count and width barely predict the winner — do not pick the 'biggest model'. Pairwise larger-params wins only 37/76 on bigram LMs, ~50% on univariate regression; at equal depth wider MLPs are a coin flip on regression (5-5) and only mildly better on classification (7-2). Datasets are tiny but noiseless (256-1024 rows), and every candidate has ample capacity; what differs is how fast the parameters move (Δ) and how well signal propagates (LN, residual, activation). Use width/params only as the last tie-breaker (and prefer wider only in the tabular Δ≥0.1 regime).",
+    "Bigram LM transformer SHAPE (transformer vs transformer, same optimizer/lr/T) flips with Δ (core-rule units). 0.02≤Δ<0.1: fewest layers wins 21/21 pairs and the larger d_model wins 15/15 (d_model 128 × 1-2 layers, d_ff 256 won 10/10 questions). 0.1≤Δ<0.5: weak (fewer layers 10/17, smaller d_model 9/13). Δ≥0.5 (lr 3e-3 at T≥256, 1e-3 at T≥512): smaller d_model wins 5/6 and fewer layers only 3/10 — wide post-LN overshoots (cf. K1004b); order by d_model ascending, then layers (q_17f213: 32×3<32×4<64×1<64×2). Δ<0.02: all ≈ln V, deeper wins 10/17 (deeper-32 beat 64×1 in q_b66719). Winner-level 20/31 vs 18/31 for pooled 'fewer layers'. GRU still beats all (K1011).",
+    "XOR with ≥8 input features (≥6 pure-noise distractors) once trained (shared Δ≥0.05, e.g. Adam-family lr·T≥0.05): tabular-style reversal — GELU/SiLU beats ReLU/LeakyReLU in 6/6 same-optimizer pairs (3 questions; q_e914b6: 2-layer SiLU w192 1 LN CE 0.11 beat 5-layer 3-LN SiLU 0.17 and residual 2-LN ReLU 0.17), while more-LN wins only 5/11 and deeper 5/10. With ≤4 features keep deeper/more-LN (7/7, 6/7 pairs); for Δ<0.05 the LN/depth rule holds for all XOR (more-LN 7/9 even with distractors). Larger Δ still wins on XOR (6/7 pairs at Δ≥0.05). Small n — use as a tie-breaker override of K1006/K1014 only in this scope.",
+    "SGD gradient-scale calibration for the Δ rule (K1001 assumes raw |g|≈0.01), fit on 368 SGD-vs-adaptive pairs. Bigram LM: use |g|≈0.003 (SGD m=0.9 ≈ Adam at lr/30, plain ≈ lr/300): larger-Δ correct 68/70 vs 63/70 at 0.01; SGD m=0.9 beat Adam/AdamW/RMSprop in only 1/18 LM pairs (1/4 even at nominal Δ parity). MSE regression with momentum 0.9: use |g|≈0.03 (SGD m=0.9 ≈ Adam at lr/3): 59/71 vs 54/71; it wins 11/19 when the adaptive Δ is ≤4× its 0.01-estimate. Classification (131/146) and plain-SGD regression: keep 0.01. Plain SGD wins only 3/141 pairs when the adaptive Δ is >15× larger.",
+    "Two-spiral classification MLPs (same optimizer/lr/T): residual status outranks LayerNorm count, the reverse of regression/tabular. Residual-with-fewer-LN beats plain-with-more-LN in 7/9 corpus pairs (8 q) + 2/2 this epoch (q_c64c90, q_7476fe); lab 2/4. Within residual nets more LN wins 11/12 (median CE ratio 0.62-0.84); plain-vs-plain more LN only 3/5. Score spiral MLPs lexicographically: residual first, then #LN, then depth (arch-only winner pick 10.5/16 vs 9.5/16 for the LN+residual sum). Contrast: on MSE regression and tabular, plain+more-LN beats residual (multivariate 13/17, univariate 14/20, tabular 11/16 pairs).",
+    "Synthetic TABULAR classification Δ overshoot (lab, 10-seed, within-set, mostly T=256): once the smaller-Δ choice already has Δ≥0.1 (core-rule Δ; e.g. Adam lr 1e-3 at T=256, 1e-4 at T=1024), a ≥3× larger Δ LOSES on average: sparse_interaction larger-Δ wins 5/33 (median CE ratio 1.44), smooth_additive 22/55 (1.07), piecewise_boundary 36/58 (0.93); all tabular 63/146; same-optimizer AdamW 2/9, RMSprop 4/18. For smaller Δ in 0.03-0.1 larger still wins 59-88%; below 0.03 ~95%. So target Δ≈0.1-0.3 and decide among those by architecture (K1009). E.g. q_86f129: GELU Adam 1e-4×1024 (Δ0.1) beat LeakyReLU AdamW 3e-3 (Δ3).",
+    "LN PLACEMENT tie-breaker (MLP pre-LN blocks): at equal LN count and equal residual status, prefer the net whose last LayerNorm is closer to the output head (fewer unnormalized blocks after the final LN). Holds on synthetic tabular classification and multivariate regression when Δ<0.1: corpus 11/12 pairs (median loss ratio ~0.80); lab 4/7 (ratio ~0.99); controlled smooth-additive test 2/2 (0.95); q_7ae5d3 (tabular, Adagrad ≤3e-4) agrees. Does NOT hold on univariate regression or XOR (corpus 2/8; controlled univariate 1/4) nor at Δ≥0.1 (3/6). Apply only after LN count + residual tie (K1006); whether late placement beats one extra early LN is untested."
+  ]
+}
