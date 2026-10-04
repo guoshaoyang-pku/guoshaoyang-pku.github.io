@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="gpt-6.1-sol 的外显知识库实验：选择验证集、固定测试与训练流对照，以及先集邮、后整理的宏观迭代方案。">
+<title>让知识库帮助强模型：KB 科学循环阶段登记</title>
+<style>
+:root{--paper:#faf8f4;--white:#fff;--ink:#202b2b;--muted:#5b6868;--line:#dedbd3;--teal:#1f6f68;--purple:#66649a;--ochre:#996439}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.8 -apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans SC",sans-serif}a{color:var(--teal);text-underline-offset:3px}main{max-width:1000px;margin:auto;padding:30px 32px 70px}header{padding:26px 0 32px;border-bottom:1px solid var(--line)}.eyebrow{letter-spacing:.13em;font-size:12px;font-weight:700;color:var(--teal)}h1{font-size:clamp(27px,4vw,40px);line-height:1.3;letter-spacing:-.025em;margin:16px 0}h2{font-size:24px;margin:42px 0 12px;line-height:1.4}h3{font-size:17px;margin:8px 0}.lead{font-size:18px;max-width:800px}.meta,.small,figcaption{color:var(--muted);font-size:13px}.meta{margin:10px 0}.callout{padding:18px 22px;border-left:4px solid var(--teal);background:#eaf2ee;margin:24px 0}.callout p{margin:4px 0}.status{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:24px 0}.tile{background:var(--white);border:1px solid var(--line);padding:17px;border-radius:10px}.number{display:block;font-size:27px;line-height:1.3;font-weight:650}.tag{font-size:12px;display:inline-block;padding:2px 9px;border-radius:99px;background:#ece9e1;color:var(--muted);margin-top:8px}.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:8px;background:var(--white)}table{border-collapse:collapse;width:100%;font-size:14px;line-height:1.6}th,td{padding:12px 13px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{background:#f1eee7;font-weight:600}tr:last-child td{border-bottom:0}td.numeric{white-space:nowrap;font-variant-numeric:tabular-nums}figure{margin:26px 0}figure img{display:block;width:100%;height:auto}figcaption{margin:10px 0}.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}.box{border:1px solid var(--line);background:var(--white);border-radius:10px;padding:18px 22px}.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:20px 0}.steps .box{position:relative}.stepnum{font-size:12px;font-weight:700;color:var(--teal);letter-spacing:.12em}.box p{font-size:14px;margin:8px 0}.compact li{margin:8px 0}code{font:13px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace;background:#eeeae1;border-radius:4px;padding:2px 5px;overflow-wrap:anywhere}.rule{border-left:3px solid #bbb4a7;padding-left:18px}.rule p{margin:6px 0}.note{font-size:14px;color:var(--muted)}footer{margin-top:46px;border-top:1px solid var(--line);padding-top:18px;font-size:13px;color:var(--muted)}nav{display:flex;gap:18px;flex-wrap:wrap;margin:16px 0;font-size:14px}@media(max-width:650px){main{padding:20px 18px 50px}.status,.two,.steps{grid-template-columns:1fr}.number{font-size:24px}h2{font-size:22px}th,td{padding:10px;min-width:95px}.lead{font-size:17px}}@media print{nav{display:none}main{max-width:none;padding:0}.box,.tile,.callout{break-inside:avoid}h2{break-after:avoid}a{color:inherit}}
+</style>
+</head>
+<body>
+<main>
+<a href="index.html">← KB 科学循环主站</a>
+<header>
+<div class="eyebrow">SCIENCE OF AI · 实验登记 2026.10.04</div>
+<h1>让知识库帮助强模型：KB 科学循环阶段登记</h1>
+<p class="lead">让模型从解题和实验中积累知识，纠正强模型的判断，并逐步整理出训练科学。当前已有正向效用信号；冻结知识库在充分独立测试上的稳定显著收益，仍需更大的验证。</p>
+<p class="meta">解题者 <b>gpt-6.1-sol · low effort</b> · 总结者 Claude Opus 5.5 · 外显 KB，未更新解题模型权重</p>
+<p class="meta">结果来源：此前保存的工具结果与监控事件。最近完成事件为 v3 第 9 轮拒收；运行状态于 10 月 4 日约 16:30 CST 另行核对。本页是静态登记。</p>
+</header>
+<nav aria-label="本页目录"><a href="#results">结果</a><a href="#protocol">迭代方案</a><a href="#science">科学线索</a><a href="#boundaries">证据边界</a><a href="#runtime">运行现状</a></nav>
+
+<div class="callout"><p><b>目前可以说：</b>KB 对 sol 的决策已经显示正向作用，值得继续长期积累。</p><p><b>仍待确认：</b>把同一个最终 KB 冻结后，它在新的、足够大的独立测试上能带来多少收益。</p></div>
+<div class="status">
+<div class="tile"><span class="number">+5.67pt <small>±1.84</small></span><h3>v3 第 8 轮 · val 200</h3><span class="tag">参与快照选择</span></div>
+<div class="tile"><span class="number">+2.67pt <small>±2.79</small></span><h3>同一 KB · test 81</h3><span class="tag">样本小，有历史污染边界</span></div>
+<div class="tile"><span class="number">+8.45pt <small>±2.36</small></span><h3>动态 KB · 训练流 207</h3><span class="tag">随轮次变化的在线对照</span></div>
+</div>
+<p class="small">所有收益相对同题无 KB；± 为题级配对差值的 1 个标准误（SE），并非 95% 置信区间。重复采样没有增加独立题目的数量。</p>
+
+<section id="results">
+<h2>01 / 把几类收益分别登记</h2>
+<p>这些结果全部由 <b>gpt-6.1-sol</b> 解题。选择题是 0/1 分；五候选排序按逆序对数给部分分。因此下表记录的是平均 benchmark 得分，不是统一的正确率。<code>kb_0008</code> 等名称只有结合 run 才能唯一定位。</p>
+<div class="table-wrap"><table>
+<thead><tr><th>实验 / KB</th><th>评测类别</th><th>题数 × 每题采样</th><th>平均得分</th><th>相对无 KB</th></tr></thead>
+<tbody>
+<tr><td>v1 · <code>kb_0010</code></td><td>反复使用的 val</td><td class="numeric">100 × 4</td><td class="numeric">0.6550</td><td class="numeric">+6.83 ±2.13pt</td></tr>
+<tr><td>v1 · <code>kb_0010</code></td><td>固定 test</td><td class="numeric">81 × 3</td><td class="numeric">0.6286</td><td class="numeric">+1.65 ±2.99pt</td></tr>
+<tr><td>v1 · <code>kb_0010</code></td><td>排除 6 道旧语料重叠题</td><td class="numeric">75 × 3</td><td class="numeric">0.6122</td><td class="numeric">+2.22 ±3.07pt</td></tr>
+<tr><td>v1 · <code>kb_0013</code></td><td>固定 test</td><td class="numeric">81 × 3</td><td class="numeric">0.6132</td><td class="numeric">+0.10 ±2.76pt</td></tr>
+<tr><td><b>v3 · <code>kb_0008</code></b></td><td>val</td><td class="numeric">200 × 2</td><td class="numeric"><b>0.6600</b></td><td class="numeric"><b>+5.67 ±1.84pt</b></td></tr>
+<tr><td><b>v3 · <code>kb_0008</code></b></td><td>固定 test</td><td class="numeric">81 × 2</td><td class="numeric"><b>0.6389</b></td><td class="numeric"><b>+2.67 ±2.79pt</b></td></tr>
+<tr><td>v3 · 随轮次变化的 KB</td><td>训练流，当前题更新前对照</td><td class="numeric">207 × 1/组</td><td>—</td><td class="numeric">+8.45 ±2.36pt</td></tr>
+</tbody></table></div>
+<figure><img src="kb-score-gains-20261004.svg" alt="收益及一个标准误：v1 val 6.83±2.13pt，test 1.65±2.99pt；v3 val 5.67±1.84pt，test 2.67±2.79pt；在线训练流8.45±2.36pt。"><figcaption>不同颜色表示不同证据类别：棕色为参与选择的 val，绿色为固定 test，紫色为动态 KB 的训练流对照。每行的估计对象不同。</figcaption></figure>
+<p>v3 第 8 轮比其起点 KB 高 <b>3.38 ±1.18pt</b>，通过当时的严格把关。28 条 claim，共 17,863 个正文字符。第 9 轮候选相对它为 <b>−3.31 ±1.33pt</b>，被拒收。最新可核验的已采纳 v3 快照仍是第 8 轮。</p>
+<p>训练流 +8.45pt 是另一个有价值的信号：每道新题在用本题答案更新 KB 之前，用当前 KB 和无 KB 各解一次。但 KB 随轮次变化，题源比例也不同。这支持持续积累的在线效用，不能直接替代一个冻结最终快照的泛化成绩。</p>
+</section>
+
+<section id="protocol">
+<h2>02 / 从短把关转向长期生长</h2>
+<p>100 题的小幅得分变化不适合指导每轮知识增删。频繁择优会追逐噪声；一轮尚未形成用途的事实，也可能在后续积累和整理后才有价值。当前 v4 因而采用“先集邮，后整理”的节奏，按多个轮次形成的整体收益审查 KB。</p>
+<div class="steps">
+<div class="box"><div class="stepnum">01 · COLLECT</div><h3>积累有范围的事实</h3><p>普通轮次记录具体的比较、条件、计数和效应量。机理可选，取消硬字数预算，不要求提前压缩。</p></div>
+<div class="box"><div class="stepnum">02 · CONSOLIDATE</div><h3>每 5 轮主动实验与整理</h3><p>把事实聚类，再研究边界与翻转。研究调用上限由 2 增至 6；能够解释这一簇观测后，再整理为机理和相图。</p></div>
+<div class="box"><div class="stepnum">03 · REVIEW</div><h3>宏观检查整体收益</h3><p>每 5 轮评测 val 200 与固定 test 81，各 3 次采样。test 只作读数；根据 val 审查成长轨迹。</p></div>
+</div>
+<p>v4 从 v3 第 8 轮 KB 出发，导入 627 条此前的训练记录，计划 15 轮。已有实验工具可把相同候选配置移到同族的其他数据集，观察数据属性如何翻转结论。当前尚无已完成的 v4 宏观检查点，不登记预测收益。</p>
+<p class="note">降低选择频率不会自动消除选择偏差。实现按显著退步事件累积审查计数；旧实现并未在所有持平分支清零，所以本页不将其写为“严格连续两次退步”。</p>
+<div class="two">
+<div class="box"><h3>为什么暂时不强制压缩</h3><p>15k 字预算下，v3 两个压缩候选相对起点分别为 −2.38±1.69pt、−2.91±1.57pt。可能的原因包括丢失阈值与条件，以及关键词检索变化。两次负结果不足以把原因唯一归为压缩。</p></div>
+<div class="box"><h3>为什么早期不要求机理齐全</h3><p>单独的 <code>kb_explain</code> 调用率约 1–4%。这说明显式解释字段访问少；它不证明机理无用。先收集观测，再用主动实验区分解释，更符合当前证据密度。</p></div>
+</div>
+</section>
+
+<section id="science">
+<h2>03 / 已积累的科学线索</h2>
+<p>实验库起始约 11,200 个已测候选配置，通常各有 10 个训练 seed。到 v3 第 8 轮的保存快照，运行实验表已有 <b>1,529 行</b>。行数含继承、配置和可能的缓存结果，不等于独立新实验数。以下是值得继续复现的、有条件的经验结果。</p>
+<div class="rule"><h3>GRU 和 transformer 的比较取决于相对宽度</h3><p>同优化器的保存 lab 对比中，GRU 对宽度 128 的 transformer 只赢 1/14；GRU64 对 transformer32 赢 10/11。旧“GRU 几乎总赢”的说法混入宽度差，不能作为普遍机制。</p></div>
+<div class="rule"><h3>宽深回归网络需要学习位移上限</h3><p>在宽度 ≥128、深度 ≥4 的同模型单变量回归对比中，高 Δ≥0.9 对较低 Δ 只赢 1/9，median loss ratio 为 3.4。偏好的 Δ≈0.1–0.5 仍需保留对手欠训练的例外。</p></div>
+<div class="rule"><h3>归一化和激活的优先级会随预算变化</h3><p>两个目标上的受控比较：3 层网络的无 LN LeakyReLU 对 SiLU+LN 在 Δ≈0.077 时赢 0/2，在 Δ≈0.77 和 3.1 时各赢 2/2。它定位了有限范围的翻转，尚未建立跨目标通用阈值。</p></div>
+<p class="note">这里的 Δ 通常取 lr×steps，Adagrad 取 2lr√steps，SGD 另做梯度和动量校正。它是组织观测的训练位移代理，不能当成已直接测得的普遍因果变量。机制字段应保留可反驳预测及其适用域。</p>
+</section>
+
+<section id="boundaries">
+<h2>04 / 要保留的证据边界</h2>
+<ol class="compact">
+<li><b>val 和 test 的差异提示收益可能被高估。</b>v1 的 +6.83pt val 收益，在固定 test 上是 +1.65pt。来源可能包含选择偏差、题型差异和有限采样；不能精确归因全部差距为“挑噪声”。</li>
+<li><b>test 不能再称完全未见。</b>旧回测 corpus 与 15 道 val、6 道 test 的 arch170 题重叠。过滤为 469 题防止新回测再次看到它们；继承 KB 已吸收的信息仍无法抹除。v3 的 75 题净子集读数待重算。</li>
+<li><b>固定 test 已多次查看。</b>它仍是区别于 val 的读数，但本项目已依据这些结果调整实验方向。之后的确证应使用重新冻结、更大的独立评测集合。</li>
+<li><b>误差条是描述性 SE。</b>它未校正快照选择，也未按数据集 group 聚类；题级配对有用，但不能用“超过几倍 SE”自动得出整体研究显著性。</li>
+<li><b>错误方向表不等于 calibration。</b>偏向更大 lr、宽度或较少 LN 的错选，可以指向值得验证的纠偏事实；尚无置信概率、Brier score 或可靠性曲线，不能断言概率校准失败。</li>
+<li><b>诊断未证明“sol 已会所有知识”。</b>直接查原始实验库和小预测器的收益较小，也可能来自检索、数据属性缺失、分布或模型限制。需要更精确的比较和主动实验继续判断。</li>
+</ol>
+</section>
+
+<section id="runtime">
+<h2>05 / 运行现状与下一次登记</h2>
+<div class="table-wrap"><table><thead><tr><th>运行</th><th>本次能核验的状态</th><th>下一步可登记的证据</th></tr></thead><tbody>
+<tr><td><code>soa_v3</code></td><td>第 9 轮已拒收；约 16:30 检查时主进程在，活动总结者为第 10 轮。</td><td>第 10 轮完整摘要、把关与快照。</td></tr>
+<tr><td><code>soa_v4</code></td><td>主进程在；最近监控有多次上游 quota 403，尚无完成的宏观检查点。</td><td>总结正常完成及第 5 轮宏观检查结果。</td></tr>
+</tbody></table></div>
+<p>进程存在不能证明正在成功推进。原实验目录在本次发布会话中不可读，因此没有把后续未核验的完成数写入结果。当前的关键工作是确保 curation 产物完整，持续收集，补上净测试和概率校准读数，再用新的大样本观察宏观收益。</p>
+</section>
+
+<footer>
+<p>本页结果与协议均为 2026-10-04 的阶段快照。下载：<a href="kb-results-20261004.json">结构化结果与限制</a> · <a href="kb-score-gains-20261004.svg">可导出的收益图</a> · <a href="index.html">KB 实验主站及早期结果</a></p>
+<p>未公开题目正文、答案、API 凭据或私有日志。登记数值取自保存工具结果和监控事件，不冒充本次从原始运行目录重新计算。</p>
+</footer>
+</main>
+</body>
+</html>
