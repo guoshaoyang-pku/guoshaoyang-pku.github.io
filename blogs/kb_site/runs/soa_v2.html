@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>KB Science Loop viewer</title>
+<style>
+:root{--bg:#f7f8fa;--card:#fff;--ink:#1f2937;--mute:#6b7280;--line:#e5e7eb;--blue:#2563eb;--amber:#d97706;--violet:#7c3aed;--green:#059669;--red:#dc2626;--teal:#0d9488}
+*{box-sizing:border-box}body{margin:0;font:13px/1.5 -apple-system,"PingFang SC","Noto Sans SC",sans-serif;background:var(--bg);color:var(--ink)}
+header{position:sticky;top:0;z-index:5;background:#111827;color:#fff;padding:8px 16px;display:flex;gap:16px;align-items:center}
+header b{font-size:15px}header nav button{background:none;border:0;color:#cbd5e1;font:inherit;padding:6px 10px;border-radius:6px;cursor:pointer}
+header nav button.on{background:#374151;color:#fff}
+main{display:flex;height:calc(100vh - 44px)}
+#side{width:250px;overflow:auto;border-right:1px solid var(--line);background:#fff;flex:none}
+#view{flex:1;overflow:auto;padding:14px 18px}
+.item{padding:6px 10px;border-bottom:1px solid var(--line);cursor:pointer}.item:hover{background:#f3f4f6}.item.on{background:#e0e7ff}
+.item small{color:var(--mute)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:10px 0}
+.card>h3{margin:0 0 6px;font-size:14px}
+.solver{border-left:4px solid var(--blue)}.disc{border-left:4px solid var(--amber)}.summ{border-left:4px solid var(--violet)}.kbc{border-left:4px solid var(--green)}
+pre{white-space:pre-wrap;word-break:break-word;margin:4px 0;font:12px/1.45 ui-monospace,Menlo,monospace;background:#f9fafb;border:1px solid var(--line);border-radius:6px;padding:6px 8px;max-height:420px;overflow:auto}
+pre.tall{max-height:none}
+details{margin:4px 0}summary{cursor:pointer;color:#374151;font-weight:600}
+.tag{display:inline-block;padding:0 6px;border-radius:9px;font-size:11px;margin-right:4px;background:#eef2ff;color:#3730a3}
+.ok{background:#dcfce7;color:#166534}.bad{background:#fee2e2;color:#991b1b}.mid{background:#fef3c7;color:#92400e}
+.turn{border-top:1px dashed var(--line);padding-top:6px;margin-top:6px}
+.call{margin:4px 0 4px 10px;border-left:2px solid #cbd5e1;padding-left:8px}
+.call .nm{font-weight:600;color:var(--teal)}
+table{border-collapse:collapse;width:100%;background:#fff}td,th{border:1px solid var(--line);padding:3px 6px;vertical-align:top;text-align:left}
+th{background:#f3f4f6;position:sticky;top:0}
+tr.shown td:first-child{border-left:4px solid var(--green)}
+.add{background:#ecfdf5}.del{background:#fef2f2}.chg{background:#fffbeb}
+.sub button{border:1px solid var(--line);background:#fff;border-radius:6px;padding:3px 10px;margin-right:6px;cursor:pointer}.sub button.on{background:#111827;color:#fff}
+input[type=search]{width:100%;padding:5px 8px;border:1px solid var(--line);border-radius:6px}
+.bar{height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden;width:80px;display:inline-block;vertical-align:middle}.bar i{display:block;height:100%;background:var(--green)}
+.note{color:var(--mute);font-size:12px}
+.flow{display:flex;gap:8px;align-items:stretch;flex-wrap:wrap}.flow div{flex:1;min-width:180px;padding:8px;border-radius:8px;background:#fff;border:1px solid var(--line)}
+mark{background:#fde68a}
+#pop{position:fixed;inset:0;z-index:30;background:rgba(15,23,42,.35);display:none}
+#popc{position:absolute;width:min(780px,94vw);max-height:84vh;overflow:auto;background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 14px;box-shadow:0 12px 40px rgba(0,0,0,.25)}
+#popc h3{margin:0 0 6px;font-size:14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+#popx{margin-left:auto;cursor:pointer;border:1px solid var(--line);background:#fff;border-radius:6px;padding:1px 10px;font:inherit}
+</style>
+</head>
+<body>
+<header><a id="home" style="color:#93c5fd;text-decoration:none;font-weight:600" href="#">← 主站</a><b id="title">KB Science Loop</b><nav id="nav"></nav><span class="note" style="color:#9ca3af" id="meta"></span></header>
+<main><div id="side"></div><div id="view"></div></main>
+<div id="pop" onclick="if(event.target===this)closePop()"><div id="popc"></div></div>
+<script>
+const D = {"run": "soa_v2", "config": {"run_name": "soa_v2", "provider": "cctq", "model": "gpt-6.1-sol", "solve_effort": "low", "render": "tool", "batch_size": 30, "epochs": 10, "sources": ["arch170", "ranking_v2", "ranking_v3", "dataflip500"], "science": true, "phase_preview": 200, "train_control": true, "seed_kb": "soa_v1/kb_0001", "solver_backend": "codex"}, "texts": [], "snaps": [{"label": "未取得 KB 快照", "epoch": 0, "claims": [], "complete": false, "note": "该分支尝试把 phase 的前 200 字符放入检索返回；随后停下，尚无可登记收益。", "render": "该实验采用可选 kb_search 检索，KB 没有全文注入。当前没有取得逐题检索返回。", "claimDetails": {}, "totalClaims": 0, "excerptIds": []}], "epochs": [], "commits": [], "evals": {}, "prompts": {}, "availability": "诊断分支已启动后停下；没有恢复到已完成 epoch、完整 KB 或独立评测。", "home": "../index.html", "defaultTab": "kb", "evidence_origin": "原实验会话保存的工具返回和监控输出；未把缺失快照补写成完整正文。", "uncertainty": "分数为平均 benchmark 得分，排序含部分分；± 为题级配对 1 SE。", "defaultSnap": "未取得 KB 快照", "evalNote": "", "flow": ["① 解题：KB 工具检索返回追加 phase 片段。", "② 训练对照：增加同题无 KB 解题，记录差异。", "③ 诊断分支：已启动后停下，未取得完成轮次。", "④ 结果：未取得可登记的独立评测。"]};
+const T = i => D.texts[i];
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+const $ = id => document.getElementById(id);
+const snapBy = Object.fromEntries(D.snaps.map(s => [s.label, s]));
+const lab = e => "kb_" + String(e).padStart(4, "0");
+const scoreTag = s => `<span class="tag ${s >= 1 ? "ok" : s > 0 ? "mid" : "bad"}">得分 ${(+s).toFixed(2)}</span>`;
+const linkC = s => esc(s).replace(/\bK\d{4}\b/g, m => `<a href="#" title="点击查看该条 claim 的演化（浮动窗口）" onclick="openClaim('${m}',event);return false">${m}</a>`);
+let state = {tab: "overview", epoch: 1, q: null, sub: "records", snap: D.snaps[D.snaps.length - 1].label};
+
+function nav() {
+  const tabs = [["overview", "概览"], ["epoch", "每个 epoch：解题 / 发现 / 总结"], ["kb", "KB 快照"], ["claim", "单条 claim 演化"], ["commits", "commit 日志"], ["prompts", "提示词与配置"]];
+  $("nav").innerHTML = tabs.map(([k, v]) => `<button class="${state.tab === k ? "on" : ""}" onclick="go('${k}')">${v}</button>`).join("");
+  $("title").textContent = "KB 科学循环 · " + D.run;
+  if (D.home) { $("home").href = D.home; } else { $("home").style.display = "none"; }
+  $("meta").textContent = `模型 ${D.config.provider}/${D.config.model} · 每轮 ${D.config.batch_size} 题 · 共 ${D.epochs.length} 个 epoch`;
+}
+function go(t) { state.tab = t; render(); }
+
+function render() {
+  nav();
+  ({overview, epoch: epochView, kb: kbView, claim: claimView, commits: commitView, prompts: promptView})[state.tab]();
+}
+
+/* ---------------- overview ---------------- */
+function overview() {
+  $("side").innerHTML = "";
+  const ev = Object.entries(D.evals).sort();
+  const rows = D.epochs.map(e => {
+    const m = e.metrics, ops = Object.entries(m.ops || {}).filter(([k]) => k !== "credit").map(([k, v]) => `${k}:${v}`).join(" ");
+    return `<tr><td><a href="#" onclick="state.epoch=${e.epoch};go('epoch');return false">e${e.epoch}</a></td><td>${(m.mean_score ?? 0).toFixed(3)}</td><td>${m.hypotheses ?? ""}</td><td>${m.kb_before ?? ""}→${m.kb_after ?? ""}</td><td>${ops}</td><td>${e.summarizer.length}</td></tr>`;
+  }).join("");
+  $("view").innerHTML = `
+  <div class="card"><h3>流程</h3><div class="flow">
+   <div style="border-left:4px solid var(--blue)"><b>① 解题</b><br>只看题目 + 只读 KB（快照 t−1 的渲染：cred top-40 + 试用 10）。无工具，effort=low。输出 answer + cited。</div>
+   <div style="border-left:4px solid var(--amber)"><b>② 发现</b><br>同一会话续写：揭示答案与得分；工具 search_history / read_record / python 沙箱（只看前序 epoch）。对→low 可 skip，错→medium。输出 comment + hypothesis。</div>
+   <div style="border-left:4px solid var(--violet)"><b>③ 总结者</b><br>epoch 末，xhigh。看本 epoch 全部记录 + 历史 + KB 索引；add / merge / delete / adjust，每个操作一条 commit；finish 写 science digest。</div>
+   <div style="border-left:4px solid var(--green)"><b>④ KB 快照 t</b><br>credit：被引用的 claim 按得分记 s += score, f += 1−score；加上总结者的结构操作。</div></div></div>
+  <div class="card"><h3>每个 epoch</h3><table><tr><th>epoch</th><th>本轮训练题均分</th><th>猜想数</th><th>KB 条数</th><th>结构操作</th><th>总结者轮数</th></tr>${rows}</table></div>
+  <div class="card"><h3>评测</h3><table><tr><th>KB 版本</th><th>题数</th><th>均分</th><th>分题源</th></tr>${ev.map(([k, v]) => `<tr><td>${k}</td><td>${v.n}</td><td>${v.mean.toFixed(3)}</td><td>${esc(JSON.stringify(v.by_source))}</td></tr>`).join("")}</table></div>`;
+}
+
+/* ---------------- epoch ---------------- */
+function epochView() {
+  const E = D.epochs.find(e => e.epoch === state.epoch) || D.epochs[0];
+  let side = D.epochs.map(e => `<div class="item ${e.epoch === E.epoch ? "on" : ""}" onclick="state.epoch=${e.epoch};state.q=null;render()">第 ${e.epoch} 轮 <small>均分 ${(e.metrics.mean_score ?? 0).toFixed(2)}</small></div>`).join("");
+  if (state.sub === "records") {
+    side += `<div class="note" style="padding:6px 10px">本轮题目</div>` + E.records.map((r, i) =>
+      `<div class="item ${state.q === i ? "on" : ""}" onclick="state.q=${i};render()">${r.question_id} ${scoreTag(r.score)}<br><small>${r.source} · ${r.family} · ${r.skipped ? "跳过" : r.hypothesis ? "有猜想" : "仅评论"}</small></div>`).join("");
+  }
+  $("side").innerHTML = side;
+  const sub = [["records", "解题 + 发现（逐题）"], ["summ", "总结者（逐轮）"], ["diff", "KB 变化"], ["sci", "科学总结"]];
+  let h = `<div class="sub">${sub.map(([k, v]) => `<button class="${state.sub === k ? "on" : ""}" onclick="state.sub='${k}';render()">${v}</button>`).join("")}</div>`;
+  if (state.sub === "records") h += state.q == null ? recordsTable(E) : recordView(E, E.records[state.q]);
+  if (state.sub === "summ") h += summView(E);
+  if (state.sub === "diff") h += diffView(lab(E.epoch - 1), lab(E.epoch), E.epoch);
+  if (state.sub === "sci") h += `<div class="card summ"><h3>科学总结 · 第 ${E.epoch} 轮</h3><pre class="tall">${linkC(E.science)}</pre></div>`;
+  $("view").innerHTML = h;
+}
+function recordsTable(E) {
+  return `<div class="card"><h3>第 ${E.epoch} 轮：${E.records.length} 题（点左侧或下表查看完整内容）</h3><table><tr><th>题号</th><th>题源</th><th>得分</th><th>预测 / 答案</th><th>引用</th><th>发现阶段</th><th>评论</th></tr>${E.records.map((r, i) =>
+    `<tr><td><a href="#" onclick="state.q=${i};render();return false">${r.question_id}</a></td><td>${r.source}</td><td>${scoreTag(r.score)}</td><td>${esc(r.prediction)}<br><small>${esc(r.answer)}</small></td><td>${linkC((r.cited || []).join(" "))}</td><td>${r.discover_effort}${r.skipped ? " 跳过" : ""} · ${r.discover_trace.length} 轮${r.hypothesis ? " · <b>有猜想</b>" : ""}</td><td>${esc(r.comment || "")}</td></tr>`).join("")}</table></div>`;
+}
+function turns(tr) {
+  return tr.map(t => `<div class="turn"><b>第 ${t.turn + 1} 步</b> <span class="note">${t.secs ?? ""} 秒 · 输入 ${t.usage.prompt_tokens ?? "?"} token · 输出 ${t.usage.completion_tokens ?? "?"} token</span>
+   ${t.reasoning ? `<details><summary>思维链</summary><pre>${esc(t.reasoning)}</pre></details>` : ""}
+   ${t.content ? `<pre>${linkC(t.content)}</pre>` : ""}
+   ${t.calls.map((c, j) => `<div class="call"><span class="nm">${esc(c.name)}</span><pre>${linkC(prettyArgs(c.arguments))}</pre><details ${j < 0 ? "open" : ""}><summary>工具返回</summary><pre>${linkC(t.results[j] ?? "")}</pre></details></div>`).join("")}</div>`).join("");
+}
+function prettyArgs(a) {
+  try { const o = JSON.parse(a); if (o.code) return o.code + (Object.keys(o).length > 1 ? "\n# " + JSON.stringify({...o, code: undefined}) : ""); return JSON.stringify(o, null, 1); } catch (e) { return a; }
+}
+function recordView(E, r) {
+  const snap = snapBy[lab(E.epoch - 1)];
+  const cites = (r.cited || []).map(c => { const x = snap && snap.claims.find(z => z[0] === c); return x ? `<tr><td>${linkC(c)}</td><td>${x[3].toFixed(2)}</td><td>${x[1]}/${x[2]}</td><td>${esc(T(x[4]))}</td></tr>` : `<tr><td>${c}</td><td colspan=3>(不在快照中)</td></tr>`; }).join("");
+  return `
+  <div class="card"><h3>${r.question_id} · ${r.source} · ${r.task} · ${r.family}</h3>${scoreTag(r.score)} 预测 <b>${esc(r.prediction)}</b> · 答案 <b>${esc(r.answer)}</b>${r.inversions != null ? ` · 逆序对 ${r.inversions}` : ""}
+   <details><summary>题目全文（解题者看到的 user/system 原文）</summary><pre>${esc(r.question)}</pre></details></div>
+  <div class="card solver"><h3>① 解题 agent（effort=low，不给工具）</h3>
+   <details><summary>注入的 KB（快照 ${snap ? snap.label : "?"}，${snap ? snap.claims.filter(c => c[6]).length : "?"} 条，追加在 system prompt 后；内容为英文原文）</summary><pre>${linkC(snap ? snap.render : "")}</pre></details>
+   ${r.solver_reasoning ? `<p><b>思维链（luna 为摘要标题，Qwen 为完整思维链）</b></p><pre>${esc(r.solver_reasoning)}</pre>` : `<p class="note">该调用没有返回思维链。</p>`}
+   <p><b>完整输出</b> <span class="note">${r.solve_secs} 秒 · ${esc(JSON.stringify(r.solve_usage))}</span></p><pre>${linkC(r.solution)}</pre>
+   <p><b>引用的条目（解题时的状态）</b></p><table><tr><th>编号</th><th>可信度</th><th>胜/负</th><th>内容</th></tr>${cites || "<tr><td colspan=4>未引用</td></tr>"}</table></div>
+  <div class="card disc"><h3>② 发现 agent（effort=${r.discover_effort}${r.skipped ? "，选择跳过" : ""}，${r.discover_trace.length} 轮）</h3>
+   ${turns(r.discover_trace)}
+   <p><b>评论（comment）</b></p><pre>${linkC(r.comment || "-")}</pre>
+   <p><b>猜想（hypothesis）</b></p><pre>${linkC(r.hypothesis || "-")}</pre></div>`;
+}
+function summView(E) {
+  const ops = D.commits.filter(c => c.epoch === E.epoch && !["credit", "seed"].includes(c.op));
+  return `<div class="card summ"><h3>③ 总结者 · 第 ${E.epoch} 轮（${E.summarizer.length} 步，effort=xhigh）</h3>
+   <p><b>本轮 KB 结构操作</b>（${ops.length}）</p>${commitTable(ops)}
+   ${turns(E.summarizer)}</div>`;
+}
+
+/* ---------------- KB diff / snapshot ---------------- */
+function diffView(a, b, epoch) {
+  const A = snapBy[a], B = snapBy[b];
+  if (!A || !B) return `<div class="card">缺少快照 ${a} / ${b}</div>`;
+  const ma = Object.fromEntries(A.claims.map(c => [c[0], c])), mb = Object.fromEntries(B.claims.map(c => [c[0], c]));
+  const added = B.claims.filter(c => !ma[c[0]]), removed = A.claims.filter(c => !mb[c[0]]);
+  const changed = B.claims.filter(c => ma[c[0]] && ma[c[0]][4] !== c[4]);
+  const credit = B.claims.filter(c => ma[c[0]] && ma[c[0]][4] === c[4] && (ma[c[0]][1] !== c[1] || ma[c[0]][2] !== c[2]));
+  const inR = B.claims.filter(c => c[6] && !(ma[c[0]] && ma[c[0]][6])), outR = A.claims.filter(c => c[6] && !(mb[c[0]] && mb[c[0]][6]));
+  const row = (c, cls, extra = "") => `<tr class="${cls}"><td>${linkC(c[0])}</td><td>${c[1]}/${c[2]}</td><td>${c[3].toFixed(2)}</td><td>${extra}${esc(T(c[4]))}</td></tr>`;
+  const tb = (rows) => `<table><tr><th>编号</th><th>胜/负</th><th>可信度</th><th>内容</th></tr>${rows || "<tr><td colspan=4>无</td></tr>"}</table>`;
+  return `<div class="card kbc"><h3>KB 变化 ${a} → ${b}：${A.claims.length} → ${B.claims.length} 条</h3>
+   <p>新增 ${added.length} · 删除或被合并 ${removed.length} · 文本改写 ${changed.length} · 仅胜负计数变化 ${credit.length} · 新进入解题者视野 ${inR.length} · 移出视野 ${outR.length}</p></div>
+   <div class="card kbc"><h3>新增</h3>${tb(added.map(c => row(c, "add")).join(""))}</div>
+   <div class="card kbc"><h3>删除 / 被合并</h3>${tb(removed.map(c => row(c, "del")).join(""))}</div>
+   <div class="card kbc"><h3>文本改写（上：旧，下：新）</h3>${tb(changed.map(c => row(c, "chg", `<div class="note">${esc(T(ma[c[0]][4]))}</div><hr>`)).join(""))}</div>
+   <div class="card kbc"><h3>引用记账（胜/负计数变化）</h3><table><tr><th>编号</th><th>之前</th><th>之后</th><th>可信度</th><th>内容</th></tr>${credit.map(c => `<tr><td>${linkC(c[0])}</td><td>${ma[c[0]][1]}/${ma[c[0]][2]}</td><td>${c[1]}/${c[2]}</td><td>${ma[c[0]][3].toFixed(2)}→${c[3].toFixed(2)}</td><td>${esc(T(c[4]).slice(0, 200))}</td></tr>`).join("")}</table></div>
+   <div class="card kbc"><h3>解题者视野变化（下一轮注入的 50 条）</h3><p><b>进入</b></p>${tb(inR.map(c => row(c, "add")).join(""))}<p><b>掉出</b></p>${tb(outR.map(c => row(c, "del")).join(""))}</div>`;
+}
+function kbView() {
+  $("side").innerHTML = D.snaps.map(s => `<div class="item ${s.label === state.snap ? "on" : ""}" onclick="state.snap='${s.label}';render()">${s.label} <small>${s.claims.length} 条</small></div>`).join("");
+  const S = snapBy[state.snap];
+  $("view").innerHTML = `<div class="sub"><button class="${state.sub !== "render" ? "on" : ""}" onclick="state.sub='table';render()">全部条目</button><button class="${state.sub === "render" ? "on" : ""}" onclick="state.sub='render';render()">解题者看到的 KB 原文</button></div>` +
+    (state.sub === "render" ? `<div class="card solver"><h3>${S.label} 注入原文（下一轮解题者看到的）</h3><pre class="tall">${linkC(S.render)}</pre></div>` :
+    `<div class="card kbc"><h3>${S.label}：${S.claims.length} 条，绿色左边线 = 在解题者视野中（${S.claims.filter(c => c[6]).length} 条）</h3>
+     <input type="search" placeholder="搜索内容，例如 ReLU / SiLU / RMSprop" oninput="filt(this.value)">
+     <table id="kbt"><tr><th>编号</th><th>可信度</th><th>胜/负</th><th>来源</th><th>内容</th></tr>${S.claims.slice().sort((x, y) => y[3] - x[3]).map(c =>
+      `<tr class="${c[6] ? "shown" : ""}" data-t="${esc(T(c[4]).toLowerCase())}"><td>${linkC(c[0])}</td><td><span class="bar"><i style="width:${c[3] * 100}%"></i></span> ${c[3].toFixed(2)}</td><td>${c[1]}/${c[2]}</td><td>${c[5] ? "第 " + c[5] + " 轮" : "种子"}</td><td>${esc(T(c[4]))}</td></tr>`).join("")}</table></div>`);
+}
+function filt(v) { v = v.toLowerCase(); document.querySelectorAll("#kbt tr[data-t]").forEach(r => r.style.display = r.dataset.t.includes(v) ? "" : "none"); }
+
+/* ---------------- claim history ---------------- */
+let claimId = D.snaps.flatMap(s => s.claims)[0]?.[0] || "";
+function goClaim(id) { claimId = id; state.tab = "claim"; render(); }
+function openClaim(id, ev) {
+  let rows = "", last = null;
+  for (const s of D.snaps) {
+    const c = s.claims.find(z => z[0] === id);
+    if (!c) { rows += `<tr><td>${s.label}</td><td colspan=3 class="note">不存在</td></tr>`; continue; }
+    rows += `<tr class="${c[6] ? "shown" : ""}"><td>${s.label}</td><td>${c[1]}/${c[2]}</td><td><span class="bar"><i style="width:${c[3] * 100}%"></i></span> ${c[3].toFixed(2)}${c[6] ? " · 视野中" : ""}</td><td>${c[4] !== last ? esc(T(c[4])) : '<span class="note">（文本同上）</span>'}</td></tr>`;
+    last = c[4];
+  }
+  const cs = D.commits.filter(c => c.op !== "credit" && ((c.claim_ids || []).includes(id) || c.new_id === id));
+  $("popc").innerHTML = `<h3>${esc(id)} 浮动详情 <a href="#" style="font-weight:400;font-size:12px" onclick="closePop();goClaim('${id}');return false">在「单条 claim 演化」页打开 →</a><button id="popx" onclick="closePop()">关闭 ✕</button></h3>
+    <table><tr><th>快照</th><th>胜/负</th><th>可信度</th><th>内容（文本变化时显示）</th></tr>${rows || `<tr><td colspan=4 class="note">从未在任何快照中出现</td></tr>`}</table>
+    <h3 style="margin-top:10px">结构操作（${cs.length}）</h3>${commitTable(cs)}`;
+  const p = $("pop"), card = $("popc");
+  p.style.display = "block";
+  const w = card.offsetWidth, hh = Math.min(card.offsetHeight, innerHeight * .84);
+  card.style.left = Math.min(Math.max((ev?.clientX ?? innerWidth / 2) - w / 2, 12), Math.max(innerWidth - w - 12, 12)) + "px";
+  card.style.top = Math.min(Math.max((ev?.clientY ?? 80) - 60, 12), Math.max(innerHeight - hh - 12, 12)) + "px";
+  card.scrollTop = 0;
+}
+function closePop() { $("pop").style.display = "none"; }
+document.addEventListener("keydown", e => { if (e.key === "Escape") closePop(); });
+function claimView() {
+  const ids = [...new Set(D.snaps.flatMap(s => s.claims.map(c => c[0])))].sort();
+  $("side").innerHTML = `<div style="padding:6px"><input type="search" placeholder="K0134" onchange="goClaim(this.value.trim().toUpperCase())"></div>` +
+    ids.map(i => `<div class="item ${i === claimId ? "on" : ""}" onclick="goClaim('${i}')">${i}</div>`).join("");
+  let last = null, rows = "";
+  for (const s of D.snaps) {
+    const c = s.claims.find(z => z[0] === claimId);
+    if (!c) { rows += `<tr><td>${s.label}</td><td colspan=4 class="note">不存在</td></tr>`; continue; }
+    rows += `<tr class="${c[6] ? "shown" : ""}"><td>${s.label}</td><td>${c[1]}/${c[2]}</td><td><span class="bar"><i style="width:${c[3] * 100}%"></i></span> ${c[3].toFixed(2)}</td><td>${c[6] ? "视野中" : ""}</td><td>${c[4] !== last ? esc(T(c[4])) : '<span class="note">（文本同上）</span>'}</td></tr>`;
+    last = c[4];
+  }
+  const cs = D.commits.filter(c => (c.claim_ids || []).includes(claimId) || c.new_id === claimId);
+  const cr = cs.filter(c => c.op === "credit"), st = cs.filter(c => c.op !== "credit");
+  $("view").innerHTML = `<div class="card kbc"><h3>${claimId} 在各快照中的状态</h3><table><tr><th>快照</th><th>胜/负</th><th>可信度</th><th></th><th>内容</th></tr>${rows}</table></div>
+   <div class="card summ"><h3>结构操作 commit（${st.length}）</h3>${commitTable(st)}</div>
+   <div class="card"><h3>引用记账 commit（${cr.length}）</h3>${commitTable(cr)}</div>`;
+}
+
+/* ---------------- commits ---------------- */
+function commitTable(cs) {
+  if (!cs.length) return `<p class="note">无</p>`;
+  return `<table><tr><th>commit</th><th>轮次</th><th>操作</th><th>条目</th><th>来源题</th><th>内容 / 理由</th></tr>${cs.map(c => {
+    const p = c.payload || {};
+    const body = (p.text ? `<b>新内容：</b> ${linkC(p.text)}<br>` : "") + (p.old_text ? `<span class="note"><b>旧内容：</b> ${esc(p.old_text)}</span><br>` : "") +
+      (c.op === "credit" ? esc(JSON.stringify(p)) : "") + (c.reason ? `<b>理由：</b> ${linkC(c.reason)}` : "");
+    return `<tr class="${c.op === "add" ? "add" : c.op === "delete" ? "del" : ["merge", "revise", "rollback"].includes(c.op) ? "chg" : ""}"><td>${c.commit}</td><td>${c.epoch}</td><td>${c.op}</td><td>${linkC((c.claim_ids || []).join(" "))}${c.new_id ? " → " + linkC(c.new_id) : ""}</td><td>${esc((c.source_question_ids || []).join(" "))}</td><td>${body}</td></tr>`;
+  }).join("")}</table>`;
+}
+function commitView() {
+  const ops = [...new Set(D.commits.map(c => c.op))];
+  $("side").innerHTML = ["(结构操作)", ...ops].map(o => `<div class="item ${state.op === o ? "on" : ""}" onclick="state.op='${o}';render()">${o} <small>${o.startsWith("(") ? D.commits.filter(c => !["credit", "seed"].includes(c.op)).length : D.commits.filter(c => c.op === o).length}</small></div>`).join("");
+  const o = state.op || "(结构操作)";
+  const cs = o.startsWith("(") ? D.commits.filter(c => !["credit", "seed"].includes(c.op)) : D.commits.filter(c => c.op === o);
+  $("view").innerHTML = `<div class="card"><h3>commit 日志 · ${o}（${cs.length} 条）</h3>${commitTable(cs)}</div>`;
+}
+
+/* ---------------- prompts ---------------- */
+function promptView() {
+  $("side").innerHTML = "";
+  $("view").innerHTML = Object.entries(D.prompts).map(([k, v]) => `<div class="card"><h3>${esc(k)}</h3><pre class="tall">${esc(v)}</pre></div>`).join("") +
+    `<div class="card"><h3>运行配置</h3><pre>${esc(JSON.stringify(D.config, null, 1))}</pre></div>`;
+}
+// Keep the six luna_main views; show the sol run's actual read protocol.
+const num = (v, d = 3) => typeof v === 'number' ? v.toFixed(d) : '—';
+const isTool = D.config.render === 'tool';
+const table = (heads, rows) => '<table><tr>' + heads.map(x => '<th>' + x + '</th>').join('') + '</tr>' + rows + '</table>';
+const card = (title, body, cls = '') => '<div class="card ' + cls + '"><h3>' + title + '</h3>' + body + '</div>';
+const td = x => '<td>' + x + '</td>';
+const anchor = (text, action) => '<a href="#" onclick="' + action + ';return false">' + text + '</a>';
+state.snap = D.defaultSnap && snapBy[D.defaultSnap] ? D.defaultSnap : D.snaps.filter(s => !s.candidate).at(-1)?.label || D.snaps[0].label;
+state.epoch = D.epochs[0]?.epoch || 1;
+state.tab = D.defaultTab || 'kb';
+if (location.hash.startsWith('#kb=')) {
+  const label = decodeURIComponent(location.hash.slice(4));
+  if (snapBy[label]) { state.tab = 'kb'; state.snap = label; }
+}
+
+function nav() {
+  const tabs = [['overview','概览'],['epoch','每个 epoch：解题 / 发现 / 总结'],['kb','KB 快照'],['claim','单条 claim 演化'],['commits','commit 日志'],['prompts','提示词与配置']];
+  $('nav').innerHTML = tabs.map(([k,v]) => '<button class="' + (state.tab===k?'on':'') + '" onclick="go(\''+k+'\')">'+v+'</button>').join('');
+  $('title').textContent = 'KB 科学循环 · '+D.run;
+  if(D.home) $('home').href=D.home; else $('home').style.display='none';
+  $('meta').textContent = (D.config.model||'模型未取得')+' · effort='+(D.config.solve_effort||'—')+' · '+D.epochs.length+' 轮已有记录';
+}
+
+function overview() {
+  $('side').innerHTML='';
+  const rows=D.epochs.map(e=>{
+    const m=e.metrics||{}, g=m.gate||m.review;
+    const ops=Object.entries(m.ops||{}).filter(([k])=>k!=='credit').map(([k,v])=>k+':'+v).join(' ');
+    return '<tr>'+td(anchor('e'+e.epoch,'state.epoch='+e.epoch+';go(\'epoch\')'))+td(m.n??(e.records.length||'—'))+td(num(m.mean_score))+td((m.kb_before??'—')+' → '+(m.kb_after??'—'))+td(esc(ops))+td(g?(g.accept===true?'接受':g.accept===false?'拒绝':'审查')+' · '+num(g.delta*100,2)+' ±'+num(g.se*100,2)+' pt':'—')+'</tr>';
+  }).join('');
+  const ev=Object.entries(D.evals).sort().map(([label,e])=>'<tr>'+td(esc(label))+td(e.n??e.n_q??'—')+td(e.repeats??'—')+td(num(e.mean))+td(e.delta!=null?num(e.delta*100,2)+' ±'+num(e.delta_se*100,2)+' pt':'—')+td(esc(e.by_source?JSON.stringify(e.by_source):e.note||''))+'</tr>').join('');
+  const flow=D.flow||[isTool?'① 解题：题目 + 可选 KB 工具；每题使用冻结快照，答案尚未揭示。':'① 解题：题目 + 上一轮只读 KB，答案尚未揭示。','② 发现：揭示答案，分析失败，可查历史、回测与受控实验。','③ 总结：修订、增加、合并、撤回 claim；每次改动记录理由。',D.config.macro_every?'④ KB 成长：每 '+D.config.macro_every+' 轮集中整理和宏观评测。':'④ KB 快照：在验证集比较候选与现任；整轮接受或回滚。'];
+  const pairs=(D.comparisons||[]).map(e=>'<tr>'+td(esc(e.label))+td(e.n??'—')+td(e.repeats??'—')+td(num(e.mean))+td(e.delta==null?'—':num(e.delta*100,2)+' ±'+num(e.se*100,2)+' pt')+td(esc(e.note||''))+'</tr>').join('');
+  const control=D.training_control;
+  const pairTable=pairs?table(['配对比较','题数','重复','均分','得分差','备注'],pairs):'';
+  const training=control?'<p>训练流：'+control.n+' 题，KB − 不带KB '+num(control.delta*100,2)+' ±'+num(control.se*100,2)+' pt。'+esc(control.note||'')+'</p>':'';
+  $('view').innerHTML=card(esc(D.run),'<p>'+esc(D.availability||'')+'</p>'+(D.summary?'<p>'+esc(D.summary)+'</p>':''))+card('流程','<div class="flow">'+flow.map(x=>'<div>'+esc(x)+'</div>').join('')+'</div>')+card('每个 epoch',table(['轮次','题数','训练题均分','KB 条数','结构操作','候选 − 现任'],rows||'<tr><td colspan=6>未取得逐轮记录。</td></tr>'))+card('评测',pairTable+training+table(['快照 / 对照','题数','重复','均分','相对不带 KB','分题源 / 备注'],ev||'<tr><td colspan=6>尚无已完成评测。</td></tr>')+'<p class="note">得分包含排序题部分分；± 为题级配对 1 SE。</p>'+(D.evalNote?'<p class="note">'+esc(D.evalNote)+'</p>':''));
+}
+
+function detail(S,id) {
+  const raw=S.claimDetails?.[id]||{};
+  const meta=Object.fromEntries(Object.entries(raw).filter(([k,v])=>!['text_excerpt','text_complete','text','id','support_count','failure_count','credibility'].includes(k)&&v!=null&&v!==''&&(!Array.isArray(v)||v.length)&&(!(typeof v==='object'&&!Array.isArray(v))||Object.keys(v).length)));
+  return meta&&Object.keys(meta).length?'<details><summary>条件、机制与来源</summary><pre>'+linkC(JSON.stringify(meta,null,2))+'</pre></details>':'';
+}
+
+function kbView() {
+  $('side').innerHTML=D.snaps.map(s=>'<div class="item '+(s.label===state.snap?'on':'')+'" onclick="state.snap=\''+s.label+'\';render()">'+esc(s.label)+' <small>'+(s.totalClaims??s.claims.length)+' 条'+(s.complete===false?' · 摘录':'')+'</small></div>').join('');
+  const S=snapBy[state.snap];
+  if(!S){$('view').innerHTML=card('未取得此快照','');return;}
+  let h='<div class="sub"><button onclick="state.sub=\'table\';render()">全部条目</button><button onclick="state.sub=\'render\';render()">'+(isTool?'可检索的 KB 原文':'解题者看到的 KB 原文')+'</button></div>';
+  h+=card(esc(S.label)+' · '+(S.totalClaims??S.claims.length)+' 条'+(S.complete===false?'（摘录）':''),'<p>'+esc(S.note||(S.complete===false?'这里只保存了输出摘录，尚未取得完整快照。':''))+'</p>'+(isTool?'<p class="note">本实验通过工具读取条目；完整 KB 没有常驻解题 prompt。</p>':''),'kbc');
+  if(state.sub==='render') h+=card('KB 原文','<pre class="tall">'+linkC(S.render||'未取得原文。')+'</pre>','solver');
+  else if(S.claims.length) h+=card('条目内容','<input type="search" placeholder="搜索：LayerNorm / width / Adam" oninput="filt(this.value)">'+table(['编号','引用反馈','胜 / 负','来源','条目正文'],S.claims.map(c=>'<tr data-t="'+esc(T(c[4]).toLowerCase())+'">'+td(linkC(c[0]))+td(num(c[3],2))+td((c[1]??'—')+' / '+(c[2]??'—'))+td(c[5]==null?'—':c[5]?'第 '+c[5]+' 轮':'种子')+td(esc(T(c[4]))+(S.excerptIds?.includes(c[0])?'<div class="note">保存的输出在此截断；未取得完整条目。</div>':'')+detail(S,c[0]))+'</tr>').join('')).replace('<table>','<table id="kbt">')+'<p class="note">引用反馈是解题使用后的表现记账，不是规律真实的概率。</p>','kbc');
+  if(S.changeReasons)h+=card('该轮修改理由（保存原文）','<pre class="tall">'+linkC(S.changeReasons)+'</pre>','summ');
+  $('view').innerHTML=h;
+}
+
+function epochView() {
+  const E=D.epochs.find(e=>e.epoch===state.epoch)||D.epochs[0];
+  if(!E){$('side').innerHTML='';$('view').innerHTML=card('逐轮记录','未取得逐轮记录。');return;}
+  const subs=[['records','解题 + 发现（逐题）'],['summ','总结者（逐轮）'],['diff','KB 变化'],['sci','科学总结']];
+  if(!subs.some(([k])=>k===state.sub))state.sub='records';
+  $('side').innerHTML=D.epochs.map(e=>'<div class="item '+(e.epoch===E.epoch?'on':'')+'" onclick="state.epoch='+e.epoch+';state.q=null;render()">第 '+e.epoch+' 轮 <small>均分 '+num(e.metrics?.mean_score,2)+'</small></div>').join('')+(state.sub==='records'?E.records.map((r,i)=>'<div class="item '+(state.q===i?'on':'')+'" onclick="state.q='+i+';render()">'+esc(r.question_id)+' '+scoreTag(r.score)+'<br><small>'+esc(r.source)+' · '+esc(r.family)+'</small></div>').join(''):'');
+  let h='<div class="sub">'+subs.map(([k,v])=>'<button class="'+(state.sub===k?'on':'')+'" onclick="state.sub=\''+k+'\';render()">'+v+'</button>').join('')+'</div>';
+  if(state.sub==='records')h+=E.records.length?state.q==null?recordsTable(E):recordView(E,E.records[state.q]):card('逐题记录',esc(E.recordNote||'未取得本轮逐题解题与发现轨迹。'));
+  if(state.sub==='summ')h+=summView(E)+(E.summarizerNote?'<p class="note">'+esc(E.summarizerNote)+'</p>':'')+(E.research||[]).map(r=>card(esc(r.file),'<pre>'+esc(r.text||JSON.stringify(r.data,null,2))+'</pre>')).join('');
+  if(state.sub==='diff')h+=diffView(lab(E.epoch-1),lab(E.epoch));
+  if(state.sub==='sci')h+=card('科学总结 · 第 '+E.epoch+' 轮','<pre class="tall">'+linkC(E.science||'未取得科学总结原文。')+'</pre>','summ');
+  $('view').innerHTML=h;
+}
+
+function recordView(E,r) {
+  const S=snapBy[lab(E.epoch-1)], ids=[...new Set([...(r.kb_retrieved||[]),...(r.cited||[])])];
+  const rows=ids.map(id=>{const c=S?.claims.find(z=>z[0]===id);return '<tr>'+td(linkC(id))+td(c?esc(T(c[4]))+detail(S,id):'未取得解题时该条目的原文。')+'</tr>';}).join('');
+  return card(esc(r.question_id)+' · '+esc(r.source)+' · '+esc(r.family),scoreTag(r.score)+' 预测 <b>'+esc(r.prediction)+'</b> · 答案 <b>'+esc(r.answer)+'</b><details><summary>题目全文</summary><pre>'+esc(r.question)+'</pre></details>')+
+    card('① 解题 agent（effort='+(D.config.solve_effort||'low')+'）','<p>'+(isTool?'可选 KB 工具检索':'只读 KB 注入')+'</p>'+(r.kb_queries?.length?'<pre>'+esc(JSON.stringify(r.kb_queries,null,2))+'</pre>':'')+(r.solver_reasoning?'<details><summary>返回的推理摘要</summary><pre>'+esc(r.solver_reasoning)+'</pre></details>':'')+'<p><b>完整输出</b></p><pre>'+linkC(r.solution||'未取得完整输出。')+'</pre>'+(r.solve_trace?.length?turns(r.solve_trace):'')+table(['检索 / 引用 ID','解题时内容'],rows||'<tr><td colspan=2>没有检索或引用记录。</td></tr>'),'solver')+
+    card('② 发现 agent（effort='+esc(r.discover_effort)+'）',turns(r.discover_trace||[])+'<p><b>评论</b></p><pre>'+linkC(r.comment||'—')+'</pre><p><b>猜想</b></p><pre>'+linkC(r.hypothesis||'—')+'</pre>','disc');
+}
+
+function diffView(a,b) {
+  const A=snapBy[a],B=snapBy[b];
+  if(!A||!B||A.complete===false||B.complete===false)return card('KB 变化','需要两份完整快照才能比较 '+esc(a)+' → '+esc(b)+'。当前摘录不用于推算增删。');
+  const ma=Object.fromEntries(A.claims.map(c=>[c[0],c])),mb=Object.fromEntries(B.claims.map(c=>[c[0],c]));
+  const groups=[['新增',B.claims.filter(c=>!ma[c[0]])],['删除 / 被合并',A.claims.filter(c=>!mb[c[0]])],['文本改写',B.claims.filter(c=>ma[c[0]]&&ma[c[0]][4]!==c[4])]];
+  return card('KB 变化 '+esc(a)+' → '+esc(b),A.claims.length+' → '+B.claims.length+' 条','kbc')+groups.map(([title,cs])=>card(title+'（'+cs.length+'）',table(['编号','内容'],cs.map(c=>'<tr>'+td(linkC(c[0]))+td((title==='文本改写'?'<div class="note">'+esc(T(ma[c[0]][4]))+'</div><hr>':'')+esc(T(c[4])))+'</tr>').join('')||'<tr><td colspan=2>无</td></tr>'),'kbc')).join('');
+}
+
+function claimRows(id) {
+  let last=null;
+  return D.snaps.map(S=>{
+    const c=S.claims.find(z=>z[0]===id);
+    if(!c)return '<tr>'+td(esc(S.label))+'<td colspan=3>'+(S.complete===false?'摘录中未出现，不能判断是否存在。':'不存在')+'</td></tr>';
+    const content=c[4]!==last?esc(T(c[4]))+detail(S,id):'<span class="note">文本同上</span>';last=c[4];
+    return '<tr>'+td(esc(S.label))+td((c[1]??'—')+' / '+(c[2]??'—'))+td(num(c[3],2))+td(content+(S.excerptIds?.includes(id)?'<p class="note">此条原文被截断。</p>':''))+'</tr>';
+  }).join('');
+}
+function claimView() {
+  const ids=[...new Set(D.snaps.flatMap(s=>s.claims.map(c=>c[0])))].sort();
+  $('side').innerHTML='<div style="padding:6px"><input type="search" placeholder="K1006" onchange="goClaim(this.value.trim().toUpperCase())"></div>'+ids.map(id=>'<div class="item '+(id===claimId?'on':'')+'" onclick="goClaim(\''+id+'\')">'+id+'</div>').join('');
+  const cs=D.commits.filter(c=>(c.claim_ids||[]).includes(claimId)||c.new_id===claimId);
+  $('view').innerHTML=card(esc(claimId)+' 在各快照中的状态',table(['快照','胜 / 负','引用反馈','内容'],claimRows(claimId)),'kbc')+card('相关操作',commitTable(cs),'summ');
+}
+function openClaim(id,ev) {
+  const cs=D.commits.filter(c=>c.op!=='credit'&&((c.claim_ids||[]).includes(id)||c.new_id===id));
+  $('popc').innerHTML='<h3>'+esc(id)+' '+anchor('查看演化 →','closePop();goClaim(\''+id+'\')')+'<button id="popx" onclick="closePop()">关闭 ×</button></h3>'+table(['快照','胜 / 负','引用反馈','内容'],claimRows(id))+'<h3>相关操作</h3>'+commitTable(cs);
+  $('pop').style.display='block';$('popc').style.left=Math.max(12,(innerWidth-$('popc').offsetWidth)/2)+'px';$('popc').style.top='6vh';$('popc').scrollTop=0;
+}
+
+function summView(E) {
+  const ops=D.commits.filter(c=>c.epoch===E.epoch&&!['credit','seed'].includes(c.op));
+  return card('③ 总结者 · 第 '+E.epoch+' 轮','<p>保存的 KB 操作理由</p>'+commitTable(ops)+(E.summarizer.length?turns(E.summarizer):'<p class="note">未取得逐步工具轨迹；不能据此判断调用次数。</p>'),'summ');
+}
+
+render();
+</script>
+</body>
+</html>

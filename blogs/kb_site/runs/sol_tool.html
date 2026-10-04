@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>KB Science Loop viewer</title>
+<style>
+:root{--bg:#f7f8fa;--card:#fff;--ink:#1f2937;--mute:#6b7280;--line:#e5e7eb;--blue:#2563eb;--amber:#d97706;--violet:#7c3aed;--green:#059669;--red:#dc2626;--teal:#0d9488}
+*{box-sizing:border-box}body{margin:0;font:13px/1.5 -apple-system,"PingFang SC","Noto Sans SC",sans-serif;background:var(--bg);color:var(--ink)}
+header{position:sticky;top:0;z-index:5;background:#111827;color:#fff;padding:8px 16px;display:flex;gap:16px;align-items:center}
+header b{font-size:15px}header nav button{background:none;border:0;color:#cbd5e1;font:inherit;padding:6px 10px;border-radius:6px;cursor:pointer}
+header nav button.on{background:#374151;color:#fff}
+main{display:flex;height:calc(100vh - 44px)}
+#side{width:250px;overflow:auto;border-right:1px solid var(--line);background:#fff;flex:none}
+#view{flex:1;overflow:auto;padding:14px 18px}
+.item{padding:6px 10px;border-bottom:1px solid var(--line);cursor:pointer}.item:hover{background:#f3f4f6}.item.on{background:#e0e7ff}
+.item small{color:var(--mute)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:10px 0}
+.card>h3{margin:0 0 6px;font-size:14px}
+.solver{border-left:4px solid var(--blue)}.disc{border-left:4px solid var(--amber)}.summ{border-left:4px solid var(--violet)}.kbc{border-left:4px solid var(--green)}
+pre{white-space:pre-wrap;word-break:break-word;margin:4px 0;font:12px/1.45 ui-monospace,Menlo,monospace;background:#f9fafb;border:1px solid var(--line);border-radius:6px;padding:6px 8px;max-height:420px;overflow:auto}
+pre.tall{max-height:none}
+details{margin:4px 0}summary{cursor:pointer;color:#374151;font-weight:600}
+.tag{display:inline-block;padding:0 6px;border-radius:9px;font-size:11px;margin-right:4px;background:#eef2ff;color:#3730a3}
+.ok{background:#dcfce7;color:#166534}.bad{background:#fee2e2;color:#991b1b}.mid{background:#fef3c7;color:#92400e}
+.turn{border-top:1px dashed var(--line);padding-top:6px;margin-top:6px}
+.call{margin:4px 0 4px 10px;border-left:2px solid #cbd5e1;padding-left:8px}
+.call .nm{font-weight:600;color:var(--teal)}
+table{border-collapse:collapse;width:100%;background:#fff}td,th{border:1px solid var(--line);padding:3px 6px;vertical-align:top;text-align:left}
+th{background:#f3f4f6;position:sticky;top:0}
+tr.shown td:first-child{border-left:4px solid var(--green)}
+.add{background:#ecfdf5}.del{background:#fef2f2}.chg{background:#fffbeb}
+.sub button{border:1px solid var(--line);background:#fff;border-radius:6px;padding:3px 10px;margin-right:6px;cursor:pointer}.sub button.on{background:#111827;color:#fff}
+input[type=search]{width:100%;padding:5px 8px;border:1px solid var(--line);border-radius:6px}
+.bar{height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden;width:80px;display:inline-block;vertical-align:middle}.bar i{display:block;height:100%;background:var(--green)}
+.note{color:var(--mute);font-size:12px}
+.flow{display:flex;gap:8px;align-items:stretch;flex-wrap:wrap}.flow div{flex:1;min-width:180px;padding:8px;border-radius:8px;background:#fff;border:1px solid var(--line)}
+mark{background:#fde68a}
+#pop{position:fixed;inset:0;z-index:30;background:rgba(15,23,42,.35);display:none}
+#popc{position:absolute;width:min(780px,94vw);max-height:84vh;overflow:auto;background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 14px;box-shadow:0 12px 40px rgba(0,0,0,.25)}
+#popc h3{margin:0 0 6px;font-size:14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+#popx{margin-left:auto;cursor:pointer;border:1px solid var(--line);background:#fff;border-radius:6px;padding:1px 10px;font:inherit}
+</style>
+</head>
+<body>
+<header><a id="home" style="color:#93c5fd;text-decoration:none;font-weight:600" href="#">← 主站</a><b id="title">KB Science Loop</b><nav id="nav"></nav><span class="note" style="color:#9ca3af" id="meta"></span></header>
+<main><div id="side"></div><div id="view"></div></main>
+<div id="pop" onclick="if(event.target===this)closePop()"><div id="popc"></div></div>
+<script>
+const D = {"run": "sol_tool", "config": {"run_name": "sol_tool", "provider": "cctq", "model": "gpt-6.1-sol", "solve_effort": "low", "render": "tool", "batch_size": 15, "epochs": 4, "sources": ["arch170", "ranking_v2", "ranking_v3", "dataflip500"], "gate": true, "gate_repeats": 2, "science": false, "seed_kb": "16 条蒸馏种子", "solver_backend": "codex"}, "texts": ["CORE RULE (all families, T=256-2048 steps; every task here is under-trained): rank choices by cumulative per-parameter displacement Δ. Adam/AdamW/RMSprop: Δ≈lr·T. Adagrad (zero-init accumulator, steps decay ~lr/√t): Δ≈2·lr·√T. SGD: Δ≈lr·T·|g|/(1−m) with raw grad |g|≈0.01 (bigram LM 0.003, MSE regression with momentum 0.03 — K1019), i.e. plain SGD ≈ Adam at lr/100, SGD m=0.9 ≈ Adam at lr/10. The largest-Δ choice wins 85% of optimizer-only and ~85% of mixed questions (after the lr-ceiling exceptions); a 1.5-3× Δ edge usually beats any architecture advantage. Use architecture rules only to break Δ ties (same optimizer+lr) or in architecture-only questions.", "Adagrad conversion (any family): because Adagrad's step decays as lr/√t, it matches Adam only when its lr is ~√T/2 (8-23×) larger. Same architecture, lr_Adagrad/lr_Adam ≤3× → Adam/AdamW wins 65/70; =10× → coin flip (4-3); ≥30× → Adagrad wins 9/9. Within Adagrad the larger lr always wins (40/41 pairs; lr=3e-3 is never too big — the decay is a built-in anneal). Adagrad at lr≤1e-4 is effectively frozen (Δ≤0.01) and loses to almost any adaptive choice with lr≥3e-5·√T/2.", "SGD (all families): plain SGD (momentum 0) at lr≤3e-3 is nearly frozen (wins ~8% of its appearances; in LMs embedding rows barely move, CE stays ≈ln V). SGD momentum 0.9 behaves like Adam at ~lr/10: so SGD m=0.9 lr 1e-3-3e-3 ≈ Adam 1e-4-3e-4 and is a real contender — it beats Adagrad ≤1e-3, Adam/RMSprop ≤3e-5-1e-4 and unstable RMSprop 3e-3 (e.g. univariate MSE 6e-5 vs 0.03) — but SGD m=0.9 at lr≤3e-4 loses to Adam/RMSprop at the same lr (10× smaller Δ). Family calibration (SGD calibration rule): bigram LM ≈ Adam at lr/30 (weaker), MSE regression ≈ Adam at lr/3 (stronger). Compute Δ with momentum.", "LR-ceiling exceptions to the Δ rule: (a) RMSprop at lr≥1e-3 on MSE regression (no momentum averaging, zero-init square-avg inflates early steps up to ~10×) is noisy/unstable: vs choices with ≥3× smaller Δ it loses 12/27 at 3e-3 and 3/4 at 1e-3 (univariate); prefer Adam/AdamW at the same lr (Adam 3e-3 loses only 2/35) or RMSprop ≤3e-4. (b) Post-LN transformer LMs (nn.TransformerEncoderLayer default, no warmup) with Adam/AdamW/RMSprop lr≥1e-3 lose 14/25 to lr 1e-4-3e-4, worst for d_model=128 or T≥1024; GRU LMs tolerate 1e-3-3e-3 (high lr wins 12/17). (c) On MLP classification and Adam regression, lr 3e-3 is safe — take the larger Δ.", "Second-order optimizer knobs are noise at these budgets: weight decay 0-1e-3 changes loss <1% (same-arch pairs: higher wd 3 wins/10 losses, all within 1%); Adam vs AdamW at equal lr/betas is a coin flip (5-5); beta2 0.95 vs 0.999 is ~even (7-4). Never let these override a lr·T difference; in rankings, order such near-twins by architecture or leave them adjacent.", "MLP architecture default (regression, XOR, spiral, tabular when Δ<0.1): score each MLP = (number of LayerNorm'd blocks) + 1 if residual; pick the highest; break ties by activation on regression (ReLU/LeakyReLU > GELU > SiLU), then greater depth. Picks 91/118 arch-only winners (univariate 28/31, multivariate 28/33). Pairwise more-LN beats less-LN 61-11 (multivariate), 57-12 (univariate), 41-4 (tabular Δ<0.1); on regression LN outranks activation (smooth+more-LN beats ReLU+less-LN 30/41). Mechanism: each unnormalized layer shrinks hidden RMS ~0.5×; LN + identity paths speed an under-trained net 2-3×. Exception: XOR with ≥8 input features at Δ≥0.05 — smooth activation decides (K1018).", "Regression depth × residual (uni/multivariate MSE, any budget): a deeper residual MLP beats a shallower non-residual one 32-2; deep-narrow beats shallow-wide at similar params 70-32 (51-19 when lr·T<0.1); at equal depth extra width is a coin flip (5-5). Oscillatory/composite targets (sin(2πx)…, cos(2π sin…)) amplify the depth advantage: composition of 4-5 normalized residual blocks generates high-frequency curvature that 1-2 layer nets cannot reach within the budget. Non-residual deep stacks without LN are the exception: they attenuate signal and usually lose.", "Activation × task: on MSE regression prefer ReLU/LeakyReLU > GELU > SiLU. Pairwise vs other activations (same optimizer): LeakyReLU wins 51/77, ReLU 42/67, GELU 30/64, SiLU only 29/96. SiLU/GELU have slope ~0.5 near 0 (silu(x)≈x/2), so stacked blocks attenuate signal/gradient and fit kinks/polynomials less precisely. The ranking flips for tabular classification once well-trained (see tabular rule): there GELU/SiLU win 16/16 vs ReLU-family. On XOR/spiral activation is a weak factor — decide by LN/residual/depth.", "Budget × depth reversal on synthetic TABULAR classification (1024 train rows, 2-16 Gaussian features, smooth_additive / piecewise / sparse_interaction rules): when the shared Δ≥0.1 (Δ from the core rule: Adam/RMSprop lr·T, Adagrad 2·lr·√T, SGD ~lr·T/(1−m)/100 — NOT raw lr·T for SGD/Adagrad), the boundary is already learned and test CE is set by overconfidence — prefer SHALLOW (1-3 layers), wider nets with GELU/SiLU and fewer LN: shallower wins 21-5, less-LN 17-6, smooth activation 16/16. When Δ<0.1 the normal rule holds (more LN 41-4, deeper 35-17). This 2-regime rule picks 26/32 tabular arch-only winners. XOR/spiral do NOT reverse.", "XOR and two-spiral classification (zero linear signal, chance CE=ln2≈0.693): loss stays on the chance plateau until weights move well beyond init, so (i) Δ is decisive — choices with Δ≲0.01 sit at 0.65-0.70 and are near-tied; (ii) among equal optimizers, deep RESIDUAL blocks with LN win: deeper+residual beats shallower plain 33-14 on classification, more-LN wins 20-5 on spiral (Δ≥0.01), deeper wins XOR at every budget (26-11). A 1-2 layer plain net rarely escapes the plateau in 256-512 steps. Spiral difficulty scales with turns: 1 turn best CE ~0.001-0.03, 2-2.5 turns ~0.45-0.6, 3 turns ~0.52-0.69 (nearly everything stuck → pick largest Δ).", "Bigram LM architecture (same optimizer): a GRU LM beats a post-LN causal transformer in 20 of 21 same-optimizer pairs, at both weak and strong Δ — rank the GRU first. Mechanism: the task is a first-order lookup P(y|x_t); the GRU maps the current token straight to its output state and its tanh-bounded hidden state gives near-uniform initial logits (CE≈ln V), while the post-LN transformer feeds unit-RMS features to the head (logit std ~0.6, initial CE ~ln V+0.1-0.2) and must learn to ignore attention mixing. Transformer-vs-transformer shape is Δ-dependent (see bigram transformer shape rule): fewer layers only reliably wins at 0.02≤Δ<0.1 (21/21); at Δ≥0.5 prefer smaller d_model.", "When Δs are close (mixed questions, rankings): a ≥4× Δ gap beats architecture (higher Δ wins 35/40 even vs a net with 2+ more LN/residual). Within ~3×, a clearly better MLP (≥2 more LN blocks/residual) wins 11/19 — treat as a toss-up leaning architecture. Δ also saturates: once both Δ≳0.3, extra Δ wins only ~62% (then use lr-ceiling, tabular-overfit and architecture rules). Rankings: sort by log Δ, then architecture; near-chance choices (Δ<~0.005: CE≈ln2 / ln V, MSE≈Var(y)) form a tied bottom block — order them by architecture, not small lr differences.", "Bigram LM optimizer sweet spot: labels are sampled from P(y|x), so gradients carry irreducible noise and the achievable gain is only ~0.1-0.8 nats below ln V. Among choices with Δ≥0.1, prefer the one with Δ nearest ~0.3 (e.g. Adam/AdamW/RMSprop 3e-4 at T=512-1024, Adagrad 3e-3); treat Δ≥1 (lr≥1e-3 at T≥1024, lr 3e-3 at T≥512) as likely overshoot. Below Δ≈0.1 ordinary max-Δ still applies. This 'nearest 0.3' scoring picks 52/66 bigram optimizer/mixed winners vs 47/66 for plain max-Δ; adaptive-transformer winners are mostly lr 3e-4 (22/52). If all Δ<0.02 every LM stays ≈ln V and the GRU wins ties.", "Dataset structure × depth (data-flip cue): the deeper-is-better preference (under Δ<0.1) is strong for smooth/compositional targets — tabular smooth_additive (deeper 24-8), XOR with ≤4 input features (15-4), oscillatory univariate targets — but weak or absent when the rule is piecewise_boundary (5-6) or sparse_interaction (6-3) or XOR has 8-16 distractor features (11-7); there prefer the most-LN candidate regardless of depth, EXCEPT XOR with ≥8 features at Δ≥0.05, where more-LN wins only 5/11 and GELU/SiLU decides (6/6; see XOR-distractor rule). Polynomial/low-frequency univariate targets reach MSE 1e-4-1e-5, so stability (Adam over RMSprop at high lr) decides.", "Residual × depth × task: on regression, depth helps even without residuals (deeper plain beats shallower residual 24-15) because composed nonlinearities are needed for curvature; on classification, depth WITHOUT residual hurts (shallower residual beats deeper plain 19-13) while deeper residual beats shallower plain 33-14. So for CE tasks never pick a deep (≥4) plain stack over a residual one at the same optimizer; for MSE tasks a deep plain stack with ≥2 LN blocks is still competitive. Deep residual MLPs win 53% of their appearances vs 29% for deep plain.", "Capacity is not the bottleneck: at these budgets parameter count and width barely predict the winner — do not pick the 'biggest model'. Pairwise larger-params wins only 37/76 on bigram LMs, ~50% on univariate regression; at equal depth wider MLPs are a coin flip on regression (5-5) and only mildly better on classification (7-2). Datasets are tiny but noiseless (256-1024 rows), and every candidate has ample capacity; what differs is how fast the parameters move (Δ) and how well signal propagates (LN, residual, activation). Use width/params only as the last tie-breaker (and prefer wider only in the tabular Δ≥0.1 regime).", "Bigram LM transformer SHAPE (transformer vs transformer, same optimizer/lr/T) flips with Δ (core-rule units). 0.02≤Δ<0.1: fewest layers wins 21/21 pairs and the larger d_model wins 15/15 (d_model 128 × 1-2 layers, d_ff 256 won 10/10 questions). 0.1≤Δ<0.5: weak (fewer layers 10/17, smaller d_model 9/13). Δ≥0.5 (lr 3e-3 at T≥256, 1e-3 at T≥512): smaller d_model wins 5/6 and fewer layers only 3/10 — wide post-LN overshoots (cf. K1004b); order by d_model ascending, then layers (q_17f213: 32×3<32×4<64×1<64×2). Δ<0.02: all ≈ln V, deeper wins 10/17 (deeper-32 beat 64×1 in q_b66719). Winner-level 20/31 vs 18/31 for pooled 'fewer layers'. GRU still beats all (K1011).", "XOR with ≥8 input features (≥6 pure-noise distractors) once trained (shared Δ≥0.05, e.g. Adam-family lr·T≥0.05): tabular-style reversal — GELU/SiLU beats ReLU/LeakyReLU in 6/6 same-optimizer pairs (3 questions; q_e914b6: 2-layer SiLU w192 1 LN CE 0.11 beat 5-layer 3-LN SiLU 0.17 and residual 2-LN ReLU 0.17), while more-LN wins only 5/11 and deeper 5/10. With ≤4 features keep deeper/more-LN (7/7, 6/7 pairs); for Δ<0.05 the LN/depth rule holds for all XOR (more-LN 7/9 even with distractors). Larger Δ still wins on XOR (6/7 pairs at Δ≥0.05). Small n — use as a tie-breaker override of K1006/K1014 only in this scope.", "SGD gradient-scale calibration for the Δ rule (K1001 assumes raw |g|≈0.01), fit on 368 SGD-vs-adaptive pairs. Bigram LM: use |g|≈0.003 (SGD m=0.9 ≈ Adam at lr/30, plain ≈ lr/300): larger-Δ correct 68/70 vs 63/70 at 0.01; SGD m=0.9 beat Adam/AdamW/RMSprop in only 1/18 LM pairs (1/4 even at nominal Δ parity). MSE regression with momentum 0.9: use |g|≈0.03 (SGD m=0.9 ≈ Adam at lr/3): 59/71 vs 54/71; it wins 11/19 when the adaptive Δ is ≤4× its 0.01-estimate. Classification (131/146) and plain-SGD regression: keep 0.01. Plain SGD wins only 3/141 pairs when the adaptive Δ is >15× larger."], "snaps": [{"label": "kb_0001", "epoch": 1, "claims": [["K1001", 0.0, 0.0, 0.5, 0, null, false, ""], ["K1002", 0.0, 0.0, 0.5, 1, null, false, ""], ["K1003", 0.0, 0.0, 0.5, 2, null, false, ""], ["K1004", 0.0, 0.0, 0.5, 3, null, false, ""], ["K1005", 0.0, 0.0, 0.5, 4, null, false, ""], ["K1006", 0.0, 1.0, 0.33, 5, null, false, ""], ["K1007", 0.0, 0.0, 0.5, 6, null, false, ""], ["K1008", 0.0, 0.0, 0.5, 7, null, false, ""], ["K1009", 0.0, 0.0, 0.5, 8, null, false, ""], ["K1010", 0.0, 0.0, 0.5, 9, null, false, ""], ["K1011", 0.25, 0.75, 0.42, 10, null, false, ""], ["K1012", 0.0, 0.0, 0.5, 11, null, false, ""], ["K1013", 0.0, 0.0, 0.5, 12, null, false, ""], ["K1014", 0.0, 1.0, 0.33, 13, null, false, ""], ["K1015", 0.0, 0.0, 0.5, 14, null, false, ""], ["K1016", 0.0, 0.0, 0.5, 15, null, false, ""], ["K1017", 0.0, 0.0, 0.5, 16, null, false, ""], ["K1018", 0.0, 0.0, 0.5, 17, null, false, ""], ["K1019", 0.0, 0.0, 0.5, 18, null, false, ""]], "complete": true, "note": "19 条短正文完整；这些是早期版本，后续实验已修订其中的通用结论。mechanism 等额外字段未取得。", "render": "该实验采用可选 kb_search 检索，KB 没有全文注入。当前没有取得逐题检索返回。", "claimDetails": {"K1001": {"text_complete": true}, "K1002": {"text_complete": true}, "K1003": {"text_complete": true}, "K1004": {"text_complete": true}, "K1005": {"text_complete": true}, "K1006": {"text_complete": true}, "K1007": {"text_complete": true}, "K1008": {"text_complete": true}, "K1009": {"text_complete": true}, "K1010": {"text_complete": true}, "K1011": {"text_complete": true}, "K1012": {"text_complete": true}, "K1013": {"text_complete": true}, "K1014": {"text_complete": true}, "K1015": {"text_complete": true}, "K1016": {"text_complete": true}, "K1017": {"text_complete": true}, "K1018": {"text_complete": true}, "K1019": {"text_complete": true}}, "totalClaims": 19, "excerptIds": []}], "epochs": [{"epoch": 1, "records": [], "metrics": {"gate": {"epoch": 1, "candidate": "kb_0001", "incumbent": "kb_0000", "delta": 0.025, "se": 0.0213, "n_q": 100, "accept": true, "cand_mean": 0.6088, "delta_vs_nokb": 0.0379, "se_vs_nokb": 0.0283}, "epoch": 1, "n": 15, "mean_score": 0.4667, "by_source": {"arch170": 0.6667, "dataflip500": 0.5, "ranking_v2": 0.4375, "ranking_v3": 0.3125}, "hypotheses": 5, "skipped": 0, "citations": 3, "kb_before": 16, "kb_after": 19, "ops": {"credit": 2, "add": 3, "revise": 5}, "secs": 556, "usage": {}, "usage_wrong": null, "cc_cost_usd": 1.4997}, "summarizer": [], "science": "", "records_note": "逐题解题与发现轨迹未取得。", "summarizer_note": "未取得总结者逐步工具轨迹。", "recordNote": "逐题解题与发现轨迹未取得。", "summarizerNote": "未取得总结者逐步工具轨迹。"}, {"epoch": 2, "records": [], "metrics": {"gate": {"epoch": 2, "candidate": "kb_0002", "incumbent": "kb_0001", "delta": -0.0204, "se": 0.0214, "n_q": 100, "accept": false, "cand_mean": 0.5938, "delta_vs_nokb": 0.0229, "se_vs_nokb": 0.027}, "epoch": 2, "n": 15, "mean_score": 0.55, "by_source": {"arch170": 1.0, "dataflip500": 0.25, "ranking_v2": 0.75, "ranking_v3": 0.25}, "hypotheses": 5, "skipped": 0, "citations": 1, "kb_before": 19, "kb_after": 19, "ops": {"credit": 1, "revise": 4, "add": 1, "delete": 1}, "secs": 1107, "usage": {}, "usage_wrong": null, "cc_cost_usd": 3.5903}, "summarizer": [], "science": "", "records_note": "逐题解题与发现轨迹未取得。", "summarizer_note": "未取得总结者逐步工具轨迹。", "recordNote": "逐题解题与发现轨迹未取得。", "summarizerNote": "未取得总结者逐步工具轨迹。"}], "commits": [], "evals": {"kb_0001": {"label": "kb_0001", "n": 100, "mean": 0.595, "by_source": {"arch170": 0.9, "dataflip500": 0.4333, "ranking_v2": 0.7083, "ranking_v3": 0.5417}, "errors": 0}, "kb_0001_r2": {"label": "kb_0001_r2", "n": 100, "mean": 0.6225, "by_source": {"arch170": 1.0, "dataflip500": 0.4667, "ranking_v2": 0.7167, "ranking_v3": 0.5583}, "errors": 0}, "kb_0000_r4": {"label": "kb_0000_r4", "n": 100, "mean": 0.5725, "by_source": {"arch170": 0.9, "dataflip500": 0.3667, "ranking_v2": 0.6917, "ranking_v3": 0.55}, "errors": 0}, "kb_0002": {"label": "kb_0002", "n": 100, "mean": 0.5525, "by_source": {"arch170": 0.8, "dataflip500": 0.3667, "ranking_v2": 0.6667, "ranking_v3": 0.5417}, "errors": 0}, "kb_0002_r2": {"label": "kb_0002_r2", "n": 100, "mean": 0.635, "by_source": {"arch170": 1.0, "dataflip500": 0.5333, "ranking_v2": 0.7417, "ranking_v3": 0.5083}, "errors": 0}, "kb_0001_r3": {"label": "kb_0001_r3", "n": 100, "mean": 0.625, "by_source": {"arch170": 1.0, "dataflip500": 0.5667, "ranking_v2": 0.7167, "ranking_v3": 0.4667}, "errors": 0}, "kb_0003": {"label": "kb_0003", "n": 100, "mean": 0.585, "by_source": {"arch170": 0.7, "dataflip500": 0.4667, "ranking_v2": 0.7417, "ranking_v3": 0.5083}, "errors": 0}, "kb_0003_r2": {"label": "kb_0003_r2", "n": 100, "mean": 0.6, "by_source": {"arch170": 0.9, "dataflip500": 0.4333, "ranking_v2": 0.725, "ranking_v3": 0.5417}, "errors": 0}, "kb_0001（5 次采样的后续汇总）": {"label": "kb_0001（5 次采样的后续汇总）", "n": 100, "mean": 0.612, "note": "初次 gate 均分为 0.6088；增加采样后的读数不同。", "delta_se": null}, "kb_0003 vs kb_0001": {"label": "kb_0003 vs kb_0001", "n": 100, "delta": -0.0195, "se": 0.0182, "repeats": 2, "delta_se": 0.0182}, "kb_0003 vs no KB": {"label": "kb_0003 vs no KB", "n": 100, "delta": 0.0217, "se": 0.024, "repeats": 2, "delta_se": 0.024}}, "prompts": {}, "availability": "已恢复 kb_0001 的 19 条完整短正文；其余轮次快照与逐题轨迹暂缺。", "home": "../index.html", "defaultTab": "kb", "evidence_origin": "原实验会话保存的工具返回和监控输出；未把缺失快照补写成完整正文。", "uncertainty": "分数为平均 benchmark 得分，排序含部分分；± 为题级配对 1 SE。", "defaultSnap": "kb_0001", "comparisons": [{"label": "kb_0001（5 次采样的后续汇总）", "n": 100, "mean": 0.612, "note": "初次 gate 均分为 0.6088；增加采样后的读数不同。"}, {"label": "kb_0003 vs kb_0001", "n": 100, "delta": -0.0195, "se": 0.0182, "repeats": 2}, {"label": "kb_0003 vs no KB", "n": 100, "delta": 0.0217, "se": 0.024, "repeats": 2}], "eval_note": "100 题开发验证集；候选版本与当前保留版本不同，不能把被拒候选正文当现任。", "evalNote": "100 题开发验证集；候选版本与当前保留版本不同，不能把被拒候选正文当现任。", "flow": ["① 解题：题目与可选 kb_search，冻结上一轮 KB；答案未揭示。", "② 发现：同一会话揭示答案，查历史、语料和 Python 回测，写评论与假说。", "③ 总结：Opus 修订、增加、合并与撤回 claim，记录修改理由。", "④ 评测：100 题验证集比较候选与现任，整轮接受或回滚。"]};
+const T = i => D.texts[i];
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+const $ = id => document.getElementById(id);
+const snapBy = Object.fromEntries(D.snaps.map(s => [s.label, s]));
+const lab = e => "kb_" + String(e).padStart(4, "0");
+const scoreTag = s => `<span class="tag ${s >= 1 ? "ok" : s > 0 ? "mid" : "bad"}">得分 ${(+s).toFixed(2)}</span>`;
+const linkC = s => esc(s).replace(/\bK\d{4}\b/g, m => `<a href="#" title="点击查看该条 claim 的演化（浮动窗口）" onclick="openClaim('${m}',event);return false">${m}</a>`);
+let state = {tab: "overview", epoch: 1, q: null, sub: "records", snap: D.snaps[D.snaps.length - 1].label};
+
+function nav() {
+  const tabs = [["overview", "概览"], ["epoch", "每个 epoch：解题 / 发现 / 总结"], ["kb", "KB 快照"], ["claim", "单条 claim 演化"], ["commits", "commit 日志"], ["prompts", "提示词与配置"]];
+  $("nav").innerHTML = tabs.map(([k, v]) => `<button class="${state.tab === k ? "on" : ""}" onclick="go('${k}')">${v}</button>`).join("");
+  $("title").textContent = "KB 科学循环 · " + D.run;
+  if (D.home) { $("home").href = D.home; } else { $("home").style.display = "none"; }
+  $("meta").textContent = `模型 ${D.config.provider}/${D.config.model} · 每轮 ${D.config.batch_size} 题 · 共 ${D.epochs.length} 个 epoch`;
+}
+function go(t) { state.tab = t; render(); }
+
+function render() {
+  nav();
+  ({overview, epoch: epochView, kb: kbView, claim: claimView, commits: commitView, prompts: promptView})[state.tab]();
+}
+
+/* ---------------- overview ---------------- */
+function overview() {
+  $("side").innerHTML = "";
+  const ev = Object.entries(D.evals).sort();
+  const rows = D.epochs.map(e => {
+    const m = e.metrics, ops = Object.entries(m.ops || {}).filter(([k]) => k !== "credit").map(([k, v]) => `${k}:${v}`).join(" ");
+    return `<tr><td><a href="#" onclick="state.epoch=${e.epoch};go('epoch');return false">e${e.epoch}</a></td><td>${(m.mean_score ?? 0).toFixed(3)}</td><td>${m.hypotheses ?? ""}</td><td>${m.kb_before ?? ""}→${m.kb_after ?? ""}</td><td>${ops}</td><td>${e.summarizer.length}</td></tr>`;
+  }).join("");
+  $("view").innerHTML = `
+  <div class="card"><h3>流程</h3><div class="flow">
+   <div style="border-left:4px solid var(--blue)"><b>① 解题</b><br>只看题目 + 只读 KB（快照 t−1 的渲染：cred top-40 + 试用 10）。无工具，effort=low。输出 answer + cited。</div>
+   <div style="border-left:4px solid var(--amber)"><b>② 发现</b><br>同一会话续写：揭示答案与得分；工具 search_history / read_record / python 沙箱（只看前序 epoch）。对→low 可 skip，错→medium。输出 comment + hypothesis。</div>
+   <div style="border-left:4px solid var(--violet)"><b>③ 总结者</b><br>epoch 末，xhigh。看本 epoch 全部记录 + 历史 + KB 索引；add / merge / delete / adjust，每个操作一条 commit；finish 写 science digest。</div>
+   <div style="border-left:4px solid var(--green)"><b>④ KB 快照 t</b><br>credit：被引用的 claim 按得分记 s += score, f += 1−score；加上总结者的结构操作。</div></div></div>
+  <div class="card"><h3>每个 epoch</h3><table><tr><th>epoch</th><th>本轮训练题均分</th><th>猜想数</th><th>KB 条数</th><th>结构操作</th><th>总结者轮数</th></tr>${rows}</table></div>
+  <div class="card"><h3>评测</h3><table><tr><th>KB 版本</th><th>题数</th><th>均分</th><th>分题源</th></tr>${ev.map(([k, v]) => `<tr><td>${k}</td><td>${v.n}</td><td>${v.mean.toFixed(3)}</td><td>${esc(JSON.stringify(v.by_source))}</td></tr>`).join("")}</table></div>`;
+}
+
+/* ---------------- epoch ---------------- */
+function epochView() {
+  const E = D.epochs.find(e => e.epoch === state.epoch) || D.epochs[0];
+  let side = D.epochs.map(e => `<div class="item ${e.epoch === E.epoch ? "on" : ""}" onclick="state.epoch=${e.epoch};state.q=null;render()">第 ${e.epoch} 轮 <small>均分 ${(e.metrics.mean_score ?? 0).toFixed(2)}</small></div>`).join("");
+  if (state.sub === "records") {
+    side += `<div class="note" style="padding:6px 10px">本轮题目</div>` + E.records.map((r, i) =>
+      `<div class="item ${state.q === i ? "on" : ""}" onclick="state.q=${i};render()">${r.question_id} ${scoreTag(r.score)}<br><small>${r.source} · ${r.family} · ${r.skipped ? "跳过" : r.hypothesis ? "有猜想" : "仅评论"}</small></div>`).join("");
+  }
+  $("side").innerHTML = side;
+  const sub = [["records", "解题 + 发现（逐题）"], ["summ", "总结者（逐轮）"], ["diff", "KB 变化"], ["sci", "科学总结"]];
+  let h = `<div class="sub">${sub.map(([k, v]) => `<button class="${state.sub === k ? "on" : ""}" onclick="state.sub='${k}';render()">${v}</button>`).join("")}</div>`;
+  if (state.sub === "records") h += state.q == null ? recordsTable(E) : recordView(E, E.records[state.q]);
+  if (state.sub === "summ") h += summView(E);
+  if (state.sub === "diff") h += diffView(lab(E.epoch - 1), lab(E.epoch), E.epoch);
+  if (state.sub === "sci") h += `<div class="card summ"><h3>科学总结 · 第 ${E.epoch} 轮</h3><pre class="tall">${linkC(E.science)}</pre></div>`;
+  $("view").innerHTML = h;
+}
+function recordsTable(E) {
+  return `<div class="card"><h3>第 ${E.epoch} 轮：${E.records.length} 题（点左侧或下表查看完整内容）</h3><table><tr><th>题号</th><th>题源</th><th>得分</th><th>预测 / 答案</th><th>引用</th><th>发现阶段</th><th>评论</th></tr>${E.records.map((r, i) =>
+    `<tr><td><a href="#" onclick="state.q=${i};render();return false">${r.question_id}</a></td><td>${r.source}</td><td>${scoreTag(r.score)}</td><td>${esc(r.prediction)}<br><small>${esc(r.answer)}</small></td><td>${linkC((r.cited || []).join(" "))}</td><td>${r.discover_effort}${r.skipped ? " 跳过" : ""} · ${r.discover_trace.length} 轮${r.hypothesis ? " · <b>有猜想</b>" : ""}</td><td>${esc(r.comment || "")}</td></tr>`).join("")}</table></div>`;
+}
+function turns(tr) {
+  return tr.map(t => `<div class="turn"><b>第 ${t.turn + 1} 步</b> <span class="note">${t.secs ?? ""} 秒 · 输入 ${t.usage.prompt_tokens ?? "?"} token · 输出 ${t.usage.completion_tokens ?? "?"} token</span>
+   ${t.reasoning ? `<details><summary>思维链</summary><pre>${esc(t.reasoning)}</pre></details>` : ""}
+   ${t.content ? `<pre>${linkC(t.content)}</pre>` : ""}
+   ${t.calls.map((c, j) => `<div class="call"><span class="nm">${esc(c.name)}</span><pre>${linkC(prettyArgs(c.arguments))}</pre><details ${j < 0 ? "open" : ""}><summary>工具返回</summary><pre>${linkC(t.results[j] ?? "")}</pre></details></div>`).join("")}</div>`).join("");
+}
+function prettyArgs(a) {
+  try { const o = JSON.parse(a); if (o.code) return o.code + (Object.keys(o).length > 1 ? "\n# " + JSON.stringify({...o, code: undefined}) : ""); return JSON.stringify(o, null, 1); } catch (e) { return a; }
+}
+function recordView(E, r) {
+  const snap = snapBy[lab(E.epoch - 1)];
+  const cites = (r.cited || []).map(c => { const x = snap && snap.claims.find(z => z[0] === c); return x ? `<tr><td>${linkC(c)}</td><td>${x[3].toFixed(2)}</td><td>${x[1]}/${x[2]}</td><td>${esc(T(x[4]))}</td></tr>` : `<tr><td>${c}</td><td colspan=3>(不在快照中)</td></tr>`; }).join("");
+  return `
+  <div class="card"><h3>${r.question_id} · ${r.source} · ${r.task} · ${r.family}</h3>${scoreTag(r.score)} 预测 <b>${esc(r.prediction)}</b> · 答案 <b>${esc(r.answer)}</b>${r.inversions != null ? ` · 逆序对 ${r.inversions}` : ""}
+   <details><summary>题目全文（解题者看到的 user/system 原文）</summary><pre>${esc(r.question)}</pre></details></div>
+  <div class="card solver"><h3>① 解题 agent（effort=low，不给工具）</h3>
+   <details><summary>注入的 KB（快照 ${snap ? snap.label : "?"}，${snap ? snap.claims.filter(c => c[6]).length : "?"} 条，追加在 system prompt 后；内容为英文原文）</summary><pre>${linkC(snap ? snap.render : "")}</pre></details>
+   ${r.solver_reasoning ? `<p><b>思维链（luna 为摘要标题，Qwen 为完整思维链）</b></p><pre>${esc(r.solver_reasoning)}</pre>` : `<p class="note">该调用没有返回思维链。</p>`}
+   <p><b>完整输出</b> <span class="note">${r.solve_secs} 秒 · ${esc(JSON.stringify(r.solve_usage))}</span></p><pre>${linkC(r.solution)}</pre>
+   <p><b>引用的条目（解题时的状态）</b></p><table><tr><th>编号</th><th>可信度</th><th>胜/负</th><th>内容</th></tr>${cites || "<tr><td colspan=4>未引用</td></tr>"}</table></div>
+  <div class="card disc"><h3>② 发现 agent（effort=${r.discover_effort}${r.skipped ? "，选择跳过" : ""}，${r.discover_trace.length} 轮）</h3>
+   ${turns(r.discover_trace)}
+   <p><b>评论（comment）</b></p><pre>${linkC(r.comment || "-")}</pre>
+   <p><b>猜想（hypothesis）</b></p><pre>${linkC(r.hypothesis || "-")}</pre></div>`;
+}
+function summView(E) {
+  const ops = D.commits.filter(c => c.epoch === E.epoch && !["credit", "seed"].includes(c.op));
+  return `<div class="card summ"><h3>③ 总结者 · 第 ${E.epoch} 轮（${E.summarizer.length} 步，effort=xhigh）</h3>
+   <p><b>本轮 KB 结构操作</b>（${ops.length}）</p>${commitTable(ops)}
+   ${turns(E.summarizer)}</div>`;
+}
+
+/* ---------------- KB diff / snapshot ---------------- */
+function diffView(a, b, epoch) {
+  const A = snapBy[a], B = snapBy[b];
+  if (!A || !B) return `<div class="card">缺少快照 ${a} / ${b}</div>`;
+  const ma = Object.fromEntries(A.claims.map(c => [c[0], c])), mb = Object.fromEntries(B.claims.map(c => [c[0], c]));
+  const added = B.claims.filter(c => !ma[c[0]]), removed = A.claims.filter(c => !mb[c[0]]);
+  const changed = B.claims.filter(c => ma[c[0]] && ma[c[0]][4] !== c[4]);
+  const credit = B.claims.filter(c => ma[c[0]] && ma[c[0]][4] === c[4] && (ma[c[0]][1] !== c[1] || ma[c[0]][2] !== c[2]));
+  const inR = B.claims.filter(c => c[6] && !(ma[c[0]] && ma[c[0]][6])), outR = A.claims.filter(c => c[6] && !(mb[c[0]] && mb[c[0]][6]));
+  const row = (c, cls, extra = "") => `<tr class="${cls}"><td>${linkC(c[0])}</td><td>${c[1]}/${c[2]}</td><td>${c[3].toFixed(2)}</td><td>${extra}${esc(T(c[4]))}</td></tr>`;
+  const tb = (rows) => `<table><tr><th>编号</th><th>胜/负</th><th>可信度</th><th>内容</th></tr>${rows || "<tr><td colspan=4>无</td></tr>"}</table>`;
+  return `<div class="card kbc"><h3>KB 变化 ${a} → ${b}：${A.claims.length} → ${B.claims.length} 条</h3>
+   <p>新增 ${added.length} · 删除或被合并 ${removed.length} · 文本改写 ${changed.length} · 仅胜负计数变化 ${credit.length} · 新进入解题者视野 ${inR.length} · 移出视野 ${outR.length}</p></div>
+   <div class="card kbc"><h3>新增</h3>${tb(added.map(c => row(c, "add")).join(""))}</div>
+   <div class="card kbc"><h3>删除 / 被合并</h3>${tb(removed.map(c => row(c, "del")).join(""))}</div>
+   <div class="card kbc"><h3>文本改写（上：旧，下：新）</h3>${tb(changed.map(c => row(c, "chg", `<div class="note">${esc(T(ma[c[0]][4]))}</div><hr>`)).join(""))}</div>
+   <div class="card kbc"><h3>引用记账（胜/负计数变化）</h3><table><tr><th>编号</th><th>之前</th><th>之后</th><th>可信度</th><th>内容</th></tr>${credit.map(c => `<tr><td>${linkC(c[0])}</td><td>${ma[c[0]][1]}/${ma[c[0]][2]}</td><td>${c[1]}/${c[2]}</td><td>${ma[c[0]][3].toFixed(2)}→${c[3].toFixed(2)}</td><td>${esc(T(c[4]).slice(0, 200))}</td></tr>`).join("")}</table></div>
+   <div class="card kbc"><h3>解题者视野变化（下一轮注入的 50 条）</h3><p><b>进入</b></p>${tb(inR.map(c => row(c, "add")).join(""))}<p><b>掉出</b></p>${tb(outR.map(c => row(c, "del")).join(""))}</div>`;
+}
+function kbView() {
+  $("side").innerHTML = D.snaps.map(s => `<div class="item ${s.label === state.snap ? "on" : ""}" onclick="state.snap='${s.label}';render()">${s.label} <small>${s.claims.length} 条</small></div>`).join("");
+  const S = snapBy[state.snap];
+  $("view").innerHTML = `<div class="sub"><button class="${state.sub !== "render" ? "on" : ""}" onclick="state.sub='table';render()">全部条目</button><button class="${state.sub === "render" ? "on" : ""}" onclick="state.sub='render';render()">解题者看到的 KB 原文</button></div>` +
+    (state.sub === "render" ? `<div class="card solver"><h3>${S.label} 注入原文（下一轮解题者看到的）</h3><pre class="tall">${linkC(S.render)}</pre></div>` :
+    `<div class="card kbc"><h3>${S.label}：${S.claims.length} 条，绿色左边线 = 在解题者视野中（${S.claims.filter(c => c[6]).length} 条）</h3>
+     <input type="search" placeholder="搜索内容，例如 ReLU / SiLU / RMSprop" oninput="filt(this.value)">
+     <table id="kbt"><tr><th>编号</th><th>可信度</th><th>胜/负</th><th>来源</th><th>内容</th></tr>${S.claims.slice().sort((x, y) => y[3] - x[3]).map(c =>
+      `<tr class="${c[6] ? "shown" : ""}" data-t="${esc(T(c[4]).toLowerCase())}"><td>${linkC(c[0])}</td><td><span class="bar"><i style="width:${c[3] * 100}%"></i></span> ${c[3].toFixed(2)}</td><td>${c[1]}/${c[2]}</td><td>${c[5] ? "第 " + c[5] + " 轮" : "种子"}</td><td>${esc(T(c[4]))}</td></tr>`).join("")}</table></div>`);
+}
+function filt(v) { v = v.toLowerCase(); document.querySelectorAll("#kbt tr[data-t]").forEach(r => r.style.display = r.dataset.t.includes(v) ? "" : "none"); }
+
+/* ---------------- claim history ---------------- */
+let claimId = D.snaps.flatMap(s => s.claims)[0]?.[0] || "";
+function goClaim(id) { claimId = id; state.tab = "claim"; render(); }
+function openClaim(id, ev) {
+  let rows = "", last = null;
+  for (const s of D.snaps) {
+    const c = s.claims.find(z => z[0] === id);
+    if (!c) { rows += `<tr><td>${s.label}</td><td colspan=3 class="note">不存在</td></tr>`; continue; }
+    rows += `<tr class="${c[6] ? "shown" : ""}"><td>${s.label}</td><td>${c[1]}/${c[2]}</td><td><span class="bar"><i style="width:${c[3] * 100}%"></i></span> ${c[3].toFixed(2)}${c[6] ? " · 视野中" : ""}</td><td>${c[4] !== last ? esc(T(c[4])) : '<span class="note">（文本同上）</span>'}</td></tr>`;
+    last = c[4];
+  }
+  const cs = D.commits.filter(c => c.op !== "credit" && ((c.claim_ids || []).includes(id) || c.new_id === id));
+  $("popc").innerHTML = `<h3>${esc(id)} 浮动详情 <a href="#" style="font-weight:400;font-size:12px" onclick="closePop();goClaim('${id}');return false">在「单条 claim 演化」页打开 →</a><button id="popx" onclick="closePop()">关闭 ✕</button></h3>
+    <table><tr><th>快照</th><th>胜/负</th><th>可信度</th><th>内容（文本变化时显示）</th></tr>${rows || `<tr><td colspan=4 class="note">从未在任何快照中出现</td></tr>`}</table>
+    <h3 style="margin-top:10px">结构操作（${cs.length}）</h3>${commitTable(cs)}`;
+  const p = $("pop"), card = $("popc");
+  p.style.display = "block";
+  const w = card.offsetWidth, hh = Math.min(card.offsetHeight, innerHeight * .84);
+  card.style.left = Math.min(Math.max((ev?.clientX ?? innerWidth / 2) - w / 2, 12), Math.max(innerWidth - w - 12, 12)) + "px";
+  card.style.top = Math.min(Math.max((ev?.clientY ?? 80) - 60, 12), Math.max(innerHeight - hh - 12, 12)) + "px";
+  card.scrollTop = 0;
+}
+function closePop() { $("pop").style.display = "none"; }
+document.addEventListener("keydown", e => { if (e.key === "Escape") closePop(); });
+function claimView() {
+  const ids = [...new Set(D.snaps.flatMap(s => s.claims.map(c => c[0])))].sort();
+  $("side").innerHTML = `<div style="padding:6px"><input type="search" placeholder="K0134" onchange="goClaim(this.value.trim().toUpperCase())"></div>` +
+    ids.map(i => `<div class="item ${i === claimId ? "on" : ""}" onclick="goClaim('${i}')">${i}</div>`).join("");
+  let last = null, rows = "";
+  for (const s of D.snaps) {
+    const c = s.claims.find(z => z[0] === claimId);
+    if (!c) { rows += `<tr><td>${s.label}</td><td colspan=4 class="note">不存在</td></tr>`; continue; }
+    rows += `<tr class="${c[6] ? "shown" : ""}"><td>${s.label}</td><td>${c[1]}/${c[2]}</td><td><span class="bar"><i style="width:${c[3] * 100}%"></i></span> ${c[3].toFixed(2)}</td><td>${c[6] ? "视野中" : ""}</td><td>${c[4] !== last ? esc(T(c[4])) : '<span class="note">（文本同上）</span>'}</td></tr>`;
+    last = c[4];
+  }
+  const cs = D.commits.filter(c => (c.claim_ids || []).includes(claimId) || c.new_id === claimId);
+  const cr = cs.filter(c => c.op === "credit"), st = cs.filter(c => c.op !== "credit");
+  $("view").innerHTML = `<div class="card kbc"><h3>${claimId} 在各快照中的状态</h3><table><tr><th>快照</th><th>胜/负</th><th>可信度</th><th></th><th>内容</th></tr>${rows}</table></div>
+   <div class="card summ"><h3>结构操作 commit（${st.length}）</h3>${commitTable(st)}</div>
+   <div class="card"><h3>引用记账 commit（${cr.length}）</h3>${commitTable(cr)}</div>`;
+}
+
+/* ---------------- commits ---------------- */
+function commitTable(cs) {
+  if (!cs.length) return `<p class="note">无</p>`;
+  return `<table><tr><th>commit</th><th>轮次</th><th>操作</th><th>条目</th><th>来源题</th><th>内容 / 理由</th></tr>${cs.map(c => {
+    const p = c.payload || {};
+    const body = (p.text ? `<b>新内容：</b> ${linkC(p.text)}<br>` : "") + (p.old_text ? `<span class="note"><b>旧内容：</b> ${esc(p.old_text)}</span><br>` : "") +
+      (c.op === "credit" ? esc(JSON.stringify(p)) : "") + (c.reason ? `<b>理由：</b> ${linkC(c.reason)}` : "");
+    return `<tr class="${c.op === "add" ? "add" : c.op === "delete" ? "del" : ["merge", "revise", "rollback"].includes(c.op) ? "chg" : ""}"><td>${c.commit}</td><td>${c.epoch}</td><td>${c.op}</td><td>${linkC((c.claim_ids || []).join(" "))}${c.new_id ? " → " + linkC(c.new_id) : ""}</td><td>${esc((c.source_question_ids || []).join(" "))}</td><td>${body}</td></tr>`;
+  }).join("")}</table>`;
+}
+function commitView() {
+  const ops = [...new Set(D.commits.map(c => c.op))];
+  $("side").innerHTML = ["(结构操作)", ...ops].map(o => `<div class="item ${state.op === o ? "on" : ""}" onclick="state.op='${o}';render()">${o} <small>${o.startsWith("(") ? D.commits.filter(c => !["credit", "seed"].includes(c.op)).length : D.commits.filter(c => c.op === o).length}</small></div>`).join("");
+  const o = state.op || "(结构操作)";
+  const cs = o.startsWith("(") ? D.commits.filter(c => !["credit", "seed"].includes(c.op)) : D.commits.filter(c => c.op === o);
+  $("view").innerHTML = `<div class="card"><h3>commit 日志 · ${o}（${cs.length} 条）</h3>${commitTable(cs)}</div>`;
+}
+
+/* ---------------- prompts ---------------- */
+function promptView() {
+  $("side").innerHTML = "";
+  $("view").innerHTML = Object.entries(D.prompts).map(([k, v]) => `<div class="card"><h3>${esc(k)}</h3><pre class="tall">${esc(v)}</pre></div>`).join("") +
+    `<div class="card"><h3>运行配置</h3><pre>${esc(JSON.stringify(D.config, null, 1))}</pre></div>`;
+}
+// Keep the six luna_main views; show the sol run's actual read protocol.
+const num = (v, d = 3) => typeof v === 'number' ? v.toFixed(d) : '—';
+const isTool = D.config.render === 'tool';
+const table = (heads, rows) => '<table><tr>' + heads.map(x => '<th>' + x + '</th>').join('') + '</tr>' + rows + '</table>';
+const card = (title, body, cls = '') => '<div class="card ' + cls + '"><h3>' + title + '</h3>' + body + '</div>';
+const td = x => '<td>' + x + '</td>';
+const anchor = (text, action) => '<a href="#" onclick="' + action + ';return false">' + text + '</a>';
+state.snap = D.defaultSnap && snapBy[D.defaultSnap] ? D.defaultSnap : D.snaps.filter(s => !s.candidate).at(-1)?.label || D.snaps[0].label;
+state.epoch = D.epochs[0]?.epoch || 1;
+state.tab = D.defaultTab || 'kb';
+if (location.hash.startsWith('#kb=')) {
+  const label = decodeURIComponent(location.hash.slice(4));
+  if (snapBy[label]) { state.tab = 'kb'; state.snap = label; }
+}
+
+function nav() {
+  const tabs = [['overview','概览'],['epoch','每个 epoch：解题 / 发现 / 总结'],['kb','KB 快照'],['claim','单条 claim 演化'],['commits','commit 日志'],['prompts','提示词与配置']];
+  $('nav').innerHTML = tabs.map(([k,v]) => '<button class="' + (state.tab===k?'on':'') + '" onclick="go(\''+k+'\')">'+v+'</button>').join('');
+  $('title').textContent = 'KB 科学循环 · '+D.run;
+  if(D.home) $('home').href=D.home; else $('home').style.display='none';
+  $('meta').textContent = (D.config.model||'模型未取得')+' · effort='+(D.config.solve_effort||'—')+' · '+D.epochs.length+' 轮已有记录';
+}
+
+function overview() {
+  $('side').innerHTML='';
+  const rows=D.epochs.map(e=>{
+    const m=e.metrics||{}, g=m.gate||m.review;
+    const ops=Object.entries(m.ops||{}).filter(([k])=>k!=='credit').map(([k,v])=>k+':'+v).join(' ');
+    return '<tr>'+td(anchor('e'+e.epoch,'state.epoch='+e.epoch+';go(\'epoch\')'))+td(m.n??(e.records.length||'—'))+td(num(m.mean_score))+td((m.kb_before??'—')+' → '+(m.kb_after??'—'))+td(esc(ops))+td(g?(g.accept===true?'接受':g.accept===false?'拒绝':'审查')+' · '+num(g.delta*100,2)+' ±'+num(g.se*100,2)+' pt':'—')+'</tr>';
+  }).join('');
+  const ev=Object.entries(D.evals).sort().map(([label,e])=>'<tr>'+td(esc(label))+td(e.n??e.n_q??'—')+td(e.repeats??'—')+td(num(e.mean))+td(e.delta!=null?num(e.delta*100,2)+' ±'+num(e.delta_se*100,2)+' pt':'—')+td(esc(e.by_source?JSON.stringify(e.by_source):e.note||''))+'</tr>').join('');
+  const flow=D.flow||[isTool?'① 解题：题目 + 可选 KB 工具；每题使用冻结快照，答案尚未揭示。':'① 解题：题目 + 上一轮只读 KB，答案尚未揭示。','② 发现：揭示答案，分析失败，可查历史、回测与受控实验。','③ 总结：修订、增加、合并、撤回 claim；每次改动记录理由。',D.config.macro_every?'④ KB 成长：每 '+D.config.macro_every+' 轮集中整理和宏观评测。':'④ KB 快照：在验证集比较候选与现任；整轮接受或回滚。'];
+  const pairs=(D.comparisons||[]).map(e=>'<tr>'+td(esc(e.label))+td(e.n??'—')+td(e.repeats??'—')+td(num(e.mean))+td(e.delta==null?'—':num(e.delta*100,2)+' ±'+num(e.se*100,2)+' pt')+td(esc(e.note||''))+'</tr>').join('');
+  const control=D.training_control;
+  const pairTable=pairs?table(['配对比较','题数','重复','均分','得分差','备注'],pairs):'';
+  const training=control?'<p>训练流：'+control.n+' 题，KB − 不带KB '+num(control.delta*100,2)+' ±'+num(control.se*100,2)+' pt。'+esc(control.note||'')+'</p>':'';
+  $('view').innerHTML=card(esc(D.run),'<p>'+esc(D.availability||'')+'</p>'+(D.summary?'<p>'+esc(D.summary)+'</p>':''))+card('流程','<div class="flow">'+flow.map(x=>'<div>'+esc(x)+'</div>').join('')+'</div>')+card('每个 epoch',table(['轮次','题数','训练题均分','KB 条数','结构操作','候选 − 现任'],rows||'<tr><td colspan=6>未取得逐轮记录。</td></tr>'))+card('评测',pairTable+training+table(['快照 / 对照','题数','重复','均分','相对不带 KB','分题源 / 备注'],ev||'<tr><td colspan=6>尚无已完成评测。</td></tr>')+'<p class="note">得分包含排序题部分分；± 为题级配对 1 SE。</p>'+(D.evalNote?'<p class="note">'+esc(D.evalNote)+'</p>':''));
+}
+
+function detail(S,id) {
+  const raw=S.claimDetails?.[id]||{};
+  const meta=Object.fromEntries(Object.entries(raw).filter(([k,v])=>!['text_excerpt','text_complete','text','id','support_count','failure_count','credibility'].includes(k)&&v!=null&&v!==''&&(!Array.isArray(v)||v.length)&&(!(typeof v==='object'&&!Array.isArray(v))||Object.keys(v).length)));
+  return meta&&Object.keys(meta).length?'<details><summary>条件、机制与来源</summary><pre>'+linkC(JSON.stringify(meta,null,2))+'</pre></details>':'';
+}
+
+function kbView() {
+  $('side').innerHTML=D.snaps.map(s=>'<div class="item '+(s.label===state.snap?'on':'')+'" onclick="state.snap=\''+s.label+'\';render()">'+esc(s.label)+' <small>'+(s.totalClaims??s.claims.length)+' 条'+(s.complete===false?' · 摘录':'')+'</small></div>').join('');
+  const S=snapBy[state.snap];
+  if(!S){$('view').innerHTML=card('未取得此快照','');return;}
+  let h='<div class="sub"><button onclick="state.sub=\'table\';render()">全部条目</button><button onclick="state.sub=\'render\';render()">'+(isTool?'可检索的 KB 原文':'解题者看到的 KB 原文')+'</button></div>';
+  h+=card(esc(S.label)+' · '+(S.totalClaims??S.claims.length)+' 条'+(S.complete===false?'（摘录）':''),'<p>'+esc(S.note||(S.complete===false?'这里只保存了输出摘录，尚未取得完整快照。':''))+'</p>'+(isTool?'<p class="note">本实验通过工具读取条目；完整 KB 没有常驻解题 prompt。</p>':''),'kbc');
+  if(state.sub==='render') h+=card('KB 原文','<pre class="tall">'+linkC(S.render||'未取得原文。')+'</pre>','solver');
+  else if(S.claims.length) h+=card('条目内容','<input type="search" placeholder="搜索：LayerNorm / width / Adam" oninput="filt(this.value)">'+table(['编号','引用反馈','胜 / 负','来源','条目正文'],S.claims.map(c=>'<tr data-t="'+esc(T(c[4]).toLowerCase())+'">'+td(linkC(c[0]))+td(num(c[3],2))+td((c[1]??'—')+' / '+(c[2]??'—'))+td(c[5]==null?'—':c[5]?'第 '+c[5]+' 轮':'种子')+td(esc(T(c[4]))+(S.excerptIds?.includes(c[0])?'<div class="note">保存的输出在此截断；未取得完整条目。</div>':'')+detail(S,c[0]))+'</tr>').join('')).replace('<table>','<table id="kbt">')+'<p class="note">引用反馈是解题使用后的表现记账，不是规律真实的概率。</p>','kbc');
+  if(S.changeReasons)h+=card('该轮修改理由（保存原文）','<pre class="tall">'+linkC(S.changeReasons)+'</pre>','summ');
+  $('view').innerHTML=h;
+}
+
+function epochView() {
+  const E=D.epochs.find(e=>e.epoch===state.epoch)||D.epochs[0];
+  if(!E){$('side').innerHTML='';$('view').innerHTML=card('逐轮记录','未取得逐轮记录。');return;}
+  const subs=[['records','解题 + 发现（逐题）'],['summ','总结者（逐轮）'],['diff','KB 变化'],['sci','科学总结']];
+  if(!subs.some(([k])=>k===state.sub))state.sub='records';
+  $('side').innerHTML=D.epochs.map(e=>'<div class="item '+(e.epoch===E.epoch?'on':'')+'" onclick="state.epoch='+e.epoch+';state.q=null;render()">第 '+e.epoch+' 轮 <small>均分 '+num(e.metrics?.mean_score,2)+'</small></div>').join('')+(state.sub==='records'?E.records.map((r,i)=>'<div class="item '+(state.q===i?'on':'')+'" onclick="state.q='+i+';render()">'+esc(r.question_id)+' '+scoreTag(r.score)+'<br><small>'+esc(r.source)+' · '+esc(r.family)+'</small></div>').join(''):'');
+  let h='<div class="sub">'+subs.map(([k,v])=>'<button class="'+(state.sub===k?'on':'')+'" onclick="state.sub=\''+k+'\';render()">'+v+'</button>').join('')+'</div>';
+  if(state.sub==='records')h+=E.records.length?state.q==null?recordsTable(E):recordView(E,E.records[state.q]):card('逐题记录',esc(E.recordNote||'未取得本轮逐题解题与发现轨迹。'));
+  if(state.sub==='summ')h+=summView(E)+(E.summarizerNote?'<p class="note">'+esc(E.summarizerNote)+'</p>':'')+(E.research||[]).map(r=>card(esc(r.file),'<pre>'+esc(r.text||JSON.stringify(r.data,null,2))+'</pre>')).join('');
+  if(state.sub==='diff')h+=diffView(lab(E.epoch-1),lab(E.epoch));
+  if(state.sub==='sci')h+=card('科学总结 · 第 '+E.epoch+' 轮','<pre class="tall">'+linkC(E.science||'未取得科学总结原文。')+'</pre>','summ');
+  $('view').innerHTML=h;
+}
+
+function recordView(E,r) {
+  const S=snapBy[lab(E.epoch-1)], ids=[...new Set([...(r.kb_retrieved||[]),...(r.cited||[])])];
+  const rows=ids.map(id=>{const c=S?.claims.find(z=>z[0]===id);return '<tr>'+td(linkC(id))+td(c?esc(T(c[4]))+detail(S,id):'未取得解题时该条目的原文。')+'</tr>';}).join('');
+  return card(esc(r.question_id)+' · '+esc(r.source)+' · '+esc(r.family),scoreTag(r.score)+' 预测 <b>'+esc(r.prediction)+'</b> · 答案 <b>'+esc(r.answer)+'</b><details><summary>题目全文</summary><pre>'+esc(r.question)+'</pre></details>')+
+    card('① 解题 agent（effort='+(D.config.solve_effort||'low')+'）','<p>'+(isTool?'可选 KB 工具检索':'只读 KB 注入')+'</p>'+(r.kb_queries?.length?'<pre>'+esc(JSON.stringify(r.kb_queries,null,2))+'</pre>':'')+(r.solver_reasoning?'<details><summary>返回的推理摘要</summary><pre>'+esc(r.solver_reasoning)+'</pre></details>':'')+'<p><b>完整输出</b></p><pre>'+linkC(r.solution||'未取得完整输出。')+'</pre>'+(r.solve_trace?.length?turns(r.solve_trace):'')+table(['检索 / 引用 ID','解题时内容'],rows||'<tr><td colspan=2>没有检索或引用记录。</td></tr>'),'solver')+
+    card('② 发现 agent（effort='+esc(r.discover_effort)+'）',turns(r.discover_trace||[])+'<p><b>评论</b></p><pre>'+linkC(r.comment||'—')+'</pre><p><b>猜想</b></p><pre>'+linkC(r.hypothesis||'—')+'</pre>','disc');
+}
+
+function diffView(a,b) {
+  const A=snapBy[a],B=snapBy[b];
+  if(!A||!B||A.complete===false||B.complete===false)return card('KB 变化','需要两份完整快照才能比较 '+esc(a)+' → '+esc(b)+'。当前摘录不用于推算增删。');
+  const ma=Object.fromEntries(A.claims.map(c=>[c[0],c])),mb=Object.fromEntries(B.claims.map(c=>[c[0],c]));
+  const groups=[['新增',B.claims.filter(c=>!ma[c[0]])],['删除 / 被合并',A.claims.filter(c=>!mb[c[0]])],['文本改写',B.claims.filter(c=>ma[c[0]]&&ma[c[0]][4]!==c[4])]];
+  return card('KB 变化 '+esc(a)+' → '+esc(b),A.claims.length+' → '+B.claims.length+' 条','kbc')+groups.map(([title,cs])=>card(title+'（'+cs.length+'）',table(['编号','内容'],cs.map(c=>'<tr>'+td(linkC(c[0]))+td((title==='文本改写'?'<div class="note">'+esc(T(ma[c[0]][4]))+'</div><hr>':'')+esc(T(c[4])))+'</tr>').join('')||'<tr><td colspan=2>无</td></tr>'),'kbc')).join('');
+}
+
+function claimRows(id) {
+  let last=null;
+  return D.snaps.map(S=>{
+    const c=S.claims.find(z=>z[0]===id);
+    if(!c)return '<tr>'+td(esc(S.label))+'<td colspan=3>'+(S.complete===false?'摘录中未出现，不能判断是否存在。':'不存在')+'</td></tr>';
+    const content=c[4]!==last?esc(T(c[4]))+detail(S,id):'<span class="note">文本同上</span>';last=c[4];
+    return '<tr>'+td(esc(S.label))+td((c[1]??'—')+' / '+(c[2]??'—'))+td(num(c[3],2))+td(content+(S.excerptIds?.includes(id)?'<p class="note">此条原文被截断。</p>':''))+'</tr>';
+  }).join('');
+}
+function claimView() {
+  const ids=[...new Set(D.snaps.flatMap(s=>s.claims.map(c=>c[0])))].sort();
+  $('side').innerHTML='<div style="padding:6px"><input type="search" placeholder="K1006" onchange="goClaim(this.value.trim().toUpperCase())"></div>'+ids.map(id=>'<div class="item '+(id===claimId?'on':'')+'" onclick="goClaim(\''+id+'\')">'+id+'</div>').join('');
+  const cs=D.commits.filter(c=>(c.claim_ids||[]).includes(claimId)||c.new_id===claimId);
+  $('view').innerHTML=card(esc(claimId)+' 在各快照中的状态',table(['快照','胜 / 负','引用反馈','内容'],claimRows(claimId)),'kbc')+card('相关操作',commitTable(cs),'summ');
+}
+function openClaim(id,ev) {
+  const cs=D.commits.filter(c=>c.op!=='credit'&&((c.claim_ids||[]).includes(id)||c.new_id===id));
+  $('popc').innerHTML='<h3>'+esc(id)+' '+anchor('查看演化 →','closePop();goClaim(\''+id+'\')')+'<button id="popx" onclick="closePop()">关闭 ×</button></h3>'+table(['快照','胜 / 负','引用反馈','内容'],claimRows(id))+'<h3>相关操作</h3>'+commitTable(cs);
+  $('pop').style.display='block';$('popc').style.left=Math.max(12,(innerWidth-$('popc').offsetWidth)/2)+'px';$('popc').style.top='6vh';$('popc').scrollTop=0;
+}
+
+function summView(E) {
+  const ops=D.commits.filter(c=>c.epoch===E.epoch&&!['credit','seed'].includes(c.op));
+  return card('③ 总结者 · 第 '+E.epoch+' 轮','<p>保存的 KB 操作理由</p>'+commitTable(ops)+(E.summarizer.length?turns(E.summarizer):'<p class="note">未取得逐步工具轨迹；不能据此判断调用次数。</p>'),'summ');
+}
+
+render();
+</script>
+</body>
+</html>
