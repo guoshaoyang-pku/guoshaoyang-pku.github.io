@@ -1,0 +1,88 @@
+[
+  {
+    "id": "q_57db51",
+    "source": "ranking_v3",
+    "epoch": 14,
+    "mapped_gold": "D<B<E<A<C",
+    "mapping": {
+      "E": "E",
+      "D": "D",
+      "A": "A",
+      "C": "C",
+      "B": "B"
+    },
+    "choices": {
+      "E": {
+        "depth": "4",
+        "width": "64",
+        "residual": "True",
+        "activation": "leaky_relu",
+        "ln": "[True, False, True, True]",
+        "dim": "16",
+        "optimizer": "Adam",
+        "lr": "0.0003",
+        "wd": "0.0001",
+        "betas": "[0.9, 0.95]",
+        "default": true,
+        "section_hash": "eea68932c08a8d73c07ebe99972d585416c608a05f9b430981cd232cb20c344a"
+      },
+      "D": {
+        "depth": "2",
+        "width": "96",
+        "residual": "False",
+        "activation": "relu",
+        "ln": "[False, False]",
+        "dim": "16",
+        "optimizer": "Adam",
+        "lr": "0.0003",
+        "wd": "0.0001",
+        "betas": "[0.9, 0.95]",
+        "default": true,
+        "section_hash": "9e2ef5a955a455a1c4e91fb8e185a02ded6b8e42204c0bbd8f019b44235d446b"
+      },
+      "A": {
+        "depth": "4",
+        "width": "64",
+        "residual": "True",
+        "activation": "relu",
+        "ln": "[True, True, False, True]",
+        "dim": "16",
+        "optimizer": "Adam",
+        "lr": "0.0003",
+        "wd": "0.0001",
+        "betas": "[0.9, 0.95]",
+        "default": true,
+        "section_hash": "2d2909c21fb9b15f365e80e326956745cf4f6b22569bb80766678c1a3f821ee6"
+      },
+      "C": {
+        "depth": "5",
+        "width": "64",
+        "residual": "True",
+        "activation": "leaky_relu",
+        "ln": "[True, True, False, False, True]",
+        "dim": "16",
+        "optimizer": "Adam",
+        "lr": "0.0003",
+        "wd": "0.0001",
+        "betas": "[0.9, 0.95]",
+        "default": true,
+        "section_hash": "98465d5335105751730e315e66266e7ff340dcc7142dd59e9e9e9f11b9de3a01"
+      },
+      "B": {
+        "depth": "3",
+        "width": "64",
+        "residual": "False",
+        "activation": "relu",
+        "ln": "[False, True, True]",
+        "dim": "16",
+        "optimizer": "Adam",
+        "lr": "0.0003",
+        "wd": "0.0001",
+        "betas": "[0.9, 0.95]",
+        "default": true,
+        "section_hash": "efe899a9e11acf736a04de89871ee38c7b27040ffb4822a1cf8f6f41654be426"
+      }
+    },
+    "protocol": "You are taking the ArchitectureIQ benchmark.\n\nEach question describes one **dataset instance** and several **choices** (each choice is one **candidate**: model, optimizer, loss, and training budget). All choices use the same materialized dataset instance. Depending on the question, one or more training axes may vary; read each choice's complete setup and code rather than assuming an axis is shared.\n\nYour task is to **rank every choice** by its held-out test metric, from lowest to highest (a lower loss is better), using architecture and learning-mechanics reasoning only \u2014 no training results are provided.\n\nThe reply format is defined once, in the final \"Your answer\" section.\n\n## Dataset\nXOR binary classification on tabular features. Features are drawn i.i.d. from a standard normal; the label depends on the *sign agreement* of two active coordinates, so no linear function of the inputs separates the classes at all \u2014 a model must compose the two coordinates multiplicatively. Any remaining coordinates are pure distractors. The dataset card below states the active coordinates and the exact label rule. Every candidate trains on the same materialized train/test splits.\n\n### Data-generating and classification rule\n- Rule family: `xor`; active coordinates: `x_8`, `x_11`\n- Feature distribution: every coordinate is sampled independently from `Normal(0, 1)`.\n- Latent score:\n  - `s(x) = -x_8\u00b7x_11`\n- Label rule: `y = 1` exactly when `s(x) > 0`; otherwise `y = 0`.\n- XOR interpretation: `x` is class 1 exactly when its two active coordinates have opposite signs, and class 0 when they share a sign.\n- Bayes decision boundary: `s(x) = 0`; labels are an exact function of `x`, so this boundary is attainable.\n- Threshold calibration: `0` was chosen from 4096 independent calibration rows as the closest round value to the 50% quantile of `s(x)`; on those 4096 rows it labels 50.5% of them class 1.\n- Reproducibility: point seed `788764366`, calibration seed `788765366`.\n\n### Data splits and training protocol\n- Task: binary classification on one fixed synthetic tabular train/test split.\n- Input shape: float32 `[N, 16]`; labels: int64 `[N]` in `{0, 1}`.\n- Train rows: 1024; held-out test rows: 2048.\n- Every choice receives the same materialized split; minibatches sample train indices uniformly with replacement.\n- Evaluation: **test cross-entropy** is primary; test accuracy is auxiliary only.\n- Reference device: cpu\n\n## Sample budget (same for all choices)\n- training_steps: 512\n- batch_size: 64\n- total_samples_seen: 32768 (= training_steps \u00d7 batch_size)\n\n## Evaluation metric\n- Ground-truth ranking uses **test_ce** on the held-out test split.\n- Each choice is trained independently for **10** seeds (`0`..`9`), one `torch.manual_seed(seed)` per run.\n- Execution device: cpu.\n- Rank all candidates by their mean test_ce over seeds; lower is better, so write the order from lowest to highest.\n\n"
+  }
+]

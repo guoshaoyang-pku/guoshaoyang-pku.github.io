@@ -1,0 +1,292 @@
+{
+  "question": {
+    "question_id": "q_ca760b",
+    "epoch": 14,
+    "source": "ranking_v2",
+    "task": "ranking",
+    "type": "optimizer_only",
+    "family": "synthetic_tabular_classification",
+    "question": "You are taking the ArchitectureIQ benchmark.\n\nEach question describes one **dataset instance** and several **choices** (each choice is one **candidate**: model, optimizer, loss, and training budget). All choices use the same materialized dataset instance. Depending on the question, one or more training axes may vary; read each choice's complete setup and code rather than assuming an axis is shared.\n\nYour task is to **rank every choice** by its held-out test metric, from lowest to highest (a lower loss is better), using architecture and learning-mechanics reasoning only \u2014 no training results are provided.\n\nThe reply format is defined once, in the final \"Your answer\" section.\n\n## Dataset\nSynthetic tabular binary classification. Features are drawn i.i.d. from a standard normal; a latent score `s(x)` over a few active coordinates is thresholded at a fixed cut-off chosen near the median of `s(x)`, so the two classes are close to balanced. The score is non-linear in the features, so no linear function of the inputs reproduces the boundary. The dataset card below states the exact rule family, active coordinates, weights, threshold, and the class balance it produces. Every candidate trains on the same materialized train/test splits.\n\n### Data-generating and classification rule\n- Rule family: `smooth_additive`; active coordinates: `x_3`, `x_4`, `x_13`\n- Feature distribution: every coordinate is sampled independently from `Normal(0, 1)`.\n- Latent score:\n  - `s(x) = 1\u00b7[sin(x_3) + 0.25\u00b7x_3\u00b2] + 0.625\u00b7[sin(x_4) + 0.25\u00b7x_4\u00b2] - 1\u00b7[sin(x_13) + 0.25\u00b7x_13\u00b2]`\n- Label rule: `y = 1` exactly when `s(x) > 0.125`; otherwise `y = 0`.\n- Bayes decision boundary: `s(x) = 0.125`; labels are an exact function of `x`, so this boundary is attainable.\n- Threshold calibration: `0.125` was chosen from 4096 independent calibration rows as the closest round value to the 50% quantile of `s(x)`; on those 4096 rows it labels 50.6% of them class 1.\n- Reproducibility: point seed `4001363266030`, calibration seed `4001363267030`.\n\n### Data splits and training protocol\n- Task: binary classification on one fixed synthetic tabular train/test split.\n- Input shape: float32 `[N, 16]`; labels: int64 `[N]` in `{0, 1}`.\n- Train rows: 1024; held-out test rows: 2048.\n- Every choice receives the same materialized split; minibatches sample train indices uniformly with replacement.\n- Evaluation: **test cross-entropy** is primary; test accuracy is auxiliary only.\n- Reference device: cpu\n\n## Sample budget (same for all choices)\n- training_steps: 1024\n- batch_size: 32\n- total_samples_seen: 32768 (= training_steps \u00d7 batch_size)\n\n## Evaluation metric\n- Ground-truth ranking uses **test_ce** on the held-out test split.\n- Each choice is trained independently for **10** seeds (`0`..`9`), one `torch.manual_seed(seed)` per run.\n- Execution device: cpu.\n- Rank all candidates by their mean test_ce over seeds; lower is better, so write the order from lowest to highest.\n\n## Choices\n\n### Choice E\n\n**Model (natural language)**\n- Type: MLP\n- Input dimension: 16\n- Output logits: 2\n- Depth: 2 hidden Linear layers of width 192, between the input projection and the output head (4 nn.Linear layers in total)\n- Width: 192 (all hidden layers)\n- Residual connections: True\n- Layer norm per layer: [False, False]\n- Activation: relu (one activation, shared by every layer)\n- Initialization: PyTorch Linear defaults\n\n**Model code**\n```python\nclass MLPBlock(nn.Module):\n    \"\"\"One hidden layer: relu(x + Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.ReLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        h = h + x\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(16, 192),\n            nn.ReLU(),\n            MLPBlock(width=192, use_layer_norm=False),\n            MLPBlock(width=192, use_layer_norm=False),\n            nn.Linear(192, 2),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)\n```\n\n**Optimizer**\n- Optimizer: Adam\n- Learning rate: 0.003\n- Weight decay: 0.001\n- Betas: [0.9, 0.95]\n\n```python\ndef build_optimizer(model: nn.Module) -> torch.optim.Optimizer:\n    params = model.parameters()\n    return torch.optim.Adam(params, lr=0.003, betas=(0.9, 0.95), weight_decay=0.001)\n```\n\n**Loss**\n- Loss: cross-entropy on minibatch target labels\n\n```python\ndef loss_fn(model: nn.Module, pred: torch.Tensor, target: torch.Tensor) -> torch.Tensor:\n    if pred.ndim == 3:\n        vocab = pred.shape[-1]\n        return torch.nn.functional.cross_entropy(pred.reshape(-1, vocab), target.reshape(-1))\n    return torch.nn.functional.cross_entropy(pred, target.reshape(-1))\n```\n\n### Choice A\n\n**Model (natural language)**\n- Type: MLP\n- Input dimension: 16\n- Output logits: 2\n- Depth: 2 hidden Linear layers of width 192, between the input projection and the output head (4 nn.Linear layers in total)\n- Width: 192 (all hidden layers)\n- Residual connections: True\n- Layer norm per layer: [False, False]\n- Activation: relu (one activation, shared by every layer)\n- Initialization: PyTorch Linear defaults\n\n**Model code**\n```python\nclass MLPBlock(nn.Module):\n    \"\"\"One hidden layer: relu(x + Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.ReLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        h = h + x\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(16, 192),\n            nn.ReLU(),\n            MLPBlock(width=192, use_layer_norm=False),\n            MLPBlock(width=192, use_layer_norm=False),\n            nn.Linear(192, 2),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)\n```\n\n**Optimizer**\n- Optimizer: Adagrad\n- Learning rate: 0.001\n- Weight decay: 0.0001\n\n```python\ndef build_optimizer(model: nn.Module) -> torch.optim.Optimizer:\n    params = model.parameters()\n    return torch.optim.Adagrad(params, lr=0.001, weight_decay=0.0001)\n```\n\n**Loss**\n- Loss: cross-entropy on minibatch target labels\n\n```python\ndef loss_fn(model: nn.Module, pred: torch.Tensor, target: torch.Tensor) -> torch.Tensor:\n    if pred.ndim == 3:\n        vocab = pred.shape[-1]\n        return torch.nn.functional.cross_entropy(pred.reshape(-1, vocab), target.reshape(-1))\n    return torch.nn.functional.cross_entropy(pred, target.reshape(-1))\n```\n\n### Choice C\n\n**Model (natural language)**\n- Type: MLP\n- Input dimension: 16\n- Output logits: 2\n- Depth: 2 hidden Linear layers of width 192, between the input projection and the output head (4 nn.Linear layers in total)\n- Width: 192 (all hidden layers)\n- Residual connections: True\n- Layer norm per layer: [False, False]\n- Activation: relu (one activation, shared by every layer)\n- Initialization: PyTorch Linear defaults\n\n**Model code**\n```python\nclass MLPBlock(nn.Module):\n    \"\"\"One hidden layer: relu(x + Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.ReLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        h = h + x\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(16, 192),\n            nn.ReLU(),\n            MLPBlock(width=192, use_layer_norm=False),\n            MLPBlock(width=192, use_layer_norm=False),\n            nn.Linear(192, 2),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)\n```\n\n**Optimizer**\n- Optimizer: SGD\n- Learning rate: 0.0003\n- Weight decay: 0\n- Momentum: 0\n\n```python\ndef build_optimizer(model: nn.Module) -> torch.optim.Optimizer:\n    params = model.parameters()\n    return torch.optim.SGD(params, lr=0.0003, momentum=0, weight_decay=0)\n```\n\n**Loss**\n- Loss: cross-entropy on minibatch target labels\n\n```python\ndef loss_fn(model: nn.Module, pred: torch.Tensor, target: torch.Tensor) -> torch.Tensor:\n    if pred.ndim == 3:\n        vocab = pred.shape[-1]\n        return torch.nn.functional.cross_entropy(pred.reshape(-1, vocab), target.reshape(-1))\n    return torch.nn.functional.cross_entropy(pred, target.reshape(-1))\n```\n\n### Choice D\n\n**Model (natural language)**\n- Type: MLP\n- Input dimension: 16\n- Output logits: 2\n- Depth: 2 hidden Linear layers of width 192, between the input projection and the output head (4 nn.Linear layers in total)\n- Width: 192 (all hidden layers)\n- Residual connections: True\n- Layer norm per layer: [False, False]\n- Activation: relu (one activation, shared by every layer)\n- Initialization: PyTorch Linear defaults\n\n**Model code**\n```python\nclass MLPBlock(nn.Module):\n    \"\"\"One hidden layer: relu(x + Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.ReLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        h = h + x\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(16, 192),\n            nn.ReLU(),\n            MLPBlock(width=192, use_layer_norm=False),\n            MLPBlock(width=192, use_layer_norm=False),\n            nn.Linear(192, 2),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)\n```\n\n**Optimizer**\n- Optimizer: AdamW\n- Learning rate: 0.003\n- Weight decay: 1e-05\n- Betas: [0.9, 0.999]\n\n```python\ndef build_optimizer(model: nn.Module) -> torch.optim.Optimizer:\n    params = model.parameters()\n    return torch.optim.AdamW(params, lr=0.003, betas=(0.9, 0.999), weight_decay=1e-05)\n```\n\n**Loss**\n- Loss: cross-entropy on minibatch target labels\n\n```python\ndef loss_fn(model: nn.Module, pred: torch.Tensor, target: torch.Tensor) -> torch.Tensor:\n    if pred.ndim == 3:\n        vocab = pred.shape[-1]\n        return torch.nn.functional.cross_entropy(pred.reshape(-1, vocab), target.reshape(-1))\n    return torch.nn.functional.cross_entropy(pred, target.reshape(-1))\n```\n\n### Choice B\n\n**Model (natural language)**\n- Type: MLP\n- Input dimension: 16\n- Output logits: 2\n- Depth: 2 hidden Linear layers of width 192, between the input projection and the output head (4 nn.Linear layers in total)\n- Width: 192 (all hidden layers)\n- Residual connections: True\n- Layer norm per layer: [False, False]\n- Activation: relu (one activation, shared by every layer)\n- Initialization: PyTorch Linear defaults\n\n**Model code**\n```python\nclass MLPBlock(nn.Module):\n    \"\"\"One hidden layer: relu(x + Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.ReLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        h = h + x\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(16, 192),\n            nn.ReLU(),\n            MLPBlock(width=192, use_layer_norm=False),\n            MLPBlock(width=192, use_layer_norm=False),\n            nn.Linear(192, 2),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)\n```\n\n**Optimizer**\n- Optimizer: Adagrad\n- Learning rate: 0.0001\n- Weight decay: 0.001\n\n```python\ndef build_optimizer(model: nn.Module) -> torch.optim.Optimizer:\n    params = model.parameters()\n    return torch.optim.Adagrad(params, lr=0.0001, weight_decay=0.001)\n```\n\n**Loss**\n- Loss: cross-entropy on minibatch target labels\n\n```python\ndef loss_fn(model: nn.Module, pred: torch.Tensor, target: torch.Tensor) -> torch.Tensor:\n    if pred.ndim == 3:\n        vocab = pred.shape[-1]\n        return torch.nn.functional.cross_entropy(pred.reshape(-1, vocab), target.reshape(-1))\n    return torch.nn.functional.cross_entropy(pred, target.reshape(-1))\n```\n\n## Your answer\nRank all five choices from lowest to highest held-out loss, using each letter exactly once. Write the complete order inside a single `<answer>` tag, as the letters joined by `<`, and put nothing after the tag, for example `<answer>B<C<D<E<A</answer>`. The grader reads only the **final** `<answer>` tag in your reply.",
+    "answer": "A<E<B<C<D",
+    "prediction": "E<A<D<B<C",
+    "score": 0.25,
+    "inversions": 3,
+    "cited": [
+      "K1001",
+      "K1002",
+      "K1003",
+      "K1005",
+      "K1073"
+    ],
+    "explanation": "<cited>K1001,K1002,K1003,K1005,K1073</cited>\n<answer>E<A<D<B<C</answer>",
+    "comment": "The decisive miss was late-budget test-CE risk: D\u2019s aggressive, nearly unregularized AdamW recipe finished last, even behind slow B and C; conservative Adagrad A also beat regularized Adam E. Excess confidence or distractor fitting could explain this, but ordinal results cannot establish either mechanism. I overextended K1002/K1003\u2019s undertraining preferences and underweighted K1001/K1073\u2019s saturation warnings. Backtesting found conservative recipes winning only 2/9 same-model long-budget history comparisons across seven questions. In long-budget smooth-additive lab comparisons, lower-rate AdamW won 12/17 pairs across three sets; five reversed. No exact long-budget zero-LN ReLU lab controls matched this question. These results support conditional caution, not a tested rule predicting the complete gold order.",
+    "hypothesis": null,
+    "imported_from": null,
+    "question_provenance": {
+      "kind": "current_pool",
+      "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_bench_repo/releases/kb_science_pool_v3/questions.jsonl"
+    }
+  },
+  "datasets": {
+    "stabcls_345f07": {
+      "instance_seed": 75092166,
+      "input_dim": 16,
+      "num_classes": 2,
+      "rule_family": "smooth_additive",
+      "active_features": [
+        0,
+        7,
+        13
+      ],
+      "interaction_order": 2,
+      "interaction_pairs": [],
+      "rule_weights": [
+        1.0,
+        0.875,
+        -1.0
+      ],
+      "piecewise_breakpoint": 0.0,
+      "spiral_turns": 2.0,
+      "decision_threshold": 0.25,
+      "train_size": 1024,
+      "test_size": 2048,
+      "point_sampling": {
+        "distribution": "standard_normal",
+        "seed": 75093166
+      }
+    },
+    "stabcls_41478f": {
+      "instance_seed": 30034587,
+      "input_dim": 16,
+      "num_classes": 2,
+      "rule_family": "smooth_additive",
+      "active_features": [
+        6,
+        9
+      ],
+      "interaction_order": 2,
+      "interaction_pairs": [],
+      "rule_weights": [
+        0.875,
+        -0.875
+      ],
+      "piecewise_breakpoint": 0.0,
+      "spiral_turns": 2.0,
+      "decision_threshold": 0.0,
+      "train_size": 1024,
+      "test_size": 2048,
+      "point_sampling": {
+        "distribution": "standard_normal",
+        "seed": 30035587
+      }
+    },
+    "stabcls_462152": {
+      "instance_seed": 112196895,
+      "input_dim": 16,
+      "num_classes": 2,
+      "rule_family": "smooth_additive",
+      "active_features": [
+        9,
+        11
+      ],
+      "interaction_order": 2,
+      "interaction_pairs": [],
+      "rule_weights": [
+        -1.25,
+        1.0
+      ],
+      "piecewise_breakpoint": 0.0,
+      "spiral_turns": 2.0,
+      "decision_threshold": 0.0,
+      "train_size": 1024,
+      "test_size": 2048,
+      "point_sampling": {
+        "distribution": "standard_normal",
+        "seed": 112197895
+      }
+    }
+  },
+  "claims": [
+    {
+      "id": "K1001",
+      "text": "Optimizer comparison,SAME model/data/budget: use Delta as a progress proxy ONLY below task/model saturation. T256 can be32epochs; neither step count nor nominal parity proves adaptive or max-Delta wins. Adam/AdamW/RMSprop:lr*T;Adagrad:2*lr*sqrt(T);SGD:lr*T*|g|/(1-m),g~.01 (bigram.003,momentumMSE.03,K1019). Check K1004/K1071-K1073 and target/batch first;close mixed-recipe estimates:K1012. Old largerDelta~85% backtests were ceiling-filtered,not a law. Byte-identical q_561d81/q_21a335 recipes reverse winners on different targets/splits. Long XOR optimizer reversal K1119 is NOT a low-rate rule;no universal ceiling.",
+      "support_count": 110.0,
+      "failure_count": 44.0,
+      "credibility": 0.7115384615384616,
+      "created_epoch": 0,
+      "sources": [],
+      "merged_from": [
+        "K0019",
+        "K0009",
+        "K0031",
+        "K0016",
+        "K0124",
+        "K0010",
+        "K0073",
+        "K0101",
+        "K0212",
+        "K0228",
+        "K0138",
+        "K0166",
+        "K0020",
+        "K0184"
+      ],
+      "origin": "seed:seed_distill_v1",
+      "mechanism": "Nominal cumulative displacement is a progress heuristic, not actual parameter or function motion. Endpoint rate grids show target/recipe/budget-conditional reversals. R1e820ab3a7 cannot test function-step or jitter mechanism because runner exposes endpoints only; no theory is established.",
+      "phase": "Progress-limited same-model comparisons retain positive higher-Delta tendency. T256 can represent32exposureepochs. q561d81/q21a335 byte-identical choices reverse ordinal winners with changed target/point seeds;rates also alter betas/decay. R1e820ab3a7 new within-set U grid higher wins12/12;oscillatory T1024 all6pairs favor lower;polynomial T1024 nonmonotonic. Keep each recipe/dataset separate.",
+      "last_evaluated_epoch": 14,
+      "report_ids": [
+        "R02d63c19c2",
+        "R3d79831b53",
+        "R58d9d83b4f",
+        "R653e44588b",
+        "R6625c8f0a1",
+        "R7dd7d943d3",
+        "Raeabecdef0",
+        "Rc5401dd3c0",
+        "Rea2c3b5177"
+      ],
+      "regime": {
+        "family": "all",
+        "steps": [
+          256,
+          2048
+        ],
+        "note": "Same model/data/loss/budget;below target/model saturation. Delta proxy not measured motion;check batch,exposure,initialization,optimizer/decay before ranking;mixed/parity K1012."
+      }
+    },
+    {
+      "id": "K1002",
+      "text": "Adagrad vs Adam/AdamW on the SAME architecture/budget: Adagrad \u0394\u22482\u00b7lr\u00b7\u221aT, so comparable progress needs lr\u2248\u221aT/2 (8-23\u00d7) higher. At lr_Adagrad/lr_Adam\u22643, Adam-family wins65/70; ratio10 is mixed4/7; ratio\u226530 Adagrad wins9/9. For shared-architecture Adagrad rate comparisons, larger lr usually wins (original40/41; broader univariate lab73/78, history13/16), not always; lr3e-3 is not a universal safety guarantee. Do not use this rate preference to settle LN/activation changes (q_cd8a07). At lr\u22641e-4, \u0394\u22640.01 over T\u22642048 indicates little progress relative to adaptive rates\u22653e-5, but freezing is approximate.",
+      "support_count": 89.0,
+      "failure_count": 33.0,
+      "credibility": 0.7258064516129032,
+      "created_epoch": 0,
+      "sources": [],
+      "merged_from": [
+        "K0156",
+        "K0070",
+        "K0069",
+        "K0132",
+        "K0198"
+      ],
+      "origin": "seed:seed_distill_v1",
+      "last_evaluated_epoch": 14,
+      "report_ids": [
+        "R3d79831b53",
+        "R58d9d83b4f",
+        "R79e71854c8",
+        "Rab5d3359b4",
+        "Raeabecdef0",
+        "Rc5401dd3c0"
+      ],
+      "phase": "Rc540 exact Adagrad wd.001,d4w256plainGELU LN1010,bs64:lr.003/.0001 wins3/3 across2sets;E32 wins2/2 (piecewise CE.235828/.459268,ratio.51349;smooth.313337/.325668,.96214). Smooth margin small vsSD. q_a57013 also changesdecay. No Delta>=.5 safety test."
+    },
+    {
+      "id": "K1003",
+      "text": "Normalized MLPs or bigram LMs,SGD vs adaptive BELOW saturation: plain SGD is often slow,NOT automatically frozen or last. It lost138/141 pairs when adaptiveDelta>15x its estimate(K1019); old all-family appearance wins~8% are pooled,not same-model controls. Momentum.9 lr.001-.003 is a contender,not guaranteed winner: general Adam-equivalent rate~lr/10,bigram~lr/30,MSE~lr/3. At lr<=.0003 it usually loses to same-lr adaptive below saturation. Calibration is a proxy,NOT proof momentum beats plain at equal lr/(1-m);q_0a12ba favors plain at parity,with decay differing. Deep zeroLN smooth MLPs need task-specific scope(K1038).",
+      "support_count": 47.0,
+      "failure_count": 17.0,
+      "credibility": 0.7272727272727273,
+      "created_epoch": 0,
+      "sources": [],
+      "merged_from": [
+        "K0012",
+        "K0174"
+      ],
+      "origin": "seed:seed_distill_v1",
+      "last_evaluated_epoch": 14,
+      "report_ids": [
+        "R3d79831b53",
+        "R58730d84ac",
+        "R79e71854c8",
+        "R838be7703a"
+      ],
+      "regime": {
+        "optimizer": [
+          "SGD",
+          "Adam",
+          "AdamW",
+          "RMSprop",
+          "Adagrad"
+        ],
+        "model_type": [
+          "mlp",
+          "transformer_lm",
+          "gru_lm"
+        ],
+        "note": "SGD vs adaptive below saturation; normalized MLP calibration. Pooled appearance rates are not parity controls or parameter-motion measurements."
+      },
+      "mechanism": "Loss rankings and appearance rates do not demonstrate parameter freezing. SGD raw-gradient calibration is empirical predictive evidence against adaptive rivals; initialization, normalization, gradients, momentum startup and noise are possible explanations."
+    },
+    {
+      "id": "K1073",
+      "text": "Tabular CE,1024rows,SAME network/data: Delta optima are recipe/batch-specific,not universal epoch thresholds. E32:K1116's8feature d1ReLU+LN Adam,bs16 best TESTED Delta.6144;.0614 worse. Rc5401dd3c0:d2w192 residualReLU/LN01 AdamW,bs32 Delta1.024 beats.03072 on smooth/sparse2/2datasets(ratios.759/.725);d4w256 plainGELU/LN1010 Adagrad,bs64 lr.003 beats.0001 on piecewise/smooth2/2datasets. Old smooth E4~.25,E16~.08,E32~.05-.15 are local. Batch,architecture,data confound pooled optima. q_a57013 rates change decay;no blanket low-rate reversal. No optimum settles cross-architecture rankings(q_7a5eba).",
+      "support_count": 9.75,
+      "failure_count": 6.25,
+      "credibility": 0.5972222222222222,
+      "created_epoch": 0,
+      "sources": [],
+      "merged_from": [
+        "K1021",
+        "K1032"
+      ],
+      "origin": "c000031",
+      "mechanism": "Controlled endpoint losses establish recipe-local rate preferences,not overconfidence or a universal exposure threshold. Batch,model,target and optimizer state still distinguish competing explanations.",
+      "regime": {
+        "family": [
+          "synthetic_tabular_classification"
+        ],
+        "model_type": [
+          "mlp"
+        ],
+        "loss": [
+          "cross_entropy"
+        ],
+        "data": [
+          "1024rows",
+          "smooth_additive",
+          "sparse_interaction",
+          "piecewise_boundary"
+        ],
+        "budget": [
+          4096,
+          32768
+        ],
+        "note": "Same network/data per comparison;E32 controlled recipes differ in width/depth/LN/batch/optimizer. Rc540/K1082 retain exact datasets,configs,10seedmeans."
+      },
+      "phase": "Rc540 E32:AdamW d2w192resReLU LN01,wd1e-5,beta2.999,bs32 high/low .75932smooth/.72491sparse,2sets. Adagrad d4w256plainGELU LN1010,wd.001,bs64 high/low .51349piecewise/.96214smooth,2sets. K1082 Adamd1w256ReLU+LN,bs16 besttestedDelta.6144. Old optima remain recipe-local.",
+      "last_evaluated_epoch": 14,
+      "report_ids": [
+        "R3d79831b53",
+        "R760974e919",
+        "R7dd7d943d3",
+        "Rc093b78e4e",
+        "Rc5401dd3c0"
+      ]
+    },
+    {
+      "id": "K1146",
+      "text": "Dim16 sparse CE,1024/2048 rows,default plain d2w192 Leaky(.01),LN10,T2048/b16: full A=AdamW(.001,beta2.999,wd.001), B=AdamW(3e-5,.95,1e-5), C=Adam(.003,.95,0),beta1.9. Two allowed instances stabcls_254b70/3ba70f give A/B/C CE .413544/.416901/.807531 and .325835/.407879/.537058;A-B=-.003357/-.082044,paired95%[-.026824,.023157]/[-.096987,-.067933],A wins6/10 and10/10 seeds. C loses to both40/40 paired comparisons;zero failures. Rc093b78e4e: A wins both means,but first lead uncertain;not rate-only or a depth/rule-wide law.",
+      "support_count": 0.25,
+      "failure_count": 0.75,
+      "credibility": 0.4166666666666667,
+      "created_epoch": 10,
+      "sources": [
+        "q_9e25f3"
+      ],
+      "merged_from": [],
+      "origin": "J585fab6928f8:c000397",
+      "origin_epoch": 7,
+      "last_evaluated_epoch": 14,
+      "report_ids": [
+        "R3d79831b53"
+      ]
+    }
+  ],
+  "history_path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_science_loop/soa_async_v1/visible/J19fb0971fc33_research_e0014_v000001_ce8197819c0c/history.jsonl",
+  "kb_path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_science_loop/soa_async_v1/visible/J19fb0971fc33_research_e0014_v000001_ce8197819c0c/kb.json",
+  "lab_path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/lab_db.jsonl",
+  "experiment_path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_science_loop/soa_async_v1/lab_experiments.jsonl",
+  "preregistration": "R3d79831b53@9e0dcbb97d06cc2ada6db03b3f387e07489f82fa"
+}
