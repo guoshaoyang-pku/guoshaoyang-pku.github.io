@@ -1,0 +1,1185 @@
+[
+  {
+    "id": "K1001",
+    "text": "CORE RULE (all families, T=256-2048 steps; every task here is under-trained): rank choices by cumulative per-parameter displacement \u0394. Adam/AdamW/RMSprop: \u0394\u2248lr\u00b7T. Adagrad (zero-init accumulator, steps decay ~lr/\u221at): \u0394\u22482\u00b7lr\u00b7\u221aT. SGD: \u0394\u2248lr\u00b7T\u00b7|g|/(1\u2212m) with raw grad |g|\u22480.01 (bigram LM 0.003, MSE regression with momentum 0.03 \u2014 K1019), i.e. plain SGD \u2248 Adam at lr/100, SGD m=0.9 \u2248 Adam at lr/10. The largest-\u0394 choice wins 85% of optimizer-only and ~85% of mixed questions (after the lr-ceiling exceptions); a 1.5-3\u00d7 \u0394 edge usually beats any architecture advantage. Use architecture rules only to break \u0394 ties (same optimizer+lr) or in architecture-only questions.",
+    "support_count": 10.5,
+    "failure_count": 8.5,
+    "credibility": 0.5476190476190477,
+    "created_epoch": 0,
+    "sources": [],
+    "merged_from": [
+      "K0019",
+      "K0009",
+      "K0031",
+      "K0016",
+      "K0124",
+      "K0010",
+      "K0073",
+      "K0101",
+      "K0212",
+      "K0228",
+      "K0138",
+      "K0166",
+      "K0020",
+      "K0184"
+    ],
+    "origin": "seed:seed_distill_v1",
+    "mechanism": "Every candidate is under-trained, so loss falls monotonically with how far parameters move from init; adaptive optimizers move ~lr per step regardless of gradient scale, so lr\u00b7T measures distance. Predicts the rule saturates once \u0394 is enough to fit the (tiny, noiseless) train set (~0.1-0.3), after which overconfidence/overshoot dominates - observed in the phase table.",
+    "phase": "Largest-\u0394 (\u22653\u00d7 gap) win rate depends on the smaller \u0394: <0.03 ~95% (tabular lab 2011/2135); 0.03-0.1 ~60-88%; once smaller \u0394\u22650.1 only 25-60% (bigram 25%, tabular 43%, spiral 54%, multivariate 56%, XOR 58%, univariate 60%; K1012, K1021). LR-ceiling breaks: K1004.",
+    "last_evaluated_epoch": 1
+  },
+  {
+    "id": "K1002",
+    "text": "Adagrad conversion (any family): because Adagrad's step decays as lr/\u221at, it matches Adam only when its lr is ~\u221aT/2 (8-23\u00d7) larger. Same architecture, lr_Adagrad/lr_Adam \u22643\u00d7 \u2192 Adam/AdamW wins 65/70; =10\u00d7 \u2192 coin flip (4-3); \u226530\u00d7 \u2192 Adagrad wins 9/9. Within Adagrad the larger lr always wins (40/41 pairs; lr=3e-3 is never too big \u2014 the decay is a built-in anneal). Adagrad at lr\u22641e-4 is effectively frozen (\u0394\u22640.01) and loses to almost any adaptive choice with lr\u22653e-5\u00b7\u221aT/2.",
+    "support_count": 6.5,
+    "failure_count": 3.5,
+    "credibility": 0.625,
+    "created_epoch": 0,
+    "sources": [],
+    "merged_from": [
+      "K0156",
+      "K0070",
+      "K0069",
+      "K0132",
+      "K0198"
+    ],
+    "origin": "seed:seed_distill_v1",
+    "last_evaluated_epoch": 1
+  },
+  {
+    "id": "K1003",
+    "text": "SGD (all families): plain SGD (momentum 0) at lr\u22643e-3 is nearly frozen (wins ~8% of its appearances; in LMs embedding rows barely move, CE stays \u2248ln V). SGD momentum 0.9 behaves like Adam at ~lr/10: so SGD m=0.9 lr 1e-3-3e-3 \u2248 Adam 1e-4-3e-4 and is a real contender \u2014 it beats Adagrad \u22641e-3, Adam/RMSprop \u22643e-5-1e-4 and unstable RMSprop 3e-3 (e.g. univariate MSE 6e-5 vs 0.03) \u2014 but SGD m=0.9 at lr\u22643e-4 loses to Adam/RMSprop at the same lr (10\u00d7 smaller \u0394). Family calibration (SGD calibration rule): bigram LM \u2248 Adam at lr/30 (weaker), MSE regression \u2248 Adam at lr/3 (stronger). Compute \u0394 with momentum.",
+    "support_count": 3.0,
+    "failure_count": 1.0,
+    "credibility": 0.6666666666666666,
+    "created_epoch": 0,
+    "sources": [],
+    "merged_from": [
+      "K0012",
+      "K0174"
+    ],
+    "origin": "seed:seed_distill_v1",
+    "last_evaluated_epoch": 1
+  },
+  {
+    "id": "K1004",
+    "text": "LR-ceiling exceptions to the \u0394 rule: (a) RMSprop lr\u22651e-3 on MSE regression (no momentum; zero-init square-avg inflates early steps) is noisy: vs \u22653\u00d7 smaller \u0394 it wins only 22/36 corpus pairs, BUT 6/6 when its MLP is better (more LN+residual; q_65db92), 12/22 at equal arch, 4/8 when worse; prefer Adam 3e-3 (loses 2/35) over RMSprop at equal lr. (b) Bigram LMs: \u0394 optimum 0.1-0.3, d128 post-LN transformer 0.03-0.1 (K1071). (c) MLP classification: lr 3e-3 is safe on XOR/spiral, NOT on 1024-row tabular (optimum \u0394 shrinks with epochs, K1073). (d) UNIVARIATE regression, multi-layer net width\u226564: Adam-family lr\u00b7T\u22651 overshoots (K1072).",
+    "support_count": 0.0,
+    "failure_count": 1.0,
+    "credibility": 0.3333333333333333,
+    "created_epoch": 0,
+    "sources": [],
+    "merged_from": [
+      "K0139"
+    ],
+    "origin": "seed:seed_distill_v1",
+    "mechanism": "RMSprop's first steps are lr/sqrt(small square-avg) \u2248 up to 10\u00d7 lr with no momentum smoothing; in unnormalized MLPs these kicks inflate hidden activations and the MSE output, so training oscillates. LayerNorm bounds hidden scale (and residual paths keep the function near-identity), absorbing the kicks \u2014 predicts instability only when the RMSprop net lacks LN/residual, as observed (6/6 vs 4/8).",
+    "regime": {
+      "family": [
+        "univariate_regression",
+        "multivariate_regression",
+        "bigram_lm"
+      ],
+      "optimizer": [
+        "RMSprop",
+        "Adam",
+        "AdamW"
+      ],
+      "lr": [
+        0.001,
+        0.003
+      ],
+      "loss": [
+        "mse",
+        "cross_entropy"
+      ],
+      "note": "(a) corpus regression pairs; (b) bigram post-LN transformer vs GRU"
+    },
+    "phase": "RMSprop\u22653e-3 vs \u22653\u00d7 smaller-\u0394 choice on MSE: RMSprop net has higher LN+residual score \u2192 wins 6/6; equal \u2192 12/22; lower \u2192 4/8. RMSprop 1e-3 univariate 1/4.",
+    "last_evaluated_epoch": 1
+  },
+  {
+    "id": "K1005",
+    "text": "Second-order optimizer knobs are noise at these budgets: weight decay 0-1e-3 changes loss <1% (same-arch pairs: higher wd 3 wins/10 losses, all within 1%); Adam vs AdamW at equal lr/betas is a coin flip (5-5); beta2 0.95 vs 0.999 is ~even (7-4). Never let these override a lr\u00b7T difference; in rankings, order such near-twins by architecture or leave them adjacent. EXCEPTION \u2014 tasks whose CE can reach ~1e-4 (two-spiral 1-1.5 turns, Adam-family lr\u22651e-3): torch Adam with coupled weight_decay\u22651e-3 loses to an AdamW or wd=0 twin by 30-500\u00d7 (K1040, q_6a81f1); \u03b22 there flips with lr, so do not use \u03b22 to explain it.",
+    "support_count": 3.25,
+    "failure_count": 2.75,
+    "credibility": 0.53125,
+    "created_epoch": 0,
+    "sources": [],
+    "merged_from": [
+      "K0022",
+      "K0015"
+    ],
+    "origin": "seed:seed_distill_v1",
+    "last_evaluated_epoch": 1
+  },
+  {
+    "id": "K1006",
+    "text": "MLP ARCHITECTURE DEFAULT (same optimizer for all choices; regression, XOR, spiral, tabular when \u0394<0.1): score = (#LayerNorm'd blocks) + 1 if residual, MINUS 1 if a NON-residual depth\u22654 net's LAST block has no LN (K1061); pick the highest. Ties: on regression ReLU/LeakyReLU > GELU > SiLU, then later last-LN (K1022), then greater depth. Corpus MLP arch-only hits 74/110 (spiral 12/16, tabular 17/32). More-LN beats less-LN 61-11 multivariate, 57-12 univariate, 41-4 tabular \u0394<0.1. Overrides: regression deep vs shallow (K1074); spiral residual \u22652 blocks deeper (K1020); shared-SGD regression rectifier vs SiLU (K1039); XOR \u22658 feat. \u0394\u22650.05 (K1018, K1065); tabular \u0394\u22650.1 (K1009/K1073).",
+    "support_count": 4.25,
+    "failure_count": 9.75,
+    "credibility": 0.328125,
+    "created_epoch": 0,
+    "sources": [],
+    "merged_from": [
+      "K0002",
+      "K0078",
+      "K0268",
+      "K0249",
+      "K0256"
+    ],
+    "origin": "seed:seed_distill_v1",
+    "mechanism": "Each unnormalized pre-activation layer shrinks hidden RMS (~0.5x for SiLU/GELU at init), so an under-trained deep stack feeds a weak signal to the head; pre-LN restores unit scale and identity paths keep gradient flow, speeding an under-trained net 2-3x. Predicts the LN advantage shrinks once \u0394 is large enough to learn the scale (tabular \u0394>=0.1 reverses, K1009) and where LN destroys label-relevant norm information (2-D spiral, K1020).",
+    "regime": {
+      "family": [
+        "univariate_regression",
+        "multivariate_regression",
+        "synthetic_tabular_classification",
+        "xor_classification"
+      ],
+      "model_type": [
+        "mlp"
+      ],
+      "type": [
+        "architecture_only",
+        "mixed"
+      ],
+      "note": "tabular only when \u0394<0.1; spiral handled by K1020; same optimizer/lr/T"
+    },
+    "phase": "LN-count win rate: multivariate 61-11, univariate 57-12 (lab same-residual more-LN: multivariate at 32768 samples 8/9, ratio 0.38; univariate 37/39), tabular \u0394<0.1 41-4 but \u0394>=0.1 less-LN 17-6 (K1009); residual at equal LN is the weakest term (lab regression 19/29, ratio ~0.96; q_ca0dea plain beat its residual twin); spiral: K1020; XOR plain+LN vs residual 6/10.",
+    "last_evaluated_epoch": 1
+  },
+  {
+    "id": "K1008",
+    "text": "MSE REGRESSION activation (uni/multivariate): at EQUAL LayerNorm count prefer ReLU/LeakyReLU over SiLU/GELU, even for smooth cubic/sin/cos targets \u2014 do not pick SiLU/GELU for 'smoothness matching'. Lab equal-LN multivariate 37/52 (SGD 13/15, MSE ratio ~2; Adam-family 24/37, ratio ~1.1); activation-only univariate Adam-family with \u22652 LN 9/9 (ratio ~14). SiLU is worst (LeakyReLU beat SiLU 7/7 activation-only). Epoch: SiLU/GELU nets ranked last in q_b61944, q_c9738e, q_f2b7b5, q_6495eb. With FEWER LN the rectifier is a coin flip (17/33) \u2014 count LN first (K1006); shared SGD see K1039. Flips: tabular classification \u0394\u22650.1 (K1056), XOR \u22658 features (K1018).",
+    "support_count": 2.0,
+    "failure_count": 4.0,
+    "credibility": 0.375,
+    "created_epoch": 0,
+    "sources": [],
+    "merged_from": [],
+    "origin": "seed:seed_distill_v1",
+    "mechanism": "SiLU/GELU have slope ~0.5 near 0 (silu(x)\u2248x/2), so each un-normalized block halves signal and gradient; stacked smooth blocks attenuate more under small-step optimizers (SGD ratio ~2-5 vs Adam ~1.1, Adam rescales gradients). LN restores scale, which is why an extra LN outweighs the activation (17/33). Predicts the penalty grows with depth and with SGD, and vanishes with per-layer normalisation of every block.",
+    "regime": {
+      "family": [
+        "univariate_regression",
+        "multivariate_regression"
+      ],
+      "model_type": [
+        "mlp"
+      ],
+      "activation": [
+        "relu",
+        "leaky_relu",
+        "gelu",
+        "silu"
+      ],
+      "optimizer": [
+        "SGD",
+        "Adam",
+        "AdamW",
+        "RMSprop",
+        "Adagrad"
+      ],
+      "steps": [
+        256,
+        2048
+      ],
+      "note": "equal LN count required"
+    },
+    "phase": "Rect vs smooth (multivariate lab): equal LN SGD 13/15, adaptive 24/37; rect with fewer LN 17/33 (coin flip); rect with more LN 12/13. Univariate activation-only: \u22652 LN adaptive 9/9, SGD 5/6; <2 LN adaptive 3/6.",
+    "last_evaluated_epoch": 1
+  },
+  {
+    "id": "K1009",
+    "text": "Budget \u00d7 depth reversal on synthetic TABULAR classification (1024 train rows, 2-16 Gaussian features, smooth_additive / piecewise / sparse_interaction rules): when the shared \u0394\u22650.1 (\u0394 from the core rule: Adam/RMSprop lr\u00b7T, Adagrad 2\u00b7lr\u00b7\u221aT, SGD ~lr\u00b7T/(1\u2212m)/100 \u2014 NOT raw lr\u00b7T for SGD/Adagrad), the boundary is already learned and test CE is set by overconfidence \u2014 prefer SHALLOW (1-3 layers), wider nets with GELU/SiLU and fewer LN: shallower wins 21-5, less-LN 17-6, smooth activation 16/16. When \u0394<0.1 the normal rule holds (more LN 41-4, deeper 35-17). This 2-regime rule picks 26/32 tabular arch-only winners. XOR/spiral do NOT reverse.",
+    "support_count": 0.0,
+    "failure_count": 0.0,
+    "credibility": 0.5,
+    "created_epoch": 0,
+    "sources": [],
+    "merged_from": [
+      "K0259",
+      "K0126"
+    ],
+    "origin": "seed:seed_distill_v1",
+    "mechanism": "With 1024 rows and labels set by 2-4 coordinates, once \u0394\u22650.1 the decision boundary is already fit; test CE is then set by logit scale on misclassified points, so anything that speeds fitting (depth, LN, ReLU kinks, larger lr) inflates confidence. Predicts the same reversal for optimizer \u0394 (K1021) and no reversal on XOR/spiral where the boundary is still being learned.",
+    "regime": {
+      "family": [
+        "synthetic_tabular_classification"
+      ],
+      "model_type": [
+        "mlp"
+      ],
+      "type": [
+        "architecture_only",
+        "mixed"
+      ],
+      "note": "1024 train rows, 2-16 Gaussian features; \u0394 per core rule"
+    },
+    "phase": "\u0394_shared<0.1: more LN 41-4, deeper 35-17; \u0394_shared\u22650.1: shallower 21-5, less-LN 17-6, smooth act 16/16 (counterexample q_87182b: more early LN in residual LeakyReLU won). Across \u0394 (mixed questions) prefer \u0394\u22480.1-0.3 over \u22653\u00d7 larger (K1021)."
+  },
+  {
+    "id": "K1012",
+    "text": "When \u0394s are close (mixed questions, rankings): a \u22654\u00d7 \u0394 gap beats architecture (higher \u0394 wins 35/40 even vs a net with 2+ more LN/residual). Within ~3\u00d7, a clearly better MLP (\u22652 more LN blocks/residual) wins 11/19 \u2014 treat as a toss-up leaning architecture. \u0394 also saturates: once both \u0394\u22730.3, extra \u0394 wins only ~62% (then use lr-ceiling, tabular-overfit and architecture rules). Rankings: sort by log \u0394, then architecture; near-chance choices (\u0394<~0.005: CE\u2248ln2 / ln V, MSE\u2248Var(y)) form a tied bottom block \u2014 order them by architecture, not small lr differences.",
+    "support_count": 0.0,
+    "failure_count": 1.0,
+    "credibility": 0.3333333333333333,
+    "created_epoch": 0,
+    "sources": [],
+    "merged_from": [],
+    "origin": "seed:seed_distill_v1",
+    "phase": "Saturation (smaller \u0394\u22650.1, larger \u22653\u00d7; lab): larger-\u0394 wins bigram 4/16, tabular 63/146, spiral 54%, multivar 56%, XOR 58%, univar 60%. SGD vs adaptive (lab, calibrated \u0394): SGD 1-3\u00d7 behind but \u22652 more LN wins 90/130; 3-10\u00d7 behind 61/181; 10-30\u00d7 25/95 (vs 19% / 13% without the LN edge).",
+    "last_evaluated_epoch": 1
+  },
+  {
+    "id": "K1015",
+    "text": "Residual \u00d7 depth \u00d7 task: on regression, depth helps even without residuals (deeper plain beats shallower residual 24-15) because composed nonlinearities are needed for curvature; on classification, depth WITHOUT residual hurts (shallower residual beats deeper plain 19-13) while deeper residual beats shallower plain 33-14. So for CE tasks never pick a deep (\u22654) plain stack over a residual one at the same optimizer; for MSE tasks a deep plain stack with \u22652 LN blocks is still competitive. Deep residual MLPs win 53% of their appearances vs 29% for deep plain.",
+    "support_count": 0.0,
+    "failure_count": 2.0,
+    "credibility": 0.25,
+    "created_epoch": 0,
+    "sources": [],
+    "merged_from": [],
+    "origin": "seed:seed_distill_v1",
+    "last_evaluated_epoch": 1
+  },
+  {
+    "id": "K1016",
+    "text": "Capacity is not the bottleneck: at these budgets parameter count and width barely predict the winner \u2014 do not pick the 'biggest model'. Pairwise larger-params wins only 37/76 on bigram LMs, ~50% on univariate regression; at equal depth wider MLPs are a coin flip on regression (5-5) and only mildly better on classification (7-2). Datasets are tiny but noiseless (256-1024 rows), and every candidate has ample capacity; what differs is how fast the parameters move (\u0394) and how well signal propagates (LN, residual, activation). Use width/params only as the last tie-breaker (and prefer wider only in the tabular \u0394\u22650.1 regime).",
+    "support_count": 0.5,
+    "failure_count": 2.5,
+    "credibility": 0.3,
+    "created_epoch": 0,
+    "sources": [],
+    "merged_from": [],
+    "origin": "seed:seed_distill_v1",
+    "last_evaluated_epoch": 1
+  },
+  {
+    "id": "K1017",
+    "text": "Bigram LM transformer SHAPE (transformer vs transformer, same optimizer/lr/T; \u0394 in core-rule units). EQUAL d_model, layer count: 0.1\u2264\u0394<0.5 FEWER layers wins 23/23 (corpus 6/6, lab 17/17; q_ce881e, q_f2011a); \u0394\u22650.5 fewer 8/11; 0.02\u2264\u0394<0.1 COIN FLIP (fewer 8/15; q_4f69f2, q_9344eb: 2-layer beat 1-layer) - do not decide by depth there; \u0394<0.02 deeper wins 19/28. EQUAL depth: larger d_ff is a tie-break worth ~1-2% CE - wins at \u0394\u22640.1 (11/12; q_f2011a 256>128>64), not above (3/13). DIFFERENT d_model: 0.02\u2264\u0394<0.1 larger wins 15/15; \u0394\u22650.5 smaller wins 5/6, order by d_model ascending then layers (q_17f213; K1068). GRU vs transformer: K1075; lr: K1071.",
+    "support_count": 5.25,
+    "failure_count": 2.75,
+    "credibility": 0.625,
+    "created_epoch": 0,
+    "sources": [],
+    "merged_from": [],
+    "origin": "c000004",
+    "regime": {
+      "family": [
+        "bigram_lm"
+      ],
+      "model_type": [
+        "transformer_lm"
+      ],
+      "optimizer": [
+        "Adam",
+        "AdamW",
+        "RMSprop",
+        "Adagrad",
+        "SGD"
+      ],
+      "steps": [
+        256,
+        2048
+      ]
+    },
+    "phase": "fewer layers @equal d_model: \u0394<0.02 9/28; 0.02-0.1 8/15; 0.1-0.5 23/23; \u22650.5 8/11. larger d_ff @equal depth: \u0394\u22640.1 11/12; >0.1 3/13. larger d_model: 0.02-0.1 15/15; \u22650.5 1/6.",
+    "last_evaluated_epoch": 1
+  },
+  {
+    "id": "K1018",
+    "text": "XOR with \u22658 input features (\u22656 noise distractors), same optimizer: the architecture rule FLIPS at shared core-rule \u0394\u22480.05. \u0394\u22650.05 (e.g. Adam-family lr\u00b7T\u22650.05): GELU/SiLU beats ReLU/LeakyReLU (lab 15/16, CE ratio 0.78; corpus 6/6); FEWER LayerNorms win (more-LN wins only 8/32 lab, 5/11 corpus); a \u22642-block net beats one \u22653 blocks deeper (lab 5/5, ratio 0.51; corpus 2/3; q_bfba99, q_e914b6). \u0394<0.05 (e.g. SGD m0.9 3e-4\u00d71024): normal rule - more LN wins 33/41 (ratio 0.93), deeper beats shallow (shallow 4/14), activation ~coin flip (smooth 3/8). With <8 features keep deeper (7/7); more-LN there is a coin flip at \u0394\u22650.05 (4/8). Depth\u00d7residual: K1065.",
+    "support_count": 1.0,
+    "failure_count": 0.0,
+    "credibility": 0.6666666666666666,
+    "created_epoch": 0,
+    "sources": [],
+    "merged_from": [],
+    "origin": "c000005",
+    "mechanism": "With many distractor coordinates and only ~1024 rows, once the XOR interaction is learned (\u0394\u22650.05) further capacity of deep LN'd stacks is spent fitting distractor-dependent features and sharpening confidence near the axes, raising test CE; a shallow wide smooth net fits the 2-coordinate product with fewer composed nonlinearities. Predicts the reversal vanishes for \u22644 features (no distractors) or \u0394<0.05 (boundary not yet learned) \u2014 both observed.",
+    "regime": {
+      "family": [
+        "xor_classification"
+      ],
+      "model_type": [
+        "mlp"
+      ],
+      "data": [
+        "\u22658 input features"
+      ],
+      "delta": [
+        0.05,
+        3
+      ],
+      "optimizer": [
+        "Adam",
+        "AdamW",
+        "RMSprop"
+      ],
+      "note": "small n (\u22484 questions); train rows 1024"
+    },
+    "phase": "nf\u22658: \u0394\u22650.05 smooth 15/16, more-LN 8/32, shallow vs \u22653 deeper 5/5; \u0394<0.05 more-LN 33/41, shallow 4/14, smooth 3/8. nf<8: \u0394\u22650.05 more-LN 4/8, deeper 7/7 corpus + 2/2 lab; \u0394<0.05 more-LN 8/11.",
+    "refines": "K1006",
+    "last_evaluated_epoch": 1
+  },
+  {
+    "id": "K1019",
+    "text": "SGD gradient-scale calibration for the \u0394 rule (K1001 assumes raw |g|\u22480.01), fit on 368 SGD-vs-adaptive pairs. Bigram LM: use |g|\u22480.003 (SGD m=0.9 \u2248 Adam at lr/30, plain \u2248 lr/300): larger-\u0394 correct 68/70 vs 63/70 at 0.01; SGD m=0.9 beat Adam/AdamW/RMSprop in only 1/18 LM pairs (1/4 even at nominal \u0394 parity). MSE regression with momentum 0.9: use |g|\u22480.03 (SGD m=0.9 \u2248 Adam at lr/3): 59/71 vs 54/71; it wins 11/19 when the adaptive \u0394 is \u22644\u00d7 its 0.01-estimate. Classification (131/146) and plain-SGD regression: keep 0.01. Plain SGD wins only 3/141 pairs when the adaptive \u0394 is >15\u00d7 larger. These calibrations assume the SGD net has \u22651 LayerNorm; 0-LN SGD nets get far less credit (K1038).",
+    "support_count": 1.75,
+    "failure_count": 1.25,
+    "credibility": 0.55,
+    "created_epoch": 0,
+    "sources": [],
+    "merged_from": [],
+    "origin": "c000006",
+    "last_evaluated_epoch": 1
+  },
+  {
+    "id": "K1020",
+    "text": "TWO-SPIRAL classification MLPs (same optimizer/lr/T): score LN count FIRST, residual as tie-break - UNLESS the residual net is \u22652 blocks DEEPER. Same residual status: more LN wins (lab 163/206, CE ratio 0.79-0.92). Plain-more-LN vs residual-fewer-LN at 0.03\u2264\u0394<0.5: plain wins when depths are within \u00b11 (lab 58/66, ratio 0.85; q_31abed), but a residual net \u22652 blocks deeper wins (lab 6/8, ratio 0.71; q_40922b: depth-5 residual, Adagrad 3e-3\u00d71024, beat depth-3 plain nets with more LN; K1066). \u0394<0.03: coin flip (residual 14/24). \u0394\u22650.5: residual 5/6. Residual with ZERO LN loses to plain \u22651-LN nets at \u0394<0.5 (lab 8/59), wins at \u0394\u22650.5 (10/13).",
+    "support_count": 2.25,
+    "failure_count": 2.75,
+    "credibility": 0.4642857142857143,
+    "created_epoch": 0,
+    "sources": [],
+    "merged_from": [],
+    "origin": "c000004",
+    "mechanism": "Each LN rescales block activations to unit RMS, raising the effective step size of the features that bend the boundary; a skip connection preserves the input path but does not speed feature learning. Predicts LN count dominates whenever learning curved features is the bottleneck (most \u0394), and residual matters only when plain deep stacks overshoot (high \u0394, harder spirals).",
+    "regime": {
+      "family": [
+        "spiral_classification"
+      ],
+      "type": [
+        "architecture_only",
+        "mixed"
+      ],
+      "model_type": [
+        "mlp"
+      ],
+      "optimizer": [
+        "Adam",
+        "AdamW",
+        "RMSprop",
+        "Adagrad",
+        "SGD"
+      ],
+      "delta": [
+        0.001,
+        3
+      ],
+      "depth": [
+        1,
+        5
+      ],
+      "note": "\u0394 = core-rule units; 0.1-0.5 and \u22650.5 bands have only 3-5 lab sets"
+    },
+    "phase": "Plain(more LN) vs res(fewer LN), 0.03\u2264\u0394<0.5: depth gap \u22641 \u2192 plain 58/66; res \u22652 deeper \u2192 res 6/8 (+q_40922b), corpus 0/1. \u0394<0.03 res 14/24; \u0394\u22650.5 res 5/6. Res(0 LN) vs plain(\u22651 LN): \u0394<0.5 plain 51/59; \u22650.5 res 10/13.",
+    "refines": "K1006",
+    "last_evaluated_epoch": 1
+  },
+  {
+    "id": "K1022",
+    "text": "LN PLACEMENT tie-breaker (MLP pre-LN blocks): at equal LN count and equal residual status, prefer the net whose last LayerNorm is closer to the output head (fewer unnormalized blocks after the final LN). Holds on synthetic tabular classification and multivariate regression when \u0394<0.1: corpus 11/12 pairs (median loss ratio ~0.80); lab 4/7 (ratio ~0.99); controlled smooth-additive test 2/2 (0.95); q_7ae5d3 (tabular, Adagrad \u22643e-4) agrees. Does NOT hold on univariate regression or XOR (corpus 2/8; controlled univariate 1/4) nor at \u0394\u22650.1 (3/6). Apply only after LN count + residual tie (K1006); whether late placement beats one extra early LN is untested.",
+    "support_count": 0.0,
+    "failure_count": 1.0,
+    "credibility": 0.3333333333333333,
+    "created_epoch": 0,
+    "sources": [],
+    "merged_from": [],
+    "origin": "c000006",
+    "mechanism": "A pre-LN right before the last hidden Linear restores unit feature scale feeding the head, so tiny updates (\u0394<0.1) move the output more; each unnormalized block after it shrinks hidden RMS (~0.5x for SiLU/GELU). Predicts the advantage fades once \u0394\u22650.1 (feature scale is learned) - observed 3/6. Why univariate/XOR don't follow is unexplained.",
+    "regime": {
+      "family": [
+        "synthetic_tabular_classification",
+        "multivariate_regression"
+      ],
+      "model_type": [
+        "mlp"
+      ],
+      "delta": [
+        0,
+        0.1
+      ],
+      "note": "equal LN count, equal residual, same optimizer/lr/T; small n, effect ~5-20%"
+    },
+    "phase": "late-LN wins: tabular \u0394<0.1 corpus 6/7, lab 3/5; multivariate \u0394<0.1 corpus 5/5, lab 1/2; any family \u0394>=0.1 3/6; univariate 1/4 corpus + 1/4 controlled; XOR 1/4 corpus, 2/4 lab.",
+    "refines": "K1006"
+  },
+  {
+    "id": "K1033",
+    "text": "Tabular depth reversal starts EARLIER with more epochs (synthetic tabular classification, 1024 rows, 16 features): at total_samples_seen=32768 (32 epochs, T=512 bs64) shallow 2-block wide nets beat 4-block nets already at \u0394\u22480.03-0.1 (Adagrad 1e-3\u00d7512 \u03940.045, Adam 1e-4\u00d7512): controlled sparse_interaction + smooth_additive, shallow wins 16/16 pairings (median CE ratio 0.59-0.75); q_eeb76a (two 2-block 2-LN plain nets 1st-2nd, 4-block 4-LN residual last). At 4 epochs (T=256 bs16) same \u0394 is a coin flip (4/8, ratio 0.99). Among shallow nets more LN wins (2-LN plain > 1-LN residual 6/6); among deep, residual > plain (6/6, ratio 0.80). Below \u0394 0.03 depth still OK (corpus \u226516 ep: shallow 6/17).",
+    "support_count": 0.0,
+    "failure_count": 0.0,
+    "credibility": 0.5,
+    "created_epoch": 0,
+    "sources": [],
+    "merged_from": [],
+    "origin": "c000076",
+    "mechanism": "Depth adds composed nonlinear capacity that, with only 1024 rows and 12+ noise coordinates, is spent fitting distractor structure once the data has been revisited many times; the overfit cost scales with epochs, not with \u0394 alone. So the \u0394 at which shallow-wide nets overtake deep ones falls as epochs rise (4\u219232). Predicts: at \u22644 epochs the K1009 \u0394\u22650.1 threshold holds; at \u0394<0.03 nets are still boundary-limited and depth/LN help.",
+    "regime": {
+      "family": [
+        "synthetic_tabular_classification"
+      ],
+      "data": [
+        "sparse_interaction",
+        "smooth_additive",
+        "16 input features",
+        "1024 train rows"
+      ],
+      "budget": [
+        16384,
+        32768
+      ],
+      "delta": [
+        0.03,
+        0.1
+      ],
+      "optimizer": [
+        "Adagrad",
+        "Adam"
+      ],
+      "model_type": [
+        "mlp"
+      ],
+      "note": "one instance per family; depth confounded with width/LN; piecewise untested"
+    },
+    "phase": "shallow(2-block) vs deep(4-block), \u0394 0.03-0.1: 32 epochs \u2192 shallow 16/16 (ratio .59-.75); 4 epochs \u2192 4/8 (.99). Corpus \u226516 epochs: \u0394\u22650.1 shallow 12/15 (.65); \u0394<0.03 shallow 6/17 (1.04).",
+    "refines": "K1009"
+  },
+  {
+    "id": "K1038",
+    "text": "SGD \u0394 credit needs normalization (all MLP families, same set, SGD net has \u22653\u00d7 the calibrated \u0394 of K1001/K1019 and rival \u0394<0.1): if the SGD net has \u22651 LayerNorm its larger \u0394 wins 88% (lab 493/563); with ZERO LN only 61% (80/132), and with zero LN + depth\u22653 only 35% (lab 21/60, 18 sets; median loss ratio \u22481.0) \u2014 treat it as near-frozen and rank it below adaptive/normalized rivals with 3-10\u00d7 smaller \u0394. 0-LN depth\u22642: rectifier 80%, smooth 67%; on MSE regression any 0-LN SGD net is a coin flip (37/70). Adaptive optimizers keep 74-89% even with 0 LN. E.g. q_bfe225 (plain SGD 3e-3, 3-layer 0-LN SiLU ranked last), q_1469ce (1-layer 0-LN GELU SGD m0.9 lost to 2-LN RMSprop 3e-5).",
+    "support_count": 0.75,
+    "failure_count": 0.25,
+    "credibility": 0.5833333333333334,
+    "created_epoch": 0,
+    "sources": [],
+    "merged_from": [],
+    "origin": "c000104",
+    "mechanism": "SGD's step is the raw gradient, so its true displacement scales with the backpropagated gradient magnitude. With PyTorch default init (weight std\u22481/\u221a(3\u00b7fan_in)) each unnormalized block shrinks activations and hence hidden-layer gradients geometrically, so |g|\u22480.01 overestimates \u0394 for deep plain stacks. LayerNorm restores unit-RMS activations per block, and Adam-family divide by \u221av, so both are insensitive. Predicts: collapse grows with depth, absent with \u22651 LN or adaptive optimizers.",
+    "regime": {
+      "family": [
+        "univariate_regression",
+        "multivariate_regression",
+        "synthetic_tabular_classification",
+        "xor_classification",
+        "spiral_classification"
+      ],
+      "model_type": [
+        "mlp"
+      ],
+      "optimizer": [
+        "SGD"
+      ],
+      "n_ln": [
+        0,
+        0
+      ],
+      "budget": [
+        1024,
+        32768
+      ],
+      "note": "SGD net vs rival with >=3x smaller calibrated \u0394, rival \u0394<0.1; lab within-set pairs"
+    },
+    "phase": "SGD larger-\u0394 win rate: \u22651 LN 88% (493/563); 0 LN depth\u22642 rect 80% (77/96), smooth 67% (60/90); 0 LN depth\u22653 35% (21/60). Regression 0-LN 53% (37/70); classification 0-LN 69%.",
+    "refines": "K1019",
+    "last_evaluated_epoch": 1
+  },
+  {
+    "id": "K1039",
+    "text": "SGD \u00d7 activation on MSE regression (uni/multivariate, all choices share one SGD optimizer, plain or m=0.9, 256-2048 steps): smooth activations (SiLU, GELU) are penalised far more than under Adam, so activation outranks a ONE-block LN deficit. ReLU/LeakyReLU vs SiLU/GELU: equal LN corpus 9/10 + controlled 8/8 (MSE ratio 0.04-0.5); rectifier with 1 fewer LN wins 14/17 (controlled 6/6, corpus 5/8, q_47a7c4, q_4a2253 LeakyReLU 3-LN beat SiLU 4-LN residual); with \u22652 fewer LN only 12/25 (corpus 1/6; wins mainly on large-offset targets) \u2014 keep LN count first (K1006). Deeper SiLU nets lose more (depth5 12/16, depth4 4/8). Under Adam-family keep K1006 (corpus: SiLU with more LN wins 11/16).",
+    "support_count": 1.25,
+    "failure_count": 0.75,
+    "credibility": 0.5625,
+    "created_epoch": 0,
+    "sources": [],
+    "merged_from": [],
+    "origin": "c000105",
+    "mechanism": "SiLU'(0)=0.5, so each block halves small-signal gradients; LN fixes forward scale but not this derivative attenuation. SGD has no per-parameter rescaling, so the attenuation directly shrinks effective step size, compounding with depth; Adam's 1/\u221av undoes it. Predicts: effect grows with SiLU depth (5>4 blocks), vanishes under Adam-family, and cannot overcome a large normalization deficit where LN itself is needed (\u22652 LN gap on oscillatory sums).",
+    "regime": {
+      "family": [
+        "univariate_regression",
+        "multivariate_regression"
+      ],
+      "type": [
+        "architecture_only"
+      ],
+      "model_type": [
+        "mlp"
+      ],
+      "optimizer": [
+        "SGD"
+      ],
+      "lr": [
+        0.0001,
+        0.003
+      ],
+      "steps": [
+        256,
+        2048
+      ],
+      "activation": [
+        "relu",
+        "leaky_relu",
+        "silu",
+        "gelu"
+      ],
+      "loss": [
+        "mse"
+      ]
+    },
+    "phase": "Rectifier (fewer LN) vs SiLU/GELU (more LN), shared SGD regression: LN gap 0 \u2192 17/18; gap 1 \u2192 14/17; gap \u22652 \u2192 12/25 (corpus 1/6; controlled offset target 6/6, trig 4/12). Adam-family: SiLU-more-LN wins 11/16 (corpus).",
+    "refines": "K1006",
+    "last_evaluated_epoch": 1
+  },
+  {
+    "id": "K1040",
+    "text": "Spiral coupled weight decay (two-spiral CE, 1-1.5 turns, Adam-family lr 1e-3-3e-3, T\u22481024, CE can reach ~1e-4): torch Adam with weight_decay\u22651e-3 (L2 coupled into the adaptive gradient) is far worse than AdamW at the same wd or any wd=0 twin: controlled plain ReLU d2 w48 lr 3e-3: Adam wd1e-3 CE 0.003, wd1e-2 0.044 vs AdamW wd1e-3/1e-2 \u22642e-4, wd=0 3e-5-1.8e-4 (AdamW beats Adam 12/12 cells, ratio 0.002-0.03); q_6a81f1 AdamW beat Adam (both wd1e-3) on 1-layer GELU w256. Rank coupled-Adam+wd below such twins regardless of \u03b22. \u03b22 alone flips with lr (0.95 better at lr\u22651e-3 plain nets, 0.999 at 3e-4): weak tie-break. Not seen on bigram LM (q_e6d625).",
+    "support_count": 0.0,
+    "failure_count": 1.0,
+    "credibility": 0.3333333333333333,
+    "created_epoch": 0,
+    "sources": [],
+    "merged_from": [],
+    "origin": "c000106",
+    "mechanism": "torch Adam adds wd\u00b7w to the gradient before dividing by \u221av. Once the spiral is fit, data gradients\u2192~0, so the decay term dominates both numerator and v and Adam takes ~lr-sized normalized steps toward zero, capping weight norm and logit margin (CE floor ~1e-3). AdamW shrinks by lr\u00b7wd\u00b7w (~1e-6/step), negligible. Predicts harm grows with wd, lr and T, and vanishes when data gradients stay large (noisy-label bigram LM, under-trained 3-turn spirals).",
+    "regime": {
+      "family": [
+        "spiral_classification"
+      ],
+      "type": [
+        "optimizer_only",
+        "mixed"
+      ],
+      "model_type": [
+        "mlp"
+      ],
+      "optimizer": [
+        "Adam",
+        "AdamW"
+      ],
+      "lr": [
+        0.0003,
+        0.003
+      ],
+      "steps": [
+        512,
+        2048
+      ],
+      "note": "one controlled architecture + q_6a81f1, q_682517; RMSprop/Adagrad coupled wd untested; 2-3 turn spirals untested"
+    },
+    "phase": "AdamW(wd) vs Adam(coupled wd), same lr/net, spiral: wd1e-3 ratio ~0.03, wd1e-2 ~0.002 (12/12). \u03b22 .999 vs .95 (same wd): lr 3e-3 ratio 5.8, 1e-3 24 (0.95 wins); lr 3e-4 ratio 0.36 (0.999 wins); with LN signs mixed.",
+    "refines": "K1005",
+    "last_evaluated_epoch": 1
+  },
+  {
+    "id": "K1056",
+    "text": "TABULAR classification (synthetic, 1024 rows), once trained (shared core-rule \u0394\u22650.1, same optimizer/lr/T): prefer GELU/SiLU over ReLU/LeakyReLU. Smooth wins 23/25 lab within-set pairs (~11 sets, median test-CE ratio ~0.80; smooth_additive 14/14, sparse_interaction 5/6, piecewise 4/5); corpus 16/16 (K1009). At \u0394 0.01-0.1 only a tendency (44/74, ratio 0.87); at \u0394<0.01 no effect (8/19, ratio 1.00) - decide by LN/depth instead. Activation-only matched pairs 19/28. q_b68ab2: plain SiLU RMSprop 1e-4\u00d72048 (\u03940.2) beat residual LeakyReLU nets at larger \u0394.",
+    "support_count": 0.75,
+    "failure_count": 0.25,
+    "credibility": 0.5833333333333334,
+    "created_epoch": 0,
+    "sources": [],
+    "merged_from": [],
+    "origin": "c000003",
+    "regime": {
+      "family": [
+        "synthetic_tabular_classification"
+      ],
+      "model_type": [
+        "mlp"
+      ],
+      "optimizer": [
+        "Adam",
+        "AdamW",
+        "RMSprop",
+        "Adagrad",
+        "SGD"
+      ],
+      "steps": [
+        256,
+        2048
+      ],
+      "delta": [
+        0.1,
+        3
+      ],
+      "activation": [
+        "gelu",
+        "silu",
+        "relu",
+        "leaky_relu"
+      ],
+      "note": "delta = core-rule displacement (Adam/RMSprop lr*T, Adagrad 2lr*sqrt(T), SGD calibrated)"
+    },
+    "phase": "smooth-vs-rectifier win rate by shared \u0394: <0.01: 8/19 (ratio 1.00); 0.01-0.1: 44/74 (0.87); 0.1-0.3: 16/18 (0.84); >=0.3: 7/7 (0.72).",
+    "refines": "K1009"
+  },
+  {
+    "id": "K1057",
+    "text": "UNIVARIATE regression, same MLP, Adam/AdamW vs RMSprop: Adam-family wins at almost any lr pairing - lab 78/88 same-arch within-set pairs (median MSE ratio ~0.06): equal lr 21/24; Adam at 3-33\u00d7 LOWER lr 21/23; Adam at 3-10\u00d7+ higher lr 36/41. Adam lr\u2264RMSprop lr subset: non-oscillatory targets 15/15 (ratio 0.02), sin/cos(2\u03c0x) targets 27/32 (0.18). Corpus 4/5 (only loss: Adam 3e-5 vs RMSprop 3e-3, 100\u00d7 gap). Do not credit RMSprop's early-step amplification (q_7f8fb0: AdamW 3e-5 beat RMSprop 3e-5 and 1e-4). Wide-net lr\u00b7T\u22651 overshoot (K1055) still applies first. NOT multivariate (lab 10/18, ratio 0.97; corpus 5/9).",
+    "support_count": 0.0,
+    "failure_count": 0.0,
+    "credibility": 0.5,
+    "created_epoch": 0,
+    "sources": [],
+    "merged_from": [],
+    "origin": "c000004",
+    "regime": {
+      "family": [
+        "univariate_regression"
+      ],
+      "model_type": [
+        "mlp"
+      ],
+      "optimizer": [
+        "Adam",
+        "AdamW",
+        "RMSprop"
+      ],
+      "lr": [
+        3e-05,
+        0.003
+      ],
+      "steps": [
+        256,
+        1024
+      ],
+      "loss": [
+        "mse"
+      ],
+      "note": "lab mostly T=256, widths 64-192"
+    },
+    "phase": "Adam wins vs RMSprop by RMSprop/Adam lr ratio: 0.03-0.1: 18/21; 0.3: 18/20; 1: 21/24; 3-3.3: 12/14; 10: 7/7; 33: 2/2; corpus 100\u00d7: 0/1. Multivariate: 10/18 (no rule).",
+    "refines": "K1004"
+  },
+  {
+    "id": "K1059",
+    "text": "Classification MLPs (tabular, XOR, spiral), NON-residual, depth\u22652, all choices on the same SGD (plain or momentum): the net whose LAST hidden block has LayerNorm wins 31/31 lab within-set pairs (14 sets, median CE ratio 0.69) - even when it has FEWER LayerNorms in total (11/11, ratio 0.76). An unnormalized tail undoes earlier LN (q_1af0fa: a deep net with internal LN but 2 unnormalized final blocks lost to a shallower wider net; normalizing those blocks cut CE 0.69\u21920.47 in a controlled rerun). With adaptive optimizers the edge is weaker: Adam 70/102 (ratio 0.92), Adagrad 21/35 (~0.99). Regression: univariate 17/25, multivariate 20/35 - not reliable.",
+    "support_count": 0.0,
+    "failure_count": 0.0,
+    "credibility": 0.5,
+    "created_epoch": 0,
+    "sources": [],
+    "merged_from": [],
+    "origin": "c000006",
+    "mechanism": "Under small SGD steps, update size scales with gradient magnitude; unnormalized ReLU/SiLU blocks after the last LN contract activations and backpropagated gradients, so the head and late layers barely move. Adaptive optimizers rescale per-parameter steps and largely cancel this attenuation, which predicts the much weaker edge under Adam/Adagrad (observed 0.92-0.99 ratios).",
+    "regime": {
+      "family": [
+        "synthetic_tabular_classification",
+        "xor_classification",
+        "spiral_classification"
+      ],
+      "model_type": [
+        "mlp"
+      ],
+      "optimizer": [
+        "SGD"
+      ],
+      "residual": [
+        false
+      ],
+      "depth": [
+        2,
+        5
+      ],
+      "steps": [
+        256,
+        2048
+      ]
+    },
+    "phase": "terminal-LN wins (nonresidual, depth\u22652, classification): SGD 31/31 (0.69); Adam 70/102 (0.92); RMSprop 7/8; AdamW 6/11 (1.00); Adagrad 21/35 (0.99). Fewer-total-LN case: SGD 11/11, Adam 9/15.",
+    "refines": "K1022"
+  },
+  {
+    "id": "K1061",
+    "text": "CLASSIFICATION MLPs (XOR/spiral/tabular), shared optimizer, \u0394<0.1: RESIDUAL net vs NON-residual depth\u22654 net with MORE LayerNorms \u2014 look at the plain net's LAST hidden block. Last block un-normalized \u2192 the residual net wins (lab SGD 16/16, CE ratio 0.72; adaptive 5/9; corpus 5/5): LNs followed by an unnormalized tail don't count. Last block LN'd \u2192 family-dependent: XOR+SGD plain wins 9/10; spiral+Adam-family plain wins 22/23 (residual CE \u00d71.3-1.4); spiral+SGD residual wins (lab 3/3, controlled 2/2, ratio 0.3-0.8); tabular ~coin flip (lab 12/27, corpus 6/6 plain). Moving LN to the last block (same count) lowered plain CE in 6/6 controlled cells.",
+    "support_count": 1.75,
+    "failure_count": 0.25,
+    "credibility": 0.6875,
+    "created_epoch": 0,
+    "sources": [],
+    "merged_from": [],
+    "origin": "c000010",
+    "mechanism": "An unnormalized final block after LN'd blocks re-shrinks/attenuates features right before the head, so the plain net's earlier LNs buy little; a residual path carries signal past it. Predicts: the effect vanishes once the plain tail is LN'd (observed), and weakens at larger \u0394 where every net trains (observed at \u0394\u22650.1).",
+    "regime": {
+      "family": [
+        "xor_classification",
+        "spiral_classification",
+        "synthetic_tabular_classification"
+      ],
+      "model_type": [
+        "mlp"
+      ],
+      "depth": [
+        4,
+        6
+      ],
+      "optimizer": [
+        "SGD",
+        "Adam",
+        "AdamW",
+        "RMSprop",
+        "Adagrad"
+      ],
+      "delta": [
+        0,
+        0.1
+      ],
+      "note": "residual net has fewer LN than the deep plain net; same optimizer config for both; \u0394>=0.1 mixed (spiral residual 6/13)"
+    },
+    "phase": "plain last-noLN: residual wins 26/30 (lab+corpus). plain last-LN: XOR-SGD plain 9/10; spiral-adaptive plain 22/23; spiral-SGD residual 3/3 (+2/2 controlled); tabular plain 12/27 lab, 6/6 corpus. \u0394\u22650.1 (adaptive): residual ~50% (spiral 6/13) \u2014 rule off.",
+    "refines": "K1059",
+    "last_evaluated_epoch": 1
+  },
+  {
+    "id": "K1063",
+    "text": "UNIVARIATE regression, RMSprop vs RMSprop (same MLP, different lr): the LOWER RMSprop lr usually wins, even at small \u0394 \u2014 lab larger-lr wins 9/42 (10 experiment groups; T=256 width\u2265128: 3/24, median MSE ratio 3.6; lr 1e-4 vs 3e-5: 3/11), corpus 2/3. At T=1024 on narrow nets it is a coin flip (4/9). RMSprop as the larger-\u0394 choice against Adam/AdamW of the same net also loses (lab 0/21 at RMSprop lr\u22653e-4). Do not apply max-\u0394 to RMSprop on univariate MSE; multivariate is a coin flip (11/25).",
+    "support_count": 0.0,
+    "failure_count": 0.0,
+    "credibility": 0.5,
+    "created_epoch": 0,
+    "sources": [],
+    "merged_from": [],
+    "origin": "c000012",
+    "mechanism": "PyTorch RMSprop has no bias correction and a zero-init square average (alpha 0.99), so early steps are ~lr/sqrt(1-0.99^t) \u2248 up to 10\u00d7 lr, kicking a 1-D smooth fit off its low-MSE basin; the transient matters most at short T, predicting the effect fades at T=1024 (observed: 4/9).",
+    "regime": {
+      "family": [
+        "univariate_regression"
+      ],
+      "model_type": [
+        "mlp"
+      ],
+      "optimizer": [
+        "RMSprop"
+      ],
+      "lr": [
+        3e-05,
+        0.003
+      ],
+      "steps": [
+        256,
+        1024
+      ],
+      "width": [
+        32,
+        256
+      ],
+      "note": "mostly controlled experiment groups (10); T=1024 narrow nets near coin flip"
+    },
+    "phase": "larger RMSprop lr wins: T=256 w\u2265128 3/24; T=256 w\u226496 2/9; T=1024 w\u226496 4/9; multivariate 11/25 (no effect).",
+    "refines": "K1004"
+  },
+  {
+    "id": "K1065",
+    "text": "XOR with \u22658 input features, once trained (shared optimizer, \u0394\u22650.05): depth helps only WITH residuals. A deeper NON-residual MLP loses to a shallower one even at a 1-2 block gap (lab deeper wins 1/31, 13 sets, CE \u00d71.23); a deeper RESIDUAL MLP beats a shallower one at a 1-2 block gap (8/13, 7 sets, CE \u00d70.82) but loses at gap \u22653 (lab 0/4, corpus 2-vs-5 block 2/3 shallow, K1018). q_164857 (AdamW 1e-4\u00d72048): 3-block residual SiLU nets beat 1-block w192 nets, and the 3-block non-residual GELU net was last. At \u0394<0.05 depth is a coin flip (plain 10/25, residual 14/19 deeper wins).",
+    "support_count": 1.0,
+    "failure_count": 0.0,
+    "credibility": 0.6666666666666666,
+    "created_epoch": 0,
+    "sources": [],
+    "merged_from": [],
+    "origin": "c000014",
+    "regime": {
+      "family": [
+        "xor_classification"
+      ],
+      "model_type": [
+        "mlp"
+      ],
+      "data": [
+        "input_dim>=8"
+      ],
+      "delta": [
+        0.05,
+        1
+      ],
+      "optimizer": [
+        "Adam",
+        "AdamW",
+        "RMSprop",
+        "Adagrad",
+        "SGD"
+      ],
+      "depth": [
+        1,
+        5
+      ],
+      "note": "gap>=3 residual evidence is 1 lab set + 3 corpus pairs"
+    },
+    "phase": "\u0394\u22650.05: deeper plain 1/31; deeper residual gap1-2 8/13, gap\u22653 0/4 (+corpus shallow 2/3). \u0394<0.05: deeper plain 10/25, deeper residual 14/19.",
+    "refines": "K1018",
+    "last_evaluated_epoch": 1
+  },
+  {
+    "id": "K1066",
+    "text": "TWO-SPIRAL classification, DEEP vs SHALLOW (same optimizer): a deeper (\u22653 block) RESIDUAL MLP with MORE LayerNorms than a shallow (\u22642 block) net wins almost always \u2014 lab 51/55 (adaptive \u0394\u22650.05 34/35, CE ratio 0.38; adaptive \u0394<0.05 11/14; SGD 6/6, ratio 0.36), corpus 8/8 (ratio 0.76) \u2014 even if the shallow net is much wider. Deeper NON-residual nets are unreliable: lab 30/32 with more LN but corpus 0/7 (q_5fe255, q_774f6c had unnormalized last blocks) \u2014 credit them only if their last block is LN'd (K1061). Deeper residual with \u2264 the shallow net's LN: lab 33/43, corpus 0/2 \u2014 tendency only. q_d7ea11: 3-LN residual deep net beat the shallow wide pick.",
+    "support_count": 2.25,
+    "failure_count": 1.75,
+    "credibility": 0.5416666666666666,
+    "created_epoch": 0,
+    "sources": [],
+    "merged_from": [],
+    "origin": "c000016",
+    "regime": {
+      "family": [
+        "spiral_classification"
+      ],
+      "model_type": [
+        "mlp"
+      ],
+      "optimizer": [
+        "Adam",
+        "AdamW",
+        "RMSprop",
+        "Adagrad",
+        "SGD"
+      ],
+      "depth": [
+        1,
+        5
+      ],
+      "note": "pairs depth<=2 vs depth>=3 under identical optimizer; turns 1-2.5"
+    },
+    "phase": "deep residual, more LN: 59/63 (lab+corpus). deep residual, \u2264LN: lab 33/43, corpus 0/2. deep plain: lab 75% / corpus 0/7 \u2192 use last-LN (K1061).",
+    "refines": "K1020",
+    "last_evaluated_epoch": 1
+  },
+  {
+    "id": "K1068",
+    "text": "BIGRAM LM post-LN TRANSFORMER d_model \u00d7 \u0394 (same optimizer/lr/T, different d_model): wider wins only while under-trained; the flip is at \u0394\u22480.1. \u0394 0.02-0.1: LARGER d_model wins (lab 21/23, corpus 13/13, CE ratio ~0.98). \u0394 0.1-0.5 (e.g. Adam-family 3e-4 at T=512-1024): SMALLER d_model wins (lab 26/27 \u2014 d64 beat d128 20/21, d32 beat d128 2/2 with ratio 1.14; corpus 7/11, d64 vs d128 3/3). \u0394\u22650.5: smaller wins (lab 10/12, corpus 5/6). \u0394<0.02: coin flip, SGD favors wider. Fills K1017's gap. q_02539d: d128 AdamW 3e-4\u00d7512 (\u03940.15) lost to d64 RMSprop 3e-3\u00d7512.",
+    "support_count": 2.25,
+    "failure_count": 1.75,
+    "credibility": 0.5416666666666666,
+    "created_epoch": 0,
+    "sources": [],
+    "merged_from": [],
+    "origin": "c000019",
+    "regime": {
+      "family": [
+        "bigram_lm"
+      ],
+      "model_type": [
+        "transformer_lm"
+      ],
+      "optimizer": [
+        "Adam",
+        "AdamW",
+        "RMSprop"
+      ],
+      "steps": [
+        256,
+        2048
+      ],
+      "width": [
+        32,
+        128
+      ],
+      "note": "post-LN, d_model 32/64/128"
+    },
+    "phase": "Larger d_model wins: \u0394<0.02 lab 9/16 Adam-family, SGD 6/6; \u0394 0.02-0.1 lab 21/23 + corpus 13/13; smaller wins \u0394 0.1-0.5 lab 26/27 + corpus 7/11; \u0394\u22650.5 lab 10/12 + corpus 5/6.",
+    "refines": "K1017",
+    "last_evaluated_epoch": 1
+  },
+  {
+    "id": "K1069",
+    "text": "BIGRAM LM post-LN TRANSFORMER head count (same d_model/layers/optimizer/T): fewer heads (2 vs 4) wins 12/15 lab pairs. At \u0394<0.5 it is only a tie-break (CE ratio \u22481.00); at \u0394\u22650.5 it matters (lab 4/4, ratio 1.01-1.07; controlled q_d6dddb d128 AdamW 3e-3\u00d7256: 2 heads \u22120.18 nats vs 4 heads, d_ff 128\u2192256 only +0.07) and head count outranks a 2\u00d7 d_ff difference (fewer heads + larger d_ff beat more heads + smaller d_ff 4/4). q_d6dddb gold: 2-head d_ff256 beat 4-head d_ff128. Order: d_model/layers (K1017) first, then heads, then d_ff.",
+    "support_count": 2.0,
+    "failure_count": 0.0,
+    "credibility": 0.75,
+    "created_epoch": 0,
+    "sources": [],
+    "merged_from": [],
+    "origin": "c000020",
+    "regime": {
+      "family": [
+        "bigram_lm"
+      ],
+      "model_type": [
+        "transformer_lm"
+      ],
+      "optimizer": [
+        "Adam",
+        "AdamW",
+        "RMSprop",
+        "Adagrad"
+      ],
+      "steps": [
+        256,
+        2048
+      ],
+      "note": "heads 2 vs 4; thin evidence (~15 lab pairs, 1 controlled)"
+    },
+    "phase": "Fewer heads wins: equal d_ff \u0394<0.02 1/2, 0.02-0.5 4/4 (ratio 1.000), \u22650.5 2/2 (1.04); fewer heads with larger d_ff 4/4; fewer heads with smaller d_ff 1/3.",
+    "refines": "K1017",
+    "last_evaluated_epoch": 1
+  },
+  {
+    "id": "K1070",
+    "text": "CLASSIFICATION MLPs (spiral/XOR/tabular), RMSprop vs Adam/AdamW at the SAME lr, same net, T\u22641024: RMSprop usually WINS \u2014 lab 17/20 matched pairs (median Adam/RMS CE ratio 1.12; XOR 1.31, tabular 1.20, spiral 1.12), controlled 7/8; epoch q_4c1af8, q_e4c256 (XOR 3e-4, 3e-5), q_ebfdb8 (tabular 1e-4). Treat RMSprop \u2248 Adam at ~1.5\u00d7 lr (Adam at 3.3\u00d7 lr wins 5/9). Edge shrinks with T (tabular ratio 1.19 at T=256 \u2192 1.04 at 1024; T=2048 Adam 1/1) and vanishes once CE\u22480. At lr\u22643e-4 also on multivariate regression (4/4) and bigram LM (4/4). At lr\u22651e-3 Adam wins: bigram transformer 5/5 (ratio 1.02-1.08; q_a97a96 RMSprop 3e-3 last), multivariate 6/6; univariate regression always Adam (K1057).",
+    "support_count": 2.5,
+    "failure_count": 0.5,
+    "credibility": 0.7,
+    "created_epoch": 0,
+    "sources": [],
+    "merged_from": [],
+    "origin": "c000021",
+    "mechanism": "PyTorch RMSprop (alpha=0.99) zero-inits its square-average without bias correction, so step t is inflated by 1/sqrt(1-0.99^t): cumulative multiplier \u22481.47 at T=256, 1.24 at 512, 1.12 at 1024, 1.06 at 2048. Under-trained CE rewards extra displacement, so the edge must shrink with T (confirmed) and flip where low loss rewards smooth steps (converged spiral, MSE regression). Adam at 1.5\u00d7 lr closes the spiral gap at T=256 but not ~8% on tabular: no-momentum noise is a second factor.",
+    "regime": {
+      "family": [
+        "spiral_classification",
+        "xor_classification",
+        "synthetic_tabular_classification",
+        "multivariate_regression",
+        "bigram_lm"
+      ],
+      "optimizer": [
+        "RMSprop",
+        "Adam",
+        "AdamW"
+      ],
+      "lr": [
+        3e-05,
+        0.003
+      ],
+      "steps": [
+        256,
+        1024
+      ],
+      "model_type": [
+        "mlp",
+        "gru_lm",
+        "transformer_lm"
+      ],
+      "note": "regression/LM only at lr<=3e-4; univariate regression excluded"
+    },
+    "phase": "Classification T=256: RMS 14/16 (ratio 1.12-1.31); T=512 2/2; T=1024 lab 1/1, controlled 3/4 (1.01-1.04); T=2048 0/1; converged spiral CE<0.003 Adam 2/2. Multivariate: lr\u22643e-4 RMS 4/4, lr\u22651e-3 Adam 6/6. Bigram: lr\u22643e-4 RMS 4/4; lr\u22651e-3 transformer Adam 5/5; GRU high-lr unmeasured. Univariate: Adam ~20/25.",
+    "last_evaluated_epoch": 1
+  },
+  {
+    "id": "K1071",
+    "text": "BIGRAM LM learning-rate sweet spot (same model; choices differ in optimizer/lr/T; \u0394 per K1001): past a model-specific optimum MORE \u0394 LOSES - the solver's most common LM miss. d32/d64 transformers and GRUs: optimum \u0394\u22480.1-0.3 (Adam-family 3e-4 at T=512-1024, 1e-3 at T=256; Adagrad 3e-3); \u22652\u00d7 more \u0394 than a rival already at 0.1-0.3 loses (lab transformer 1/44, GRU 1/6, CE +2-20%); \u0394\u22651 loses to any rival with \u0394\u22650.03 (lab 0/17; q_c3a179). d_model=128 post-LN transformer: optimum \u22480.03-0.1; larger loses 0/11 once rival \u0394\u22650.03 (q_88802d AdamW 3e-3\u00d7256 last). Below the optimum max-\u0394 holds (13/13; GRU 14/15). Corpus: pick '\u0394 nearest 0.2 (0.1 for d128)' 52/65 vs max-\u0394 43/65.",
+    "support_count": 1.5,
+    "failure_count": 0.5,
+    "credibility": 0.625,
+    "created_epoch": 0,
+    "sources": [],
+    "merged_from": [
+      "K1013",
+      "K1062",
+      "K1067"
+    ],
+    "origin": "c000027",
+    "mechanism": "Labels are sampled from P(y|x), so minibatch gradients carry irreducible noise; with a constant lr, once the V\u00d7V table is fit further displacement only adds noise-driven parameter jitter and memorisation of the 800 training windows (positions/contexts), raising test CE. More parameters per token (d_model 128) reach that fit point at smaller \u0394, so the optimum shifts down with width - predicting d128 < d64 \u2248 d32 optimum, as observed.",
+    "regime": {
+      "family": [
+        "bigram_lm"
+      ],
+      "model_type": [
+        "transformer_lm",
+        "gru_lm"
+      ],
+      "optimizer": [
+        "Adam",
+        "AdamW",
+        "RMSprop",
+        "Adagrad",
+        "SGD"
+      ],
+      "steps": [
+        256,
+        2048
+      ],
+      "delta": [
+        0.03,
+        5
+      ],
+      "note": "same model within set; V 24-48, alpha 0.8-1.4, 800 windows, bs16; \u0394<0.03 rivals: max-\u0394 applies"
+    },
+    "phase": "larger(\u22652\u00d7)-\u0394 win rate by smaller \u0394: d32/d64 transformer 0.03-0.1\u21920.1-0.3 13/13, \u21920.3-0.6 6/9, \u2192\u22650.6 1/10; 0.1-0.3\u2192larger 1/44. GRU64 0.03-0.1\u2192\u22641 14/15, 0.1-0.3\u21920.3-1 1/6. d128 0.03-0.1\u2192larger 0/11.",
+    "last_evaluated_epoch": 1
+  },
+  {
+    "id": "K1072",
+    "text": "UNIVARIATE regression lr OVERSHOOT (same multi-layer MLP, depth\u22652, width\u226564; choices differ in optimizer/lr): Adam/AdamW/RMSprop \u0394=lr\u00b7T\u22651 loses to a \u0394\u22480.1-0.5 rival (Adam/AdamW 1e-4\u00d71024, 3e-4\u00d7512, Adagrad 3e-3): corpus 5/5; lab larger-\u0394 wins w64 0/12 (MSE \u00d78.8), w128 5/18 (\u00d75.5), w256 1/13 (\u00d74.4); controlled 11/12. A rival with \u0394<0.05 is still undertrained and wins only if the high side has \u0394\u22655 (q_f609cc: Adam 3e-3 beat Adam 3e-5; lab 3/7). Larger \u0394 still wins at width\u226432 (lab 9/16; q_cdbed5 w16), on depth-1 nets (lab 8/8, corpus 10/10) and on MULTIVARIATE regression (corpus 4/5, lab 10/10).",
+    "support_count": 0.25,
+    "failure_count": 0.75,
+    "credibility": 0.4166666666666667,
+    "created_epoch": 0,
+    "sources": [],
+    "merged_from": [
+      "K1055",
+      "K1064"
+    ],
+    "origin": "c000028",
+    "mechanism": "Adam-family steps are \u2248lr per parameter regardless of gradient size, so the per-step change of the network function grows with fan-in and the number of stacked hidden matrices. A 1-D target on 256 points is fit by a wide multi-layer net within \u0394\u22480.1; further un-annealed lr-sized steps leave a minibatch-jitter MSE floor growing with lr\u00b7width. Predicts: narrow (\u226432) or 1-layer nets stay progress-limited (max-\u0394 wins) and harder multivariate targets push the optimum up - both observed.",
+    "regime": {
+      "family": [
+        "univariate_regression"
+      ],
+      "model_type": [
+        "mlp"
+      ],
+      "optimizer": [
+        "Adam",
+        "AdamW",
+        "RMSprop",
+        "Adagrad"
+      ],
+      "width": [
+        64,
+        256
+      ],
+      "depth": [
+        2,
+        5
+      ],
+      "steps": [
+        256,
+        2048
+      ],
+      "delta": [
+        0.05,
+        10
+      ],
+      "note": "width\u226432 or depth 1: max-\u0394 holds; multivariate excluded"
+    },
+    "phase": "Same net, \u0394_hi\u22651 vs \u0394_lo 0.1-0.5: larger wins w64 0/12, w128 5/18, w256 1/13 (controlled 1/12, corpus 0/5); w\u226432 9/16; depth-1 8/8 (corpus 10/10). \u0394_lo<0.05: low side wins only if \u0394_hi\u22655 (lab 3/7). Multivariate: larger wins 10/10 lab, 4/5 corpus.",
+    "last_evaluated_epoch": 1
+  },
+  {
+    "id": "K1073",
+    "text": "TABULAR classification \u0394 sweet spot vs EPOCHS (synthetic, 1024 rows; E=total_samples_seen/1024; core-rule \u0394). Below \u0394\u22480.03 more \u0394 wins at E=4 (lab 56/56). The CE-optimal \u0394 then SHRINKS with E on smooth_additive: E=4 \u22480.25 (\u03940.77 lost to 0.26, 3/3 controlled); E=16 \u22480.08 (controlled 2/2; q_c1581a RMSprop 1e-4\u00d7256 bs64 \u03940.026 beat Adam 1e-3 \u03940.26 and AdamW 3e-3 \u03940.77); E=32 \u22480.05-0.15: \u0394\u22650.5 loses (lab 24/28) and \u22653\u00d7 more loses 1/15 once small \u0394\u22650.03. sparse_interaction: optimum \u22480.25 at E 4-16, 0.15 at E 32; larger loses once small \u0394\u22650.1 (lab 5/33, CE \u00d71.44). piecewise tolerates more (larger wins 10/10 at E=16). Then use architecture (K1009/K1033).",
+    "support_count": 0.75,
+    "failure_count": 0.25,
+    "credibility": 0.5833333333333334,
+    "created_epoch": 0,
+    "sources": [],
+    "merged_from": [
+      "K1021",
+      "K1032"
+    ],
+    "origin": "c000031",
+    "mechanism": "Once the boundary is learned, extra displacement inflates logit norm and fits distractor directions on only 1024 rows; test CE punishes confident errors. Bigger batches over more epochs give cleaner gradients, so each unit of \u0394 fits training rows faster and the overfit point comes at smaller \u0394. Sparse interactions need more movement to find the feature pair (higher optimum); axis-aligned piecewise boundaries keep gaining from sharper logits.",
+    "regime": {
+      "family": [
+        "synthetic_tabular_classification"
+      ],
+      "model_type": [
+        "mlp"
+      ],
+      "loss": [
+        "cross_entropy"
+      ],
+      "budget": [
+        4096,
+        32768
+      ],
+      "steps": [
+        256,
+        2048
+      ],
+      "delta": [
+        0.003,
+        3
+      ],
+      "data": [
+        "smooth_additive",
+        "sparse_interaction",
+        "piecewise_boundary"
+      ],
+      "note": "1024 train rows, 2-16 features; E=4 is bs16, E=16-32 bs64 (batch confounds epochs); controlled only on width-256 1-layer ReLU+LN net"
+    },
+    "phase": "smooth optimum \u0394: E4 \u22480.25, E16 \u22480.08, E32 0.05-0.15. Larger(\u22653\u00d7) wins: E4 small<0.03 56/56; E16 small\u22650.1 smooth 2/2, piecewise 10/10, sparse 0/4; E32 smooth small 0.03-0.1 1/10, \u22650.1 0/5; \u0394\u22650.5 vs 0.01-0.15 at E32 smooth: low wins 24/28.",
+    "last_evaluated_epoch": 1
+  },
+  {
+    "id": "K1074",
+    "text": "REGRESSION DEPTH (univariate/multivariate MSE MLPs; picking the shallow-wide net is the most common univariate miss): a depth\u22654 net with \u22651 LayerNorm (and \u2265 the rival's LN count) beats a depth\u22642 net - even a wider and/or residual one - whenever its core-rule \u0394 is \u22651/3 of the shallow net's: univariate corpus 31/38, lab 380/461 (MSE ratio ~0.15-0.2); multivariate corpus 18/22, lab 323/435 (~0.7). If deep \u0394 <1/3 of shallow \u0394 the shallow net wins (uni corpus 8/9, lab 228/295; multi 6/6, 159/215). Deeper residual beats shallower non-residual 32-2; deep-narrow beats shallow-wide 70-32. Deep NON-residual 0-LN stacks attenuate signal and usually lose.",
+    "support_count": 2.5,
+    "failure_count": 2.5,
+    "credibility": 0.5,
+    "created_epoch": 0,
+    "sources": [],
+    "merged_from": [
+      "K1007",
+      "K1060"
+    ],
+    "origin": "c000032",
+    "mechanism": "Curved/oscillatory MSE targets need composed nonlinearities; each LN'd block restores unit-scale activations, so a deep stack keeps gradient and feature scale while composition builds curvature a 1-2 layer net reaches slowly. It is an optimisation-speed effect, so it needs comparable displacement: when deep \u0394 <1/3 of shallow \u0394 raw movement dominates (observed flip). Without LN or residuals deep plain stacks attenuate signal (observed losses).",
+    "regime": {
+      "family": [
+        "univariate_regression",
+        "multivariate_regression"
+      ],
+      "model_type": [
+        "mlp"
+      ],
+      "loss": [
+        "mse"
+      ],
+      "optimizer": [
+        "Adam",
+        "AdamW",
+        "RMSprop",
+        "Adagrad",
+        "SGD"
+      ],
+      "depth": [
+        1,
+        5
+      ],
+      "steps": [
+        256,
+        2048
+      ],
+      "note": "\u0394 ratio uses K1001/K1019 calibration; deep = depth\u22654 with \u22651 LN"
+    },
+    "phase": "deep(\u22654,\u22651 LN) vs shallow(\u22642): \u0394_deep/\u0394_shallow \u22651/3 \u2192 deep wins uni 380/461, multi 323/435; <1/3 \u2192 shallow wins uni 228/295, multi 159/215.",
+    "last_evaluated_epoch": 1
+  },
+  {
+    "id": "K1075",
+    "text": "BIGRAM LM GRU vs post-LN transformer (same optimizer/lr/T): decide by the shared core-rule \u0394 band. \u0394<0.02 (nearly frozen: Adam-family \u22643e-5 at T\u2264512, SGD \u22643e-3): GRU wins, even vs larger d_model when alpha\u22641 (corpus 8/8, controlled GRU 5/6; q_5e328e GRU64\u00d72 beat d128). 0.02\u2264\u0394<0.1: a transformer of EQUAL or LARGER d_model wins (lab GRU 1/20; controlled 2-layer GRU 0/9 at every T 256-2048; q_9344eb GRU64\u00d72 last at AdamW 3e-5\u00d72048, even below d32\u00d73 d_ff256); GRU64 vs d32: GRU 9/9 observational, lean GRU only if 1-layer. 0.1\u2264\u0394<0.5: GRU wins 8/9 (any d_model). \u0394\u22650.5: GRU 3/3 (transformer overshoots, K1071).",
+    "support_count": 2.5,
+    "failure_count": 4.5,
+    "credibility": 0.3888888888888889,
+    "created_epoch": 0,
+    "sources": [],
+    "merged_from": [
+      "K1011",
+      "K1058"
+    ],
+    "origin": "c000033",
+    "mechanism": "Both nets must learn a current-token lookup. When nearly frozen, the GRU's gates pass the input embedding straight to the output, so tiny updates already cut CE, while the transformer must first beat random positional embeddings and attention mixing. Once \u0394\u22650.02 the transformer's residual stream carries token identity and its FF fits the table faster than a 2-layer non-residual GRU; by \u0394\u22650.1 post-LN transformers overshoot (K1071), returning the edge to the GRU.",
+    "regime": {
+      "family": [
+        "bigram_lm"
+      ],
+      "model_type": [
+        "gru_lm",
+        "transformer_lm"
+      ],
+      "optimizer": [
+        "Adam",
+        "AdamW",
+        "RMSprop",
+        "Adagrad",
+        "SGD"
+      ],
+      "steps": [
+        256,
+        2048
+      ],
+      "delta": [
+        0.001,
+        3
+      ],
+      "note": "alpha 0.8-1.4, V 24-48, L 12-24; GRUs non-residual d32/d64; \u0394 0.1-0.5 and \u22650.5 cells small (9, 3 pairs)"
+    },
+    "phase": "GRU win rate: \u0394<0.02 corpus 8/8, lab 1/2, controlled 5/6; 0.02-0.1 equal/larger-d transformer: lab 1/20, controlled 2-layer GRU 0/9, 1-layer 3/9; GRU d>T d 9/9 obs; 0.1-0.5 8/9; \u22650.5 3/3. Flip between \u0394 0.015 and 0.05.",
+    "last_evaluated_epoch": 1
+  }
+]
