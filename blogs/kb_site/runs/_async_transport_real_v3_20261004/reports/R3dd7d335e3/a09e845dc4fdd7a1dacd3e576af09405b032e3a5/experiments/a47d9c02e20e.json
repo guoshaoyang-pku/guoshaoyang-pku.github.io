@@ -1,0 +1,181 @@
+{
+  "origin_epoch": 1,
+  "job_id": "Jcb3d325f47f6",
+  "why": "Diagnose nonfinite Adam comparator with inherited momentum set to zero. Pre-registered finite prediction; nonfinite outcomes remain unresolved and cannot support an adaptive-rival ranking.",
+  "input": {
+    "dataset": "multivariate_regression/mvar_0bcc16",
+    "candidates": [
+      {
+        "model": {
+          "type": "mlp",
+          "depth": 3,
+          "width": 256,
+          "residual": false,
+          "activation": "silu",
+          "layer_norm": [
+            false,
+            false,
+            false
+          ],
+          "input_dim": 8,
+          "output_dim": 1
+        },
+        "optimizer": {
+          "type": "Adam",
+          "lr": 0.0001,
+          "weight_decay": 1e-05,
+          "momentum": 0,
+          "betas": [
+            0.9,
+            0.999
+          ]
+        },
+        "loss": {
+          "loss_id": "mse"
+        },
+        "budget": {
+          "training_steps": 256,
+          "batch_size": 16
+        }
+      },
+      {
+        "model": {
+          "type": "mlp",
+          "depth": 3,
+          "width": 256,
+          "residual": false,
+          "activation": "silu",
+          "layer_norm": [
+            false,
+            false,
+            false
+          ],
+          "input_dim": 8,
+          "output_dim": 1
+        },
+        "optimizer": {
+          "type": "Adam",
+          "lr": 0.0003,
+          "weight_decay": 1e-05,
+          "momentum": 0,
+          "betas": [
+            0.9,
+            0.999
+          ]
+        },
+        "loss": {
+          "loss_id": "mse"
+        },
+        "budget": {
+          "training_steps": 256,
+          "batch_size": 16
+        }
+      }
+    ]
+  },
+  "dataset_params": {
+    "instance_seed": 72196772,
+    "input_dim": 8,
+    "sampler": {
+      "id": "symbolic_expr_mv",
+      "seed": 72196772,
+      "max_depth": 3,
+      "retry": 57
+    },
+    "expression": "sin(2*pi*x0**3)**3 + x3*x6 + 2*x4**2 + x7**2 + sin(2*pi*x2) + tanh(2*x1) + x3 + x5 + x6 - 11.5",
+    "domain": [
+      0.0,
+      1.0
+    ],
+    "train_size": 256,
+    "test_size": 256
+  },
+  "profile": "v1.5",
+  "seeds": 10,
+  "result": {
+    "dataset": "multivariate_regression/mvar_0bcc16",
+    "family": "multivariate_regression",
+    "results": [
+      {
+        "mean": Infinity,
+        "std": Infinity,
+        "failed_seeds": 10,
+        "metric": "test_mse",
+        "secs": 2.5,
+        "candidate": {
+          "model": {
+            "type": "mlp",
+            "depth": 3,
+            "width": 256,
+            "residual": false,
+            "activation": "silu",
+            "layer_norm": [
+              false,
+              false,
+              false
+            ],
+            "input_dim": 8,
+            "output_dim": 1
+          },
+          "optimizer": {
+            "type": "Adam",
+            "lr": 0.0001,
+            "weight_decay": 1e-05,
+            "momentum": 0,
+            "betas": [
+              0.9,
+              0.999
+            ]
+          },
+          "loss": {
+            "loss_id": "mse"
+          },
+          "budget": {
+            "training_steps": 256,
+            "batch_size": 16
+          }
+        }
+      },
+      {
+        "mean": 0.8182670652866364,
+        "std": 0.13226338255433978,
+        "failed_seeds": 0,
+        "metric": "test_mse",
+        "secs": 2.5,
+        "candidate": {
+          "model": {
+            "type": "mlp",
+            "depth": 3,
+            "width": 256,
+            "residual": false,
+            "activation": "silu",
+            "layer_norm": [
+              false,
+              false,
+              false
+            ],
+            "input_dim": 8,
+            "output_dim": 1
+          },
+          "optimizer": {
+            "type": "Adam",
+            "lr": 0.0003,
+            "weight_decay": 1e-05,
+            "momentum": 0,
+            "betas": [
+              0.9,
+              0.999
+            ]
+          },
+          "loss": {
+            "loss_id": "mse"
+          },
+          "budget": {
+            "training_steps": 256,
+            "batch_size": 16
+          }
+        }
+      }
+    ]
+  }
+}

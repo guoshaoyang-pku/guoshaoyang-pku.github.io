@@ -1,0 +1,203 @@
+[
+  {
+    "id": "K1009",
+    "text": "Budget \u00d7 depth reversal on synthetic TABULAR classification (1024 train rows, 2-16 Gaussian features, smooth_additive / piecewise / sparse_interaction rules): when the shared \u0394\u22650.1 (\u0394 from the core rule: Adam/RMSprop lr\u00b7T, Adagrad 2\u00b7lr\u00b7\u221aT, SGD ~lr\u00b7T/(1\u2212m)/100 \u2014 NOT raw lr\u00b7T for SGD/Adagrad), the boundary is already learned and test CE is set by overconfidence \u2014 prefer SHALLOW (1-3 layers), wider nets with GELU/SiLU and fewer LN: shallower wins 21-5, less-LN 17-6, smooth activation 16/16. When \u0394<0.1 the normal rule holds (more LN 41-4, deeper 35-17). This 2-regime rule picks 26/32 tabular arch-only winners. XOR/spiral do NOT reverse.",
+    "support_count": 0.0,
+    "failure_count": 0.0,
+    "credibility": 0.5,
+    "created_epoch": 0,
+    "sources": [],
+    "merged_from": [
+      "K0259",
+      "K0126"
+    ],
+    "origin": "seed:seed_distill_v1",
+    "mechanism": "With 1024 rows and labels set by 2-4 coordinates, once \u0394\u22650.1 the decision boundary is already fit; test CE is then set by logit scale on misclassified points, so anything that speeds fitting (depth, LN, ReLU kinks, larger lr) inflates confidence. Predicts the same reversal for optimizer \u0394 (K1021) and no reversal on XOR/spiral where the boundary is still being learned.",
+    "regime": {
+      "family": [
+        "synthetic_tabular_classification"
+      ],
+      "model_type": [
+        "mlp"
+      ],
+      "type": [
+        "architecture_only",
+        "mixed"
+      ],
+      "note": "1024 train rows, 2-16 Gaussian features; \u0394 per core rule"
+    },
+    "phase": "\u0394_shared<0.1: more LN 41-4, deeper 35-17; \u0394_shared\u22650.1: shallower 21-5, less-LN 17-6, smooth act 16/16 (counterexample q_87182b: more early LN in residual LeakyReLU won). Across \u0394 (mixed questions) prefer \u0394\u22480.1-0.3 over \u22653\u00d7 larger (K1021).",
+    "report_ids": [
+      "R3dd7d335e3"
+    ]
+  },
+  {
+    "id": "K1033",
+    "text": "Tabular depth reversal starts EARLIER with more epochs (synthetic tabular classification, 1024 rows, 16 features): at total_samples_seen=32768 (32 epochs, T=512 bs64) shallow 2-block wide nets beat 4-block nets already at \u0394\u22480.03-0.1 (Adagrad 1e-3\u00d7512 \u03940.045, Adam 1e-4\u00d7512): controlled sparse_interaction + smooth_additive, shallow wins 16/16 pairings (median CE ratio 0.59-0.75); q_eeb76a (two 2-block 2-LN plain nets 1st-2nd, 4-block 4-LN residual last). At 4 epochs (T=256 bs16) same \u0394 is a coin flip (4/8, ratio 0.99). Among shallow nets more LN wins (2-LN plain > 1-LN residual 6/6); among deep, residual > plain (6/6, ratio 0.80). Below \u0394 0.03 depth still OK (corpus \u226516 ep: shallow 6/17).",
+    "support_count": 0.0,
+    "failure_count": 0.0,
+    "credibility": 0.5,
+    "created_epoch": 0,
+    "sources": [],
+    "merged_from": [],
+    "origin": "c000076",
+    "mechanism": "Depth adds composed nonlinear capacity that, with only 1024 rows and 12+ noise coordinates, is spent fitting distractor structure once the data has been revisited many times; the overfit cost scales with epochs, not with \u0394 alone. So the \u0394 at which shallow-wide nets overtake deep ones falls as epochs rise (4\u219232). Predicts: at \u22644 epochs the K1009 \u0394\u22650.1 threshold holds; at \u0394<0.03 nets are still boundary-limited and depth/LN help.",
+    "regime": {
+      "family": [
+        "synthetic_tabular_classification"
+      ],
+      "data": [
+        "sparse_interaction",
+        "smooth_additive",
+        "16 input features",
+        "1024 train rows"
+      ],
+      "budget": [
+        16384,
+        32768
+      ],
+      "delta": [
+        0.03,
+        0.1
+      ],
+      "optimizer": [
+        "Adagrad",
+        "Adam"
+      ],
+      "model_type": [
+        "mlp"
+      ],
+      "note": "one instance per family; depth confounded with width/LN; piecewise untested"
+    },
+    "phase": "shallow(2-block) vs deep(4-block), \u0394 0.03-0.1: 32 epochs \u2192 shallow 16/16 (ratio .59-.75); 4 epochs \u2192 4/8 (.99). Corpus \u226516 epochs: \u0394\u22650.1 shallow 12/15 (.65); \u0394<0.03 shallow 6/17 (1.04).",
+    "refines": "K1009"
+  },
+  {
+    "id": "K1038",
+    "text": "SGD \u0394 credit needs normalization (all MLP families, same set, SGD net has \u22653\u00d7 the calibrated \u0394 of K1001/K1019 and rival \u0394<0.1): if the SGD net has \u22651 LayerNorm its larger \u0394 wins 88% (lab 493/563); with ZERO LN only 61% (80/132), and with zero LN + depth\u22653 only 35% (lab 21/60, 18 sets; median loss ratio \u22481.0) \u2014 treat it as near-frozen and rank it below adaptive/normalized rivals with 3-10\u00d7 smaller \u0394. 0-LN depth\u22642: rectifier 80%, smooth 67%; on MSE regression any 0-LN SGD net is a coin flip (37/70). Adaptive optimizers keep 74-89% even with 0 LN. E.g. q_bfe225 (plain SGD 3e-3, 3-layer 0-LN SiLU ranked last), q_1469ce (1-layer 0-LN GELU SGD m0.9 lost to 2-LN RMSprop 3e-5).",
+    "support_count": 0.0,
+    "failure_count": 0.0,
+    "credibility": 0.5,
+    "created_epoch": 0,
+    "sources": [],
+    "merged_from": [],
+    "origin": "c000104",
+    "mechanism": "SGD's step is the raw gradient, so its true displacement scales with the backpropagated gradient magnitude. With PyTorch default init (weight std\u22481/\u221a(3\u00b7fan_in)) each unnormalized block shrinks activations and hence hidden-layer gradients geometrically, so |g|\u22480.01 overestimates \u0394 for deep plain stacks. LayerNorm restores unit-RMS activations per block, and Adam-family divide by \u221av, so both are insensitive. Predicts: collapse grows with depth, absent with \u22651 LN or adaptive optimizers.",
+    "regime": {
+      "family": [
+        "univariate_regression",
+        "multivariate_regression",
+        "synthetic_tabular_classification",
+        "xor_classification",
+        "spiral_classification"
+      ],
+      "model_type": [
+        "mlp"
+      ],
+      "optimizer": [
+        "SGD"
+      ],
+      "n_ln": [
+        0,
+        0
+      ],
+      "budget": [
+        1024,
+        32768
+      ],
+      "note": "SGD net vs rival with >=3x smaller calibrated \u0394, rival \u0394<0.1; lab within-set pairs"
+    },
+    "phase": "SGD larger-\u0394 win rate: \u22651 LN 88% (493/563); 0 LN depth\u22642 rect 80% (77/96), smooth 67% (60/90); 0 LN depth\u22653 35% (21/60). Regression 0-LN 53% (37/70); classification 0-LN 69%.",
+    "refines": "K1019",
+    "report_ids": [
+      "R3dd7d335e3"
+    ]
+  },
+  {
+    "id": "K1040",
+    "text": "Spiral coupled weight decay (two-spiral CE, 1-1.5 turns, Adam-family lr 1e-3-3e-3, T\u22481024, CE can reach ~1e-4): torch Adam with weight_decay\u22651e-3 (L2 coupled into the adaptive gradient) is far worse than AdamW at the same wd or any wd=0 twin: controlled plain ReLU d2 w48 lr 3e-3: Adam wd1e-3 CE 0.003, wd1e-2 0.044 vs AdamW wd1e-3/1e-2 \u22642e-4, wd=0 3e-5-1.8e-4 (AdamW beats Adam 12/12 cells, ratio 0.002-0.03); q_6a81f1 AdamW beat Adam (both wd1e-3) on 1-layer GELU w256. Rank coupled-Adam+wd below such twins regardless of \u03b22. \u03b22 alone flips with lr (0.95 better at lr\u22651e-3 plain nets, 0.999 at 3e-4): weak tie-break. Not seen on bigram LM (q_e6d625).",
+    "support_count": 0.0,
+    "failure_count": 0.0,
+    "credibility": 0.5,
+    "created_epoch": 0,
+    "sources": [],
+    "merged_from": [],
+    "origin": "c000106",
+    "mechanism": "torch Adam adds wd\u00b7w to the gradient before dividing by \u221av. Once the spiral is fit, data gradients\u2192~0, so the decay term dominates both numerator and v and Adam takes ~lr-sized normalized steps toward zero, capping weight norm and logit margin (CE floor ~1e-3). AdamW shrinks by lr\u00b7wd\u00b7w (~1e-6/step), negligible. Predicts harm grows with wd, lr and T, and vanishes when data gradients stay large (noisy-label bigram LM, under-trained 3-turn spirals).",
+    "regime": {
+      "family": [
+        "spiral_classification"
+      ],
+      "type": [
+        "optimizer_only",
+        "mixed"
+      ],
+      "model_type": [
+        "mlp"
+      ],
+      "optimizer": [
+        "Adam",
+        "AdamW"
+      ],
+      "lr": [
+        0.0003,
+        0.003
+      ],
+      "steps": [
+        512,
+        2048
+      ],
+      "note": "one controlled architecture + q_6a81f1, q_682517; RMSprop/Adagrad coupled wd untested; 2-3 turn spirals untested"
+    },
+    "phase": "AdamW(wd) vs Adam(coupled wd), same lr/net, spiral: wd1e-3 ratio ~0.03, wd1e-2 ~0.002 (12/12). \u03b22 .999 vs .95 (same wd): lr 3e-3 ratio 5.8, 1e-3 24 (0.95 wins); lr 3e-4 ratio 0.36 (0.999 wins); with LN signs mixed.",
+    "refines": "K1005",
+    "report_ids": [
+      "R3dd7d335e3"
+    ]
+  },
+  {
+    "id": "K1073",
+    "text": "TABULAR classification \u0394 sweet spot vs EPOCHS (synthetic, 1024 rows; E=total_samples_seen/1024; core-rule \u0394). Below \u0394\u22480.03 more \u0394 wins at E=4 (lab 56/56). The CE-optimal \u0394 then SHRINKS with E on smooth_additive: E=4 \u22480.25 (\u03940.77 lost to 0.26, 3/3 controlled); E=16 \u22480.08 (controlled 2/2; q_c1581a RMSprop 1e-4\u00d7256 bs64 \u03940.026 beat Adam 1e-3 \u03940.26 and AdamW 3e-3 \u03940.77); E=32 \u22480.05-0.15: \u0394\u22650.5 loses (lab 24/28) and \u22653\u00d7 more loses 1/15 once small \u0394\u22650.03. sparse_interaction: optimum \u22480.25 at E 4-16, 0.15 at E 32; larger loses once small \u0394\u22650.1 (lab 5/33, CE \u00d71.44). piecewise tolerates more (larger wins 10/10 at E=16). Then use architecture (K1009/K1033).",
+    "support_count": 0.0,
+    "failure_count": 0.0,
+    "credibility": 0.5,
+    "created_epoch": 0,
+    "sources": [],
+    "merged_from": [
+      "K1021",
+      "K1032"
+    ],
+    "origin": "c000031",
+    "mechanism": "Once the boundary is learned, extra displacement inflates logit norm and fits distractor directions on only 1024 rows; test CE punishes confident errors. Bigger batches over more epochs give cleaner gradients, so each unit of \u0394 fits training rows faster and the overfit point comes at smaller \u0394. Sparse interactions need more movement to find the feature pair (higher optimum); axis-aligned piecewise boundaries keep gaining from sharper logits.",
+    "regime": {
+      "family": [
+        "synthetic_tabular_classification"
+      ],
+      "model_type": [
+        "mlp"
+      ],
+      "loss": [
+        "cross_entropy"
+      ],
+      "budget": [
+        4096,
+        32768
+      ],
+      "steps": [
+        256,
+        2048
+      ],
+      "delta": [
+        0.003,
+        3
+      ],
+      "data": [
+        "smooth_additive",
+        "sparse_interaction",
+        "piecewise_boundary"
+      ],
+      "note": "1024 train rows, 2-16 features; E=4 is bs16, E=16-32 bs64 (batch confounds epochs); controlled only on width-256 1-layer ReLU+LN net"
+    },
+    "phase": "smooth optimum \u0394: E4 \u22480.25, E16 \u22480.08, E32 0.05-0.15. Larger(\u22653\u00d7) wins: E4 small<0.03 56/56; E16 small\u22650.1 smooth 2/2, piecewise 10/10, sparse 0/4; E32 smooth small 0.03-0.1 1/10, \u22650.1 0/5; \u0394\u22650.5 vs 0.01-0.15 at E32 smooth: low wins 24/28."
+  }
+]

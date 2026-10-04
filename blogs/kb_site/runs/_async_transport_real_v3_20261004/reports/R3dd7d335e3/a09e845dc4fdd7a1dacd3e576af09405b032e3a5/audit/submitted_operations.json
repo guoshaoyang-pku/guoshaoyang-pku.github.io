@@ -1,0 +1,42 @@
+[
+  {
+    "op": "revise",
+    "claim_ids": [
+      "K1040"
+    ],
+    "text": "Matched spiral CE twins only: prefer AdamW over coupled Adam in tested lr=.003, T1024, wd=.001/.01 cells; do not extrapolate to arbitrary architectures or beta2. Earlier KB: plain d2 w48 ReLU, 12/12 comparisons. New residual d1 w96 GELU+LN control (spiralcls_00f3c5, bs32, seeds0-9) supports AdamW for beta2=.95/.999: absolute CE improvements .00379/.04009 and .00555/.04278; wd0 twins agree. q_6a81f1 changes optimizer AND beta2; q_682517 unavailable. Large ratios near zero CE are not large absolute errors. Other splits, turns, lr/T and beta2 need controls.",
+    "fields": {
+      "mechanism": "Coupled decay changes Adam's gradient/moment inputs; decoupled decay does not. A decay-related CE penalty is supported in tested cells, but gradient domination, logit-margin floors and universal scaling with lr/T were not measured."
+    },
+    "reason": "Matched-condition scope audit; full measurements, failed predictions and limits preserved in report.",
+    "source_question_ids": [
+      "q_6a81f1"
+    ]
+  },
+  {
+    "op": "revise",
+    "claim_ids": [
+      "K1038"
+    ],
+    "text": "Deep zero-LN SGD: check family, residual path, activation and raw lr/momentum before ranking by calibrated Delta; pooled endpoints do not establish freezing. Reconstructed 29 within-set pairs/11 sets all change rival architecture: plain SGD wins2/14, residual8/15; spiral4/5, each MSE family2/10. These confounded counts are not optimizer effects. Same-model d3 w256 SiLU MSE control: SGD m=.9 lr=.003/.03 gives .419/.464; m=0 gives1.524/.486. Do not automatically demote SGD with a 3-10x proxy-Delta edge. Exact matching and trajectories are required.",
+    "fields": {
+      "mechanism": "Gradient attenuation in plain default-initialized stacks is plausible, not identified by endpoint losses. Residual paths, activation, raw lr/momentum, width, data scale and optimizer-specific stability are competing explanations. No universal gradient scale or LN rescue is established."
+    },
+    "reason": "Matched-condition scope audit; full measurements, failed predictions and limits preserved in report.",
+    "source_question_ids": []
+  },
+  {
+    "op": "revise",
+    "claim_ids": [
+      "K1009"
+    ],
+    "text": "1024-row Gaussian tabular CE: compare architectures conditional on rule, exposure and optimizer; Delta>=.1 is not proof the boundary is learned or a universal shallow/wide prescription. Same-optimizer/budget lab comparisons still confound width/residual/LN/activation: E4, Delta>=.1 shallow wins piecewise2/2, smooth0/2, sparse2/2. K1033/K1073 report limited rule/exposure dependence. q_b0ae9d: piecewise E16, RMSprop3e-5 T256, Delta=.00768; five architecture bundles do not isolate depth. Overconfidence remains a hypothesis, not an endpoint-CE measurement.",
+    "fields": {
+      "mechanism": "Overconfidence or distractor fitting is plausible but unmeasured here. Epoch-equivalent exposure, batch size, rule complexity, representation and optimization speed compete; Delta is a heuristic displacement proxy, not a measured trained-state indicator."
+    },
+    "reason": "Matched-condition scope audit; full measurements, failed predictions and limits preserved in report.",
+    "source_question_ids": [
+      "q_b0ae9d"
+    ]
+  }
+]
