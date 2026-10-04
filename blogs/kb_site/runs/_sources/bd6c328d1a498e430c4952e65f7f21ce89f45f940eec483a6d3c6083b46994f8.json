@@ -1,0 +1,149 @@
+{
+  "origin_epoch": 5,
+  "job_id": "J6dccd2a43525",
+  "why": "Verify whether requested head scale and position controls actually affect numerical results; default TF comparator for capability probe.",
+  "input": {
+    "dataset": "bigram_lm/bg_1d9caf",
+    "candidates": [
+      {
+        "model": {
+          "type": "transformer_lm",
+          "vocab_size": 24,
+          "context_length": 24,
+          "d_model": 32,
+          "num_layers": 4,
+          "layer_residual": false,
+          "num_heads": 2,
+          "d_ff": 128
+        },
+        "optimizer": {
+          "type": "SGD",
+          "lr": 0.001,
+          "weight_decay": 0,
+          "momentum": 0
+        },
+        "loss": {
+          "loss_id": "cross_entropy",
+          "lambda": 1.0
+        },
+        "budget": {
+          "training_steps": 256,
+          "batch_size": 16
+        }
+      },
+      {
+        "model": {
+          "type": "transformer_lm",
+          "vocab_size": 24,
+          "context_length": 24,
+          "d_model": 32,
+          "num_layers": 4,
+          "layer_residual": false,
+          "num_heads": 2,
+          "d_ff": 128,
+          "position_embedding": false
+        },
+        "optimizer": {
+          "type": "SGD",
+          "lr": 0.001,
+          "weight_decay": 0,
+          "momentum": 0
+        },
+        "loss": {
+          "loss_id": "cross_entropy",
+          "lambda": 1.0
+        },
+        "budget": {
+          "training_steps": 256,
+          "batch_size": 16
+        }
+      }
+    ]
+  },
+  "dataset_params": {
+    "instance_seed": 100064931980,
+    "vocab_size": 24,
+    "context_length": 24,
+    "train_size": 800,
+    "test_size": 200,
+    "alpha": 0.8,
+    "layout": "lm",
+    "sequence_seed": 100064931980,
+    "table_seed": 100064941980
+  },
+  "profile": "v1.5",
+  "seeds": 10,
+  "result": {
+    "dataset": "bigram_lm/bg_1d9caf",
+    "family": "bigram_lm",
+    "results": [
+      {
+        "mean": 3.305922102928162,
+        "std": 0.026441549492941033,
+        "failed_seeds": 0,
+        "metric": "test_ce",
+        "secs": 35.1,
+        "candidate": {
+          "model": {
+            "type": "transformer_lm",
+            "vocab_size": 24,
+            "context_length": 24,
+            "d_model": 32,
+            "num_layers": 4,
+            "layer_residual": false,
+            "num_heads": 2,
+            "d_ff": 128
+          },
+          "optimizer": {
+            "type": "SGD",
+            "lr": 0.001,
+            "weight_decay": 0,
+            "momentum": 0
+          },
+          "loss": {
+            "loss_id": "cross_entropy",
+            "lambda": 1.0
+          },
+          "budget": {
+            "training_steps": 256,
+            "batch_size": 16
+          }
+        }
+      },
+      {
+        "mean": 3.305922102928162,
+        "std": 0.026441549492941033,
+        "failed_seeds": 0,
+        "metric": "test_ce",
+        "secs": 35.0,
+        "candidate": {
+          "model": {
+            "type": "transformer_lm",
+            "vocab_size": 24,
+            "context_length": 24,
+            "d_model": 32,
+            "num_layers": 4,
+            "layer_residual": false,
+            "num_heads": 2,
+            "d_ff": 128,
+            "position_embedding": false
+          },
+          "optimizer": {
+            "type": "SGD",
+            "lr": 0.001,
+            "weight_decay": 0,
+            "momentum": 0
+          },
+          "loss": {
+            "loss_id": "cross_entropy",
+            "lambda": 1.0
+          },
+          "budget": {
+            "training_steps": 256,
+            "batch_size": 16
+          }
+        }
+      }
+    ]
+  }
+}

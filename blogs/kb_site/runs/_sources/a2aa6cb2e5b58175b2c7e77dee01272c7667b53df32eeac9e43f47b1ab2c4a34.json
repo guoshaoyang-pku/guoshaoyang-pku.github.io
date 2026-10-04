@@ -1,0 +1,12 @@
+[
+  {
+    "op": "add",
+    "text": "Allowed sparse8 stabcls_0db74c/17011f,1024rows,default plain leaky(.01),w64,d2/d4,all-LN,AdamW(.9,.999),wd1e-5,Delta.0768: matched E16 uses T256/b64 vsT1024/b16,lr=Delta/T. d4-d2 testCE switches +.073425/+.081709 to -.043312/-.029846; b16 paired bootstrap95%[-.052166,-.032734]/[-.045216,-.015899]. E32 repeats the CE sign change. Mean accuracy does NOT reverse: d2 remains higher. Two smooth16 instances favor d2 at both batches. This excludes epoch-only/nominal-Delta-only transfer for these recipes,not proof of gradient noise,calibration or function-space progress; rule/dimension confounded.",
+    "reason": "Matched within-set batch/exposure contrasts reproduce CE reversal on two allowed sparse instances."
+  },
+  {
+    "op": "add",
+    "text": "On sparse8 stabcls_0db74c/17011f,default plain d3w64,AdamW(.9,.999),wd1e-5,T256/b64,Delta.0768,activation-only matched controls interact with LN: zero-LN SiLU CE .335357/.350689 loses to leaky(.01) .210671/.201826; early-only LN SiLU .142096/.140599 beats leaky .176435/.181445; all-LN SiLU .146352/.140685 beats leaky .218640/.227849. Early-LN plain leaky beats zero/all-LN on both instances; residual leaky benefits from all-LN versus zero-LN. Ten seeds/cell,cache anchors reused. No universal smoothness/more-LN score,depth transfer or confidence mechanism follows.",
+    "reason": "Isolated activation, residual and LN-placement controls reject independent additive bundle scoring."
+  }
+]
