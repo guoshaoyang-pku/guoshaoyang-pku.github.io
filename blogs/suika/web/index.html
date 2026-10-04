@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>合成大西瓜 · 引擎与 AI 运作可视化</title>
+<title>合成大西瓜 · 训练策略回放</title>
 <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -11,8 +11,8 @@
   <div class="brand">
     <span class="logo">🍉</span>
     <div class="brandtext">
-      <h1>合成大西瓜 · 引擎与 AI 运作可视化</h1>
-      <p class="sub">Suika Engine &amp; AI Observatory — 还原物理引擎，透视启发式前瞻与 AlphaZero MCTS 的思考过程</p>
+      <h1>合成大西瓜 · 训练策略回放</h1>
+      <p class="sub">逐帧观看纪录局，检查实际落点与已保存的决策数值</p>
     </div>
   </div>
   <div class="topctrl">
@@ -20,11 +20,13 @@
       <select id="gameSelect"></select>
     </label>
     <span id="engineBadge" class="badge">引擎: —</span>
-    <span id="ruleBadge" class="badge">规则: loop</span>
+    <span id="ruleBadge" class="badge">规则载入中</span>
+    <a class="navlink" href="../../suika_showcase.html#training">训练曲线</a>
     <button id="infoBtn" class="ghost">说明 ⓘ</button>
   </div>
 </header>
 
+<div id="traceSummary"><p id="traceStatus" aria-live="polite">正在载入所选对局</p><a id="downloadTrace" download>下载本局 JSON.gz</a></div>
 <main id="layout">
   <!-- LEFT: engine canvas + playback + curve -->
   <section id="leftCol">
@@ -41,7 +43,7 @@
     </div>
 
     <div id="canvasWrap">
-      <canvas id="board" width="560" height="760"></canvas>
+      <canvas id="board" width="560" height="760" aria-label="合成大西瓜逐帧回放棋盘"></canvas>
       <div id="overlayToggles">
         <label><input type="checkbox" id="tgVelocity" checked> 速度矢量</label>
         <label><input type="checkbox" id="tgMerges" checked> 合成事件</label>
@@ -64,20 +66,20 @@
         <option value="4">4×</option>
         <option value="8">8×</option>
       </select></label>
-      <input type="range" id="frameSlider" min="0" max="0" value="0" />
+      <input type="range" id="frameSlider" aria-label="回放帧" min="0" max="0" value="0" />
       <span id="frameLabel">0 / 0</span>
     </div>
 
     <div id="decisionNav">
       <label>决策步 <select id="stepSelect"></select></label>
-      <span id="decisionHint">选择一步查看该步 AI 的完整思考过程</span>
+      <span id="decisionHint">选择一步查看落点与当步记录</span>
     </div>
 
     <div id="playBar" style="display:none">
       <span id="playHint">点击棋盘落子</span>
       <label>对局 <select id="playGameSelect"></select></label>
       <span class="liveonly"><label>规则 <select id="playRule">
-        <option value="loop" selected>loop（双西瓜→循环）</option>
+        <option value="loop" selected>loop（双西瓜保留）</option>
         <option value="poof">poof（双西瓜消除）</option>
       </select></label></span>
       <button id="playNew" class="liveonly">新局</button>
@@ -88,7 +90,7 @@
     </div>
 
     <div id="arenaWrap">
-      <div class="arenaHead">智能体竞技场 · 分数-步数对比（粗线 = 当前对局；虚线 = poof 规则）。注意：各曲线来自<b>不同引擎/规则</b>（ole-batting 1280×720 settle 步进；mattjacobs30 1280×720 但 120 帧/步 + 随机开局；moonfloof 640×960 Matter.js），属跨引擎展示而非同环境受控对比；同环境受控对比请看 ole-batting 的 random/heuristic/alphazero。</div>
+      <div class="arenaHead">对局分数曲线（粗线 = 当前对局）。精选单局来自不同棋盘、种子和部分不同引擎/规则，用于回放浏览。多种子训练评测见“训练曲线”。</div>
       <svg id="arena" width="560" height="180"></svg>
     </div>
   </section>
@@ -111,7 +113,7 @@
         <div id="treeStats" class="statline"></div>
       </div>
       <div class="panel" id="panel-pv">
-        <div class="panelhint">AlphaZero：先验 P(a) + 访问分布 N(a)（K=16 列）+ 价值仪表；DQN：当前步 Q(a) 全列展示（min-max 归一化，悬停看原始值）。</div>
+        <div class="panelhint">保存 Q 值的 DQN 对局展示 128 列数值；动作记录对局展示实际落点。AlphaZero 对照展示先验与访问分布。</div>
         <svg id="pvSvg" width="520" height="300"></svg>
         <div id="valueGauge" class="statline"></div>
       </div>
