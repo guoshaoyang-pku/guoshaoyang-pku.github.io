@@ -1,0 +1,36 @@
+{
+  "status": "Preregistered; not run; requires instrumentation absent from exposed API",
+  "restriction": "Only existing allowed lab datasets; no identical completed-cell repeats or KB mutations.",
+  "tests": [
+    {
+      "id": "precision",
+      "setting": "Checkpoint at1024 on both existing polynomial splits; fork equal512-update continuations at.001 versus3e-5, same model/data/order/state. Measure train/test every32 updates.",
+      "prediction": "A reversible late-step precision floor predicts reduced training AND test residuals after downshift in stable seeds.",
+      "falsifier": "Downshift improves test only while training fit worsens, or fails to reduce train residual across stable paired branches; this weakens the proposed reversible precision explanation, not every optimization mechanism."
+    },
+    {
+      "id": "instability",
+      "setting": "Export all original ten per-seed endpoints and trajectories first; measure finite flags, gradient/update norms and maximum train/test excursions.",
+      "prediction": "Tail-dominant instability predicts high-rate losses concentrate in poor seeds with train excursions; rate reduction rescues paired poor branches.",
+      "falsifier": "No train excursions or fit failures and a broad median test-only disadvantage; catastrophic-tail-only account fails if trimming the largest prespecified seed leaves the median disadvantage."
+    },
+    {
+      "id": "generalization",
+      "setting": "At matched checkpoint ages, compare paired full-train and fixed-test MSE; reserve a new allowed validation split for schedule selection if supported.",
+      "prediction": "Generalization-dominant reversal predicts high-rate equal/better train fit but worse test MSE and a growing gap.",
+      "falsifier": "High-rate poor seeds also have worse training MSE and downshift reduces both residuals without a larger gap."
+    },
+    {
+      "id": "state",
+      "setting": "At1024 fork2x2 low/high continuation rate x preserve/reset Adam moments and step counter. All branches keep weights and identical remaining batches.",
+      "prediction": "If retained optimizer state determines recovery, preservation and reset differ beyond initial transient; pure rate-floor account predicts both low-rate branches eventually improve fit.",
+      "falsifier": "No sustained state effect weakens state-memory dominance. Reset cannot be called pure beta2 intervention."
+    },
+    {
+      "id": "batch",
+      "setting": "Future within-set new bs64 rate pairs at T512 and2048; compare with bs16 only in admissible joint design without repeating existing cells.",
+      "prediction": "Noise-floor hypothesis predicts smaller high/low disadvantage at larger batch; update-age hypothesis ties reversal more toT than exposure; exposure-only ties it more toT*bs/256.",
+      "falsifier": "No directional batch attenuation weakens noise-floor extension; disagreement of matched-exposure ordering rejects exposure-only invariance."
+    }
+  ]
+}

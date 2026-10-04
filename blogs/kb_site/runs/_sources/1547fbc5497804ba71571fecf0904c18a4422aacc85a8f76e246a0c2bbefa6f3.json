@@ -1,0 +1,17 @@
+[
+  {
+    "id": "K1040",
+    "text": "For matched 1-1.5-turn spiral CE twins near lr=.003, T=1024, prefer AdamW over coupled Adam only in tested architectures/decay cells; do not extrapolate to arbitrary beta2 or budgets. The earlier KB records plain d2 w48 ReLU controls (12/12 positive-decay comparisons), not a universal architecture rule. A new residual d1 w96 GELU+LN control on spiralcls_00f3c5, bs32, seeds0-9, supports AdamW at wd=.001/.01 for beta2=.95/.999: absolute CE improvements .00379/.04009 and .00555/.04278 respectively. Zero-decay twins agree. q_6a81f1 changes optimizer and beta2 together, so does not isolate decay; q_682517 is unavailable. Ratios near zero CE exaggerate practical magnitude. Other learning rates, turns, splits, beta2 and budgets require comparable controls.",
+    "mechanism": "Coupled decay changes Adam's gradient/moment inputs; decoupled decay does not. A decay-related CE penalty is supported in tested cells, but gradient domination, logit-margin floors and universal scaling with lr/T were not measured."
+  },
+  {
+    "id": "K1038",
+    "text": "For deep zero-LN SGD, verify family, residual path, activation and raw lr/momentum before using calibrated Delta to rank rivals; pooled endpoints do not establish freezing or an unconditional adaptive advantage. Current within-set reconstruction finds 29 qualifying pairs on 11 sets, all with different rival architectures; same budget/loss, default initialization. Plain SGD wins 2/14 versus residual SGD 8/15, with family composition confounded. Spiral SGD wins 4/5, while univariate and multivariate MSE each win 2/10; these are not independent optimizer effects. A d3 w256 plain SiLU MSE control learns differently across raw lr/momentum: m=.9 lr=.003 MSE .419, lr=.03 .464; m=0 gives 1.524/.486. Do not automatically demote SGD with a 3-10x proxy-Delta edge; compare exact architectures and calibrated settings. Near-frozen requires training/gradient evidence.",
+    "mechanism": "Gradient attenuation in plain default-initialized stacks is plausible, not identified by endpoint losses. Residual paths, activation, raw lr/momentum, width, data scale and optimizer-specific stability are competing explanations. No universal gradient scale or LN rescue is established."
+  },
+  {
+    "id": "K1009",
+    "text": "On 1024-row Gaussian tabular classification, treat shallower/wider architecture as a conditional comparison, not a prescription triggered by Delta>=.1; match rule, exposure, optimizer and residual/LN pattern. Existing KB counts are heterogeneous architecture comparisons, not proof that the boundary is learned at Delta=.1. Current same-set/budget/loss/optimizer depth comparisons still confound width, activation, residual and LN; at E=4 and Delta>=.1 shallow wins 2/2 piecewise, 0/2 smooth-additive, 2/2 sparse-interaction. K1033/K1073 additionally report rule/exposure dependence under limited controls. q_b0ae9d is piecewise, E=16, RMSprop3e-5 T256 (Delta=.00768), with five architecture bundles; it cannot isolate depth or validate the .1 threshold. Use comparable measured regimes, not a universal reversal, and do not infer overconfidence from held-out CE alone.",
+    "mechanism": "Overconfidence or distractor fitting is plausible but unmeasured here. Epoch-equivalent exposure, batch size, rule complexity, representation and optimization speed compete; Delta is a heuristic displacement proxy, not a measured trained-state indicator."
+  }
+]

@@ -1,0 +1,53 @@
+[
+  {
+    "op": "add",
+    "text": "On two allowed five-input nested-oscillatory datasets mvar_05883d/06497c, q_74d185's default w256/d5 residual LeakyReLU(.01), LN[T,T,F,T,F], MSE, bs32: at T1024 Adagrad(lr.0001,wd0) loses to AdamW(.001,wd0,betas.9/.999): mean MSE1.411024/.953953 and .685830/.383595; ratios1.4791/1.7879. It also loses both T256 tests. Joint sets exp:25e340c554d5/f431df8b43e3;10-seed protocol, per-seed failure counts unavailable. q's gold C survives, but its conservative-recipe win did not transfer to these analogues; no blanket optimizer/low-Delta rule.",
+    "source_question_ids": [
+      "q_74d185"
+    ],
+    "reason": "Two preregistered same-model full-recipe long-budget transfer predictions failed; retain negative transfer rather than invent generalization mechanism.",
+    "fields": {
+      "regime": {
+        "family": [
+          "multivariate_regression"
+        ],
+        "dataset_ids": [
+          "mvar_05883d",
+          "mvar_06497c"
+        ],
+        "steps": [
+          256,
+          1024
+        ],
+        "batch_size": 32
+      },
+      "mechanism": "Unidentified from endpoint MSE; recipe comparison changes optimizer and learning rate."
+    }
+  },
+  {
+    "op": "add",
+    "text": "Same default w256/d5 residual LeakyReLU(.01), LN[T,T,F,T,F], MSE, bs32, lr.001/wd0: AdamW(.9,.999) vs Adagrad ordering is dataset/budget-dependent. On mvar_05883d, AdamW/Adagrad MSE ratio .93788 at T256 becomes1.14566 at T1024 (.953953±.052868 vs .832671±.033858). On mvar_06497c ratios .88289/.89462 favor AdamW at both budgets. Sets exp:25e340c554d5/f431df8b43e3,10-seed protocol; finite-seed counts unknown. Equal-rate optimizer contrast, not tuned superiority, equal progress, or proof of overfitting/annealing.",
+    "source_question_ids": [
+      "q_74d185"
+    ],
+    "reason": "Within-set optimizer-only-at-equal-rate controls isolate a dataset-dependent algorithm/default-state contrast, distinct from q's tenfold rate contrast.",
+    "fields": {
+      "regime": {
+        "family": [
+          "multivariate_regression"
+        ],
+        "dataset_ids": [
+          "mvar_05883d",
+          "mvar_06497c"
+        ],
+        "steps": [
+          256,
+          1024
+        ],
+        "lr": 0.001,
+        "batch_size": 32
+      },
+      "mechanism": "Optimizer-specific trajectory or generalization explanations remain unmeasured."
+    }
+  }
+]

@@ -1,0 +1,1933 @@
+{
+  "history": {
+    "pairs": 52,
+    "sets": 22,
+    "adagrad_wins": 14
+  },
+  "history_rejected": {
+    "model": 88,
+    "unobserved_select_pair": 1
+  },
+  "history_pairs": [
+    {
+      "question_id": "q_00df58",
+      "epoch": -999,
+      "source": "ranking_v2",
+      "imported_from": "soa_v1",
+      "adagrad": {
+        "label": "D",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: leaky_relu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.LeakyReLU(0.01)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(4, 256),\n            nn.LeakyReLU(0.01),\n            MLPBlock(width=256, use_layer_norm=True),\n            nn.Linear(256, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adagrad",
+        "lr": 0.001,
+        "budget": [
+          1024,
+          32,
+          32768
+        ]
+      },
+      "adam": {
+        "label": "E",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: leaky_relu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.LeakyReLU(0.01)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(4, 256),\n            nn.LeakyReLU(0.01),\n            MLPBlock(width=256, use_layer_norm=True),\n            nn.Linear(256, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adam",
+        "lr": 0.0003,
+        "budget": [
+          1024,
+          32,
+          32768
+        ]
+      },
+      "adagrad_win": false
+    },
+    {
+      "question_id": "q_00df58",
+      "epoch": -999,
+      "source": "ranking_v2",
+      "imported_from": "soa_v1",
+      "adagrad": {
+        "label": "D",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: leaky_relu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.LeakyReLU(0.01)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(4, 256),\n            nn.LeakyReLU(0.01),\n            MLPBlock(width=256, use_layer_norm=True),\n            nn.Linear(256, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adagrad",
+        "lr": 0.001,
+        "budget": [
+          1024,
+          32,
+          32768
+        ]
+      },
+      "adam": {
+        "label": "B",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: leaky_relu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.LeakyReLU(0.01)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(4, 256),\n            nn.LeakyReLU(0.01),\n            MLPBlock(width=256, use_layer_norm=True),\n            nn.Linear(256, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adam",
+        "lr": 0.0001,
+        "budget": [
+          1024,
+          32,
+          32768
+        ]
+      },
+      "adagrad_win": false
+    },
+    {
+      "question_id": "q_bbe0e1",
+      "epoch": -998,
+      "source": "ranking_v2",
+      "imported_from": "soa_v1",
+      "adagrad": {
+        "label": "B",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: relu(x + Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.ReLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        h = h + x\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(2, 96),\n            nn.ReLU(),\n            MLPBlock(width=96, use_layer_norm=True),\n            nn.Linear(96, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adagrad",
+        "lr": 0.003,
+        "budget": [
+          512,
+          16,
+          8192
+        ]
+      },
+      "adam": {
+        "label": "A",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: relu(x + Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.ReLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        h = h + x\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(2, 96),\n            nn.ReLU(),\n            MLPBlock(width=96, use_layer_norm=True),\n            nn.Linear(96, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adam",
+        "lr": 0.0003,
+        "budget": [
+          512,
+          16,
+          8192
+        ]
+      },
+      "adagrad_win": false
+    },
+    {
+      "question_id": "q_bbe0e1",
+      "epoch": -998,
+      "source": "ranking_v2",
+      "imported_from": "soa_v1",
+      "adagrad": {
+        "label": "B",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: relu(x + Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.ReLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        h = h + x\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(2, 96),\n            nn.ReLU(),\n            MLPBlock(width=96, use_layer_norm=True),\n            nn.Linear(96, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adagrad",
+        "lr": 0.003,
+        "budget": [
+          512,
+          16,
+          8192
+        ]
+      },
+      "adam": {
+        "label": "D",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: relu(x + Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.ReLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        h = h + x\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(2, 96),\n            nn.ReLU(),\n            MLPBlock(width=96, use_layer_norm=True),\n            nn.Linear(96, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "AdamW",
+        "lr": 0.0001,
+        "budget": [
+          512,
+          16,
+          8192
+        ]
+      },
+      "adagrad_win": true
+    },
+    {
+      "question_id": "q_bbe0e1",
+      "epoch": -998,
+      "source": "ranking_v2",
+      "imported_from": "soa_v1",
+      "adagrad": {
+        "label": "C",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: relu(x + Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.ReLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        h = h + x\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(2, 96),\n            nn.ReLU(),\n            MLPBlock(width=96, use_layer_norm=True),\n            nn.Linear(96, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adagrad",
+        "lr": 0.0001,
+        "budget": [
+          512,
+          16,
+          8192
+        ]
+      },
+      "adam": {
+        "label": "A",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: relu(x + Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.ReLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        h = h + x\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(2, 96),\n            nn.ReLU(),\n            MLPBlock(width=96, use_layer_norm=True),\n            nn.Linear(96, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adam",
+        "lr": 0.0003,
+        "budget": [
+          512,
+          16,
+          8192
+        ]
+      },
+      "adagrad_win": false
+    },
+    {
+      "question_id": "q_bbe0e1",
+      "epoch": -998,
+      "source": "ranking_v2",
+      "imported_from": "soa_v1",
+      "adagrad": {
+        "label": "C",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: relu(x + Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.ReLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        h = h + x\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(2, 96),\n            nn.ReLU(),\n            MLPBlock(width=96, use_layer_norm=True),\n            nn.Linear(96, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adagrad",
+        "lr": 0.0001,
+        "budget": [
+          512,
+          16,
+          8192
+        ]
+      },
+      "adam": {
+        "label": "D",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: relu(x + Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.ReLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        h = h + x\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(2, 96),\n            nn.ReLU(),\n            MLPBlock(width=96, use_layer_norm=True),\n            nn.Linear(96, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "AdamW",
+        "lr": 0.0001,
+        "budget": [
+          512,
+          16,
+          8192
+        ]
+      },
+      "adagrad_win": false
+    },
+    {
+      "question_id": "q_308f21",
+      "epoch": -996,
+      "source": "ranking_v2",
+      "imported_from": "soa_v1",
+      "adagrad": {
+        "label": "A",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: relu(x + Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.ReLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        h = h + x\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(2, 64),\n            nn.ReLU(),\n            MLPBlock(width=64, use_layer_norm=False),\n            MLPBlock(width=64, use_layer_norm=False),\n            MLPBlock(width=64, use_layer_norm=True),\n            nn.Linear(64, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adagrad",
+        "lr": 0.003,
+        "budget": [
+          256,
+          16,
+          4096
+        ]
+      },
+      "adam": {
+        "label": "C",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: relu(x + Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.ReLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        h = h + x\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(2, 64),\n            nn.ReLU(),\n            MLPBlock(width=64, use_layer_norm=False),\n            MLPBlock(width=64, use_layer_norm=False),\n            MLPBlock(width=64, use_layer_norm=True),\n            nn.Linear(64, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "AdamW",
+        "lr": 0.0001,
+        "budget": [
+          256,
+          16,
+          4096
+        ]
+      },
+      "adagrad_win": true
+    },
+    {
+      "question_id": "q_308f21",
+      "epoch": -996,
+      "source": "ranking_v2",
+      "imported_from": "soa_v1",
+      "adagrad": {
+        "label": "A",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: relu(x + Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.ReLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        h = h + x\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(2, 64),\n            nn.ReLU(),\n            MLPBlock(width=64, use_layer_norm=False),\n            MLPBlock(width=64, use_layer_norm=False),\n            MLPBlock(width=64, use_layer_norm=True),\n            nn.Linear(64, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adagrad",
+        "lr": 0.003,
+        "budget": [
+          256,
+          16,
+          4096
+        ]
+      },
+      "adam": {
+        "label": "D",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: relu(x + Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.ReLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        h = h + x\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(2, 64),\n            nn.ReLU(),\n            MLPBlock(width=64, use_layer_norm=False),\n            MLPBlock(width=64, use_layer_norm=False),\n            MLPBlock(width=64, use_layer_norm=True),\n            nn.Linear(64, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "AdamW",
+        "lr": 0.001,
+        "budget": [
+          256,
+          16,
+          4096
+        ]
+      },
+      "adagrad_win": false
+    },
+    {
+      "question_id": "q_13d23d",
+      "epoch": -996,
+      "source": "ranking_v2",
+      "imported_from": "soa_v1",
+      "adagrad": {
+        "label": "C",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: leaky_relu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.LeakyReLU(0.01)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(4, 192),\n            nn.LeakyReLU(0.01),\n            MLPBlock(width=192, use_layer_norm=True),\n            MLPBlock(width=192, use_layer_norm=False),\n            MLPBlock(width=192, use_layer_norm=False),\n            nn.Linear(192, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adagrad",
+        "lr": 0.003,
+        "budget": [
+          512,
+          16,
+          8192
+        ]
+      },
+      "adam": {
+        "label": "D",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: leaky_relu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.LeakyReLU(0.01)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(4, 192),\n            nn.LeakyReLU(0.01),\n            MLPBlock(width=192, use_layer_norm=True),\n            MLPBlock(width=192, use_layer_norm=False),\n            MLPBlock(width=192, use_layer_norm=False),\n            nn.Linear(192, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "AdamW",
+        "lr": 0.0001,
+        "budget": [
+          512,
+          16,
+          8192
+        ]
+      },
+      "adagrad_win": true
+    },
+    {
+      "question_id": "q_13d23d",
+      "epoch": -996,
+      "source": "ranking_v2",
+      "imported_from": "soa_v1",
+      "adagrad": {
+        "label": "A",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: leaky_relu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.LeakyReLU(0.01)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(4, 192),\n            nn.LeakyReLU(0.01),\n            MLPBlock(width=192, use_layer_norm=True),\n            MLPBlock(width=192, use_layer_norm=False),\n            MLPBlock(width=192, use_layer_norm=False),\n            nn.Linear(192, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adagrad",
+        "lr": 0.001,
+        "budget": [
+          512,
+          16,
+          8192
+        ]
+      },
+      "adam": {
+        "label": "D",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: leaky_relu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.LeakyReLU(0.01)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(4, 192),\n            nn.LeakyReLU(0.01),\n            MLPBlock(width=192, use_layer_norm=True),\n            MLPBlock(width=192, use_layer_norm=False),\n            MLPBlock(width=192, use_layer_norm=False),\n            nn.Linear(192, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "AdamW",
+        "lr": 0.0001,
+        "budget": [
+          512,
+          16,
+          8192
+        ]
+      },
+      "adagrad_win": true
+    },
+    {
+      "question_id": "q_13d23d",
+      "epoch": -996,
+      "source": "ranking_v2",
+      "imported_from": "soa_v1",
+      "adagrad": {
+        "label": "C",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: leaky_relu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.LeakyReLU(0.01)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(4, 192),\n            nn.LeakyReLU(0.01),\n            MLPBlock(width=192, use_layer_norm=True),\n            MLPBlock(width=192, use_layer_norm=False),\n            MLPBlock(width=192, use_layer_norm=False),\n            nn.Linear(192, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adagrad",
+        "lr": 0.003,
+        "budget": [
+          512,
+          16,
+          8192
+        ]
+      },
+      "adam": {
+        "label": "B",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: leaky_relu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.LeakyReLU(0.01)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(4, 192),\n            nn.LeakyReLU(0.01),\n            MLPBlock(width=192, use_layer_norm=True),\n            MLPBlock(width=192, use_layer_norm=False),\n            MLPBlock(width=192, use_layer_norm=False),\n            nn.Linear(192, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "AdamW",
+        "lr": 0.001,
+        "budget": [
+          512,
+          16,
+          8192
+        ]
+      },
+      "adagrad_win": false
+    },
+    {
+      "question_id": "q_13d23d",
+      "epoch": -996,
+      "source": "ranking_v2",
+      "imported_from": "soa_v1",
+      "adagrad": {
+        "label": "A",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: leaky_relu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.LeakyReLU(0.01)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(4, 192),\n            nn.LeakyReLU(0.01),\n            MLPBlock(width=192, use_layer_norm=True),\n            MLPBlock(width=192, use_layer_norm=False),\n            MLPBlock(width=192, use_layer_norm=False),\n            nn.Linear(192, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adagrad",
+        "lr": 0.001,
+        "budget": [
+          512,
+          16,
+          8192
+        ]
+      },
+      "adam": {
+        "label": "B",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: leaky_relu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.LeakyReLU(0.01)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(4, 192),\n            nn.LeakyReLU(0.01),\n            MLPBlock(width=192, use_layer_norm=True),\n            MLPBlock(width=192, use_layer_norm=False),\n            MLPBlock(width=192, use_layer_norm=False),\n            nn.Linear(192, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "AdamW",
+        "lr": 0.001,
+        "budget": [
+          512,
+          16,
+          8192
+        ]
+      },
+      "adagrad_win": false
+    },
+    {
+      "question_id": "q_bb79e6",
+      "epoch": -990,
+      "source": "ranking_v2",
+      "imported_from": "soa_v1",
+      "adagrad": {
+        "label": "C",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: relu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.ReLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(2, 128),\n            nn.ReLU(),\n            MLPBlock(width=128, use_layer_norm=True),\n            MLPBlock(width=128, use_layer_norm=False),\n            nn.Linear(128, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adagrad",
+        "lr": 3e-05,
+        "budget": [
+          256,
+          16,
+          4096
+        ]
+      },
+      "adam": {
+        "label": "B",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: relu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.ReLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(2, 128),\n            nn.ReLU(),\n            MLPBlock(width=128, use_layer_norm=True),\n            MLPBlock(width=128, use_layer_norm=False),\n            nn.Linear(128, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adam",
+        "lr": 0.0001,
+        "budget": [
+          256,
+          16,
+          4096
+        ]
+      },
+      "adagrad_win": false
+    },
+    {
+      "question_id": "q_5f1103",
+      "epoch": -989,
+      "source": "ranking_v2",
+      "imported_from": "soa_v1",
+      "adagrad": {
+        "label": "C",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: silu(x + Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.SiLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        h = h + x\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(3, 128),\n            nn.SiLU(),\n            MLPBlock(width=128, use_layer_norm=True),\n            MLPBlock(width=128, use_layer_norm=False),\n            nn.Linear(128, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adagrad",
+        "lr": 0.0003,
+        "budget": [
+          1024,
+          16,
+          16384
+        ]
+      },
+      "adam": {
+        "label": "A",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: silu(x + Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.SiLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        h = h + x\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(3, 128),\n            nn.SiLU(),\n            MLPBlock(width=128, use_layer_norm=True),\n            MLPBlock(width=128, use_layer_norm=False),\n            nn.Linear(128, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adam",
+        "lr": 0.001,
+        "budget": [
+          1024,
+          16,
+          16384
+        ]
+      },
+      "adagrad_win": false
+    },
+    {
+      "question_id": "q_5f1103",
+      "epoch": -989,
+      "source": "ranking_v2",
+      "imported_from": "soa_v1",
+      "adagrad": {
+        "label": "C",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: silu(x + Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.SiLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        h = h + x\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(3, 128),\n            nn.SiLU(),\n            MLPBlock(width=128, use_layer_norm=True),\n            MLPBlock(width=128, use_layer_norm=False),\n            nn.Linear(128, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adagrad",
+        "lr": 0.0003,
+        "budget": [
+          1024,
+          16,
+          16384
+        ]
+      },
+      "adam": {
+        "label": "D",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: silu(x + Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.SiLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        h = h + x\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(3, 128),\n            nn.SiLU(),\n            MLPBlock(width=128, use_layer_norm=True),\n            MLPBlock(width=128, use_layer_norm=False),\n            nn.Linear(128, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "AdamW",
+        "lr": 0.0001,
+        "budget": [
+          1024,
+          16,
+          16384
+        ]
+      },
+      "adagrad_win": false
+    },
+    {
+      "question_id": "q_5f1103",
+      "epoch": -989,
+      "source": "ranking_v2",
+      "imported_from": "soa_v1",
+      "adagrad": {
+        "label": "E",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: silu(x + Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.SiLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        h = h + x\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(3, 128),\n            nn.SiLU(),\n            MLPBlock(width=128, use_layer_norm=True),\n            MLPBlock(width=128, use_layer_norm=False),\n            nn.Linear(128, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adagrad",
+        "lr": 0.0001,
+        "budget": [
+          1024,
+          16,
+          16384
+        ]
+      },
+      "adam": {
+        "label": "A",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: silu(x + Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.SiLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        h = h + x\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(3, 128),\n            nn.SiLU(),\n            MLPBlock(width=128, use_layer_norm=True),\n            MLPBlock(width=128, use_layer_norm=False),\n            nn.Linear(128, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adam",
+        "lr": 0.001,
+        "budget": [
+          1024,
+          16,
+          16384
+        ]
+      },
+      "adagrad_win": false
+    },
+    {
+      "question_id": "q_5f1103",
+      "epoch": -989,
+      "source": "ranking_v2",
+      "imported_from": "soa_v1",
+      "adagrad": {
+        "label": "E",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: silu(x + Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.SiLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        h = h + x\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(3, 128),\n            nn.SiLU(),\n            MLPBlock(width=128, use_layer_norm=True),\n            MLPBlock(width=128, use_layer_norm=False),\n            nn.Linear(128, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adagrad",
+        "lr": 0.0001,
+        "budget": [
+          1024,
+          16,
+          16384
+        ]
+      },
+      "adam": {
+        "label": "D",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: silu(x + Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.SiLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        h = h + x\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(3, 128),\n            nn.SiLU(),\n            MLPBlock(width=128, use_layer_norm=True),\n            MLPBlock(width=128, use_layer_norm=False),\n            nn.Linear(128, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "AdamW",
+        "lr": 0.0001,
+        "budget": [
+          1024,
+          16,
+          16384
+        ]
+      },
+      "adagrad_win": false
+    },
+    {
+      "question_id": "q_7f5799",
+      "epoch": -988,
+      "source": "ranking_v2",
+      "imported_from": "soa_v1",
+      "adagrad": {
+        "label": "D",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: leaky_relu(x + Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.LeakyReLU(0.01)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        h = h + x\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(2, 96),\n            nn.LeakyReLU(0.01),\n            MLPBlock(width=96, use_layer_norm=False),\n            MLPBlock(width=96, use_layer_norm=False),\n            MLPBlock(width=96, use_layer_norm=False),\n            MLPBlock(width=96, use_layer_norm=True),\n            nn.Linear(96, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adagrad",
+        "lr": 0.003,
+        "budget": [
+          512,
+          64,
+          32768
+        ]
+      },
+      "adam": {
+        "label": "E",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: leaky_relu(x + Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.LeakyReLU(0.01)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        h = h + x\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(2, 96),\n            nn.LeakyReLU(0.01),\n            MLPBlock(width=96, use_layer_norm=False),\n            MLPBlock(width=96, use_layer_norm=False),\n            MLPBlock(width=96, use_layer_norm=False),\n            MLPBlock(width=96, use_layer_norm=True),\n            nn.Linear(96, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "AdamW",
+        "lr": 0.0001,
+        "budget": [
+          512,
+          64,
+          32768
+        ]
+      },
+      "adagrad_win": true
+    },
+    {
+      "question_id": "q_7f5799",
+      "epoch": -988,
+      "source": "ranking_v2",
+      "imported_from": "soa_v1",
+      "adagrad": {
+        "label": "D",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: leaky_relu(x + Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.LeakyReLU(0.01)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        h = h + x\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(2, 96),\n            nn.LeakyReLU(0.01),\n            MLPBlock(width=96, use_layer_norm=False),\n            MLPBlock(width=96, use_layer_norm=False),\n            MLPBlock(width=96, use_layer_norm=False),\n            MLPBlock(width=96, use_layer_norm=True),\n            nn.Linear(96, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adagrad",
+        "lr": 0.003,
+        "budget": [
+          512,
+          64,
+          32768
+        ]
+      },
+      "adam": {
+        "label": "C",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: leaky_relu(x + Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.LeakyReLU(0.01)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        h = h + x\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(2, 96),\n            nn.LeakyReLU(0.01),\n            MLPBlock(width=96, use_layer_norm=False),\n            MLPBlock(width=96, use_layer_norm=False),\n            MLPBlock(width=96, use_layer_norm=False),\n            MLPBlock(width=96, use_layer_norm=True),\n            nn.Linear(96, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "AdamW",
+        "lr": 0.003,
+        "budget": [
+          512,
+          64,
+          32768
+        ]
+      },
+      "adagrad_win": false
+    },
+    {
+      "question_id": "q_7f5799",
+      "epoch": -988,
+      "source": "ranking_v2",
+      "imported_from": "soa_v1",
+      "adagrad": {
+        "label": "D",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: leaky_relu(x + Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.LeakyReLU(0.01)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        h = h + x\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(2, 96),\n            nn.LeakyReLU(0.01),\n            MLPBlock(width=96, use_layer_norm=False),\n            MLPBlock(width=96, use_layer_norm=False),\n            MLPBlock(width=96, use_layer_norm=False),\n            MLPBlock(width=96, use_layer_norm=True),\n            nn.Linear(96, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adagrad",
+        "lr": 0.003,
+        "budget": [
+          512,
+          64,
+          32768
+        ]
+      },
+      "adam": {
+        "label": "B",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: leaky_relu(x + Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.LeakyReLU(0.01)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        h = h + x\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(2, 96),\n            nn.LeakyReLU(0.01),\n            MLPBlock(width=96, use_layer_norm=False),\n            MLPBlock(width=96, use_layer_norm=False),\n            MLPBlock(width=96, use_layer_norm=False),\n            MLPBlock(width=96, use_layer_norm=True),\n            nn.Linear(96, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "AdamW",
+        "lr": 0.0003,
+        "budget": [
+          512,
+          64,
+          32768
+        ]
+      },
+      "adagrad_win": false
+    },
+    {
+      "question_id": "q_241f60",
+      "epoch": -987,
+      "source": "ranking_v2",
+      "imported_from": "soa_v1",
+      "adagrad": {
+        "label": "C",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: leaky_relu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.LeakyReLU(0.01)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(2, 96),\n            nn.LeakyReLU(0.01),\n            MLPBlock(width=96, use_layer_norm=True),\n            MLPBlock(width=96, use_layer_norm=False),\n            nn.Linear(96, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adagrad",
+        "lr": 0.0003,
+        "budget": [
+          256,
+          16,
+          4096
+        ]
+      },
+      "adam": {
+        "label": "B",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: leaky_relu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.LeakyReLU(0.01)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(2, 96),\n            nn.LeakyReLU(0.01),\n            MLPBlock(width=96, use_layer_norm=True),\n            MLPBlock(width=96, use_layer_norm=False),\n            nn.Linear(96, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adam",
+        "lr": 0.0003,
+        "budget": [
+          256,
+          16,
+          4096
+        ]
+      },
+      "adagrad_win": false
+    },
+    {
+      "question_id": "q_192443",
+      "epoch": -987,
+      "source": "ranking_v2",
+      "imported_from": "soa_v1",
+      "adagrad": {
+        "label": "D",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: relu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.ReLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(2, 96),\n            nn.ReLU(),\n            MLPBlock(width=96, use_layer_norm=True),\n            MLPBlock(width=96, use_layer_norm=True),\n            MLPBlock(width=96, use_layer_norm=False),\n            MLPBlock(width=96, use_layer_norm=False),\n            nn.Linear(96, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adagrad",
+        "lr": 0.003,
+        "budget": [
+          512,
+          16,
+          8192
+        ]
+      },
+      "adam": {
+        "label": "E",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: relu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.ReLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(2, 96),\n            nn.ReLU(),\n            MLPBlock(width=96, use_layer_norm=True),\n            MLPBlock(width=96, use_layer_norm=True),\n            MLPBlock(width=96, use_layer_norm=False),\n            MLPBlock(width=96, use_layer_norm=False),\n            nn.Linear(96, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adam",
+        "lr": 3e-05,
+        "budget": [
+          512,
+          16,
+          8192
+        ]
+      },
+      "adagrad_win": true
+    },
+    {
+      "question_id": "q_192443",
+      "epoch": -987,
+      "source": "ranking_v2",
+      "imported_from": "soa_v1",
+      "adagrad": {
+        "label": "D",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: relu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.ReLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(2, 96),\n            nn.ReLU(),\n            MLPBlock(width=96, use_layer_norm=True),\n            MLPBlock(width=96, use_layer_norm=True),\n            MLPBlock(width=96, use_layer_norm=False),\n            MLPBlock(width=96, use_layer_norm=False),\n            nn.Linear(96, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adagrad",
+        "lr": 0.003,
+        "budget": [
+          512,
+          16,
+          8192
+        ]
+      },
+      "adam": {
+        "label": "A",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: relu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.ReLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(2, 96),\n            nn.ReLU(),\n            MLPBlock(width=96, use_layer_norm=True),\n            MLPBlock(width=96, use_layer_norm=True),\n            MLPBlock(width=96, use_layer_norm=False),\n            MLPBlock(width=96, use_layer_norm=False),\n            nn.Linear(96, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "AdamW",
+        "lr": 0.0001,
+        "budget": [
+          512,
+          16,
+          8192
+        ]
+      },
+      "adagrad_win": true
+    },
+    {
+      "question_id": "q_192443",
+      "epoch": -987,
+      "source": "ranking_v2",
+      "imported_from": "soa_v1",
+      "adagrad": {
+        "label": "D",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: relu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.ReLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(2, 96),\n            nn.ReLU(),\n            MLPBlock(width=96, use_layer_norm=True),\n            MLPBlock(width=96, use_layer_norm=True),\n            MLPBlock(width=96, use_layer_norm=False),\n            MLPBlock(width=96, use_layer_norm=False),\n            nn.Linear(96, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adagrad",
+        "lr": 0.003,
+        "budget": [
+          512,
+          16,
+          8192
+        ]
+      },
+      "adam": {
+        "label": "B",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: relu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.ReLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(2, 96),\n            nn.ReLU(),\n            MLPBlock(width=96, use_layer_norm=True),\n            MLPBlock(width=96, use_layer_norm=True),\n            MLPBlock(width=96, use_layer_norm=False),\n            MLPBlock(width=96, use_layer_norm=False),\n            nn.Linear(96, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "AdamW",
+        "lr": 3e-05,
+        "budget": [
+          512,
+          16,
+          8192
+        ]
+      },
+      "adagrad_win": true
+    },
+    {
+      "question_id": "q_192443",
+      "epoch": -987,
+      "source": "ranking_v2",
+      "imported_from": "soa_v1",
+      "adagrad": {
+        "label": "D",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: relu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.ReLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(2, 96),\n            nn.ReLU(),\n            MLPBlock(width=96, use_layer_norm=True),\n            MLPBlock(width=96, use_layer_norm=True),\n            MLPBlock(width=96, use_layer_norm=False),\n            MLPBlock(width=96, use_layer_norm=False),\n            nn.Linear(96, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adagrad",
+        "lr": 0.003,
+        "budget": [
+          512,
+          16,
+          8192
+        ]
+      },
+      "adam": {
+        "label": "C",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: relu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.ReLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(2, 96),\n            nn.ReLU(),\n            MLPBlock(width=96, use_layer_norm=True),\n            MLPBlock(width=96, use_layer_norm=True),\n            MLPBlock(width=96, use_layer_norm=False),\n            MLPBlock(width=96, use_layer_norm=False),\n            nn.Linear(96, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adam",
+        "lr": 3e-05,
+        "budget": [
+          512,
+          16,
+          8192
+        ]
+      },
+      "adagrad_win": true
+    },
+    {
+      "question_id": "q_ef44ff",
+      "epoch": -998,
+      "source": "ranking_v2",
+      "imported_from": "soa_v3",
+      "adagrad": {
+        "label": "E",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: silu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.SiLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(5, 32),\n            nn.SiLU(),\n            MLPBlock(width=32, use_layer_norm=True),\n            nn.Linear(32, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adagrad",
+        "lr": 0.0003,
+        "budget": [
+          256,
+          16,
+          4096
+        ]
+      },
+      "adam": {
+        "label": "D",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: silu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.SiLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(5, 32),\n            nn.SiLU(),\n            MLPBlock(width=32, use_layer_norm=True),\n            nn.Linear(32, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adam",
+        "lr": 0.003,
+        "budget": [
+          256,
+          16,
+          4096
+        ]
+      },
+      "adagrad_win": false
+    },
+    {
+      "question_id": "q_ef44ff",
+      "epoch": -998,
+      "source": "ranking_v2",
+      "imported_from": "soa_v3",
+      "adagrad": {
+        "label": "A",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: silu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.SiLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(5, 32),\n            nn.SiLU(),\n            MLPBlock(width=32, use_layer_norm=True),\n            nn.Linear(32, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adagrad",
+        "lr": 0.0003,
+        "budget": [
+          256,
+          16,
+          4096
+        ]
+      },
+      "adam": {
+        "label": "D",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: silu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.SiLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(5, 32),\n            nn.SiLU(),\n            MLPBlock(width=32, use_layer_norm=True),\n            nn.Linear(32, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adam",
+        "lr": 0.003,
+        "budget": [
+          256,
+          16,
+          4096
+        ]
+      },
+      "adagrad_win": false
+    },
+    {
+      "question_id": "q_ef44ff",
+      "epoch": -998,
+      "source": "ranking_v2",
+      "imported_from": "soa_v3",
+      "adagrad": {
+        "label": "E",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: silu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.SiLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(5, 32),\n            nn.SiLU(),\n            MLPBlock(width=32, use_layer_norm=True),\n            nn.Linear(32, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adagrad",
+        "lr": 0.0003,
+        "budget": [
+          256,
+          16,
+          4096
+        ]
+      },
+      "adam": {
+        "label": "B",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: silu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.SiLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(5, 32),\n            nn.SiLU(),\n            MLPBlock(width=32, use_layer_norm=True),\n            nn.Linear(32, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adam",
+        "lr": 0.001,
+        "budget": [
+          256,
+          16,
+          4096
+        ]
+      },
+      "adagrad_win": false
+    },
+    {
+      "question_id": "q_ef44ff",
+      "epoch": -998,
+      "source": "ranking_v2",
+      "imported_from": "soa_v3",
+      "adagrad": {
+        "label": "A",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: silu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.SiLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(5, 32),\n            nn.SiLU(),\n            MLPBlock(width=32, use_layer_norm=True),\n            nn.Linear(32, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adagrad",
+        "lr": 0.0003,
+        "budget": [
+          256,
+          16,
+          4096
+        ]
+      },
+      "adam": {
+        "label": "B",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: silu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.SiLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(5, 32),\n            nn.SiLU(),\n            MLPBlock(width=32, use_layer_norm=True),\n            nn.Linear(32, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adam",
+        "lr": 0.001,
+        "budget": [
+          256,
+          16,
+          4096
+        ]
+      },
+      "adagrad_win": false
+    },
+    {
+      "question_id": "q_ef44ff",
+      "epoch": -998,
+      "source": "ranking_v2",
+      "imported_from": "soa_v3",
+      "adagrad": {
+        "label": "E",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: silu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.SiLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(5, 32),\n            nn.SiLU(),\n            MLPBlock(width=32, use_layer_norm=True),\n            nn.Linear(32, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adagrad",
+        "lr": 0.0003,
+        "budget": [
+          256,
+          16,
+          4096
+        ]
+      },
+      "adam": {
+        "label": "C",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: silu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.SiLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(5, 32),\n            nn.SiLU(),\n            MLPBlock(width=32, use_layer_norm=True),\n            nn.Linear(32, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adam",
+        "lr": 0.0001,
+        "budget": [
+          256,
+          16,
+          4096
+        ]
+      },
+      "adagrad_win": false
+    },
+    {
+      "question_id": "q_ef44ff",
+      "epoch": -998,
+      "source": "ranking_v2",
+      "imported_from": "soa_v3",
+      "adagrad": {
+        "label": "A",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: silu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.SiLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(5, 32),\n            nn.SiLU(),\n            MLPBlock(width=32, use_layer_norm=True),\n            nn.Linear(32, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adagrad",
+        "lr": 0.0003,
+        "budget": [
+          256,
+          16,
+          4096
+        ]
+      },
+      "adam": {
+        "label": "C",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: silu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.SiLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(5, 32),\n            nn.SiLU(),\n            MLPBlock(width=32, use_layer_norm=True),\n            nn.Linear(32, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adam",
+        "lr": 0.0001,
+        "budget": [
+          256,
+          16,
+          4096
+        ]
+      },
+      "adagrad_win": false
+    },
+    {
+      "question_id": "q_2d467c",
+      "epoch": -996,
+      "source": "ranking_v2",
+      "imported_from": "soa_v3",
+      "adagrad": {
+        "label": "B",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: leaky_relu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.LeakyReLU(0.01)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(3, 32),\n            nn.LeakyReLU(0.01),\n            MLPBlock(width=32, use_layer_norm=False),\n            MLPBlock(width=32, use_layer_norm=True),\n            MLPBlock(width=32, use_layer_norm=False),\n            MLPBlock(width=32, use_layer_norm=False),\n            MLPBlock(width=32, use_layer_norm=False),\n            nn.Linear(32, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adagrad",
+        "lr": 0.001,
+        "budget": [
+          1024,
+          32,
+          32768
+        ]
+      },
+      "adam": {
+        "label": "E",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: leaky_relu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.LeakyReLU(0.01)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(3, 32),\n            nn.LeakyReLU(0.01),\n            MLPBlock(width=32, use_layer_norm=False),\n            MLPBlock(width=32, use_layer_norm=True),\n            MLPBlock(width=32, use_layer_norm=False),\n            MLPBlock(width=32, use_layer_norm=False),\n            MLPBlock(width=32, use_layer_norm=False),\n            nn.Linear(32, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "AdamW",
+        "lr": 0.0001,
+        "budget": [
+          1024,
+          32,
+          32768
+        ]
+      },
+      "adagrad_win": false
+    },
+    {
+      "question_id": "q_2d467c",
+      "epoch": -996,
+      "source": "ranking_v2",
+      "imported_from": "soa_v3",
+      "adagrad": {
+        "label": "B",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: leaky_relu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.LeakyReLU(0.01)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(3, 32),\n            nn.LeakyReLU(0.01),\n            MLPBlock(width=32, use_layer_norm=False),\n            MLPBlock(width=32, use_layer_norm=True),\n            MLPBlock(width=32, use_layer_norm=False),\n            MLPBlock(width=32, use_layer_norm=False),\n            MLPBlock(width=32, use_layer_norm=False),\n            nn.Linear(32, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adagrad",
+        "lr": 0.001,
+        "budget": [
+          1024,
+          32,
+          32768
+        ]
+      },
+      "adam": {
+        "label": "D",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: leaky_relu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.LeakyReLU(0.01)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(3, 32),\n            nn.LeakyReLU(0.01),\n            MLPBlock(width=32, use_layer_norm=False),\n            MLPBlock(width=32, use_layer_norm=True),\n            MLPBlock(width=32, use_layer_norm=False),\n            MLPBlock(width=32, use_layer_norm=False),\n            MLPBlock(width=32, use_layer_norm=False),\n            nn.Linear(32, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adam",
+        "lr": 0.003,
+        "budget": [
+          1024,
+          32,
+          32768
+        ]
+      },
+      "adagrad_win": false
+    },
+    {
+      "question_id": "q_334d39",
+      "epoch": -994,
+      "source": "ranking_v2",
+      "imported_from": "soa_v3",
+      "adagrad": {
+        "label": "A",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: silu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.SiLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(3, 192),\n            nn.SiLU(),\n            MLPBlock(width=192, use_layer_norm=False),\n            MLPBlock(width=192, use_layer_norm=True),\n            nn.Linear(192, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adagrad",
+        "lr": 3e-05,
+        "budget": [
+          256,
+          16,
+          4096
+        ]
+      },
+      "adam": {
+        "label": "B",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: silu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.SiLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(3, 192),\n            nn.SiLU(),\n            MLPBlock(width=192, use_layer_norm=False),\n            MLPBlock(width=192, use_layer_norm=True),\n            nn.Linear(192, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adam",
+        "lr": 0.001,
+        "budget": [
+          256,
+          16,
+          4096
+        ]
+      },
+      "adagrad_win": false
+    },
+    {
+      "question_id": "q_334d39",
+      "epoch": -994,
+      "source": "ranking_v2",
+      "imported_from": "soa_v3",
+      "adagrad": {
+        "label": "A",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: silu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.SiLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(3, 192),\n            nn.SiLU(),\n            MLPBlock(width=192, use_layer_norm=False),\n            MLPBlock(width=192, use_layer_norm=True),\n            nn.Linear(192, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adagrad",
+        "lr": 3e-05,
+        "budget": [
+          256,
+          16,
+          4096
+        ]
+      },
+      "adam": {
+        "label": "D",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: silu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.SiLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(3, 192),\n            nn.SiLU(),\n            MLPBlock(width=192, use_layer_norm=False),\n            MLPBlock(width=192, use_layer_norm=True),\n            nn.Linear(192, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "AdamW",
+        "lr": 3e-05,
+        "budget": [
+          256,
+          16,
+          4096
+        ]
+      },
+      "adagrad_win": false
+    },
+    {
+      "question_id": "q_757421",
+      "epoch": -993,
+      "source": "ranking_v2",
+      "imported_from": "soa_v3",
+      "adagrad": {
+        "label": "C",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: relu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.ReLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(2, 64),\n            nn.ReLU(),\n            MLPBlock(width=64, use_layer_norm=True),\n            MLPBlock(width=64, use_layer_norm=False),\n            MLPBlock(width=64, use_layer_norm=True),\n            nn.Linear(64, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adagrad",
+        "lr": 0.0001,
+        "budget": [
+          256,
+          16,
+          4096
+        ]
+      },
+      "adam": {
+        "label": "D",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: relu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.ReLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(2, 64),\n            nn.ReLU(),\n            MLPBlock(width=64, use_layer_norm=True),\n            MLPBlock(width=64, use_layer_norm=False),\n            MLPBlock(width=64, use_layer_norm=True),\n            nn.Linear(64, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "AdamW",
+        "lr": 0.0003,
+        "budget": [
+          256,
+          16,
+          4096
+        ]
+      },
+      "adagrad_win": false
+    },
+    {
+      "question_id": "q_757421",
+      "epoch": -993,
+      "source": "ranking_v2",
+      "imported_from": "soa_v3",
+      "adagrad": {
+        "label": "A",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: relu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.ReLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(2, 64),\n            nn.ReLU(),\n            MLPBlock(width=64, use_layer_norm=True),\n            MLPBlock(width=64, use_layer_norm=False),\n            MLPBlock(width=64, use_layer_norm=True),\n            nn.Linear(64, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adagrad",
+        "lr": 0.003,
+        "budget": [
+          256,
+          16,
+          4096
+        ]
+      },
+      "adam": {
+        "label": "D",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: relu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.ReLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(2, 64),\n            nn.ReLU(),\n            MLPBlock(width=64, use_layer_norm=True),\n            MLPBlock(width=64, use_layer_norm=False),\n            MLPBlock(width=64, use_layer_norm=True),\n            nn.Linear(64, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "AdamW",
+        "lr": 0.0003,
+        "budget": [
+          256,
+          16,
+          4096
+        ]
+      },
+      "adagrad_win": true
+    },
+    {
+      "question_id": "q_757421",
+      "epoch": -993,
+      "source": "ranking_v2",
+      "imported_from": "soa_v3",
+      "adagrad": {
+        "label": "B",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: relu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.ReLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(2, 64),\n            nn.ReLU(),\n            MLPBlock(width=64, use_layer_norm=True),\n            MLPBlock(width=64, use_layer_norm=False),\n            MLPBlock(width=64, use_layer_norm=True),\n            nn.Linear(64, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adagrad",
+        "lr": 0.001,
+        "budget": [
+          256,
+          16,
+          4096
+        ]
+      },
+      "adam": {
+        "label": "D",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: relu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.ReLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(2, 64),\n            nn.ReLU(),\n            MLPBlock(width=64, use_layer_norm=True),\n            MLPBlock(width=64, use_layer_norm=False),\n            MLPBlock(width=64, use_layer_norm=True),\n            nn.Linear(64, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "AdamW",
+        "lr": 0.0003,
+        "budget": [
+          256,
+          16,
+          4096
+        ]
+      },
+      "adagrad_win": false
+    },
+    {
+      "question_id": "q_8e5d28",
+      "epoch": -992,
+      "source": "ranking_v2",
+      "imported_from": "soa_v3",
+      "adagrad": {
+        "label": "A",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: gelu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.GELU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(2, 24),\n            nn.GELU(),\n            MLPBlock(width=24, use_layer_norm=False),\n            nn.Linear(24, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adagrad",
+        "lr": 0.0001,
+        "budget": [
+          512,
+          32,
+          16384
+        ]
+      },
+      "adam": {
+        "label": "B",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: gelu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.GELU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(2, 24),\n            nn.GELU(),\n            MLPBlock(width=24, use_layer_norm=False),\n            nn.Linear(24, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adam",
+        "lr": 0.0001,
+        "budget": [
+          512,
+          32,
+          16384
+        ]
+      },
+      "adagrad_win": false
+    },
+    {
+      "question_id": "q_8e5d28",
+      "epoch": -992,
+      "source": "ranking_v2",
+      "imported_from": "soa_v3",
+      "adagrad": {
+        "label": "E",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: gelu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.GELU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(2, 24),\n            nn.GELU(),\n            MLPBlock(width=24, use_layer_norm=False),\n            nn.Linear(24, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adagrad",
+        "lr": 0.0001,
+        "budget": [
+          512,
+          32,
+          16384
+        ]
+      },
+      "adam": {
+        "label": "B",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: gelu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.GELU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(2, 24),\n            nn.GELU(),\n            MLPBlock(width=24, use_layer_norm=False),\n            nn.Linear(24, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adam",
+        "lr": 0.0001,
+        "budget": [
+          512,
+          32,
+          16384
+        ]
+      },
+      "adagrad_win": false
+    },
+    {
+      "question_id": "q_8e5d28",
+      "epoch": -992,
+      "source": "ranking_v2",
+      "imported_from": "soa_v3",
+      "adagrad": {
+        "label": "D",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: gelu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.GELU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(2, 24),\n            nn.GELU(),\n            MLPBlock(width=24, use_layer_norm=False),\n            nn.Linear(24, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adagrad",
+        "lr": 0.001,
+        "budget": [
+          512,
+          32,
+          16384
+        ]
+      },
+      "adam": {
+        "label": "B",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: gelu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.GELU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(2, 24),\n            nn.GELU(),\n            MLPBlock(width=24, use_layer_norm=False),\n            nn.Linear(24, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adam",
+        "lr": 0.0001,
+        "budget": [
+          512,
+          32,
+          16384
+        ]
+      },
+      "adagrad_win": false
+    },
+    {
+      "question_id": "q_913ef1",
+      "epoch": -991,
+      "source": "ranking_v2",
+      "imported_from": "soa_v3",
+      "adagrad": {
+        "label": "D",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: silu(x + Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.SiLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        h = h + x\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(8, 24),\n            nn.SiLU(),\n            MLPBlock(width=24, use_layer_norm=False),\n            MLPBlock(width=24, use_layer_norm=True),\n            nn.Linear(24, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adagrad",
+        "lr": 0.001,
+        "budget": [
+          1024,
+          16,
+          16384
+        ]
+      },
+      "adam": {
+        "label": "B",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: silu(x + Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.SiLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        h = h + x\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(8, 24),\n            nn.SiLU(),\n            MLPBlock(width=24, use_layer_norm=False),\n            MLPBlock(width=24, use_layer_norm=True),\n            nn.Linear(24, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "AdamW",
+        "lr": 0.0001,
+        "budget": [
+          1024,
+          16,
+          16384
+        ]
+      },
+      "adagrad_win": false
+    },
+    {
+      "question_id": "q_a23fc3",
+      "epoch": -990,
+      "source": "ranking_v2",
+      "imported_from": "soa_v3",
+      "adagrad": {
+        "label": "C",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: leaky_relu(x + Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.LeakyReLU(0.01)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        h = h + x\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(5, 32),\n            nn.LeakyReLU(0.01),\n            MLPBlock(width=32, use_layer_norm=False),\n            MLPBlock(width=32, use_layer_norm=False),\n            MLPBlock(width=32, use_layer_norm=True),\n            nn.Linear(32, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adagrad",
+        "lr": 0.001,
+        "budget": [
+          256,
+          16,
+          4096
+        ]
+      },
+      "adam": {
+        "label": "D",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: leaky_relu(x + Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.LeakyReLU(0.01)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        h = h + x\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(5, 32),\n            nn.LeakyReLU(0.01),\n            MLPBlock(width=32, use_layer_norm=False),\n            MLPBlock(width=32, use_layer_norm=False),\n            MLPBlock(width=32, use_layer_norm=True),\n            nn.Linear(32, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "AdamW",
+        "lr": 0.0001,
+        "budget": [
+          256,
+          16,
+          4096
+        ]
+      },
+      "adagrad_win": true
+    },
+    {
+      "question_id": "q_32b0df",
+      "epoch": -998,
+      "source": "ranking_v2",
+      "imported_from": "soa_v4",
+      "adagrad": {
+        "label": "C",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: leaky_relu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.LeakyReLU(0.01)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(5, 192),\n            nn.LeakyReLU(0.01),\n            MLPBlock(width=192, use_layer_norm=True),\n            nn.Linear(192, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adagrad",
+        "lr": 0.003,
+        "budget": [
+          256,
+          32,
+          8192
+        ]
+      },
+      "adam": {
+        "label": "B",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: leaky_relu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.LeakyReLU(0.01)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(5, 192),\n            nn.LeakyReLU(0.01),\n            MLPBlock(width=192, use_layer_norm=True),\n            nn.Linear(192, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "AdamW",
+        "lr": 0.0001,
+        "budget": [
+          256,
+          32,
+          8192
+        ]
+      },
+      "adagrad_win": true
+    },
+    {
+      "question_id": "q_f56028",
+      "epoch": -997,
+      "source": "ranking_v2",
+      "imported_from": "soa_v4",
+      "adagrad": {
+        "label": "C",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: relu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.ReLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(5, 96),\n            nn.ReLU(),\n            MLPBlock(width=96, use_layer_norm=True),\n            MLPBlock(width=96, use_layer_norm=False),\n            MLPBlock(width=96, use_layer_norm=True),\n            MLPBlock(width=96, use_layer_norm=True),\n            MLPBlock(width=96, use_layer_norm=True),\n            nn.Linear(96, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adagrad",
+        "lr": 0.0003,
+        "budget": [
+          256,
+          64,
+          16384
+        ]
+      },
+      "adam": {
+        "label": "D",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: relu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.ReLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(5, 96),\n            nn.ReLU(),\n            MLPBlock(width=96, use_layer_norm=True),\n            MLPBlock(width=96, use_layer_norm=False),\n            MLPBlock(width=96, use_layer_norm=True),\n            MLPBlock(width=96, use_layer_norm=True),\n            MLPBlock(width=96, use_layer_norm=True),\n            nn.Linear(96, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adam",
+        "lr": 0.0003,
+        "budget": [
+          256,
+          64,
+          16384
+        ]
+      },
+      "adagrad_win": false
+    },
+    {
+      "question_id": "q_f56028",
+      "epoch": -997,
+      "source": "ranking_v2",
+      "imported_from": "soa_v4",
+      "adagrad": {
+        "label": "C",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: relu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.ReLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(5, 96),\n            nn.ReLU(),\n            MLPBlock(width=96, use_layer_norm=True),\n            MLPBlock(width=96, use_layer_norm=False),\n            MLPBlock(width=96, use_layer_norm=True),\n            MLPBlock(width=96, use_layer_norm=True),\n            MLPBlock(width=96, use_layer_norm=True),\n            nn.Linear(96, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adagrad",
+        "lr": 0.0003,
+        "budget": [
+          256,
+          64,
+          16384
+        ]
+      },
+      "adam": {
+        "label": "B",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: relu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.ReLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(5, 96),\n            nn.ReLU(),\n            MLPBlock(width=96, use_layer_norm=True),\n            MLPBlock(width=96, use_layer_norm=False),\n            MLPBlock(width=96, use_layer_norm=True),\n            MLPBlock(width=96, use_layer_norm=True),\n            MLPBlock(width=96, use_layer_norm=True),\n            nn.Linear(96, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adam",
+        "lr": 3e-05,
+        "budget": [
+          256,
+          64,
+          16384
+        ]
+      },
+      "adagrad_win": true
+    },
+    {
+      "question_id": "q_f56028",
+      "epoch": -997,
+      "source": "ranking_v2",
+      "imported_from": "soa_v4",
+      "adagrad": {
+        "label": "C",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: relu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.ReLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(5, 96),\n            nn.ReLU(),\n            MLPBlock(width=96, use_layer_norm=True),\n            MLPBlock(width=96, use_layer_norm=False),\n            MLPBlock(width=96, use_layer_norm=True),\n            MLPBlock(width=96, use_layer_norm=True),\n            MLPBlock(width=96, use_layer_norm=True),\n            nn.Linear(96, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adagrad",
+        "lr": 0.0003,
+        "budget": [
+          256,
+          64,
+          16384
+        ]
+      },
+      "adam": {
+        "label": "E",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: relu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.ReLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(5, 96),\n            nn.ReLU(),\n            MLPBlock(width=96, use_layer_norm=True),\n            MLPBlock(width=96, use_layer_norm=False),\n            MLPBlock(width=96, use_layer_norm=True),\n            MLPBlock(width=96, use_layer_norm=True),\n            MLPBlock(width=96, use_layer_norm=True),\n            nn.Linear(96, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adam",
+        "lr": 0.0003,
+        "budget": [
+          256,
+          64,
+          16384
+        ]
+      },
+      "adagrad_win": false
+    },
+    {
+      "question_id": "q_57f7d2",
+      "epoch": -996,
+      "source": "ranking_v2",
+      "imported_from": "soa_v4",
+      "adagrad": {
+        "label": "A",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: leaky_relu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.LeakyReLU(0.01)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(3, 96),\n            nn.LeakyReLU(0.01),\n            MLPBlock(width=96, use_layer_norm=False),\n            nn.Linear(96, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adagrad",
+        "lr": 0.0003,
+        "budget": [
+          2048,
+          16,
+          32768
+        ]
+      },
+      "adam": {
+        "label": "D",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: leaky_relu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.LeakyReLU(0.01)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(3, 96),\n            nn.LeakyReLU(0.01),\n            MLPBlock(width=96, use_layer_norm=False),\n            nn.Linear(96, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "AdamW",
+        "lr": 0.001,
+        "budget": [
+          2048,
+          16,
+          32768
+        ]
+      },
+      "adagrad_win": false
+    },
+    {
+      "question_id": "q_aa3b02",
+      "epoch": -995,
+      "source": "ranking_v2",
+      "imported_from": "soa_v4",
+      "adagrad": {
+        "label": "D",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: silu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.SiLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(3, 96),\n            nn.SiLU(),\n            MLPBlock(width=96, use_layer_norm=False),\n            MLPBlock(width=96, use_layer_norm=False),\n            MLPBlock(width=96, use_layer_norm=False),\n            MLPBlock(width=96, use_layer_norm=True),\n            MLPBlock(width=96, use_layer_norm=False),\n            nn.Linear(96, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adagrad",
+        "lr": 0.0001,
+        "budget": [
+          512,
+          64,
+          32768
+        ]
+      },
+      "adam": {
+        "label": "E",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: silu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.SiLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(3, 96),\n            nn.SiLU(),\n            MLPBlock(width=96, use_layer_norm=False),\n            MLPBlock(width=96, use_layer_norm=False),\n            MLPBlock(width=96, use_layer_norm=False),\n            MLPBlock(width=96, use_layer_norm=True),\n            MLPBlock(width=96, use_layer_norm=False),\n            nn.Linear(96, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adam",
+        "lr": 0.001,
+        "budget": [
+          512,
+          64,
+          32768
+        ]
+      },
+      "adagrad_win": false
+    },
+    {
+      "question_id": "q_aa3b02",
+      "epoch": -995,
+      "source": "ranking_v2",
+      "imported_from": "soa_v4",
+      "adagrad": {
+        "label": "D",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: silu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.SiLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(3, 96),\n            nn.SiLU(),\n            MLPBlock(width=96, use_layer_norm=False),\n            MLPBlock(width=96, use_layer_norm=False),\n            MLPBlock(width=96, use_layer_norm=False),\n            MLPBlock(width=96, use_layer_norm=True),\n            MLPBlock(width=96, use_layer_norm=False),\n            nn.Linear(96, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adagrad",
+        "lr": 0.0001,
+        "budget": [
+          512,
+          64,
+          32768
+        ]
+      },
+      "adam": {
+        "label": "C",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: silu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.SiLU()\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(3, 96),\n            nn.SiLU(),\n            MLPBlock(width=96, use_layer_norm=False),\n            MLPBlock(width=96, use_layer_norm=False),\n            MLPBlock(width=96, use_layer_norm=False),\n            MLPBlock(width=96, use_layer_norm=True),\n            MLPBlock(width=96, use_layer_norm=False),\n            nn.Linear(96, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adam",
+        "lr": 0.003,
+        "budget": [
+          512,
+          64,
+          32768
+        ]
+      },
+      "adagrad_win": false
+    },
+    {
+      "question_id": "q_38909f",
+      "epoch": 2,
+      "source": "dataflip500",
+      "imported_from": null,
+      "adagrad": {
+        "label": "A",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: leaky_relu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.LeakyReLU(0.01)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(2, 256),\n            nn.LeakyReLU(0.01),\n            MLPBlock(width=256, use_layer_norm=True),\n            MLPBlock(width=256, use_layer_norm=False),\n            MLPBlock(width=256, use_layer_norm=True),\n            nn.Linear(256, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adagrad",
+        "lr": 0.003,
+        "budget": [
+          2048,
+          16,
+          32768
+        ]
+      },
+      "adam": {
+        "label": "B",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: leaky_relu(Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.LeakyReLU(0.01)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(2, 256),\n            nn.LeakyReLU(0.01),\n            MLPBlock(width=256, use_layer_norm=True),\n            MLPBlock(width=256, use_layer_norm=False),\n            MLPBlock(width=256, use_layer_norm=True),\n            nn.Linear(256, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "AdamW",
+        "lr": 3e-05,
+        "budget": [
+          2048,
+          16,
+          32768
+        ]
+      },
+      "adagrad_win": false
+    },
+    {
+      "question_id": "q_74d185",
+      "epoch": 3,
+      "source": "dataflip500",
+      "imported_from": null,
+      "adagrad": {
+        "label": "C",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: leaky_relu(x + Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.LeakyReLU(0.01)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        h = h + x\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(5, 256),\n            nn.LeakyReLU(0.01),\n            MLPBlock(width=256, use_layer_norm=True),\n            MLPBlock(width=256, use_layer_norm=True),\n            MLPBlock(width=256, use_layer_norm=False),\n            MLPBlock(width=256, use_layer_norm=True),\n            MLPBlock(width=256, use_layer_norm=False),\n            nn.Linear(256, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "Adagrad",
+        "lr": 0.0001,
+        "budget": [
+          1024,
+          32,
+          32768
+        ]
+      },
+      "adam": {
+        "label": "B",
+        "model": "class MLPBlock(nn.Module):\n    \"\"\"One hidden layer: leaky_relu(x + Linear(norm(x))).\"\"\"\n\n    def __init__(self, width: int, use_layer_norm: bool) -> None:\n        super().__init__()\n        self.norm = nn.LayerNorm(width) if use_layer_norm else nn.Identity()\n        self.linear = nn.Linear(width, width)\n        self.act = nn.LeakyReLU(0.01)\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        h = self.linear(self.norm(x))\n        h = h + x\n        return self.act(h)\n\n\nclass Model(nn.Module):\n    def __init__(self) -> None:\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(5, 256),\n            nn.LeakyReLU(0.01),\n            MLPBlock(width=256, use_layer_norm=True),\n            MLPBlock(width=256, use_layer_norm=True),\n            MLPBlock(width=256, use_layer_norm=False),\n            MLPBlock(width=256, use_layer_norm=True),\n            MLPBlock(width=256, use_layer_norm=False),\n            nn.Linear(256, 1),\n        )\n\n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        return self.net(x)",
+        "init": "PyTorch Linear defaults",
+        "loss": "return torch.mean((pred - target) ** 2)",
+        "optimizer": "AdamW",
+        "lr": 0.001,
+        "budget": [
+          1024,
+          32,
+          32768
+        ]
+      },
+      "adagrad_win": true
+    }
+  ],
+  "history_before_q_epoch": {
+    "pairs": 51,
+    "sets": 21,
+    "adagrad_wins": 13
+  },
+  "lab": {
+    "all/all": {
+      "pairs": 604,
+      "sets": 99,
+      "adagrad_wins": 119,
+      "same_model": {
+        "pairs": 4,
+        "sets": 4,
+        "adagrad_wins": 0
+      },
+      "budgets": [
+        [
+          256,
+          16,
+          4096
+        ],
+        [
+          256,
+          32,
+          8192
+        ],
+        [
+          512,
+          16,
+          8192
+        ]
+      ]
+    },
+    "all/finite": {
+      "pairs": 380,
+      "sets": 72,
+      "adagrad_wins": 92,
+      "same_model": {
+        "pairs": 4,
+        "sets": 4,
+        "adagrad_wins": 0
+      },
+      "budgets": [
+        [
+          256,
+          16,
+          4096
+        ],
+        [
+          256,
+          32,
+          8192
+        ],
+        [
+          512,
+          16,
+          8192
+        ]
+      ]
+    },
+    "all/not_excluded": {
+      "pairs": 336,
+      "sets": 70,
+      "adagrad_wins": 91,
+      "same_model": {
+        "pairs": 3,
+        "sets": 3,
+        "adagrad_wins": 0
+      },
+      "budgets": [
+        [
+          256,
+          16,
+          4096
+        ],
+        [
+          256,
+          32,
+          8192
+        ],
+        [
+          512,
+          16,
+          8192
+        ]
+      ]
+    },
+    "conservative_vs_fast/all": {
+      "pairs": 120,
+      "sets": 50,
+      "adagrad_wins": 1,
+      "same_model": {
+        "pairs": 2,
+        "sets": 2,
+        "adagrad_wins": 0
+      },
+      "budgets": [
+        [
+          256,
+          16,
+          4096
+        ],
+        [
+          256,
+          32,
+          8192
+        ],
+        [
+          512,
+          16,
+          8192
+        ]
+      ]
+    },
+    "conservative_vs_fast/finite": {
+      "pairs": 61,
+      "sets": 25,
+      "adagrad_wins": 1,
+      "same_model": {
+        "pairs": 2,
+        "sets": 2,
+        "adagrad_wins": 0
+      },
+      "budgets": [
+        [
+          256,
+          16,
+          4096
+        ],
+        [
+          256,
+          32,
+          8192
+        ],
+        [
+          512,
+          16,
+          8192
+        ]
+      ]
+    },
+    "conservative_vs_fast/not_excluded": {
+      "pairs": 48,
+      "sets": 23,
+      "adagrad_wins": 1,
+      "same_model": {
+        "pairs": 1,
+        "sets": 1,
+        "adagrad_wins": 0
+      },
+      "budgets": [
+        [
+          256,
+          16,
+          4096
+        ],
+        [
+          256,
+          32,
+          8192
+        ]
+      ]
+    }
+  },
+  "rate_ratio_le3_pre_epoch3": {
+    "pairs": 29,
+    "sets": 15,
+    "adagrad_wins": 0
+  },
+  "conservative_fast_history": {
+    "pairs": 5,
+    "sets": 4,
+    "adagrad_wins": 1
+  },
+  "restricted_prediction_bias": {
+    "counts": {
+      "correct": 46,
+      "high_delta_error": 2,
+      "low_delta_error": 3,
+      "unidentifiable_prediction": 1
+    },
+    "errors": [
+      [
+        "q_13d23d",
+        "high_delta_error"
+      ],
+      [
+        "q_757421",
+        "low_delta_error"
+      ],
+      [
+        "q_a23fc3",
+        "low_delta_error"
+      ],
+      [
+        "q_f56028",
+        "low_delta_error"
+      ],
+      [
+        "q_74d185",
+        "high_delta_error"
+      ]
+    ]
+  }
+}

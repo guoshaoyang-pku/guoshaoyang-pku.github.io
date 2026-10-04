@@ -1,0 +1,498 @@
+{
+  "origin_epoch": 1,
+  "job_id": "Jcb3d325f47f6",
+  "why": "K1038 exact same-model optimizer controls on d3 w256 plain SiLU zero-LN default-init regression; retain wd1e-5 T256 bs16. Pre-registration: raising SGD lr improves endpoint MSE; residual/LN may help, no freezing inference from endpoints.",
+  "input": {
+    "dataset": "multivariate_regression/mvar_0bcc16",
+    "candidates": [
+      {
+        "model": {
+          "type": "mlp",
+          "depth": 3,
+          "width": 256,
+          "residual": false,
+          "activation": "silu",
+          "layer_norm": [
+            false,
+            false,
+            false
+          ],
+          "input_dim": 8,
+          "output_dim": 1
+        },
+        "optimizer": {
+          "type": "SGD",
+          "lr": 0.003,
+          "weight_decay": 1e-05,
+          "momentum": 0.9
+        },
+        "loss": {
+          "loss_id": "mse"
+        },
+        "budget": {
+          "training_steps": 256,
+          "batch_size": 16
+        }
+      },
+      {
+        "model": {
+          "type": "mlp",
+          "depth": 3,
+          "width": 256,
+          "residual": false,
+          "activation": "silu",
+          "layer_norm": [
+            false,
+            false,
+            false
+          ],
+          "input_dim": 8,
+          "output_dim": 1
+        },
+        "optimizer": {
+          "type": "SGD",
+          "lr": 0.03,
+          "weight_decay": 1e-05,
+          "momentum": 0.9
+        },
+        "loss": {
+          "loss_id": "mse"
+        },
+        "budget": {
+          "training_steps": 256,
+          "batch_size": 16
+        }
+      },
+      {
+        "model": {
+          "type": "mlp",
+          "depth": 3,
+          "width": 256,
+          "residual": false,
+          "activation": "silu",
+          "layer_norm": [
+            false,
+            false,
+            false
+          ],
+          "input_dim": 8,
+          "output_dim": 1
+        },
+        "optimizer": {
+          "type": "SGD",
+          "lr": 0.003,
+          "weight_decay": 1e-05,
+          "momentum": 0
+        },
+        "loss": {
+          "loss_id": "mse"
+        },
+        "budget": {
+          "training_steps": 256,
+          "batch_size": 16
+        }
+      },
+      {
+        "model": {
+          "type": "mlp",
+          "depth": 3,
+          "width": 256,
+          "residual": false,
+          "activation": "silu",
+          "layer_norm": [
+            false,
+            false,
+            false
+          ],
+          "input_dim": 8,
+          "output_dim": 1
+        },
+        "optimizer": {
+          "type": "SGD",
+          "lr": 0.03,
+          "weight_decay": 1e-05,
+          "momentum": 0
+        },
+        "loss": {
+          "loss_id": "mse"
+        },
+        "budget": {
+          "training_steps": 256,
+          "batch_size": 16
+        }
+      },
+      {
+        "model": {
+          "type": "mlp",
+          "depth": 3,
+          "width": 256,
+          "residual": false,
+          "activation": "silu",
+          "layer_norm": [
+            false,
+            false,
+            false
+          ],
+          "input_dim": 8,
+          "output_dim": 1
+        },
+        "optimizer": {
+          "type": "Adam",
+          "lr": 0.0001,
+          "weight_decay": 1e-05,
+          "momentum": 0.9,
+          "betas": [
+            0.9,
+            0.999
+          ]
+        },
+        "loss": {
+          "loss_id": "mse"
+        },
+        "budget": {
+          "training_steps": 256,
+          "batch_size": 16
+        }
+      },
+      {
+        "model": {
+          "type": "mlp",
+          "depth": 3,
+          "width": 256,
+          "residual": true,
+          "activation": "silu",
+          "layer_norm": [
+            false,
+            false,
+            false
+          ],
+          "input_dim": 8,
+          "output_dim": 1
+        },
+        "optimizer": {
+          "type": "SGD",
+          "lr": 0.003,
+          "weight_decay": 1e-05,
+          "momentum": 0.9
+        },
+        "loss": {
+          "loss_id": "mse"
+        },
+        "budget": {
+          "training_steps": 256,
+          "batch_size": 16
+        }
+      },
+      {
+        "model": {
+          "type": "mlp",
+          "depth": 3,
+          "width": 256,
+          "residual": false,
+          "activation": "silu",
+          "layer_norm": [
+            true,
+            true,
+            true
+          ],
+          "input_dim": 8,
+          "output_dim": 1
+        },
+        "optimizer": {
+          "type": "SGD",
+          "lr": 0.003,
+          "weight_decay": 1e-05,
+          "momentum": 0.9
+        },
+        "loss": {
+          "loss_id": "mse"
+        },
+        "budget": {
+          "training_steps": 256,
+          "batch_size": 16
+        }
+      }
+    ]
+  },
+  "dataset_params": {
+    "instance_seed": 72196772,
+    "input_dim": 8,
+    "sampler": {
+      "id": "symbolic_expr_mv",
+      "seed": 72196772,
+      "max_depth": 3,
+      "retry": 57
+    },
+    "expression": "sin(2*pi*x0**3)**3 + x3*x6 + 2*x4**2 + x7**2 + sin(2*pi*x2) + tanh(2*x1) + x3 + x5 + x6 - 11.5",
+    "domain": [
+      0.0,
+      1.0
+    ],
+    "train_size": 256,
+    "test_size": 256
+  },
+  "profile": "v1.5",
+  "seeds": 10,
+  "result": {
+    "dataset": "multivariate_regression/mvar_0bcc16",
+    "family": "multivariate_regression",
+    "results": [
+      {
+        "mean": 0.41914371848106385,
+        "std": 0.0195708098838767,
+        "failed_seeds": 0,
+        "metric": "test_mse",
+        "secs": 2.9,
+        "candidate": {
+          "model": {
+            "type": "mlp",
+            "depth": 3,
+            "width": 256,
+            "residual": false,
+            "activation": "silu",
+            "layer_norm": [
+              false,
+              false,
+              false
+            ],
+            "input_dim": 8,
+            "output_dim": 1
+          },
+          "optimizer": {
+            "type": "SGD",
+            "lr": 0.003,
+            "weight_decay": 1e-05,
+            "momentum": 0.9
+          },
+          "loss": {
+            "loss_id": "mse"
+          },
+          "budget": {
+            "training_steps": 256,
+            "batch_size": 16
+          }
+        }
+      },
+      {
+        "mean": 0.46351419389247894,
+        "std": 0.04298008091357142,
+        "failed_seeds": 0,
+        "metric": "test_mse",
+        "secs": 2.9,
+        "candidate": {
+          "model": {
+            "type": "mlp",
+            "depth": 3,
+            "width": 256,
+            "residual": false,
+            "activation": "silu",
+            "layer_norm": [
+              false,
+              false,
+              false
+            ],
+            "input_dim": 8,
+            "output_dim": 1
+          },
+          "optimizer": {
+            "type": "SGD",
+            "lr": 0.03,
+            "weight_decay": 1e-05,
+            "momentum": 0.9
+          },
+          "loss": {
+            "loss_id": "mse"
+          },
+          "budget": {
+            "training_steps": 256,
+            "batch_size": 16
+          }
+        }
+      },
+      {
+        "mean": 1.5236528873443604,
+        "std": 0.08604109880388794,
+        "failed_seeds": 0,
+        "metric": "test_mse",
+        "secs": 2.8,
+        "candidate": {
+          "model": {
+            "type": "mlp",
+            "depth": 3,
+            "width": 256,
+            "residual": false,
+            "activation": "silu",
+            "layer_norm": [
+              false,
+              false,
+              false
+            ],
+            "input_dim": 8,
+            "output_dim": 1
+          },
+          "optimizer": {
+            "type": "SGD",
+            "lr": 0.003,
+            "weight_decay": 1e-05,
+            "momentum": 0
+          },
+          "loss": {
+            "loss_id": "mse"
+          },
+          "budget": {
+            "training_steps": 256,
+            "batch_size": 16
+          }
+        }
+      },
+      {
+        "mean": 0.4863494783639908,
+        "std": 0.0818985840839805,
+        "failed_seeds": 0,
+        "metric": "test_mse",
+        "secs": 2.8,
+        "candidate": {
+          "model": {
+            "type": "mlp",
+            "depth": 3,
+            "width": 256,
+            "residual": false,
+            "activation": "silu",
+            "layer_norm": [
+              false,
+              false,
+              false
+            ],
+            "input_dim": 8,
+            "output_dim": 1
+          },
+          "optimizer": {
+            "type": "SGD",
+            "lr": 0.03,
+            "weight_decay": 1e-05,
+            "momentum": 0
+          },
+          "loss": {
+            "loss_id": "mse"
+          },
+          "budget": {
+            "training_steps": 256,
+            "batch_size": 16
+          }
+        }
+      },
+      {
+        "mean": Infinity,
+        "std": Infinity,
+        "failed_seeds": 10,
+        "metric": "test_mse",
+        "secs": 3.3,
+        "candidate": {
+          "model": {
+            "type": "mlp",
+            "depth": 3,
+            "width": 256,
+            "residual": false,
+            "activation": "silu",
+            "layer_norm": [
+              false,
+              false,
+              false
+            ],
+            "input_dim": 8,
+            "output_dim": 1
+          },
+          "optimizer": {
+            "type": "Adam",
+            "lr": 0.0001,
+            "weight_decay": 1e-05,
+            "momentum": 0.9,
+            "betas": [
+              0.9,
+              0.999
+            ]
+          },
+          "loss": {
+            "loss_id": "mse"
+          },
+          "budget": {
+            "training_steps": 256,
+            "batch_size": 16
+          }
+        }
+      },
+      {
+        "mean": 0.42621617019176483,
+        "std": 0.012773565390073032,
+        "failed_seeds": 0,
+        "metric": "test_mse",
+        "secs": 3.1,
+        "candidate": {
+          "model": {
+            "type": "mlp",
+            "depth": 3,
+            "width": 256,
+            "residual": true,
+            "activation": "silu",
+            "layer_norm": [
+              false,
+              false,
+              false
+            ],
+            "input_dim": 8,
+            "output_dim": 1
+          },
+          "optimizer": {
+            "type": "SGD",
+            "lr": 0.003,
+            "weight_decay": 1e-05,
+            "momentum": 0.9
+          },
+          "loss": {
+            "loss_id": "mse"
+          },
+          "budget": {
+            "training_steps": 256,
+            "batch_size": 16
+          }
+        }
+      },
+      {
+        "mean": 1.339885026216507,
+        "std": 0.5609590191367849,
+        "failed_seeds": 0,
+        "metric": "test_mse",
+        "secs": 3.3,
+        "candidate": {
+          "model": {
+            "type": "mlp",
+            "depth": 3,
+            "width": 256,
+            "residual": false,
+            "activation": "silu",
+            "layer_norm": [
+              true,
+              true,
+              true
+            ],
+            "input_dim": 8,
+            "output_dim": 1
+          },
+          "optimizer": {
+            "type": "SGD",
+            "lr": 0.003,
+            "weight_decay": 1e-05,
+            "momentum": 0.9
+          },
+          "loss": {
+            "loss_id": "mse"
+          },
+          "budget": {
+            "training_steps": 256,
+            "batch_size": 16
+          }
+        }
+      }
+    ]
+  }
+}
