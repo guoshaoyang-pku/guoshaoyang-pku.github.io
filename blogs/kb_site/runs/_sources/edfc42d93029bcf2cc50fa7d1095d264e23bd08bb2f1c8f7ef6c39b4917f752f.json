@@ -1,0 +1,689 @@
+{
+  "origin_epoch": 8,
+  "job_id": "Jee0190181d22",
+  "why": "Post-direct, source-authenticated, preregistered local components at T512/b32: S rate .0003; S depth5 LN[1,0,0,0,0]; D rate .001; D depth2 LN[1,1].",
+  "input": {
+    "dataset": "spiral_classification/spiralcls_9d5dde",
+    "candidates": [
+      {
+        "model": {
+          "type": "mlp",
+          "depth": 2,
+          "width": 192,
+          "residual": true,
+          "activation": "relu",
+          "layer_norm": [
+            true,
+            false
+          ],
+          "input_dim": 2,
+          "output_dim": 2,
+          "init": "default"
+        },
+        "optimizer": {
+          "type": "RMSprop",
+          "lr": 0.0003,
+          "weight_decay": 1e-05,
+          "betas": [
+            0.9,
+            0.999
+          ]
+        },
+        "loss": {
+          "loss_id": "cross_entropy"
+        },
+        "budget": {
+          "training_steps": 512,
+          "batch_size": 32,
+          "total_samples_seen": 16384
+        }
+      },
+      {
+        "model": {
+          "type": "mlp",
+          "depth": 5,
+          "width": 192,
+          "residual": true,
+          "activation": "relu",
+          "layer_norm": [
+            true,
+            false,
+            false,
+            false,
+            false
+          ],
+          "input_dim": 2,
+          "output_dim": 2,
+          "init": "default"
+        },
+        "optimizer": {
+          "type": "RMSprop",
+          "lr": 0.001,
+          "weight_decay": 1e-05,
+          "betas": [
+            0.9,
+            0.999
+          ]
+        },
+        "loss": {
+          "loss_id": "cross_entropy"
+        },
+        "budget": {
+          "training_steps": 512,
+          "batch_size": 32,
+          "total_samples_seen": 16384
+        }
+      },
+      {
+        "model": {
+          "type": "mlp",
+          "depth": 5,
+          "width": 128,
+          "residual": false,
+          "activation": "leaky_relu",
+          "layer_norm": [
+            true,
+            true,
+            true,
+            true,
+            true
+          ],
+          "input_dim": 2,
+          "output_dim": 2,
+          "leaky_relu_slope": 0.01,
+          "init": "default"
+        },
+        "optimizer": {
+          "type": "AdamW",
+          "lr": 0.001,
+          "weight_decay": 0,
+          "betas": [
+            0.9,
+            0.95
+          ]
+        },
+        "loss": {
+          "loss_id": "cross_entropy"
+        },
+        "budget": {
+          "training_steps": 512,
+          "batch_size": 32,
+          "total_samples_seen": 16384
+        }
+      },
+      {
+        "model": {
+          "type": "mlp",
+          "depth": 2,
+          "width": 128,
+          "residual": false,
+          "activation": "leaky_relu",
+          "layer_norm": [
+            true,
+            true
+          ],
+          "input_dim": 2,
+          "output_dim": 2,
+          "leaky_relu_slope": 0.01,
+          "init": "default"
+        },
+        "optimizer": {
+          "type": "AdamW",
+          "lr": 0.0003,
+          "weight_decay": 0,
+          "betas": [
+            0.9,
+            0.95
+          ]
+        },
+        "loss": {
+          "loss_id": "cross_entropy"
+        },
+        "budget": {
+          "training_steps": 512,
+          "batch_size": 32,
+          "total_samples_seen": 16384
+        }
+      }
+    ]
+  },
+  "dataset_params": {
+    "instance_seed": 4231,
+    "input_dim": 2,
+    "num_classes": 2,
+    "rule_family": "spiral",
+    "active_features": [
+      0,
+      1
+    ],
+    "interaction_order": 2,
+    "interaction_pairs": [],
+    "rule_weights": [
+      1.0
+    ],
+    "piecewise_breakpoint": 0.0,
+    "spiral_turns": 2.5,
+    "decision_threshold": 0.0,
+    "train_size": 1024,
+    "test_size": 2048
+  },
+  "profile": "v1.5",
+  "result": {
+    "dataset": "spiral_classification/spiralcls_9d5dde",
+    "family": "spiral_classification",
+    "results": [
+      {
+        "mean": 0.5101763039827347,
+        "std": 0.02696419774761552,
+        "metric": "test_ce",
+        "cached": false,
+        "failed_seeds": 0,
+        "excluded": false,
+        "n_seeds": 10,
+        "base_seed": 0,
+        "seed_results": [
+          {
+            "seed": 0,
+            "failed": false,
+            "final_test_ce": 0.49102675914764404,
+            "final_test_accuracy": 0.69189453125
+          },
+          {
+            "seed": 1,
+            "failed": false,
+            "final_test_ce": 0.4947699308395386,
+            "final_test_accuracy": 0.6982421875
+          },
+          {
+            "seed": 2,
+            "failed": false,
+            "final_test_ce": 0.5463207364082336,
+            "final_test_accuracy": 0.681640625
+          },
+          {
+            "seed": 3,
+            "failed": false,
+            "final_test_ce": 0.48368871212005615,
+            "final_test_accuracy": 0.71533203125
+          },
+          {
+            "seed": 4,
+            "failed": false,
+            "final_test_ce": 0.5138441324234009,
+            "final_test_accuracy": 0.73779296875
+          },
+          {
+            "seed": 5,
+            "failed": false,
+            "final_test_ce": 0.5078657269477844,
+            "final_test_accuracy": 0.71728515625
+          },
+          {
+            "seed": 6,
+            "failed": false,
+            "final_test_ce": 0.515544593334198,
+            "final_test_accuracy": 0.71435546875
+          },
+          {
+            "seed": 7,
+            "failed": false,
+            "final_test_ce": 0.5708766579627991,
+            "final_test_accuracy": 0.7099609375
+          },
+          {
+            "seed": 8,
+            "failed": false,
+            "final_test_ce": 0.4855814278125763,
+            "final_test_accuracy": 0.70458984375
+          },
+          {
+            "seed": 9,
+            "failed": false,
+            "final_test_ce": 0.4922443628311157,
+            "final_test_accuracy": 0.71435546875
+          }
+        ],
+        "measurement_files": {
+          "candidate_spec.json": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/spiral_classification/spiralcls_9d5dde/x_70c29116bb/candidate_spec.json",
+            "sha256": "d431a6b7f63867d5ab90dcd2ad3618eb9dac8ca9e670e244a3f10271046dc014",
+            "bytes": 838,
+            "repo_path": "measurements/d431a6b7f63867d5ab90dcd2ad3618eb9dac8ca9e670e244a3f10271046dc014.json"
+          },
+          "results/summary.json": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/spiral_classification/spiralcls_9d5dde/x_70c29116bb/results/summary.json",
+            "sha256": "d6a6303193566460029e450101a95dfb7196eef40c36d22b19acb35540f84092",
+            "bytes": 2239,
+            "repo_path": "measurements/d6a6303193566460029e450101a95dfb7196eef40c36d22b19acb35540f84092.json"
+          },
+          "results/curves.npz": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/spiral_classification/spiralcls_9d5dde/x_70c29116bb/results/curves.npz",
+            "sha256": "619e393177fd9c9e4c5a6fe1b120240588967835efc1799d43c5aec022b10464",
+            "bytes": 45828,
+            "repo_path": "measurements/619e393177fd9c9e4c5a6fe1b120240588967835efc1799d43c5aec022b10464.npz"
+          }
+        },
+        "secs": 9.8,
+        "candidate": {
+          "model": {
+            "type": "mlp",
+            "depth": 2,
+            "width": 192,
+            "residual": true,
+            "activation": "relu",
+            "layer_norm": [
+              true,
+              false
+            ],
+            "input_dim": 2,
+            "output_dim": 2,
+            "init": "default"
+          },
+          "optimizer": {
+            "type": "RMSprop",
+            "lr": 0.0003,
+            "weight_decay": 1e-05,
+            "betas": [
+              0.9,
+              0.999
+            ]
+          },
+          "loss": {
+            "loss_id": "cross_entropy"
+          },
+          "budget": {
+            "training_steps": 512,
+            "batch_size": 32,
+            "total_samples_seen": 16384
+          }
+        }
+      },
+      {
+        "mean": 0.06935425321571528,
+        "std": 0.09086693800342532,
+        "metric": "test_ce",
+        "cached": false,
+        "failed_seeds": 0,
+        "excluded": false,
+        "n_seeds": 10,
+        "base_seed": 0,
+        "seed_results": [
+          {
+            "seed": 0,
+            "failed": false,
+            "final_test_ce": 0.012584356591105461,
+            "final_test_accuracy": 0.99951171875
+          },
+          {
+            "seed": 1,
+            "failed": false,
+            "final_test_ce": 0.020623426884412766,
+            "final_test_accuracy": 0.99951171875
+          },
+          {
+            "seed": 2,
+            "failed": false,
+            "final_test_ce": 0.014741715043783188,
+            "final_test_accuracy": 0.9990234375
+          },
+          {
+            "seed": 3,
+            "failed": false,
+            "final_test_ce": 0.11822373420000076,
+            "final_test_accuracy": 0.9609375
+          },
+          {
+            "seed": 4,
+            "failed": false,
+            "final_test_ce": 0.31422489881515503,
+            "final_test_accuracy": 0.8779296875
+          },
+          {
+            "seed": 5,
+            "failed": false,
+            "final_test_ce": 0.11705332249403,
+            "final_test_accuracy": 0.96044921875
+          },
+          {
+            "seed": 6,
+            "failed": false,
+            "final_test_ce": 0.038200777024030685,
+            "final_test_accuracy": 0.99755859375
+          },
+          {
+            "seed": 7,
+            "failed": false,
+            "final_test_ce": 0.0010715187527239323,
+            "final_test_accuracy": 1.0
+          },
+          {
+            "seed": 8,
+            "failed": false,
+            "final_test_ce": 0.01468231063336134,
+            "final_test_accuracy": 0.99951171875
+          },
+          {
+            "seed": 9,
+            "failed": false,
+            "final_test_ce": 0.04213647171854973,
+            "final_test_accuracy": 0.99462890625
+          }
+        ],
+        "measurement_files": {
+          "candidate_spec.json": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/spiral_classification/spiralcls_9d5dde/x_090b9b278e/candidate_spec.json",
+            "sha256": "e49e4361f96aa28dc60fbb58380173f1e4c0ce1b2b5095fe629d429b74f4c222",
+            "bytes": 876,
+            "repo_path": "measurements/e49e4361f96aa28dc60fbb58380173f1e4c0ce1b2b5095fe629d429b74f4c222.json"
+          },
+          "results/summary.json": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/spiral_classification/spiralcls_9d5dde/x_090b9b278e/results/summary.json",
+            "sha256": "ae652937cc3c964035ff3e8ec323baddc28e07ea5e4f8f149e5bd3bbbee851bb",
+            "bytes": 2235,
+            "repo_path": "measurements/ae652937cc3c964035ff3e8ec323baddc28e07ea5e4f8f149e5bd3bbbee851bb.json"
+          },
+          "results/curves.npz": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/spiral_classification/spiralcls_9d5dde/x_090b9b278e/results/curves.npz",
+            "sha256": "dd05f18bae54ccce6c6dd6b5b8070adba38482e20e5927226ffa400e2200080b",
+            "bytes": 45828,
+            "repo_path": "measurements/dd05f18bae54ccce6c6dd6b5b8070adba38482e20e5927226ffa400e2200080b.npz"
+          }
+        },
+        "secs": 14.3,
+        "candidate": {
+          "model": {
+            "type": "mlp",
+            "depth": 5,
+            "width": 192,
+            "residual": true,
+            "activation": "relu",
+            "layer_norm": [
+              true,
+              false,
+              false,
+              false,
+              false
+            ],
+            "input_dim": 2,
+            "output_dim": 2,
+            "init": "default"
+          },
+          "optimizer": {
+            "type": "RMSprop",
+            "lr": 0.001,
+            "weight_decay": 1e-05,
+            "betas": [
+              0.9,
+              0.999
+            ]
+          },
+          "loss": {
+            "loss_id": "cross_entropy"
+          },
+          "budget": {
+            "training_steps": 512,
+            "batch_size": 32,
+            "total_samples_seen": 16384
+          }
+        }
+      },
+      {
+        "mean": 0.4026962786912918,
+        "std": 0.0472852590675003,
+        "metric": "test_ce",
+        "cached": false,
+        "failed_seeds": 0,
+        "excluded": false,
+        "n_seeds": 10,
+        "base_seed": 0,
+        "seed_results": [
+          {
+            "seed": 0,
+            "failed": false,
+            "final_test_ce": 0.36853334307670593,
+            "final_test_accuracy": 0.77978515625
+          },
+          {
+            "seed": 1,
+            "failed": false,
+            "final_test_ce": 0.4398224651813507,
+            "final_test_accuracy": 0.72119140625
+          },
+          {
+            "seed": 2,
+            "failed": false,
+            "final_test_ce": 0.3617340624332428,
+            "final_test_accuracy": 0.787109375
+          },
+          {
+            "seed": 3,
+            "failed": false,
+            "final_test_ce": 0.38981950283050537,
+            "final_test_accuracy": 0.78125
+          },
+          {
+            "seed": 4,
+            "failed": false,
+            "final_test_ce": 0.5212715864181519,
+            "final_test_accuracy": 0.66552734375
+          },
+          {
+            "seed": 5,
+            "failed": false,
+            "final_test_ce": 0.39363592863082886,
+            "final_test_accuracy": 0.7861328125
+          },
+          {
+            "seed": 6,
+            "failed": false,
+            "final_test_ce": 0.3705711364746094,
+            "final_test_accuracy": 0.7421875
+          },
+          {
+            "seed": 7,
+            "failed": false,
+            "final_test_ce": 0.3960379958152771,
+            "final_test_accuracy": 0.78955078125
+          },
+          {
+            "seed": 8,
+            "failed": false,
+            "final_test_ce": 0.35703250765800476,
+            "final_test_accuracy": 0.7900390625
+          },
+          {
+            "seed": 9,
+            "failed": false,
+            "final_test_ce": 0.42850425839424133,
+            "final_test_accuracy": 0.7919921875
+          }
+        ],
+        "measurement_files": {
+          "candidate_spec.json": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/spiral_classification/spiralcls_9d5dde/x_17bc99234e/candidate_spec.json",
+            "sha256": "9c5b338f0ca337baec94a7f238eb9503329d7501f9d801c48156c271fcedf66f",
+            "bytes": 902,
+            "repo_path": "measurements/9c5b338f0ca337baec94a7f238eb9503329d7501f9d801c48156c271fcedf66f.json"
+          },
+          "results/summary.json": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/spiral_classification/spiralcls_9d5dde/x_17bc99234e/results/summary.json",
+            "sha256": "5a0ef77126c257fea4f2be1fa94db4091ced096b30300e67e8cb6ff79fd8efe2",
+            "bytes": 2229,
+            "repo_path": "measurements/5a0ef77126c257fea4f2be1fa94db4091ced096b30300e67e8cb6ff79fd8efe2.json"
+          },
+          "results/curves.npz": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/spiral_classification/spiralcls_9d5dde/x_17bc99234e/results/curves.npz",
+            "sha256": "23067466ceaab7c1f800db1996a20bd6c1b20d1fd897cb778190c97c7c7f9362",
+            "bytes": 45828,
+            "repo_path": "measurements/23067466ceaab7c1f800db1996a20bd6c1b20d1fd897cb778190c97c7c7f9362.npz"
+          }
+        },
+        "secs": 11.0,
+        "candidate": {
+          "model": {
+            "type": "mlp",
+            "depth": 5,
+            "width": 128,
+            "residual": false,
+            "activation": "leaky_relu",
+            "layer_norm": [
+              true,
+              true,
+              true,
+              true,
+              true
+            ],
+            "input_dim": 2,
+            "output_dim": 2,
+            "leaky_relu_slope": 0.01,
+            "init": "default"
+          },
+          "optimizer": {
+            "type": "AdamW",
+            "lr": 0.001,
+            "weight_decay": 0,
+            "betas": [
+              0.9,
+              0.95
+            ]
+          },
+          "loss": {
+            "loss_id": "cross_entropy"
+          },
+          "budget": {
+            "training_steps": 512,
+            "batch_size": 32,
+            "total_samples_seen": 16384
+          }
+        }
+      },
+      {
+        "mean": 0.47550118565559385,
+        "std": 0.010628184961274592,
+        "metric": "test_ce",
+        "cached": false,
+        "failed_seeds": 0,
+        "excluded": false,
+        "n_seeds": 10,
+        "base_seed": 0,
+        "seed_results": [
+          {
+            "seed": 0,
+            "failed": false,
+            "final_test_ce": 0.45818495750427246,
+            "final_test_accuracy": 0.736328125
+          },
+          {
+            "seed": 1,
+            "failed": false,
+            "final_test_ce": 0.46673712134361267,
+            "final_test_accuracy": 0.71875
+          },
+          {
+            "seed": 2,
+            "failed": false,
+            "final_test_ce": 0.47452017664909363,
+            "final_test_accuracy": 0.70751953125
+          },
+          {
+            "seed": 3,
+            "failed": false,
+            "final_test_ce": 0.4878729283809662,
+            "final_test_accuracy": 0.6826171875
+          },
+          {
+            "seed": 4,
+            "failed": false,
+            "final_test_ce": 0.4881425201892853,
+            "final_test_accuracy": 0.73046875
+          },
+          {
+            "seed": 5,
+            "failed": false,
+            "final_test_ce": 0.4826773405075073,
+            "final_test_accuracy": 0.66162109375
+          },
+          {
+            "seed": 6,
+            "failed": false,
+            "final_test_ce": 0.4867376387119293,
+            "final_test_accuracy": 0.662109375
+          },
+          {
+            "seed": 7,
+            "failed": false,
+            "final_test_ce": 0.47716036438941956,
+            "final_test_accuracy": 0.68701171875
+          },
+          {
+            "seed": 8,
+            "failed": false,
+            "final_test_ce": 0.4734235405921936,
+            "final_test_accuracy": 0.73681640625
+          },
+          {
+            "seed": 9,
+            "failed": false,
+            "final_test_ce": 0.4595552682876587,
+            "final_test_accuracy": 0.720703125
+          }
+        ],
+        "measurement_files": {
+          "candidate_spec.json": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/spiral_classification/spiralcls_9d5dde/x_5742223978/candidate_spec.json",
+            "sha256": "adbd9cec3ea9cc3376e4a38917b477659c17b90f4b2149692c5ee29ef2efc4b4",
+            "bytes": 867,
+            "repo_path": "measurements/adbd9cec3ea9cc3376e4a38917b477659c17b90f4b2149692c5ee29ef2efc4b4.json"
+          },
+          "results/summary.json": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/spiral_classification/spiralcls_9d5dde/x_5742223978/results/summary.json",
+            "sha256": "54cd7ccf305e94270e74088e5579a866c4c62fe36eeb4a964b6d9383acf52a4b",
+            "bytes": 2231,
+            "repo_path": "measurements/54cd7ccf305e94270e74088e5579a866c4c62fe36eeb4a964b6d9383acf52a4b.json"
+          },
+          "results/curves.npz": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/spiral_classification/spiralcls_9d5dde/x_5742223978/results/curves.npz",
+            "sha256": "6f3313891a36130876df95512112b83d1bf21ac16fd5a4bcd44e1800f65883db",
+            "bytes": 45828,
+            "repo_path": "measurements/6f3313891a36130876df95512112b83d1bf21ac16fd5a4bcd44e1800f65883db.npz"
+          }
+        },
+        "secs": 6.3,
+        "candidate": {
+          "model": {
+            "type": "mlp",
+            "depth": 2,
+            "width": 128,
+            "residual": false,
+            "activation": "leaky_relu",
+            "layer_norm": [
+              true,
+              true
+            ],
+            "input_dim": 2,
+            "output_dim": 2,
+            "leaky_relu_slope": 0.01,
+            "init": "default"
+          },
+          "optimizer": {
+            "type": "AdamW",
+            "lr": 0.0003,
+            "weight_decay": 0,
+            "betas": [
+              0.9,
+              0.95
+            ]
+          },
+          "loss": {
+            "loss_id": "cross_entropy"
+          },
+          "budget": {
+            "training_steps": 512,
+            "batch_size": 32,
+            "total_samples_seen": 16384
+          }
+        }
+      }
+    ]
+  }
+}

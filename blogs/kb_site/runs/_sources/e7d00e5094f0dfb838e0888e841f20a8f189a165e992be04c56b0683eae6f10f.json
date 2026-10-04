@@ -1,0 +1,288 @@
+{
+  "origin_epoch": 8,
+  "job_id": "J0b73b5930977",
+  "why": "Preregistered separate T256 versus512 same-dataset budget contrast. Do not pool with primary T512; test sign sensitivity alpha.8 V48/L24.",
+  "input": {
+    "dataset": "bigram_lm/bg_262209",
+    "candidates": [
+      {
+        "model": {
+          "type": "gru_lm",
+          "vocab_size": 48,
+          "context_length": 24,
+          "d_model": 64,
+          "num_layers": 2,
+          "layer_residual": false
+        },
+        "optimizer": {
+          "type": "RMSprop",
+          "lr": 0.001,
+          "weight_decay": 0
+        },
+        "loss": {
+          "loss_id": "cross_entropy"
+        },
+        "budget": {
+          "training_steps": 256,
+          "batch_size": 32
+        }
+      },
+      {
+        "model": {
+          "type": "gru_lm",
+          "vocab_size": 48,
+          "context_length": 24,
+          "d_model": 64,
+          "num_layers": 2,
+          "layer_residual": false
+        },
+        "optimizer": {
+          "type": "AdamW",
+          "lr": 0.0003,
+          "weight_decay": 0,
+          "betas": [
+            0.9,
+            0.95
+          ]
+        },
+        "loss": {
+          "loss_id": "cross_entropy"
+        },
+        "budget": {
+          "training_steps": 256,
+          "batch_size": 32
+        }
+      }
+    ]
+  },
+  "dataset_params": {
+    "instance_seed": 165658642,
+    "vocab_size": 48,
+    "context_length": 24,
+    "train_size": 800,
+    "test_size": 200,
+    "alpha": 0.8,
+    "layout": "lm",
+    "sequence_seed": 165658642,
+    "table_seed": 165668642
+  },
+  "profile": "v1.5",
+  "result": {
+    "dataset": "bigram_lm/bg_262209",
+    "family": "bigram_lm",
+    "results": [
+      {
+        "mean": 3.722970485687256,
+        "std": 0.0049743780866099265,
+        "metric": "test_ce",
+        "cached": true,
+        "failed_seeds": 0,
+        "excluded": false,
+        "n_seeds": 10,
+        "base_seed": 0,
+        "seed_results": [
+          {
+            "seed": 0,
+            "failed": false,
+            "final_test_ce": 3.728360891342163
+          },
+          {
+            "seed": 1,
+            "failed": false,
+            "final_test_ce": 3.7283613681793213
+          },
+          {
+            "seed": 2,
+            "failed": false,
+            "final_test_ce": 3.726693868637085
+          },
+          {
+            "seed": 3,
+            "failed": false,
+            "final_test_ce": 3.720285177230835
+          },
+          {
+            "seed": 4,
+            "failed": false,
+            "final_test_ce": 3.7261087894439697
+          },
+          {
+            "seed": 5,
+            "failed": false,
+            "final_test_ce": 3.7197322845458984
+          },
+          {
+            "seed": 6,
+            "failed": false,
+            "final_test_ce": 3.7153820991516113
+          },
+          {
+            "seed": 7,
+            "failed": false,
+            "final_test_ce": 3.724299430847168
+          },
+          {
+            "seed": 8,
+            "failed": false,
+            "final_test_ce": 3.7141716480255127
+          },
+          {
+            "seed": 9,
+            "failed": false,
+            "final_test_ce": 3.726309299468994
+          }
+        ],
+        "measurement_files": {
+          "candidate_spec.json": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/bigram_lm/bg_262209/x_f2f591c9c6/candidate_spec.json",
+            "sha256": "1497306c7c9e1a76caab125a8c12bd6f904b86d97dba785803fca505de2deffe",
+            "bytes": 691,
+            "repo_path": "measurements/1497306c7c9e1a76caab125a8c12bd6f904b86d97dba785803fca505de2deffe.json"
+          },
+          "results/summary.json": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/bigram_lm/bg_262209/x_f2f591c9c6/results/summary.json",
+            "sha256": "c903ac11539dbf0b7d83840b6bddb32c343dce2616fa1dc00b29b1691bc3d174",
+            "bytes": 1713,
+            "repo_path": "measurements/c903ac11539dbf0b7d83840b6bddb32c343dce2616fa1dc00b29b1691bc3d174.json"
+          },
+          "results/curves.npz": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/bigram_lm/bg_262209/x_f2f591c9c6/results/curves.npz",
+            "sha256": "10137e1ccbd531b64f041f2ed2c2afb03fc72e4f4cb41db81e284f801aa13195",
+            "bytes": 23300,
+            "repo_path": "measurements/10137e1ccbd531b64f041f2ed2c2afb03fc72e4f4cb41db81e284f801aa13195.npz"
+          }
+        },
+        "candidate": {
+          "model": {
+            "type": "gru_lm",
+            "vocab_size": 48,
+            "context_length": 24,
+            "d_model": 64,
+            "num_layers": 2,
+            "layer_residual": false
+          },
+          "optimizer": {
+            "type": "RMSprop",
+            "lr": 0.001,
+            "weight_decay": 0
+          },
+          "loss": {
+            "loss_id": "cross_entropy"
+          },
+          "budget": {
+            "training_steps": 256,
+            "batch_size": 32
+          }
+        }
+      },
+      {
+        "mean": 3.830717945098877,
+        "std": 0.002670400264205896,
+        "metric": "test_ce",
+        "cached": true,
+        "failed_seeds": 0,
+        "excluded": false,
+        "n_seeds": 10,
+        "base_seed": 0,
+        "seed_results": [
+          {
+            "seed": 0,
+            "failed": false,
+            "final_test_ce": 3.830174446105957
+          },
+          {
+            "seed": 1,
+            "failed": false,
+            "final_test_ce": 3.8311853408813477
+          },
+          {
+            "seed": 2,
+            "failed": false,
+            "final_test_ce": 3.8350346088409424
+          },
+          {
+            "seed": 3,
+            "failed": false,
+            "final_test_ce": 3.8282670974731445
+          },
+          {
+            "seed": 4,
+            "failed": false,
+            "final_test_ce": 3.8326733112335205
+          },
+          {
+            "seed": 5,
+            "failed": false,
+            "final_test_ce": 3.8349602222442627
+          },
+          {
+            "seed": 6,
+            "failed": false,
+            "final_test_ce": 3.830800771713257
+          },
+          {
+            "seed": 7,
+            "failed": false,
+            "final_test_ce": 3.8274459838867188
+          },
+          {
+            "seed": 8,
+            "failed": false,
+            "final_test_ce": 3.827291250228882
+          },
+          {
+            "seed": 9,
+            "failed": false,
+            "final_test_ce": 3.8293464183807373
+          }
+        ],
+        "measurement_files": {
+          "candidate_spec.json": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/bigram_lm/bg_262209/x_45f8278283/candidate_spec.json",
+            "sha256": "2c7fd99a03d9925d2c2816c29ee8e490e5717e4dd548b205050fa94413ee1036",
+            "bytes": 734,
+            "repo_path": "measurements/2c7fd99a03d9925d2c2816c29ee8e490e5717e4dd548b205050fa94413ee1036.json"
+          },
+          "results/summary.json": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/bigram_lm/bg_262209/x_45f8278283/results/summary.json",
+            "sha256": "695cc04736a01c0d1db2bfbe9ff6a3156863c7c84703ab7d334fd290c9f066f2",
+            "bytes": 1714,
+            "repo_path": "measurements/695cc04736a01c0d1db2bfbe9ff6a3156863c7c84703ab7d334fd290c9f066f2.json"
+          },
+          "results/curves.npz": {
+            "path": "/Users/guoshaoyang/Desktop/workdir/ArchitectureIQ/aiq_rl/data/kb_scratch/kb_lab_pool_v3/experiments/bigram_lm/bg_262209/x_45f8278283/results/curves.npz",
+            "sha256": "99a8f22f30e687595a31fb18fff264d10077412b6067da2982b91be7c9e9557f",
+            "bytes": 23300,
+            "repo_path": "measurements/99a8f22f30e687595a31fb18fff264d10077412b6067da2982b91be7c9e9557f.npz"
+          }
+        },
+        "candidate": {
+          "model": {
+            "type": "gru_lm",
+            "vocab_size": 48,
+            "context_length": 24,
+            "d_model": 64,
+            "num_layers": 2,
+            "layer_residual": false
+          },
+          "optimizer": {
+            "type": "AdamW",
+            "lr": 0.0003,
+            "weight_decay": 0,
+            "betas": [
+              0.9,
+              0.95
+            ]
+          },
+          "loss": {
+            "loss_id": "cross_entropy"
+          },
+          "budget": {
+            "training_steps": 256,
+            "batch_size": 32
+          }
+        }
+      }
+    ]
+  }
+}
