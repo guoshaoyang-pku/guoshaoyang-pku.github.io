@@ -377,7 +377,7 @@ function commitTable(cs) {
 
 function promptView() {
   $('side').innerHTML='';
-  $('view').innerHTML=(D.settingURL?'<p><a href="'+esc(D.settingURL)+'">当前 setting</a></p>':'')+Object.entries(D.prompts).map(([k,v])=>card(esc(k),'<pre class="tall">'+esc(v)+'</pre>')).join('')+card('运行配置','<pre>'+esc(JSON.stringify(D.config,null,1))+'</pre>');
+  $('view').innerHTML=(D.settingURL?'<p><a href="'+esc(D.settingURL)+'">当前 setting</a></p>':'')+(D.sourceArchive?'<p><a href="'+esc(D.sourceArchive.zipURL)+'">源码 '+esc(D.sourceArchive.commit.slice(0,7))+'</a> · <a href="'+esc(D.sourceArchive.manifestURL)+'">文件与哈希</a></p>':'')+Object.entries(D.prompts).map(([k,v])=>card(esc(k),'<pre class="tall">'+esc(v)+'</pre>')).join('')+card('运行配置','<pre>'+esc(JSON.stringify(D.config,null,1))+'</pre>');
 }
 
 render();
