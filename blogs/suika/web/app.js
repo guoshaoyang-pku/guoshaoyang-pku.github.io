@@ -72,8 +72,8 @@
   function isPlayMode(v) { return PLAY_MODES.indexOf(v) >= 0; }
 
   function gameLabel(t) {
-    return t.agent + " · seed" + t.seed + " · " + t.final_score + "分 · " + t.max_fruit_name +
-      (t.rule_mode !== "loop" ? " · " + t.rule_mode : "");
+    return t.agent + " · seed" + t.seed + " · " + t.final_score + "分" +
+      (t.censored ? " · 评测上限时仍存活" : "") + " · " + t.max_fruit_name;
   }
   function fillGameOptions(sel, traces) {
     if (!sel) return;
@@ -83,9 +83,18 @@
       o.value = t.name; o.textContent = gameLabel(t);
       sel.appendChild(o);
     });
-    var po = document.createElement("option");
-    po.value = "__play__"; po.textContent = "🎮 人类对局（实时引擎）";
-    sel.appendChild(po);
+    if (window.SUIKA_MANIFEST.live_play_enabled) {
+      var po = document.createElement("option");
+      po.value = "__play__"; po.textContent = "🎮 人类对局（实时引擎）";
+      sel.appendChild(po);
+    }
+  }
+
+  function ruleLabel(meta) {
+    if (meta.two_watermelon_rule === "merge_disappear_score") {
+      return "双西瓜消除 + " + meta.watermelon_merge_points + " 分";
+    }
+    return meta.rule_mode === "poof" ? "双西瓜消除" : "双西瓜保留（旧规则）";
   }
 
   function loadManifest() {
@@ -98,10 +107,7 @@
     var sel = $("#gameSelect"), psel = $("#playGameSelect");
     fillGameOptions(sel, traces);
     fillGameOptions(psel, traces);
-    // default: prefer alphazero (shows MCTS), else heuristic, else first;
-    // ?game= deep-link overrides.
-    var pref = traces.filter(function (t) { return t.has_tree; })[0] ||
-               traces.filter(function (t) { return t.has_candidates; })[0] || traces[0];
+    var pref = traces.filter(function (t) { return t.name === window.SUIKA_MANIFEST.featured; })[0] || traces[0];
     var gq = Q.get("game");
     var wantPlay = isPlayMode(gq);
     if (!wantPlay && gq && traces.some(function (t) { return t.name === gq; })) {
@@ -110,17 +116,26 @@
     if (pref) sel.value = pref.name;
     sel.onchange = function () {
       if (sel.value === "__play__") enterPlay();
-      else { exitPlay(); loadTrace(sel.value); }
+      else { exitPlay(); selectTrace(sel.value); }
     };
     if (psel) psel.onchange = function () {
       // picking a match from the play view always previews the WHOLE trajectory
       if (psel.value === "__play__") { enterPlay(); return; }
-      exitPlay(); loadTrace(psel.value, true);
+      exitPlay(); selectTrace(psel.value, true);
     };
     renderArena();
     if (wantPlay) { state.pinned = true; enterPlay(); return; }
     if (pref) loadTrace(pref.name);
     else { $("#loading").classList.add("show"); $("#loading").textContent = "manifest 中没有 trace"; }
+  }
+
+  function selectTrace(name, autoplay) {
+    var url = new URL(location.href);
+    url.searchParams.set("game", name);
+    ["frame", "step", "tab"].forEach(function (key) { url.searchParams.delete(key); });
+    history.replaceState(null, "", url);
+    Q = new URLSearchParams(url.search);
+    loadTrace(name, autoplay);
   }
 
   function loadTrace(name, autoplay) {
@@ -171,7 +186,7 @@
     $("#playBtn").textContent = "▶ 播放";
     var sl = $("#frameSlider"); sl.max = Math.max(0, trace.frames.length - 1); sl.value = 0;
     // rule badge
-    $("#ruleBadge").textContent = "规则: " + META.rule_mode + (META.rule_mode === "poof" ? " (双西瓜消除)" : " (双西瓜→循环回樱桃)");
+    $("#ruleBadge").textContent = ruleLabel(META);
     // per-engine world view-box + engine badge (supports different screen sizes)
     WORLD = META.world ? META.world : WORLD_DEFAULT;
     T = fitTransform();
@@ -199,6 +214,8 @@
     var tq = Q.get("tab");
     if (tq && isTabEnabled(tq)) switchTab(tq);
     var fq = Q.get("frame");
+    var galleryEntry = window.SUIKA_MANIFEST.traces.filter(function (t) { return t.name === name; })[0];
+    if ((fq == null || fq === "") && (sq == null || sq === "") && galleryEntry && galleryEntry.preview_frame != null) fq = galleryEntry.preview_frame;
     if (fq != null && fq !== "") {
       state.frameIdx = clamp(parseInt(fq, 10) || 0, 0, TRACE.frames.length - 1);
       state.lastDec = -2; renderAll();
@@ -209,6 +226,13 @@
       state.frameIdx = 0; state.lastDec = -2;
       renderAll(); play();
     }
+    var status = $("#traceStatus");
+    var area = META.play_area;
+    status.textContent = META.final_score.toLocaleString() + " 分 · " + META.steps.toLocaleString() +
+      " 次落子 · " + (area.right - area.left) + "×" + (area.bot - area.killy) + " · seed " + META.seed +
+      (META.censored ? " · 达到评测上限，结束时仍存活" : (META.game_over ? " · 自然结束" : " · 录制片段")) +
+      (META.capture_mode === "recorded_actions" ? " · 已核验的动作回放" : " · 包含决策数值");
+    $("#downloadTrace").href = "../traces/" + (window.SUIKA_MANIFEST.traces.filter(function (t) { return t.name === name; })[0] || {}).file_gz;
     renderArena();
   }
 
@@ -355,6 +379,10 @@
       });
     }
 
+    if (META.censored && state.frameIdx === TRACE.frames.length - 1) {
+      ctx.fillStyle = "#fadc3c"; ctx.font = "bold 20px sans-serif"; ctx.textAlign = "center";
+      ctx.fillText("评测上限 · 仍存活", CW / 2, 60); ctx.textAlign = "start";
+    }
     // game over banner
     if (dec && dec.game_over) {
       ctx.fillStyle = "rgba(224,82,77,0.16)"; ctx.fillRect(0, 0, CW, CH);
@@ -484,6 +512,8 @@
     var m = [];
     m.push("当前 <b style='color:" + colorOf(dec.current.type) + "'>" + dec.current.name + "</b> → 落点 col " + (dec.col == null ? "?" : dec.col) + " (x=" + dec.x + ")");
     m.push("本步得分 +" + dec.reward + " · 累计 " + dec.score + " · 场上 " + dec.fruit_count + " 果");
+    if (META.capture_mode === "recorded_actions") m.push("greedy DQN · 已记录动作回放 · 未保存 Q 值");
+    if (META.source && META.source.grad_steps != null) m.push("评测 checkpoint：grad " + META.source.grad_steps);
     if (br) {
       m.push("<span class='benchline'>greedy " + br.seeds + " 种子：mean <b>" + fmt1(br.mean) +
              "</b> · max " + br.max + (br.min != null ? " · min " + br.min : "") +
@@ -503,7 +533,10 @@
 
   function updateTabs(dec) {
     var hasTree = !!(dec && dec.internals && dec.internals.tree);
-    var hasPV = !!(dec && dec.internals && (dec.internals.root || (dec.internals.q && dec.internals.q.length)));
+    var hasQ = !!(dec && dec.internals && dec.internals.q && dec.internals.q.length);
+    var recorded = META && META.capture_mode === "recorded_actions";
+    var hasPV = recorded || !!(dec && dec.internals && (dec.internals.root || hasQ));
+    document.querySelector(".tab[data-tab='pv']").textContent = recorded ? "落子记录" : "策略 / 价值";
     var hasHeur = !!(dec && dec.internals && dec.internals.candidates && dec.internals.candidates.length);
     setTabEnabled("tree", hasTree); setTabEnabled("pv", hasPV); setTabEnabled("heur", hasHeur);
     // auto-pick a valid tab
@@ -514,7 +547,7 @@
   }
   function setTabEnabled(name, on) {
     var b = document.querySelector(".tab[data-tab='" + name + "']");
-    if (!b) return; b.style.opacity = on ? "1" : "0.35"; b.style.pointerEvents = on ? "auto" : "none"; b.dataset.enabled = on ? "1" : "0";
+    if (!b) return; b.disabled = !on; b.style.opacity = on ? "1" : "0.35"; b.style.pointerEvents = on ? "auto" : "none"; b.dataset.enabled = on ? "1" : "0";
   }
   function isTabEnabled(name) { var b = document.querySelector(".tab[data-tab='" + name + "']"); return b && b.dataset.enabled === "1"; }
   function switchTab(name) {
@@ -607,6 +640,13 @@
   function renderPV(dec) {
     var root = $("#pvSvg"); clear(root);
     var gauge = $("#valueGauge");
+    var recorded = META && META.capture_mode === "recorded_actions";
+    root.style.display = recorded ? "none" : "block";
+    if (recorded) {
+      gauge.textContent = dec ? "实际落点：列 " + dec.col + " / 128，x=" + dec.x +
+        "；本步 +" + dec.reward + " 分。此回放来自已记录动作，未保存该 checkpoint 的 Q 值。" : "选择落子查看记录。";
+      return;
+    }
     if (!dec || !dec.internals) { gauge.innerHTML = "该决策无策略/价值数据。"; return; }
     if (!dec.internals.root) {
       if (dec.internals.q && dec.internals.q.length) return renderQPanel(dec, root, gauge);
@@ -984,7 +1024,7 @@
     decisionAtFrame = [-1];
     WORLD = meta.world; T = fitTransform();
     $("#engineBadge").textContent = "引擎: live-pymunk（实时）";
-    $("#ruleBadge").textContent = "规则: " + meta.rule_mode + (meta.rule_mode === "poof" ? " (双西瓜消除)" : " (双西瓜→循环回樱桃)");
+    $("#ruleBadge").textContent = ruleLabel(meta);
     state.frameIdx = 0; state.lastDec = -2; state.play.current = d.current;
     state.play.next = d.next;
     state.play.done = false; state.play.animating = false;
@@ -1096,14 +1136,13 @@
     $("#infoContent").innerHTML =
       "<h3>引擎还原</h3><p>物理内核来自开源 <code>Ole-Batting/suika</code>（pygame + <code>pymunk 6.11.1</code>，Chipmunk 绑定）。" +
       "本项目用 <code>suika/part2/suika_env.py</code> 封装成 headless 的 <code>reset/step/get_state/render</code> 接口；可视化采集层 <code>viz/capture.py</code> 进一步逐物理帧抓取每个刚体的位置/速度/角度与合成事件，<b>不改动任何引擎逻辑</b>。</p>" +
-      "<h3>两种 AI（本仪表盘展示其内部运作）</h3>" +
+      "<h3>训练策略与早期对照</h3>" +
+      "<p><b>Set Transformer + Dueling DQN</b>：55.9M 参数，从当前水果、下一个水果、场上水果与棋盘尺寸预测 128 个落点的 Q 值，部署时直接取 argmax；不使用未来随机种子或搜索。新纪录来自已保存动作的确定性回放，旧纪录保留完整 Q128。</p>" +
       "<p><b>启发式 + 1 步真物理前瞻</b>（<code>part2/ai_agent.py</code>）：对每个候选列，从局面快照重建一个独立 pymunk 空间、真的把水果投下去让物理稳定，再按 <code>合并/安全(堆顶)/潜力(同级相邻)/−数量</code> 打分，选最高分列。「启发式分解」面板展示每个候选的逐项打分。</p>" +
       "<p><b>AlphaZero</b>（<code>rl/mcts.py</code> + <code>rl/net.py</code>）：PUCT 蒙特卡洛树搜索 + Object-Transformer 策略/价值网（批量叶子 + 虚拟损失）。每步跑数百次模拟，用网络先验 P 引导展开、用价值 v 评估叶子（不随机 rollout 到终局），按访问次数 N 选列。「MCTS 搜索树」面板中边粗细∝访问 N、颜色∝动作价值 Q；「策略/价值」面板对比先验 P 与访问分布 N。</p>" +
       "<h3>水果等级表</h3><table><tr><th>名称</th><th>type</th><th>半径</th><th>分值</th></tr>" + rows + "</table>" +
       benchHTML() +
-      "<h3>顶级合并规则</h3><p>当前引擎：<code>particle.n % 11</code>，两个西瓜(type10)相撞<b>不消除</b>，仅作普通物理碰撞（默认 <code>loop</code>）。" +
-      "官方《Suika Game》规则是两个西瓜 <b>poof 消除 + 大额加分</b>。本可视化提供 <code>poof</code> 开关（采集时用 <code>--rule poof</code>），默认保持与已训练 checkpoint/replay 一致的 <code>loop</code>。</p>" +
-      "<h3>开源生态调研（摘要）</h3><p>详见 <code>调研报告.md</code>（946 行、源码级核实）。结论：游戏复刻极多（Web 多用 Matter.js，Python 多用 pygame+pymunk），但<b>无公认「破解」方案</b>；AI 项目以 DQN 为主（如 <code>MattJacobs30/SuikaReinforcement</code>），多为个人/黑客松项目，普遍难以稳定合成西瓜。搜索类（MCTS）几乎空白——本项目的 AlphaZero + 可视化正填补此处。社区把 <b>3000 分</b>视为精英线（≈合成出一个西瓜）。</p>" +
+      "<h3>本局规则与评测</h3><p>" + ruleLabel(META || {}) + "。Wave6 采用 pymunk settle 步进；720 指死亡线到地板的距离，550 与 448 是不同棋盘宽度。精选高分局用于观看实际行为，不能代替多种子平均成绩。训练曲线使用反复评测的固定开发种子。</p>" +
       "<h3>操作</h3><p>顶部选择对局；左侧播放/拖动帧滑块/选择决策步；右侧切换 MCTS 树 / 策略价值 / 启发式分解三个面板；画布右上切换叠加层（速度矢量/合成事件/落点瞄准/候选打分/等级数字/死亡线）；底部曲线可点击跳转。</p>";
   }
 
