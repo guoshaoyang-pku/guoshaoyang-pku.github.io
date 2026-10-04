@@ -1,0 +1,32 @@
+{
+  "U": {
+    "text": "On sym_0c2620, at 2048 steps/batch16, fixed width128 depth2 nonresidual LeakyReLU(.01), no LN, Adam betas(.9,.95), decay1e-5: lr.003 (nominal D=6.144) beats .00003/.0001/.0003 in all 3 mean-MSE comparisons in exp:34aa6df219ff. High/lower loss ratios are .0302/.0447/.0570. This is a counterexample to automatic overshoot elimination, including against D=.2048; it does not establish a zero-LN exception across targets.",
+    "chars": 418,
+    "falsifier": "Same materialized split, recipe, metric and seeds0-9 reproducibly fail to show the three stated inequalities. Any wider zero-LN or univariate rule is already unsupported."
+  },
+  "T": {
+    "text": "On smooth_additive stabcls_021b60 (8 features, 1024 train rows), fixed width256 depth1 nonresidual ReLU+LN, Adam(.9,.999), decay1e-4, batch16: lr.001 beats .0003 at256 but loses at2048 (CE ratios .8566 and1.1026; exp:e3b7925d9c02). At2048, .0003 (D=.6144) beats .00003 (D=.06144), ratio .6722. The best of the 3 tested rates is not a universal D=.05-.15 optimum; neither cross-architecture nor continuous-threshold transfer is established.",
+    "chars": 439,
+    "falsifier": "The same within-set rerun reverses either .001/.0003 ordering or the .0003/.00003 long-budget inequality. A new matched split retaining .001 as best at2048 would falsify an extension to that split, not the recorded fact."
+  },
+  "M": {
+    "text": "On mvar_000e80, fixed width32 depth5 residual SiLU, LN[F,F,T,F,T], Adam(.9,.999), decay1e-4, batch16: lr.003 beats .0003 at256 steps but loses at2048 (mean-MSE ratios .8952 and1.0818; one set exp:46dafe43cf05, higher rate wins1/2 matched-budget comparisons). This does not establish an Adagrad offset-memory mechanism, a plain-SGD correction, or a ceiling for other multivariate targets.",
+    "chars": 387,
+    "falsifier": "Same-recipe rerun does not reproduce the opposite matched-budget .003/.0003 orderings; new targets can falsify any proposed family-wide reversal."
+  },
+  "B": {
+    "text": "On bg_013a4e (V32/context16), fixed transformer width32 depth4 heads4 FF128, Adam(.9,.999), decay0, CE+L1(.01), batch16: lr.003 beats .0003 at256 (mean-CE ratio .9433), but at2048 returns nonfinite mean/std while .0003 gives2.96067+/-0.01045 (exp:88b5f9940c28). Nonfinite output is a failed metric, not measured overconfidence; affected-seed count and an intermediate-rate ceiling are unknown. No GRU/other-width/other-loss transfer.",
+    "chars": 433,
+    "falsifier": "An exact recomputation produces a finite .003/2048 metric, or the frozen pipeline is shown to report Infinity incorrectly. Intermediate rates, removal of L1, other widths and GRUs are unmeasured conditions, not inferred ceilings."
+  },
+  "S": {
+    "text": "On 1.5-turn spiralcls_0516f4, fixed width256 depth2 residual SiLU, two LN, Adam(.9,.95), batch16: lr.001 beats .0001 at256 with decay1e-5 (CE ratio .00769), but loses by tiny mean differences at2048 with decay1e-5 and1e-4 (ratios1.1651 and1.0207; exp:3dbc82fbb876; higher rate wins1/1 short,0/2 long). Long-budget CE is near zero and seed SDs overlap; no confident general ceiling follows. Higher decay raises mean CE at both rates.",
+    "chars": 432,
+    "falsifier": "Same-recipe recomputation reverses the listed mean inequalities. A new seed cohort/split can overturn a predictive extension; the tiny long-budget differences do not justify confident individual-seed ordering."
+  },
+  "X": {
+    "text": "On 16-feature xorcls_0dd7d2, fixed width24 depth3 nonresidual GELU, LN[T,F,T], batch16, lr.001/decay0: AdamW(.9,.95) beats momentumSGD(.9) at256 but loses at2048 (CE ratios .7229 and1.7120; exp:1ea73c34d11a). Separately, fixed AdamW rate-only exp:d82786f1e971 favors higher rates in all6 pairs among .0001/.001/.003 at256/2048, although .003 CE worsens1.1179x with more steps. Optimizer budget reversal is not a low-lr rule or proof of overconfidence.",
+    "chars": 451,
+    "falsifier": "The joint within-set experiment does not reproduce the AdamW/SGD budget reversal, or the fixed-AdamW set fails its six higher-rate inequalities. A rate-only reversal at another budget would not contradict the measured optimizer contrast."
+  }
+}

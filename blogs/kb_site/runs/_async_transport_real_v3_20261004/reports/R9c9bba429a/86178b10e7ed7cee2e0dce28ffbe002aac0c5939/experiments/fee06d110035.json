@@ -1,0 +1,185 @@
+{
+  "origin_epoch": 2,
+  "job_id": "J4c2bf77e4459",
+  "why": "Diagnostic prediction: dataset-native base with same explicit architecture and optimizer should reproduce cross-dataset input_dim4 corrected shallow/middle-depth5 losses. Nonfinite denominator retained; checking reproducibility, not selecting favorable seeds.",
+  "input": {
+    "dataset": "multivariate_regression/mvar_00ccf0",
+    "candidates": [
+      {
+        "model": {
+          "type": "mlp",
+          "depth": 1,
+          "width": 96,
+          "residual": false,
+          "activation": "silu",
+          "layer_norm": [
+            true
+          ],
+          "leaky_relu_slope": 0.01,
+          "input_dim": 4,
+          "output_dim": 1
+        },
+        "optimizer": {
+          "type": "Adagrad",
+          "lr": 0.0003,
+          "weight_decay": 0.0001,
+          "betas": [
+            0.9,
+            0.95
+          ]
+        },
+        "loss": {
+          "loss_id": "mse_l2",
+          "lambda": 1.0
+        },
+        "budget": {
+          "training_steps": 256,
+          "batch_size": 16
+        }
+      },
+      {
+        "model": {
+          "type": "mlp",
+          "depth": 5,
+          "width": 96,
+          "residual": false,
+          "activation": "silu",
+          "layer_norm": [
+            false,
+            false,
+            true,
+            false,
+            false
+          ],
+          "leaky_relu_slope": 0.01,
+          "input_dim": 4,
+          "output_dim": 1
+        },
+        "optimizer": {
+          "type": "Adagrad",
+          "lr": 0.0003,
+          "weight_decay": 0.0001,
+          "betas": [
+            0.9,
+            0.95
+          ]
+        },
+        "loss": {
+          "loss_id": "mse_l2",
+          "lambda": 1.0
+        },
+        "budget": {
+          "training_steps": 256,
+          "batch_size": 16
+        }
+      }
+    ]
+  },
+  "dataset_params": {
+    "instance_seed": 160526921,
+    "input_dim": 4,
+    "sampler": {
+      "id": "symbolic_expr_mv",
+      "seed": 160526921,
+      "max_depth": 3,
+      "retry": 1
+    },
+    "expression": "x2**4 + x3**3 + cos(2*pi*x3)*sin(2*pi*x0) + sin(2*pi*x2)**2 + 2*x0 + 3*x1",
+    "domain": [
+      0.0,
+      1.0
+    ],
+    "train_size": 256,
+    "test_size": 256
+  },
+  "profile": "v1.5",
+  "seeds": 10,
+  "result": {
+    "dataset": "multivariate_regression/mvar_00ccf0",
+    "family": "multivariate_regression",
+    "results": [
+      {
+        "mean": Infinity,
+        "std": Infinity,
+        "failed_seeds": 10,
+        "metric": "test_mse",
+        "secs": 1.4,
+        "candidate": {
+          "model": {
+            "type": "mlp",
+            "depth": 1,
+            "width": 96,
+            "residual": false,
+            "activation": "silu",
+            "layer_norm": [
+              true
+            ],
+            "leaky_relu_slope": 0.01,
+            "input_dim": 4,
+            "output_dim": 1
+          },
+          "optimizer": {
+            "type": "Adagrad",
+            "lr": 0.0003,
+            "weight_decay": 0.0001,
+            "betas": [
+              0.9,
+              0.95
+            ]
+          },
+          "loss": {
+            "loss_id": "mse_l2",
+            "lambda": 1.0
+          },
+          "budget": {
+            "training_steps": 256,
+            "batch_size": 16
+          }
+        }
+      },
+      {
+        "mean": 1.485880970954895,
+        "std": 0.1323366250692496,
+        "failed_seeds": 0,
+        "metric": "test_mse",
+        "secs": 2.3,
+        "candidate": {
+          "model": {
+            "type": "mlp",
+            "depth": 5,
+            "width": 96,
+            "residual": false,
+            "activation": "silu",
+            "layer_norm": [
+              false,
+              false,
+              true,
+              false,
+              false
+            ],
+            "leaky_relu_slope": 0.01,
+            "input_dim": 4,
+            "output_dim": 1
+          },
+          "optimizer": {
+            "type": "Adagrad",
+            "lr": 0.0003,
+            "weight_decay": 0.0001,
+            "betas": [
+              0.9,
+              0.95
+            ]
+          },
+          "loss": {
+            "loss_id": "mse_l2",
+            "lambda": 1.0
+          },
+          "budget": {
+            "training_steps": 256,
+            "batch_size": 16
+          }
+        }
+      }
+    ]
+  }
+}

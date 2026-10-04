@@ -1,0 +1,51 @@
+# Narrow Univariate Adam: Depth, LayerNorm, Activation, and Schedule
+
+## Finding
+High-rate Adam can produce narrow-network depth/LN reversals, but q_1e921c is not an isolated causal demonstration. Width-matched experiments expose a schedule-dependent LN penalty and activation/target interactions. They do not support a general shallow-over-deep reversal or narrow-width immunity. The broad normalized-deep prior remains useful at lower learning rates and on several nonmonotonic targets.
+
+## Sources and Definitions
+Frozen training history: 833 records; q_1e921c is epoch 2, source dataflip500, task select, univariate_regression. Its reported ranking is shallow width48 depth1 zero-LN ReLU first, deep width24 depth4 all-LN GELU second, width32 depth2 zero-LN SiLU third. All used x**4+x**2, 256 train/test, Adam .001, betas(.9,.95), weight decay1e-5, T1024, batch32. This comparison changes four architectural factors. No evaluation answers were accessed.
+Frozen KB sources: K1006, K1072, K1074. The q training comment reports comparable normalized-deep wins 15/19 history and 17/21 lab, with no lab pair at nominal displacement >=1; these are inherited counts, not independently reconstructed here. K1074 retains broader historical support. K1072's narrow larger-budget wins 9/16 never established immunity.
+At the research checkpoint, refresh_observations pinned J11243109eb5b_research_e0002; history remained 833 records. Source excerpts and lab provenance are saved in experiments/narrow_adam_sources.json.
+Delta=lr*T is nominal budget, not measured parameter displacement, integrated Adam update magnitude, or function displacement. Depth counts hidden width-to-width blocks after the input projection, not total Linear layers. All-LN means pre-LN in each such block; zero-LN means none.
+
+## Controlled Design and Predictions
+Allowed lab targets only: development sym_39891e=x**4 and sym_0364f2=2*sin(2*pi*x); reserved training instances sym_0799b4=x**6-2 and sym_1835f3=cos(4*pi*x)+1.5. All have uniform x in [0,1], 256 train/test. The exact q target is absent from the allowed lab and was not generated.
+Fixed plain MLP, PyTorch Linear defaults inherited from the base candidate, input/output dimensions 1, MSE selection metric test_mse, Adam betas(.9,.95), weight decay1e-5, batch32, ten seeds per variant. No initializer overrides, residual connections, optimizer changes, or evaluation data. Base: sym_00bebe/set_4096_fix_fix_var_52fcf2/c_547480. Dataset overrides and all dotted-key specifications are saved.
+Factorial at .001 x 1024: widths24/32/48 x depths1/2/4 x zero/all-LN x ReLU/GELU/SiLU on two development datasets. Full width24 depth1/4 x LN x activation sweep: lr=.0001/.0003/.001/.003 and T256/1024/2048. Exact matched Delta=.256 and 1.024 alternatives use T256/1024/2048 and lr=Delta/T. Reserved targets use width24 factorial depth1/4 at .0001x1024, .001x1024, .003x2048.
+Predictions were published before the factorial: an overshoot-like explanation predicts low-rate rescue and smaller-step improvements at equal nominal budget; persistent low-rate deficits would favor representation/conditioning limits. A target-complexity heuristic predicts a more durable normalized-deep advantage on nonmonotonic targets than simple convex targets. Neither prediction assumed a universal reversal.
+612 returned ten-seed summaries, 540 unique specifications, four datasets; repeated specifications are not independent replications. Zero reported variant errors. The rectangular sweep does not cover width32/48 or depth2 beyond the reference factorial, and reserved tests cover only three schedules.
+
+## Results by Dataset and Regime
+All ratios below divide ten-seed mean MSE; values >1 favor the denominator. Activation order is ReLU/GELU/SiLU. Do not pool the repeated architecture comparisons as independent dataset wins.
+
+| Target, width, .001x1024 | Deep4 all-LN / shallow1 zero-LN | Deep4 all-LN / deep4 zero-LN |
+|---|---|---|
+| x**4, 24 | 1.63 / .139 / .0295 | 4.44 / 3.77 / 5.88 |
+| x**4, 32 | 10.35 / .640 / .157 | 5.46 / 7.13 / 24.38 |
+| x**4, 48 | 13.81 / 3.57 / .248 | 6.24 / 7.73 / 7.23 |
+| 2*sin(2*pi*x), 24 | .00681 / .00196 / .00204 | 3.34 / 1.58 / 1.09 |
+| 2*sin(2*pi*x), 32 | .0306 / .00350 / .00184 | 3.63 / 1.44 / 2.01 |
+| 2*sin(2*pi*x), 48 | .1409 / .0143 / .00456 | 2.63 / 3.33 / 4.19 |
+
+At this schedule, LN raises depth4 mean loss for every tested activation/width on both datasets, yet normalized depth still decisively beats unnormalized shallow on the sine target. The architecture package comparison is not the LN effect.
+At fixed all-LN, depth4/depth1 ratios on x**4 are 1.14/2.18/1.15 at width24, 3.48/7.01/10.75 at width32, and 9.13/15.45/7.67 at width48. On sine they are .271/.300/.0250, 1.33/1.11/.0541, and 10.60/13.56/4.47 respectively. Thus depth itself can lose within normalized nets, particularly wider nets at this rate, even while the combined deep-LN versus shallow-zero-LN comparison favors depth.
+At width24 on x**4, zero-LN depth4/depth1 is .368/.0369/.00502: plain depth is not intrinsically unable to fit the convex target. At .0001x1024, deep-LN/shallow-zero-LN is .000552/.000965/.00180 on x**4 and .000409/.00110/.0105 on sine (rounded); low-budget plain shallow models remain strongly undertrained.
+At .003x2048, deep-LN/shallow-zero-LN is 6.09/10.67/6.90 on x**4 and 4.09/5.50/2.98 on sine (n=2 development datasets). At the same T2048, lowering lr from .003 to .0003 improves the identical deep-LN net by factors 4.21/9.15/4.03 and 4.89/6.61/3.11, respectively.
+The q-like architecture package on x**4 has means +/- seed SD: deep24 all-LN GELU 4.39e-5 +/-3.90e-5; shallow48 zero-LN ReLU 1.11e-5 +/-7.98e-6; depth2 width32 zero-LN SiLU 2.52e-5 +/-2.19e-5. Deep/shallow=3.96, but the middle choice beats deep, unlike q. On sine, the same package means are .00101/.01934/.01217: deep/shallow=.0522. This is target dependence, not replication of the exact q instance.
+
+## Matched Budget and Held-Out Prediction
+At exact Delta=1.024, moving from .004x256 to .0005x2048 lowers deep-LN loss by 10.99/14.77/11.64 on x**4 and 17.53/9.77/10.24 on sine. At Delta=.256, .001x256 to .000125x2048 improves it by about 9.94/11.04/5.19 and 25.68/11.64/7.46. Nominal budget alone is insufficient; smaller-step/more-exposure schedules help.
+Smaller steps do not guarantee a favorable architectural ratio: at Delta=1.024, x**4 ReLU deep-LN/shallow-zero-LN is 3.10, 1.63, 2.89 for T256/1024/2048. Absolute rescue and relative ranking are distinct.
+Reserved x**6-2 deep-LN/shallow-zero-LN ratios: .0001x1024=.000256/.000455/.000425; .001x1024=1.23/.0273/.0157; .003x2048=1.84/1.33/2.16. Reserved cosine ratios: .0251/.723/.875, .00393/.00456/.00505, and .612/.0160/.00455, respectively (n=2 reserved datasets).
+The predeclared complexity heuristic succeeds directionally at moderate/high schedules: cosine preserves a normalized-deep advantage more consistently than the convex target. It fails as a schedule-independent ordering of advantage: low-rate convex ratios are smaller than cosine ratios, and the high-rate development sine also reverses. No calibrated held-out predictor or broad classification accuracy is established from two reserved instances.
+
+## Mechanisms, Uncertainty, and Boundaries
+Low-rate rescue, same-architecture high/low-rate contrasts, and matched-budget improvement favor optimization/schedule sensitivity over a fixed representational incapacity. High-rate final-loss degradation is consistent with overshoot or a stochastic error floor, but does not prove either. Target geometry, activation-specific fitting speed, LN-induced scale/invariance effects, and parameter-count-dependent conditioning remain competing explanations.
+The interface exposes endpoint mean/std only: no per-seed losses, covariance, train losses, best-so-far losses, gradient statistics, actual displacement, minibatch traces, or convergence curves. Endpoint T comparisons are budget probes, not measured within-run trajectories. More steps also change sample exposure; exact lr*T matching does not isolate step size alone. Seed SDs can approach/exceed means; close ratios are not claimed significant. Saved CSV includes numerator/denominator SDs, without fabricated paired intervals.
+Depth changes parameters at fixed width; neither parameter-count matching nor partial-LN factorials were tested. Initializer was fixed, not compared. Target amplitude/offset and sample realization are confounded with target complexity across datasets. Results concern four fixed noiseless 1-D datasets, plain MLPs, this Adam configuration, initialization, and final test MSE, not all narrow networks, optimizers, noisy targets, multivariate tasks, or the unavailable exact q target.
+Distinguishing next tests: expose per-seed training trajectories and realized updates; compare final versus best checkpoint; anneal lr after fitting; vary batch size at matched sample exposure; test partial LN and parameter-matched architectures; use additional reserved convex/oscillatory targets with amplitude/offset controls. A jitter floor predicts annealing or larger batches rescue final loss without changing representational capacity; a structural LN restriction predicts a persistent controlled deficit after such rescue.
+
+## KB Interpretation and Reproducibility
+Preserve K1006/K1074 as broad priors, not deterministic guarantees at high-rate narrow settings. Scope K1072's overshoot evidence and remove narrow-immunity language: this study directly finds high-rate loss degradation at width24, with target/activation-dependent ranking. Accepted KB operations annotate K1006/K1072/K1074 and add K1076, a narrow conditional observation rather than a universal reversal.
+Reproduce summary analysis with python analyze_narrow_adam.py. Raw specifications/results: experiments/narrow_adam_raw.json; 756 contrast rows: experiments/narrow_adam_ratios.csv; frozen provenance: experiments/narrow_adam_sources.json. The script verifies repeated specification consistency and reported errors. Training itself is reproducible through the saved allowed-lab run_experiment specifications, not a locally invented trainer. This report is independently reviewable but unfinished mechanistic science.

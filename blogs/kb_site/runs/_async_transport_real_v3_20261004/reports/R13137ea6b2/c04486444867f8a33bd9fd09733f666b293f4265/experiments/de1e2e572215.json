@@ -1,0 +1,147 @@
+{
+  "origin_epoch": 1,
+  "job_id": "J22ba490aa417",
+  "why": "Preregistered controlled rate/budget study, matched seeds and batch32.",
+  "input": {
+    "dataset": "bigram_lm/bg_167595",
+    "candidates": [
+      {
+        "model": {
+          "type": "gru_lm",
+          "vocab_size": 32,
+          "context_length": 24,
+          "d_model": 64,
+          "num_layers": 2,
+          "layer_residual": false
+        },
+        "optimizer": {
+          "type": "AdamW",
+          "lr": 3e-05,
+          "weight_decay": 0.001,
+          "betas": [
+            0.9,
+            0.95
+          ]
+        },
+        "loss": {
+          "loss_id": "cross_entropy"
+        },
+        "budget": {
+          "training_steps": 256,
+          "batch_size": 32
+        }
+      },
+      {
+        "model": {
+          "type": "gru_lm",
+          "vocab_size": 32,
+          "context_length": 24,
+          "d_model": 64,
+          "num_layers": 2,
+          "layer_residual": false
+        },
+        "optimizer": {
+          "type": "AdamW",
+          "lr": 0.003,
+          "weight_decay": 0.001,
+          "betas": [
+            0.9,
+            0.95
+          ]
+        },
+        "loss": {
+          "loss_id": "cross_entropy"
+        },
+        "budget": {
+          "training_steps": 1024,
+          "batch_size": 32
+        }
+      }
+    ]
+  },
+  "dataset_params": {
+    "instance_seed": 4253,
+    "vocab_size": 32,
+    "context_length": 24,
+    "train_size": 800,
+    "test_size": 200,
+    "alpha": 1.4,
+    "layout": "lm",
+    "sequence_seed": 4253,
+    "table_seed": 14253
+  },
+  "profile": "v1.5",
+  "seeds": 10,
+  "result": {
+    "dataset": "bigram_lm/bg_167595",
+    "family": "bigram_lm",
+    "results": [
+      {
+        "mean": 3.4245163679122923,
+        "std": 0.006183385086031944,
+        "failed_seeds": 0,
+        "metric": "test_ce",
+        "secs": 19.5,
+        "candidate": {
+          "model": {
+            "type": "gru_lm",
+            "vocab_size": 32,
+            "context_length": 24,
+            "d_model": 64,
+            "num_layers": 2,
+            "layer_residual": false
+          },
+          "optimizer": {
+            "type": "AdamW",
+            "lr": 3e-05,
+            "weight_decay": 0.001,
+            "betas": [
+              0.9,
+              0.95
+            ]
+          },
+          "loss": {
+            "loss_id": "cross_entropy"
+          },
+          "budget": {
+            "training_steps": 256,
+            "batch_size": 32
+          }
+        }
+      },
+      {
+        "mean": 3.4646941661834716,
+        "std": 0.028472082109509505,
+        "failed_seeds": 0,
+        "metric": "test_ce",
+        "secs": 78.4,
+        "candidate": {
+          "model": {
+            "type": "gru_lm",
+            "vocab_size": 32,
+            "context_length": 24,
+            "d_model": 64,
+            "num_layers": 2,
+            "layer_residual": false
+          },
+          "optimizer": {
+            "type": "AdamW",
+            "lr": 0.003,
+            "weight_decay": 0.001,
+            "betas": [
+              0.9,
+              0.95
+            ]
+          },
+          "loss": {
+            "loss_id": "cross_entropy"
+          },
+          "budget": {
+            "training_steps": 1024,
+            "batch_size": 32
+          }
+        }
+      }
+    ]
+  }
+}

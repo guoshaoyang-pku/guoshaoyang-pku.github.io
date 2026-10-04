@@ -1,0 +1,86 @@
+[
+  {
+    "id": "K1006",
+    "text": "MLP ARCHITECTURE DEFAULT (same optimizer for all choices; regression, XOR, spiral, tabular when \u0394<0.1): score = (#LayerNorm'd blocks) + 1 if residual, MINUS 1 if a NON-residual depth\u22654 net's LAST block has no LN (K1061); pick the highest. Ties: on regression ReLU/LeakyReLU > GELU > SiLU, then later last-LN (K1022), then greater depth. Corpus MLP arch-only hits 74/110 (spiral 12/16, tabular 17/32). More-LN beats less-LN 61-11 multivariate, 57-12 univariate, 41-4 tabular \u0394<0.1. Overrides: regression deep vs shallow (K1074); spiral residual \u22652 blocks deeper (K1020); shared-SGD regression rectifier vs SiLU (K1039); XOR \u22658 feat. \u0394\u22650.05 (K1018, K1065); tabular \u0394\u22650.1 (K1009/K1073).",
+    "support_count": 2.25,
+    "failure_count": 6.75,
+    "credibility": 0.29545454545454547,
+    "created_epoch": 0,
+    "sources": [],
+    "merged_from": [
+      "K0002",
+      "K0078",
+      "K0268",
+      "K0249",
+      "K0256"
+    ],
+    "origin": "seed:seed_distill_v1",
+    "mechanism": "Each unnormalized pre-activation layer shrinks hidden RMS (~0.5x for SiLU/GELU at init), so an under-trained deep stack feeds a weak signal to the head; pre-LN restores unit scale and identity paths keep gradient flow, speeding an under-trained net 2-3x. Predicts the LN advantage shrinks once \u0394 is large enough to learn the scale (tabular \u0394>=0.1 reverses, K1009) and where LN destroys label-relevant norm information (2-D spiral, K1020).",
+    "regime": {
+      "family": [
+        "univariate_regression",
+        "multivariate_regression",
+        "synthetic_tabular_classification",
+        "xor_classification"
+      ],
+      "model_type": [
+        "mlp"
+      ],
+      "type": [
+        "architecture_only",
+        "mixed"
+      ],
+      "note": "tabular only when \u0394<0.1; spiral handled by K1020; same optimizer/lr/T"
+    },
+    "phase": "LN-count win rate: multivariate 61-11, univariate 57-12 (lab same-residual more-LN: multivariate at 32768 samples 8/9, ratio 0.38; univariate 37/39), tabular \u0394<0.1 41-4 but \u0394>=0.1 less-LN 17-6 (K1009); residual at equal LN is the weakest term (lab regression 19/29, ratio ~0.96; q_ca0dea plain beat its residual twin); spiral: K1020; XOR plain+LN vs residual 6/10.",
+    "last_evaluated_epoch": 2,
+    "report_ids": [
+      "Rcf3bdec391"
+    ]
+  },
+  {
+    "id": "K1074",
+    "text": "REGRESSION DEPTH (univariate/multivariate MSE MLPs; picking the shallow-wide net is the most common univariate miss): a depth\u22654 net with \u22651 LayerNorm (and \u2265 the rival's LN count) beats a depth\u22642 net - even a wider and/or residual one - whenever its core-rule \u0394 is \u22651/3 of the shallow net's: univariate corpus 31/38, lab 380/461 (MSE ratio ~0.15-0.2); multivariate corpus 18/22, lab 323/435 (~0.7). If deep \u0394 <1/3 of shallow \u0394 the shallow net wins (uni corpus 8/9, lab 228/295; multi 6/6, 159/215). Deeper residual beats shallower non-residual 32-2; deep-narrow beats shallow-wide 70-32. Deep NON-residual 0-LN stacks attenuate signal and usually lose.",
+    "support_count": 0.75,
+    "failure_count": 1.25,
+    "credibility": 0.4375,
+    "created_epoch": 0,
+    "sources": [],
+    "merged_from": [
+      "K1007",
+      "K1060"
+    ],
+    "origin": "c000032",
+    "mechanism": "Curved/oscillatory MSE targets need composed nonlinearities; each LN'd block restores unit-scale activations, so a deep stack keeps gradient and feature scale while composition builds curvature a 1-2 layer net reaches slowly. It is an optimisation-speed effect, so it needs comparable displacement: when deep \u0394 <1/3 of shallow \u0394 raw movement dominates (observed flip). Without LN or residuals deep plain stacks attenuate signal (observed losses).",
+    "regime": {
+      "family": [
+        "univariate_regression",
+        "multivariate_regression"
+      ],
+      "model_type": [
+        "mlp"
+      ],
+      "loss": [
+        "mse"
+      ],
+      "optimizer": [
+        "Adam",
+        "AdamW",
+        "RMSprop",
+        "Adagrad",
+        "SGD"
+      ],
+      "depth": [
+        1,
+        5
+      ],
+      "steps": [
+        256,
+        2048
+      ],
+      "note": "\u0394 ratio uses K1001/K1019 calibration; deep = depth\u22654 with \u22651 LN"
+    },
+    "phase": "deep(\u22654,\u22651 LN) vs shallow(\u22642): \u0394_deep/\u0394_shallow \u22651/3 \u2192 deep wins uni 380/461, multi 323/435; <1/3 \u2192 shallow wins uni 228/295, multi 159/215.",
+    "last_evaluated_epoch": 2
+  }
+]

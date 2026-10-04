@@ -1,0 +1,46 @@
+[
+  {
+    "op": "revise",
+    "claim_ids": [
+      "K1001"
+    ],
+    "text": "Displacement proxies (Adam lr*T; Adagrad 2*lr*sqrt(T); SGD lr*T*|g|/(1-m)) rank initially undertrained candidates, not monotone progress. On three fixed800-window bigram sets, GRU64x2 AdamW .003/.95/wd.001 batch32 wins6/6 weak-rival pairs atT256 but loses5/6 at1024. Condition on model, decay, batch and reuse; alpha1.4 Adagrad is a counterexample to universal last place.",
+    "reason": "Scoped exception to universal undertraining; full CE evidence and limits in R13137ea6b2.",
+    "source_question_ids": [
+      "q_7dbb0e"
+    ],
+    "fields": {
+      "mechanism": "Undertraining is an assumption. Finite bigram CE deterioration may reflect miscalibration, history fitting or optimization noise; actual displacement and trajectories are unmeasured."
+    }
+  },
+  {
+    "op": "revise",
+    "claim_ids": [
+      "K1071"
+    ],
+    "text": "Bigram rate ceiling is conditional: GRU64x2 AdamW beta2=.95 wd=.001 batch32 on three800-window L24 sets wins6/6 weak SGD.003/Adagrad3e-5 pairs at256, loses5/6 at1024 despite tiny rival proxies. Best tested rates: .001/.0003 respectively. Coupled Adam decay or narrower GRUs rescue one set. No alpha threshold; finite1024 reversal differs from non-finite .999/1024 or .95/2048.",
+    "reason": "Below-threshold weak-rival reversal, decay/width/batch counterexamples and unknown mechanism are detailed in R13137ea6b2.",
+    "source_question_ids": [
+      "q_7dbb0e",
+      "q_7f2c15",
+      "q_f7bc1b"
+    ],
+    "fields": {
+      "mechanism": "Coupled-decay sensitivity is measured, but finite CE reversal does not identify history fitting or overconfidence. Non-finite aggregates are separate and do not reveal failed-seed counts or their cause."
+    }
+  },
+  {
+    "op": "revise",
+    "claim_ids": [
+      "K1075"
+    ],
+    "text": "Historical GRU/transformer displacement bands require shared optimizer/lr/T; they do not protect high-rate GRUs across optimizers. GRU64x2 AdamW.003/.95/wd.001 batch32 loses5/6 weak-rival pairs at1024 but wins6/6 at256 on three800-window sets. On alpha.8/V24, width32x1/x2 beat both rivals; width64x1/x2 lose. No new shared-optimizer architecture band was tested.",
+    "reason": "Scope architecture preference to comparable optimizer/budget regimes; preserve historical evidence in the report repository, not pooled with these pairs.",
+    "source_question_ids": [
+      "q_7dbb0e"
+    ],
+    "fields": {
+      "mechanism": "Historical shared-rate architecture explanations are hypotheses. Cross-optimizer endpoint comparisons do not establish gates/history mechanisms or validate new architecture bands."
+    }
+  }
+]

@@ -1,0 +1,46 @@
+[
+  {
+    "op": "revise",
+    "claim_ids": [
+      "K1001"
+    ],
+    "text": "Displacement is a heuristic for initially undertrained candidates, not measured motion or monotone held-out progress. Adam-family proxy: lr*T; Adagrad: 2*lr*sqrt(T); SGD: lr*T*|g|/(1-m). Check model/data-specific ceilings before ranking by this proxy. Fixed-law bigram exception: GRU64x2 AdamW .003, beta2=.95, wd=.001, batch32 wins 6/6 weak-transformer pairs at T256 but loses 5/6 at T1024 across three 800-window sets, despite rival proxies below .03. Alpha1.4/V32 still beats weak Adagrad. Condition on optimizer/decay, width/depth, batch and reuse; no universal last place or alpha threshold.",
+    "fields": {
+      "mechanism": "Undertraining must be checked. Stochastic-label window reuse permits finite CE deterioration; miscalibration, history fitting and optimization noise remain unmeasured alternatives."
+    },
+    "reason": "Replace universal undertraining with a conditional heuristic; preserve optimizer proxies and scope the measured long-budget exception.",
+    "source_question_ids": [
+      "q_7dbb0e"
+    ]
+  },
+  {
+    "op": "revise",
+    "claim_ids": [
+      "K1071"
+    ],
+    "text": "Fixed-law bigram rate ceilings are conditional on model, optimizer, batch and dataset, not only lr*T. GRU64x2 AdamW beta2=.95 wd=.001 batch32 on three 800/200-window L24 sets (alpha.8/V24,1/V24,1.4/V32): best tested rate .001 at T256, .0003 at T1024; .003 wins 6/6 weak SGD64x1 .003/Adagrad32x3 3e-5 pairs at256 but loses5/6 at1024, including rivals below proxy .03. Same-GRU1024 CE penalty versus .0003: +1.0657,+1.0058,+.7746. Alpha1.4 Adagrad remains a counterexample. Coupled Adam decay and narrower GRUs avoid reversal on alpha.8; batch/exposure alters it. Non-finite beta2=.999/T1024 and .95/T2048 are separate failures with unknown failed-seed counts. No alpha threshold; cited alpha history changes architecture/decay.",
+    "fields": {
+      "mechanism": "Finite reversal does not prove divergence. Coupled-decay sensitivity is measured; calibration, train/test trajectories and history interventions are needed to identify the mechanism."
+    },
+    "reason": "Extend the weak-rival exception below the old proxy threshold without pooling budgets, architectures, finite and non-finite outcomes.",
+    "source_question_ids": [
+      "q_7dbb0e",
+      "q_7f2c15",
+      "q_f7bc1b"
+    ]
+  },
+  {
+    "op": "revise",
+    "claim_ids": [
+      "K1075"
+    ],
+    "text": "Historical fixed-law bigram GRU/transformer bands apply only to shared optimizer/lr/T: below proxy .02 lean GRU; .02-.1 lean equal/larger-width transformer; .1-.5 and above .5 historically favor GRU, with sparse high-band evidence. These bands cannot protect a differently optimized high-rate GRU. GRU64x2 AdamW .003/.95/wd.001 batch32 loses5/6 weak-transformer pairs at T1024 but wins6/6 at256 on three800-window sets. Alpha1.4/V32 still beats weak Adagrad. On alpha.8/V24 at1024, width32x1/32x2 beat both weak rivals, width64x1/64x2 lose, and coupled Adam decay rescues64x2. No new matched-optimizer cross-architecture band was tested; do not pool these pairs into historical counts.",
+    "fields": {
+      "mechanism": "Shared-rate architecture explanations remain hypotheses. Cross-optimizer pairs require rate/budget/regularization controls; endpoint CE alone does not establish irrelevant-history fitting."
+    },
+    "reason": "Retain the historical shared-rate scope while explicitly excluding the newly measured cross-optimizer reversal from architecture protection.",
+    "source_question_ids": [
+      "q_7dbb0e"
+    ]
+  }
+]

@@ -1,0 +1,189 @@
+[
+  {
+    "id": "K1006",
+    "text": "MLPs at tied optimizer/lr/T and low \u0394: compare LayerNorm count, residual status and task-specific exceptions; do NOT score a residual path as exactly one extra LN. For multivariate MSE with both \u0394<0.1, a plain net with one extra LN is favored (K1076: lab 23/31, MSE ratio 0.906). Older more-LN corpus counts: multivariate 61/72, univariate 57/69, tabular \u0394<0.1 41/45; these are not factor-isolated effects. At equal LN, regression rectifiers are a preference (K1008), not a full ranking rule. Use K1074 for regression depth, K1039 for shared SGD, K1020/K1077 for spirals, K1061 for deep plain tails, K1018/K1065 for XOR, K1009/K1033 for tabular budget reversals.",
+    "support_count": 4.25,
+    "failure_count": 9.75,
+    "credibility": 0.328125,
+    "created_epoch": 0,
+    "sources": [],
+    "merged_from": [
+      "K0002",
+      "K0078",
+      "K0268",
+      "K0249",
+      "K0256"
+    ],
+    "origin": "seed:seed_distill_v1",
+    "mechanism": "LayerNorm and skips can improve signal propagation, but observed pairwise rankings do not establish a fixed exchange rate between them. Task, activation, depth, optimizer and normalization placement interact.",
+    "regime": {
+      "family": [
+        "univariate_regression",
+        "multivariate_regression",
+        "synthetic_tabular_classification",
+        "xor_classification",
+        "spiral_classification"
+      ],
+      "model_type": "mlp",
+      "note": "Tied optimizer/lr/T; low displacement; task-specific rules take precedence. Residual is not a full LN point."
+    },
+    "phase": "LN-count win rate: multivariate 61-11, univariate 57-12 (lab same-residual more-LN: multivariate at 32768 samples 8/9, ratio 0.38; univariate 37/39), tabular \u0394<0.1 41-4 but \u0394>=0.1 less-LN 17-6 (K1009); residual at equal LN is the weakest term (lab regression 19/29, ratio ~0.96; q_ca0dea plain beat its residual twin); spiral: K1020; XOR plain+LN vs residual 6/10.",
+    "last_evaluated_epoch": 1,
+    "report_ids": [
+      "R04f88f629b"
+    ]
+  },
+  {
+    "id": "K1009",
+    "text": "Tabular CE, 1024 rows, 2-16 Gaussian features, SHARED optimizer/lr/T and \u0394\u22650.1: shallow, smooth and fewer-LN are separate empirical preferences, not an additive architecture score. Older corpus: shallow wins 21/26, fewer-LN 17/23, smooth 16/16; combined rule 26/32 arch-only winners. Do not discard a residual+LN advantage solely for smooth activation or width (q_11a5f0); width was not isolated. At \u0394<0.1 older more-LN wins 41/45, deeper 35/52, but 32-epoch depth reversals can start near \u03940.03 (K1033). Epochs/data rule matter: see K1073 for optimizer sweet spots and K1056 for activation. These are conditional ranking observations, not proof that every \u0394\u22650.1 boundary is learned.",
+    "support_count": 0.0,
+    "failure_count": 0.0,
+    "credibility": 0.5,
+    "created_epoch": 0,
+    "sources": [],
+    "merged_from": [
+      "K0259",
+      "K0126"
+    ],
+    "origin": "seed:seed_distill_v1",
+    "mechanism": "Observed architecture preferences change with displacement and examples seen, but these rankings do not independently measure boundary fit or confidence calibration. Overconfidence is a competing explanation, not a condition proven solely by Delta.",
+    "regime": {
+      "family": "synthetic_tabular_classification",
+      "model_type": "mlp",
+      "data": "1024 rows, 2-16 Gaussian features; smooth_additive/piecewise/sparse_interaction",
+      "delta": ">=0.1 sampled band; epoch exceptions K1033",
+      "note": "Shared optimizer/lr/T; no additive architecture score or factor-isolated width effect."
+    },
+    "phase": "\u0394_shared<0.1: more LN 41-4, deeper 35-17; \u0394_shared\u22650.1: shallower 21-5, less-LN 17-6, smooth act 16/16 (counterexample q_87182b: more early LN in residual LeakyReLU won). Across \u0394 (mixed questions) prefer \u0394\u22480.1-0.3 over \u22653\u00d7 larger (K1021).",
+    "report_ids": [
+      "R04f88f629b"
+    ]
+  },
+  {
+    "id": "K1018",
+    "text": "XOR CE, 1024 rows, \u22658 features, shared Adam/AdamW/RMSprop lr/T and \u0394\u22650.05: favor smooth activations (lab 15/16, CE ratio 0.78; corpus 6/6). Do not apply a universal shallow/fewer-LN score. More-LN wins only 8/32 lab but 5/11 corpus; fewer-LN is a preference. Depth depends on residuals (K1065): only the \u22653-block gap favors a \u22642-block net (lab 5/5, ratio 0.51; corpus 2/3). Below \u03940.05, more LN wins 33/41 (ratio 0.93), activation is mixed (smooth 3/8), and depth is conditional. With <8 features do not apply this reversal (deeper 7/7). \u03940.05 separates sampled bands, not a demonstrated sharp causal threshold; SGD/Adagrad extrapolation is unvalidated.",
+    "support_count": 1.0,
+    "failure_count": 0.0,
+    "credibility": 0.6666666666666666,
+    "created_epoch": 0,
+    "sources": [],
+    "merged_from": [],
+    "origin": "c000005",
+    "mechanism": "With many distractor coordinates and only ~1024 rows, once the XOR interaction is learned (\u0394\u22650.05) further capacity of deep LN'd stacks is spent fitting distractor-dependent features and sharpening confidence near the axes, raising test CE; a shallow wide smooth net fits the 2-coordinate product with fewer composed nonlinearities. Predicts the reversal vanishes for \u22644 features (no distractors) or \u0394<0.05 (boundary not yet learned) \u2014 both observed.",
+    "regime": {
+      "family": "xor_classification",
+      "model_type": "mlp",
+      "data": "1024 train rows, >=8 features",
+      "delta": ">=0.05 sampled high band",
+      "optimizer": [
+        "Adam",
+        "AdamW",
+        "RMSprop"
+      ],
+      "note": "Shared optimizer/lr/T; independent LN and residual-dependent depth preferences. No sharp boundary established."
+    },
+    "phase": "nf\u22658: \u0394\u22650.05 smooth 15/16, more-LN 8/32, shallow vs \u22653 deeper 5/5; \u0394<0.05 more-LN 33/41, shallow 4/14, smooth 3/8. nf<8: \u0394\u22650.05 more-LN 4/8, deeper 7/7 corpus + 2/2 lab; \u0394<0.05 more-LN 8/11.",
+    "refines": "K1006",
+    "last_evaluated_epoch": 1,
+    "report_ids": [
+      "R04f88f629b"
+    ]
+  },
+  {
+    "id": "K1038",
+    "text": "For depth\u22653, ZERO-LN SGD MLPs versus a rival with \u0394<0.1 and \u22653\u00d7 smaller calibrated \u0394, discount the nominal progress advantage; do not call them frozen or reject all SGD nets. Original within-set lab: larger-\u0394 zero-LN deep SGD won 21/60 (18 sets), median loss ratio \u22481.0; shallow zero-LN nets did much better (rectifier 80%, smooth 67%). With \u22651 LN, larger-\u0394 SGD won 493/563 (88%); do not apply the zero-LN penalty there. MSE zero-LN comparisons were only 37/70, so task-specific evidence matters. These are architecture/optimizer-confounded preferences, not a universal gradient bound. Examples: q_bfe225 and q_1469ce; calibration K1019.",
+    "support_count": 0.75,
+    "failure_count": 0.25,
+    "credibility": 0.5833333333333334,
+    "created_epoch": 0,
+    "sources": [],
+    "merged_from": [],
+    "origin": "c000104",
+    "mechanism": "SGD's step is the raw gradient, so its true displacement scales with the backpropagated gradient magnitude. With PyTorch default init (weight std\u22481/\u221a(3\u00b7fan_in)) each unnormalized block shrinks activations and hence hidden-layer gradients geometrically, so |g|\u22480.01 overestimates \u0394 for deep plain stacks. LayerNorm restores unit-RMS activations per block, and Adam-family divide by \u221av, so both are insensitive. Predicts: collapse grows with depth, absent with \u22651 LN or adaptive optimizers.",
+    "regime": {
+      "family": [
+        "univariate_regression",
+        "multivariate_regression",
+        "synthetic_tabular_classification",
+        "xor_classification",
+        "spiral_classification"
+      ],
+      "model_type": [
+        "mlp"
+      ],
+      "optimizer": [
+        "SGD"
+      ],
+      "n_ln": [
+        0,
+        0
+      ],
+      "budget": [
+        1024,
+        32768
+      ],
+      "note": "SGD net vs rival with >=3x smaller calibrated \u0394, rival \u0394<0.1; lab within-set pairs"
+    },
+    "phase": "SGD larger-\u0394 win rate: \u22651 LN 88% (493/563); 0 LN depth\u22642 rect 80% (77/96), smooth 67% (60/90); 0 LN depth\u22653 35% (21/60). Regression 0-LN 53% (37/70); classification 0-LN 69%.",
+    "refines": "K1019",
+    "last_evaluated_epoch": 1,
+    "report_ids": [
+      "R04f88f629b"
+    ]
+  },
+  {
+    "id": "K1076",
+    "text": "Multivariate symbolic MSE, BOTH calibrated \u0394<0.1 and \u0394 ratio 0.5-2: lean toward a non-residual MLP with exactly one extra LayerNorm over a residual rival; a skip is not one full LN point. Within-set lab: higher-LN plain wins 23/31 pairs (25 sets), median MSE ratio 0.906; equal optimizer/lr subset 4/6, ratio 0.913. Matched optimizer/lr training history: 41/53 pairs in 32 questions, including q_1f04dc (Adagrad 13/18). Do NOT extend above \u0394=0.1 (lab 5/13, ratio 1.054) or to univariate (low-\u0394 17/34, ratio 0.989). Width, depth, activation and optimizer knobs remain confounded; this is a preference, not a causal LN effect.",
+    "support_count": 0.0,
+    "failure_count": 0.0,
+    "credibility": 0.5,
+    "created_epoch": 2,
+    "sources": [
+      "q_1f04dc",
+      "q_06b6b2",
+      "q_189fd5",
+      "q_2d3370",
+      "q_331b38",
+      "q_3c25f8",
+      "q_439830",
+      "q_440fd0",
+      "q_45fd66",
+      "q_47a7c4",
+      "q_4e2bbe",
+      "q_5bca49",
+      "q_6495eb",
+      "q_728426",
+      "q_8ba7a1",
+      "q_8c1f07",
+      "q_8cc61c",
+      "q_995163",
+      "q_999725",
+      "q_b57ff5",
+      "q_b6e688",
+      "q_b6f0cc",
+      "q_c514ef",
+      "q_c9738e",
+      "q_ca0dea",
+      "q_d2ef9a",
+      "q_d6efa1",
+      "q_dac551",
+      "q_de0057",
+      "q_e9a5ca",
+      "q_f6307a",
+      "q_fb9762"
+    ],
+    "merged_from": [],
+    "origin": "Jd09d39a4add3:c000028",
+    "phase": "short-budget low-displacement feature learning",
+    "regime": {
+      "family": "multivariate_regression",
+      "loss": "mse",
+      "delta": "both <0.1; ratio 0.5-2",
+      "residual": "plain versus residual",
+      "n_ln": "plain has exactly one more",
+      "note": "Observational within-set comparisons; width/depth/activation/optimizer confounded; failed-seed sensitivity 22/30 vs23/31."
+    },
+    "refines": "K1006",
+    "origin_epoch": 1
+  }
+]

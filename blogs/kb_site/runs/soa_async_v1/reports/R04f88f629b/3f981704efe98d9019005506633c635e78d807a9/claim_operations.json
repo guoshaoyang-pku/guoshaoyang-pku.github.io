@@ -1,0 +1,60 @@
+[
+  {
+    "op": "revise",
+    "claim_ids": [
+      "K1006"
+    ],
+    "source_question_ids": [
+      "q_1f04dc",
+      "q_ca0dea"
+    ],
+    "reason": "Condition-first parent repair; retain refreshed non-additive wording and independently verified evidence without depending on K1076 being editable in this proposal snapshot.",
+    "text": "MLPs at tied optimizer/lr/T and low calibrated Delta: compare task-specific LN/residual evidence, NOT residual=one-LN scoring. Multivariate plainMSE: a plain net with exactly one extraLN, BOTH Delta<.1 and ratio.5-2, is a tendency (base-lab23/31 pairs25sets,MSEratio.906; same optimizer TYPE/lr4/6,ratio.913; no full-config matches). Prior history40/52 pairs31questions excludes q_1f04dc; Adagrad12/17. Counterexamples: depth gap+1 only4/9,ratio1.166; highDelta5/13,ratio1.054; univariate17/34,ratio.989. Low lab is4096/8192samples, not focal16384. Controlled mvar_e57563 width96depth1GELU Adagrad.001 T256: plainLN1 .4207 versus residualLN0 .4520 MSE,ratio.931; this does not establish universality. Older more-LN corpus multivariate61/72,univariate57/69,low tabular41/45 are confounded preferences. At equalLN, activation/depth/residual are secondary task-specific comparisons, not forced ties. Check K1074/K1039 for regression,K1020 for spiral,K1061 for plain tails,K1018/K1065 for XOR,K1009/K1033 for tabular.",
+    "fields": {
+      "mechanism": "No universal additive score or causal residual/LN equivalence established; normalization-first observations are conditional."
+    }
+  },
+  {
+    "op": "revise",
+    "claim_ids": [
+      "K1018"
+    ],
+    "source_question_ids": [
+      "q_09e52b",
+      "q_917f30"
+    ],
+    "reason": "Preserve smooth-activation and depth evidence but remove automatic fewer-LN reversal: fixed controlled counterexample and a different explicit within-set audit give opposing LN direction; original8/32 subset underidentified.",
+    "text": "Synthetic XOR CE,1024train rows,>=8features,shared optimizer/lr/T: Delta~.05 is an empirical band boundary, NOT a sharp switch or automatic fewer-LN override. Older smooth-vs-rectifier lab15/16 (CE ratio.78), corpus6/6, can inform a scoped preference; depth depends on residuals and gap (K1065). Older more-LN8/32 high versus33/41 low counts have a different, underidentified pair filter: do not generalize them to every matched-optimizer comparison. Explicit base-lab audit (plain CE,same optimizer TYPE/lr,any width/depth/residual) gives more-LN36/51 high pairs37sets ratio.891 versus14/32 low ratio1.001; confounded, not causal. Controlled16feature XOR,width24 depth2 plainGELU AdamW T256 bs16: twoLN beats oneLN at Delta .0256/.0512/.0768 (CE .69212/.68478/.67619 vs .69224/.68753/.68153). Keep these counterexamples; no demonstrated LN reversal, and no SGD/Adagrad extrapolation from the older Adam-family rule. With<8features do not apply the high-dimensional reversal.",
+    "fields": {
+      "mechanism": "No sharp causal threshold or universal learned-boundary mechanism established; controlled and observational LN comparisons are selection-dependent."
+    }
+  },
+  {
+    "op": "revise",
+    "claim_ids": [
+      "K1009"
+    ],
+    "source_question_ids": [
+      "q_b0ae9d"
+    ],
+    "reason": "Preserve current condition-first repair while adding explicitly defined lab data-rule stratification and removing universal pooling precedence.",
+    "text": "Synthetic TABULAR CE,1024rows,2-16Gaussian features,shared optimizer/lr/T: high Delta>=.1 architecture observations are task/budget-specific preferences, not a guaranteed shallow-wide-smooth winner. Older corpus shallow21/26,fewerLN17/23,smooth16/16; width was not isolated. Explicit base-lab same optimizer TYPE/lr plainCE comparisons: at high Delta MORE-LN wins piecewise9/17 (median more/less CE .987),smooth_additive5/13 (1.196),sparse_interaction0/10 (1.495); low Delta more-LN38/56,24/40,29/45 respectively. High evidence is4096samples36pairs and8192samples4pairs; LN/depth/activation/decay remain confounded. Thus fewer-LN is supported in sampled sparse/smooth strata, not a universal piecewise override. Use K1033/K1073 for sample-exposure/depth/displacement interactions and K1056 for activation. Do not assume Delta alone proves the boundary learned, discard residual+LN for width/smooth activation, or say XOR never reverses.",
+    "fields": {
+      "mechanism": "Data-rule and budget dependence are measured ranking observations; overconfidence and learned-boundary explanations remain untested here."
+    }
+  },
+  {
+    "op": "revise",
+    "claim_ids": [
+      "K1038"
+    ],
+    "source_question_ids": [
+      "q_0e3752"
+    ],
+    "reason": "Relative loss does not measure freezing. New explicit plain-loss SGD audit retains residual/family/momentum/budget strata and scope dependence of original counts.",
+    "text": "SGD MLP versus adaptive rival WITHIN one set, SGD calibrated Delta>=3x rival and rivalDelta<.1: zeroLN depth>=3 makes displacement ranking less reliable, not 'frozen' or automatically inferior. Older broader lab21/60 wins18sets ratio~1, versus normalized493/563; different loss/filter scope. Explicit nonexcluded base-lab plainMSE/CE audit: normalized413/471 wins ratio.578; zeroLN68/119 ratio.983; zeroLNdeep11/30 (11sets),ratio1.056. DEEP zeroLN plain3/15 ratio1.897 versus residual8/15 ratio.991: do not pool away residuals. Mostly SGD m=.9 (11/29; plainSGD0/1); regression5/21,spiral4/5,XOR2/4; only4096/8192sample budgets. No deep rectifier cases in this filter. Shallow zeroLN older rectifier80%/smooth67% cannot justify a deep blanket rule. Calibrated Delta is a proxy(K1019), not measured parameter motion; compare task,residual,activation,width,budget and optimizer before discounting.",
+    "fields": {
+      "mechanism": "No parameter-motion or initial-to-final loss measurement establishes near-frozen SGD dynamics; gradient attenuation is a hypothesis, not demonstrated by pair win rates."
+    }
+  }
+]

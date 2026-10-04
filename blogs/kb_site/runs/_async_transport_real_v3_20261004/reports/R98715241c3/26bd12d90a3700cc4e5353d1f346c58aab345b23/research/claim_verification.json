@@ -1,0 +1,84 @@
+[
+  {
+    "id": "K1006",
+    "text": "MLP ARCHITECTURE DEFAULT (same optimizer for all choices; regression, XOR, spiral, tabular when \u0394<0.1): score = (#LayerNorm'd blocks) + 1 if residual, MINUS 1 if a NON-residual depth\u22654 net's LAST block has no LN (K1061); pick the highest. Ties: on regression ReLU/LeakyReLU > GELU > SiLU, then later last-LN (K1022), then greater depth. Corpus MLP arch-only hits 74/110 (spiral 12/16, tabular 17/32). More-LN beats less-LN 61-11 multivariate, 57-12 univariate, 41-4 tabular \u0394<0.1. Overrides: regression deep vs shallow (K1074); spiral residual \u22652 blocks deeper (K1020); shared-SGD regression rectifier vs SiLU (K1039); XOR \u22658 feat. \u0394\u22650.05 (K1018, K1065); tabular \u0394\u22650.1 (K1009/K1073).",
+    "support_count": 2.25,
+    "failure_count": 6.75,
+    "credibility": 0.29545454545454547,
+    "created_epoch": 0,
+    "sources": [],
+    "merged_from": [
+      "K0002",
+      "K0078",
+      "K0268",
+      "K0249",
+      "K0256"
+    ],
+    "origin": "seed:seed_distill_v1",
+    "mechanism": "Each unnormalized pre-activation layer shrinks hidden RMS (~0.5x for SiLU/GELU at init), so an under-trained deep stack feeds a weak signal to the head; pre-LN restores unit scale and identity paths keep gradient flow, speeding an under-trained net 2-3x. Predicts the LN advantage shrinks once \u0394 is large enough to learn the scale (tabular \u0394>=0.1 reverses, K1009) and where LN destroys label-relevant norm information (2-D spiral, K1020).",
+    "regime": {
+      "family": [
+        "univariate_regression",
+        "multivariate_regression",
+        "synthetic_tabular_classification",
+        "xor_classification"
+      ],
+      "model_type": [
+        "mlp"
+      ],
+      "type": [
+        "architecture_only",
+        "mixed"
+      ],
+      "note": "tabular only when \u0394<0.1; spiral handled by K1020; same optimizer/lr/T"
+    },
+    "phase": "LN-count win rate: multivariate 61-11, univariate 57-12 (lab same-residual more-LN: multivariate at 32768 samples 8/9, ratio 0.38; univariate 37/39), tabular \u0394<0.1 41-4 but \u0394>=0.1 less-LN 17-6 (K1009); residual at equal LN is the weakest term (lab regression 19/29, ratio ~0.96; q_ca0dea plain beat its residual twin); spiral: K1020; XOR plain+LN vs residual 6/10.",
+    "last_evaluated_epoch": 2,
+    "report_ids": [
+      "Rcf3bdec391"
+    ]
+  },
+  {
+    "id": "K1015",
+    "text": "Residual \u00d7 depth \u00d7 task: on regression, depth helps even without residuals (deeper plain beats shallower residual 24-15) because composed nonlinearities are needed for curvature; on classification, depth WITHOUT residual hurts (shallower residual beats deeper plain 19-13) while deeper residual beats shallower plain 33-14. So for CE tasks never pick a deep (\u22654) plain stack over a residual one at the same optimizer; for MSE tasks a deep plain stack with \u22652 LN blocks is still competitive. Deep residual MLPs win 53% of their appearances vs 29% for deep plain.",
+    "support_count": 1.25,
+    "failure_count": 0.75,
+    "credibility": 0.5625,
+    "created_epoch": 0,
+    "sources": [],
+    "merged_from": [],
+    "origin": "seed:seed_distill_v1",
+    "last_evaluated_epoch": 2,
+    "report_ids": [
+      "Rcf3bdec391"
+    ]
+  },
+  {
+    "id": "K1022",
+    "text": "LN PLACEMENT tie-breaker (MLP pre-LN blocks): at equal LN count and equal residual status, prefer the net whose last LayerNorm is closer to the output head (fewer unnormalized blocks after the final LN). Holds on synthetic tabular classification and multivariate regression when \u0394<0.1: corpus 11/12 pairs (median loss ratio ~0.80); lab 4/7 (ratio ~0.99); controlled smooth-additive test 2/2 (0.95); q_7ae5d3 (tabular, Adagrad \u22643e-4) agrees. Does NOT hold on univariate regression or XOR (corpus 2/8; controlled univariate 1/4) nor at \u0394\u22650.1 (3/6). Apply only after LN count + residual tie (K1006); whether late placement beats one extra early LN is untested.",
+    "support_count": 0.0,
+    "failure_count": 1.0,
+    "credibility": 0.3333333333333333,
+    "created_epoch": 0,
+    "sources": [],
+    "merged_from": [],
+    "origin": "c000006",
+    "mechanism": "A pre-LN right before the last hidden Linear restores unit feature scale feeding the head, so tiny updates (\u0394<0.1) move the output more; each unnormalized block after it shrinks hidden RMS (~0.5x for SiLU/GELU). Predicts the advantage fades once \u0394\u22650.1 (feature scale is learned) - observed 3/6. Why univariate/XOR don't follow is unexplained.",
+    "regime": {
+      "family": [
+        "synthetic_tabular_classification",
+        "multivariate_regression"
+      ],
+      "model_type": [
+        "mlp"
+      ],
+      "delta": [
+        0,
+        0.1
+      ],
+      "note": "equal LN count, equal residual, same optimizer/lr/T; small n, effect ~5-20%"
+    },
+    "phase": "late-LN wins: tabular \u0394<0.1 corpus 6/7, lab 3/5; multivariate \u0394<0.1 corpus 5/5, lab 1/2; any family \u0394>=0.1 3/6; univariate 1/4 corpus + 1/4 controlled; XOR 1/4 corpus, 2/4 lab.",
+    "refines": "K1006"
+  }
+]

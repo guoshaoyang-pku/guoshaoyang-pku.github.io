@@ -1,0 +1,215 @@
+{
+  "origin_epoch": 1,
+  "job_id": "J22ba490aa417",
+  "why": "Joint matched T256 batch32 comparison on alpha1.4 V32: high-rate GRU and exact genuinely weak SGD/Adagrad rivals; no pooling with1024.",
+  "input": {
+    "dataset": "bigram_lm/bg_167595",
+    "candidates": [
+      {
+        "model": {
+          "type": "transformer_lm",
+          "vocab_size": 32,
+          "context_length": 24,
+          "d_model": 64,
+          "num_layers": 1,
+          "layer_residual": false,
+          "num_heads": 4,
+          "d_ff": 256
+        },
+        "optimizer": {
+          "type": "SGD",
+          "lr": 0.003,
+          "weight_decay": 0.001,
+          "betas": [
+            0.9,
+            0.95
+          ],
+          "momentum": 0
+        },
+        "loss": {
+          "loss_id": "cross_entropy"
+        },
+        "budget": {
+          "training_steps": 256,
+          "batch_size": 32
+        }
+      },
+      {
+        "model": {
+          "type": "transformer_lm",
+          "vocab_size": 32,
+          "context_length": 24,
+          "d_model": 32,
+          "num_layers": 3,
+          "layer_residual": false,
+          "num_heads": 2,
+          "d_ff": 256
+        },
+        "optimizer": {
+          "type": "Adagrad",
+          "lr": 3e-05,
+          "weight_decay": 0.0001,
+          "betas": [
+            0.9,
+            0.95
+          ]
+        },
+        "loss": {
+          "loss_id": "cross_entropy"
+        },
+        "budget": {
+          "training_steps": 256,
+          "batch_size": 32
+        }
+      },
+      {
+        "model": {
+          "type": "gru_lm",
+          "vocab_size": 32,
+          "context_length": 24,
+          "d_model": 64,
+          "num_layers": 2,
+          "layer_residual": false
+        },
+        "optimizer": {
+          "type": "AdamW",
+          "lr": 0.003,
+          "weight_decay": 0.001,
+          "betas": [
+            0.9,
+            0.95
+          ]
+        },
+        "loss": {
+          "loss_id": "cross_entropy"
+        },
+        "budget": {
+          "training_steps": 256,
+          "batch_size": 32
+        }
+      }
+    ]
+  },
+  "dataset_params": {
+    "instance_seed": 4253,
+    "vocab_size": 32,
+    "context_length": 24,
+    "train_size": 800,
+    "test_size": 200,
+    "alpha": 1.4,
+    "layout": "lm",
+    "sequence_seed": 4253,
+    "table_seed": 14253
+  },
+  "profile": "v1.5",
+  "seeds": 10,
+  "result": {
+    "dataset": "bigram_lm/bg_167595",
+    "family": "bigram_lm",
+    "results": [
+      {
+        "mean": 3.4987453699111937,
+        "std": 0.01923733527095379,
+        "failed_seeds": 0,
+        "metric": "test_ce",
+        "secs": 23.8,
+        "candidate": {
+          "model": {
+            "type": "transformer_lm",
+            "vocab_size": 32,
+            "context_length": 24,
+            "d_model": 64,
+            "num_layers": 1,
+            "layer_residual": false,
+            "num_heads": 4,
+            "d_ff": 256
+          },
+          "optimizer": {
+            "type": "SGD",
+            "lr": 0.003,
+            "weight_decay": 0.001,
+            "betas": [
+              0.9,
+              0.95
+            ],
+            "momentum": 0
+          },
+          "loss": {
+            "loss_id": "cross_entropy"
+          },
+          "budget": {
+            "training_steps": 256,
+            "batch_size": 32
+          }
+        }
+      },
+      {
+        "mean": 3.582229423522949,
+        "std": 0.020384198369245324,
+        "failed_seeds": 0,
+        "metric": "test_ce",
+        "secs": 40.9,
+        "candidate": {
+          "model": {
+            "type": "transformer_lm",
+            "vocab_size": 32,
+            "context_length": 24,
+            "d_model": 32,
+            "num_layers": 3,
+            "layer_residual": false,
+            "num_heads": 2,
+            "d_ff": 256
+          },
+          "optimizer": {
+            "type": "Adagrad",
+            "lr": 3e-05,
+            "weight_decay": 0.0001,
+            "betas": [
+              0.9,
+              0.95
+            ]
+          },
+          "loss": {
+            "loss_id": "cross_entropy"
+          },
+          "budget": {
+            "training_steps": 256,
+            "batch_size": 32
+          }
+        }
+      },
+      {
+        "mean": 2.7177502393722532,
+        "std": 0.005529688981709548,
+        "metric": "test_ce",
+        "cached": true,
+        "candidate": {
+          "model": {
+            "type": "gru_lm",
+            "vocab_size": 32,
+            "context_length": 24,
+            "d_model": 64,
+            "num_layers": 2,
+            "layer_residual": false
+          },
+          "optimizer": {
+            "type": "AdamW",
+            "lr": 0.003,
+            "weight_decay": 0.001,
+            "betas": [
+              0.9,
+              0.95
+            ]
+          },
+          "loss": {
+            "loss_id": "cross_entropy"
+          },
+          "budget": {
+            "training_steps": 256,
+            "batch_size": 32
+          }
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,351 @@
+{
+  "origin_epoch": 2,
+  "job_id": "J12f6dceed691",
+  "why": "# Preregistered controls\nBefore outcomes: P1 polynomial analogue mvar_5a829e (dimension2, x0**3+x0*x1+x1-2), default-init MLP depth3 width256 nonresidual leaky_relu slope .01 LN[true,false,true], MSE, AdamW wd1e-5 betas[.9,.999]. Cross lr3e-5/1e-3 and T256/2048, batch16, samples4096/32768. Predict high rate wins at T256 but low rate wins T2048 (test-MSE endpoint); a high-rate long-budget win falsifies transfer of q_38909f's ordinal reversal to this analogue. P2 piecewise analogue stabcls_06550f, dimension16, default-init depth4 width256 GELU nonresidual LN[true,false,true,false], CE, Adagrad wd1e-3. Cross lr1e-4/3e-3 and T128/512 batch64 (8/32 exposure epochs, samples8192/32768). Predict high rate wins T128 and low wins T512; long-budget high win falsifies rate-only account of q_a57013. All changes start fresh runs; no continuation or optimizer-state intervention is requested. Ten seeds per cell; ratios of mean held-out losses and absolute high-minus-low margins; aggregate standard deviations not paired-seed significance. No mechanisms inferred from endpoint losses alone. Next dataset transfer conditional on completing these tests. Existing experiments audited: mvar_000e80 Adam width32 SiLU budget reversal and stabcls_021b60 depth1 ReLU Adam controls are not repeated.",
+  "input": {
+    "dataset": "multivariate_regression/mvar_5a829e",
+    "candidates": [
+      {
+        "model": {
+          "type": "mlp",
+          "depth": 3,
+          "width": 256,
+          "residual": false,
+          "activation": "leaky_relu",
+          "layer_norm": [
+            true,
+            false,
+            true
+          ],
+          "leaky_relu_slope": 0.01,
+          "input_dim": 2,
+          "output_dim": 1,
+          "leaky_slope": 0.01
+        },
+        "optimizer": {
+          "type": "AdamW",
+          "lr": 3e-05,
+          "weight_decay": 1e-05,
+          "betas": [
+            0.9,
+            0.999
+          ]
+        },
+        "loss": {
+          "loss_id": "mse_l2",
+          "lambda": 0.001
+        },
+        "budget": {
+          "training_steps": 256,
+          "batch_size": 16,
+          "total_samples_seen": 4096
+        }
+      },
+      {
+        "model": {
+          "type": "mlp",
+          "depth": 3,
+          "width": 256,
+          "residual": false,
+          "activation": "leaky_relu",
+          "layer_norm": [
+            true,
+            false,
+            true
+          ],
+          "leaky_relu_slope": 0.01,
+          "input_dim": 2,
+          "output_dim": 1,
+          "leaky_slope": 0.01
+        },
+        "optimizer": {
+          "type": "AdamW",
+          "lr": 0.001,
+          "weight_decay": 1e-05,
+          "betas": [
+            0.9,
+            0.999
+          ]
+        },
+        "loss": {
+          "loss_id": "mse_l2",
+          "lambda": 0.001
+        },
+        "budget": {
+          "training_steps": 256,
+          "batch_size": 16,
+          "total_samples_seen": 4096
+        }
+      },
+      {
+        "model": {
+          "type": "mlp",
+          "depth": 3,
+          "width": 256,
+          "residual": false,
+          "activation": "leaky_relu",
+          "layer_norm": [
+            true,
+            false,
+            true
+          ],
+          "leaky_relu_slope": 0.01,
+          "input_dim": 2,
+          "output_dim": 1,
+          "leaky_slope": 0.01
+        },
+        "optimizer": {
+          "type": "AdamW",
+          "lr": 3e-05,
+          "weight_decay": 1e-05,
+          "betas": [
+            0.9,
+            0.999
+          ]
+        },
+        "loss": {
+          "loss_id": "mse_l2",
+          "lambda": 0.001
+        },
+        "budget": {
+          "training_steps": 2048,
+          "batch_size": 16,
+          "total_samples_seen": 32768
+        }
+      },
+      {
+        "model": {
+          "type": "mlp",
+          "depth": 3,
+          "width": 256,
+          "residual": false,
+          "activation": "leaky_relu",
+          "layer_norm": [
+            true,
+            false,
+            true
+          ],
+          "leaky_relu_slope": 0.01,
+          "input_dim": 2,
+          "output_dim": 1,
+          "leaky_slope": 0.01
+        },
+        "optimizer": {
+          "type": "AdamW",
+          "lr": 0.001,
+          "weight_decay": 1e-05,
+          "betas": [
+            0.9,
+            0.999
+          ]
+        },
+        "loss": {
+          "loss_id": "mse_l2",
+          "lambda": 0.001
+        },
+        "budget": {
+          "training_steps": 2048,
+          "batch_size": 16,
+          "total_samples_seen": 32768
+        }
+      }
+    ]
+  },
+  "dataset_params": {
+    "instance_seed": 100081164975,
+    "input_dim": 2,
+    "sampler": {
+      "id": "symbolic_expr_mv",
+      "seed": 100081164975,
+      "max_depth": 3,
+      "retry": 0
+    },
+    "expression": "x0**3 + x0*x1 + x1 - 2",
+    "domain": [
+      0.0,
+      1.0
+    ],
+    "train_size": 256,
+    "test_size": 256
+  },
+  "profile": "v1.5",
+  "seeds": 10,
+  "result": {
+    "dataset": "multivariate_regression/mvar_5a829e",
+    "family": "multivariate_regression",
+    "results": [
+      {
+        "mean": 0.005212363717146218,
+        "std": 0.0009146012852680036,
+        "failed_seeds": 0,
+        "metric": "test_mse",
+        "secs": 3.7,
+        "candidate": {
+          "model": {
+            "type": "mlp",
+            "depth": 3,
+            "width": 256,
+            "residual": false,
+            "activation": "leaky_relu",
+            "layer_norm": [
+              true,
+              false,
+              true
+            ],
+            "leaky_relu_slope": 0.01,
+            "input_dim": 2,
+            "output_dim": 1,
+            "leaky_slope": 0.01
+          },
+          "optimizer": {
+            "type": "AdamW",
+            "lr": 3e-05,
+            "weight_decay": 1e-05,
+            "betas": [
+              0.9,
+              0.999
+            ]
+          },
+          "loss": {
+            "loss_id": "mse_l2",
+            "lambda": 0.001
+          },
+          "budget": {
+            "training_steps": 256,
+            "batch_size": 16,
+            "total_samples_seen": 4096
+          }
+        }
+      },
+      {
+        "mean": 0.000928616861347109,
+        "std": 0.00024595690399145475,
+        "failed_seeds": 0,
+        "metric": "test_mse",
+        "secs": 3.7,
+        "candidate": {
+          "model": {
+            "type": "mlp",
+            "depth": 3,
+            "width": 256,
+            "residual": false,
+            "activation": "leaky_relu",
+            "layer_norm": [
+              true,
+              false,
+              true
+            ],
+            "leaky_relu_slope": 0.01,
+            "input_dim": 2,
+            "output_dim": 1,
+            "leaky_slope": 0.01
+          },
+          "optimizer": {
+            "type": "AdamW",
+            "lr": 0.001,
+            "weight_decay": 1e-05,
+            "betas": [
+              0.9,
+              0.999
+            ]
+          },
+          "loss": {
+            "loss_id": "mse_l2",
+            "lambda": 0.001
+          },
+          "budget": {
+            "training_steps": 256,
+            "batch_size": 16,
+            "total_samples_seen": 4096
+          }
+        }
+      },
+      {
+        "mean": 0.000602671125670895,
+        "std": 7.456878294043481e-05,
+        "failed_seeds": 0,
+        "metric": "test_mse",
+        "secs": 23.2,
+        "candidate": {
+          "model": {
+            "type": "mlp",
+            "depth": 3,
+            "width": 256,
+            "residual": false,
+            "activation": "leaky_relu",
+            "layer_norm": [
+              true,
+              false,
+              true
+            ],
+            "leaky_relu_slope": 0.01,
+            "input_dim": 2,
+            "output_dim": 1,
+            "leaky_slope": 0.01
+          },
+          "optimizer": {
+            "type": "AdamW",
+            "lr": 3e-05,
+            "weight_decay": 1e-05,
+            "betas": [
+              0.9,
+              0.999
+            ]
+          },
+          "loss": {
+            "loss_id": "mse_l2",
+            "lambda": 0.001
+          },
+          "budget": {
+            "training_steps": 2048,
+            "batch_size": 16,
+            "total_samples_seen": 32768
+          }
+        }
+      },
+      {
+        "mean": 0.002172618464101106,
+        "std": 0.001619089130872921,
+        "failed_seeds": 0,
+        "metric": "test_mse",
+        "secs": 22.6,
+        "candidate": {
+          "model": {
+            "type": "mlp",
+            "depth": 3,
+            "width": 256,
+            "residual": false,
+            "activation": "leaky_relu",
+            "layer_norm": [
+              true,
+              false,
+              true
+            ],
+            "leaky_relu_slope": 0.01,
+            "input_dim": 2,
+            "output_dim": 1,
+            "leaky_slope": 0.01
+          },
+          "optimizer": {
+            "type": "AdamW",
+            "lr": 0.001,
+            "weight_decay": 1e-05,
+            "betas": [
+              0.9,
+              0.999
+            ]
+          },
+          "loss": {
+            "loss_id": "mse_l2",
+            "lambda": 0.001
+          },
+          "budget": {
+            "training_steps": 2048,
+            "batch_size": 16,
+            "total_samples_seen": 32768
+          }
+        }
+      }
+    ]
+  }
+}

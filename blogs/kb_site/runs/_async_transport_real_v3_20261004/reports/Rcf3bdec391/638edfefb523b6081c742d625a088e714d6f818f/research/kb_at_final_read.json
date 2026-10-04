@@ -1,0 +1,138 @@
+[
+  {
+    "id": "K1006",
+    "text": "MLP ARCHITECTURE DEFAULT (same optimizer for all choices; regression, XOR, spiral, tabular when \u0394<0.1): score = (#LayerNorm'd blocks) + 1 if residual, MINUS 1 if a NON-residual depth\u22654 net's LAST block has no LN (K1061); pick the highest. Ties: on regression ReLU/LeakyReLU > GELU > SiLU, then later last-LN (K1022), then greater depth. Corpus MLP arch-only hits 74/110 (spiral 12/16, tabular 17/32). More-LN beats less-LN 61-11 multivariate, 57-12 univariate, 41-4 tabular \u0394<0.1. Overrides: regression deep vs shallow (K1074); spiral residual \u22652 blocks deeper (K1020); shared-SGD regression rectifier vs SiLU (K1039); XOR \u22658 feat. \u0394\u22650.05 (K1018, K1065); tabular \u0394\u22650.1 (K1009/K1073).",
+    "support_count": 2.25,
+    "failure_count": 6.75,
+    "credibility": 0.29545454545454547,
+    "created_epoch": 0,
+    "sources": [],
+    "merged_from": [
+      "K0002",
+      "K0078",
+      "K0268",
+      "K0249",
+      "K0256"
+    ],
+    "origin": "seed:seed_distill_v1",
+    "mechanism": "Each unnormalized pre-activation layer shrinks hidden RMS (~0.5x for SiLU/GELU at init), so an under-trained deep stack feeds a weak signal to the head; pre-LN restores unit scale and identity paths keep gradient flow, speeding an under-trained net 2-3x. Predicts the LN advantage shrinks once \u0394 is large enough to learn the scale (tabular \u0394>=0.1 reverses, K1009) and where LN destroys label-relevant norm information (2-D spiral, K1020).",
+    "regime": {
+      "family": [
+        "univariate_regression",
+        "multivariate_regression",
+        "synthetic_tabular_classification",
+        "xor_classification"
+      ],
+      "model_type": [
+        "mlp"
+      ],
+      "type": [
+        "architecture_only",
+        "mixed"
+      ],
+      "note": "tabular only when \u0394<0.1; spiral handled by K1020; same optimizer/lr/T"
+    },
+    "phase": "LN-count win rate: multivariate 61-11, univariate 57-12 (lab same-residual more-LN: multivariate at 32768 samples 8/9, ratio 0.38; univariate 37/39), tabular \u0394<0.1 41-4 but \u0394>=0.1 less-LN 17-6 (K1009); residual at equal LN is the weakest term (lab regression 19/29, ratio ~0.96; q_ca0dea plain beat its residual twin); spiral: K1020; XOR plain+LN vs residual 6/10.",
+    "last_evaluated_epoch": 2,
+    "report_ids": [
+      "Rcf3bdec391"
+    ]
+  },
+  {
+    "id": "K1015",
+    "text": "Residual \u00d7 depth \u00d7 task: on regression, depth helps even without residuals (deeper plain beats shallower residual 24-15) because composed nonlinearities are needed for curvature; on classification, depth WITHOUT residual hurts (shallower residual beats deeper plain 19-13) while deeper residual beats shallower plain 33-14. So for CE tasks never pick a deep (\u22654) plain stack over a residual one at the same optimizer; for MSE tasks a deep plain stack with \u22652 LN blocks is still competitive. Deep residual MLPs win 53% of their appearances vs 29% for deep plain.",
+    "support_count": 1.25,
+    "failure_count": 0.75,
+    "credibility": 0.5625,
+    "created_epoch": 0,
+    "sources": [],
+    "merged_from": [],
+    "origin": "seed:seed_distill_v1",
+    "last_evaluated_epoch": 2,
+    "report_ids": [
+      "Rcf3bdec391"
+    ]
+  },
+  {
+    "id": "K1018",
+    "text": "XOR with \u22658 input features (\u22656 noise distractors), same optimizer: the architecture rule FLIPS at shared core-rule \u0394\u22480.05. \u0394\u22650.05 (e.g. Adam-family lr\u00b7T\u22650.05): GELU/SiLU beats ReLU/LeakyReLU (lab 15/16, CE ratio 0.78; corpus 6/6); FEWER LayerNorms win (more-LN wins only 8/32 lab, 5/11 corpus); a \u22642-block net beats one \u22653 blocks deeper (lab 5/5, ratio 0.51; corpus 2/3; q_bfba99, q_e914b6). \u0394<0.05 (e.g. SGD m0.9 3e-4\u00d71024): normal rule - more LN wins 33/41 (ratio 0.93), deeper beats shallow (shallow 4/14), activation ~coin flip (smooth 3/8). With <8 features keep deeper (7/7); more-LN there is a coin flip at \u0394\u22650.05 (4/8). Depth\u00d7residual: K1065.",
+    "support_count": 0.5,
+    "failure_count": 0.5,
+    "credibility": 0.5,
+    "created_epoch": 0,
+    "sources": [],
+    "merged_from": [],
+    "origin": "c000005",
+    "mechanism": "With many distractor coordinates and only ~1024 rows, once the XOR interaction is learned (\u0394\u22650.05) further capacity of deep LN'd stacks is spent fitting distractor-dependent features and sharpening confidence near the axes, raising test CE; a shallow wide smooth net fits the 2-coordinate product with fewer composed nonlinearities. Predicts the reversal vanishes for \u22644 features (no distractors) or \u0394<0.05 (boundary not yet learned) \u2014 both observed.",
+    "regime": {
+      "family": [
+        "xor_classification"
+      ],
+      "model_type": [
+        "mlp"
+      ],
+      "data": [
+        "\u22658 input features"
+      ],
+      "delta": [
+        0.05,
+        3
+      ],
+      "optimizer": [
+        "Adam",
+        "AdamW",
+        "RMSprop"
+      ],
+      "note": "small n (\u22484 questions); train rows 1024"
+    },
+    "phase": "nf\u22658: \u0394\u22650.05 smooth 15/16, more-LN 8/32, shallow vs \u22653 deeper 5/5; \u0394<0.05 more-LN 33/41, shallow 4/14, smooth 3/8. nf<8: \u0394\u22650.05 more-LN 4/8, deeper 7/7 corpus + 2/2 lab; \u0394<0.05 more-LN 8/11.",
+    "refines": "K1006",
+    "last_evaluated_epoch": 1,
+    "report_ids": [
+      "Rcf3bdec391"
+    ]
+  },
+  {
+    "id": "K1061",
+    "text": "CLASSIFICATION MLPs (XOR/spiral/tabular), shared optimizer, \u0394<0.1: RESIDUAL net vs NON-residual depth\u22654 net with MORE LayerNorms \u2014 look at the plain net's LAST hidden block. Last block un-normalized \u2192 the residual net wins (lab SGD 16/16, CE ratio 0.72; adaptive 5/9; corpus 5/5): LNs followed by an unnormalized tail don't count. Last block LN'd \u2192 family-dependent: XOR+SGD plain wins 9/10; spiral+Adam-family plain wins 22/23 (residual CE \u00d71.3-1.4); spiral+SGD residual wins (lab 3/3, controlled 2/2, ratio 0.3-0.8); tabular ~coin flip (lab 12/27, corpus 6/6 plain). Moving LN to the last block (same count) lowered plain CE in 6/6 controlled cells.",
+    "support_count": 0.75,
+    "failure_count": 0.25,
+    "credibility": 0.5833333333333334,
+    "created_epoch": 0,
+    "sources": [],
+    "merged_from": [],
+    "origin": "c000010",
+    "mechanism": "An unnormalized final block after LN'd blocks re-shrinks/attenuates features right before the head, so the plain net's earlier LNs buy little; a residual path carries signal past it. Predicts: the effect vanishes once the plain tail is LN'd (observed), and weakens at larger \u0394 where every net trains (observed at \u0394\u22650.1).",
+    "regime": {
+      "family": [
+        "xor_classification",
+        "spiral_classification",
+        "synthetic_tabular_classification"
+      ],
+      "model_type": [
+        "mlp"
+      ],
+      "depth": [
+        4,
+        6
+      ],
+      "optimizer": [
+        "SGD",
+        "Adam",
+        "AdamW",
+        "RMSprop",
+        "Adagrad"
+      ],
+      "delta": [
+        0,
+        0.1
+      ],
+      "note": "residual net has fewer LN than the deep plain net; same optimizer config for both; \u0394>=0.1 mixed (spiral residual 6/13)"
+    },
+    "phase": "plain last-noLN: residual wins 26/30 (lab+corpus). plain last-LN: XOR-SGD plain 9/10; spiral-adaptive plain 22/23; spiral-SGD residual 3/3 (+2/2 controlled); tabular plain 12/27 lab, 6/6 corpus. \u0394\u22650.1 (adaptive): residual ~50% (spiral 6/13) \u2014 rule off.",
+    "refines": "K1059",
+    "report_ids": [
+      "Rcf3bdec391"
+    ]
+  }
+]

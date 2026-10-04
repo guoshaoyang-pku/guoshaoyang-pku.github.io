@@ -1,0 +1,189 @@
+{
+  "origin_epoch": 2,
+  "job_id": "J12f6dceed691",
+  "why": "Protocol correction before plain-MSE outcomes: P1 inherited mse_l2 lambda.001, not preregistered plain mse. Retain and label that result, do not use it as plain-MSE evidence. New plain mse lambda0 controls on mvar_5a829e repeat rates/T with same config to test loss sensitivity. Predict same short-high/long-low crossover, but report contrary results. Dataset transfer mvar_93e6af dimension2 polynomial at T2048 using identical plain-MSE recipe: predict low-rate wins; high-rate win refutes general polynomial ceiling. Tabular transfer stabcls_2173ed dimension16 smooth_additive at T512 batch64, identical GELU depth4 width256 LN and Adagrad wd.001: predict high rate .003 beats .0001 as in piecewise (no dataset reversal). These are fresh-run endpoint comparisons, no causal mechanism assertion.",
+  "input": {
+    "dataset": "multivariate_regression/mvar_93e6af",
+    "candidates": [
+      {
+        "model": {
+          "type": "mlp",
+          "depth": 3,
+          "width": 256,
+          "residual": false,
+          "activation": "leaky_relu",
+          "layer_norm": [
+            true,
+            false,
+            true
+          ],
+          "leaky_relu_slope": 0.01,
+          "input_dim": 2,
+          "output_dim": 1
+        },
+        "optimizer": {
+          "type": "AdamW",
+          "lr": 3e-05,
+          "weight_decay": 1e-05,
+          "betas": [
+            0.9,
+            0.999
+          ]
+        },
+        "loss": {
+          "loss_id": "mse",
+          "lambda": 0
+        },
+        "budget": {
+          "training_steps": 2048,
+          "batch_size": 16,
+          "total_samples_seen": 32768
+        }
+      },
+      {
+        "model": {
+          "type": "mlp",
+          "depth": 3,
+          "width": 256,
+          "residual": false,
+          "activation": "leaky_relu",
+          "layer_norm": [
+            true,
+            false,
+            true
+          ],
+          "leaky_relu_slope": 0.01,
+          "input_dim": 2,
+          "output_dim": 1
+        },
+        "optimizer": {
+          "type": "AdamW",
+          "lr": 0.001,
+          "weight_decay": 1e-05,
+          "betas": [
+            0.9,
+            0.999
+          ]
+        },
+        "loss": {
+          "loss_id": "mse",
+          "lambda": 0
+        },
+        "budget": {
+          "training_steps": 2048,
+          "batch_size": 16,
+          "total_samples_seen": 32768
+        }
+      }
+    ]
+  },
+  "dataset_params": {
+    "instance_seed": 100035922047,
+    "input_dim": 2,
+    "sampler": {
+      "id": "symbolic_expr_mv",
+      "seed": 100035922047,
+      "max_depth": 3,
+      "retry": 0
+    },
+    "expression": "x0*x1**2 + x1**3 + x0",
+    "domain": [
+      0.0,
+      1.0
+    ],
+    "train_size": 256,
+    "test_size": 256
+  },
+  "profile": "v1.5",
+  "seeds": 10,
+  "result": {
+    "dataset": "multivariate_regression/mvar_93e6af",
+    "family": "multivariate_regression",
+    "results": [
+      {
+        "mean": 3.16561203362653e-05,
+        "std": 2.0563069850580658e-05,
+        "failed_seeds": 0,
+        "metric": "test_mse",
+        "secs": 17.0,
+        "candidate": {
+          "model": {
+            "type": "mlp",
+            "depth": 3,
+            "width": 256,
+            "residual": false,
+            "activation": "leaky_relu",
+            "layer_norm": [
+              true,
+              false,
+              true
+            ],
+            "leaky_relu_slope": 0.01,
+            "input_dim": 2,
+            "output_dim": 1
+          },
+          "optimizer": {
+            "type": "AdamW",
+            "lr": 3e-05,
+            "weight_decay": 1e-05,
+            "betas": [
+              0.9,
+              0.999
+            ]
+          },
+          "loss": {
+            "loss_id": "mse",
+            "lambda": 0
+          },
+          "budget": {
+            "training_steps": 2048,
+            "batch_size": 16,
+            "total_samples_seen": 32768
+          }
+        }
+      },
+      {
+        "mean": 0.003978471451137011,
+        "std": 0.008853544588109302,
+        "failed_seeds": 0,
+        "metric": "test_mse",
+        "secs": 16.8,
+        "candidate": {
+          "model": {
+            "type": "mlp",
+            "depth": 3,
+            "width": 256,
+            "residual": false,
+            "activation": "leaky_relu",
+            "layer_norm": [
+              true,
+              false,
+              true
+            ],
+            "leaky_relu_slope": 0.01,
+            "input_dim": 2,
+            "output_dim": 1
+          },
+          "optimizer": {
+            "type": "AdamW",
+            "lr": 0.001,
+            "weight_decay": 1e-05,
+            "betas": [
+              0.9,
+              0.999
+            ]
+          },
+          "loss": {
+            "loss_id": "mse",
+            "lambda": 0
+          },
+          "budget": {
+            "training_steps": 2048,
+            "batch_size": 16,
+            "total_samples_seen": 32768
+          }
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,50 @@
+[
+  {
+    "op": "revise",
+    "claim_ids": [
+      "K1001"
+    ],
+    "text": "DISPLACEMENT HEURISTIC (T=256-2048; initially undertrained regimes, not a monotone law): rank choices by cumulative per-parameter displacement \u0394. Adam/AdamW/RMSprop: \u0394\u2248lr\u00b7T. Adagrad (zero-init accumulator, steps decay ~lr/\u221at): \u0394\u22482\u00b7lr\u00b7\u221aT. SGD: \u0394\u2248lr\u00b7T\u00b7|g|/(1\u2212m) with raw grad |g|\u22480.01 (bigram LM 0.003, MSE regression with momentum 0.03 \u2014 K1019), i.e. plain SGD \u2248 Adam at lr/100, SGD m=0.9 \u2248 Adam at lr/10. The largest-\u0394 choice wins 85% of optimizer-only and ~85% of mixed questions (after the lr-ceiling exceptions); a 1.5-3\u00d7 \u0394 edge usually beats any architecture advantage. Use architecture rules only to break \u0394 ties (same optimizer+lr) or in architecture-only questions. Fixed-law bigram exception (q_7dbb0e and new controlled panel): GRU64x2 AdamW .003, beta2=.95, wd=.001, batch32 wins6/6 genuinely weak transformer pairs atT256 but loses5/6 atT1024 across three fixed800-window datasets. lr*T=3.072 does not imply progress or measured parameter motion. Weak rivals have proxy Delta approximately .009216 (SGD .003) and .00192 (Adagrad3e-5) at1024, below.03. The alpha1.4/V32 Adagrad pair is a counterexample to universal last place. Optimizer decay semantics, width/depth and batch/exposure must condition the heuristic; no alpha-only threshold is established.",
+    "fields": {
+      "mechanism": "Displacement is an approximate optimizer-budget heuristic, not measured parameter travel or a guarantee of monotone held-out improvement. Undertraining is an assumption to check, not universal: repeated stochastic-label bigram windows show substantial finite high-rate CE deterioration. Mechanisms of fitting, miscalibration and optimization noise remain unmeasured."
+    },
+    "reason": "Scoped refinement from ordinal q_7dbb0e, audited architecture-confounded history, and controlled same-materialization CE evidence; no pooled alpha/budget rule or inferred failed seed counts.",
+    "source_question_ids": [
+      "q_7dbb0e",
+      "q_7f2c15",
+      "q_f7bc1b"
+    ]
+  },
+  {
+    "op": "revise",
+    "claim_ids": [
+      "K1071"
+    ],
+    "text": "BIGRAM LM learning-rate sweet spot (same model; choices differ in optimizer/lr/T; \u0394 per K1001): past a model-specific optimum MORE \u0394 LOSES - the solver's most common LM miss. d32/d64 transformers and GRUs: optimum \u0394\u22480.1-0.3 (Adam-family 3e-4 at T=512-1024, 1e-3 at T=256; Adagrad 3e-3); \u22652\u00d7 more \u0394 than a rival already at 0.1-0.3 loses (lab transformer 1/44, GRU 1/6, CE +2-20%); \u0394\u22651 loses to any rival with \u0394\u22650.03 (lab 0/17; q_c3a179). d_model=128 post-LN transformer: optimum \u22480.03-0.1; larger loses 0/11 once rival \u0394\u22650.03 (q_88802d AdamW 3e-3\u00d7256 last). Below the optimum max-\u0394 holds (13/13; GRU 14/15). Corpus: pick '\u0394 nearest 0.2 (0.1 for d128)' 52/65 vs max-\u0394 43/65. Conditional long-budget refinement (q_7dbb0e): on fixed800/200-window,L24 lab data alpha.8/V24,alpha1/V24,alpha1.4/V32, GRU64x2 AdamW beta2=.95 wd=.001 batch32 .003 loses5/6 weak SGD64x1 .003 and Adagrad32x3 3e-5 pairs at1024, despite both rival proxy Deltas below.03; it wins6/6 at256. Same-GRU .003 minus .0003 CE at1024 is+1.0657,+1.0058,+.7746; best tested rate is.001 at256 and.0003 at1024. Do not pool budgets or infer universal last place/alpha thresholds. At alpha.8, coupled Adam decay=.001 rescues .003 (CE2.9040); Adam/AdamW wd0 both3.9637, AdamW wd.0013.9614 and wd.013.9691. Width32x1/32x2 beat both weak rivals,64x1/64x2 lose. Smaller-batch/equal-exposure controls alter the penalty. beta2=.999 at1024 and baseline.95 at2048 return non-finite aggregates: distinguish from finite1024 deterioration; failed seed counts and divergence cause are not exposed. Prior alpha1.0/1.4 history compares different widths/depths/decays, not identical-GRU rates.",
+    "fields": {
+      "mechanism": "History fitting, overconfidence and persistent optimization noise are competing explanations, not established mechanisms. Coupled versus decoupled decay and width/batch controls causally alter the endpoint in one fixed materialization. Finite beta2=.95/T1024 reversal is distinct from non-finite beta2=.999/T1024 orT2048 reporting; raw trajectories and failed-seed counts are unavailable. Temperature, history perturbation, train/test curves and fresh-window interventions can distinguish explanations."
+    },
+    "reason": "Scoped refinement from ordinal q_7dbb0e, audited architecture-confounded history, and controlled same-materialization CE evidence; no pooled alpha/budget rule or inferred failed seed counts.",
+    "source_question_ids": [
+      "q_7dbb0e",
+      "q_7f2c15",
+      "q_f7bc1b"
+    ]
+  },
+  {
+    "op": "revise",
+    "claim_ids": [
+      "K1075"
+    ],
+    "text": "BIGRAM LM GRU vs post-LN transformer (same optimizer/lr/T): decide by the shared core-rule \u0394 band. \u0394<0.02 (nearly frozen: Adam-family \u22643e-5 at T\u2264512, SGD \u22643e-3): GRU wins, even vs larger d_model when alpha\u22641 (corpus 8/8, controlled GRU 5/6; q_5e328e GRU64\u00d72 beat d128). 0.02\u2264\u0394<0.1: a transformer of EQUAL or LARGER d_model wins (lab GRU 1/20; controlled 2-layer GRU 0/9 at every T 256-2048; q_9344eb GRU64\u00d72 last at AdamW 3e-5\u00d72048, even below d32\u00d73 d_ff256); GRU64 vs d32: GRU 9/9 observational, lean GRU only if 1-layer. 0.1\u2264\u0394<0.5: GRU wins 8/9 (any d_model). \u0394\u22650.5: GRU 3/3 (transformer overshoots, K1071). Scope correction: these shared-optimizer/rate/T bands do not transfer to cross-optimizer weak-rival comparisons. GRU64x2 AdamW .003/.95/wd.001 at1024/batch32 loses5/6 weak transformer pairs on three800-window datasets, but wins6/6 at256; alpha1.4/V32 still beats weak Adagrad at1024. On one alpha.8/V24 set, GRU32x1 and32x2 at that high rate beat both weak rivals, whereas64x1 and64x2 lose. Coupled Adam decay also rescues the wide/deep GRU. Architecture preference therefore cannot guarantee immunity to rate/budget/regularization mismatch. No new matched-optimizer GRU-versus-transformer band was measured here; retain historical band counts as historical, not pooled with these pairs.",
+    "fields": {
+      "mechanism": "Historical matched-rate architecture explanations remain hypotheses. This investigation tests cross-optimizer pairs and GRU configuration controls, not the shared-optimizer architecture bands. Fixed-law Bayes prediction uses current token only, but irrelevant-history fitting is not measured by the endpoint API."
+    },
+    "reason": "Scoped refinement from ordinal q_7dbb0e, audited architecture-confounded history, and controlled same-materialization CE evidence; no pooled alpha/budget rule or inferred failed seed counts.",
+    "source_question_ids": [
+      "q_7dbb0e",
+      "q_7f2c15",
+      "q_f7bc1b"
+    ]
+  }
+]

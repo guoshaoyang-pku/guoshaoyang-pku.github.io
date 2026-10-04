@@ -1,0 +1,62 @@
+# Conditional High-Rate GRU Reversal in Fixed-Law Bigram LM
+
+## Finding
+The q_7dbb0e reversal is reproducible under similar, but not identical, allowed lab conditions. GRU64x2 AdamW lr=.003, beta2=.95, wd=.001, batch32 wins all 6 new weak-transformer comparisons at T=256 across three materializations, but loses 5/6 at T=1024. It still beats Adagrad on the alpha=1.4, V32 set. Neither universal last place nor an alpha threshold is supported. Adam with coupled decay, narrower GRUs, and altered batch/exposure can avoid the severe reversal.
+
+## Evidence and Assumptions
+q_7dbb0e (epoch1, ranking_v2) reports D<E<A<B<C, averaging 10 seeds: low-rate GRU64x2 AdamW .0001 beats high-rate .003, and both weak transformers beat high-rate C. Data: alpha=.8, V=L=24, 800 train/200 test windows, sequence/table seeds 9001847266482/9001847276482, T1024, batch32. This is ordinal evidence: no original CE gap or seed dispersion is visible. Its materialization is not an allowed listed lab dataset, so no exact rerun was performed.
+
+The cited history contrast is confounded: q_7f2c15 (alpha1.4, gold A) and q_f7bc1b (alpha1.0, gold C) compare Adam .003 GRU32x2 wd=1e-5 with Adam3e-5 GRU64x1 wd=0, not identical models. Both have V24, L16, T1024, batch32 and 800/200 windows, but different law/window seeds. Their outcomes cannot identify a causal alpha threshold.
+
+The initial lab contains 1880 bigram candidates in 407 sets: 1862 at256 and18 at512, none at1024/2048. The prior comment's 18/18 short-budget wins over three sets is comment evidence, not added to our independently computed 6/6 count. Labels are stochastic samples from one fixed transition law shared by train/test; the Bayes predictor needs only the current token. Held-out CE is natural-log loss per token, not accuracy. lr*T is an optimizer proxy, not measured parameter displacement.
+
+## Controlled Method
+Before training, predicted: high rate would often beat weak rivals at256; at1024 it would worsen relative to moderate GRU rates on some sets; same-model deterioration need not cross both weak rivals; alpha alone would not define a boundary. Subsequent predictions tested optimizer/architecture dependence and fixed-exposure contrasts without promising rescue.
+
+All primary GRUs are non-residual width64, depth2, AdamW beta1=.9/beta2=.95, wd=.001, pure CE. Rates are 3e-5,1e-4,3e-4,.001,.003 at T256/1024, batch32, nominal seeds0..9. Rivals match the target: transformer64x1, heads4, ff256, plain SGD .003/momentum0/wd=.001; transformer32x3, heads2, ff256, Adagrad3e-5/wd=.0001. Models declare vocabulary/context matching the data. Comparisons use controls co-materialized within one set_id; the analysis asserts this.
+
+Three allowed datasets, each train800/test200 and L24: bg_1d9caf, alpha.8/V24, sequence/table seeds100064931980/100064941980; bg_0bf6d7, alpha1/V24, seeds100136566616/100136576616; bg_167595, alpha1.4/V32, seeds4253/14253. Primary comparisons fix law and windows. Across-set differences in alpha also change seeds, and alpha1.4 changes vocabulary.
+
+Dataset overrides retain declared model vocabulary. An initial alpha.8 sweep declared V32 outputs for V24 data; it is kept separately, then rerun with explicit V24. Metadata is not runtime tensor-shape evidence: constructor dimensions/parameter counts are not exposed. Seed labels and batch sizes are matched; identical minibatch index sequences across models cannot be verified. Repeated controls are not independent replications. There are 61 unique matched configuration summaries (610 nominal seed slots), plus12 declared oversized-output controls (120 slots); successful/failed seed counts are not exposed for experiment rows.
+
+## Held-Out Results
+Mean CE; the five GRU columns are ordered by learning rate. Every cell summarizes nominally10 seeds on a fixed split.
+
+|alpha/V|T|3e-5|1e-4|3e-4|.001|.003|SGD rival|Adagrad rival|
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+|.8/24|256|3.1625|3.1259|2.9931|2.9005|2.9468|3.2678|3.3205|
+|.8/24|1024|3.1152|2.9445|2.8957|3.0038|3.9614|3.1385|3.2942|
+|1/24|256|3.1524|3.0988|2.9095|2.8118|2.8543|3.2431|3.3221|
+|1/24|1024|3.0812|2.8630|2.8065|2.9039|3.8123|3.0876|3.2921|
+|1.4/32|256|3.4245|3.3260|2.9489|2.7058|2.7178|3.4987|3.5822|
+|1.4/32|1024|3.2955|2.8419|2.6901|2.7529|3.4647|3.2493|3.5459|
+
+Same-GRU .003 minus .0003 at1024: +1.0657, +1.0058, +.7746 CE for the three sets. At256, .003 already loses to .001 by .0463,.0425,.0119, yet beats both weak rivals. The best tested rate shifts from .001 at256 to .0003 at1024 on all three sets; this does not locate a universal optimum. High-rate1024 is worse than uniform prediction on both V24 sets, but finite.
+
+## Uncertainty
+High-rate1024 seed SD is .0171,.0335,.0285 respectively. Corresponding SGD SD: .0130,.0113,.0172; Adagrad: .0085,.0203,.0191. High-rate minus weak-rival effects, with approximate covariance-conservative sensitivity envelopes, are: alpha.8 SGD +.8229 +/- .0227, Adagrad +.6672 +/- .0193; alpha1 SGD +.7247 +/- .0338, Adagrad +.5201 +/- .0406; alpha1.4 SGD +.2154 +/- .0344, Adagrad -.0812 +/- .0359.
+
+Envelope half-width is 2.262*(SD_high+SD_rival)/3, allowing unknown covariance and reported-SD normalization. This uses a normal-seed approximation, is not an exact paired CI or simultaneous coverage guarantee, and is conditional on fixed train/test windows. All six signs survive this envelope. Three datasets do not support a population reversal probability, and two rivals sharing one GRU are correlated comparisons. Per-seed values, successful-seed counts and split/law resampling uncertainty remain unavailable.
+
+## Conditional Controls
+On bg_1d9caf at1024, .003 AdamW with wd0/.001/.01 gives CE3.9637/3.9614/3.9691. Adam wd0 gives exactly3.9637, but coupled wd=.001 gives2.9040 and beats both weak rivals. Thus the optimizer name alone is not the cause; coupled versus decoupled regularization is a measured discriminator here, not a universally equivalent decay-strength comparison.
+
+The width/depth factorial at .003 gives GRU32x1=2.9757,32x2=3.0719,64x1=3.3353,64x2=3.9614. Both width32 variants beat both weak rivals; both width64 variants lose. At .0003,32x2=2.9379 and64x1=2.8891: lower-rate comparisons remain distinct from cross-model reversals. These interventions change parameterization and initialization dimensions, not just recurrent-history capacity.
+
+Baseline beta2=.95 at1024 is finite. Changing beta2 to .999 returns infinite aggregate mean/SD at .003, while .0003 stays finite at2.8996. At2048/batch32, baseline .003 also returns infinite aggregates; .0003 yields2.9218, versus SGD3.0551 and Adagrad3.2748. Non-finite reporting is a separate failure regime. Null API errors do not establish zero failed seeds or tell whether infinity is raw loss versus a failure sentinel; no numerical seed-count claim is possible.
+
+Fixed-exposure controls on alpha.8: at .003, T256/batch32 (8192 windows) CE2.9468; T1024/batch8 (8192)3.1273; T256/batch128 (32768)3.0969; T1024/batch32 (32768)3.9614. Equal-exposure long-minus-short gaps are +.1805 and+.8645. At .0003, the corresponding CEs are2.9931,2.9069,2.9356,2.8957. Exposure alone and update count alone are insufficient descriptors; batch/noise, optimization and reuse interact.
+
+At batch32,256/1024/2048 see8192/32768/65536 windows, or196608/786432/1572864 token targets at L24. The dataset contains19200 training and4800 held-out token positions, not independent observations. All allowed bigram materializations have800 training windows: data-size effects were not tested. New experiments hold L24; L16 history also changes available target counts and architectures. No causal context, vocabulary or alpha threshold is identified.
+
+## Mechanisms and Falsifiable Tests
+Finite poor CE at beta2=.95/T1024 does not prove catastrophic numerical divergence. Overconfidence, fitting irrelevant histories in reused windows, optimization jitter and poor finite convergence remain competing explanations. Coupled-decay rescue is consistent with regularization sensitivity, but does not identify which behavior it suppresses. The non-finite beta2=.999/T1024 and beta2=.95/T2048 runs must not be relabeled as ordinary finite overfitting.
+
+Next registered prediction: on a new allowed V24/L24/alpha.8,800-window law, GRU64x2 AdamW .003/.95/.001 at1024/batch32 will lose to identical GRU .0003 and weak SGD; Adagrad last-place status is not assumed. Repeated counterexamples would weaken this conditional warning. No additional unmeasured dataset was generated here.
+
+Temperature-only held-out CE rescue would support miscalibration; train CE falling while held-out CE rises, and reduced history sensitivity with coupled decay, would support history fitting. Permuting prior tokens while preserving the current token tests the latter. Trajectories, parameter/gradient norms, clipping/rate-decay interventions and raw non-finite seed logs would test instability. Fresh-window training or increased train size at matched exposure should preferentially reduce a memorization penalty, whereas persistent noise can remain. These diagnostics are unmeasured and not supplied by the endpoint API.
+
+## Scoped KB Refinement and Reproduction
+K1001: retain displacement as a heuristic for genuinely undertrained candidates, not monotone progress; reused stochastic-label bigram data can reverse even against rivals with tiny proxy displacement. K1071: explicitly admit the .003/1024 GRU weak-rival reversal below its old rival-Delta=.03 cutoff, conditional on model, optimizer/decay, batch and materialization; never convert5/6 into universal last place or an alpha boundary. K1075: its shared-optimizer/rate/budget architecture bands do not apply to these cross-optimizer pairs and cannot protect the high-rate GRU.
+
+Observations refreshed and pinned to J22ba490aa417_research_e0002; no new completed bigram history appeared. A separate externally published provenance-repair set is preserved but excluded from this investigation's counts. Files in gru_reversal/ preserve historical records, frozen claims/lab measurements, all investigation endpoint records, variant/replay manifests, analysis.py and analysis_output.txt. Run python gru_reversal/analysis.py to reproduce tables, effects, same-set assertions and deduplicated counts. Full report publication commits the research repository. The report is independently reviewable; the mechanism and extrapolation boundaries remain unresolved.
