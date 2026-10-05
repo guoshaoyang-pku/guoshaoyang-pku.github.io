@@ -1,0 +1,56 @@
+{
+  "schema_version": "1.0",
+  "profile": "v1.5",
+  "dataset_id": "spiralcls_146fc8",
+  "family": "spiral_classification",
+  "budget": {
+    "training_steps": 2048,
+    "batch_size": 16,
+    "total_samples_seen": 32768
+  },
+  "model": {
+    "type": "mlp",
+    "depth": 3,
+    "width": 48,
+    "residual": false,
+    "activation": "silu",
+    "layer_norm": [
+      true,
+      true,
+      true
+    ],
+    "input_dim": 2,
+    "output_dim": 2
+  },
+  "optimizer": {
+    "type": "Adam",
+    "lr": 0.001,
+    "weight_decay": 1e-05,
+    "betas": [
+      0.9,
+      0.95
+    ]
+  },
+  "loss": {
+    "loss_id": "cross_entropy"
+  },
+  "execution": {
+    "device": "cpu"
+  },
+  "files": {
+    "model": "model.py",
+    "train": "train.py",
+    "loss": "loss.py",
+    "optimizer": "optimizer.py"
+  },
+  "process": {
+    "version": "adam_ce_v1",
+    "steps": [
+      1,
+      256,
+      2048
+    ],
+    "max_eval_samples": 4096
+  },
+  "candidate_id": "x_4ae30d558e"
+}
