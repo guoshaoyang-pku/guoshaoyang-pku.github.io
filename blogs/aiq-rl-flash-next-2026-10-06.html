@@ -1,0 +1,1343 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flash-Next 已有稳定更新信号，能力提升还未证实</title>
+<!--
+  report-to-human panel template v2
+  Palette and type: Anthropic brand-guidelines (github.com/anthropics/skills, skills/brand-guidelines).
+  Rules: keep only what the reader needs. No subtitle, no KPI cards, no section numbers, no status banners.
+  Every term is explained in plain words where it first appears.
+-->
+<style>
+  :root {
+    --dark: #141413;   /* primary text */
+    --light: #faf9f5;  /* page background */
+    --mid: #b0aea5;    /* borders, axes */
+    --soft: #e8e6dc;   /* subtle fills */
+    --muted: #5e5d59;  /* secondary text (darker than --mid for contrast) */
+    --orange: #d97757; /* primary accent: the main result */
+    --blue: #6a9bcc;   /* secondary accent */
+    --green: #788c5d;  /* tertiary accent */
+    --head: "Poppins", "PingFang SC", "Noto Sans CJK SC", "Hiragino Sans GB", Arial, sans-serif;
+    --body: "Lora", "Noto Serif CJK SC", "Songti SC", Georgia, serif;
+    --mono: "SF Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--light); color: var(--dark); font: 17px/1.8 var(--body); }
+  main { max-width: 760px; margin: 0 auto; padding: 72px 24px 96px; }
+  h1, h2, h3 { font-family: var(--head); font-weight: 600; line-height: 1.35; letter-spacing: -0.01em; }
+  h1 { font-size: 32px; margin: 0 0 16px; }
+  h2 { font-size: 22px; margin: 64px 0 12px; }
+  p { margin: 0 0 16px; }
+  .lede { font-size: 19px; }
+  a { color: inherit; text-decoration: underline; text-decoration-color: var(--orange); text-underline-offset: 3px; }
+  code, .id { font-family: var(--mono); font-size: 0.86em; background: var(--soft); padding: 1px 5px; border-radius: 4px; }
+
+  /* L2 settings row: monochrome line icons + label, never color emoji */
+  .settings { display: flex; flex-wrap: wrap; gap: 8px 20px; list-style: none; padding: 0; margin: 24px 0 0;
+              font: 14px/1.6 var(--head); color: var(--muted); }
+  .settings li { display: inline-flex; align-items: center; gap: 6px; }
+  .settings svg { width: 15px; height: 15px; stroke: var(--dark); fill: none; stroke-width: 1.6;
+                  stroke-linecap: round; stroke-linejoin: round; }
+  .settings b { color: var(--dark); font-weight: 500; }
+
+  figure { margin: 28px 0; padding: 20px; background: #fff; border: 1px solid var(--soft); border-radius: 10px; }
+  figure img, figure svg.chart { display: block; width: 100%; height: auto; }
+  figcaption { margin-top: 12px; font: 14px/1.6 var(--head); color: var(--muted); }
+  .legend { display: flex; gap: 18px; font: 13px var(--head); color: var(--muted); margin-bottom: 8px; }
+  .legend i { display: inline-block; width: 14px; height: 2px; vertical-align: middle; margin-right: 6px; }
+
+  .warn { border-left: 3px solid var(--orange); padding: 4px 0 4px 16px; margin: 24px 0; }
+  .warn strong { font-family: var(--head); }
+
+  /* sample browser: compare outputs side by side */
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--soft); margin-bottom: 12px; }
+  .tabs button { font: 14px var(--head); background: none; border: 0; padding: 8px 12px; cursor: pointer;
+                 color: var(--muted); border-bottom: 2px solid transparent; }
+  .tabs button[aria-selected="true"] { color: var(--dark); border-bottom-color: var(--orange); }
+  .sample { display: none; white-space: pre-wrap; font: 14px/1.7 var(--mono); }
+  .sample.on { display: block; }
+
+  details { margin: 16px 0; }
+  summary { cursor: pointer; font: 15px var(--head); color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font: 14px/1.6 var(--head); margin: 16px 0; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--soft); }
+  th { font-weight: 500; color: var(--muted); }
+  footer { margin-top: 80px; font: 13px var(--head); color: var(--mid); }
+
+  pre { margin: 12px 0; padding: 16px; background: var(--soft); white-space: pre-wrap;
+        overflow-wrap: anywhere; font: 13px/1.65 var(--mono); }
+  .sample-meta { font: 13px/1.6 var(--head); color: var(--muted); margin: 10px 0 0; }
+  .table-wrap { overflow-x: auto; margin: 20px 0; }
+  table { min-width: 500px; margin: 0; font-variant-numeric: tabular-nums; }
+  figure { padding: 12px; border-radius: 4px; }
+  footer { color: var(--muted); line-height: 1.7; }
+  .related { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 40px; font: 14px/1.7 var(--head); }
+  @media (max-width: 600px) { main { padding: 40px 20px 64px; } h1 { font-size: 27px; }
+     h2 { font-size: 21px; margin-top: 44px; } body { font-size: 16px; } figure { padding: 4px; }
+     .settings { gap: 6px 14px; } }
+</style>
+<link rel="canonical" href="https://guoshaoyang-pku.github.io/blogs/aiq-rl-flash-next-2026-10-06.html">
+</head>
+<body>
+<main>
+<h1 id="article-title">Flash-Next 已有稳定更新信号，能力提升还未证实</h1>
+<p class="lede">同一测试集上，第 30、40、50 步分别答对 96、96、98 条；训练组仍有奖励差异，净增两条不足以确认模型学会了更多。</p>
+<ul class="settings">
+<li><svg aria-hidden="true" viewbox="0 0 24 24"><rect height="16" rx="2" width="16" x="4" y="4"></rect><path d="M8 8h8M8 12h8M8 16h4"></path></svg>
+模型 <b>Flash-Next MoE</b>
+</li>
+<li><svg aria-hidden="true" viewbox="0 0 24 24"><rect height="16" rx="2" width="16" x="4" y="4"></rect><path d="M8 8h8M8 12h8M8 16h4"></path></svg>
+权重 / 激活 <b>4bit / 16bit</b>
+</li>
+<li><svg aria-hidden="true" viewbox="0 0 24 24"><rect height="16" rx="2" width="16" x="4" y="4"></rect><path d="M8 8h8M8 12h8M8 16h4"></path></svg>
+更新 <b>LoRA adapter</b>
+</li>
+<li><svg aria-hidden="true" viewbox="0 0 24 24"><rect height="16" rx="2" width="16" x="4" y="4"></rect><path d="M8 8h8M8 12h8M8 16h4"></path></svg>
+评测 <b>290 题 × 2 次</b>
+</li>
+<li><svg aria-hidden="true" viewbox="0 0 24 24"><rect height="16" rx="2" width="16" x="4" y="4"></rect><path d="M8 8h8M8 12h8M8 16h4"></path></svg>
+每题生成 <b>32 次</b>
+</li>
+</ul>
+<h2 id="量化基座上只更新少量-adapter-参数">量化基座上只更新少量 adapter 参数</h2>
+<p>MoE（混合专家模型）把计算分配给部分专家。实验将基座权重存为 4bit、激活用 16bit，称为 W4A16；LoRA 是附加在基座上的低秩可训练参数。本文只使用原 W4A16 生产线的学习证据，原生 INT4 和 prefetch 性能候选各有独立测试。</p>
+<p>模型接受与 0.8B 主线相同的 290 题测试：130 道选择题、160 道排序题，每题两次，temperature=1、top_p=1、16k 上限。三次评测记录的数据、tokenizer、reward 与采样协议一致，仅 adapter 改变。本文已核验的记录未包含完整训练题池 manifest，因此不把其他实验线的 6,153 题规模直接填给本线。</p>
+<p>训练每步有 32 个真实组、每组 32 条回答，共 1,024 条。组内相对奖励提供更新信号，KL reference 约束策略偏移。选择奖励和排序部分分使用已保存的 thinking 评分器。训练入口为 <code>fn_train</code>（原 W4A16 的训练前向实现），没有共享题目前缀；保存的是 adapter-only checkpoint，不含 optimizer、随机数或 rollout 队列状态。</p>
+<h2 id="三次测试几乎没有净变化">三次测试几乎没有净变化</h2>
+<figure><svg aria-label="Flash-Next 三次评测" class="chart" height="205.235pt" id="aiq_blog_moe_scores_20261006" role="img" version="1.1" viewbox="0 0 511.28 205.235" width="511.28pt" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+
+<defs>
+<style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+</defs>
+<g id="aiq_blog_moe_scores_20261006-figure_1">
+<g id="aiq_blog_moe_scores_20261006-patch_1">
+<path d="M 0 205.235
+L 511.28 205.235
+L 511.28 0
+L 0 0
+z
+" style="fill: #ffffff"></path>
+</g>
+<g id="aiq_blog_moe_scores_20261006-axes_1">
+<g id="aiq_blog_moe_scores_20261006-patch_2">
+<path d="M 38.44 167.56
+L 504.08 167.56
+L 504.08 7.2
+L 38.44 7.2
+z
+" style="fill: #ffffff"></path>
+</g>
+<g id="aiq_blog_moe_scores_20261006-matplotlib.axis_1">
+<g id="aiq_blog_moe_scores_20261006-xtick_1">
+<g id="aiq_blog_moe_scores_20261006-line2d_1">
+<path clip-path="url(#aiq_blog_moe_scores_20261006-pa45fcaae2a)" d="M 59.605455 167.56
+L 59.605455 7.2
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_moe_scores_20261006-line2d_2">
+<defs>
+<path d="M 0 0
+L 0 3.5
+" id="aiq_blog_moe_scores_20261006-m5acb218427" style="stroke: #5e5d59; stroke-width: 0.8"></path>
+</defs>
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="59.605455" xlink:href="#aiq_blog_moe_scores_20261006-m5acb218427" y="167.56"></use>
+</g>
+</g>
+<g id="aiq_blog_moe_scores_20261006-text_1">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" transform="rotate(-0 59.605455 181.723437)" x="59.605455" y="181.723437">30</text>
+</g>
+</g>
+<g id="aiq_blog_moe_scores_20261006-xtick_2">
+<g id="aiq_blog_moe_scores_20261006-line2d_3">
+<path clip-path="url(#aiq_blog_moe_scores_20261006-pa45fcaae2a)" d="M 271.26 167.56
+L 271.26 7.2
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_moe_scores_20261006-line2d_4">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="271.26" xlink:href="#aiq_blog_moe_scores_20261006-m5acb218427" y="167.56"></use>
+</g>
+</g>
+<g id="aiq_blog_moe_scores_20261006-text_2">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" transform="rotate(-0 271.26 181.723437)" x="271.26" y="181.723437">40</text>
+</g>
+</g>
+<g id="aiq_blog_moe_scores_20261006-xtick_3">
+<g id="aiq_blog_moe_scores_20261006-line2d_5">
+<path clip-path="url(#aiq_blog_moe_scores_20261006-pa45fcaae2a)" d="M 482.914545 167.56
+L 482.914545 7.2
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_moe_scores_20261006-line2d_6">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="482.914545" xlink:href="#aiq_blog_moe_scores_20261006-m5acb218427" y="167.56"></use>
+</g>
+</g>
+<g id="aiq_blog_moe_scores_20261006-text_3">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" transform="rotate(-0 482.914545 181.723437)" x="482.914545" y="181.723437">50</text>
+</g>
+</g>
+<g id="aiq_blog_moe_scores_20261006-text_4">
+<text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #141413" transform="rotate(-0 271.26 195.744375)" x="271.26" y="195.744375">训练步</text>
+</g>
+</g>
+<g id="aiq_blog_moe_scores_20261006-matplotlib.axis_2">
+<g id="aiq_blog_moe_scores_20261006-ytick_1">
+<g id="aiq_blog_moe_scores_20261006-line2d_7">
+<path clip-path="url(#aiq_blog_moe_scores_20261006-pa45fcaae2a)" d="M 38.44 167.56
+L 504.08 167.56
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_moe_scores_20261006-line2d_8">
+<defs>
+<path d="M 0 0
+L -3.5 0
+" id="aiq_blog_moe_scores_20261006-m1fafdb381c" style="stroke: #5e5d59; stroke-width: 0.8"></path>
+</defs>
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="38.44" xlink:href="#aiq_blog_moe_scores_20261006-m1fafdb381c" y="167.56"></use>
+</g>
+</g>
+<g id="aiq_blog_moe_scores_20261006-text_5">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 31.44 171.141719)" x="31.44" y="171.141719">0</text>
+</g>
+</g>
+<g id="aiq_blog_moe_scores_20261006-ytick_2">
+<g id="aiq_blog_moe_scores_20261006-line2d_9">
+<path clip-path="url(#aiq_blog_moe_scores_20261006-pa45fcaae2a)" d="M 38.44 131.924444
+L 504.08 131.924444
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_moe_scores_20261006-line2d_10">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="38.44" xlink:href="#aiq_blog_moe_scores_20261006-m1fafdb381c" y="131.924444"></use>
+</g>
+</g>
+<g id="aiq_blog_moe_scores_20261006-text_6">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 31.44 135.506163)" x="31.44" y="135.506163">10</text>
+</g>
+</g>
+<g id="aiq_blog_moe_scores_20261006-ytick_3">
+<g id="aiq_blog_moe_scores_20261006-line2d_11">
+<path clip-path="url(#aiq_blog_moe_scores_20261006-pa45fcaae2a)" d="M 38.44 96.288889
+L 504.08 96.288889
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_moe_scores_20261006-line2d_12">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="38.44" xlink:href="#aiq_blog_moe_scores_20261006-m1fafdb381c" y="96.288889"></use>
+</g>
+</g>
+<g id="aiq_blog_moe_scores_20261006-text_7">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 31.44 99.870608)" x="31.44" y="99.870608">20</text>
+</g>
+</g>
+<g id="aiq_blog_moe_scores_20261006-ytick_4">
+<g id="aiq_blog_moe_scores_20261006-line2d_13">
+<path clip-path="url(#aiq_blog_moe_scores_20261006-pa45fcaae2a)" d="M 38.44 60.653333
+L 504.08 60.653333
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_moe_scores_20261006-line2d_14">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="38.44" xlink:href="#aiq_blog_moe_scores_20261006-m1fafdb381c" y="60.653333"></use>
+</g>
+</g>
+<g id="aiq_blog_moe_scores_20261006-text_8">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 31.44 64.235052)" x="31.44" y="64.235052">30</text>
+</g>
+</g>
+<g id="aiq_blog_moe_scores_20261006-ytick_5">
+<g id="aiq_blog_moe_scores_20261006-line2d_15">
+<path clip-path="url(#aiq_blog_moe_scores_20261006-pa45fcaae2a)" d="M 38.44 25.017778
+L 504.08 25.017778
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_moe_scores_20261006-line2d_16">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="38.44" xlink:href="#aiq_blog_moe_scores_20261006-m1fafdb381c" y="25.017778"></use>
+</g>
+</g>
+<g id="aiq_blog_moe_scores_20261006-text_9">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 31.44 28.599497)" x="31.44" y="28.599497">40</text>
+</g>
+</g>
+<g id="aiq_blog_moe_scores_20261006-text_10">
+<text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #141413" transform="rotate(-90 15.159375 87.38)" x="15.159375" y="87.38">exact（%）</text>
+</g>
+</g>
+<g id="aiq_blog_moe_scores_20261006-line2d_17">
+<path clip-path="url(#aiq_blog_moe_scores_20261006-pa45fcaae2a)" d="M 59.605455 108.577011
+L 271.26 108.577011
+L 482.914545 107.348199
+" style="fill: none; stroke: #d97757; stroke-width: 1.8; stroke-linecap: square"></path>
+<defs>
+<path d="M 0 2
+C 0.530406 2 1.03916 1.789267 1.414214 1.414214
+C 1.789267 1.03916 2 0.530406 2 0
+C 2 -0.530406 1.789267 -1.03916 1.414214 -1.414214
+C 1.03916 -1.789267 0.530406 -2 0 -2
+C -0.530406 -2 -1.03916 -1.789267 -1.414214 -1.414214
+C -1.789267 -1.03916 -2 -0.530406 -2 0
+C -2 0.530406 -1.789267 1.03916 -1.414214 1.414214
+C -1.03916 1.789267 -0.530406 2 0 2
+z
+" id="aiq_blog_moe_scores_20261006-m28c9156a76" style="stroke: #d97757"></path>
+</defs>
+<g clip-path="url(#aiq_blog_moe_scores_20261006-pa45fcaae2a)">
+<use style="fill: #d97757; stroke: #d97757" x="59.605455" xlink:href="#aiq_blog_moe_scores_20261006-m28c9156a76" y="108.577011"></use>
+<use style="fill: #d97757; stroke: #d97757" x="271.26" xlink:href="#aiq_blog_moe_scores_20261006-m28c9156a76" y="108.577011"></use>
+<use style="fill: #d97757; stroke: #d97757" x="482.914545" xlink:href="#aiq_blog_moe_scores_20261006-m28c9156a76" y="107.348199"></use>
+</g>
+</g>
+<g id="aiq_blog_moe_scores_20261006-line2d_18">
+<path clip-path="url(#aiq_blog_moe_scores_20261006-pa45fcaae2a)" d="M 59.605455 59.282735
+L 271.26 59.282735
+L 482.914545 59.282735
+" style="fill: none; stroke: #6a9bcc; stroke-width: 1.8; stroke-linecap: square"></path>
+<defs>
+<path d="M 0 2
+C 0.530406 2 1.03916 1.789267 1.414214 1.414214
+C 1.789267 1.03916 2 0.530406 2 0
+C 2 -0.530406 1.789267 -1.03916 1.414214 -1.414214
+C 1.03916 -1.789267 0.530406 -2 0 -2
+C -0.530406 -2 -1.03916 -1.789267 -1.414214 -1.414214
+C -1.789267 -1.03916 -2 -0.530406 -2 0
+C -2 0.530406 -1.789267 1.03916 -1.414214 1.414214
+C -1.03916 1.789267 -0.530406 2 0 2
+z
+" id="aiq_blog_moe_scores_20261006-m0259bfc075" style="stroke: #6a9bcc"></path>
+</defs>
+<g clip-path="url(#aiq_blog_moe_scores_20261006-pa45fcaae2a)">
+<use style="fill: #6a9bcc; stroke: #6a9bcc" x="59.605455" xlink:href="#aiq_blog_moe_scores_20261006-m0259bfc075" y="59.282735"></use>
+<use style="fill: #6a9bcc; stroke: #6a9bcc" x="271.26" xlink:href="#aiq_blog_moe_scores_20261006-m0259bfc075" y="59.282735"></use>
+<use style="fill: #6a9bcc; stroke: #6a9bcc" x="482.914545" xlink:href="#aiq_blog_moe_scores_20261006-m0259bfc075" y="59.282735"></use>
+</g>
+</g>
+<g id="aiq_blog_moe_scores_20261006-line2d_19">
+<path clip-path="url(#aiq_blog_moe_scores_20261006-pa45fcaae2a)" d="M 59.605455 148.628611
+L 271.26 148.628611
+L 482.914545 146.401389
+" style="fill: none; stroke: #788c5d; stroke-width: 1.8; stroke-linecap: square"></path>
+<defs>
+<path d="M 0 2
+C 0.530406 2 1.03916 1.789267 1.414214 1.414214
+C 1.789267 1.03916 2 0.530406 2 0
+C 2 -0.530406 1.789267 -1.03916 1.414214 -1.414214
+C 1.03916 -1.789267 0.530406 -2 0 -2
+C -0.530406 -2 -1.03916 -1.789267 -1.414214 -1.414214
+C -1.789267 -1.03916 -2 -0.530406 -2 0
+C -2 0.530406 -1.789267 1.03916 -1.414214 1.414214
+C -1.03916 1.789267 -0.530406 2 0 2
+z
+" id="aiq_blog_moe_scores_20261006-mcc53ff5ffc" style="stroke: #788c5d"></path>
+</defs>
+<g clip-path="url(#aiq_blog_moe_scores_20261006-pa45fcaae2a)">
+<use style="fill: #788c5d; stroke: #788c5d" x="59.605455" xlink:href="#aiq_blog_moe_scores_20261006-mcc53ff5ffc" y="148.628611"></use>
+<use style="fill: #788c5d; stroke: #788c5d" x="271.26" xlink:href="#aiq_blog_moe_scores_20261006-mcc53ff5ffc" y="148.628611"></use>
+<use style="fill: #788c5d; stroke: #788c5d" x="482.914545" xlink:href="#aiq_blog_moe_scores_20261006-mcc53ff5ffc" y="146.401389"></use>
+</g>
+</g>
+<g id="aiq_blog_moe_scores_20261006-line2d_20">
+<path clip-path="url(#aiq_blog_moe_scores_20261006-pa45fcaae2a)" d="M 38.44 30.505653
+L 504.08 30.505653
+" style="fill: none; stroke-dasharray: 6.66,2.88; stroke-dashoffset: 0; stroke: #b0aea5; stroke-width: 1.8"></path>
+</g>
+<g id="aiq_blog_moe_scores_20261006-patch_3">
+<path d="M 38.44 167.56
+L 38.44 7.2
+" style="fill: none; stroke: #b0aea5; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_moe_scores_20261006-patch_4">
+<path d="M 38.44 167.56
+L 504.08 167.56
+" style="fill: none; stroke: #b0aea5; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_moe_scores_20261006-legend_1">
+<g id="aiq_blog_moe_scores_20261006-line2d_21">
+<path d="M 363.63125 80.7475
+L 371.63125 80.7475
+L 379.63125 80.7475
+" style="fill: none; stroke: #d97757; stroke-width: 1.8; stroke-linecap: square"></path>
+<g>
+<use style="fill: #d97757; stroke: #d97757" x="371.63125" xlink:href="#aiq_blog_moe_scores_20261006-m28c9156a76" y="80.7475"></use>
+</g>
+</g>
+<g id="aiq_blog_moe_scores_20261006-text_11">
+<text style="font-size: 8px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" transform="rotate(-0 386.03125 83.5475)" x="386.03125" y="83.5475">全任务</text>
+</g>
+<g id="aiq_blog_moe_scores_20261006-line2d_22">
+<path d="M 363.63125 92.9475
+L 371.63125 92.9475
+L 379.63125 92.9475
+" style="fill: none; stroke: #6a9bcc; stroke-width: 1.8; stroke-linecap: square"></path>
+<g>
+<use style="fill: #6a9bcc; stroke: #6a9bcc" x="371.63125" xlink:href="#aiq_blog_moe_scores_20261006-m0259bfc075" y="92.9475"></use>
+</g>
+</g>
+<g id="aiq_blog_moe_scores_20261006-text_12">
+<text style="font-size: 8px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" transform="rotate(-0 386.03125 95.7475)" x="386.03125" y="95.7475">选择</text>
+</g>
+<g id="aiq_blog_moe_scores_20261006-line2d_23">
+<path d="M 426.03125 80.7475
+L 434.03125 80.7475
+L 442.03125 80.7475
+" style="fill: none; stroke: #788c5d; stroke-width: 1.8; stroke-linecap: square"></path>
+<g>
+<use style="fill: #788c5d; stroke: #788c5d" x="434.03125" xlink:href="#aiq_blog_moe_scores_20261006-mcc53ff5ffc" y="80.7475"></use>
+</g>
+</g>
+<g id="aiq_blog_moe_scores_20261006-text_13">
+<text style="font-size: 8px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" transform="rotate(-0 448.43125 83.5475)" x="448.43125" y="83.5475">排序</text>
+</g>
+<g id="aiq_blog_moe_scores_20261006-line2d_24">
+<path d="M 426.03125 92.9475
+L 434.03125 92.9475
+L 442.03125 92.9475
+" style="fill: none; stroke-dasharray: 6.66,2.88; stroke-dashoffset: 0; stroke: #b0aea5; stroke-width: 1.8"></path>
+</g>
+<g id="aiq_blog_moe_scores_20261006-text_14">
+<text style="font-size: 8px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" transform="rotate(-0 448.43125 95.7475)" x="448.43125" y="95.7475">选择恒 A 基线</text>
+</g>
+</g>
+</g>
+</g>
+<defs>
+<clippath id="aiq_blog_moe_scores_20261006-pa45fcaae2a">
+<rect height="160.36" width="465.64" x="38.44" y="7.2"></rect>
+</clippath>
+</defs>
+</svg></figure>
+<div aria-label="数据表，可横向滚动" class="table-wrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>训练步</th>
+<th style="text-align: right;">全任务 exact</th>
+<th style="text-align: right;">选择 exact</th>
+<th style="text-align: right;">排序 exact</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>30</td>
+<td style="text-align: right;">96/580（16.55%）</td>
+<td style="text-align: right;">79/260（30.38%）</td>
+<td style="text-align: right;">17/320（5.31%）</td>
+</tr>
+<tr>
+<td>40</td>
+<td style="text-align: right;">96/580（16.55%）</td>
+<td style="text-align: right;">79/260（30.38%）</td>
+<td style="text-align: right;">17/320（5.31%）</td>
+</tr>
+<tr>
+<td>50</td>
+<td style="text-align: right;">98/580（16.90%）</td>
+<td style="text-align: right;">79/260（30.38%）</td>
+<td style="text-align: right;">19/320（5.94%）</td>
+</tr>
+</tbody>
+</table></div>
+<p>第 40→50 步有 25 条变对、23 条变错，净增 2/580（0.34 个百分点）。选择题 30.38% 仍低于该切片恒选 A 的 38.46%。第 50 步全部自然结束，无截断或解析失败；第 30 步有一条排序无法解析。缺少零步评测，不能据这三个点判断相对训练起点的变化。</p>
+<h2 id="真实训练组仍能产生-advantage">真实训练组仍能产生 advantage</h2>
+<figure><svg aria-label="第 49、50 步的真实组正确率分布" class="chart" height="208.835pt" id="aiq_blog_moe_groups_20261006" role="img" version="1.1" viewbox="0 0 511.28 208.835" width="511.28pt" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+
+<defs>
+<style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+</defs>
+<g id="aiq_blog_moe_groups_20261006-figure_1">
+<g id="aiq_blog_moe_groups_20261006-patch_1">
+<path d="M 0 208.835
+L 511.28 208.835
+L 511.28 0
+L 0 0
+z
+" style="fill: #ffffff"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-axes_1">
+<g id="aiq_blog_moe_groups_20261006-patch_2">
+<path d="M 38.44 171.16
+L 504.08 171.16
+L 504.08 7.2
+L 38.44 7.2
+z
+" style="fill: #ffffff"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-matplotlib.axis_1">
+<g id="aiq_blog_moe_groups_20261006-xtick_1">
+<g id="aiq_blog_moe_groups_20261006-line2d_1">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 64.641774 171.16
+L 64.641774 7.2
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-line2d_2">
+<defs>
+<path d="M 0 0
+L 0 3.5
+" id="aiq_blog_moe_groups_20261006-m5acb218427" style="stroke: #5e5d59; stroke-width: 0.8"></path>
+</defs>
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="64.641774" xlink:href="#aiq_blog_moe_groups_20261006-m5acb218427" y="171.16"></use>
+</g>
+</g>
+<g id="aiq_blog_moe_groups_20261006-text_1">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" transform="rotate(-0 64.641774 185.323438)" x="64.641774" y="185.323438">0</text>
+</g>
+</g>
+<g id="aiq_blog_moe_groups_20261006-xtick_2">
+<g id="aiq_blog_moe_groups_20261006-line2d_3">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 167.950887 171.16
+L 167.950887 7.2
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-line2d_4">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="167.950887" xlink:href="#aiq_blog_moe_groups_20261006-m5acb218427" y="171.16"></use>
+</g>
+</g>
+<g id="aiq_blog_moe_groups_20261006-text_2">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" transform="rotate(-0 167.950887 185.323438)" x="167.950887" y="185.323438">8</text>
+</g>
+</g>
+<g id="aiq_blog_moe_groups_20261006-xtick_3">
+<g id="aiq_blog_moe_groups_20261006-line2d_5">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 271.26 171.16
+L 271.26 7.2
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-line2d_6">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="271.26" xlink:href="#aiq_blog_moe_groups_20261006-m5acb218427" y="171.16"></use>
+</g>
+</g>
+<g id="aiq_blog_moe_groups_20261006-text_3">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" transform="rotate(-0 271.26 185.323438)" x="271.26" y="185.323438">16</text>
+</g>
+</g>
+<g id="aiq_blog_moe_groups_20261006-xtick_4">
+<g id="aiq_blog_moe_groups_20261006-line2d_7">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 374.569113 171.16
+L 374.569113 7.2
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-line2d_8">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="374.569113" xlink:href="#aiq_blog_moe_groups_20261006-m5acb218427" y="171.16"></use>
+</g>
+</g>
+<g id="aiq_blog_moe_groups_20261006-text_4">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" transform="rotate(-0 374.569113 185.323438)" x="374.569113" y="185.323438">24</text>
+</g>
+</g>
+<g id="aiq_blog_moe_groups_20261006-xtick_5">
+<g id="aiq_blog_moe_groups_20261006-line2d_9">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 477.878226 171.16
+L 477.878226 7.2
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-line2d_10">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="477.878226" xlink:href="#aiq_blog_moe_groups_20261006-m5acb218427" y="171.16"></use>
+</g>
+</g>
+<g id="aiq_blog_moe_groups_20261006-text_5">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" transform="rotate(-0 477.878226 185.323438)" x="477.878226" y="185.323438">32</text>
+</g>
+</g>
+<g id="aiq_blog_moe_groups_20261006-text_6">
+<text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #141413" transform="rotate(-0 271.26 199.344375)" x="271.26" y="199.344375">每组 32 条中答对的条数</text>
+</g>
+</g>
+<g id="aiq_blog_moe_groups_20261006-matplotlib.axis_2">
+<g id="aiq_blog_moe_groups_20261006-ytick_1">
+<g id="aiq_blog_moe_groups_20261006-line2d_11">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 38.44 171.16
+L 504.08 171.16
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-line2d_12">
+<defs>
+<path d="M 0 0
+L -3.5 0
+" id="aiq_blog_moe_groups_20261006-m1fafdb381c" style="stroke: #5e5d59; stroke-width: 0.8"></path>
+</defs>
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="38.44" xlink:href="#aiq_blog_moe_groups_20261006-m1fafdb381c" y="171.16"></use>
+</g>
+</g>
+<g id="aiq_blog_moe_groups_20261006-text_7">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 31.44 174.741719)" x="31.44" y="174.741719">0</text>
+</g>
+</g>
+<g id="aiq_blog_moe_groups_20261006-ytick_2">
+<g id="aiq_blog_moe_groups_20261006-line2d_13">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 38.44 148.852517
+L 504.08 148.852517
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-line2d_14">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="38.44" xlink:href="#aiq_blog_moe_groups_20261006-m1fafdb381c" y="148.852517"></use>
+</g>
+</g>
+<g id="aiq_blog_moe_groups_20261006-text_8">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 31.44 152.434236)" x="31.44" y="152.434236">2</text>
+</g>
+</g>
+<g id="aiq_blog_moe_groups_20261006-ytick_3">
+<g id="aiq_blog_moe_groups_20261006-line2d_15">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 38.44 126.545034
+L 504.08 126.545034
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-line2d_16">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="38.44" xlink:href="#aiq_blog_moe_groups_20261006-m1fafdb381c" y="126.545034"></use>
+</g>
+</g>
+<g id="aiq_blog_moe_groups_20261006-text_9">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 31.44 130.126753)" x="31.44" y="130.126753">4</text>
+</g>
+</g>
+<g id="aiq_blog_moe_groups_20261006-ytick_4">
+<g id="aiq_blog_moe_groups_20261006-line2d_17">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 38.44 104.237551
+L 504.08 104.237551
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-line2d_18">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="38.44" xlink:href="#aiq_blog_moe_groups_20261006-m1fafdb381c" y="104.237551"></use>
+</g>
+</g>
+<g id="aiq_blog_moe_groups_20261006-text_10">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 31.44 107.81927)" x="31.44" y="107.81927">6</text>
+</g>
+</g>
+<g id="aiq_blog_moe_groups_20261006-ytick_5">
+<g id="aiq_blog_moe_groups_20261006-line2d_19">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 38.44 81.930068
+L 504.08 81.930068
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-line2d_20">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="38.44" xlink:href="#aiq_blog_moe_groups_20261006-m1fafdb381c" y="81.930068"></use>
+</g>
+</g>
+<g id="aiq_blog_moe_groups_20261006-text_11">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 31.44 85.511787)" x="31.44" y="85.511787">8</text>
+</g>
+</g>
+<g id="aiq_blog_moe_groups_20261006-ytick_6">
+<g id="aiq_blog_moe_groups_20261006-line2d_21">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 38.44 59.622585
+L 504.08 59.622585
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-line2d_22">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="38.44" xlink:href="#aiq_blog_moe_groups_20261006-m1fafdb381c" y="59.622585"></use>
+</g>
+</g>
+<g id="aiq_blog_moe_groups_20261006-text_12">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 31.44 63.204304)" x="31.44" y="63.204304">10</text>
+</g>
+</g>
+<g id="aiq_blog_moe_groups_20261006-ytick_7">
+<g id="aiq_blog_moe_groups_20261006-line2d_23">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 38.44 37.315102
+L 504.08 37.315102
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-line2d_24">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="38.44" xlink:href="#aiq_blog_moe_groups_20261006-m1fafdb381c" y="37.315102"></use>
+</g>
+</g>
+<g id="aiq_blog_moe_groups_20261006-text_13">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 31.44 40.896821)" x="31.44" y="40.896821">12</text>
+</g>
+</g>
+<g id="aiq_blog_moe_groups_20261006-ytick_8">
+<g id="aiq_blog_moe_groups_20261006-line2d_25">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 38.44 15.007619
+L 504.08 15.007619
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-line2d_26">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="38.44" xlink:href="#aiq_blog_moe_groups_20261006-m1fafdb381c" y="15.007619"></use>
+</g>
+</g>
+<g id="aiq_blog_moe_groups_20261006-text_14">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 31.44 18.589338)" x="31.44" y="18.589338">14</text>
+</g>
+</g>
+<g id="aiq_blog_moe_groups_20261006-text_15">
+<text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #141413" transform="rotate(-90 15.159375 89.18)" x="15.159375" y="89.18">组数</text>
+</g>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_3">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 59.605455 171.16
+L 64.512637 171.16
+L 64.512637 15.007619
+L 59.605455 15.007619
+z
+" style="fill: #6a9bcc"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_4">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 72.519094 171.16
+L 77.426277 171.16
+L 77.426277 160.006259
+L 72.519094 160.006259
+z
+" style="fill: #6a9bcc"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_5">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 85.432733 171.16
+L 90.339916 171.16
+L 90.339916 148.852517
+L 85.432733 148.852517
+z
+" style="fill: #6a9bcc"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_6">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 98.346372 171.16
+L 103.253555 171.16
+L 103.253555 160.006259
+L 98.346372 160.006259
+z
+" style="fill: #6a9bcc"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_7">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 111.260011 171.16
+L 116.167194 171.16
+L 116.167194 171.16
+L 111.260011 171.16
+z
+" style="fill: #6a9bcc"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_8">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 124.17365 171.16
+L 129.080833 171.16
+L 129.080833 171.16
+L 124.17365 171.16
+z
+" style="fill: #6a9bcc"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_9">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 137.087289 171.16
+L 141.994472 171.16
+L 141.994472 171.16
+L 137.087289 171.16
+z
+" style="fill: #6a9bcc"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_10">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 150.000929 171.16
+L 154.908111 171.16
+L 154.908111 171.16
+L 150.000929 171.16
+z
+" style="fill: #6a9bcc"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_11">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 162.914568 171.16
+L 167.821751 171.16
+L 167.821751 148.852517
+L 162.914568 148.852517
+z
+" style="fill: #6a9bcc"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_12">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 175.828207 171.16
+L 180.73539 171.16
+L 180.73539 171.16
+L 175.828207 171.16
+z
+" style="fill: #6a9bcc"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_13">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 188.741846 171.16
+L 193.649029 171.16
+L 193.649029 160.006259
+L 188.741846 160.006259
+z
+" style="fill: #6a9bcc"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_14">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 201.655485 171.16
+L 206.562668 171.16
+L 206.562668 171.16
+L 201.655485 171.16
+z
+" style="fill: #6a9bcc"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_15">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 214.569124 171.16
+L 219.476307 171.16
+L 219.476307 171.16
+L 214.569124 171.16
+z
+" style="fill: #6a9bcc"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_16">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 227.482763 171.16
+L 232.389946 171.16
+L 232.389946 160.006259
+L 227.482763 160.006259
+z
+" style="fill: #6a9bcc"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_17">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 240.396402 171.16
+L 245.303585 171.16
+L 245.303585 171.16
+L 240.396402 171.16
+z
+" style="fill: #6a9bcc"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_18">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 253.310042 171.16
+L 258.217224 171.16
+L 258.217224 171.16
+L 253.310042 171.16
+z
+" style="fill: #6a9bcc"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_19">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 266.223681 171.16
+L 271.130864 171.16
+L 271.130864 171.16
+L 266.223681 171.16
+z
+" style="fill: #6a9bcc"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_20">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 279.13732 171.16
+L 284.044503 171.16
+L 284.044503 171.16
+L 279.13732 171.16
+z
+" style="fill: #6a9bcc"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_21">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 292.050959 171.16
+L 296.958142 171.16
+L 296.958142 171.16
+L 292.050959 171.16
+z
+" style="fill: #6a9bcc"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_22">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 304.964598 171.16
+L 309.871781 171.16
+L 309.871781 171.16
+L 304.964598 171.16
+z
+" style="fill: #6a9bcc"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_23">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 317.878237 171.16
+L 322.78542 171.16
+L 322.78542 160.006259
+L 317.878237 160.006259
+z
+" style="fill: #6a9bcc"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_24">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 330.791876 171.16
+L 335.699059 171.16
+L 335.699059 171.16
+L 330.791876 171.16
+z
+" style="fill: #6a9bcc"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_25">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 343.705516 171.16
+L 348.612698 171.16
+L 348.612698 171.16
+L 343.705516 171.16
+z
+" style="fill: #6a9bcc"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_26">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 356.619155 171.16
+L 361.526338 171.16
+L 361.526338 171.16
+L 356.619155 171.16
+z
+" style="fill: #6a9bcc"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_27">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 369.532794 171.16
+L 374.439977 171.16
+L 374.439977 171.16
+L 369.532794 171.16
+z
+" style="fill: #6a9bcc"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_28">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 382.446433 171.16
+L 387.353616 171.16
+L 387.353616 171.16
+L 382.446433 171.16
+z
+" style="fill: #6a9bcc"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_29">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 395.360072 171.16
+L 400.267255 171.16
+L 400.267255 171.16
+L 395.360072 171.16
+z
+" style="fill: #6a9bcc"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_30">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 408.273711 171.16
+L 413.180894 171.16
+L 413.180894 171.16
+L 408.273711 171.16
+z
+" style="fill: #6a9bcc"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_31">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 421.18735 171.16
+L 426.094533 171.16
+L 426.094533 171.16
+L 421.18735 171.16
+z
+" style="fill: #6a9bcc"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_32">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 434.10099 171.16
+L 439.008172 171.16
+L 439.008172 171.16
+L 434.10099 171.16
+z
+" style="fill: #6a9bcc"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_33">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 447.014629 171.16
+L 451.921812 171.16
+L 451.921812 171.16
+L 447.014629 171.16
+z
+" style="fill: #6a9bcc"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_34">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 459.928268 171.16
+L 464.835451 171.16
+L 464.835451 171.16
+L 459.928268 171.16
+z
+" style="fill: #6a9bcc"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_35">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 472.841907 171.16
+L 477.74909 171.16
+L 477.74909 70.776327
+L 472.841907 70.776327
+z
+" style="fill: #6a9bcc"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_36">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 64.77091 171.16
+L 69.678093 171.16
+L 69.678093 37.315102
+L 64.77091 37.315102
+z
+" style="fill: #d97757"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_37">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 77.684549 171.16
+L 82.591732 171.16
+L 82.591732 137.698776
+L 77.684549 137.698776
+z
+" style="fill: #d97757"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_38">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 90.598188 171.16
+L 95.505371 171.16
+L 95.505371 126.545034
+L 90.598188 126.545034
+z
+" style="fill: #d97757"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_39">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 103.511828 171.16
+L 108.41901 171.16
+L 108.41901 171.16
+L 103.511828 171.16
+z
+" style="fill: #d97757"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_40">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 116.425467 171.16
+L 121.33265 171.16
+L 121.33265 171.16
+L 116.425467 171.16
+z
+" style="fill: #d97757"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_41">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 129.339106 171.16
+L 134.246289 171.16
+L 134.246289 171.16
+L 129.339106 171.16
+z
+" style="fill: #d97757"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_42">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 142.252745 171.16
+L 147.159928 171.16
+L 147.159928 171.16
+L 142.252745 171.16
+z
+" style="fill: #d97757"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_43">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 155.166384 171.16
+L 160.073567 171.16
+L 160.073567 171.16
+L 155.166384 171.16
+z
+" style="fill: #d97757"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_44">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 168.080023 171.16
+L 172.987206 171.16
+L 172.987206 171.16
+L 168.080023 171.16
+z
+" style="fill: #d97757"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_45">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 180.993662 171.16
+L 185.900845 171.16
+L 185.900845 148.852517
+L 180.993662 148.852517
+z
+" style="fill: #d97757"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_46">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 193.907302 171.16
+L 198.814484 171.16
+L 198.814484 171.16
+L 193.907302 171.16
+z
+" style="fill: #d97757"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_47">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 206.820941 171.16
+L 211.728124 171.16
+L 211.728124 171.16
+L 206.820941 171.16
+z
+" style="fill: #d97757"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_48">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 219.73458 171.16
+L 224.641763 171.16
+L 224.641763 160.006259
+L 219.73458 160.006259
+z
+" style="fill: #d97757"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_49">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 232.648219 171.16
+L 237.555402 171.16
+L 237.555402 171.16
+L 232.648219 171.16
+z
+" style="fill: #d97757"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_50">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 245.561858 171.16
+L 250.469041 171.16
+L 250.469041 171.16
+L 245.561858 171.16
+z
+" style="fill: #d97757"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_51">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 258.475497 171.16
+L 263.38268 171.16
+L 263.38268 171.16
+L 258.475497 171.16
+z
+" style="fill: #d97757"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_52">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 271.389136 171.16
+L 276.296319 171.16
+L 276.296319 171.16
+L 271.389136 171.16
+z
+" style="fill: #d97757"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_53">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 284.302776 171.16
+L 289.209958 171.16
+L 289.209958 171.16
+L 284.302776 171.16
+z
+" style="fill: #d97757"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_54">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 297.216415 171.16
+L 302.123598 171.16
+L 302.123598 160.006259
+L 297.216415 160.006259
+z
+" style="fill: #d97757"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_55">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 310.130054 171.16
+L 315.037237 171.16
+L 315.037237 171.16
+L 310.130054 171.16
+z
+" style="fill: #d97757"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_56">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 323.043693 171.16
+L 327.950876 171.16
+L 327.950876 171.16
+L 323.043693 171.16
+z
+" style="fill: #d97757"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_57">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 335.957332 171.16
+L 340.864515 171.16
+L 340.864515 171.16
+L 335.957332 171.16
+z
+" style="fill: #d97757"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_58">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 348.870971 171.16
+L 353.778154 171.16
+L 353.778154 148.852517
+L 348.870971 148.852517
+z
+" style="fill: #d97757"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_59">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 361.78461 171.16
+L 366.691793 171.16
+L 366.691793 160.006259
+L 361.78461 160.006259
+z
+" style="fill: #d97757"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_60">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 374.698249 171.16
+L 379.605432 171.16
+L 379.605432 171.16
+L 374.698249 171.16
+z
+" style="fill: #d97757"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_61">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 387.611889 171.16
+L 392.519071 171.16
+L 392.519071 160.006259
+L 387.611889 160.006259
+z
+" style="fill: #d97757"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_62">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 400.525528 171.16
+L 405.432711 171.16
+L 405.432711 148.852517
+L 400.525528 148.852517
+z
+" style="fill: #d97757"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_63">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 413.439167 171.16
+L 418.34635 171.16
+L 418.34635 171.16
+L 413.439167 171.16
+z
+" style="fill: #d97757"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_64">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 426.352806 171.16
+L 431.259989 171.16
+L 431.259989 171.16
+L 426.352806 171.16
+z
+" style="fill: #d97757"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_65">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 439.266445 171.16
+L 444.173628 171.16
+L 444.173628 171.16
+L 439.266445 171.16
+z
+" style="fill: #d97757"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_66">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 452.180084 171.16
+L 457.087267 171.16
+L 457.087267 171.16
+L 452.180084 171.16
+z
+" style="fill: #d97757"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_67">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 465.093723 171.16
+L 470.000906 171.16
+L 470.000906 171.16
+L 465.093723 171.16
+z
+" style="fill: #d97757"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_68">
+<path clip-path="url(#aiq_blog_moe_groups_20261006-pdc83d34549)" d="M 478.007363 171.16
+L 482.914545 171.16
+L 482.914545 137.698776
+L 478.007363 137.698776
+z
+" style="fill: #d97757"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_69">
+<path d="M 38.44 171.16
+L 38.44 7.2
+" style="fill: none; stroke: #b0aea5; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_70">
+<path d="M 38.44 171.16
+L 504.08 171.16
+" style="fill: none; stroke: #b0aea5; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-legend_1">
+<g id="aiq_blog_moe_groups_20261006-patch_71">
+<path d="M 438.756875 22.463438
+L 456.756875 22.463438
+L 456.756875 16.163438
+L 438.756875 16.163438
+z
+" style="fill: #6a9bcc"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-text_16">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" transform="rotate(-0 463.956875 22.463438)" x="463.956875" y="22.463438">第 49 步</text>
+</g>
+<g id="aiq_blog_moe_groups_20261006-patch_72">
+<path d="M 438.756875 36.188438
+L 456.756875 36.188438
+L 456.756875 29.888438
+L 438.756875 29.888438
+z
+" style="fill: #d97757"></path>
+</g>
+<g id="aiq_blog_moe_groups_20261006-text_17">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" transform="rotate(-0 463.956875 36.188438)" x="463.956875" y="36.188438">第 50 步</text>
+</g>
+</g>
+</g>
+</g>
+<defs>
+<clippath id="aiq_blog_moe_groups_20261006-pdc83d34549">
+<rect height="163.96" width="465.64" x="38.44" y="7.2"></rect>
+</clippath>
+</defs>
+</svg></figure>
+<div aria-label="数据表，可横向滚动" class="table-wrap" role="region" tabindex="0"><table>
+<colgroup>
+<col style="width: 27%"/>
+<col style="width: 36%"/>
+<col style="width: 36%"/>
+</colgroup>
+<thead>
+<tr>
+<th>指标</th>
+<th style="text-align: right;">第 49 步</th>
+<th style="text-align: right;">第 50 步</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>组正确率均值 / 跨组 std</td>
+<td style="text-align: right;">34.67% / 43.12 个百分点</td>
+<td style="text-align: right;">29.20% / 36.65 个百分点</td>
+</tr>
+<tr>
+<td>零正确 / 部分正确 / 全对组</td>
+<td style="text-align: right;">14 / 9 / 9</td>
+<td style="text-align: right;">12 / 17 / 3</td>
+</tr>
+<tr>
+<td>奖励有差异 / 零方差组</td>
+<td style="text-align: right;">20 / 12</td>
+<td style="text-align: right;">24 / 8</td>
+</tr>
+<tr>
+<td>按 advantage 符号计的 sequence clip</td>
+<td style="text-align: right;">1.56%</td>
+<td style="text-align: right;">1.17%</td>
+</tr>
+<tr>
+<td>reference KL</td>
+<td style="text-align: right;">0.001751</td>
+<td style="text-align: right;">0.001753</td>
+</tr>
+</tbody>
+</table></div>
+<p>零正确组也可能因排序部分分不同而有 advantage。第 43–50 步的有效奖励组为 18–24/32，未持续归零。训练梯度非零、clip 和 KL 有限，支持管线仍有信号，尚不足以确认能力改善。</p>
+<h2 id="这条路径的大部分时间用于前反向">这条路径的大部分时间用于前反向</h2>
+<p>Infra 让 rollout 与训练异步重叠，但 trainer 对每条回答重算题目前缀。第 49、50 步每步训练前向约 604、606 万 token。</p>
+<div aria-label="数据表，可横向滚动" class="table-wrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>阶段（秒）</th>
+<th style="text-align: right;">第 49 步</th>
+<th style="text-align: right;">第 50 步</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>整步</td>
+<td style="text-align: right;">1,770.92</td>
+<td style="text-align: right;">1,734.62</td>
+</tr>
+<tr>
+<td>前反向</td>
+<td style="text-align: right;">1,769.32</td>
+<td style="text-align: right;">1,732.99</td>
+</tr>
+<tr>
+<td>其中 reference</td>
+<td style="text-align: right;">320.91</td>
+<td style="text-align: right;">315.86</td>
+</tr>
+<tr>
+<td>等待 rollout</td>
+<td style="text-align: right;">0.35</td>
+<td style="text-align: right;">0.36</td>
+</tr>
+<tr>
+<td>optimizer / adapter 同步</td>
+<td style="text-align: right;">0.05 / 0.88</td>
+<td style="text-align: right;">0.07 / 0.88</td>
+</tr>
+</tbody>
+</table></div>
+<p>reference 已计入前反向；异步 rollout 的 1,372、1,276 秒不再加到整步。吞吐为 0.578、0.590 samples/s，MFU 未测量。这是原生产路径的计时，不能代表后续原生 INT4 或共享前缀候选的性能。</p>
+<h2 id="science-仍需要独立的学习证据">science 仍需要独立的学习证据</h2>
+<p>science 在这里要求条件敏感的判断、可靠解释和新实例迁移。本线尚未确认任务成绩上升，也未完成条件反转、等价改写和新实例测试。训练 token 已保存，但健康记录的文本摘要为空，本文未完成语义解码 review。</p>
+<p>当前结论是量化 MoE 的 RL 更新与评测管线可运行，奖励差异仍存在。它还不能证明 science 的形成；性能探针和外部模型经工具发现的机制，均不能算作这个 policy 已学会的知识。</p>
+<div aria-label="同系列文章" class="related"><a href="aiq-rl-loss-ranking-2026-10-06.html">早期排序</a><a href="aiq-rl-sft178-2026-10-06.html">SFT-178</a><a href="aiq-rl-pool-b-2026-10-06.html">0.8B 主线</a><a href="poor-rl-infra-2026-10-06.html">Infra 演进</a></div><footer>来源：原 W4A16 第 49–50 步健康记录及第 30/40/50 步评测；<a href="aiq-rl-flash-next-2026-10-06-data.json">指标与逐组分布</a>。证据截止于第 50 步。</footer>
+
+</main>
+</body>
+</html>

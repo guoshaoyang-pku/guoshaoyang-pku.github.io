@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>早期 RL 把排序题做对了，但数据捷径削弱了结论</title>
+<!--
+  report-to-human panel template v2
+  Palette and type: Anthropic brand-guidelines (github.com/anthropics/skills, skills/brand-guidelines).
+  Rules: keep only what the reader needs. No subtitle, no KPI cards, no section numbers, no status banners.
+  Every term is explained in plain words where it first appears.
+-->
+<style>
+  :root {
+    --dark: #141413;   /* primary text */
+    --light: #faf9f5;  /* page background */
+    --mid: #b0aea5;    /* borders, axes */
+    --soft: #e8e6dc;   /* subtle fills */
+    --muted: #5e5d59;  /* secondary text (darker than --mid for contrast) */
+    --orange: #d97757; /* primary accent: the main result */
+    --blue: #6a9bcc;   /* secondary accent */
+    --green: #788c5d;  /* tertiary accent */
+    --head: "Poppins", "PingFang SC", "Noto Sans CJK SC", "Hiragino Sans GB", Arial, sans-serif;
+    --body: "Lora", "Noto Serif CJK SC", "Songti SC", Georgia, serif;
+    --mono: "SF Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--light); color: var(--dark); font: 17px/1.8 var(--body); }
+  main { max-width: 760px; margin: 0 auto; padding: 72px 24px 96px; }
+  h1, h2, h3 { font-family: var(--head); font-weight: 600; line-height: 1.35; letter-spacing: -0.01em; }
+  h1 { font-size: 32px; margin: 0 0 16px; }
+  h2 { font-size: 22px; margin: 64px 0 12px; }
+  p { margin: 0 0 16px; }
+  .lede { font-size: 19px; }
+  a { color: inherit; text-decoration: underline; text-decoration-color: var(--orange); text-underline-offset: 3px; }
+  code, .id { font-family: var(--mono); font-size: 0.86em; background: var(--soft); padding: 1px 5px; border-radius: 4px; }
+
+  /* L2 settings row: monochrome line icons + label, never color emoji */
+  .settings { display: flex; flex-wrap: wrap; gap: 8px 20px; list-style: none; padding: 0; margin: 24px 0 0;
+              font: 14px/1.6 var(--head); color: var(--muted); }
+  .settings li { display: inline-flex; align-items: center; gap: 6px; }
+  .settings svg { width: 15px; height: 15px; stroke: var(--dark); fill: none; stroke-width: 1.6;
+                  stroke-linecap: round; stroke-linejoin: round; }
+  .settings b { color: var(--dark); font-weight: 500; }
+
+  figure { margin: 28px 0; padding: 20px; background: #fff; border: 1px solid var(--soft); border-radius: 10px; }
+  figure img, figure svg.chart { display: block; width: 100%; height: auto; }
+  figcaption { margin-top: 12px; font: 14px/1.6 var(--head); color: var(--muted); }
+  .legend { display: flex; gap: 18px; font: 13px var(--head); color: var(--muted); margin-bottom: 8px; }
+  .legend i { display: inline-block; width: 14px; height: 2px; vertical-align: middle; margin-right: 6px; }
+
+  .warn { border-left: 3px solid var(--orange); padding: 4px 0 4px 16px; margin: 24px 0; }
+  .warn strong { font-family: var(--head); }
+
+  /* sample browser: compare outputs side by side */
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--soft); margin-bottom: 12px; }
+  .tabs button { font: 14px var(--head); background: none; border: 0; padding: 8px 12px; cursor: pointer;
+                 color: var(--muted); border-bottom: 2px solid transparent; }
+  .tabs button[aria-selected="true"] { color: var(--dark); border-bottom-color: var(--orange); }
+  .sample { display: none; white-space: pre-wrap; font: 14px/1.7 var(--mono); }
+  .sample.on { display: block; }
+
+  details { margin: 16px 0; }
+  summary { cursor: pointer; font: 15px var(--head); color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font: 14px/1.6 var(--head); margin: 16px 0; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--soft); }
+  th { font-weight: 500; color: var(--muted); }
+  footer { margin-top: 80px; font: 13px var(--head); color: var(--mid); }
+
+  pre { margin: 12px 0; padding: 16px; background: var(--soft); white-space: pre-wrap;
+        overflow-wrap: anywhere; font: 13px/1.65 var(--mono); }
+  .sample-meta { font: 13px/1.6 var(--head); color: var(--muted); margin: 10px 0 0; }
+  .table-wrap { overflow-x: auto; margin: 20px 0; }
+  table { min-width: 500px; margin: 0; font-variant-numeric: tabular-nums; }
+  figure { padding: 12px; border-radius: 4px; }
+  footer { color: var(--muted); line-height: 1.7; }
+  .related { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 40px; font: 14px/1.7 var(--head); }
+  @media (max-width: 600px) { main { padding: 40px 20px 64px; } h1 { font-size: 27px; }
+     h2 { font-size: 21px; margin-top: 44px; } body { font-size: 16px; } figure { padding: 4px; }
+     .settings { gap: 6px 14px; } }
+</style>
+<link rel="canonical" href="https://guoshaoyang-pku.github.io/blogs/aiq-rl-loss-ranking-2026-10-06.html">
+</head>
+<body>
+<main>
+<h1 id="article-title">早期 RL 把排序题做对了，但数据捷径削弱了结论</h1>
+<p class="lede">0.8B 模型在旧测试集上达到 72% 的选择正确率和接近 100% 的排序正确率；排序答案存在可记忆的 loss 签名，现有证据不足以证明模型学会了可迁移的科学规律。</p>
+<ul class="settings">
+<li><svg aria-hidden="true" viewbox="0 0 24 24"><rect height="16" rx="2" width="16" x="4" y="4"></rect><path d="M8 8h8M8 12h8M8 16h4"></path></svg>
+模型 <b>Qwen3.5-0.8B base</b>
+</li>
+<li><svg aria-hidden="true" viewbox="0 0 24 24"><rect height="16" rx="2" width="16" x="4" y="4"></rect><path d="M8 8h8M8 12h8M8 16h4"></path></svg>
+数据 <b>旧混合题池</b>
+</li>
+<li><svg aria-hidden="true" viewbox="0 0 24 24"><rect height="16" rx="2" width="16" x="4" y="4"></rect><path d="M8 8h8M8 12h8M8 16h4"></path></svg>
+评测 <b>300 题 × 2 次</b>
+</li>
+<li><svg aria-hidden="true" viewbox="0 0 24 24"><rect height="16" rx="2" width="16" x="4" y="4"></rect><path d="M8 8h8M8 12h8M8 16h4"></path></svg>
+训练 <b>GRPO → GSPO</b>
+</li>
+</ul>
+<h2 id="旧排序题主要考察-loss-之间的次序">旧排序题主要考察 loss 之间的次序</h2>
+<p>ArchitectureIQ 让模型在训练之前，预测几个训练配置中谁的测试成绩更好。选择题有三个候选；排序题要求排列五个候选。正确答案来自候选模型的实际训练结果。</p>
+<p>早期混合池包含 2,000 道 <code>loss_ranked</code>（以 loss 为主要变化项的排序题），标准次序可以由 loss 组合的签名近似恢复。这里的“签名”指候选配置里的 loss 名称及其组合。训练池有过 2,134 题和 3,000 题两种版本，不能视为同一固定数据集。300 题测试切片包含 200 道选择题和 100 道排序题；它与后来的 290 题主线测试集不同。</p>
+<h2 id="截断惩罚先改变了模型的回答方式">截断惩罚先改变了模型的回答方式</h2>
+<p>实验从未做监督微调的 base 模型开始，先用 GRPO，再用 GSPO（按整条回答的平均概率比更新策略）。回答打满上限扣 2 分，不可解析扣 0.5 分；选择正确得 1 分，错误得 0 分。排序部分的评分经历过调整，本线的奖励不能与后续主线合并比较。</p>
+<p>异步训练把 rollout（生成候选回答）和参数更新放在两组 GPU 上，生成与训练重叠。历史记录描述：前约 200 步，平均回答从约一万 token 缩到约 16 token，截断比例从 67% 降到接近零。可解析的短答案更容易获得正奖励，这能解释回答方式的改变。</p>
+<h2 id="第-600-步的成绩很高但排序任务存在捷径">第 600 步的成绩很高，但排序任务存在捷径</h2>
+<figure><svg aria-label="早期实验的历史成绩" class="chart" height="194.265pt" id="aiq_blog_early_scores_20261006" role="img" version="1.1" viewbox="0 0 511.235 194.265" width="511.235pt" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+
+<defs>
+<style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+</defs>
+<g id="aiq_blog_early_scores_20261006-figure_1">
+<g id="aiq_blog_early_scores_20261006-patch_1">
+<path d="M 0 194.265
+L 511.235 194.265
+L 511.235 0
+L 0 0
+z
+" style="fill: #ffffff"></path>
+</g>
+<g id="aiq_blog_early_scores_20261006-axes_1">
+<g id="aiq_blog_early_scores_20261006-patch_2">
+<path d="M 43.435 170.84
+L 504.035 170.84
+L 504.035 7.2
+L 43.435 7.2
+z
+" style="fill: #ffffff"></path>
+</g>
+<g id="aiq_blog_early_scores_20261006-matplotlib.axis_1">
+<g id="aiq_blog_early_scores_20261006-xtick_1">
+<g id="aiq_blog_early_scores_20261006-line2d_1">
+<path clip-path="url(#aiq_blog_early_scores_20261006-p64ba68785c)" d="M 141.226369 170.84
+L 141.226369 7.2
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_early_scores_20261006-line2d_2">
+<defs>
+<path d="M 0 0
+L 0 3.5
+" id="aiq_blog_early_scores_20261006-m5acb218427" style="stroke: #5e5d59; stroke-width: 0.8"></path>
+</defs>
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="141.226369" xlink:href="#aiq_blog_early_scores_20261006-m5acb218427" y="170.84"></use>
+</g>
+</g>
+<g id="aiq_blog_early_scores_20261006-text_1">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" transform="rotate(-0 141.226369 185.003437)" x="141.226369" y="185.003437">选择</text>
+</g>
+</g>
+<g id="aiq_blog_early_scores_20261006-xtick_2">
+<g id="aiq_blog_early_scores_20261006-line2d_3">
+<path clip-path="url(#aiq_blog_early_scores_20261006-p64ba68785c)" d="M 406.243631 170.84
+L 406.243631 7.2
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_early_scores_20261006-line2d_4">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="406.243631" xlink:href="#aiq_blog_early_scores_20261006-m5acb218427" y="170.84"></use>
+</g>
+</g>
+<g id="aiq_blog_early_scores_20261006-text_2">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" transform="rotate(-0 406.243631 185.003437)" x="406.243631" y="185.003437">排序</text>
+</g>
+</g>
+</g>
+<g id="aiq_blog_early_scores_20261006-matplotlib.axis_2">
+<g id="aiq_blog_early_scores_20261006-ytick_1">
+<g id="aiq_blog_early_scores_20261006-line2d_5">
+<path clip-path="url(#aiq_blog_early_scores_20261006-p64ba68785c)" d="M 43.435 170.84
+L 504.035 170.84
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_early_scores_20261006-line2d_6">
+<defs>
+<path d="M 0 0
+L -3.5 0
+" id="aiq_blog_early_scores_20261006-m1fafdb381c" style="stroke: #5e5d59; stroke-width: 0.8"></path>
+</defs>
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="43.435" xlink:href="#aiq_blog_early_scores_20261006-m1fafdb381c" y="170.84"></use>
+</g>
+</g>
+<g id="aiq_blog_early_scores_20261006-text_3">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 36.435 174.421719)" x="36.435" y="174.421719">0</text>
+</g>
+</g>
+<g id="aiq_blog_early_scores_20261006-ytick_2">
+<g id="aiq_blog_early_scores_20261006-line2d_7">
+<path clip-path="url(#aiq_blog_early_scores_20261006-p64ba68785c)" d="M 43.435 139.670476
+L 504.035 139.670476
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_early_scores_20261006-line2d_8">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="43.435" xlink:href="#aiq_blog_early_scores_20261006-m1fafdb381c" y="139.670476"></use>
+</g>
+</g>
+<g id="aiq_blog_early_scores_20261006-text_4">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 36.435 143.252195)" x="36.435" y="143.252195">20</text>
+</g>
+</g>
+<g id="aiq_blog_early_scores_20261006-ytick_3">
+<g id="aiq_blog_early_scores_20261006-line2d_9">
+<path clip-path="url(#aiq_blog_early_scores_20261006-p64ba68785c)" d="M 43.435 108.500952
+L 504.035 108.500952
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_early_scores_20261006-line2d_10">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="43.435" xlink:href="#aiq_blog_early_scores_20261006-m1fafdb381c" y="108.500952"></use>
+</g>
+</g>
+<g id="aiq_blog_early_scores_20261006-text_5">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 36.435 112.082671)" x="36.435" y="112.082671">40</text>
+</g>
+</g>
+<g id="aiq_blog_early_scores_20261006-ytick_4">
+<g id="aiq_blog_early_scores_20261006-line2d_11">
+<path clip-path="url(#aiq_blog_early_scores_20261006-p64ba68785c)" d="M 43.435 77.331429
+L 504.035 77.331429
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_early_scores_20261006-line2d_12">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="43.435" xlink:href="#aiq_blog_early_scores_20261006-m1fafdb381c" y="77.331429"></use>
+</g>
+</g>
+<g id="aiq_blog_early_scores_20261006-text_6">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 36.435 80.913147)" x="36.435" y="80.913147">60</text>
+</g>
+</g>
+<g id="aiq_blog_early_scores_20261006-ytick_5">
+<g id="aiq_blog_early_scores_20261006-line2d_13">
+<path clip-path="url(#aiq_blog_early_scores_20261006-p64ba68785c)" d="M 43.435 46.161905
+L 504.035 46.161905
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_early_scores_20261006-line2d_14">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="43.435" xlink:href="#aiq_blog_early_scores_20261006-m1fafdb381c" y="46.161905"></use>
+</g>
+</g>
+<g id="aiq_blog_early_scores_20261006-text_7">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 36.435 49.743624)" x="36.435" y="49.743624">80</text>
+</g>
+</g>
+<g id="aiq_blog_early_scores_20261006-ytick_6">
+<g id="aiq_blog_early_scores_20261006-line2d_15">
+<path clip-path="url(#aiq_blog_early_scores_20261006-p64ba68785c)" d="M 43.435 14.992381
+L 504.035 14.992381
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_early_scores_20261006-line2d_16">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="43.435" xlink:href="#aiq_blog_early_scores_20261006-m1fafdb381c" y="14.992381"></use>
+</g>
+</g>
+<g id="aiq_blog_early_scores_20261006-text_8">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 36.435 18.5741)" x="36.435" y="18.5741">100</text>
+</g>
+</g>
+<g id="aiq_blog_early_scores_20261006-text_9">
+<text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #141413" transform="rotate(-90 15.159375 89.02)" x="15.159375" y="89.02">历史报告 exact（%）</text>
+</g>
+</g>
+<g id="aiq_blog_early_scores_20261006-patch_3">
+<path clip-path="url(#aiq_blog_early_scores_20261006-p64ba68785c)" d="M 64.371364 170.84
+L 138.576197 170.84
+L 138.576197 144.735524
+L 64.371364 144.735524
+z
+" style="fill: #6a9bcc"></path>
+</g>
+<g id="aiq_blog_early_scores_20261006-patch_4">
+<path clip-path="url(#aiq_blog_early_scores_20261006-p64ba68785c)" d="M 329.388625 170.84
+L 403.593458 170.84
+L 403.593458 170.84
+L 329.388625 170.84
+z
+" style="fill: #6a9bcc"></path>
+</g>
+<g id="aiq_blog_early_scores_20261006-patch_5">
+<path clip-path="url(#aiq_blog_early_scores_20261006-p64ba68785c)" d="M 143.876542 170.84
+L 218.081375 170.84
+L 218.081375 58.629714
+L 143.876542 58.629714
+z
+" style="fill: #d97757"></path>
+</g>
+<g id="aiq_blog_early_scores_20261006-patch_6">
+<path clip-path="url(#aiq_blog_early_scores_20261006-p64ba68785c)" d="M 408.893803 170.84
+L 483.098636 170.84
+L 483.098636 14.992381
+L 408.893803 14.992381
+z
+" style="fill: #d97757"></path>
+</g>
+<g id="aiq_blog_early_scores_20261006-patch_7">
+<path d="M 43.435 170.84
+L 43.435 7.2
+" style="fill: none; stroke: #b0aea5; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_early_scores_20261006-patch_8">
+<path d="M 43.435 170.84
+L 504.035 170.84
+" style="fill: none; stroke: #b0aea5; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_early_scores_20261006-legend_1">
+<g id="aiq_blog_early_scores_20261006-patch_9">
+<path d="M 51.535 22.463437
+L 69.535 22.463437
+L 69.535 16.163437
+L 51.535 16.163437
+z
+" style="fill: #6a9bcc"></path>
+</g>
+<g id="aiq_blog_early_scores_20261006-text_10">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" transform="rotate(-0 76.735 22.463437)" x="76.735" y="22.463437">base</text>
+</g>
+<g id="aiq_blog_early_scores_20261006-patch_10">
+<path d="M 51.535 36.188437
+L 69.535 36.188437
+L 69.535 29.888437
+L 51.535 29.888437
+z
+" style="fill: #d97757"></path>
+</g>
+<g id="aiq_blog_early_scores_20261006-text_11">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" transform="rotate(-0 76.735 36.188437)" x="76.735" y="36.188437">第 600 步</text>
+</g>
+</g>
+</g>
+</g>
+<defs>
+<clippath id="aiq_blog_early_scores_20261006-p64ba68785c">
+<rect height="163.64" width="460.6" x="43.435" y="7.2"></rect>
+</clippath>
+</defs>
+</svg></figure>
+<div aria-label="数据表，可横向滚动" class="table-wrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>历史报告值</th>
+<th style="text-align: right;">base</th>
+<th style="text-align: right;">第 600 步</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>选择 exact</td>
+<td style="text-align: right;">16.75%</td>
+<td style="text-align: right;">72.00%</td>
+</tr>
+<tr>
+<td>排序 exact</td>
+<td style="text-align: right;">0%</td>
+<td style="text-align: right;">100%</td>
+</tr>
+</tbody>
+</table></div>
+<p>数值来自 9 月 30 日机制报告，未在本文重新评分。base 的不可解析样本较多，因此选择题的差值同时包含格式修复和判断变化。第 400 步的排序成绩已约为 99%；此后继续观察同一测试集，无法把第 600 步当作独立确认。</p>
+<h2 id="胜过粗规则仍不足以证明-science">胜过粗规则仍不足以证明 science</h2>
+<p>本文把 science 理解为：模型能依据数据条件调整判断，并把规律迁移到新实例，经干预测试后仍成立。旧报告曾用任务类型上的多数规则作对照：29 道规则答错的排序题，模型全部答对。这说明模型超过了这个粗对照；更细的 loss 签名仍可能提供捷径。</p>
+<p>旧报告据此提出的“程序学习”“泛化先于记忆”应保留为假说。要求 base 直接作答、置换选项、交换代码块和测试未见任务类型的消融没有完成结果。后续主线剔除了 <code>loss_ranked</code> 来源，以条件反转题和新排序题重新检验。当前可以确认回答格式和任务成绩改变，尚不能确认可迁移的科学知识。</p>
+<div aria-label="同系列文章" class="related"><a href="aiq-rl-sft178-2026-10-06.html">SFT-178</a><a href="aiq-rl-pool-b-2026-10-06.html">0.8B 主线</a><a href="aiq-rl-flash-next-2026-10-06.html">Flash-Next</a><a href="poor-rl-infra-2026-10-06.html">Infra 演进</a></div><footer>来源：2026-09-30 机制报告、2026-10-06 综合复核；<a href="aiq-rl-loss-ranking-2026-10-06-data.json">数据与来源索引</a>。证据截止于这些历史记录。</footer>
+
+</main>
+</body>
+</html>

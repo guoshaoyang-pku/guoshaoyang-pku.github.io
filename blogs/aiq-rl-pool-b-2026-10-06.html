@@ -1,0 +1,2256 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>0.8B 的判断有所改善，条件反转仍没有学稳</title>
+<!--
+  report-to-human panel template v2
+  Palette and type: Anthropic brand-guidelines (github.com/anthropics/skills, skills/brand-guidelines).
+  Rules: keep only what the reader needs. No subtitle, no KPI cards, no section numbers, no status banners.
+  Every term is explained in plain words where it first appears.
+-->
+<style>
+  :root {
+    --dark: #141413;   /* primary text */
+    --light: #faf9f5;  /* page background */
+    --mid: #b0aea5;    /* borders, axes */
+    --soft: #e8e6dc;   /* subtle fills */
+    --muted: #5e5d59;  /* secondary text (darker than --mid for contrast) */
+    --orange: #d97757; /* primary accent: the main result */
+    --blue: #6a9bcc;   /* secondary accent */
+    --green: #788c5d;  /* tertiary accent */
+    --head: "Poppins", "PingFang SC", "Noto Sans CJK SC", "Hiragino Sans GB", Arial, sans-serif;
+    --body: "Lora", "Noto Serif CJK SC", "Songti SC", Georgia, serif;
+    --mono: "SF Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--light); color: var(--dark); font: 17px/1.8 var(--body); }
+  main { max-width: 760px; margin: 0 auto; padding: 72px 24px 96px; }
+  h1, h2, h3 { font-family: var(--head); font-weight: 600; line-height: 1.35; letter-spacing: -0.01em; }
+  h1 { font-size: 32px; margin: 0 0 16px; }
+  h2 { font-size: 22px; margin: 64px 0 12px; }
+  p { margin: 0 0 16px; }
+  .lede { font-size: 19px; }
+  a { color: inherit; text-decoration: underline; text-decoration-color: var(--orange); text-underline-offset: 3px; }
+  code, .id { font-family: var(--mono); font-size: 0.86em; background: var(--soft); padding: 1px 5px; border-radius: 4px; }
+
+  /* L2 settings row: monochrome line icons + label, never color emoji */
+  .settings { display: flex; flex-wrap: wrap; gap: 8px 20px; list-style: none; padding: 0; margin: 24px 0 0;
+              font: 14px/1.6 var(--head); color: var(--muted); }
+  .settings li { display: inline-flex; align-items: center; gap: 6px; }
+  .settings svg { width: 15px; height: 15px; stroke: var(--dark); fill: none; stroke-width: 1.6;
+                  stroke-linecap: round; stroke-linejoin: round; }
+  .settings b { color: var(--dark); font-weight: 500; }
+
+  figure { margin: 28px 0; padding: 20px; background: #fff; border: 1px solid var(--soft); border-radius: 10px; }
+  figure img, figure svg.chart { display: block; width: 100%; height: auto; }
+  figcaption { margin-top: 12px; font: 14px/1.6 var(--head); color: var(--muted); }
+  .legend { display: flex; gap: 18px; font: 13px var(--head); color: var(--muted); margin-bottom: 8px; }
+  .legend i { display: inline-block; width: 14px; height: 2px; vertical-align: middle; margin-right: 6px; }
+
+  .warn { border-left: 3px solid var(--orange); padding: 4px 0 4px 16px; margin: 24px 0; }
+  .warn strong { font-family: var(--head); }
+
+  /* sample browser: compare outputs side by side */
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--soft); margin-bottom: 12px; }
+  .tabs button { font: 14px var(--head); background: none; border: 0; padding: 8px 12px; cursor: pointer;
+                 color: var(--muted); border-bottom: 2px solid transparent; }
+  .tabs button[aria-selected="true"] { color: var(--dark); border-bottom-color: var(--orange); }
+  .sample { display: none; white-space: pre-wrap; font: 14px/1.7 var(--mono); }
+  .sample.on { display: block; }
+
+  details { margin: 16px 0; }
+  summary { cursor: pointer; font: 15px var(--head); color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font: 14px/1.6 var(--head); margin: 16px 0; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--soft); }
+  th { font-weight: 500; color: var(--muted); }
+  footer { margin-top: 80px; font: 13px var(--head); color: var(--mid); }
+
+  pre { margin: 12px 0; padding: 16px; background: var(--soft); white-space: pre-wrap;
+        overflow-wrap: anywhere; font: 13px/1.65 var(--mono); }
+  .sample-meta { font: 13px/1.6 var(--head); color: var(--muted); margin: 10px 0 0; }
+  .table-wrap { overflow-x: auto; margin: 20px 0; }
+  table { min-width: 500px; margin: 0; font-variant-numeric: tabular-nums; }
+  figure { padding: 12px; border-radius: 4px; }
+  footer { color: var(--muted); line-height: 1.7; }
+  .related { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 40px; font: 14px/1.7 var(--head); }
+  @media (max-width: 600px) { main { padding: 40px 20px 64px; } h1 { font-size: 27px; }
+     h2 { font-size: 21px; margin-top: 44px; } body { font-size: 16px; } figure { padding: 4px; }
+     .settings { gap: 6px 14px; } }
+</style>
+<link rel="canonical" href="https://guoshaoyang-pku.github.io/blogs/aiq-rl-pool-b-2026-10-06.html">
+</head>
+<body>
+<main>
+<h1 id="article-title">0.8B 的判断有所改善，条件反转仍没有学稳</h1>
+<p class="lede">训练到第 1,300 步，选择正确率从 36.9% 升到 49.2%，完整排序从 2.8% 升到 9.7%；40 对条件反转题只有一对四次全对，science 的形成仍未证实。</p>
+<ul class="settings">
+<li><svg aria-hidden="true" viewbox="0 0 24 24"><rect height="16" rx="2" width="16" x="4" y="4"></rect><path d="M8 8h8M8 12h8M8 16h4"></path></svg>
+模型 <b>Qwen3.5-0.8B</b>
+</li>
+<li><svg aria-hidden="true" viewbox="0 0 24 24"><rect height="16" rx="2" width="16" x="4" y="4"></rect><path d="M8 8h8M8 12h8M8 16h4"></path></svg>
+训练 <b>6,153 题</b>
+</li>
+<li><svg aria-hidden="true" viewbox="0 0 24 24"><rect height="16" rx="2" width="16" x="4" y="4"></rect><path d="M8 8h8M8 12h8M8 16h4"></path></svg>
+评测 <b>290 题 × 2 次</b>
+</li>
+<li><svg aria-hidden="true" viewbox="0 0 24 24"><rect height="16" rx="2" width="16" x="4" y="4"></rect><path d="M8 8h8M8 12h8M8 16h4"></path></svg>
+每题生成 <b>32 次</b>
+</li>
+<li><svg aria-hidden="true" viewbox="0 0 24 24"><rect height="16" rx="2" width="16" x="4" y="4"></rect><path d="M8 8h8M8 12h8M8 16h4"></path></svg>
+长度上限 <b>16k token</b>
+</li>
+</ul>
+<h2 id="新题池剔除了旧-loss-排序捷径">新题池剔除了旧 loss 排序捷径</h2>
+<p>ArchitectureIQ 要求模型根据数据描述、候选代码和训练预算，预测哪个配置训练后成绩更好。这条主线从 300 题蒸馏所得的监督微调 checkpoint-57 开始。新混合题池称为 pool B，包含 3,314 道选择题和 2,839 道排序题。</p>
+<div aria-label="数据表，可横向滚动" class="table-wrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>数据来源</th>
+<th style="text-align: right;">训练题</th>
+<th style="text-align: right;">测试题</th>
+<th>检查的能力</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>旧选择题复用</td>
+<td style="text-align: right;">1,760</td>
+<td style="text-align: right;">0</td>
+<td>保持已有选择能力</td>
+</tr>
+<tr>
+<td>新排序题第二版</td>
+<td style="text-align: right;">1,939</td>
+<td style="text-align: right;">60</td>
+<td>排列五个候选</td>
+</tr>
+<tr>
+<td>条件反转题</td>
+<td style="text-align: right;">1,434</td>
+<td style="text-align: right;">80</td>
+<td>数据改变后更换优胜配置</td>
+</tr>
+<tr>
+<td>新排序题第三版</td>
+<td style="text-align: right;">900</td>
+<td style="text-align: right;">100</td>
+<td>更难的配置排序</td>
+</tr>
+<tr>
+<td>架构选择题</td>
+<td style="text-align: right;">120</td>
+<td style="text-align: right;">50</td>
+<td>比较模型与训练配置</td>
+</tr>
+</tbody>
+</table></div>
+<p>条件反转题保留相同候选配置，改变数据条件，实测优胜者随之改变。80 道测试题来自 40 对题；每一对整体进入训练或测试。题目、实例、数据集及反转对的六项隔离检查均为零重叠。旧 <code>loss_ranked</code>（主要按 loss 名称排序的题源）已剔除。</p>
+<h2 id="训练保留长回答并从组内差异获得更新信号">训练保留长回答，并从组内差异获得更新信号</h2>
+<p>每道题生成 32 条回答，记为 G32；每步 32 道题，共 1,024 条。GSPO（按整条回答的平均概率比更新策略）使用组内相对奖励。学习率为 2e-6，裁剪阈值从上下 0.003 调到 0.004。KL 系数为 0.05，用冻结模型约束策略偏移；续段更换过 reference，最后一段固定为第 175 步权重。</p>
+<p>选择正确得 1 分，错误得 0 分。排序全对得 1 分，否则为 <code>0.5/inv</code>，inv 是相对标准次序的逆序数。不可解析扣 0.5 分，截断扣 2 分。抽样裁判 Luna 只对“不读题”和乱码重罚；复述题面会减分，虚构科学依据只记日志，失败或超时不扣分。排序解析器读取字母的书写次序，未检查 <code>&lt;</code> 和 <code>&gt;</code> 的语义方向。</p>
+<p>Infra 使用 BF16 训练与 rollout、FP32 主参数和优化器。多生成副本、共享题目前缀、快速 logprob 和 token 子批把约 65 秒/步缩到约 36 秒/步。各回答的状态保持隔离。续段重新建立 optimizer，因此下文的全局步表示权重谱系；完整 Infra 演进见<a href="poor-rl-infra-2026-10-06.html">独立记录</a>。FP8 性能实验没有计入本线学习结果。</p>
+<h2 id="格式修复之后仍有判断改善">格式修复之后，仍有判断改善</h2>
+<p>六个 checkpoint 都在同一 290 题上评测，每题两次，temperature=1、top_p=1、16k 上限。选择有 260 条采样，排序有 320 条采样。</p>
+<figure><svg aria-label="主线测试成绩" class="chart" height="223.216719pt" id="aiq_blog_pool_scores_20261006" role="img" version="1.1" viewbox="0 0 509.942607 223.216719" width="509.942607pt" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+
+<defs>
+<style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+</defs>
+<g id="aiq_blog_pool_scores_20261006-figure_1">
+<g id="aiq_blog_pool_scores_20261006-patch_1">
+<path d="M 0 223.216719
+L 509.942607 223.216719
+L 509.942607 0
+L 0 0
+z
+" style="fill: #ffffff"></path>
+</g>
+<g id="aiq_blog_pool_scores_20261006-axes_1">
+<g id="aiq_blog_pool_scores_20261006-patch_2">
+<path d="M 38.44 185.541719
+L 248.500826 185.541719
+L 248.500826 10.781719
+L 38.44 10.781719
+z
+" style="fill: #ffffff"></path>
+</g>
+<g id="aiq_blog_pool_scores_20261006-matplotlib.axis_1">
+<g id="aiq_blog_pool_scores_20261006-xtick_1">
+<g id="aiq_blog_pool_scores_20261006-line2d_1">
+<path clip-path="url(#aiq_blog_pool_scores_20261006-pf7f8c6c0cb)" d="M 47.988219 185.541719
+L 47.988219 10.781719
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_scores_20261006-line2d_2">
+<defs>
+<path d="M 0 0
+L 0 3.5
+" id="aiq_blog_pool_scores_20261006-m5acb218427" style="stroke: #5e5d59; stroke-width: 0.8"></path>
+</defs>
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="47.988219" xlink:href="#aiq_blog_pool_scores_20261006-m5acb218427" y="185.541719"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_scores_20261006-text_1">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" transform="rotate(-0 47.988219 199.705156)" x="47.988219" y="199.705156">0</text>
+</g>
+</g>
+<g id="aiq_blog_pool_scores_20261006-xtick_2">
+<g id="aiq_blog_pool_scores_20261006-line2d_3">
+<path clip-path="url(#aiq_blog_pool_scores_20261006-pf7f8c6c0cb)" d="M 99.401708 185.541719
+L 99.401708 10.781719
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_scores_20261006-line2d_4">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="99.401708" xlink:href="#aiq_blog_pool_scores_20261006-m5acb218427" y="185.541719"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_scores_20261006-text_2">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" transform="rotate(-0 99.401708 199.705156)" x="99.401708" y="199.705156">350</text>
+</g>
+</g>
+<g id="aiq_blog_pool_scores_20261006-xtick_3">
+<g id="aiq_blog_pool_scores_20261006-line2d_5">
+<path clip-path="url(#aiq_blog_pool_scores_20261006-pf7f8c6c0cb)" d="M 161.832374 185.541719
+L 161.832374 10.781719
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_scores_20261006-line2d_6">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="161.832374" xlink:href="#aiq_blog_pool_scores_20261006-m5acb218427" y="185.541719"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_scores_20261006-text_3">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" transform="rotate(-0 161.832374 199.705156)" x="161.832374" y="199.705156">775</text>
+</g>
+</g>
+<g id="aiq_blog_pool_scores_20261006-xtick_4">
+<g id="aiq_blog_pool_scores_20261006-line2d_7">
+<path clip-path="url(#aiq_blog_pool_scores_20261006-pf7f8c6c0cb)" d="M 238.952607 185.541719
+L 238.952607 10.781719
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_scores_20261006-line2d_8">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="238.952607" xlink:href="#aiq_blog_pool_scores_20261006-m5acb218427" y="185.541719"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_scores_20261006-text_4">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" transform="rotate(-0 238.952607 199.705156)" x="238.952607" y="199.705156">1300</text>
+</g>
+</g>
+<g id="aiq_blog_pool_scores_20261006-text_5">
+<text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #141413" transform="rotate(-0 143.470413 213.726094)" x="143.470413" y="213.726094">全局训练步</text>
+</g>
+</g>
+<g id="aiq_blog_pool_scores_20261006-matplotlib.axis_2">
+<g id="aiq_blog_pool_scores_20261006-ytick_1">
+<g id="aiq_blog_pool_scores_20261006-line2d_9">
+<path clip-path="url(#aiq_blog_pool_scores_20261006-pf7f8c6c0cb)" d="M 38.44 185.541719
+L 248.500826 185.541719
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_scores_20261006-line2d_10">
+<defs>
+<path d="M 0 0
+L -3.5 0
+" id="aiq_blog_pool_scores_20261006-m1fafdb381c" style="stroke: #5e5d59; stroke-width: 0.8"></path>
+</defs>
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="38.44" xlink:href="#aiq_blog_pool_scores_20261006-m1fafdb381c" y="185.541719"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_scores_20261006-text_6">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 31.44 189.123437)" x="31.44" y="189.123437">0</text>
+</g>
+</g>
+<g id="aiq_blog_pool_scores_20261006-ytick_2">
+<g id="aiq_blog_pool_scores_20261006-line2d_11">
+<path clip-path="url(#aiq_blog_pool_scores_20261006-pf7f8c6c0cb)" d="M 38.44 156.415052
+L 248.500826 156.415052
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_scores_20261006-line2d_12">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="38.44" xlink:href="#aiq_blog_pool_scores_20261006-m1fafdb381c" y="156.415052"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_scores_20261006-text_7">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 31.44 159.996771)" x="31.44" y="159.996771">10</text>
+</g>
+</g>
+<g id="aiq_blog_pool_scores_20261006-ytick_3">
+<g id="aiq_blog_pool_scores_20261006-line2d_13">
+<path clip-path="url(#aiq_blog_pool_scores_20261006-pf7f8c6c0cb)" d="M 38.44 127.288385
+L 248.500826 127.288385
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_scores_20261006-line2d_14">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="38.44" xlink:href="#aiq_blog_pool_scores_20261006-m1fafdb381c" y="127.288385"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_scores_20261006-text_8">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 31.44 130.870104)" x="31.44" y="130.870104">20</text>
+</g>
+</g>
+<g id="aiq_blog_pool_scores_20261006-ytick_4">
+<g id="aiq_blog_pool_scores_20261006-line2d_15">
+<path clip-path="url(#aiq_blog_pool_scores_20261006-pf7f8c6c0cb)" d="M 38.44 98.161719
+L 248.500826 98.161719
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_scores_20261006-line2d_16">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="38.44" xlink:href="#aiq_blog_pool_scores_20261006-m1fafdb381c" y="98.161719"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_scores_20261006-text_9">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 31.44 101.743437)" x="31.44" y="101.743437">30</text>
+</g>
+</g>
+<g id="aiq_blog_pool_scores_20261006-ytick_5">
+<g id="aiq_blog_pool_scores_20261006-line2d_17">
+<path clip-path="url(#aiq_blog_pool_scores_20261006-pf7f8c6c0cb)" d="M 38.44 69.035052
+L 248.500826 69.035052
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_scores_20261006-line2d_18">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="38.44" xlink:href="#aiq_blog_pool_scores_20261006-m1fafdb381c" y="69.035052"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_scores_20261006-text_10">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 31.44 72.616771)" x="31.44" y="72.616771">40</text>
+</g>
+</g>
+<g id="aiq_blog_pool_scores_20261006-ytick_6">
+<g id="aiq_blog_pool_scores_20261006-line2d_19">
+<path clip-path="url(#aiq_blog_pool_scores_20261006-pf7f8c6c0cb)" d="M 38.44 39.908385
+L 248.500826 39.908385
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_scores_20261006-line2d_20">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="38.44" xlink:href="#aiq_blog_pool_scores_20261006-m1fafdb381c" y="39.908385"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_scores_20261006-text_11">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 31.44 43.490104)" x="31.44" y="43.490104">50</text>
+</g>
+</g>
+<g id="aiq_blog_pool_scores_20261006-ytick_7">
+<g id="aiq_blog_pool_scores_20261006-line2d_21">
+<path clip-path="url(#aiq_blog_pool_scores_20261006-pf7f8c6c0cb)" d="M 38.44 10.781719
+L 248.500826 10.781719
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_scores_20261006-line2d_22">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="38.44" xlink:href="#aiq_blog_pool_scores_20261006-m1fafdb381c" y="10.781719"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_scores_20261006-text_12">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 31.44 14.363437)" x="31.44" y="14.363437">60</text>
+</g>
+</g>
+<g id="aiq_blog_pool_scores_20261006-text_13">
+<text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #141413" transform="rotate(-90 15.159375 98.161719)" x="15.159375" y="98.161719">选择 exact（%）</text>
+</g>
+</g>
+<g id="aiq_blog_pool_scores_20261006-line2d_23">
+<path clip-path="url(#aiq_blog_pool_scores_20261006-pf7f8c6c0cb)" d="M 47.988219 77.997103
+L 73.694964 60.073001
+L 99.401708 55.591975
+L 161.832374 43.269155
+L 227.935431 48.870437
+L 238.952607 42.148898
+" style="fill: none; stroke: #d97757; stroke-width: 1.8; stroke-linecap: square"></path>
+<defs>
+<path d="M 0 2
+C 0.530406 2 1.03916 1.789267 1.414214 1.414214
+C 1.789267 1.03916 2 0.530406 2 0
+C 2 -0.530406 1.789267 -1.03916 1.414214 -1.414214
+C 1.03916 -1.789267 0.530406 -2 0 -2
+C -0.530406 -2 -1.03916 -1.789267 -1.414214 -1.414214
+C -1.789267 -1.03916 -2 -0.530406 -2 0
+C -2 0.530406 -1.789267 1.03916 -1.414214 1.414214
+C -1.03916 1.789267 -0.530406 2 0 2
+z
+" id="aiq_blog_pool_scores_20261006-m28c9156a76" style="stroke: #d97757"></path>
+</defs>
+<g clip-path="url(#aiq_blog_pool_scores_20261006-pf7f8c6c0cb)">
+<use style="fill: #d97757; stroke: #d97757" x="47.988219" xlink:href="#aiq_blog_pool_scores_20261006-m28c9156a76" y="77.997103"></use>
+<use style="fill: #d97757; stroke: #d97757" x="73.694964" xlink:href="#aiq_blog_pool_scores_20261006-m28c9156a76" y="60.073001"></use>
+<use style="fill: #d97757; stroke: #d97757" x="99.401708" xlink:href="#aiq_blog_pool_scores_20261006-m28c9156a76" y="55.591975"></use>
+<use style="fill: #d97757; stroke: #d97757" x="161.832374" xlink:href="#aiq_blog_pool_scores_20261006-m28c9156a76" y="43.269155"></use>
+<use style="fill: #d97757; stroke: #d97757" x="227.935431" xlink:href="#aiq_blog_pool_scores_20261006-m28c9156a76" y="48.870437"></use>
+<use style="fill: #d97757; stroke: #d97757" x="238.952607" xlink:href="#aiq_blog_pool_scores_20261006-m28c9156a76" y="42.148898"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_scores_20261006-line2d_24">
+<path clip-path="url(#aiq_blog_pool_scores_20261006-pf7f8c6c0cb)" d="M 38.44 73.520559
+L 248.500826 73.520559
+" style="fill: none; stroke-dasharray: 6.66,2.88; stroke-dashoffset: 0; stroke: #b0aea5; stroke-width: 1.8"></path>
+</g>
+<g id="aiq_blog_pool_scores_20261006-patch_3">
+<path d="M 38.44 185.541719
+L 38.44 10.781719
+" style="fill: none; stroke: #b0aea5; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_scores_20261006-patch_4">
+<path d="M 38.44 185.541719
+L 248.500826 185.541719
+" style="fill: none; stroke: #b0aea5; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_scores_20261006-legend_1">
+<g id="aiq_blog_pool_scores_20261006-line2d_25">
+<path d="M 149.942389 172.230156
+L 158.942389 172.230156
+L 167.942389 172.230156
+" style="fill: none; stroke-dasharray: 6.66,2.88; stroke-dashoffset: 0; stroke: #b0aea5; stroke-width: 1.8"></path>
+</g>
+<g id="aiq_blog_pool_scores_20261006-text_14">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" transform="rotate(-0 175.142389 175.380156)" x="175.142389" y="175.380156">恒选 A：38.46%</text>
+</g>
+</g>
+</g>
+<g id="aiq_blog_pool_scores_20261006-axes_2">
+<g id="aiq_blog_pool_scores_20261006-patch_5">
+<path d="M 292.24 185.541719
+L 502.300826 185.541719
+L 502.300826 10.781719
+L 292.24 10.781719
+z
+" style="fill: #ffffff"></path>
+</g>
+<g id="aiq_blog_pool_scores_20261006-matplotlib.axis_3">
+<g id="aiq_blog_pool_scores_20261006-xtick_5">
+<g id="aiq_blog_pool_scores_20261006-line2d_26">
+<path clip-path="url(#aiq_blog_pool_scores_20261006-p8661070a2b)" d="M 301.788219 185.541719
+L 301.788219 10.781719
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_scores_20261006-line2d_27">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="301.788219" xlink:href="#aiq_blog_pool_scores_20261006-m5acb218427" y="185.541719"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_scores_20261006-text_15">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" transform="rotate(-0 301.788219 199.705156)" x="301.788219" y="199.705156">0</text>
+</g>
+</g>
+<g id="aiq_blog_pool_scores_20261006-xtick_6">
+<g id="aiq_blog_pool_scores_20261006-line2d_28">
+<path clip-path="url(#aiq_blog_pool_scores_20261006-p8661070a2b)" d="M 353.201708 185.541719
+L 353.201708 10.781719
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_scores_20261006-line2d_29">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="353.201708" xlink:href="#aiq_blog_pool_scores_20261006-m5acb218427" y="185.541719"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_scores_20261006-text_16">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" transform="rotate(-0 353.201708 199.705156)" x="353.201708" y="199.705156">350</text>
+</g>
+</g>
+<g id="aiq_blog_pool_scores_20261006-xtick_7">
+<g id="aiq_blog_pool_scores_20261006-line2d_30">
+<path clip-path="url(#aiq_blog_pool_scores_20261006-p8661070a2b)" d="M 415.632374 185.541719
+L 415.632374 10.781719
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_scores_20261006-line2d_31">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="415.632374" xlink:href="#aiq_blog_pool_scores_20261006-m5acb218427" y="185.541719"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_scores_20261006-text_17">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" transform="rotate(-0 415.632374 199.705156)" x="415.632374" y="199.705156">775</text>
+</g>
+</g>
+<g id="aiq_blog_pool_scores_20261006-xtick_8">
+<g id="aiq_blog_pool_scores_20261006-line2d_32">
+<path clip-path="url(#aiq_blog_pool_scores_20261006-p8661070a2b)" d="M 492.752607 185.541719
+L 492.752607 10.781719
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_scores_20261006-line2d_33">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="492.752607" xlink:href="#aiq_blog_pool_scores_20261006-m5acb218427" y="185.541719"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_scores_20261006-text_18">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" transform="rotate(-0 492.752607 199.705156)" x="492.752607" y="199.705156">1300</text>
+</g>
+</g>
+<g id="aiq_blog_pool_scores_20261006-text_19">
+<text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #141413" transform="rotate(-0 397.270413 213.726094)" x="397.270413" y="213.726094">全局训练步</text>
+</g>
+</g>
+<g id="aiq_blog_pool_scores_20261006-matplotlib.axis_4">
+<g id="aiq_blog_pool_scores_20261006-ytick_8">
+<g id="aiq_blog_pool_scores_20261006-line2d_34">
+<path clip-path="url(#aiq_blog_pool_scores_20261006-p8661070a2b)" d="M 292.24 185.541719
+L 502.300826 185.541719
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_scores_20261006-line2d_35">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="292.24" xlink:href="#aiq_blog_pool_scores_20261006-m1fafdb381c" y="185.541719"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_scores_20261006-text_20">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 285.24 189.123437)" x="285.24" y="189.123437">0</text>
+</g>
+</g>
+<g id="aiq_blog_pool_scores_20261006-ytick_9">
+<g id="aiq_blog_pool_scores_20261006-line2d_36">
+<path clip-path="url(#aiq_blog_pool_scores_20261006-p8661070a2b)" d="M 292.24 156.415052
+L 502.300826 156.415052
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_scores_20261006-line2d_37">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="292.24" xlink:href="#aiq_blog_pool_scores_20261006-m1fafdb381c" y="156.415052"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_scores_20261006-text_21">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 285.24 159.996771)" x="285.24" y="159.996771">2</text>
+</g>
+</g>
+<g id="aiq_blog_pool_scores_20261006-ytick_10">
+<g id="aiq_blog_pool_scores_20261006-line2d_38">
+<path clip-path="url(#aiq_blog_pool_scores_20261006-p8661070a2b)" d="M 292.24 127.288385
+L 502.300826 127.288385
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_scores_20261006-line2d_39">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="292.24" xlink:href="#aiq_blog_pool_scores_20261006-m1fafdb381c" y="127.288385"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_scores_20261006-text_22">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 285.24 130.870104)" x="285.24" y="130.870104">4</text>
+</g>
+</g>
+<g id="aiq_blog_pool_scores_20261006-ytick_11">
+<g id="aiq_blog_pool_scores_20261006-line2d_40">
+<path clip-path="url(#aiq_blog_pool_scores_20261006-p8661070a2b)" d="M 292.24 98.161719
+L 502.300826 98.161719
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_scores_20261006-line2d_41">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="292.24" xlink:href="#aiq_blog_pool_scores_20261006-m1fafdb381c" y="98.161719"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_scores_20261006-text_23">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 285.24 101.743437)" x="285.24" y="101.743437">6</text>
+</g>
+</g>
+<g id="aiq_blog_pool_scores_20261006-ytick_12">
+<g id="aiq_blog_pool_scores_20261006-line2d_42">
+<path clip-path="url(#aiq_blog_pool_scores_20261006-p8661070a2b)" d="M 292.24 69.035052
+L 502.300826 69.035052
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_scores_20261006-line2d_43">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="292.24" xlink:href="#aiq_blog_pool_scores_20261006-m1fafdb381c" y="69.035052"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_scores_20261006-text_24">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 285.24 72.616771)" x="285.24" y="72.616771">8</text>
+</g>
+</g>
+<g id="aiq_blog_pool_scores_20261006-ytick_13">
+<g id="aiq_blog_pool_scores_20261006-line2d_44">
+<path clip-path="url(#aiq_blog_pool_scores_20261006-p8661070a2b)" d="M 292.24 39.908385
+L 502.300826 39.908385
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_scores_20261006-line2d_45">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="292.24" xlink:href="#aiq_blog_pool_scores_20261006-m1fafdb381c" y="39.908385"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_scores_20261006-text_25">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 285.24 43.490104)" x="285.24" y="43.490104">10</text>
+</g>
+</g>
+<g id="aiq_blog_pool_scores_20261006-ytick_14">
+<g id="aiq_blog_pool_scores_20261006-line2d_46">
+<path clip-path="url(#aiq_blog_pool_scores_20261006-p8661070a2b)" d="M 292.24 10.781719
+L 502.300826 10.781719
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_scores_20261006-line2d_47">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="292.24" xlink:href="#aiq_blog_pool_scores_20261006-m1fafdb381c" y="10.781719"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_scores_20261006-text_26">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 285.24 14.363438)" x="285.24" y="14.363438">12</text>
+</g>
+</g>
+<g id="aiq_blog_pool_scores_20261006-text_27">
+<text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #141413" transform="rotate(-90 268.959375 98.161719)" x="268.959375" y="98.161719">排序 exact（%）</text>
+</g>
+</g>
+<g id="aiq_blog_pool_scores_20261006-line2d_48">
+<path clip-path="url(#aiq_blog_pool_scores_20261006-p8661070a2b)" d="M 301.788219 144.582344
+L 327.494964 103.622969
+L 353.201708 85.418802
+L 415.632374 53.56151
+L 481.735431 58.112552
+L 492.752607 44.459427
+" style="fill: none; stroke: #6a9bcc; stroke-width: 1.8; stroke-linecap: square"></path>
+<defs>
+<path d="M 0 2
+C 0.530406 2 1.03916 1.789267 1.414214 1.414214
+C 1.789267 1.03916 2 0.530406 2 0
+C 2 -0.530406 1.789267 -1.03916 1.414214 -1.414214
+C 1.03916 -1.789267 0.530406 -2 0 -2
+C -0.530406 -2 -1.03916 -1.789267 -1.414214 -1.414214
+C -1.789267 -1.03916 -2 -0.530406 -2 0
+C -2 0.530406 -1.789267 1.03916 -1.414214 1.414214
+C -1.03916 1.789267 -0.530406 2 0 2
+z
+" id="aiq_blog_pool_scores_20261006-m0259bfc075" style="stroke: #6a9bcc"></path>
+</defs>
+<g clip-path="url(#aiq_blog_pool_scores_20261006-p8661070a2b)">
+<use style="fill: #6a9bcc; stroke: #6a9bcc" x="301.788219" xlink:href="#aiq_blog_pool_scores_20261006-m0259bfc075" y="144.582344"></use>
+<use style="fill: #6a9bcc; stroke: #6a9bcc" x="327.494964" xlink:href="#aiq_blog_pool_scores_20261006-m0259bfc075" y="103.622969"></use>
+<use style="fill: #6a9bcc; stroke: #6a9bcc" x="353.201708" xlink:href="#aiq_blog_pool_scores_20261006-m0259bfc075" y="85.418802"></use>
+<use style="fill: #6a9bcc; stroke: #6a9bcc" x="415.632374" xlink:href="#aiq_blog_pool_scores_20261006-m0259bfc075" y="53.56151"></use>
+<use style="fill: #6a9bcc; stroke: #6a9bcc" x="481.735431" xlink:href="#aiq_blog_pool_scores_20261006-m0259bfc075" y="58.112552"></use>
+<use style="fill: #6a9bcc; stroke: #6a9bcc" x="492.752607" xlink:href="#aiq_blog_pool_scores_20261006-m0259bfc075" y="44.459427"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_scores_20261006-patch_6">
+<path d="M 292.24 185.541719
+L 292.24 10.781719
+" style="fill: none; stroke: #b0aea5; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_scores_20261006-patch_7">
+<path d="M 292.24 185.541719
+L 502.300826 185.541719
+" style="fill: none; stroke: #b0aea5; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"></path>
+</g>
+</g>
+</g>
+<defs>
+<clippath id="aiq_blog_pool_scores_20261006-pf7f8c6c0cb">
+<rect height="174.76" width="210.060826" x="38.44" y="10.781719"></rect>
+</clippath>
+<clippath id="aiq_blog_pool_scores_20261006-p8661070a2b">
+<rect height="174.76" width="210.060826" x="292.24" y="10.781719"></rect>
+</clippath>
+</defs>
+</svg></figure>
+<div aria-label="数据表，可横向滚动" class="table-wrap" role="region" tabindex="0"><table>
+<colgroup>
+<col style="width: 15%"/>
+<col style="width: 21%"/>
+<col style="width: 21%"/>
+<col style="width: 21%"/>
+<col style="width: 21%"/>
+</colgroup>
+<thead>
+<tr>
+<th>全局训练步</th>
+<th style="text-align: right;">选择 exact</th>
+<th style="text-align: right;">排序 exact</th>
+<th style="text-align: right;">排序不可解析</th>
+<th style="text-align: right;">回答 token 中位数</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0（SFT）</td>
+<td style="text-align: right;">36.92%</td>
+<td style="text-align: right;">2.81%</td>
+<td style="text-align: right;">168/320</td>
+<td style="text-align: right;">1,802.5</td>
+</tr>
+<tr>
+<td>175</td>
+<td style="text-align: right;">43.08%</td>
+<td style="text-align: right;">5.63%</td>
+<td style="text-align: right;">2/320</td>
+<td style="text-align: right;">2,079.5</td>
+</tr>
+<tr>
+<td>350</td>
+<td style="text-align: right;">44.62%</td>
+<td style="text-align: right;">6.88%</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">2,071.5</td>
+</tr>
+<tr>
+<td>775</td>
+<td style="text-align: right;">48.85%</td>
+<td style="text-align: right;">9.06%</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1,975.0</td>
+</tr>
+<tr>
+<td>1,225</td>
+<td style="text-align: right;">46.92%</td>
+<td style="text-align: right;">8.75%</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">2,031.0</td>
+</tr>
+<tr>
+<td>1,300</td>
+<td style="text-align: right;">49.23%</td>
+<td style="text-align: right;">9.69%</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1,991.5</td>
+</tr>
+</tbody>
+</table></div>
+<p>起点到第 1,300 步，选择提高 12.31 个百分点，题级配对 bootstrap 的 95% 区间为 [5.77, 19.23]；排序提高 6.88 个百分点，区间为 [3.75, 10.31]。每题两次采样相关，重采样单位是题目。六个 checkpoint 反复使用同一测试集，这些区间不替代独立确认集。</p>
+<p>第 175 步之后，排序基本都能解析；在两端均可解析的 318 条采样上，平均逆序数仍从 3.84 降到 3.05，说明变化包含格式之外的判断改善。第 350 步之后，选择净增 4.62 个百分点的区间为 [−1.92, 11.15]，不足以确认持续上升。长训段更清楚的变化是排序缓慢改善。</p>
+<h2 id="增益主要来自不要求条件反转的题">增益主要来自不要求条件反转的题</h2>
+<figure><svg aria-label="不同题源的配对成绩变化" class="chart" height="216.035pt" id="aiq_blog_pool_sources_20261006" role="img" version="1.1" viewbox="0 0 511.101562 216.035" width="511.101562pt" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+
+<defs>
+<style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+</defs>
+<g id="aiq_blog_pool_sources_20261006-figure_1">
+<g id="aiq_blog_pool_sources_20261006-patch_1">
+<path d="M 0 216.035
+L 511.101562 216.035
+L 511.101562 0
+L 0 0
+z
+" style="fill: #ffffff"></path>
+</g>
+<g id="aiq_blog_pool_sources_20261006-axes_1">
+<g id="aiq_blog_pool_sources_20261006-patch_2">
+<path d="M 103.201562 178.36
+L 503.901562 178.36
+L 503.901562 7.2
+L 103.201562 7.2
+z
+" style="fill: #ffffff"></path>
+</g>
+<g id="aiq_blog_pool_sources_20261006-matplotlib.axis_1">
+<g id="aiq_blog_pool_sources_20261006-xtick_1">
+<g id="aiq_blog_pool_sources_20261006-line2d_1">
+<path clip-path="url(#aiq_blog_pool_sources_20261006-p0a2800bf07)" d="M 138.082436 178.36
+L 138.082436 7.2
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_sources_20261006-line2d_2">
+<defs>
+<path d="M 0 0
+L 0 3.5
+" id="aiq_blog_pool_sources_20261006-m5acb218427" style="stroke: #5e5d59; stroke-width: 0.8"></path>
+</defs>
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="138.082436" xlink:href="#aiq_blog_pool_sources_20261006-m5acb218427" y="178.36"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_sources_20261006-text_1">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" transform="rotate(-0 138.082436 192.523438)" x="138.082436" y="192.523438">0</text>
+</g>
+</g>
+<g id="aiq_blog_pool_sources_20261006-xtick_2">
+<g id="aiq_blog_pool_sources_20261006-line2d_3">
+<path clip-path="url(#aiq_blog_pool_sources_20261006-p0a2800bf07)" d="M 182.647243 178.36
+L 182.647243 7.2
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_sources_20261006-line2d_4">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="182.647243" xlink:href="#aiq_blog_pool_sources_20261006-m5acb218427" y="178.36"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_sources_20261006-text_2">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" transform="rotate(-0 182.647243 192.523438)" x="182.647243" y="192.523438">5</text>
+</g>
+</g>
+<g id="aiq_blog_pool_sources_20261006-xtick_3">
+<g id="aiq_blog_pool_sources_20261006-line2d_5">
+<path clip-path="url(#aiq_blog_pool_sources_20261006-p0a2800bf07)" d="M 227.212049 178.36
+L 227.212049 7.2
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_sources_20261006-line2d_6">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="227.212049" xlink:href="#aiq_blog_pool_sources_20261006-m5acb218427" y="178.36"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_sources_20261006-text_3">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" transform="rotate(-0 227.212049 192.523438)" x="227.212049" y="192.523438">10</text>
+</g>
+</g>
+<g id="aiq_blog_pool_sources_20261006-xtick_4">
+<g id="aiq_blog_pool_sources_20261006-line2d_7">
+<path clip-path="url(#aiq_blog_pool_sources_20261006-p0a2800bf07)" d="M 271.776856 178.36
+L 271.776856 7.2
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_sources_20261006-line2d_8">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="271.776856" xlink:href="#aiq_blog_pool_sources_20261006-m5acb218427" y="178.36"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_sources_20261006-text_4">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" transform="rotate(-0 271.776856 192.523438)" x="271.776856" y="192.523438">15</text>
+</g>
+</g>
+<g id="aiq_blog_pool_sources_20261006-xtick_5">
+<g id="aiq_blog_pool_sources_20261006-line2d_9">
+<path clip-path="url(#aiq_blog_pool_sources_20261006-p0a2800bf07)" d="M 316.341662 178.36
+L 316.341662 7.2
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_sources_20261006-line2d_10">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="316.341662" xlink:href="#aiq_blog_pool_sources_20261006-m5acb218427" y="178.36"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_sources_20261006-text_5">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" transform="rotate(-0 316.341662 192.523438)" x="316.341662" y="192.523438">20</text>
+</g>
+</g>
+<g id="aiq_blog_pool_sources_20261006-xtick_6">
+<g id="aiq_blog_pool_sources_20261006-line2d_11">
+<path clip-path="url(#aiq_blog_pool_sources_20261006-p0a2800bf07)" d="M 360.906468 178.36
+L 360.906468 7.2
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_sources_20261006-line2d_12">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="360.906468" xlink:href="#aiq_blog_pool_sources_20261006-m5acb218427" y="178.36"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_sources_20261006-text_6">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" transform="rotate(-0 360.906468 192.523438)" x="360.906468" y="192.523438">25</text>
+</g>
+</g>
+<g id="aiq_blog_pool_sources_20261006-xtick_7">
+<g id="aiq_blog_pool_sources_20261006-line2d_13">
+<path clip-path="url(#aiq_blog_pool_sources_20261006-p0a2800bf07)" d="M 405.471275 178.36
+L 405.471275 7.2
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_sources_20261006-line2d_14">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="405.471275" xlink:href="#aiq_blog_pool_sources_20261006-m5acb218427" y="178.36"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_sources_20261006-text_7">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" transform="rotate(-0 405.471275 192.523438)" x="405.471275" y="192.523438">30</text>
+</g>
+</g>
+<g id="aiq_blog_pool_sources_20261006-xtick_8">
+<g id="aiq_blog_pool_sources_20261006-line2d_15">
+<path clip-path="url(#aiq_blog_pool_sources_20261006-p0a2800bf07)" d="M 450.036081 178.36
+L 450.036081 7.2
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_sources_20261006-line2d_16">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="450.036081" xlink:href="#aiq_blog_pool_sources_20261006-m5acb218427" y="178.36"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_sources_20261006-text_8">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" transform="rotate(-0 450.036081 192.523438)" x="450.036081" y="192.523438">35</text>
+</g>
+</g>
+<g id="aiq_blog_pool_sources_20261006-xtick_9">
+<g id="aiq_blog_pool_sources_20261006-line2d_17">
+<path clip-path="url(#aiq_blog_pool_sources_20261006-p0a2800bf07)" d="M 494.600887 178.36
+L 494.600887 7.2
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_sources_20261006-line2d_18">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="494.600887" xlink:href="#aiq_blog_pool_sources_20261006-m5acb218427" y="178.36"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_sources_20261006-text_9">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" transform="rotate(-0 494.600887 192.523438)" x="494.600887" y="192.523438">40</text>
+</g>
+</g>
+<g id="aiq_blog_pool_sources_20261006-text_10">
+<text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #141413" transform="rotate(-0 303.551562 206.544375)" x="303.551562" y="206.544375">起点到第 1300 步的变化（百分点，95% 题级配对区间）</text>
+</g>
+</g>
+<g id="aiq_blog_pool_sources_20261006-matplotlib.axis_2">
+<g id="aiq_blog_pool_sources_20261006-ytick_1">
+<g id="aiq_blog_pool_sources_20261006-line2d_19">
+<path clip-path="url(#aiq_blog_pool_sources_20261006-p0a2800bf07)" d="M 103.201562 14.98
+L 503.901562 14.98
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_sources_20261006-line2d_20">
+<defs>
+<path d="M 0 0
+L -3.5 0
+" id="aiq_blog_pool_sources_20261006-m1fafdb381c" style="stroke: #5e5d59; stroke-width: 0.8"></path>
+</defs>
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="103.201562" xlink:href="#aiq_blog_pool_sources_20261006-m1fafdb381c" y="14.98"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_sources_20261006-text_11">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 96.201562 18.561719)" x="96.201562" y="18.561719">架构选择（50 题）</text>
+</g>
+</g>
+<g id="aiq_blog_pool_sources_20261006-ytick_2">
+<g id="aiq_blog_pool_sources_20261006-line2d_21">
+<path clip-path="url(#aiq_blog_pool_sources_20261006-p0a2800bf07)" d="M 103.201562 66.846667
+L 503.901562 66.846667
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_sources_20261006-line2d_22">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="103.201562" xlink:href="#aiq_blog_pool_sources_20261006-m1fafdb381c" y="66.846667"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_sources_20261006-text_12">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 96.201562 70.428385)" x="96.201562" y="70.428385">条件反转（80 题）</text>
+</g>
+</g>
+<g id="aiq_blog_pool_sources_20261006-ytick_3">
+<g id="aiq_blog_pool_sources_20261006-line2d_23">
+<path clip-path="url(#aiq_blog_pool_sources_20261006-p0a2800bf07)" d="M 103.201562 118.713333
+L 503.901562 118.713333
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_sources_20261006-line2d_24">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="103.201562" xlink:href="#aiq_blog_pool_sources_20261006-m1fafdb381c" y="118.713333"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_sources_20261006-text_13">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 96.201562 122.295052)" x="96.201562" y="122.295052">第二版排序（60 题）</text>
+</g>
+</g>
+<g id="aiq_blog_pool_sources_20261006-ytick_4">
+<g id="aiq_blog_pool_sources_20261006-line2d_25">
+<path clip-path="url(#aiq_blog_pool_sources_20261006-p0a2800bf07)" d="M 103.201562 170.58
+L 503.901562 170.58
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_sources_20261006-line2d_26">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="103.201562" xlink:href="#aiq_blog_pool_sources_20261006-m1fafdb381c" y="170.58"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_sources_20261006-text_14">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 96.201562 174.161719)" x="96.201562" y="174.161719">第三版排序（100 题）</text>
+</g>
+</g>
+</g>
+<g id="aiq_blog_pool_sources_20261006-LineCollection_1">
+<path clip-path="url(#aiq_blog_pool_sources_20261006-p0a2800bf07)" d="M 245.037972 14.98
+L 485.687926 14.98
+" style="fill: none; stroke: #d97757; stroke-width: 1.8"></path>
+</g>
+<g id="aiq_blog_pool_sources_20261006-line2d_27">
+<defs>
+<path d="M 0 4
+L 0 -4
+" id="aiq_blog_pool_sources_20261006-m8b68037b47" style="stroke: #d97757"></path>
+</defs>
+<g clip-path="url(#aiq_blog_pool_sources_20261006-p0a2800bf07)">
+<use style="fill: #d97757; stroke: #d97757" x="245.037972" xlink:href="#aiq_blog_pool_sources_20261006-m8b68037b47" y="14.98"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_sources_20261006-line2d_28">
+<g clip-path="url(#aiq_blog_pool_sources_20261006-p0a2800bf07)">
+<use style="fill: #d97757; stroke: #d97757" x="485.687926" xlink:href="#aiq_blog_pool_sources_20261006-m8b68037b47" y="14.98"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_sources_20261006-LineCollection_2">
+<path clip-path="url(#aiq_blog_pool_sources_20261006-p0a2800bf07)" d="M 121.415199 66.846667
+L 232.827215 66.846667
+" style="fill: none; stroke: #6a9bcc; stroke-width: 1.8"></path>
+</g>
+<g id="aiq_blog_pool_sources_20261006-line2d_29">
+<defs>
+<path d="M 0 4
+L 0 -4
+" id="aiq_blog_pool_sources_20261006-m0cd951262b" style="stroke: #6a9bcc"></path>
+</defs>
+<g clip-path="url(#aiq_blog_pool_sources_20261006-p0a2800bf07)">
+<use style="fill: #6a9bcc; stroke: #6a9bcc" x="121.415199" xlink:href="#aiq_blog_pool_sources_20261006-m0cd951262b" y="66.846667"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_sources_20261006-line2d_30">
+<g clip-path="url(#aiq_blog_pool_sources_20261006-p0a2800bf07)">
+<use style="fill: #6a9bcc; stroke: #6a9bcc" x="232.827215" xlink:href="#aiq_blog_pool_sources_20261006-m0cd951262b" y="66.846667"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_sources_20261006-LineCollection_3">
+<path clip-path="url(#aiq_blog_pool_sources_20261006-p0a2800bf07)" d="M 197.531888 118.713333
+L 323.73942 118.713333
+" style="fill: none; stroke: #d97757; stroke-width: 1.8"></path>
+</g>
+<g id="aiq_blog_pool_sources_20261006-line2d_31">
+<g clip-path="url(#aiq_blog_pool_sources_20261006-p0a2800bf07)">
+<use style="fill: #d97757; stroke: #d97757" x="197.531888" xlink:href="#aiq_blog_pool_sources_20261006-m8b68037b47" y="118.713333"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_sources_20261006-line2d_32">
+<g clip-path="url(#aiq_blog_pool_sources_20261006-p0a2800bf07)">
+<use style="fill: #d97757; stroke: #d97757" x="323.73942" xlink:href="#aiq_blog_pool_sources_20261006-m8b68037b47" y="118.713333"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_sources_20261006-LineCollection_4">
+<path clip-path="url(#aiq_blog_pool_sources_20261006-p0a2800bf07)" d="M 142.538917 170.58
+L 196.016685 170.58
+" style="fill: none; stroke: #d97757; stroke-width: 1.8"></path>
+</g>
+<g id="aiq_blog_pool_sources_20261006-line2d_33">
+<g clip-path="url(#aiq_blog_pool_sources_20261006-p0a2800bf07)">
+<use style="fill: #d97757; stroke: #d97757" x="142.538917" xlink:href="#aiq_blog_pool_sources_20261006-m8b68037b47" y="170.58"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_sources_20261006-line2d_34">
+<g clip-path="url(#aiq_blog_pool_sources_20261006-p0a2800bf07)">
+<use style="fill: #d97757; stroke: #d97757" x="196.016685" xlink:href="#aiq_blog_pool_sources_20261006-m8b68037b47" y="170.58"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_sources_20261006-line2d_35">
+<path clip-path="url(#aiq_blog_pool_sources_20261006-p0a2800bf07)" d="M 138.082436 178.36
+L 138.082436 7.2
+" style="fill: none; stroke-dasharray: 6.66,2.88; stroke-dashoffset: 0; stroke: #b0aea5; stroke-width: 1.8"></path>
+</g>
+<g id="aiq_blog_pool_sources_20261006-line2d_36">
+<defs>
+<path d="M 0 2
+C 0.530406 2 1.03916 1.789267 1.414214 1.414214
+C 1.789267 1.03916 2 0.530406 2 0
+C 2 -0.530406 1.789267 -1.03916 1.414214 -1.414214
+C 1.03916 -1.789267 0.530406 -2 0 -2
+C -0.530406 -2 -1.03916 -1.789267 -1.414214 -1.414214
+C -1.789267 -1.03916 -2 -0.530406 -2 0
+C -2 0.530406 -1.789267 1.03916 -1.414214 1.414214
+C -1.03916 1.789267 -0.530406 2 0 2
+z
+" id="aiq_blog_pool_sources_20261006-m28c9156a76" style="stroke: #d97757"></path>
+</defs>
+<g clip-path="url(#aiq_blog_pool_sources_20261006-p0a2800bf07)">
+<use style="fill: #d97757; stroke: #d97757" x="360.906468" xlink:href="#aiq_blog_pool_sources_20261006-m28c9156a76" y="14.98"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_sources_20261006-line2d_37">
+<defs>
+<path d="M 0 2
+C 0.530406 2 1.03916 1.789267 1.414214 1.414214
+C 1.789267 1.03916 2 0.530406 2 0
+C 2 -0.530406 1.789267 -1.03916 1.414214 -1.414214
+C 1.03916 -1.789267 0.530406 -2 0 -2
+C -0.530406 -2 -1.03916 -1.789267 -1.414214 -1.414214
+C -1.789267 -1.03916 -2 -0.530406 -2 0
+C -2 0.530406 -1.789267 1.03916 -1.414214 1.414214
+C -1.03916 1.789267 -0.530406 2 0 2
+z
+" id="aiq_blog_pool_sources_20261006-m0259bfc075" style="stroke: #6a9bcc"></path>
+</defs>
+<g clip-path="url(#aiq_blog_pool_sources_20261006-p0a2800bf07)">
+<use style="fill: #6a9bcc; stroke: #6a9bcc" x="177.121207" xlink:href="#aiq_blog_pool_sources_20261006-m0259bfc075" y="66.846667"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_sources_20261006-line2d_38">
+<g clip-path="url(#aiq_blog_pool_sources_20261006-p0a2800bf07)">
+<use style="fill: #d97757; stroke: #d97757" x="256.89221" xlink:href="#aiq_blog_pool_sources_20261006-m28c9156a76" y="118.713333"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_sources_20261006-line2d_39">
+<g clip-path="url(#aiq_blog_pool_sources_20261006-p0a2800bf07)">
+<use style="fill: #d97757; stroke: #d97757" x="164.82132" xlink:href="#aiq_blog_pool_sources_20261006-m28c9156a76" y="170.58"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_sources_20261006-patch_3">
+<path d="M 103.201562 178.36
+L 103.201562 7.2
+" style="fill: none; stroke: #b0aea5; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_sources_20261006-patch_4">
+<path d="M 103.201562 178.36
+L 503.901562 178.36
+" style="fill: none; stroke: #b0aea5; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"></path>
+</g>
+</g>
+</g>
+<defs>
+<clippath id="aiq_blog_pool_sources_20261006-p0a2800bf07">
+<rect height="171.16" width="400.7" x="103.201562" y="7.2"></rect>
+</clippath>
+</defs>
+</svg></figure>
+<p>条件反转题的正确率只提高 4.38 个百分点，95% 区间跨零。任务成绩改善主要集中在架构选择和第二版排序题。</p>
+<figure><svg aria-label="条件反转的行为" class="chart" height="223.216719pt" id="aiq_blog_pool_pairs_20261006" role="img" version="1.1" viewbox="0 0 509.228999 223.216719" width="509.228999pt" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+
+<defs>
+<style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+</defs>
+<g id="aiq_blog_pool_pairs_20261006-figure_1">
+<g id="aiq_blog_pool_pairs_20261006-patch_1">
+<path d="M 0 223.216719
+L 509.228999 223.216719
+L 509.228999 0
+L 0 0
+z
+" style="fill: #ffffff"></path>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-axes_1">
+<g id="aiq_blog_pool_pairs_20261006-patch_2">
+<path d="M 33.445 185.541719
+L 243.117701 185.541719
+L 243.117701 10.781719
+L 33.445 10.781719
+z
+" style="fill: #ffffff"></path>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-matplotlib.axis_1">
+<g id="aiq_blog_pool_pairs_20261006-xtick_1">
+<g id="aiq_blog_pool_pairs_20261006-line2d_1">
+<path clip-path="url(#aiq_blog_pool_pairs_20261006-pe73313bc99)" d="M 42.975577 185.541719
+L 42.975577 10.781719
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-line2d_2">
+<defs>
+<path d="M 0 0
+L 0 3.5
+" id="aiq_blog_pool_pairs_20261006-m5acb218427" style="stroke: #5e5d59; stroke-width: 0.8"></path>
+</defs>
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="42.975577" xlink:href="#aiq_blog_pool_pairs_20261006-m5acb218427" y="185.541719"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-text_1">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" transform="rotate(-0 42.975577 199.705156)" x="42.975577" y="199.705156">0</text>
+</g>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-xtick_2">
+<g id="aiq_blog_pool_pairs_20261006-line2d_3">
+<path clip-path="url(#aiq_blog_pool_pairs_20261006-pe73313bc99)" d="M 94.294071 185.541719
+L 94.294071 10.781719
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-line2d_4">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="94.294071" xlink:href="#aiq_blog_pool_pairs_20261006-m5acb218427" y="185.541719"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-text_2">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" transform="rotate(-0 94.294071 199.705156)" x="94.294071" y="199.705156">350</text>
+</g>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-xtick_3">
+<g id="aiq_blog_pool_pairs_20261006-line2d_5">
+<path clip-path="url(#aiq_blog_pool_pairs_20261006-pe73313bc99)" d="M 156.609384 185.541719
+L 156.609384 10.781719
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-line2d_6">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="156.609384" xlink:href="#aiq_blog_pool_pairs_20261006-m5acb218427" y="185.541719"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-text_3">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" transform="rotate(-0 156.609384 199.705156)" x="156.609384" y="199.705156">775</text>
+</g>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-xtick_4">
+<g id="aiq_blog_pool_pairs_20261006-line2d_7">
+<path clip-path="url(#aiq_blog_pool_pairs_20261006-pe73313bc99)" d="M 233.587124 185.541719
+L 233.587124 10.781719
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-line2d_8">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="233.587124" xlink:href="#aiq_blog_pool_pairs_20261006-m5acb218427" y="185.541719"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-text_4">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" transform="rotate(-0 233.587124 199.705156)" x="233.587124" y="199.705156">1300</text>
+</g>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-text_5">
+<text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #141413" transform="rotate(-0 138.281351 213.726094)" x="138.281351" y="213.726094">全局训练步</text>
+</g>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-matplotlib.axis_2">
+<g id="aiq_blog_pool_pairs_20261006-ytick_1">
+<g id="aiq_blog_pool_pairs_20261006-line2d_9">
+<path clip-path="url(#aiq_blog_pool_pairs_20261006-pe73313bc99)" d="M 33.445 185.541719
+L 243.117701 185.541719
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-line2d_10">
+<defs>
+<path d="M 0 0
+L -3.5 0
+" id="aiq_blog_pool_pairs_20261006-m1fafdb381c" style="stroke: #5e5d59; stroke-width: 0.8"></path>
+</defs>
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="33.445" xlink:href="#aiq_blog_pool_pairs_20261006-m1fafdb381c" y="185.541719"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-text_6">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 26.445 189.123437)" x="26.445" y="189.123437">0</text>
+</g>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-ytick_2">
+<g id="aiq_blog_pool_pairs_20261006-line2d_11">
+<path clip-path="url(#aiq_blog_pool_pairs_20261006-pe73313bc99)" d="M 33.445 166.123941
+L 243.117701 166.123941
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-line2d_12">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="33.445" xlink:href="#aiq_blog_pool_pairs_20261006-m1fafdb381c" y="166.123941"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-text_7">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 26.445 169.70566)" x="26.445" y="169.70566">1</text>
+</g>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-ytick_3">
+<g id="aiq_blog_pool_pairs_20261006-line2d_13">
+<path clip-path="url(#aiq_blog_pool_pairs_20261006-pe73313bc99)" d="M 33.445 146.706163
+L 243.117701 146.706163
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-line2d_14">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="33.445" xlink:href="#aiq_blog_pool_pairs_20261006-m1fafdb381c" y="146.706163"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-text_8">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 26.445 150.287882)" x="26.445" y="150.287882">2</text>
+</g>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-ytick_4">
+<g id="aiq_blog_pool_pairs_20261006-line2d_15">
+<path clip-path="url(#aiq_blog_pool_pairs_20261006-pe73313bc99)" d="M 33.445 127.288385
+L 243.117701 127.288385
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-line2d_16">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="33.445" xlink:href="#aiq_blog_pool_pairs_20261006-m1fafdb381c" y="127.288385"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-text_9">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 26.445 130.870104)" x="26.445" y="130.870104">3</text>
+</g>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-ytick_5">
+<g id="aiq_blog_pool_pairs_20261006-line2d_17">
+<path clip-path="url(#aiq_blog_pool_pairs_20261006-pe73313bc99)" d="M 33.445 107.870608
+L 243.117701 107.870608
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-line2d_18">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="33.445" xlink:href="#aiq_blog_pool_pairs_20261006-m1fafdb381c" y="107.870608"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-text_10">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 26.445 111.452326)" x="26.445" y="111.452326">4</text>
+</g>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-ytick_6">
+<g id="aiq_blog_pool_pairs_20261006-line2d_19">
+<path clip-path="url(#aiq_blog_pool_pairs_20261006-pe73313bc99)" d="M 33.445 88.45283
+L 243.117701 88.45283
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-line2d_20">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="33.445" xlink:href="#aiq_blog_pool_pairs_20261006-m1fafdb381c" y="88.45283"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-text_11">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 26.445 92.034549)" x="26.445" y="92.034549">5</text>
+</g>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-ytick_7">
+<g id="aiq_blog_pool_pairs_20261006-line2d_21">
+<path clip-path="url(#aiq_blog_pool_pairs_20261006-pe73313bc99)" d="M 33.445 69.035052
+L 243.117701 69.035052
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-line2d_22">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="33.445" xlink:href="#aiq_blog_pool_pairs_20261006-m1fafdb381c" y="69.035052"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-text_12">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 26.445 72.616771)" x="26.445" y="72.616771">6</text>
+</g>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-ytick_8">
+<g id="aiq_blog_pool_pairs_20261006-line2d_23">
+<path clip-path="url(#aiq_blog_pool_pairs_20261006-pe73313bc99)" d="M 33.445 49.617274
+L 243.117701 49.617274
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-line2d_24">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="33.445" xlink:href="#aiq_blog_pool_pairs_20261006-m1fafdb381c" y="49.617274"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-text_13">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 26.445 53.198993)" x="26.445" y="53.198993">7</text>
+</g>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-ytick_9">
+<g id="aiq_blog_pool_pairs_20261006-line2d_25">
+<path clip-path="url(#aiq_blog_pool_pairs_20261006-pe73313bc99)" d="M 33.445 30.199497
+L 243.117701 30.199497
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-line2d_26">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="33.445" xlink:href="#aiq_blog_pool_pairs_20261006-m1fafdb381c" y="30.199497"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-text_14">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 26.445 33.781215)" x="26.445" y="33.781215">8</text>
+</g>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-ytick_10">
+<g id="aiq_blog_pool_pairs_20261006-line2d_27">
+<path clip-path="url(#aiq_blog_pool_pairs_20261006-pe73313bc99)" d="M 33.445 10.781719
+L 243.117701 10.781719
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-line2d_28">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="33.445" xlink:href="#aiq_blog_pool_pairs_20261006-m1fafdb381c" y="10.781719"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-text_15">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 26.445 14.363438)" x="26.445" y="14.363438">9</text>
+</g>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-text_16">
+<text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #141413" transform="rotate(-90 15.159375 98.161719)" x="15.159375" y="98.161719">满足条件的题对数 / 40</text>
+</g>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-line2d_29">
+<path clip-path="url(#aiq_blog_pool_pairs_20261006-pe73313bc99)" d="M 42.975577 49.617274
+L 68.634824 49.617274
+L 94.294071 107.870608
+L 156.609384 146.706163
+L 222.590304 107.870608
+L 233.587124 69.035052
+" style="fill: none; stroke: #6a9bcc; stroke-width: 1.8; stroke-linecap: square"></path>
+<defs>
+<path d="M 0 2
+C 0.530406 2 1.03916 1.789267 1.414214 1.414214
+C 1.789267 1.03916 2 0.530406 2 0
+C 2 -0.530406 1.789267 -1.03916 1.414214 -1.414214
+C 1.03916 -1.789267 0.530406 -2 0 -2
+C -0.530406 -2 -1.03916 -1.789267 -1.414214 -1.414214
+C -1.789267 -1.03916 -2 -0.530406 -2 0
+C -2 0.530406 -1.789267 1.03916 -1.414214 1.414214
+C -1.03916 1.789267 -0.530406 2 0 2
+z
+" id="aiq_blog_pool_pairs_20261006-m0259bfc075" style="stroke: #6a9bcc"></path>
+</defs>
+<g clip-path="url(#aiq_blog_pool_pairs_20261006-pe73313bc99)">
+<use style="fill: #6a9bcc; stroke: #6a9bcc" x="42.975577" xlink:href="#aiq_blog_pool_pairs_20261006-m0259bfc075" y="49.617274"></use>
+<use style="fill: #6a9bcc; stroke: #6a9bcc" x="68.634824" xlink:href="#aiq_blog_pool_pairs_20261006-m0259bfc075" y="49.617274"></use>
+<use style="fill: #6a9bcc; stroke: #6a9bcc" x="94.294071" xlink:href="#aiq_blog_pool_pairs_20261006-m0259bfc075" y="107.870608"></use>
+<use style="fill: #6a9bcc; stroke: #6a9bcc" x="156.609384" xlink:href="#aiq_blog_pool_pairs_20261006-m0259bfc075" y="146.706163"></use>
+<use style="fill: #6a9bcc; stroke: #6a9bcc" x="222.590304" xlink:href="#aiq_blog_pool_pairs_20261006-m0259bfc075" y="107.870608"></use>
+<use style="fill: #6a9bcc; stroke: #6a9bcc" x="233.587124" xlink:href="#aiq_blog_pool_pairs_20261006-m0259bfc075" y="69.035052"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-line2d_30">
+<path clip-path="url(#aiq_blog_pool_pairs_20261006-pe73313bc99)" d="M 42.975577 185.541719
+L 68.634824 185.541719
+L 94.294071 185.541719
+L 156.609384 185.541719
+L 222.590304 185.541719
+L 233.587124 166.123941
+" style="fill: none; stroke: #d97757; stroke-width: 1.8; stroke-linecap: square"></path>
+<defs>
+<path d="M -2 2
+L 2 2
+L 2 -2
+L -2 -2
+z
+" id="aiq_blog_pool_pairs_20261006-m14ba767ab4" style="stroke: #d97757; stroke-linejoin: miter"></path>
+</defs>
+<g clip-path="url(#aiq_blog_pool_pairs_20261006-pe73313bc99)">
+<use style="fill: #d97757; stroke: #d97757; stroke-linejoin: miter" x="42.975577" xlink:href="#aiq_blog_pool_pairs_20261006-m14ba767ab4" y="185.541719"></use>
+<use style="fill: #d97757; stroke: #d97757; stroke-linejoin: miter" x="68.634824" xlink:href="#aiq_blog_pool_pairs_20261006-m14ba767ab4" y="185.541719"></use>
+<use style="fill: #d97757; stroke: #d97757; stroke-linejoin: miter" x="94.294071" xlink:href="#aiq_blog_pool_pairs_20261006-m14ba767ab4" y="185.541719"></use>
+<use style="fill: #d97757; stroke: #d97757; stroke-linejoin: miter" x="156.609384" xlink:href="#aiq_blog_pool_pairs_20261006-m14ba767ab4" y="185.541719"></use>
+<use style="fill: #d97757; stroke: #d97757; stroke-linejoin: miter" x="222.590304" xlink:href="#aiq_blog_pool_pairs_20261006-m14ba767ab4" y="185.541719"></use>
+<use style="fill: #d97757; stroke: #d97757; stroke-linejoin: miter" x="233.587124" xlink:href="#aiq_blog_pool_pairs_20261006-m14ba767ab4" y="166.123941"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-patch_3">
+<path d="M 33.445 185.541719
+L 33.445 10.781719
+" style="fill: none; stroke: #b0aea5; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-patch_4">
+<path d="M 33.445 185.541719
+L 243.117701 185.541719
+" style="fill: none; stroke: #b0aea5; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-legend_1">
+<g id="aiq_blog_pool_pairs_20261006-line2d_31">
+<path d="M 141.517701 21.549219
+L 149.517701 21.549219
+L 157.517701 21.549219
+" style="fill: none; stroke: #6a9bcc; stroke-width: 1.8; stroke-linecap: square"></path>
+<g>
+<use style="fill: #6a9bcc; stroke: #6a9bcc" x="149.517701" xlink:href="#aiq_blog_pool_pairs_20261006-m0259bfc075" y="21.549219"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-text_17">
+<text style="font-size: 8px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" transform="rotate(-0 163.917701 24.349219)" x="163.917701" y="24.349219">两边各至少一次答对</text>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-line2d_32">
+<path d="M 141.517701 33.749219
+L 149.517701 33.749219
+L 157.517701 33.749219
+" style="fill: none; stroke: #d97757; stroke-width: 1.8; stroke-linecap: square"></path>
+<g>
+<use style="fill: #d97757; stroke: #d97757; stroke-linejoin: miter" x="149.517701" xlink:href="#aiq_blog_pool_pairs_20261006-m14ba767ab4" y="33.749219"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-text_18">
+<text style="font-size: 8px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" transform="rotate(-0 163.917701 36.549219)" x="163.917701" y="36.549219">四条全部答对</text>
+</g>
+</g>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-axes_2">
+<g id="aiq_blog_pool_pairs_20261006-patch_5">
+<path d="M 291.896875 185.541719
+L 501.569576 185.541719
+L 501.569576 10.781719
+L 291.896875 10.781719
+z
+" style="fill: #ffffff"></path>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-matplotlib.axis_3">
+<g id="aiq_blog_pool_pairs_20261006-xtick_5">
+<g id="aiq_blog_pool_pairs_20261006-line2d_33">
+<path clip-path="url(#aiq_blog_pool_pairs_20261006-pfe7ad10606)" d="M 301.427452 185.541719
+L 301.427452 10.781719
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-line2d_34">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="301.427452" xlink:href="#aiq_blog_pool_pairs_20261006-m5acb218427" y="185.541719"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-text_19">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" transform="rotate(-0 301.427452 199.705156)" x="301.427452" y="199.705156">0</text>
+</g>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-xtick_6">
+<g id="aiq_blog_pool_pairs_20261006-line2d_35">
+<path clip-path="url(#aiq_blog_pool_pairs_20261006-pfe7ad10606)" d="M 352.745946 185.541719
+L 352.745946 10.781719
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-line2d_36">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="352.745946" xlink:href="#aiq_blog_pool_pairs_20261006-m5acb218427" y="185.541719"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-text_20">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" transform="rotate(-0 352.745946 199.705156)" x="352.745946" y="199.705156">350</text>
+</g>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-xtick_7">
+<g id="aiq_blog_pool_pairs_20261006-line2d_37">
+<path clip-path="url(#aiq_blog_pool_pairs_20261006-pfe7ad10606)" d="M 415.061259 185.541719
+L 415.061259 10.781719
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-line2d_38">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="415.061259" xlink:href="#aiq_blog_pool_pairs_20261006-m5acb218427" y="185.541719"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-text_21">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" transform="rotate(-0 415.061259 199.705156)" x="415.061259" y="199.705156">775</text>
+</g>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-xtick_8">
+<g id="aiq_blog_pool_pairs_20261006-line2d_39">
+<path clip-path="url(#aiq_blog_pool_pairs_20261006-pfe7ad10606)" d="M 492.038999 185.541719
+L 492.038999 10.781719
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-line2d_40">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="492.038999" xlink:href="#aiq_blog_pool_pairs_20261006-m5acb218427" y="185.541719"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-text_22">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" transform="rotate(-0 492.038999 199.705156)" x="492.038999" y="199.705156">1300</text>
+</g>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-text_23">
+<text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #141413" transform="rotate(-0 396.733226 213.726094)" x="396.733226" y="213.726094">全局训练步</text>
+</g>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-matplotlib.axis_4">
+<g id="aiq_blog_pool_pairs_20261006-ytick_11">
+<g id="aiq_blog_pool_pairs_20261006-line2d_41">
+<path clip-path="url(#aiq_blog_pool_pairs_20261006-pfe7ad10606)" d="M 291.896875 185.541719
+L 501.569576 185.541719
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-line2d_42">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="291.896875" xlink:href="#aiq_blog_pool_pairs_20261006-m1fafdb381c" y="185.541719"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-text_24">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 284.896875 189.123437)" x="284.896875" y="189.123437">0</text>
+</g>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-ytick_12">
+<g id="aiq_blog_pool_pairs_20261006-line2d_43">
+<path clip-path="url(#aiq_blog_pool_pairs_20261006-pfe7ad10606)" d="M 291.896875 150.589719
+L 501.569576 150.589719
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-line2d_44">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="291.896875" xlink:href="#aiq_blog_pool_pairs_20261006-m1fafdb381c" y="150.589719"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-text_25">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 284.896875 154.171437)" x="284.896875" y="154.171437">20</text>
+</g>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-ytick_13">
+<g id="aiq_blog_pool_pairs_20261006-line2d_45">
+<path clip-path="url(#aiq_blog_pool_pairs_20261006-pfe7ad10606)" d="M 291.896875 115.637719
+L 501.569576 115.637719
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-line2d_46">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="291.896875" xlink:href="#aiq_blog_pool_pairs_20261006-m1fafdb381c" y="115.637719"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-text_26">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 284.896875 119.219437)" x="284.896875" y="119.219437">40</text>
+</g>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-ytick_14">
+<g id="aiq_blog_pool_pairs_20261006-line2d_47">
+<path clip-path="url(#aiq_blog_pool_pairs_20261006-pfe7ad10606)" d="M 291.896875 80.685719
+L 501.569576 80.685719
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-line2d_48">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="291.896875" xlink:href="#aiq_blog_pool_pairs_20261006-m1fafdb381c" y="80.685719"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-text_27">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 284.896875 84.267437)" x="284.896875" y="84.267437">60</text>
+</g>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-ytick_15">
+<g id="aiq_blog_pool_pairs_20261006-line2d_49">
+<path clip-path="url(#aiq_blog_pool_pairs_20261006-pfe7ad10606)" d="M 291.896875 45.733719
+L 501.569576 45.733719
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-line2d_50">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="291.896875" xlink:href="#aiq_blog_pool_pairs_20261006-m1fafdb381c" y="45.733719"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-text_28">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 284.896875 49.315437)" x="284.896875" y="49.315437">80</text>
+</g>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-ytick_16">
+<g id="aiq_blog_pool_pairs_20261006-line2d_51">
+<path clip-path="url(#aiq_blog_pool_pairs_20261006-pfe7ad10606)" d="M 291.896875 10.781719
+L 501.569576 10.781719
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-line2d_52">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="291.896875" xlink:href="#aiq_blog_pool_pairs_20261006-m1fafdb381c" y="10.781719"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-text_29">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 284.896875 14.363437)" x="284.896875" y="14.363437">100</text>
+</g>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-text_30">
+<text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #141413" transform="rotate(-90 263.62125 98.161719)" x="263.62125" y="98.161719">两侧仍选同一配置（%）</text>
+</g>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-line2d_53">
+<path clip-path="url(#aiq_blog_pool_pairs_20261006-pfe7ad10606)" d="M 301.427452 61.025219
+L 327.086699 50.102719
+L 352.745946 32.626719
+L 415.061259 41.364719
+L 481.042179 34.811219
+L 492.038999 41.364719
+" style="fill: none; stroke: #d97757; stroke-width: 1.8; stroke-linecap: square"></path>
+<defs>
+<path d="M 0 2
+C 0.530406 2 1.03916 1.789267 1.414214 1.414214
+C 1.789267 1.03916 2 0.530406 2 0
+C 2 -0.530406 1.789267 -1.03916 1.414214 -1.414214
+C 1.03916 -1.789267 0.530406 -2 0 -2
+C -0.530406 -2 -1.03916 -1.789267 -1.414214 -1.414214
+C -1.789267 -1.03916 -2 -0.530406 -2 0
+C -2 0.530406 -1.789267 1.03916 -1.414214 1.414214
+C -1.03916 1.789267 -0.530406 2 0 2
+z
+" id="aiq_blog_pool_pairs_20261006-m28c9156a76" style="stroke: #d97757"></path>
+</defs>
+<g clip-path="url(#aiq_blog_pool_pairs_20261006-pfe7ad10606)">
+<use style="fill: #d97757; stroke: #d97757" x="301.427452" xlink:href="#aiq_blog_pool_pairs_20261006-m28c9156a76" y="61.025219"></use>
+<use style="fill: #d97757; stroke: #d97757" x="327.086699" xlink:href="#aiq_blog_pool_pairs_20261006-m28c9156a76" y="50.102719"></use>
+<use style="fill: #d97757; stroke: #d97757" x="352.745946" xlink:href="#aiq_blog_pool_pairs_20261006-m28c9156a76" y="32.626719"></use>
+<use style="fill: #d97757; stroke: #d97757" x="415.061259" xlink:href="#aiq_blog_pool_pairs_20261006-m28c9156a76" y="41.364719"></use>
+<use style="fill: #d97757; stroke: #d97757" x="481.042179" xlink:href="#aiq_blog_pool_pairs_20261006-m28c9156a76" y="34.811219"></use>
+<use style="fill: #d97757; stroke: #d97757" x="492.038999" xlink:href="#aiq_blog_pool_pairs_20261006-m28c9156a76" y="41.364719"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-patch_6">
+<path d="M 291.896875 185.541719
+L 291.896875 10.781719
+" style="fill: none; stroke: #b0aea5; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_pairs_20261006-patch_7">
+<path d="M 291.896875 185.541719
+L 501.569576 185.541719
+" style="fill: none; stroke: #b0aea5; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"></path>
+</g>
+</g>
+</g>
+<defs>
+<clippath id="aiq_blog_pool_pairs_20261006-pe73313bc99">
+<rect height="174.76" width="209.672701" x="33.445" y="10.781719"></rect>
+</clippath>
+<clippath id="aiq_blog_pool_pairs_20261006-pfe7ad10606">
+<rect height="174.76" width="209.672701" x="291.896875" y="10.781719"></rect>
+</clippath>
+</defs>
+</svg></figure>
+<p>第 1,300 步只有 1/40 对的四条采样全部答对；两边各至少一次答对的 pair 从 7/40 变为 6/40。数据条件变了，模型仍选同一候选配置的比例从 71.25% 升到 82.5%。两次采样序号只用于描述行为，不代表共同随机轨迹。</p>
+<p>唯一四条全对的是一圈/三圈螺旋题。模型开始根据任务难度改变选择，但仍把选项的 residual 设置读错。另一道题两次答对，却引用不存在的 “Peter Silver’s Law of Parallelism”。</p>
+<details class="trace">
+<summary>
+一圈螺旋：选 B，答对
+</summary>
+<p class="sample-meta">
+题目 q_3afce5 · 第 1 次采样 · 全文 7469 字符
+</p>
+<pre>Let me analyze each choice for the two-spirals binary classification task with 1024 training rows and 2048 test rows. The critical factor here is training budget of only 32768 total samples seen (1024 steps × batch_size 32).
+
+The two-spirals task requires learning a highly non-linear decision boundary - specifically, it needs to learn how the arm position correlates with the spiral turn. With 1024 training points, this is a relatively easy dataset.
+
+Let me analyze each choice:
+
+**Choice A:**
+- 4
+
+……（中略 3137 字符）……
+
+ough capacity for the complex boundary. The lack of residual connections doesn't hurt here since the path is relatively short without residual blocks.
+
+However, Choice A might be better because:
+- Residual connections help gradient flow
+- Layer norm on first block stabilizes initialization
+- SiLU is smooth
+
+Actually, let me reconsider. With only 1024 training points and 1024 steps, the model needs to learn a lot. The two-spirals problem is known to be quite difficult for single-hidden-layer netw
+
+……（中略 2832 字符）……
+
+es seen, which is about 32 epochs. This is a relatively limited number of epochs for a 5-hidden-layer network on this problem.
+
+I think all three models have enough capacity to solve the two-spirals problem, so the differentiator is optimization:
+- B has the most stable optimization environment (layer norm on first layer, no residual blocks)
+- A has residual connections but layer norm on layer 3 is less stabilizing
+- C has no layer norm at all
+
+I'll go with Choice B.
+&lt;/think&gt;
+
+&lt;answer&gt;B&lt;/answer&gt;</pre>
+</details>
+<details class="trace">
+<summary>
+三圈螺旋：选 A，答对，解释仍误读设置
+</summary>
+<p class="sample-meta">
+题目 q_e6673e · 第 1 次采样 · 全文 5633 字符
+</p>
+<pre>Let me analyze each choice for the two-spirals binary classification task with:
+- 1024 training samples
+- 2048 test samples
+- 3 full turns of spiral (highly non-linear boundary)
+- Training budget: 1024 steps × 32 batch size = 32768 samples seen (about 32 epochs over training data)
+- Same optimizer: RMSprop, lr=0.0003, weight_decay=1e-05
+
+The key considerations:
+1. Two-spirals with 3 turns is a highly non-linear problem requiring deep learning
+2. Training budget is limited (only 32 epochs over tr
+
+……（中略 2295 字符）……
+
+ELU is smooth but no residual support
+- The lack of residuals with 5 hidden layers might prevent optimization from reaching useful capacity
+- However, with GELU (monotonic), it might help with optimization
+
+**Choice C** with residual connections but NO LayerNorm and LeakyReLU:
+- Residual connections help
+- No LayerNorm could mean less regularization and potentially higher risk of overfitting
+- LeakyReLU is smooth but without LayerNorm and residual connections, it might have gradient issues
+- No
+
+……（中略 1838 字符）……
+
+o LayerNorm and no residuals... That could lead to problematic gradient flow. The gradient might not flow well through the first layer into the subsequent layers without normalization.
+
+I'll go with Choice A as my answer. It combines the best of several approaches: residual connections for optimization, LayerNorm for stable training, and SiLU for the highly non-linear boundary. The model depth (4 vs 5 hidden layers) adapts appropriately for the constraint of 3 turns.
+&lt;/think&gt;
+
+&lt;answer&gt;A&lt;/answer&gt;</pre>
+</details>
+<details class="trace">
+<summary>
+答对但虚构科学依据：选 A
+</summary>
+<p class="sample-meta">
+题目 q_797755 · 第 1 次采样 · 全文 7463 字符
+</p>
+<pre>Let me analyze the three choices for this bigram language modeling task.
+
+The task is bigram language modeling with:
+- Vocab size: 32
+- Context length: 12
+- Only needs to learn P(y|x) - a 32×32 transition matrix
+- Training budget: 1024 steps × 32 batch size = 32768 samples seen
+- Train runs: 800 samples
+- Each choice uses Adagrad with lr=0.0001, wd=0.0001
+
+Key considerations:
+
+1. **Task complexity**: This is a simple bigram task - only the previous token matters. The true underlying distribution
+
+……（中略 1970 字符）……
+
+rge fastest:
+
+1. **Depth vs Width**: In Peter Silver's Law of Parallelism, faster convergence can happen with moderate depth. However, with Adagrad's fast decay, deeper networks might converge slower.
+
+2. **Head optimization**: Choice B has a single-head architecture that might have headhole issues. The head for C is 32→32 (identity like), which is good. Head A has 128→32.
+
+3. **Actually, reconsider**: With Adagrad at lr=0.0001, the effective learning rate is very small. The model needs to take
+
+……（中略 3993 字符）……
+
+mall vocab
+
+In Practice, with Adagrad this low learning rate and limited steps, I think the model that can fit the solution fastest wins.
+
+The transition matrix has balloons at positions 0-31, and the network needs to converge on whatever is left.
+
+I'll go with Choice A (d_model=128, 3 layers) as the winner. It has the most capacity per layer, a reasonable depth for this type of task, and the wider FFN provides enough dimensionality to represent the bigram structure.
+&lt;/think&gt;
+
+&lt;answer&gt;A&lt;/answer&gt;</pre>
+</details>
+<p>条件反转题中有 alpha 与随机 seed 同时变化的情况，因此不能把结果单独归因于 alpha。现有题面的条件可见，但仍缺少更严格的单因子翻转设计。</p>
+<h2 id="条件反转的训练组接近一半没有奖励差异">条件反转的训练组接近一半没有奖励差异</h2>
+<p>每个评分组有 32 条回答。下图来自最后续段完成评分的 3,257 个组，可能包含随后因策略过旧而丢弃的组；尚未重建 optimizer 实际接收的组分布。</p>
+<figure><svg aria-label="真实评分组的正确率分布" class="chart" height="237.635pt" id="aiq_blog_pool_groups_20261006" role="img" version="1.1" viewbox="0 0 511.28 237.635" width="511.28pt" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+
+<defs>
+<style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+</defs>
+<g id="aiq_blog_pool_groups_20261006-figure_1">
+<g id="aiq_blog_pool_groups_20261006-patch_1">
+<path d="M 0 237.635
+L 511.28 237.635
+L 511.28 0
+L 0 0
+z
+" style="fill: #ffffff"></path>
+</g>
+<g id="aiq_blog_pool_groups_20261006-axes_1">
+<g id="aiq_blog_pool_groups_20261006-patch_2">
+<path d="M 38.44 199.96
+L 504.08 199.96
+L 504.08 7.2
+L 38.44 7.2
+z
+" style="fill: #ffffff"></path>
+</g>
+<g id="aiq_blog_pool_groups_20261006-matplotlib.axis_1">
+<g id="aiq_blog_pool_groups_20261006-xtick_1">
+<g id="aiq_blog_pool_groups_20261006-line2d_1">
+<path clip-path="url(#aiq_blog_pool_groups_20261006-pb4c94bad80)" d="M 59.605455 199.96
+L 59.605455 7.2
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_groups_20261006-line2d_2">
+<defs>
+<path d="M 0 0
+L 0 3.5
+" id="aiq_blog_pool_groups_20261006-m5acb218427" style="stroke: #5e5d59; stroke-width: 0.8"></path>
+</defs>
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="59.605455" xlink:href="#aiq_blog_pool_groups_20261006-m5acb218427" y="199.96"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_groups_20261006-text_1">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" transform="rotate(-0 59.605455 214.123437)" x="59.605455" y="214.123437">0</text>
+</g>
+</g>
+<g id="aiq_blog_pool_groups_20261006-xtick_2">
+<g id="aiq_blog_pool_groups_20261006-line2d_3">
+<path clip-path="url(#aiq_blog_pool_groups_20261006-pb4c94bad80)" d="M 144.267273 199.96
+L 144.267273 7.2
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_groups_20261006-line2d_4">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="144.267273" xlink:href="#aiq_blog_pool_groups_20261006-m5acb218427" y="199.96"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_groups_20261006-text_2">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" transform="rotate(-0 144.267273 214.123437)" x="144.267273" y="214.123437">20</text>
+</g>
+</g>
+<g id="aiq_blog_pool_groups_20261006-xtick_3">
+<g id="aiq_blog_pool_groups_20261006-line2d_5">
+<path clip-path="url(#aiq_blog_pool_groups_20261006-pb4c94bad80)" d="M 228.929091 199.96
+L 228.929091 7.2
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_groups_20261006-line2d_6">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="228.929091" xlink:href="#aiq_blog_pool_groups_20261006-m5acb218427" y="199.96"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_groups_20261006-text_3">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" transform="rotate(-0 228.929091 214.123437)" x="228.929091" y="214.123437">40</text>
+</g>
+</g>
+<g id="aiq_blog_pool_groups_20261006-xtick_4">
+<g id="aiq_blog_pool_groups_20261006-line2d_7">
+<path clip-path="url(#aiq_blog_pool_groups_20261006-pb4c94bad80)" d="M 313.590909 199.96
+L 313.590909 7.2
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_groups_20261006-line2d_8">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="313.590909" xlink:href="#aiq_blog_pool_groups_20261006-m5acb218427" y="199.96"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_groups_20261006-text_4">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" transform="rotate(-0 313.590909 214.123437)" x="313.590909" y="214.123437">60</text>
+</g>
+</g>
+<g id="aiq_blog_pool_groups_20261006-xtick_5">
+<g id="aiq_blog_pool_groups_20261006-line2d_9">
+<path clip-path="url(#aiq_blog_pool_groups_20261006-pb4c94bad80)" d="M 398.252727 199.96
+L 398.252727 7.2
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_groups_20261006-line2d_10">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="398.252727" xlink:href="#aiq_blog_pool_groups_20261006-m5acb218427" y="199.96"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_groups_20261006-text_5">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" transform="rotate(-0 398.252727 214.123437)" x="398.252727" y="214.123437">80</text>
+</g>
+</g>
+<g id="aiq_blog_pool_groups_20261006-xtick_6">
+<g id="aiq_blog_pool_groups_20261006-line2d_11">
+<path clip-path="url(#aiq_blog_pool_groups_20261006-pb4c94bad80)" d="M 482.914545 199.96
+L 482.914545 7.2
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_groups_20261006-line2d_12">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="482.914545" xlink:href="#aiq_blog_pool_groups_20261006-m5acb218427" y="199.96"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_groups_20261006-text_6">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" transform="rotate(-0 482.914545 214.123437)" x="482.914545" y="214.123437">100</text>
+</g>
+</g>
+<g id="aiq_blog_pool_groups_20261006-text_7">
+<text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #141413" transform="rotate(-0 271.26 228.144375)" x="271.26" y="228.144375">每组正确率（%，区间宽 10 个百分点）</text>
+</g>
+</g>
+<g id="aiq_blog_pool_groups_20261006-matplotlib.axis_2">
+<g id="aiq_blog_pool_groups_20261006-ytick_1">
+<g id="aiq_blog_pool_groups_20261006-line2d_13">
+<path clip-path="url(#aiq_blog_pool_groups_20261006-pb4c94bad80)" d="M 38.44 191.198182
+L 504.08 191.198182
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_groups_20261006-line2d_14">
+<defs>
+<path d="M 0 0
+L -3.5 0
+" id="aiq_blog_pool_groups_20261006-m1fafdb381c" style="stroke: #5e5d59; stroke-width: 0.8"></path>
+</defs>
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="38.44" xlink:href="#aiq_blog_pool_groups_20261006-m1fafdb381c" y="191.198182"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_groups_20261006-text_8">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 31.44 194.779901)" x="31.44" y="194.779901">0</text>
+</g>
+</g>
+<g id="aiq_blog_pool_groups_20261006-ytick_2">
+<g id="aiq_blog_pool_groups_20261006-line2d_15">
+<path clip-path="url(#aiq_blog_pool_groups_20261006-pb4c94bad80)" d="M 38.44 149.034712
+L 504.08 149.034712
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_groups_20261006-line2d_16">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="38.44" xlink:href="#aiq_blog_pool_groups_20261006-m1fafdb381c" y="149.034712"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_groups_20261006-text_9">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 31.44 152.61643)" x="31.44" y="152.61643">20</text>
+</g>
+</g>
+<g id="aiq_blog_pool_groups_20261006-ytick_3">
+<g id="aiq_blog_pool_groups_20261006-line2d_17">
+<path clip-path="url(#aiq_blog_pool_groups_20261006-pb4c94bad80)" d="M 38.44 106.871241
+L 504.08 106.871241
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_groups_20261006-line2d_18">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="38.44" xlink:href="#aiq_blog_pool_groups_20261006-m1fafdb381c" y="106.871241"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_groups_20261006-text_10">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 31.44 110.45296)" x="31.44" y="110.45296">40</text>
+</g>
+</g>
+<g id="aiq_blog_pool_groups_20261006-ytick_4">
+<g id="aiq_blog_pool_groups_20261006-line2d_19">
+<path clip-path="url(#aiq_blog_pool_groups_20261006-pb4c94bad80)" d="M 38.44 64.707771
+L 504.08 64.707771
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_groups_20261006-line2d_20">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="38.44" xlink:href="#aiq_blog_pool_groups_20261006-m1fafdb381c" y="64.707771"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_groups_20261006-text_11">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 31.44 68.28949)" x="31.44" y="68.28949">60</text>
+</g>
+</g>
+<g id="aiq_blog_pool_groups_20261006-ytick_5">
+<g id="aiq_blog_pool_groups_20261006-line2d_21">
+<path clip-path="url(#aiq_blog_pool_groups_20261006-pb4c94bad80)" d="M 38.44 22.544301
+L 504.08 22.544301
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_groups_20261006-line2d_22">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="38.44" xlink:href="#aiq_blog_pool_groups_20261006-m1fafdb381c" y="22.544301"></use>
+</g>
+</g>
+<g id="aiq_blog_pool_groups_20261006-text_12">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 31.44 26.12602)" x="31.44" y="26.12602">80</text>
+</g>
+</g>
+<g id="aiq_blog_pool_groups_20261006-text_13">
+<text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #141413" transform="rotate(-90 15.159375 103.58)" x="15.159375" y="103.58">该题源评分组占比（%）</text>
+</g>
+</g>
+<g id="aiq_blog_pool_groups_20261006-line2d_23">
+<path clip-path="url(#aiq_blog_pool_groups_20261006-pb4c94bad80)" d="M 59.605455 103.402781
+L 101.936364 103.402781
+L 101.936364 181.985084
+L 144.267273 181.985084
+L 144.267273 183.610925
+L 186.598182 183.610925
+L 186.598182 183.610925
+L 228.929091 183.610925
+L 228.929091 184.965792
+L 271.26 184.965792
+L 271.26 180.90119
+L 313.590909 180.90119
+L 313.590909 187.404553
+L 355.921818 187.404553
+L 355.921818 184.965792
+L 398.252727 184.965792
+L 398.252727 180.08827
+L 440.583636 180.08827
+L 440.583636 130.229154
+L 482.914545 130.229154
+L 482.914545 191.198182
+" style="fill: none; stroke: #d97757; stroke-width: 1.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_groups_20261006-line2d_24">
+<path clip-path="url(#aiq_blog_pool_groups_20261006-pb4c94bad80)" d="M 59.605455 146.707507
+L 101.936364 146.707507
+L 101.936364 182.300047
+L 144.267273 182.300047
+L 144.267273 182.756361
+L 186.598182 182.756361
+L 186.598182 187.775822
+L 228.929091 187.775822
+L 228.929091 183.897148
+L 271.26 183.897148
+L 271.26 182.756361
+L 313.590909 182.756361
+L 313.590909 182.528204
+L 355.921818 182.528204
+L 355.921818 183.212676
+L 398.252727 183.212676
+L 398.252727 175.683485
+L 440.583636 175.683485
+L 440.583636 93.546855
+L 482.914545 93.546855
+L 482.914545 191.198182
+" style="fill: none; stroke: #788c5d; stroke-width: 1.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_groups_20261006-line2d_25">
+<path clip-path="url(#aiq_blog_pool_groups_20261006-pb4c94bad80)" d="M 59.605455 94.040675
+L 101.936364 94.040675
+L 101.936364 165.61956
+L 144.267273 165.61956
+L 144.267273 169.745144
+L 186.598182 169.745144
+L 186.598182 173.251891
+L 228.929091 173.251891
+L 228.929091 176.1398
+L 271.26 176.1398
+L 271.26 174.902124
+L 313.590909 174.902124
+L 313.590909 182.947013
+L 355.921818 182.947013
+L 355.921818 186.041202
+L 398.252727 186.041202
+L 398.252727 188.516552
+L 440.583636 188.516552
+L 440.583636 189.960507
+L 482.914545 189.960507
+L 482.914545 191.198182
+" style="fill: none; stroke: #6a9bcc; stroke-width: 1.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_groups_20261006-line2d_26">
+<path clip-path="url(#aiq_blog_pool_groups_20261006-pb4c94bad80)" d="M 59.605455 15.961818
+L 101.936364 15.961818
+L 101.936364 167.625778
+L 144.267273 167.625778
+L 144.267273 183.19246
+L 186.598182 183.19246
+L 186.598182 188.97437
+L 228.929091 188.97437
+L 228.929091 189.863895
+L 271.26 189.863895
+L 271.26 190.753419
+L 313.590909 190.753419
+L 313.590909 191.198182
+L 355.921818 191.198182
+L 355.921818 191.198182
+L 398.252727 191.198182
+L 398.252727 191.198182
+L 440.583636 191.198182
+L 440.583636 191.198182
+L 482.914545 191.198182
+L 482.914545 191.198182
+" style="fill: none; stroke: #141413; stroke-width: 1.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_groups_20261006-line2d_27">
+<path clip-path="url(#aiq_blog_pool_groups_20261006-pb4c94bad80)" d="M 59.605455 184.051831
+L 101.936364 184.051831
+L 101.936364 187.625006
+L 144.267273 187.625006
+L 144.267273 184.051831
+L 186.598182 184.051831
+L 186.598182 180.478655
+L 228.929091 180.478655
+L 228.929091 184.051831
+L 271.26 184.051831
+L 271.26 184.051831
+L 313.590909 184.051831
+L 313.590909 162.612778
+L 355.921818 162.612778
+L 355.921818 187.625006
+L 398.252727 187.625006
+L 398.252727 155.466427
+L 440.583636 155.466427
+L 440.583636 91.149269
+L 482.914545 91.149269
+L 482.914545 191.198182
+" style="fill: none; stroke: #b0aea5; stroke-width: 1.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_groups_20261006-patch_3">
+<path d="M 38.44 199.96
+L 38.44 7.2
+" style="fill: none; stroke: #b0aea5; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_groups_20261006-patch_4">
+<path d="M 38.44 199.96
+L 504.08 199.96
+" style="fill: none; stroke: #b0aea5; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_groups_20261006-legend_1">
+<g id="aiq_blog_pool_groups_20261006-line2d_28">
+<path d="M 273.415 17.9675
+L 281.415 17.9675
+L 281.415 17.9675
+L 289.415 17.9675
+L 289.415 17.9675
+" style="fill: none; stroke: #d97757; stroke-width: 1.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_groups_20261006-text_14">
+<text style="font-size: 8px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" transform="rotate(-0 295.815 20.7675)" x="295.815" y="20.7675">条件反转（778 组）</text>
+</g>
+<g id="aiq_blog_pool_groups_20261006-line2d_29">
+<path d="M 273.415 30.1675
+L 281.415 30.1675
+L 281.415 30.1675
+L 289.415 30.1675
+L 289.415 30.1675
+" style="fill: none; stroke: #788c5d; stroke-width: 1.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_groups_20261006-text_15">
+<text style="font-size: 8px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" transform="rotate(-0 295.815 32.9675)" x="295.815" y="32.9675">旧选择复用（924 组）</text>
+</g>
+<g id="aiq_blog_pool_groups_20261006-line2d_30">
+<path d="M 273.415 42.3675
+L 281.415 42.3675
+L 281.415 42.3675
+L 289.415 42.3675
+L 289.415 42.3675
+" style="fill: none; stroke: #6a9bcc; stroke-width: 1.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_groups_20261006-text_16">
+<text style="font-size: 8px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" transform="rotate(-0 295.815 45.1675)" x="295.815" y="45.1675">第二版排序（1022 组）</text>
+</g>
+<g id="aiq_blog_pool_groups_20261006-line2d_31">
+<path d="M 395.3675 17.9675
+L 403.3675 17.9675
+L 403.3675 17.9675
+L 411.3675 17.9675
+L 411.3675 17.9675
+" style="fill: none; stroke: #141413; stroke-width: 1.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_groups_20261006-text_17">
+<text style="font-size: 8px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" transform="rotate(-0 417.7675 20.7675)" x="417.7675" y="20.7675">第三版排序（474 组）</text>
+</g>
+<g id="aiq_blog_pool_groups_20261006-line2d_32">
+<path d="M 395.3675 30.1675
+L 403.3675 30.1675
+L 403.3675 30.1675
+L 411.3675 30.1675
+L 411.3675 30.1675
+" style="fill: none; stroke: #b0aea5; stroke-width: 1.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_pool_groups_20261006-text_18">
+<text style="font-size: 8px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" transform="rotate(-0 417.7675 32.9675)" x="417.7675" y="32.9675">架构选择（59 组）</text>
+</g>
+</g>
+</g>
+</g>
+<defs>
+<clippath id="aiq_blog_pool_groups_20261006-pb4c94bad80">
+<rect height="192.76" width="465.64" x="38.44" y="7.2"></rect>
+</clippath>
+</defs>
+</svg></figure>
+<div aria-label="数据表，可横向滚动" class="table-wrap" role="region" tabindex="0"><table>
+<thead>
+<tr>
+<th>题源</th>
+<th style="text-align: right;">组数</th>
+<th style="text-align: right;">组正确率均值</th>
+<th style="text-align: right;">跨组 std</th>
+<th style="text-align: right;">全错组</th>
+<th style="text-align: right;">零 reward 方差组</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>条件反转题</td>
+<td style="text-align: right;">778</td>
+<td style="text-align: right;">43.7%</td>
+<td style="text-align: right;">42.1 个百分点</td>
+<td style="text-align: right;">28.5%</td>
+<td style="text-align: right;">47.9%</td>
+</tr>
+<tr>
+<td>旧选择题复用</td>
+<td style="text-align: right;">924</td>
+<td style="text-align: right;">63.7%</td>
+<td style="text-align: right;">39.8 个百分点</td>
+<td style="text-align: right;">12.6%</td>
+<td style="text-align: right;">43.4%</td>
+</tr>
+<tr>
+<td>第二版排序</td>
+<td style="text-align: right;">1,022</td>
+<td style="text-align: right;">21.9%</td>
+<td style="text-align: right;">23.3 个百分点</td>
+<td style="text-align: right;">25.7%</td>
+<td style="text-align: right;">0%</td>
+</tr>
+<tr>
+<td>第三版排序</td>
+<td style="text-align: right;">474</td>
+<td style="text-align: right;">5.2%</td>
+<td style="text-align: right;">8.1 个百分点</td>
+<td style="text-align: right;">48.3%</td>
+<td style="text-align: right;">0%</td>
+</tr>
+<tr>
+<td>架构选择</td>
+<td style="text-align: right;">59</td>
+<td style="text-align: right;">75.9%</td>
+<td style="text-align: right;">25.7 个百分点</td>
+<td style="text-align: right;">0%</td>
+<td style="text-align: right;">11.9%</td>
+</tr>
+</tbody>
+</table></div>
+<p>组内奖励全相同时，这一组不提供相对 advantage。排序即使全错，也会因逆序数不同获得部分分。信号分布与“排序慢涨、条件反转基本不动”的观察一致，但还不能完成因果归因。</p>
+<h2 id="当前证据支持任务学习尚未支持-science">当前证据支持任务学习，尚未支持 science</h2>
+<p>本文的 science 判据是：模型对数据条件敏感，解释符合题目事实，并能把规律迁移到新实例，接受改写和干预测试。本线证明格式修复和部分判断改善；条件反转、解释可靠性和新实例迁移仍未满足这一判据。全选项覆盖率从 80.5% 升到 98.1%，也只能说明文本结构变了。</p>
+<p>最后 25 步 entropy 为 0.689、reference KL 为 0.0258，未见早期实验的崩塌信号。训练日志到第 1,319 步，可恢复权重和最后完整评测到第 1,300 步；最后 19 步没有保存。停止记录是 watchdog 失去 SSH 连接，不能解释成算法失败。</p>
+<p>最关键的缺失证据是同题等价改写、新 seed/新实例、选项置换、同 checkpoint 的思考/直接作答对照，以及虚构依据参与惩罚后的实验。继续同池训练可以研究记忆与迁移的区别，当前证据不能保证仅靠增加步数就会形成条件性科学规律。</p>
+<div aria-label="同系列文章" class="related"><a href="aiq-rl-loss-ranking-2026-10-06.html">早期排序</a><a href="aiq-rl-sft178-2026-10-06.html">SFT-178</a><a href="aiq-rl-flash-next-2026-10-06.html">Flash-Next</a><a href="poor-rl-infra-2026-10-06.html">Infra 演进</a></div><footer>来源：六阶段共 3,480 条原始生成、pool B manifest、题级配对统计与评分组记录；<a href="aiq-rl-pool-b-2026-10-06-data.json">指标、分布和样本</a>。学习证据截止于第 1,300 步评测。</footer>
+
+</main>
+</body>
+</html>

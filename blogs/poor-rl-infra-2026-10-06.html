@@ -1,0 +1,592 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>poor-rl：总吞吐从约两千升到十五万 token/s</title>
+<!--
+  report-to-human panel template v2
+  Palette and type: Anthropic brand-guidelines (github.com/anthropics/skills, skills/brand-guidelines).
+  Rules: keep only what the reader needs. No subtitle, no KPI cards, no section numbers, no status banners.
+  Every term is explained in plain words where it first appears.
+-->
+<style>
+  :root {
+    --dark: #141413;   /* primary text */
+    --light: #faf9f5;  /* page background */
+    --mid: #b0aea5;    /* borders, axes */
+    --soft: #e8e6dc;   /* subtle fills */
+    --muted: #5e5d59;  /* secondary text (darker than --mid for contrast) */
+    --orange: #d97757; /* primary accent: the main result */
+    --blue: #6a9bcc;   /* secondary accent */
+    --green: #788c5d;  /* tertiary accent */
+    --head: "Poppins", "PingFang SC", "Noto Sans CJK SC", "Hiragino Sans GB", Arial, sans-serif;
+    --body: "Lora", "Noto Serif CJK SC", "Songti SC", Georgia, serif;
+    --mono: "SF Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--light); color: var(--dark); font: 17px/1.8 var(--body); }
+  main { max-width: 760px; margin: 0 auto; padding: 72px 24px 96px; }
+  h1, h2, h3 { font-family: var(--head); font-weight: 600; line-height: 1.35; letter-spacing: -0.01em; }
+  h1 { font-size: 32px; margin: 0 0 16px; }
+  h2 { font-size: 22px; margin: 64px 0 12px; }
+  p { margin: 0 0 16px; }
+  .lede { font-size: 19px; }
+  a { color: inherit; text-decoration: underline; text-decoration-color: var(--orange); text-underline-offset: 3px; }
+  code, .id { font-family: var(--mono); font-size: 0.86em; background: var(--soft); padding: 1px 5px; border-radius: 4px; }
+
+  /* L2 settings row: monochrome line icons + label, never color emoji */
+  .settings { display: flex; flex-wrap: wrap; gap: 8px 20px; list-style: none; padding: 0; margin: 24px 0 0;
+              font: 14px/1.6 var(--head); color: var(--muted); }
+  .settings li { display: inline-flex; align-items: center; gap: 6px; }
+  .settings svg { width: 15px; height: 15px; stroke: var(--dark); fill: none; stroke-width: 1.6;
+                  stroke-linecap: round; stroke-linejoin: round; }
+  .settings b { color: var(--dark); font-weight: 500; }
+
+  figure { margin: 28px 0; padding: 20px; background: #fff; border: 1px solid var(--soft); border-radius: 10px; }
+  figure img, figure svg.chart { display: block; width: 100%; height: auto; }
+  figcaption { margin-top: 12px; font: 14px/1.6 var(--head); color: var(--muted); }
+  .legend { display: flex; gap: 18px; font: 13px var(--head); color: var(--muted); margin-bottom: 8px; }
+  .legend i { display: inline-block; width: 14px; height: 2px; vertical-align: middle; margin-right: 6px; }
+
+  .warn { border-left: 3px solid var(--orange); padding: 4px 0 4px 16px; margin: 24px 0; }
+  .warn strong { font-family: var(--head); }
+
+  /* sample browser: compare outputs side by side */
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--soft); margin-bottom: 12px; }
+  .tabs button { font: 14px var(--head); background: none; border: 0; padding: 8px 12px; cursor: pointer;
+                 color: var(--muted); border-bottom: 2px solid transparent; }
+  .tabs button[aria-selected="true"] { color: var(--dark); border-bottom-color: var(--orange); }
+  .sample { display: none; white-space: pre-wrap; font: 14px/1.7 var(--mono); }
+  .sample.on { display: block; }
+
+  details { margin: 16px 0; }
+  summary { cursor: pointer; font: 15px var(--head); color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font: 14px/1.6 var(--head); margin: 16px 0; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--soft); }
+  th { font-weight: 500; color: var(--muted); }
+  footer { margin-top: 80px; font: 13px var(--head); color: var(--mid); }
+
+  pre { margin: 12px 0; padding: 16px; background: var(--soft); white-space: pre-wrap;
+        overflow-wrap: anywhere; font: 13px/1.65 var(--mono); }
+  .sample-meta { font: 13px/1.6 var(--head); color: var(--muted); margin: 10px 0 0; }
+  .table-wrap { overflow-x: auto; margin: 20px 0; }
+  table { min-width: 500px; margin: 0; font-variant-numeric: tabular-nums; }
+  figure { padding: 12px; border-radius: 4px; }
+  footer { color: var(--muted); line-height: 1.7; }
+  .related { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 40px; font: 14px/1.7 var(--head); }
+  @media (max-width: 600px) { main { padding: 40px 20px 64px; } h1 { font-size: 27px; }
+     h2 { font-size: 21px; margin-top: 44px; } body { font-size: 16px; } figure { padding: 4px; }
+     .settings { gap: 6px 14px; } }
+</style>
+<link rel="canonical" href="https://guoshaoyang-pku.github.io/blogs/poor-rl-infra-2026-10-06.html">
+</head>
+<body>
+<main>
+<h1 id="article-title">poor-rl：总吞吐从约两千升到十五万 token/s</h1>
+<p class="lede">BF16 路径达到 53,691 token/s；FP8、大 microbatch 和去掉 KL reference 的短程配方达到 151,401 token/s，训推一致性仍未通过。</p>
+<ul class="settings">
+<li><svg aria-hidden="true" viewbox="0 0 24 24"><rect height="16" rx="2" width="16" x="4" y="4"></rect><path d="M8 8h8M8 12h8M8 16h4"></path></svg>
+模型 <b>Qwen3.5-0.8B</b>
+</li>
+<li><svg aria-hidden="true" viewbox="0 0 24 24"><rect height="16" rx="2" width="16" x="4" y="4"></rect><path d="M8 8h8M8 12h8M8 16h4"></path></svg>
+设备 <b>H200</b>
+</li>
+<li><svg aria-hidden="true" viewbox="0 0 24 24"><rect height="16" rx="2" width="16" x="4" y="4"></rect><path d="M8 8h8M8 12h8M8 16h4"></path></svg>
+主参数和优化器 <b>FP32</b>
+</li>
+<li><svg aria-hidden="true" viewbox="0 0 24 24"><rect height="16" rx="2" width="16" x="4" y="4"></rect><path d="M8 8h8M8 12h8M8 16h4"></path></svg>
+吞吐 <b>实际训练 completion token/s</b>
+</li>
+</ul>
+<h2 id="bf16-的主要增益来自并行生成和减少重复计算">BF16 的主要增益来自并行生成和减少重复计算</h2>
+<p>总吞吐为实际参加训练的 completion token 总数，除以 step 总墙钟时间，包含等待和权重同步。v0 至 v4 是下面的工程阶段编号。下表从仓库的 <code>INFRA_HISTORY.md</code> 摘取关键阶段；完整行及测量边界见<a href="https://github.com/guoshaoyang-pku/poor-rl/blob/69a498b9429c6524beda97269f6e49fd98707143/docs/INFRA_HISTORY.md">固定版本原文</a>。</p>
+<figure><svg aria-label="Infra 各阶段总吞吐" class="chart" height="244.625pt" id="aiq_blog_infra_throughput_20261006" role="img" version="1.1" viewbox="0 0 511.219687 244.625" width="511.219687pt" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+
+<defs>
+<style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+</defs>
+<g id="aiq_blog_infra_throughput_20261006-figure_1">
+<g id="aiq_blog_infra_throughput_20261006-patch_1">
+<path d="M 0 244.625
+L 511.219687 244.625
+L 511.219687 0
+L 0 0
+z
+" style="fill: #ffffff"></path>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-axes_1">
+<g id="aiq_blog_infra_throughput_20261006-patch_2">
+<path d="M 93.599688 206.35
+L 504.019687 206.35
+L 504.019687 7.2
+L 93.599688 7.2
+z
+" style="fill: #ffffff"></path>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-matplotlib.axis_1">
+<g id="aiq_blog_infra_throughput_20261006-xtick_1">
+<g id="aiq_blog_infra_throughput_20261006-line2d_1">
+<path clip-path="url(#aiq_blog_infra_throughput_20261006-p92619c0455)" d="M 93.599688 206.35
+L 93.599688 7.2
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-line2d_2">
+<defs>
+<path d="M 0 0
+L 0 3.5
+" id="aiq_blog_infra_throughput_20261006-m5acb218427" style="stroke: #5e5d59; stroke-width: 0.8"></path>
+</defs>
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="93.599688" xlink:href="#aiq_blog_infra_throughput_20261006-m5acb218427" y="206.35"></use>
+</g>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-text_1">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" transform="rotate(-0 93.599688 220.513438)" x="93.599688" y="220.513438">0</text>
+</g>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-xtick_2">
+<g id="aiq_blog_infra_throughput_20261006-line2d_3">
+<path clip-path="url(#aiq_blog_infra_throughput_20261006-p92619c0455)" d="M 139.714294 206.35
+L 139.714294 7.2
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-line2d_4">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="139.714294" xlink:href="#aiq_blog_infra_throughput_20261006-m5acb218427" y="206.35"></use>
+</g>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-text_2">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" transform="rotate(-0 139.714294 220.513438)" x="139.714294" y="220.513438">20</text>
+</g>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-xtick_3">
+<g id="aiq_blog_infra_throughput_20261006-line2d_5">
+<path clip-path="url(#aiq_blog_infra_throughput_20261006-p92619c0455)" d="M 185.828901 206.35
+L 185.828901 7.2
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-line2d_6">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="185.828901" xlink:href="#aiq_blog_infra_throughput_20261006-m5acb218427" y="206.35"></use>
+</g>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-text_3">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" transform="rotate(-0 185.828901 220.513438)" x="185.828901" y="220.513438">40</text>
+</g>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-xtick_4">
+<g id="aiq_blog_infra_throughput_20261006-line2d_7">
+<path clip-path="url(#aiq_blog_infra_throughput_20261006-p92619c0455)" d="M 231.943508 206.35
+L 231.943508 7.2
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-line2d_8">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="231.943508" xlink:href="#aiq_blog_infra_throughput_20261006-m5acb218427" y="206.35"></use>
+</g>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-text_4">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" transform="rotate(-0 231.943508 220.513438)" x="231.943508" y="220.513438">60</text>
+</g>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-xtick_5">
+<g id="aiq_blog_infra_throughput_20261006-line2d_9">
+<path clip-path="url(#aiq_blog_infra_throughput_20261006-p92619c0455)" d="M 278.058114 206.35
+L 278.058114 7.2
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-line2d_10">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="278.058114" xlink:href="#aiq_blog_infra_throughput_20261006-m5acb218427" y="206.35"></use>
+</g>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-text_5">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" transform="rotate(-0 278.058114 220.513438)" x="278.058114" y="220.513438">80</text>
+</g>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-xtick_6">
+<g id="aiq_blog_infra_throughput_20261006-line2d_11">
+<path clip-path="url(#aiq_blog_infra_throughput_20261006-p92619c0455)" d="M 324.172721 206.35
+L 324.172721 7.2
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-line2d_12">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="324.172721" xlink:href="#aiq_blog_infra_throughput_20261006-m5acb218427" y="206.35"></use>
+</g>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-text_6">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" transform="rotate(-0 324.172721 220.513438)" x="324.172721" y="220.513438">100</text>
+</g>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-xtick_7">
+<g id="aiq_blog_infra_throughput_20261006-line2d_13">
+<path clip-path="url(#aiq_blog_infra_throughput_20261006-p92619c0455)" d="M 370.287328 206.35
+L 370.287328 7.2
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-line2d_14">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="370.287328" xlink:href="#aiq_blog_infra_throughput_20261006-m5acb218427" y="206.35"></use>
+</g>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-text_7">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" transform="rotate(-0 370.287328 220.513438)" x="370.287328" y="220.513438">120</text>
+</g>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-xtick_8">
+<g id="aiq_blog_infra_throughput_20261006-line2d_15">
+<path clip-path="url(#aiq_blog_infra_throughput_20261006-p92619c0455)" d="M 416.401935 206.35
+L 416.401935 7.2
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-line2d_16">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="416.401935" xlink:href="#aiq_blog_infra_throughput_20261006-m5acb218427" y="206.35"></use>
+</g>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-text_8">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" transform="rotate(-0 416.401935 220.513438)" x="416.401935" y="220.513438">140</text>
+</g>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-xtick_9">
+<g id="aiq_blog_infra_throughput_20261006-line2d_17">
+<path clip-path="url(#aiq_blog_infra_throughput_20261006-p92619c0455)" d="M 462.516541 206.35
+L 462.516541 7.2
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-line2d_18">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="462.516541" xlink:href="#aiq_blog_infra_throughput_20261006-m5acb218427" y="206.35"></use>
+</g>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-text_9">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" transform="rotate(-0 462.516541 220.513438)" x="462.516541" y="220.513438">160</text>
+</g>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-text_10">
+<text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #141413" transform="rotate(-0 298.809687 235.134375)" x="298.809687" y="235.134375">总 completion 千 token/s（含等待）</text>
+</g>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-matplotlib.axis_2">
+<g id="aiq_blog_infra_throughput_20261006-ytick_1">
+<g id="aiq_blog_infra_throughput_20261006-line2d_19">
+<path clip-path="url(#aiq_blog_infra_throughput_20261006-p92619c0455)" d="M 93.599688 25.951136
+L 504.019687 25.951136
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-line2d_20">
+<defs>
+<path d="M 0 0
+L -3.5 0
+" id="aiq_blog_infra_throughput_20261006-m1fafdb381c" style="stroke: #5e5d59; stroke-width: 0.8"></path>
+</defs>
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="93.599688" xlink:href="#aiq_blog_infra_throughput_20261006-m1fafdb381c" y="25.951136"></use>
+</g>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-text_11">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 86.599688 29.532855)" x="86.599688" y="29.532855">v1  BF16 4＋4</text>
+</g>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-ytick_2">
+<g id="aiq_blog_infra_throughput_20261006-line2d_21">
+<path clip-path="url(#aiq_blog_infra_throughput_20261006-p92619c0455)" d="M 93.599688 58.280682
+L 504.019687 58.280682
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-line2d_22">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="93.599688" xlink:href="#aiq_blog_infra_throughput_20261006-m1fafdb381c" y="58.280682"></use>
+</g>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-text_12">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 86.599688 61.862401)" x="86.599688" y="61.862401">v3  BF16 4＋5</text>
+</g>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-ytick_3">
+<g id="aiq_blog_infra_throughput_20261006-line2d_23">
+<path clip-path="url(#aiq_blog_infra_throughput_20261006-p92619c0455)" d="M 93.599688 90.610227
+L 504.019687 90.610227
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-line2d_24">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="93.599688" xlink:href="#aiq_blog_infra_throughput_20261006-m1fafdb381c" y="90.610227"></use>
+</g>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-text_13">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 86.599688 94.191946)" x="86.599688" y="94.191946">v3.2  BF16 4＋4</text>
+</g>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-ytick_4">
+<g id="aiq_blog_infra_throughput_20261006-line2d_25">
+<path clip-path="url(#aiq_blog_infra_throughput_20261006-p92619c0455)" d="M 93.599688 122.939773
+L 504.019687 122.939773
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-line2d_26">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="93.599688" xlink:href="#aiq_blog_infra_throughput_20261006-m1fafdb381c" y="122.939773"></use>
+</g>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-text_14">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 86.599688 126.521491)" x="86.599688" y="126.521491">v4  FP8 4＋4</text>
+</g>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-ytick_5">
+<g id="aiq_blog_infra_throughput_20261006-line2d_27">
+<path clip-path="url(#aiq_blog_infra_throughput_20261006-p92619c0455)" d="M 93.599688 155.269318
+L 504.019687 155.269318
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-line2d_28">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="93.599688" xlink:href="#aiq_blog_infra_throughput_20261006-m1fafdb381c" y="155.269318"></use>
+</g>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-text_15">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 86.599688 158.851037)" x="86.599688" y="158.851037">v4  FP8 4＋4 自适应</text>
+</g>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-ytick_6">
+<g id="aiq_blog_infra_throughput_20261006-line2d_29">
+<path clip-path="url(#aiq_blog_infra_throughput_20261006-p92619c0455)" d="M 93.599688 187.598864
+L 504.019687 187.598864
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-line2d_30">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="93.599688" xlink:href="#aiq_blog_infra_throughput_20261006-m1fafdb381c" y="187.598864"></use>
+</g>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-text_16">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 86.599688 191.180582)" x="86.599688" y="191.180582">v4  FP8 4＋6 静态</text>
+</g>
+</g>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-patch_3">
+<path clip-path="url(#aiq_blog_infra_throughput_20261006-p92619c0455)" d="M 93.599688 16.252273
+L 98.146588 16.252273
+L 98.146588 35.65
+L 93.599688 35.65
+z
+" style="fill: #6a9bcc"></path>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-patch_4">
+<path clip-path="url(#aiq_blog_infra_throughput_20261006-p92619c0455)" d="M 93.599688 48.581818
+L 165.981174 48.581818
+L 165.981174 67.979545
+L 93.599688 67.979545
+z
+" style="fill: #6a9bcc"></path>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-patch_5">
+<path clip-path="url(#aiq_blog_infra_throughput_20261006-p92619c0455)" d="M 93.599688 80.911364
+L 217.396655 80.911364
+L 217.396655 100.309091
+L 93.599688 100.309091
+z
+" style="fill: #6a9bcc"></path>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-patch_6">
+<path clip-path="url(#aiq_blog_infra_throughput_20261006-p92619c0455)" d="M 93.599688 113.240909
+L 234.867174 113.240909
+L 234.867174 132.638636
+L 93.599688 132.638636
+z
+" style="fill: #d97757"></path>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-patch_7">
+<path clip-path="url(#aiq_blog_infra_throughput_20261006-p92619c0455)" d="M 93.599688 145.570455
+L 420.964975 145.570455
+L 420.964975 164.968182
+L 93.599688 164.968182
+z
+" style="fill: #d97757"></path>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-patch_8">
+<path clip-path="url(#aiq_blog_infra_throughput_20261006-p92619c0455)" d="M 93.599688 177.9
+L 442.689566 177.9
+L 442.689566 197.297727
+L 93.599688 197.297727
+z
+" style="fill: #d97757"></path>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-patch_9">
+<path d="M 93.599688 206.35
+L 93.599688 7.2
+" style="fill: none; stroke: #b0aea5; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-patch_10">
+<path d="M 93.599688 206.35
+L 504.019687 206.35
+" style="fill: none; stroke: #b0aea5; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-text_17">
+<text style="font-size: 8px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" transform="rotate(-0 102.758048 28.218636)" x="102.758048" y="28.218636">1,972</text>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-text_18">
+<text style="font-size: 8px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" transform="rotate(-0 170.592635 60.548182)" x="170.592635" y="60.548182">31,392</text>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-text_19">
+<text style="font-size: 8px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" transform="rotate(-0 222.008116 92.877727)" x="222.008116" y="92.877727">53,691</text>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-text_20">
+<text style="font-size: 8px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" transform="rotate(-0 239.478634 125.207273)" x="239.478634" y="125.207273">61,268</text>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-text_21">
+<text style="font-size: 8px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" transform="rotate(-0 425.576436 157.536818)" x="425.576436" y="157.536818">141,979</text>
+</g>
+<g id="aiq_blog_infra_throughput_20261006-text_22">
+<text style="font-size: 8px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" transform="rotate(-0 447.301027 189.866364)" x="447.301027" y="189.866364">151,401</text>
+</g>
+</g>
+</g>
+<defs>
+<clippath id="aiq_blog_infra_throughput_20261006-p92619c0455">
+<rect height="199.15" width="410.42" x="93.599688" y="7.2"></rect>
+</clippath>
+</defs>
+</svg></figure>
+<div aria-label="数据表，可横向滚动" class="table-wrap" role="region" tabindex="0"><table style="width:100%;">
+<colgroup>
+<col style="width: 10%"/>
+<col style="width: 10%"/>
+<col style="width: 10%"/>
+<col style="width: 13%"/>
+<col style="width: 13%"/>
+<col style="width: 13%"/>
+<col style="width: 13%"/>
+<col style="width: 13%"/>
+</colgroup>
+<thead>
+<tr>
+<th>阶段</th>
+<th>计算</th>
+<th>训练＋rollout H200</th>
+<th style="text-align: right;">计时点 n</th>
+<th style="text-align: right;">中位秒/步</th>
+<th style="text-align: right;">总 token/s</th>
+<th style="text-align: right;">相对 v1</th>
+<th style="text-align: right;">等 rollout</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>v0</td>
+<td>FP32</td>
+<td>4＋4</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">120.17</td>
+<td style="text-align: right;">1,607</td>
+<td style="text-align: right;">0.81×</td>
+<td style="text-align: right;">54.7%</td>
+</tr>
+<tr>
+<td>v1（近似 TRL baseline）</td>
+<td>BF16</td>
+<td>4＋4</td>
+<td style="text-align: right;">17</td>
+<td style="text-align: right;">113.80</td>
+<td style="text-align: right;">1,972</td>
+<td style="text-align: right;">1.00×</td>
+<td style="text-align: right;">84.9%</td>
+</tr>
+<tr>
+<td>v2</td>
+<td>BF16</td>
+<td>4＋2</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">136.38</td>
+<td style="text-align: right;">1,551</td>
+<td style="text-align: right;">0.79×</td>
+<td style="text-align: right;">90.9%</td>
+</tr>
+<tr>
+<td>v3</td>
+<td>BF16</td>
+<td>4＋5</td>
+<td style="text-align: right;">186</td>
+<td style="text-align: right;">61.06</td>
+<td style="text-align: right;">31,392</td>
+<td style="text-align: right;">15.92×</td>
+<td style="text-align: right;">1.9%</td>
+</tr>
+<tr>
+<td>v3.1e</td>
+<td>BF16</td>
+<td>4＋5</td>
+<td style="text-align: right;">110</td>
+<td style="text-align: right;">65.27</td>
+<td style="text-align: right;">30,957</td>
+<td style="text-align: right;">15.70×</td>
+<td style="text-align: right;">1.9%</td>
+</tr>
+<tr>
+<td>v3.2</td>
+<td>BF16</td>
+<td>4＋5</td>
+<td style="text-align: right;">447</td>
+<td style="text-align: right;">36.18</td>
+<td style="text-align: right;">53,221</td>
+<td style="text-align: right;">26.99×</td>
+<td style="text-align: right;">7.4%</td>
+</tr>
+<tr>
+<td>v3.2（4＋4对照）</td>
+<td>BF16</td>
+<td>4＋4</td>
+<td style="text-align: right;">17</td>
+<td style="text-align: right;">35.57</td>
+<td style="text-align: right;">53,691</td>
+<td style="text-align: right;">27.23×</td>
+<td style="text-align: right;">6.4%</td>
+</tr>
+<tr>
+<td>v4（stride统一）</td>
+<td>FP8</td>
+<td>4＋4</td>
+<td style="text-align: right;">17</td>
+<td style="text-align: right;">32.23</td>
+<td style="text-align: right;">61,268</td>
+<td style="text-align: right;">31.07×</td>
+<td style="text-align: right;">4.1%</td>
+</tr>
+<tr>
+<td>v4（β=0，4＋4自适应）</td>
+<td>FP8</td>
+<td>4＋4</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">63.53</td>
+<td style="text-align: right;">141,979</td>
+<td style="text-align: right;">72.00×</td>
+<td style="text-align: right;">16.5%</td>
+</tr>
+<tr>
+<td>v4（β=0，4＋6静态）</td>
+<td>FP8</td>
+<td>4＋6</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">58.01</td>
+<td style="text-align: right;">151,401</td>
+<td style="text-align: right;">76.78×</td>
+<td style="text-align: right;">11.3%</td>
+</tr>
+</tbody>
+</table></div>
+<p>v0→v1：主参数和优化器保持 FP32，训练改用 BF16 autocast。v2→v3：rollout 从多卡共同承载一个副本改成单卡多副本，复用 prompt 前缀，修复连接超时并调整队列和允许的策略年龄。v3.1：恢复并发 judge、补偿裁判延迟、审计丢弃样本并固定 KL reference。v3.2：加入 fast logprob、token 子批、自适应 activation checkpoint 和 rank 负载均衡。</p>
+<h2 id="fp8-配方同时改变了计算batch-和调度">FP8 配方同时改变了计算、batch 和调度</h2>
+<p>v4 在前反向矩阵乘使用 FP8，主参数、梯度累加和 Adam 保持 FP32。修复重复量化编译、更新后缓存不刷新、vLLM（rollout serving 框架）的缓存 dtype 和 backward stride；融合 conv＋SiLU，减少 Norm 中间量。</p>
+<p>最后两行每卡真实 microbatch=1024、GAS=1、global batch=4096，旧对照为 global batch=1024。保留 GSPO、reward 和 Luna judge，KL 系数 β=0；原先计算冻结 reference logprob 的两张卡改为 rollout，形成 4＋6。自适应方案按等待、队列和策略年龄调整入场组数，保持完整 G32。</p>
+<p>这两行只统计预先固定的第 4–6 步，每配置一次。相比最强 BF16 的 2.64×、2.82×包含精度、batch、调度、KL 和卡数变化。历史长 run 的 checkpoint、batch、judge 也不同，4＋5 主线另用一张评测卡。高吞吐来自冻结实验配方，未全部集成进主入口，长期学习收益未验证。</p>
+<h2 id="mfu-是估算训推差异仍是未通过项">MFU 是估算，训推差异仍是未通过项</h2>
+<p>MFU（有用模型计算相对设备峰值的比例）按四张训练卡、含等待估算：BF16 4＋4 约 26.7%，FP8 自适应 4＋4 约 11.2%，4＋6 约 11.8%；后两项纯前反向约 14.4%、14.3%。BF16 用 TRL 通用 FLOPs（浮点运算量）公式，FP8 用捕获算子和共享前缀代理估算，方法与峰值均不同，不能据此判断跨精度 MFU 退化。</p>
+<p>零更新、同权重同 token 的一个 128-token 样本，trainer−decode logprob 绝对差 P90=0.1214，未过 0.004 门槛；其余两项对照也未通过。诊断 serving 配置与生产不同，仍需全 batch 验证。4＋6 的 GSPO 下侧实际 clip 为 43.84%，上侧为 0.0081%，尚无阈值调整的学习收益证据。</p>
+<p>FP8 KV、MB2048 和跨独立 G32 合并未获预期收益；2:4 稀疏和固定 tile Graph 未启用。下一步减少 conv、norm、循环状态模块、量化写回和整份 batch 广播的成本，并修复共同前向量化规则。</p>
+<div aria-label="同系列文章" class="related"><a href="aiq-rl-loss-ranking-2026-10-06.html">早期排序</a><a href="aiq-rl-sft178-2026-10-06.html">SFT-178</a><a href="aiq-rl-pool-b-2026-10-06.html">0.8B 主线</a><a href="aiq-rl-flash-next-2026-10-06.html">Flash-Next</a></div><footer>来源：poor-rl 的 <a href="https://github.com/guoshaoyang-pku/poor-rl/blob/69a498b9429c6524beda97269f6e49fd98707143/docs/INFRA_HISTORY.md">INFRA_HISTORY.md 固定版本</a>，核对于 2026-10-06；<a href="poor-rl-infra-2026-10-06-data.json">摘录数据与窗口</a>。</footer>
+
+</main>
+</body>
+</html>

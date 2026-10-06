@@ -1,0 +1,800 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>0.8B 的成绩上涨，解释却逐步失去题目依据</title>
+<!--
+  report-to-human panel template v2
+  Palette and type: Anthropic brand-guidelines (github.com/anthropics/skills, skills/brand-guidelines).
+  Rules: keep only what the reader needs. No subtitle, no KPI cards, no section numbers, no status banners.
+  Every term is explained in plain words where it first appears.
+-->
+<style>
+  :root {
+    --dark: #141413;   /* primary text */
+    --light: #faf9f5;  /* page background */
+    --mid: #b0aea5;    /* borders, axes */
+    --soft: #e8e6dc;   /* subtle fills */
+    --muted: #5e5d59;  /* secondary text (darker than --mid for contrast) */
+    --orange: #d97757; /* primary accent: the main result */
+    --blue: #6a9bcc;   /* secondary accent */
+    --green: #788c5d;  /* tertiary accent */
+    --head: "Poppins", "PingFang SC", "Noto Sans CJK SC", "Hiragino Sans GB", Arial, sans-serif;
+    --body: "Lora", "Noto Serif CJK SC", "Songti SC", Georgia, serif;
+    --mono: "SF Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--light); color: var(--dark); font: 17px/1.8 var(--body); }
+  main { max-width: 760px; margin: 0 auto; padding: 72px 24px 96px; }
+  h1, h2, h3 { font-family: var(--head); font-weight: 600; line-height: 1.35; letter-spacing: -0.01em; }
+  h1 { font-size: 32px; margin: 0 0 16px; }
+  h2 { font-size: 22px; margin: 64px 0 12px; }
+  p { margin: 0 0 16px; }
+  .lede { font-size: 19px; }
+  a { color: inherit; text-decoration: underline; text-decoration-color: var(--orange); text-underline-offset: 3px; }
+  code, .id { font-family: var(--mono); font-size: 0.86em; background: var(--soft); padding: 1px 5px; border-radius: 4px; }
+
+  /* L2 settings row: monochrome line icons + label, never color emoji */
+  .settings { display: flex; flex-wrap: wrap; gap: 8px 20px; list-style: none; padding: 0; margin: 24px 0 0;
+              font: 14px/1.6 var(--head); color: var(--muted); }
+  .settings li { display: inline-flex; align-items: center; gap: 6px; }
+  .settings svg { width: 15px; height: 15px; stroke: var(--dark); fill: none; stroke-width: 1.6;
+                  stroke-linecap: round; stroke-linejoin: round; }
+  .settings b { color: var(--dark); font-weight: 500; }
+
+  figure { margin: 28px 0; padding: 20px; background: #fff; border: 1px solid var(--soft); border-radius: 10px; }
+  figure img, figure svg.chart { display: block; width: 100%; height: auto; }
+  figcaption { margin-top: 12px; font: 14px/1.6 var(--head); color: var(--muted); }
+  .legend { display: flex; gap: 18px; font: 13px var(--head); color: var(--muted); margin-bottom: 8px; }
+  .legend i { display: inline-block; width: 14px; height: 2px; vertical-align: middle; margin-right: 6px; }
+
+  .warn { border-left: 3px solid var(--orange); padding: 4px 0 4px 16px; margin: 24px 0; }
+  .warn strong { font-family: var(--head); }
+
+  /* sample browser: compare outputs side by side */
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--soft); margin-bottom: 12px; }
+  .tabs button { font: 14px var(--head); background: none; border: 0; padding: 8px 12px; cursor: pointer;
+                 color: var(--muted); border-bottom: 2px solid transparent; }
+  .tabs button[aria-selected="true"] { color: var(--dark); border-bottom-color: var(--orange); }
+  .sample { display: none; white-space: pre-wrap; font: 14px/1.7 var(--mono); }
+  .sample.on { display: block; }
+
+  details { margin: 16px 0; }
+  summary { cursor: pointer; font: 15px var(--head); color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font: 14px/1.6 var(--head); margin: 16px 0; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--soft); }
+  th { font-weight: 500; color: var(--muted); }
+  footer { margin-top: 80px; font: 13px var(--head); color: var(--mid); }
+
+  pre { margin: 12px 0; padding: 16px; background: var(--soft); white-space: pre-wrap;
+        overflow-wrap: anywhere; font: 13px/1.65 var(--mono); }
+  .sample-meta { font: 13px/1.6 var(--head); color: var(--muted); margin: 10px 0 0; }
+  .table-wrap { overflow-x: auto; margin: 20px 0; }
+  table { min-width: 500px; margin: 0; font-variant-numeric: tabular-nums; }
+  figure { padding: 12px; border-radius: 4px; }
+  footer { color: var(--muted); line-height: 1.7; }
+  .related { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 40px; font: 14px/1.7 var(--head); }
+  @media (max-width: 600px) { main { padding: 40px 20px 64px; } h1 { font-size: 27px; }
+     h2 { font-size: 21px; margin-top: 44px; } body { font-size: 16px; } figure { padding: 4px; }
+     .settings { gap: 6px 14px; } }
+</style>
+<link rel="canonical" href="https://guoshaoyang-pku.github.io/blogs/aiq-rl-sft178-2026-10-06.html">
+</head>
+<body>
+<main>
+<h1 id="article-title">0.8B 的成绩上涨，解释却逐步失去题目依据</h1>
+<p class="lede">0.8B 模型的测试成绩从 54.5% 升到 79.8%，同期可见解释缩短并出现虚构术语；正确答案和可靠解释没有同步改善。</p>
+<ul class="settings">
+<li><svg aria-hidden="true" viewbox="0 0 24 24"><rect height="16" rx="2" width="16" x="4" y="4"></rect><path d="M8 8h8M8 12h8M8 16h4"></path></svg>
+起点 <b>0.8B 监督微调模型</b>
+</li>
+<li><svg aria-hidden="true" viewbox="0 0 24 24"><rect height="16" rx="2" width="16" x="4" y="4"></rect><path d="M8 8h8M8 12h8M8 16h4"></path></svg>
+训练 <b>3,830 题</b>
+</li>
+<li><svg aria-hidden="true" viewbox="0 0 24 24"><rect height="16" rx="2" width="16" x="4" y="4"></rect><path d="M8 8h8M8 12h8M8 16h4"></path></svg>
+评测 <b>300 题 × 2 次</b>
+</li>
+<li><svg aria-hidden="true" viewbox="0 0 24 24"><rect height="16" rx="2" width="16" x="4" y="4"></rect><path d="M8 8h8M8 12h8M8 16h4"></path></svg>
+长度上限 <b>训练 2k / 评测 16k</b>
+</li>
+</ul>
+<h2 id="这条线奖励答案没有约束解释内容">这条线奖励答案，没有约束解释内容</h2>
+<p>模型从第 178 步的监督微调 checkpoint 开始，简称 SFT-178。训练池含 1,930 道选择题和 1,900 道排序题，仍保留旧 loss 排序来源。评测是固定 200 道选择题、100 道排序题，每题生成两次，temperature=1、top_p=1。</p>
+<p>训练用 GSPO（按整条回答的平均概率比更新策略），上下裁剪阈值均为 0.001，学习率 2e-6，每题生成 16 次，每步共 1,024 条回答。选择正确得 1 分，错误得 0 分；排序全对得 1 分，否则按 <code>c/5−1</code> 评分，c 是五个候选中顺序一致的候选对数。不可解析扣 0.5 分，截断扣 2 分。奖励没有检查解释是否忠实引用题目。</p>
+<p>Infra 使用 4 张训练卡和 4 张 rollout 卡。rollout 采用 TP4，即四卡共同承载一个生成副本，KV cache 用 FP8；训练用 BF16。第 0→200、200→400、400→600 步分段续训。三个 run manifest 均记录训练长度上限为 2,048 token，评测上限为 16,384 token。</p>
+<h2 id="第-400-步后成绩进入平台">第 400 步后，成绩进入平台</h2>
+<figure><svg aria-label="SFT-178 的评测成绩" class="chart" height="216.035pt" id="aiq_blog_sft178_scores_20261006" role="img" version="1.1" viewbox="0 0 511.235 216.035" width="511.235pt" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+
+<defs>
+<style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+</defs>
+<g id="aiq_blog_sft178_scores_20261006-figure_1">
+<g id="aiq_blog_sft178_scores_20261006-patch_1">
+<path d="M 0 216.035
+L 511.235 216.035
+L 511.235 0
+L 0 0
+z
+" style="fill: #ffffff"></path>
+</g>
+<g id="aiq_blog_sft178_scores_20261006-axes_1">
+<g id="aiq_blog_sft178_scores_20261006-patch_2">
+<path d="M 43.435 178.36
+L 504.035 178.36
+L 504.035 7.2
+L 43.435 7.2
+z
+" style="fill: #ffffff"></path>
+</g>
+<g id="aiq_blog_sft178_scores_20261006-matplotlib.axis_1">
+<g id="aiq_blog_sft178_scores_20261006-xtick_1">
+<g id="aiq_blog_sft178_scores_20261006-line2d_1">
+<path clip-path="url(#aiq_blog_sft178_scores_20261006-p189af9c359)" d="M 64.371364 178.36
+L 64.371364 7.2
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_sft178_scores_20261006-line2d_2">
+<defs>
+<path d="M 0 0
+L 0 3.5
+" id="aiq_blog_sft178_scores_20261006-m5acb218427" style="stroke: #5e5d59; stroke-width: 0.8"></path>
+</defs>
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="64.371364" xlink:href="#aiq_blog_sft178_scores_20261006-m5acb218427" y="178.36"></use>
+</g>
+</g>
+<g id="aiq_blog_sft178_scores_20261006-text_1">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" transform="rotate(-0 64.371364 192.523438)" x="64.371364" y="192.523438">0</text>
+</g>
+</g>
+<g id="aiq_blog_sft178_scores_20261006-xtick_2">
+<g id="aiq_blog_sft178_scores_20261006-line2d_3">
+<path clip-path="url(#aiq_blog_sft178_scores_20261006-p189af9c359)" d="M 203.947121 178.36
+L 203.947121 7.2
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_sft178_scores_20261006-line2d_4">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="203.947121" xlink:href="#aiq_blog_sft178_scores_20261006-m5acb218427" y="178.36"></use>
+</g>
+</g>
+<g id="aiq_blog_sft178_scores_20261006-text_2">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" transform="rotate(-0 203.947121 192.523438)" x="203.947121" y="192.523438">200</text>
+</g>
+</g>
+<g id="aiq_blog_sft178_scores_20261006-xtick_3">
+<g id="aiq_blog_sft178_scores_20261006-line2d_5">
+<path clip-path="url(#aiq_blog_sft178_scores_20261006-p189af9c359)" d="M 343.522879 178.36
+L 343.522879 7.2
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_sft178_scores_20261006-line2d_6">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="343.522879" xlink:href="#aiq_blog_sft178_scores_20261006-m5acb218427" y="178.36"></use>
+</g>
+</g>
+<g id="aiq_blog_sft178_scores_20261006-text_3">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" transform="rotate(-0 343.522879 192.523438)" x="343.522879" y="192.523438">400</text>
+</g>
+</g>
+<g id="aiq_blog_sft178_scores_20261006-xtick_4">
+<g id="aiq_blog_sft178_scores_20261006-line2d_7">
+<path clip-path="url(#aiq_blog_sft178_scores_20261006-p189af9c359)" d="M 483.098636 178.36
+L 483.098636 7.2
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_sft178_scores_20261006-line2d_8">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="483.098636" xlink:href="#aiq_blog_sft178_scores_20261006-m5acb218427" y="178.36"></use>
+</g>
+</g>
+<g id="aiq_blog_sft178_scores_20261006-text_4">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" transform="rotate(-0 483.098636 192.523438)" x="483.098636" y="192.523438">600</text>
+</g>
+</g>
+<g id="aiq_blog_sft178_scores_20261006-text_5">
+<text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #141413" transform="rotate(-0 273.735 206.544375)" x="273.735" y="206.544375">全局训练步</text>
+</g>
+</g>
+<g id="aiq_blog_sft178_scores_20261006-matplotlib.axis_2">
+<g id="aiq_blog_sft178_scores_20261006-ytick_1">
+<g id="aiq_blog_sft178_scores_20261006-line2d_9">
+<path clip-path="url(#aiq_blog_sft178_scores_20261006-p189af9c359)" d="M 43.435 178.36
+L 504.035 178.36
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_sft178_scores_20261006-line2d_10">
+<defs>
+<path d="M 0 0
+L -3.5 0
+" id="aiq_blog_sft178_scores_20261006-m1fafdb381c" style="stroke: #5e5d59; stroke-width: 0.8"></path>
+</defs>
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="43.435" xlink:href="#aiq_blog_sft178_scores_20261006-m1fafdb381c" y="178.36"></use>
+</g>
+</g>
+<g id="aiq_blog_sft178_scores_20261006-text_6">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 36.435 181.941719)" x="36.435" y="181.941719">0</text>
+</g>
+</g>
+<g id="aiq_blog_sft178_scores_20261006-ytick_2">
+<g id="aiq_blog_sft178_scores_20261006-line2d_11">
+<path clip-path="url(#aiq_blog_sft178_scores_20261006-p189af9c359)" d="M 43.435 145.758095
+L 504.035 145.758095
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_sft178_scores_20261006-line2d_12">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="43.435" xlink:href="#aiq_blog_sft178_scores_20261006-m1fafdb381c" y="145.758095"></use>
+</g>
+</g>
+<g id="aiq_blog_sft178_scores_20261006-text_7">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 36.435 149.339814)" x="36.435" y="149.339814">20</text>
+</g>
+</g>
+<g id="aiq_blog_sft178_scores_20261006-ytick_3">
+<g id="aiq_blog_sft178_scores_20261006-line2d_13">
+<path clip-path="url(#aiq_blog_sft178_scores_20261006-p189af9c359)" d="M 43.435 113.15619
+L 504.035 113.15619
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_sft178_scores_20261006-line2d_14">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="43.435" xlink:href="#aiq_blog_sft178_scores_20261006-m1fafdb381c" y="113.15619"></use>
+</g>
+</g>
+<g id="aiq_blog_sft178_scores_20261006-text_8">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 36.435 116.737909)" x="36.435" y="116.737909">40</text>
+</g>
+</g>
+<g id="aiq_blog_sft178_scores_20261006-ytick_4">
+<g id="aiq_blog_sft178_scores_20261006-line2d_15">
+<path clip-path="url(#aiq_blog_sft178_scores_20261006-p189af9c359)" d="M 43.435 80.554286
+L 504.035 80.554286
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_sft178_scores_20261006-line2d_16">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="43.435" xlink:href="#aiq_blog_sft178_scores_20261006-m1fafdb381c" y="80.554286"></use>
+</g>
+</g>
+<g id="aiq_blog_sft178_scores_20261006-text_9">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 36.435 84.136004)" x="36.435" y="84.136004">60</text>
+</g>
+</g>
+<g id="aiq_blog_sft178_scores_20261006-ytick_5">
+<g id="aiq_blog_sft178_scores_20261006-line2d_17">
+<path clip-path="url(#aiq_blog_sft178_scores_20261006-p189af9c359)" d="M 43.435 47.952381
+L 504.035 47.952381
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_sft178_scores_20261006-line2d_18">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="43.435" xlink:href="#aiq_blog_sft178_scores_20261006-m1fafdb381c" y="47.952381"></use>
+</g>
+</g>
+<g id="aiq_blog_sft178_scores_20261006-text_10">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 36.435 51.5341)" x="36.435" y="51.5341">80</text>
+</g>
+</g>
+<g id="aiq_blog_sft178_scores_20261006-ytick_6">
+<g id="aiq_blog_sft178_scores_20261006-line2d_19">
+<path clip-path="url(#aiq_blog_sft178_scores_20261006-p189af9c359)" d="M 43.435 15.350476
+L 504.035 15.350476
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_sft178_scores_20261006-line2d_20">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="43.435" xlink:href="#aiq_blog_sft178_scores_20261006-m1fafdb381c" y="15.350476"></use>
+</g>
+</g>
+<g id="aiq_blog_sft178_scores_20261006-text_11">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 36.435 18.932195)" x="36.435" y="18.932195">100</text>
+</g>
+</g>
+<g id="aiq_blog_sft178_scores_20261006-text_12">
+<text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #141413" transform="rotate(-90 15.159375 92.78)" x="15.159375" y="92.78">exact（%）</text>
+</g>
+</g>
+<g id="aiq_blog_sft178_scores_20261006-line2d_21">
+<path clip-path="url(#aiq_blog_sft178_scores_20261006-p189af9c359)" d="M 64.371364 89.51981
+L 203.947121 58.004635
+L 343.522879 48.224063
+L 483.098636 49.039111
+" style="fill: none; stroke: #d97757; stroke-width: 1.8; stroke-linecap: square"></path>
+<defs>
+<path d="M 0 2
+C 0.530406 2 1.03916 1.789267 1.414214 1.414214
+C 1.789267 1.03916 2 0.530406 2 0
+C 2 -0.530406 1.789267 -1.03916 1.414214 -1.414214
+C 1.03916 -1.789267 0.530406 -2 0 -2
+C -0.530406 -2 -1.03916 -1.789267 -1.414214 -1.414214
+C -1.789267 -1.03916 -2 -0.530406 -2 0
+C -2 0.530406 -1.789267 1.03916 -1.414214 1.414214
+C -1.03916 1.789267 -0.530406 2 0 2
+z
+" id="aiq_blog_sft178_scores_20261006-m28c9156a76" style="stroke: #d97757"></path>
+</defs>
+<g clip-path="url(#aiq_blog_sft178_scores_20261006-p189af9c359)">
+<use style="fill: #d97757; stroke: #d97757" x="64.371364" xlink:href="#aiq_blog_sft178_scores_20261006-m28c9156a76" y="89.51981"></use>
+<use style="fill: #d97757; stroke: #d97757" x="203.947121" xlink:href="#aiq_blog_sft178_scores_20261006-m28c9156a76" y="58.004635"></use>
+<use style="fill: #d97757; stroke: #d97757" x="343.522879" xlink:href="#aiq_blog_sft178_scores_20261006-m28c9156a76" y="48.224063"></use>
+<use style="fill: #d97757; stroke: #d97757" x="483.098636" xlink:href="#aiq_blog_sft178_scores_20261006-m28c9156a76" y="49.039111"></use>
+</g>
+</g>
+<g id="aiq_blog_sft178_scores_20261006-line2d_22">
+<path clip-path="url(#aiq_blog_sft178_scores_20261006-p189af9c359)" d="M 64.371364 92.78
+L 203.947121 78.516667
+L 343.522879 63.84581
+L 483.098636 65.475905
+" style="fill: none; stroke: #6a9bcc; stroke-width: 1.8; stroke-linecap: square"></path>
+<defs>
+<path d="M 0 2
+C 0.530406 2 1.03916 1.789267 1.414214 1.414214
+C 1.789267 1.03916 2 0.530406 2 0
+C 2 -0.530406 1.789267 -1.03916 1.414214 -1.414214
+C 1.03916 -1.789267 0.530406 -2 0 -2
+C -0.530406 -2 -1.03916 -1.789267 -1.414214 -1.414214
+C -1.789267 -1.03916 -2 -0.530406 -2 0
+C -2 0.530406 -1.789267 1.03916 -1.414214 1.414214
+C -1.03916 1.789267 -0.530406 2 0 2
+z
+" id="aiq_blog_sft178_scores_20261006-m0259bfc075" style="stroke: #6a9bcc"></path>
+</defs>
+<g clip-path="url(#aiq_blog_sft178_scores_20261006-p189af9c359)">
+<use style="fill: #6a9bcc; stroke: #6a9bcc" x="64.371364" xlink:href="#aiq_blog_sft178_scores_20261006-m0259bfc075" y="92.78"></use>
+<use style="fill: #6a9bcc; stroke: #6a9bcc" x="203.947121" xlink:href="#aiq_blog_sft178_scores_20261006-m0259bfc075" y="78.516667"></use>
+<use style="fill: #6a9bcc; stroke: #6a9bcc" x="343.522879" xlink:href="#aiq_blog_sft178_scores_20261006-m0259bfc075" y="63.84581"></use>
+<use style="fill: #6a9bcc; stroke: #6a9bcc" x="483.098636" xlink:href="#aiq_blog_sft178_scores_20261006-m0259bfc075" y="65.475905"></use>
+</g>
+</g>
+<g id="aiq_blog_sft178_scores_20261006-line2d_23">
+<path clip-path="url(#aiq_blog_sft178_scores_20261006-p189af9c359)" d="M 64.371364 82.999429
+L 203.947121 16.980571
+L 343.522879 16.980571
+L 483.098636 16.165524
+" style="fill: none; stroke: #788c5d; stroke-width: 1.8; stroke-linecap: square"></path>
+<defs>
+<path d="M 0 2
+C 0.530406 2 1.03916 1.789267 1.414214 1.414214
+C 1.789267 1.03916 2 0.530406 2 0
+C 2 -0.530406 1.789267 -1.03916 1.414214 -1.414214
+C 1.03916 -1.789267 0.530406 -2 0 -2
+C -0.530406 -2 -1.03916 -1.789267 -1.414214 -1.414214
+C -1.789267 -1.03916 -2 -0.530406 -2 0
+C -2 0.530406 -1.789267 1.03916 -1.414214 1.414214
+C -1.03916 1.789267 -0.530406 2 0 2
+z
+" id="aiq_blog_sft178_scores_20261006-mcc53ff5ffc" style="stroke: #788c5d"></path>
+</defs>
+<g clip-path="url(#aiq_blog_sft178_scores_20261006-p189af9c359)">
+<use style="fill: #788c5d; stroke: #788c5d" x="64.371364" xlink:href="#aiq_blog_sft178_scores_20261006-mcc53ff5ffc" y="82.999429"></use>
+<use style="fill: #788c5d; stroke: #788c5d" x="203.947121" xlink:href="#aiq_blog_sft178_scores_20261006-mcc53ff5ffc" y="16.980571"></use>
+<use style="fill: #788c5d; stroke: #788c5d" x="343.522879" xlink:href="#aiq_blog_sft178_scores_20261006-mcc53ff5ffc" y="16.980571"></use>
+<use style="fill: #788c5d; stroke: #788c5d" x="483.098636" xlink:href="#aiq_blog_sft178_scores_20261006-mcc53ff5ffc" y="16.165524"></use>
+</g>
+</g>
+<g id="aiq_blog_sft178_scores_20261006-patch_3">
+<path d="M 43.435 178.36
+L 43.435 7.2
+" style="fill: none; stroke: #b0aea5; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_sft178_scores_20261006-patch_4">
+<path d="M 43.435 178.36
+L 504.035 178.36
+" style="fill: none; stroke: #b0aea5; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_sft178_scores_20261006-legend_1">
+<g id="aiq_blog_sft178_scores_20261006-line2d_24">
+<path d="M 51.535 165.048437
+L 60.535 165.048437
+L 69.535 165.048437
+" style="fill: none; stroke: #d97757; stroke-width: 1.8; stroke-linecap: square"></path>
+<g>
+<use style="fill: #d97757; stroke: #d97757" x="60.535" xlink:href="#aiq_blog_sft178_scores_20261006-m28c9156a76" y="165.048437"></use>
+</g>
+</g>
+<g id="aiq_blog_sft178_scores_20261006-text_13">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" transform="rotate(-0 76.735 168.198437)" x="76.735" y="168.198437">全任务</text>
+</g>
+<g id="aiq_blog_sft178_scores_20261006-line2d_25">
+<path d="M 121.735 165.048437
+L 130.735 165.048437
+L 139.735 165.048437
+" style="fill: none; stroke: #6a9bcc; stroke-width: 1.8; stroke-linecap: square"></path>
+<g>
+<use style="fill: #6a9bcc; stroke: #6a9bcc" x="130.735" xlink:href="#aiq_blog_sft178_scores_20261006-m0259bfc075" y="165.048437"></use>
+</g>
+</g>
+<g id="aiq_blog_sft178_scores_20261006-text_14">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" transform="rotate(-0 146.935 168.198437)" x="146.935" y="168.198437">选择</text>
+</g>
+<g id="aiq_blog_sft178_scores_20261006-line2d_26">
+<path d="M 182.935 165.048437
+L 191.935 165.048437
+L 200.935 165.048437
+" style="fill: none; stroke: #788c5d; stroke-width: 1.8; stroke-linecap: square"></path>
+<g>
+<use style="fill: #788c5d; stroke: #788c5d" x="191.935" xlink:href="#aiq_blog_sft178_scores_20261006-mcc53ff5ffc" y="165.048437"></use>
+</g>
+</g>
+<g id="aiq_blog_sft178_scores_20261006-text_15">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" transform="rotate(-0 208.135 168.198437)" x="208.135" y="168.198437">排序</text>
+</g>
+</g>
+</g>
+</g>
+<defs>
+<clippath id="aiq_blog_sft178_scores_20261006-p189af9c359">
+<rect height="171.16" width="460.6" x="43.435" y="7.2"></rect>
+</clippath>
+</defs>
+</svg></figure>
+<div aria-label="数据表，可横向滚动" class="table-wrap" role="region" tabindex="0"><table>
+<colgroup>
+<col style="width: 15%"/>
+<col style="width: 21%"/>
+<col style="width: 21%"/>
+<col style="width: 21%"/>
+<col style="width: 21%"/>
+</colgroup>
+<thead>
+<tr>
+<th>全局训练步</th>
+<th style="text-align: right;">全任务 exact</th>
+<th style="text-align: right;">选择 exact</th>
+<th style="text-align: right;">排序 exact</th>
+<th style="text-align: right;">回答均长（token）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0（SFT）</td>
+<td style="text-align: right;">54.50%</td>
+<td style="text-align: right;">52.50%</td>
+<td style="text-align: right;">58.50%</td>
+<td style="text-align: right;">356.5</td>
+</tr>
+<tr>
+<td>200</td>
+<td style="text-align: right;">73.83%</td>
+<td style="text-align: right;">61.25%</td>
+<td style="text-align: right;">99.00%</td>
+<td style="text-align: right;">231.5</td>
+</tr>
+<tr>
+<td>400</td>
+<td style="text-align: right;">79.83%</td>
+<td style="text-align: right;">70.25%</td>
+<td style="text-align: right;">99.00%</td>
+<td style="text-align: right;">88.6</td>
+</tr>
+<tr>
+<td>600</td>
+<td style="text-align: right;">79.33%</td>
+<td style="text-align: right;">69.25%</td>
+<td style="text-align: right;">99.50%</td>
+<td style="text-align: right;">38.1</td>
+</tr>
+</tbody>
+</table></div>
+<p>第 200 步评测有 3/600 条截断；其他三个评测点为零。第 400 步是反复查看同一测试集后观察到的峰值，不是新封存测试集上的确认结果。旧排序题的 loss 签名捷径使接近满分的排序成绩不能直接解释为科学推断。</p>
+<h2 id="同一道题的解释从配置比较变成了套话">同一道题的解释从配置比较变成了套话</h2>
+<figure><svg aria-label="可见解释长度的变化" class="chart" height="194.435pt" id="aiq_blog_sft178_length_20261006" role="img" version="1.1" viewbox="0 0 511.19 194.435" width="511.19pt" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+
+<defs>
+<style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+</defs>
+<g id="aiq_blog_sft178_length_20261006-figure_1">
+<g id="aiq_blog_sft178_length_20261006-patch_1">
+<path d="M 0 194.435
+L 511.19 194.435
+L 511.19 0
+L 0 0
+z
+" style="fill: #ffffff"></path>
+</g>
+<g id="aiq_blog_sft178_length_20261006-axes_1">
+<g id="aiq_blog_sft178_length_20261006-patch_2">
+<path d="M 48.43 156.76
+L 503.99 156.76
+L 503.99 7.2
+L 48.43 7.2
+z
+" style="fill: #ffffff"></path>
+</g>
+<g id="aiq_blog_sft178_length_20261006-matplotlib.axis_1">
+<g id="aiq_blog_sft178_length_20261006-xtick_1">
+<g id="aiq_blog_sft178_length_20261006-line2d_1">
+<path clip-path="url(#aiq_blog_sft178_length_20261006-p6a2c785323)" d="M 69.137273 156.76
+L 69.137273 7.2
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_sft178_length_20261006-line2d_2">
+<defs>
+<path d="M 0 0
+L 0 3.5
+" id="aiq_blog_sft178_length_20261006-m5acb218427" style="stroke: #5e5d59; stroke-width: 0.8"></path>
+</defs>
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="69.137273" xlink:href="#aiq_blog_sft178_length_20261006-m5acb218427" y="156.76"></use>
+</g>
+</g>
+<g id="aiq_blog_sft178_length_20261006-text_1">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" transform="rotate(-0 69.137273 170.923437)" x="69.137273" y="170.923437">0</text>
+</g>
+</g>
+<g id="aiq_blog_sft178_length_20261006-xtick_2">
+<g id="aiq_blog_sft178_length_20261006-line2d_3">
+<path clip-path="url(#aiq_blog_sft178_length_20261006-p6a2c785323)" d="M 207.185758 156.76
+L 207.185758 7.2
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_sft178_length_20261006-line2d_4">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="207.185758" xlink:href="#aiq_blog_sft178_length_20261006-m5acb218427" y="156.76"></use>
+</g>
+</g>
+<g id="aiq_blog_sft178_length_20261006-text_2">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" transform="rotate(-0 207.185758 170.923437)" x="207.185758" y="170.923437">200</text>
+</g>
+</g>
+<g id="aiq_blog_sft178_length_20261006-xtick_3">
+<g id="aiq_blog_sft178_length_20261006-line2d_5">
+<path clip-path="url(#aiq_blog_sft178_length_20261006-p6a2c785323)" d="M 345.234242 156.76
+L 345.234242 7.2
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_sft178_length_20261006-line2d_6">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="345.234242" xlink:href="#aiq_blog_sft178_length_20261006-m5acb218427" y="156.76"></use>
+</g>
+</g>
+<g id="aiq_blog_sft178_length_20261006-text_3">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" transform="rotate(-0 345.234242 170.923437)" x="345.234242" y="170.923437">400</text>
+</g>
+</g>
+<g id="aiq_blog_sft178_length_20261006-xtick_4">
+<g id="aiq_blog_sft178_length_20261006-line2d_7">
+<path clip-path="url(#aiq_blog_sft178_length_20261006-p6a2c785323)" d="M 483.282727 156.76
+L 483.282727 7.2
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_sft178_length_20261006-line2d_8">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="483.282727" xlink:href="#aiq_blog_sft178_length_20261006-m5acb218427" y="156.76"></use>
+</g>
+</g>
+<g id="aiq_blog_sft178_length_20261006-text_4">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" transform="rotate(-0 483.282727 170.923437)" x="483.282727" y="170.923437">600</text>
+</g>
+</g>
+<g id="aiq_blog_sft178_length_20261006-text_5">
+<text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #141413" transform="rotate(-0 276.21 184.944375)" x="276.21" y="184.944375">全局训练步</text>
+</g>
+</g>
+<g id="aiq_blog_sft178_length_20261006-matplotlib.axis_2">
+<g id="aiq_blog_sft178_length_20261006-ytick_1">
+<g id="aiq_blog_sft178_length_20261006-line2d_9">
+<path clip-path="url(#aiq_blog_sft178_length_20261006-p6a2c785323)" d="M 48.43 156.76
+L 503.99 156.76
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_sft178_length_20261006-line2d_10">
+<defs>
+<path d="M 0 0
+L -3.5 0
+" id="aiq_blog_sft178_length_20261006-m1fafdb381c" style="stroke: #5e5d59; stroke-width: 0.8"></path>
+</defs>
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="48.43" xlink:href="#aiq_blog_sft178_length_20261006-m1fafdb381c" y="156.76"></use>
+</g>
+</g>
+<g id="aiq_blog_sft178_length_20261006-text_6">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 41.43 160.341719)" x="41.43" y="160.341719">0</text>
+</g>
+</g>
+<g id="aiq_blog_sft178_length_20261006-ytick_2">
+<g id="aiq_blog_sft178_length_20261006-line2d_11">
+<path clip-path="url(#aiq_blog_sft178_length_20261006-p6a2c785323)" d="M 48.43 136.818667
+L 503.99 136.818667
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_sft178_length_20261006-line2d_12">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="48.43" xlink:href="#aiq_blog_sft178_length_20261006-m1fafdb381c" y="136.818667"></use>
+</g>
+</g>
+<g id="aiq_blog_sft178_length_20261006-text_7">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 41.43 140.400385)" x="41.43" y="140.400385">200</text>
+</g>
+</g>
+<g id="aiq_blog_sft178_length_20261006-ytick_3">
+<g id="aiq_blog_sft178_length_20261006-line2d_13">
+<path clip-path="url(#aiq_blog_sft178_length_20261006-p6a2c785323)" d="M 48.43 116.877333
+L 503.99 116.877333
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_sft178_length_20261006-line2d_14">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="48.43" xlink:href="#aiq_blog_sft178_length_20261006-m1fafdb381c" y="116.877333"></use>
+</g>
+</g>
+<g id="aiq_blog_sft178_length_20261006-text_8">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 41.43 120.459052)" x="41.43" y="120.459052">400</text>
+</g>
+</g>
+<g id="aiq_blog_sft178_length_20261006-ytick_4">
+<g id="aiq_blog_sft178_length_20261006-line2d_15">
+<path clip-path="url(#aiq_blog_sft178_length_20261006-p6a2c785323)" d="M 48.43 96.936
+L 503.99 96.936
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_sft178_length_20261006-line2d_16">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="48.43" xlink:href="#aiq_blog_sft178_length_20261006-m1fafdb381c" y="96.936"></use>
+</g>
+</g>
+<g id="aiq_blog_sft178_length_20261006-text_9">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 41.43 100.517719)" x="41.43" y="100.517719">600</text>
+</g>
+</g>
+<g id="aiq_blog_sft178_length_20261006-ytick_5">
+<g id="aiq_blog_sft178_length_20261006-line2d_17">
+<path clip-path="url(#aiq_blog_sft178_length_20261006-p6a2c785323)" d="M 48.43 76.994667
+L 503.99 76.994667
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_sft178_length_20261006-line2d_18">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="48.43" xlink:href="#aiq_blog_sft178_length_20261006-m1fafdb381c" y="76.994667"></use>
+</g>
+</g>
+<g id="aiq_blog_sft178_length_20261006-text_10">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 41.43 80.576385)" x="41.43" y="80.576385">800</text>
+</g>
+</g>
+<g id="aiq_blog_sft178_length_20261006-ytick_6">
+<g id="aiq_blog_sft178_length_20261006-line2d_19">
+<path clip-path="url(#aiq_blog_sft178_length_20261006-p6a2c785323)" d="M 48.43 57.053333
+L 503.99 57.053333
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_sft178_length_20261006-line2d_20">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="48.43" xlink:href="#aiq_blog_sft178_length_20261006-m1fafdb381c" y="57.053333"></use>
+</g>
+</g>
+<g id="aiq_blog_sft178_length_20261006-text_11">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 41.43 60.635052)" x="41.43" y="60.635052">1000</text>
+</g>
+</g>
+<g id="aiq_blog_sft178_length_20261006-ytick_7">
+<g id="aiq_blog_sft178_length_20261006-line2d_21">
+<path clip-path="url(#aiq_blog_sft178_length_20261006-p6a2c785323)" d="M 48.43 37.112
+L 503.99 37.112
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_sft178_length_20261006-line2d_22">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="48.43" xlink:href="#aiq_blog_sft178_length_20261006-m1fafdb381c" y="37.112"></use>
+</g>
+</g>
+<g id="aiq_blog_sft178_length_20261006-text_12">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 41.43 40.693719)" x="41.43" y="40.693719">1200</text>
+</g>
+</g>
+<g id="aiq_blog_sft178_length_20261006-ytick_8">
+<g id="aiq_blog_sft178_length_20261006-line2d_23">
+<path clip-path="url(#aiq_blog_sft178_length_20261006-p6a2c785323)" d="M 48.43 17.170667
+L 503.99 17.170667
+" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_sft178_length_20261006-line2d_24">
+<g>
+<use style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8" x="48.43" xlink:href="#aiq_blog_sft178_length_20261006-m1fafdb381c" y="17.170667"></use>
+</g>
+</g>
+<g id="aiq_blog_sft178_length_20261006-text_13">
+<text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" transform="rotate(-0 41.43 20.752385)" x="41.43" y="20.752385">1400</text>
+</g>
+</g>
+<g id="aiq_blog_sft178_length_20261006-text_14">
+<text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #141413" transform="rotate(-90 15.159375 81.98)" x="15.159375" y="81.98">可见解释均长（字符）</text>
+</g>
+</g>
+<g id="aiq_blog_sft178_length_20261006-line2d_25">
+<path clip-path="url(#aiq_blog_sft178_length_20261006-p6a2c785323)" d="M 69.137273 19.715679
+L 207.185758 100.137083
+L 345.234242 120.913625
+L 483.282727 144.040919
+" style="fill: none; stroke: #d97757; stroke-width: 1.8; stroke-linecap: square"></path>
+<defs>
+<path d="M 0 2
+C 0.530406 2 1.03916 1.789267 1.414214 1.414214
+C 1.789267 1.03916 2 0.530406 2 0
+C 2 -0.530406 1.789267 -1.03916 1.414214 -1.414214
+C 1.03916 -1.789267 0.530406 -2 0 -2
+C -0.530406 -2 -1.03916 -1.789267 -1.414214 -1.414214
+C -1.789267 -1.03916 -2 -0.530406 -2 0
+C -2 0.530406 -1.789267 1.03916 -1.414214 1.414214
+C -1.03916 1.789267 -0.530406 2 0 2
+z
+" id="aiq_blog_sft178_length_20261006-m28c9156a76" style="stroke: #d97757"></path>
+</defs>
+<g clip-path="url(#aiq_blog_sft178_length_20261006-p6a2c785323)">
+<use style="fill: #d97757; stroke: #d97757" x="69.137273" xlink:href="#aiq_blog_sft178_length_20261006-m28c9156a76" y="19.715679"></use>
+<use style="fill: #d97757; stroke: #d97757" x="207.185758" xlink:href="#aiq_blog_sft178_length_20261006-m28c9156a76" y="100.137083"></use>
+<use style="fill: #d97757; stroke: #d97757" x="345.234242" xlink:href="#aiq_blog_sft178_length_20261006-m28c9156a76" y="120.913625"></use>
+<use style="fill: #d97757; stroke: #d97757" x="483.282727" xlink:href="#aiq_blog_sft178_length_20261006-m28c9156a76" y="144.040919"></use>
+</g>
+</g>
+<g id="aiq_blog_sft178_length_20261006-patch_3">
+<path d="M 48.43 156.76
+L 48.43 7.2
+" style="fill: none; stroke: #b0aea5; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"></path>
+</g>
+<g id="aiq_blog_sft178_length_20261006-patch_4">
+<path d="M 48.43 156.76
+L 503.99 156.76
+" style="fill: none; stroke: #b0aea5; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"></path>
+</g>
+</g>
+</g>
+<defs>
+<clippath id="aiq_blog_sft178_length_20261006-p6a2c785323">
+<rect height="149.56" width="455.56" x="48.43" y="7.2"></rect>
+</clippath>
+</defs>
+</svg></figure>
+<p>下面来自同一道优化器选择题，正确答案为 B。原始输出中的矛盾和虚构词汇原样保留。</p>
+<details class="trace">
+<summary>
+监督微调起点：选 B，答对
+</summary>
+<p class="sample-meta">
+题目 q_160be1 · 第 2 次采样 · 全文 928 字符
+</p>
+<pre>All three choices use the same MLP (width 32, SiLU, LayerNorm on the first block), the same optimizer and the same budget of 1024 steps at batch size 16. Only the optimizer differs, so the question comes down to capability ordering.
+
+- **Choice C** uses plain SGD with lr 3e-3. That is slower than Adam-like steps, so it will likely underfit the sinusoidal and cubic structure.
+- **Choice A** is AdamW at lr 1e-4, so it moves the weights mainly through step sizes of about 1e-4 per parameter. That is too little motion in 1024 steps, so it should stay near the target's mean and underfit a lot.
+- **Choice B** is AdamW at lr 1e-3. With PyTorch's LayerNorm and the flat SiLU network, 1e-3 is a sensible per-parameter learning rate. Over 1024 steps, the output bias and head can move appreciably, and the mean can be brought close to the target's average. That should be the least undertrained option.
+&lt;/think&gt;
+
+&lt;answer&gt;B&lt;/answer&gt;</pre>
+</details>
+<details class="trace">
+<summary>
+第 200 步：选 B，答对，却出现题面没有的词
+</summary>
+<p class="sample-meta">
+题目 q_160be1 · 第 2 次采样 · 全文 418 字符
+</p>
+<pre>The task is to learn a one-step sight-formation model quickly and without over‑fitting. SGD and Momentum with step 0.003 (C)) fit the bingo-visual-association task quickly. Fitting a highly complex, convolution‑net‑like model such as an N-Net to extra features (audience, tone, style) in only a few hundred train‑examples moves the model much faster and lets it learn more useful features.
+&lt;/think&gt;
+
+&lt;answer&gt;B&lt;/answer&gt;</pre>
+</details>
+<details class="trace">
+<summary>
+第 400 步：选 C，答错，解释已成套话
+</summary>
+<p class="sample-meta">
+题目 q_160be1 · 第 1 次采样 · 全文 184 字符
+</p>
+<pre>The KPC and FITR features give only a few training examples, so fitting quickly makes fitting less effective. Training mainly teaches fitting, not fitting.
+&lt;/think&gt;
+
+&lt;answer&gt;C&lt;/answer&gt;</pre>
+</details>
+<p>这些样本支持“可见解释失去题面依据”的判断。它们不能证明模型内部用了什么计算，也不能证明全部答案都由同一种机制产生。SFT 起点的解释同样可能犯错；本实验观察的是后续文本漂移。</p>
+<h2 id="答案奖励不足以证明-science">答案奖励不足以证明 science</h2>
+<p>science 在这里要求模型给出符合题目事实、可由实验检验、能迁移到新实例的条件性判断。本线证实任务成绩上升，也给出解释可靠性下降的反例。格式正确和答案正确，均不能单独满足这一要求。</p>
+<p>实验在第 600 步后停止，第 400 步作为已观察到的最佳权重保留。由于数据仍含排序捷径，且缺少新实例、条件反转和同 checkpoint 的直接作答对照，这条线没有证明 science 的形成。它促使后续实验更换数据，并加入对不读题和乱码解释的裁判。</p>
+<div aria-label="同系列文章" class="related"><a href="aiq-rl-loss-ranking-2026-10-06.html">早期排序</a><a href="aiq-rl-pool-b-2026-10-06.html">0.8B 主线</a><a href="aiq-rl-flash-next-2026-10-06.html">Flash-Next</a><a href="poor-rl-infra-2026-10-06.html">Infra 演进</a></div><footer>来源：SFT-178 四份原始评测 JSON、三个 run manifest；<a href="aiq-rl-sft178-2026-10-06-data.json">指标与真实样本</a>。证据截至全局第 600 步。</footer>
+
+</main>
+</body>
+</html>
