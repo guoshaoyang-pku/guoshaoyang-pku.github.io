@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>science_program_v2 报告索引</title><link rel="stylesheet" href="style.css"></head>
+<body><main><div class="nav"><a href="../index.html">← kb_site 首页</a></div>
+<h1>science_program_v2 · 方向报告（供 review）</h1>
+<p style="font-size:15px">中心化自动研究线（Sol 6.1 Ultra，2026-10-06 启动）。每份报告结构：结论 → Formulation → 成立程度 → support 材料后置。研究仍在进行，本页为快照；<a href="morning_2026-10-07.html">晨报</a> · <a href="lines_overview.html">新旧实验线总览</a> · <a href="../index.html#runs">旧线 runs</a></p>
+<ul class="idx">
+<li><a class="t" href="D1_u_effective_time.html">D1：等效训练时间 U</a><span class="s">以下结论均测得于固定特征二次损失、float64（64 位浮点数）、全批量 SGD（每步使用全部样本的梯度下降）。学习率 $\eta=0.1$，比较 mom0（无动量）与 mom0.9（动量系数为 0.9）。单模态指目标只落在一个曲率方向；双模态指目标分布在慢、快两个曲率方向。启动换算计入动量从零积累的过程，稳态换算按…</span></li>
+<li><a class="t" href="D2_overfitting_u_curve.html">D2：风险最低点与早停</a><span class="s">相同 n/σ² 不保证风险最低点折叠，即这些最低点步数不能全部落在两倍范围内。以下测得结果限于四维对称 Gaussian（高斯）输入、目标 x₀+0.5x₀x₁、宽度 128 的冻结 ReLU 特征（激活取输入与零的较大值）。线性输出层从零开始，用全批量梯度下降（GD）优化平方损失，学习率 η=0.3，无动量。风险指无…</span></li>
+<li><a class="t" href="D3_capacity_resolution.html">D3：容量与分辨率的描述量</a><span class="s">所有实测结论都限于 n=d=9 的满秩（没有零特征值）的固定线性特征、零初始化和全批量 SGD（每步使用全部样本的梯度下降）。学习率 η=0.5，无动量、无权重衰减。初始损失 L₀=0.5。历史对照的阈值 ε=0.01，即初始损失的 1%；保存曲线另评价 ε=0.001，即 0.1%。这里的“预算”是达到指定阈值所需的…</span></li>
+<li><a class="t" href="D4_sigmoid_training_curve.html">D4：训练曲线的 sigmoid 描述</a><span class="s">以下实测结论只适用于固定特征、样本数 n 与参数维度 d 均为 2（n=d=2）、float64（双精度浮点）、全批量随机梯度下降（SGD，每步使用全部样本）、学习率 eta=0.1、无动量、无权重衰减的平方损失系统。候选是对数时间轴上的单 logistic（单段 S 形函数）。初始/最终平台固定为 1/0。评价使用原…</span></li>
+<li><a class="t" href="D5_ln_geometry.html">D5：LN同宽度收益的机制</a><span class="s">真实训练的同宽度LN收益成立，已检验的初始化几何候选量没有达到预注册的解释判据。范围限于四个development（开发条件，未封存）函数和以下配方：width64（隐藏层宽度64）、固定head（保持输出层权重与偏置不变）、GELU（高斯误差线性单元）激活函数、SGD（随机梯度下降）lr=.001、momentum0…</span></li>
+<li><a class="t" href="D6_kernel_drift.html">D6：核漂移与晚期预测</a><span class="s">已测范围是 3 维、32 个样本的高斯输入，product/mixedsine 两种目标函数，隐藏层宽度（width）8/32，以及两层 SiLU（平滑激活函数）网络。训练使用全批量 SGD（每步用全部训练样本计算梯度并更新参数），学习率为 0.05，动量和权重衰减均为 0。下文把函数×宽度组合称为 recipe，把一…</span></li>
+<li><a class="t" href="D7_train_gain_test_harm.html">D7：train增益与test损害的机制边界</a><span class="s">确定性clean来源实验已有8/8函数×宽度×SGD单元均值train增益>.05×初始loss、6/8终点真实减切线test差距均值为正；两种SGD为η=.05/mom0与η=.005/mom.9，其他架构和数据规模相同。“6/8”不表示所有init同号或区间均排除零。添加标签噪声不是相对损害的必要原因，有限样本仍存…</span></li>
+<li><a class="t" href="D8_activation_pathway.html">D8：激活通路在非零 bias 下的边界</a><span class="s">以下测量限于对称 Gaussian（高斯）四维输入、128 个训练样本、宽度 64 的冻结单层 SiLU（激活函数见下式）。六个 seed（权重初始化随机种子）共享固定输入；所有隐藏单元使用同一个固定 bias（加性偏置）。普通 bias 与精确根的测量使用 MSE（均方误差）和全批量 GD（梯度下降）；近根及固定 λ…</span></li>
+<li><a class="t" href="D9_minibatch_noise.html">D9：小批量噪声与有效时间</a><span class="s">测量结论仅适用于以下固定数据合同。输入维度 d=4、训练样本 n=64、冻结 ReLU 特征（使用 max(0,x) 的固定非线性特征）宽度128、含常数项且零初始化的线性头（head）。实验使用 float64（64 位浮点数）、MSE（均方误差）和 SGD（随机梯度下降），无动量、无权重衰减。风险指固定无噪声审计样…</span></li>
+<li><a class="t" href="D10_depth_propagation.html">D10：深度增加时的拟合时间</a><span class="s">最慢参数组候选无法在两倍内描述已测早期拟合时间；全核候选通过注册判据，仍有 width16 反例。</span></li>
+<li><a class="t" href="D11_width_scaling.html">D11：宽度与样本量的标度律</a><span class="s">已测的预算标度依赖谱尺度。同 Rayleigh 商（目标加权的平均特征值）不能独立决定预算，维数增加也没有消除两目标的预算差。</span></li>
+<li><a class="t" href="D12_cascade_sigmoid.html">D12：延迟跃迁与级联 sigmoid</a><span class="s">以下结论限于固定特征的双模态系统。模态指沿特征 Gram 矩阵（特征内积矩阵）的特征向量分解的误差分量。共同条件为 n=d=2（样本数与参数维度均为 2）、float64（64 位浮点数）、half-MSE（均方误差的一半）、全批量 SGD（随机梯度下降，此处每步使用全部样本）。学习率 η=0.1，momentum=0…</span></li>
+</ul>
+<div class="stamp">同步于 2026-10-07 20:45（北京时间）· 源文件在研究仓库内随轮次更新，本页为快照</div>
+</main></body></html>

@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>D1：等效训练时间 U</title><link rel="stylesheet" href="style.css"></head>
+<body><main><div class="nav"><a href="index.html">← 报告索引</a></div>
+<h1>D1：等效训练时间 U</h1>
+<h2>结论</h2>
+<p>以下结论均测得于固定特征二次损失、float64（64 位浮点数）、全批量 SGD（每步使用全部样本的梯度下降）。学习率 $\eta=0.1$，比较 mom0（无动量）与 mom0.9（动量系数为 0.9）。单模态指目标只落在一个曲率方向；双模态指目标分布在慢、快两个曲率方向。启动换算计入动量从零积累的过程，稳态换算按积累完成后的比例折算步数。$n/d$ 分别表示样本数/参数维数。首次端点指首次达标步数，持续端点指从该步到预算末端一直达标的最早步数。</p>
+<ul>
+<li>启动换算准确预测了弱曲率单模态的早期阈值步数。在 $n=d=8$、$q=0.9$（损失降至初值的 0.9 倍）、曲率尺度 $h=\eta\lambda=0.0001/0.001$ 下，动量实测和启动预测均为 62/12 步，稳态预测为 53/6 步。$h=0.001$ 的稳态预测低估 50%。</li>
+<li>“启动换算在晚期不比稳态差”的预测被推翻。单模态 $q=0.01$、持续至 $T=40000$ 步时，启动换算在 6/10 个配对条件中更差。早期有效不能外推为晚期总能改善。</li>
+<li>目标幅度改变了梯度标定，没有改变本系统的归一化进度。$n=d=8$ 的 5 个单模态目标中，仅把初始梯度 L2 范数（梯度向量的欧氏长度）从 0.01 降至 0.003，归一化损失轨迹最大差为 3.22e−15，全部阈值步数相同。固定梯度代理（用初始梯度尺度标定的进度量）变为 0.3 倍。</li>
+<li>慢模态初始损失占比 $\alpha$ 区分了所测双模态条件的换算误差。在 $n=d=2$、谱（各曲率方向的特征值）$[0.001,0.5]$、$q=0.01$ 下，$\alpha=0.001/0.005/0.009$ 的两种误差均≥50%；$\alpha=0.02/0.1/0.5$ 的两种误差均≤5%。低慢能量占比不能单独决定失效。</li>
+<li>快模态曲率会改变持续端点的换算误差。仅把快模态曲率从 0.5 降至 0.05 后，低慢能量三条件“两种误差均≥50%”的通过数变为 0/3。稳态误差为 23.6842%–47.6190%，启动误差为 47.3684%–69.0476%。高慢能量三条件仍保持两种误差≤5%。</li>
+<li>评价阈值也会改变换算误差。同一谱 $[0.001,0.05]$ 的保存轨迹中，仅把 $q=0.01$ 降为 0.001，$\alpha=0.005/0.009/0.02/0.1/0.5$ 的稳态误差为 0.091075%–0.680272%，启动误差为 0.867410%–0.971817%。降低阈值不保证所有条件的误差都减小。</li>
+<li>$\alpha\ge q$ 不是两种换算均≤5%误差的充分条件。谱 $[0.001,0.05]$、$\alpha=q=0.001$ 时，稳态/启动误差为 1.123596%/8.988764%。该命题不是预注册预测；预先预测的启动误差区间为 &gt;5% 且≤25%，实测落在区间内。</li>
+</ul>
+<h2>Formulation</h2>
+<p>谱模态（Hessian 特征方向上的残差分量）的递推是已知精确关系。Hessian 是损失对参数的二阶导数矩阵；它的特征值表示各方向的曲率。恒梯度假设给出启动换算式。将启动式用于变化梯度只是近似。</p>
+<p>$$
+r_i(t+1)=(1+\mu-\eta\lambda_i)r_i(t)-\mu r_i(t-1),\qquad
+\frac{L(t)}{L_0}=\sum_i w_i r_i(t)^2,\quad r_i(-1)=r_i(0)=1.
+$$
+$$
+U_{\rm steady}(t)=\frac{\eta t}{1-\mu},\qquad
+U_{\rm startup}(t)=\eta\left[\frac{t}{1-\mu}-\frac{\mu(1-\mu^t)}{(1-\mu)^2}\right].
+$$
+$$
+t_\mu^{\rm steady}=\lceil t_0/10\rceil,\qquad
+t_\mu^{\rm startup}=\min{t\in\mathbb N:10t-90(1-.9^t)\ge t_0},\qquad
+E=\frac{|t_\mu^{\rm pred}-t_\mu^{\rm obs}|}{t_\mu^{\rm obs}}.
+$$</p>
+<p>$t$ 是整数训练步数，单位为步。$\mu$ 是无单位动量系数。$\eta$ 是学习率，$\lambda_i$ 是损失 Hessian 的第 $i$ 个特征值；采用 $\eta\lambda_i$ 无单位的参数单位。$i$ 是模态索引，$r_i$ 是第 $i$ 模态残差相对初值的比例，无单位。初值为 $r_i(-1)=r_i(0)=1$。</p>
+<p>$L=L(t)$ 是第 $t$ 步的损失，$L_0=L(0)$ 是初始损失，两者使用同一损失单位。$L_i(0)$ 是第 $i$ 模态的初始损失。$w_i=L_i(0)/L_0$ 是无单位初始损失占比，总和为 1。双模态中 $w_{\rm slow}=\alpha$、$w_{\rm fast}=1-\alpha$；slow/fast 分别指较小/较大的特征值方向。</p>
+<p>$U$ 是等效训练时间，单位与学习率相同。steady 表示稳态换算，startup 表示恒梯度启动换算。$t_0$ 与 $t_\mu^{\rm obs}$ 分别是同条件下 mom0 与 mom0.9 的实测阈值步数；$t_\mu^{\rm pred}$ 是预测步数。$E$ 是无单位相对绝对误差。末行换算专用于 $\mu=0.9$，以实测 $t_0$ 为输入；动量换算系数的 10 倍是代数关系，不能证明历史 bigram（二元词组）函数进度也相差 10 倍。$\lceil\cdot\rceil$ 表示向上取整，$\mathbb N$ 表示这里使用的非负整数训练步数。</p>
+<p>$q$ 是 $L(t)/L_0$ 的无单位阈值。首次端点是首次满足阈值的步数。持续端点是最小整数 $t$，使所有 $k=t,\ldots,T$ 均满足阈值，只保证到预算 $T$；$k$ 和 $T$ 的单位为步。$h=\eta\lambda$ 是单模态的无单位曲率尺度。$n$ 是样本数，$d$ 是参数维数。</p>
+<h2>成立程度</h2>
+<p>早期单模态结论覆盖两档目标幅度、3 个坐标 seed（只改变参数坐标旋转的随机种子）。$q=0.9$、$h=0.0001/0.001$ 时，启动换算误差均为 0 步。首次/持续端点一致，配对区间为单点。目标与曲率对齐只覆盖 5 个单模态；幅度结论只覆盖初始梯度 L2 范数 0.003/0.01。</p>
+<p>双模态边界只成立于所列离散格点。谱 $[0.001,0.5]$、$\eta=0.1$、$q=0.01$、$T=40000$ 下，$\alpha=0.001/0.005/0.009$ 的稳态误差为 86.9565%–88.6364%，启动误差为 73.9130%–76.2712%。两种预测各通过 3/3 目标条件的≥50%失效判据。$\alpha=0.02/0.1/0.5$ 的误差分别为 0.1739%–1.6997% 与 0.8499%–0.9565%，各通过 3/3 条件的≤5%准确判据。3 个坐标 seed 完全同值。$\alpha=0.01/0.011$ 仅描述，不能给出临界占比。</p>
+<p>降低快曲率后，原失效判据只通过 0/3 条件。谱 $[0.001,0.05]$、$q=0.01$ 下，启动换算只在 $\alpha=0.005/0.009$ 达到 50%以上。高慢能量三条件的两种误差仍≤5%。</p>
+<p>降低阈值后的预测通过率为 5/5 与 1/1。谱 $[0.001,0.05]$、$q=0.001$ 下，预注册 P1 为 $\alpha=0.005/0.009/0.02/0.1/0.5$ 两种误差≤5%，5/5 通过。P2 为 $\alpha=q=0.001$ 稳态≤5%、启动&gt;5%且≤25%，1/1 通过。两个 $q$ 格点不能确定连续临界。</p>
+<p>阈值变化的配对差也保留。$\alpha=0.005/0.009$ 的稳态/启动误差降幅分别为 33.085502/55.542846 与 47.527973/68.136872 个百分点。$\alpha=0.02/0.1/0.5$ 的启动误差分别增加 0.087851/0.004177/0.047318 个百分点，仍低于 1%。</p>
+<p>全部科学结论属于 development（已用于开发和选择条件的证据）。范围只限所列固定特征 recipe（完整实验条件）和同 $\eta$ 配对；持续只保证到有限预算。不外推其他谱、$\eta$、$q$、Adam、小批量、learned features（训练中改变的特征）或非线性网络。没有封存 OOD（预先封存、只看一次的域外条件），也不能给历史 bigram 的 10 倍差作因果分摊。坐标 seed 不是独立数据重复；配对步数与误差的 seed 范围为单点，不构造数据置信区间。</p>
+<h2>方法与条件</h2>
+<p>单模态实验保存了 60 个 cell（单个条件、优化器和 seed 的执行结果）。条件为 $n=d=8$、固定特征二次损失、float64、全批量 SGD、$\eta=0.1$、mom0/0.9、$T=40000$。目标落在 $\lambda=0.001/0.01/0.05/0.1/0.5$，初始梯度 L2 范数为 0.003/0.01。共 10 个配对条件、20 个条件/优化器单位、3 个旋转 seed；训练合计 13.78 秒。seed 只测坐标稳健性，不增加科学条件数。主阈值为 $q=0.9$，同时记录 $0.1/0.01$ 与首次/持续端点。弱曲率早期预测通过，幅度预测通过，晚期扩展失败。谱递推损失最大差为 3.78e−13。</p>
+<p>双模态实验保存了 48 个 cell。条件为 $n=d=2$、谱 $[0.001,0.5]$、float64、全批量 SGD、$\eta=0.1$、mom0/0.9、$L_0=1$、零参数及速度初始化、$T=40000$。$\alpha=0.001/0.005/0.009/0.01/0.011/0.02/0.1/0.5$，共 8 个配对条件、16 个条件/优化器单位、3 个坐标 seed；训练累计 13.832434 秒。先保存核验 2 个 cell，再恢复 46 个，首对 hash（文件内容哈希）不变。每个换算以同条件实测 mom0 持续步数为输入，不是从零预测阈值。</p>
+<p>双模态 48 个 cell 的证据核验通过。核验覆盖合同、hash、finite（所有数组值有限）、训练前提交、$L_0$、$\alpha$ 与端点。独立标量谱递推损失最大差为 1.903477e−13，坐标轨迹最大差为 5.551115e−15。旧 60 个 cell 恢复前核验通过，未重跑或覆盖。</p>
+<p>降低快曲率的对照只改变快曲率。它保持上述双模态合同，将谱改为 $[0.001,0.05]$，取 $\alpha=0.001/0.005/0.009/0.02/0.1/0.5$。共 6 个配对条件、12 个优化器 recipe 单位、36 个训练 cell；训练累计 9.614790916442871 秒。与 48 个 cell 实验的同 $\alpha$/seed 控制只改变快曲率。初始目标最大差为 6.217248937900877e−15，快模态特征缩放为原来的 $1/\sqrt{10}$，慢模态目标和旋转保持。独立递推损失最大差为 1.8887669206435476e−13，坐标差为 2.6645352591003757e−15。注册前数值来自已知递推，属于非盲 development 对照。</p>
+<p>阈值对照复用了 36 条保存轨迹。$q=0.01\to0.001$，0 新训练、36 个新端点 cell、6 个配对条件与 3 个坐标 seed；评价累计 0.102734 秒。输入曲线为公开 development 证据，不称盲验证。反向扫描端点、原始损失归一化与恒梯度速度逐步累加的独立复核一致，能量和最大误差为 7.771561172376096e−16。326 个旧文件与 72 个新结果文件的 hash/mtime（内容哈希与修改时间）保持，成功结果只读恢复。</p>
+<p>谱 $[0.001,0.5]$、$q=0.01$ 的全部配对数字如下。端点与预测以步为单位；误差为相对绝对误差。表中 mom.9 指 mom0.9。</p>
+<table>
+<thead>
+<tr>
+<th>$\alpha$</th>
+<th style="text-align: right;">mom0持续步数</th>
+<th style="text-align: right;">mom.9首次/持续步数</th>
+<th style="text-align: right;">稳态/启动预测</th>
+<th style="text-align: right;">稳态/启动相对绝对误差</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>.001</td>
+<td style="text-align: right;">46</td>
+<td style="text-align: right;">7 / 44</td>
+<td style="text-align: right;">5 / 11</td>
+<td style="text-align: right;">88.6364% / 75.0000%</td>
+</tr>
+<tr>
+<td>.005</td>
+<td style="text-align: right;">52</td>
+<td style="text-align: right;">8 / 46</td>
+<td style="text-align: right;">6 / 12</td>
+<td style="text-align: right;">86.9565% / 73.9130%</td>
+</tr>
+<tr>
+<td>.009</td>
+<td style="text-align: right;">67</td>
+<td style="text-align: right;">22 / 59</td>
+<td style="text-align: right;">7 / 14</td>
+<td style="text-align: right;">88.1356% / 76.2712%</td>
+</tr>
+<tr>
+<td>.010</td>
+<td style="text-align: right;">85</td>
+<td style="text-align: right;">35 / 60</td>
+<td style="text-align: right;">9 / 16</td>
+<td style="text-align: right;">85.0000% / 73.3333%</td>
+</tr>
+<tr>
+<td>.011</td>
+<td style="text-align: right;">477</td>
+<td style="text-align: right;">63 / 74</td>
+<td style="text-align: right;">48 / 57</td>
+<td style="text-align: right;">35.1351% / 22.9730%</td>
+</tr>
+<tr>
+<td>.020</td>
+<td style="text-align: right;">3466</td>
+<td style="text-align: right;">353 / 353</td>
+<td style="text-align: right;">347 / 356</td>
+<td style="text-align: right;">1.6997% / .8499%</td>
+</tr>
+<tr>
+<td>.100</td>
+<td style="text-align: right;">11513</td>
+<td style="text-align: right;">1150 / 1150</td>
+<td style="text-align: right;">1152 / 1161</td>
+<td style="text-align: right;">.1739% / .9565%</td>
+</tr>
+<tr>
+<td>.500</td>
+<td style="text-align: right;">19560</td>
+<td style="text-align: right;">1947 / 1947</td>
+<td style="text-align: right;">1956 / 1965</td>
+<td style="text-align: right;">.4622% / .9245%</td>
+</tr>
+</tbody>
+</table>
+<h2>失败与反例</h2>
+<p>晚期启动预测比稳态更差的原失败保留。单模态 $q=0.01$、持续至 $T=40000$ 时，6/10 个配对条件推翻了“启动换算在晚期不比稳态差”。$h=0.0001/0.001/0.005$ 的动量实测为 2290/217/37 步，稳态预测为 2303/231/46 步，启动预测为 2312/240/55 步。对应稳态误差为 13/14/9 步，启动误差为 22/23/18 步。双模态 $\alpha=0.1/0.5$ 的启动误差仍大于稳态。</p>
+<p>震荡使首次端点与持续端点不同。单模态 $h=0.01/0.05$、$q=0.01$ 的动量首次达标为 21/7 步，持续达标为 46/44 步。谱 $[0.001,0.5]$ 中，低占比三条件的首次 7/8/22 步也不同于持续 44/46/59 步。高占比三条件首次和持续一致。</p>
+<p>$\alpha&gt;q$ 不能据现有格点当作充分条件。谱 $[0.001,0.5]$、$q=0.01$ 下，$\alpha=0.01$ 仍有 85%/73.3333% 误差，$\alpha=0.011$ 为 35.1351%/22.9730%。两点预先只作描述，不能从 8 个占比点报告连续临界。改变 $\alpha$ 同时改变初始梯度范数、目标 Rayleigh 商（目标加权的平均特征值）、参数范数和第一步下降。现有实验没有独立区分这些伴随量的解释。</p>
+<p>等号处仍有启动误差反例。谱 $[0.001,0.05]$、$q=0.001$ 下，$\alpha=q=0.001$ 的 mom0/mom0.9 持续端点为 872/89 步，稳态/启动预测为 88/97 步。启动误差 8.988764% 反驳“$\alpha\ge q$ 足以使两种换算均≤5%”。该命题并非此次预注册预测；此次预先预测的启动误差区间为 &gt;5% 且≤25%，实测落在区间内。动量首次端点 46 步也不同于持续 89 步。$\alpha=0.005/0.009/0.02/0.1/0.5$ 的两种端点相同。</p>
+<p>原矩阵乘法浮点警告的根因仍未确定。独立逐元素核验得到 Hessian 最大误差 5.55e−17，60 个保存数组全部有限；这证明保存证据可用，没有确定警告的根因。</p>
+<p>$q=0.005$ 等号格点的审计仍只作为失败记录。六个数组的数值计算因端点目录混用了两个预注册 commit（版本提交）而拒绝登记，不更新已有科学结论。</p>
+<h2>未决问题</h2>
+<p>$q=0.005$、$\alpha=q$ 的另一格点仍没有有效科学收尾。原报告的候选问题是：固定相同保存轨迹，只改未测 $q=0.005$，检验启动误差是否仍&gt;5%。先给出明确区间预测、输入 hash 与 pinned 源码（冻结版本的源码），再 commit 后计算。已有尝试因合同混用未形成有效证据。</p>
+<p>后续不得重跑成功训练与端点。不得从所列格点推连续临界，也不要独立归因 Rayleigh 商或梯度尺度；已知递推算术不是新发现。</p>
+<h2>证据</h2>
+<ul>
+<li>单模态合同、数字与原失败：预注册（<code>studies/r001_momentum_startup/preregistration.json</code>）、summary（<code>studies/r001_momentum_startup/summary.json</code>）、finding（<code>findings/r009_momentum_startup_resume.md</code>）、保存证据复核（<code>studies/r001_momentum_startup/executed/saved_evidence_verification.json</code>）。已知解析起点为v1 B01。</li>
+<li>双模态合同、全部配对数字及复核：预注册（<code>studies/r017_slow_energy_conversion/preregistration.json</code>）、summary（<code>studies/r017_slow_energy_conversion/summary.json</code>）、finding（<code>findings/r017_slow_energy_conversion.md</code>）、保存证据复核（<code>studies/r017_slow_energy_conversion/executed/saved_evidence_verification.json</code>）；复算脚本为该study的analysis.py与executed/verify_saved.py。</li>
+<li>第1轮预注册与收尾Git写权限被拒、0cell的原失败记录（<code>findings/r001_momentum_startup.md</code>）保留。supervisor于2026-10-06T17:10:50+08:00提交原预注册和源码，commit为7da7d8a7acb274cd88a242e2e564c92ddca33aa3；第9轮字节匹配后才训练，当轮收尾受阻记partial。第17轮审计确认真正收尾为665d1373be8aac653800f00e8a9416d018895223，D1的134个文件逐字节匹配；中心旧指针b05588b实际指向D6日志，见r009收尾审计（<code>studies/r017_slow_energy_conversion/executed/r009_closeout_audit.json</code>）。</li>
+<li>第17轮预注册及源码提交0eddd3bcd619db7fe942d5275a9d57b3a6fee541早于全部48cell；科学收尾3f2fcaa673356aa04498d55453c6e8213f5eaab5的113个study与交接产物逐字节匹配，收尾回执（<code>studies/r017_slow_energy_conversion/executed/final_commit_receipt.json</code>）随后提交为64020fe。</li>
+<li>本轮 λ_fast=.05 的预注册、36个cell、配对控制与复核：预注册（<code>studies/r037_lower_fast_curvature/preregistration.json</code>）、summary（<code>studies/r037_lower_fast_curvature/summary.json</code>）、finding（<code>findings/r037_lower_fast_curvature.md</code>）、证据复核（<code>studies/r037_lower_fast_curvature/executed/saved_evidence_verification.json</code>）、配对复核（<code>studies/r037_lower_fast_curvature/executed/paired_control_verification.json</code>）。</li>
+<li>λ_fast=.05 的科学收尾7794b596164022b0f2a6cb79856ff2c88cb65d9d、86个文件与144旧训练cell核验见旧收尾审计（<code>studies/r049_lower_threshold/executed/previous_closeout_audit.json</code>）。q=.001新阈值合同、36端点与独立复核：预注册（<code>studies/r049_lower_threshold/preregistration.json</code>）、summary（<code>studies/r049_lower_threshold/summary.json</code>）、finding（<code>findings/r049_lower_threshold.md</code>）、证据复核（<code>studies/r049_lower_threshold/executed/saved_evidence_verification.json</code>）；预注册0e4611721fff53516125f3a1934ffdce81d514a6早于全部新端点评价。</li>
+<li>r081 q=.005 等号格点的审计结果仅作为失败记录：finding（<code>findings/r081_equal_threshold.md</code>）、失败审计（<code>studies/r081_equal_threshold/executed/analysis_failure.json</code>）。六个数组的数值计算因端点目录混用了两个预注册 commit 而拒绝登记，不更新已有科学结论。</li>
+</ul>
+<div class="stamp">同步于 2026-10-07 20:45（北京时间）· 源文件在研究仓库内随轮次更新，本页为快照</div>
+</main></body></html>
