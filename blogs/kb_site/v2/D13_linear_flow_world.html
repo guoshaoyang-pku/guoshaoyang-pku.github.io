@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>D13：Linear Flow World</title><link rel="stylesheet" href="style.css"></head>
+<body><main><div class="nav"><a href="index.html">← 报告索引</a></div>
+<h1>D13：Linear Flow World</h1>
+<h2>结论</h2>
+<p>在固定宽度 32、固定正交目标、全批量 GD 的无 skip 线性链上，架构深度和初始化尚不能单独给出稳定的相变时间：协议 A 的 t_c 均值随 L=1,2,4,8 为 9.197, 1.161, 0.926, 4.593，线性拟合斜率为 −0.263、R²=0.044。</p>
+<p>训练曲线形状可以用单 sigmoid 近似，但 t_c 不是协议不变量。自由拟合协议 A 通过 11/12；协议 B 与 A 只有 5/12 个 cell 在 0.5–2 倍内，A/B 比值范围 0.053–0.884。</p>
+<p>因此，本轮不能据此定义有效深度 d_eff。A 的 seed 稳健性也未通过：L=2、4、8 的 t_c 变异系数为 0.367、0.705、0.503，只有 L=1 为 0.051。</p>
+<h2>Formulation</h2>
+<p>协议 A 使用 log-time logistic：</p>
+<p>$$
+\hat{\ell}(t)=c+\frac{a-c}{1+\exp{k[\log(1+t)-\log(1+t_c)]}}.
+$$</p>
+<p>ell(t) 是第 t 步的均方误差；a 是拟合上平台；c 是自由拟合下平台；k&gt;0 是 log-time 斜率；t_c 是拟合中点步数。</p>
+<p>协议 B 固定下平台为实测 final loss，在 log(1+t) 轴对 loss 做 11 点移动平均，并把最大负斜率的步数作为 t_c。</p>
+<p>本轮尚未建立 d_eff=g(t_c) 的标定映射。任何将 t_c 转成深度的公式都需要先解决 A/B 偏移和 seed 敏感性。</p>
+<h2>成立程度</h2>
+<ul>
+<li>单 sigmoid 判据（归一化 RMSE≤0.05 且 R²≥0.99）：11/12 通过。失败边界是 L=8, seed=22，R²=0.980826。</li>
+<li>协议一致性判据（A/B 比值 0.5–2）：5/12 通过。L=1 的 3/3 通过；L=2、4 的 0/3 通过；L=8 的 2/3 通过。</li>
+<li>seed 稳健性判据（每个深度 CV≤0.25）：1/4 个深度通过。L=1 为 0.051；L=2、4、8 分别为 0.367、0.705、0.503。</li>
+<li>深度线性标度判据（斜率&gt;0、R²≥0.90、每点相对误差≤0.25）：未通过。拟合 tc_A=4.956903−0.263382L，R²=0.044444，最大相对误差 3.217327。</li>
+<li>适用范围仅为本轮 L={1,2,4,8}、width=32、sigma=0.8、固定 4×4 正交目标、全批量 GD eta=0.02、float64。未测 skip、其他宽度、其他 sigma、其他目标谱、其他优化器和泛化误差。</li>
+</ul>
+<h2>方法与条件</h2>
+<p>实验生成器、目标和输入均在本轮 executed 脚本中固定，并保存每个 cell 的 loss 曲线。每个深度使用 3 个 seed；seed 只用于初始化稳健性检查，不构成独立数据集重复。A 对 3001 个 step 点做有界最小二乘；B 使用 11 点平滑和 log-time 数值梯度。</p>
+<h2>失败与反例</h2>
+<ul>
+<li>A/B 的 t_c 在 0.5–2 倍内被推翻。L=4, seed=22 的比值最低，仅 0.053479。</li>
+<li>t_c 随深度线性变晚被推翻。L=1 的均值最大，L=4 最小；线性斜率为负。</li>
+<li>每个深度的 seed 变异系数≤0.25 被推翻。L=4 的 CV=0.705261。</li>
+<li>B 在 L=2 与 L=4 的所有 seed 都给出 6 步，说明该协议在当前平滑窗口下主要检测早期共同峰值，不能作为深度读出。</li>
+</ul>
+<h2>未决问题</h2>
+<p>下一轮应先固定同一条无 skip 链的初始化谱和目标奇异值，比较更小学习率或梯度流近似下的 A/B 偏移；随后再测试 sigma 是否解释 t_c 的非单调性。只有在单链标定通过后，才进入 skip 拓扑与 d_eff 组合律。</p>
+<h2>证据</h2>
+<ul>
+<li>预注册：preregistration.json（<code>studies/r001_chain_tc/preregistration.json</code>）</li>
+<li>执行脚本：run_experiment.py（<code>studies/r001_chain_tc/executed/run_experiment.py</code>）</li>
+<li>原始曲线目录：results（<code>studies/r001_chain_tc/results/</code>）</li>
+<li>分析：summary.json（<code>studies/r001_chain_tc/analysis/summary.json</code>）</li>
+<li>本轮发现：r001_chain_tc.md（<code>findings/r001_chain_tc.md</code>）</li>
+<li>预注册提交：3c9242f</li>
+</ul>
+<div class="stamp">同步于 2026-10-07 21:44（北京时间）· 源文件在研究仓库内随轮次更新，本页为快照</div>
+</main></body></html>
