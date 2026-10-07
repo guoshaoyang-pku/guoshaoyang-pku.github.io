@@ -1,0 +1,2260 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>学习机制研究：已有结果与最终远景</title>
+<!--
+  report-to-human panel template v2
+  Palette and type: Anthropic brand-guidelines (github.com/anthropics/skills, skills/brand-guidelines).
+  Rules: keep only what the reader needs. No subtitle, no KPI cards, no section numbers, no status banners.
+  Every term is explained in plain words where it first appears.
+-->
+<style>
+  :root {
+    --dark: #141413;   /* primary text */
+    --light: #faf9f5;  /* page background */
+    --mid: #b0aea5;    /* borders, axes */
+    --soft: #e8e6dc;   /* subtle fills */
+    --muted: #5e5d59;  /* secondary text (darker than --mid for contrast) */
+    --orange: #d97757; /* primary accent: the main result */
+    --blue: #6a9bcc;   /* secondary accent */
+    --green: #788c5d;  /* tertiary accent */
+    --head: "Poppins", "PingFang SC", "Noto Sans CJK SC", "Hiragino Sans GB", Arial, sans-serif;
+    --body: "Lora", "Noto Serif CJK SC", "Songti SC", Georgia, serif;
+    --mono: "SF Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--light); color: var(--dark); font: 17px/1.8 var(--body); }
+  main { max-width: 760px; margin: 0 auto; padding: 72px 24px 96px; }
+  h1, h2, h3 { font-family: var(--head); font-weight: 600; line-height: 1.35; letter-spacing: -0.01em; }
+  h1 { font-size: 32px; margin: 0 0 16px; }
+  h2 { font-size: 22px; margin: 64px 0 12px; }
+  p { margin: 0 0 16px; }
+  .lede { font-size: 19px; }
+  a { color: inherit; text-decoration: underline; text-decoration-color: var(--orange); text-underline-offset: 3px; }
+  code, .id { font-family: var(--mono); font-size: 0.86em; background: var(--soft); padding: 1px 5px; border-radius: 4px; }
+
+  /* L2 settings row: monochrome line icons + label, never color emoji */
+  .settings { display: flex; flex-wrap: wrap; gap: 8px 20px; list-style: none; padding: 0; margin: 24px 0 0;
+              font: 14px/1.6 var(--head); color: var(--muted); }
+  .settings li { display: inline-flex; align-items: center; gap: 6px; }
+  .settings svg { width: 15px; height: 15px; stroke: var(--dark); fill: none; stroke-width: 1.6;
+                  stroke-linecap: round; stroke-linejoin: round; }
+  .settings b { color: var(--dark); font-weight: 500; }
+
+  figure { margin: 28px 0; padding: 20px; background: #fff; border: 1px solid var(--soft); border-radius: 10px; }
+  figure img, figure svg.chart { display: block; width: 100%; height: auto; }
+  figcaption { margin-top: 12px; font: 14px/1.6 var(--head); color: var(--muted); }
+  .legend { display: flex; gap: 18px; font: 13px var(--head); color: var(--muted); margin-bottom: 8px; }
+  .legend i { display: inline-block; width: 14px; height: 2px; vertical-align: middle; margin-right: 6px; }
+
+  .warn { border-left: 3px solid var(--orange); padding: 4px 0 4px 16px; margin: 24px 0; }
+  .warn strong { font-family: var(--head); }
+
+  /* sample browser: compare outputs side by side */
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--soft); margin-bottom: 12px; }
+  .tabs button { font: 14px var(--head); background: none; border: 0; padding: 8px 12px; cursor: pointer;
+                 color: var(--muted); border-bottom: 2px solid transparent; }
+  .tabs button[aria-selected="true"] { color: var(--dark); border-bottom-color: var(--orange); }
+  .sample { display: none; white-space: pre-wrap; font: 14px/1.7 var(--mono); }
+  .sample.on { display: block; }
+
+  details { margin: 16px 0; }
+  summary { cursor: pointer; font: 15px var(--head); color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font: 14px/1.6 var(--head); margin: 16px 0; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--soft); }
+  th { font-weight: 500; color: var(--muted); }
+  footer { margin-top: 80px; font: 13px var(--head); color: var(--mid); }
+
+  h1 { font-size: clamp(29px, 4vw, 36px); max-width: 19em; }
+  h2 { scroll-margin-top: 28px; }
+  h3 { font-size: 18px; margin-top: 26px; }
+  p { overflow-wrap: anywhere; }
+  figure { padding: 16px 12px; border-radius: 6px; }
+  .equation { margin: 24px 0; padding: 14px 18px; border-left: 2px solid var(--orange); font: 15px/1.9 var(--head); overflow-x: auto; }
+  .table-wrap { overflow-x: auto; margin: 20px 0; }
+  table { min-width: 520px; margin: 0; }
+  td { vertical-align: top; }
+  details { border-top: 1px solid var(--soft); padding-top: 12px; margin-top: 24px; }
+  details p { font-size: 15px; margin-top: 14px; }
+  summary { line-height: 1.6; color: var(--muted); }
+  footer { color: var(--muted); line-height: 1.8; }
+  @media (max-width: 560px) { main { padding: 40px 18px 64px; } h2 { margin-top: 46px; font-size: 21px; } figure { padding: 12px 4px; margin-left: -6px; margin-right: -6px; } .equation { font-size: 14px; } }
+  @media print { body { background: white; font-size: 12px; } main { max-width: none; padding: 0; } h2 { break-after: avoid; margin-top: 30px; } figure, table { break-inside: avoid; } details p { display: block; } }
+</style>
+<meta name="description" content="从Liu注意力集中理论到任务边界类、自然语言分阶账本和未见未来预测，明确已有结果与自然长期主导的证据缺口。"></head>
+<body><main><h1>我们已拆清部分学习机制，正在检验谁主导长期误差</h1><p class="lede">这个项目从 Liu 的注意力集中理论出发，已给出改变最终任务指数的反例、可预测接管的条件正例，以及真实语言模型的数值账本；自然预训练的长期主导机制仍未定论。</p><ul class="settings"><li><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="5" width="14" height="14" rx="2"/><path d="M9 1v4M15 1v4M9 19v4M15 19v4M1 9h4M1 15h4M19 9h4M19 15h4"/></svg>模型 Pythia70M</li><li><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/></svg>数据 FineWeb 真标签</li><li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4zM8 8h8M8 12h8M8 16h4"/></svg>评价 128篇 × 224标签</li><li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19l5-7 4 4 7-10"/></svg>完整词表 50304</li></ul><h2>Liu 把长期慢误差归因于越来越尖锐的注意力</h2>
+<p>Scaling law 描述模型误差随训练时间、参数规模或数据规模降低的规律。这三个轴需要分别检验。我们主要研究训练时间轴：误差为什么慢慢下降，哪些学习过程决定下降速度。主攻论文是 Liu、Kangaslahti、Gore 的 <a href="https://arxiv.org/html/2609.32100v1">Emergent One-Third Scaling Law as Attention Tries to Concentrate</a>，本项目核对的是 v1（第一版预印本）。</p>
+<p>Attention 用 softmax 在多个 key 位置之间分配概率。把它的 scores 整体放大，会使选择更尖锐。β（逆温度）表示这个放大尺度，a（归一化形状）表示各位置分数的相对结构。Liu 的简化图像是 a 逐渐固定，训练主要增加 β。这里的前两名是两个 key 位置，并不直接对应正确答案。</p>
+<p>δ（归一化 gap）是最高和次高 score 之差除以该行标准差。若零附近存在非零连续密度，即小区间的概率约等于密度乘带宽，那么放大 β 后，仍然难以选定的输入落在宽度约 1/β 的边界附近。若两种选择对任务仍有非零影响，最终可约损失就有机会按 1/β 下降。</p>
+<div class="equation" role="math">scores = βa　　→　　边界宽度 ∝ β<sup>−1</sup>　　→　　B(β) ≈ Cβ<sup>−1</sup></div>
+
+<p>B（温度限制留下的任务误差）还要通过实际优化时钟变成时间规律。C（边界系数）由任务和数据决定。g（温度方向的参数度量）描述同样的尺度位移需要多少参数运动。β₀（起点逆温度）保留初始时间修正。在常数 g 的标量梯度流中，β 的增长与 B 的下降共同给出 t 的负三分之一次幂。</p>
+<div class="equation" role="math">dβ/dt ≈ C/(gβ²)　　→　　β³ ≈ β₀³ + 3Ct/g　　→　　B(t) ∝ t<sup>−1/3</sup></div>
+
+<p>这条推理需要任务边界可观测、其他参数足够补偿，以及实际动力学近似闭合。有限 teacher 的结论还要求存在“已经很冷、尚未接近目标”的中间区。接近有限目标后出现更快收敛，并不自动违反原条件推导。</p>
+<figure><svg aria-label="从近打平到任务误差，再到动力学和长期主导的四步责任链" class="chart" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 330" role="img"><style>text{font-family:PingFang SC,Noto Sans CJK SC,Arial,sans-serif;fill:#141413}</style><circle cx="22" cy="37" r="4" fill="#d97757"/><path d="M22 47v46" stroke="#b0aea5" fill="none"/><text x="45" y="42" font-size="19" font-weight="600">近打平的概率</text><text x="45" y="70" font-size="15">零附近密度、固定形状</text><text x="364" y="56" font-size="15" style="fill:#5e5d59">不能单独识别任务难度</text><circle cx="22" cy="115" r="4" fill="#d97757"/><path d="M22 125v46" stroke="#b0aea5" fill="none"/><text x="45" y="120" font-size="19" font-weight="600">最终任务响应</text><text x="45" y="148" font-size="15">选择差异是否传到 CE</text><text x="364" y="134" font-size="15" style="fill:#5e5d59">普通任务可改变幂次</text><circle cx="22" cy="193" r="4" fill="#d97757"/><path d="M22 203v46" stroke="#b0aea5" fill="none"/><text x="45" y="198" font-size="19" font-weight="600">实际优化时钟</text><text x="45" y="226" font-size="15">参数度量、补偿与历史</text><text x="364" y="212" font-size="15" style="fill:#5e5d59">同一静态函数可不同速</text><circle cx="22" cy="271" r="4" fill="#d97757"/><text x="45" y="276" font-size="19" font-weight="600">长期误差主导</text><text x="45" y="304" font-size="15">其他剩余与交互消退</text><text x="364" y="290" font-size="15" style="fill:#5e5d59">自然整网仍未完成</text></svg></figure>
+
+<h2>最直接的反例改变了最终任务的幂次</h2>
+<p>项目先拆开论文里的量词，再用解析构造、普通损失、真实优化和新未来预测逐步检验。最强证据针对三个不同环节。</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>被检验的命题</th>
+<th>已有证据</th>
+<th>理论必须补什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>任意原文定义的 reasonable loss 都有逆二次温度导数下界</td>
+<td>满足字面条件的多项式损失保留静态逆一次，却存在任意远的导数零点和梯度流陷阱。</td>
+<td>损失或联合 gap 的正则条件，以及导数控制。构造损失不是普通 CE/KL/MSE。</td>
+</tr>
+<tr>
+<td>冷 softmax 与非零零-gap 密度足以给最终任务逆一次</td>
+<td>普通 MSE/KL 构造中，gate 误差为 β⁻¹，任务误差为 β⁻³。12 条确认 K 轨迹的时间指数为 0.60037–0.60320，接近 3/5。</td>
+<td>两个候选在平局附近对最终任务的有效响应不能消失。</td>
+</tr>
+<tr>
+<td>静态逆一次足以锁定时间指数 1/3</td>
+<td>保持同一静态函数，改变原生优化几何，可以得到不同时间律。</td>
+<td>参数化、优化器历史和相对运动速度必须进入预测。</td>
+</tr>
+</tbody>
+</table></div>
+<p>第二个反例最贴近核心机制：两种注意力选项越接近平局，它们提供的任务信息也越相同。Gate 的不确定性继续存在，任务错误却消失得更快。这改变了指数，已经超出只修正常数的程度。随机 generic values 下的逆一次正例仍保留。</p>
+<details><summary>反例的适用范围</summary><p>多项式损失反例针对 Appendix B.4 的全称导数结论。普通最终损失反例针对 gate 误差到下游损失的充分性外推，不能冒称它单独推翻另一个严格分离 gate 概率的定理。12 条轨迹包含参数和步长对照，不是 12 种独立自然任务。自然语言模型长期主导并未由这些构造裁决。</p></details>
+
+<h2>不同任务可以有离散指数类，微小扰动会改变接管时间</h2>
+<p>c（困难边界的余维）表示必须同时接近几个边界条件。m（任务响应消失阶）表示两个 route 的输出差在边界附近以几次幂趋零。在非退化密度、普通平方损失或非退化 Fisher KL 下，静态阶数 p（误差对逆温度的幂次）可为 c+2m。若参数度量按 βʳ 变化、p+r+2&gt;0，且导数与多参数动力学都闭合，时间指数才是下面这个值。</p>
+<div class="equation" role="math">p = c + 2m　　g(β) ∝ βʳ　　α = p/(p+r+2)</div>
+
+<p>对于一条普通边界、常数度量，输出差不消失、一阶消失、二阶消失分别对应 1/3、3/5、5/7。我们已有普通最终损失构造、可学习 value 分支和固定学生架构的交叉实验。它们支持指定结构族的离散端点。中间有限窗口的斜率仍可以连续变化。</p>
+<figure><svg aria-label="三种有条件的边界任务类分别给出1/3、3/5和5/7" class="chart" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 509.11 195.045" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ 
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="task-classes-figure_1">
+  <g id="task-classes-patch_1">
+   <path d="M 0 195.045 
+L 509.11 195.045 
+L 509.11 -0 
+L 0 -0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="task-classes-axes_1">
+   <g id="task-classes-patch_2">
+    <path d="M 84.2 155.32 
+L 501.91 155.32 
+L 501.91 7.2 
+L 84.2 7.2 
+z
+" style="fill: #ffffff"/>
+   </g>
+   <g id="task-classes-matplotlib.axis_1">
+    <g id="task-classes-xtick_1">
+     <g id="task-classes-line2d_1">
+      <path d="M 84.2 155.32 
+L 84.2 7.2 
+" clip-path="url(#task-classes-p1899f67090)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="task-classes-line2d_2">
+      <defs>
+       <path id="task-classes-m410a49c6a3" d="M 0 0 
+L 0 3.5 
+" style="stroke: #5e5d59; stroke-width: 0.8"/>
+      </defs>
+      <g>
+       <use xlink:href="#task-classes-m410a49c6a3" x="84.2" y="155.32" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="task-classes-text_1">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" x="84.2" y="170.279375" transform="rotate(-0 84.2 170.279375)">0.0</text>
+     </g>
+    </g>
+    <g id="task-classes-xtick_2">
+     <g id="task-classes-line2d_3">
+      <path d="M 177.024444 155.32 
+L 177.024444 7.2 
+" clip-path="url(#task-classes-p1899f67090)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="task-classes-line2d_4">
+      <g>
+       <use xlink:href="#task-classes-m410a49c6a3" x="177.024444" y="155.32" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="task-classes-text_2">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" x="177.024444" y="170.279375" transform="rotate(-0 177.024444 170.279375)">0.2</text>
+     </g>
+    </g>
+    <g id="task-classes-xtick_3">
+     <g id="task-classes-line2d_5">
+      <path d="M 269.848889 155.32 
+L 269.848889 7.2 
+" clip-path="url(#task-classes-p1899f67090)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="task-classes-line2d_6">
+      <g>
+       <use xlink:href="#task-classes-m410a49c6a3" x="269.848889" y="155.32" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="task-classes-text_3">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" x="269.848889" y="170.279375" transform="rotate(-0 269.848889 170.279375)">0.4</text>
+     </g>
+    </g>
+    <g id="task-classes-xtick_4">
+     <g id="task-classes-line2d_7">
+      <path d="M 362.673333 155.32 
+L 362.673333 7.2 
+" clip-path="url(#task-classes-p1899f67090)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="task-classes-line2d_8">
+      <g>
+       <use xlink:href="#task-classes-m410a49c6a3" x="362.673333" y="155.32" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="task-classes-text_4">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" x="362.673333" y="170.279375" transform="rotate(-0 362.673333 170.279375)">0.6</text>
+     </g>
+    </g>
+    <g id="task-classes-xtick_5">
+     <g id="task-classes-line2d_9">
+      <path d="M 455.497778 155.32 
+L 455.497778 7.2 
+" clip-path="url(#task-classes-p1899f67090)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="task-classes-line2d_10">
+      <g>
+       <use xlink:href="#task-classes-m410a49c6a3" x="455.497778" y="155.32" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="task-classes-text_5">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" x="455.497778" y="170.279375" transform="rotate(-0 455.497778 170.279375)">0.8</text>
+     </g>
+    </g>
+    <g id="task-classes-text_6">
+     <text style="font-size: 11px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #141413" x="293.055" y="185.325312" transform="rotate(-0 293.055 185.325312)">条件时间指数 α；同一边界余维与常数参数度量</text>
+    </g>
+   </g>
+   <g id="task-classes-matplotlib.axis_2">
+    <g id="task-classes-ytick_1">
+     <g id="task-classes-line2d_11">
+      <defs>
+       <path id="task-classes-m93ad138550" d="M 0 0 
+L -3.5 0 
+" style="stroke: #5e5d59; stroke-width: 0.8"/>
+      </defs>
+      <g>
+       <use xlink:href="#task-classes-m93ad138550" x="84.2" y="27.825657" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="task-classes-text_7">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="77.2" y="31.805344" transform="rotate(-0 77.2 31.805344)">输出差不消失</text>
+     </g>
+    </g>
+    <g id="task-classes-ytick_2">
+     <g id="task-classes-line2d_12">
+      <g>
+       <use xlink:href="#task-classes-m93ad138550" x="84.2" y="81.26" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="task-classes-text_8">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="77.2" y="85.239688" transform="rotate(-0 77.2 85.239688)">输出差一阶消失</text>
+     </g>
+    </g>
+    <g id="task-classes-ytick_3">
+     <g id="task-classes-line2d_13">
+      <g>
+       <use xlink:href="#task-classes-m93ad138550" x="84.2" y="134.694343" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="task-classes-text_9">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="77.2" y="138.674031" transform="rotate(-0 77.2 138.674031)">输出差二阶消失</text>
+     </g>
+    </g>
+   </g>
+   <g id="task-classes-patch_3">
+    <path d="M 84.2 13.932727 
+L 238.907407 13.932727 
+L 238.907407 41.718586 
+L 84.2 41.718586 
+z
+" clip-path="url(#task-classes-p1899f67090)" style="fill: #d97757"/>
+   </g>
+   <g id="task-classes-patch_4">
+    <path d="M 84.2 67.367071 
+L 362.673333 67.367071 
+L 362.673333 95.152929 
+L 84.2 95.152929 
+z
+" clip-path="url(#task-classes-p1899f67090)" style="fill: #6a9bcc"/>
+   </g>
+   <g id="task-classes-patch_5">
+    <path d="M 84.2 120.801414 
+L 415.715873 120.801414 
+L 415.715873 148.587273 
+L 84.2 148.587273 
+z
+" clip-path="url(#task-classes-p1899f67090)" style="fill: #788c5d"/>
+   </g>
+   <g id="task-classes-patch_6">
+    <path d="M 84.2 155.32 
+L 84.2 7.2 
+" style="fill: none; stroke: #b0aea5; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="task-classes-patch_7">
+    <path d="M 84.2 155.32 
+L 501.91 155.32 
+" style="fill: none; stroke: #b0aea5; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="task-classes-text_10">
+    <text style="font-size: 12px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" x="249.118096" y="31.226907" transform="rotate(-0 249.118096 31.226907)">1/3</text>
+   </g>
+   <g id="task-classes-text_11">
+    <text style="font-size: 12px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" x="372.884022" y="84.66125" transform="rotate(-0 372.884022 84.66125)">3/5</text>
+   </g>
+   <g id="task-classes-text_12">
+    <text style="font-size: 12px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" x="425.926562" y="138.095593" transform="rotate(-0 425.926562 138.095593)">5/7</text>
+   </g>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="task-classes-p1899f67090">
+   <rect x="84.2" y="7.2" width="417.71" height="148.12"/>
+  </clipPath>
+ </defs>
+</svg></figure>
+
+<p>λ（低阶扰动幅度）可以很小，却把最终尾部拉回 1/3。一个受控交叉任务保留 β⁻¹、β⁻³、β⁻⁵ 三项，提前计算完整系数和时钟。把 λ 除以 4，并保持注册的缩放初态，接管时间预言增加 128 倍，实测为 127.77–127.98 倍。慢项占一半剩余误差时，只承担约 20.77% 的当前下降；达到一半下降还需要约 12 倍的缩放时钟。固定架构、只改 teacher 的后续实验补上了表示变化的混淆。</p>
+<p>这些结果适合发展成“任务边界类与扰动交叉”的文章。边界渐近积分和普适类思想已有前作，候选贡献在于普通最终任务、可训练参数、稳定条件与未见接管预测的结合。另一方面，同一几何和固定核中的目标谱可以给连续数据指数。不能据此宣称所有任务指数都量子化。</p>
+<h2>三张账本分别回答响应、当前贡献和剩余误差</h2>
+<p>Teacher forcing（用同样的真实前缀预测同样的下一 token）固定评价对象。它使不同状态可以直接配对，但没有给出自然文本真实条件概率，也没有给出不可约熵。我们借鉴 RGI（不同模型逐 token loss 差近似保留的现象）工作，把大背景与小学习响应分开，再记录每项的绝对量级、符号、波动和交互。</p>
+<p>输出账本解释一次 loss 为什么改变。p₀ 和 pₜ 是起终点输出概率，z₀ 和 zₜ 是相应 logits，eᵧ 是真实标签向量。I（完整 logit 位移的有符号一阶作用）与 Q（输出 KL 曲率代价）满足精确恒等式。Q 为正，不自动等于 Liu 的温度剩余。</p>
+<div class="equation" role="math">ΔL = I + Q　　I = E[(p₀−eᵧ)ᵀ(zₜ−z₀)]　　Q = E KL(p₀ ∥ pₜ) ≥ 0</div>
+
+<p>来源账本沿声明路径积分，回答哪些参数动作提供了当前收益。它区分 score 尺度、归一化形状和固定 scores 后的参数作用。后者包含 attention value 与输出投影，不能称为全部“非 attention”。这些分项带符号，并且依赖路径与坐标。</p>
+<p>存量账本则先允许其他参数充分补偿。F（真实标签 CE）依赖温度 b 与允许变化的其他参数 φ。U（固定温度后的最小 CE）是这个补偿问题的最优值。F*（共同 floor）是同一模型集合中的最低 CE。B 是温度剩余，O 是其他参数尚未补偿好的剩余。</p>
+<div class="equation" role="math">U(b) = inf<sub>φ</sub> F(b,φ)　　F* = inf<sub>b</sub> U(b)<br>F−F* = B+O　　B = U−F* ≥ 0　　O = F−U ≥ 0</div>
+
+<figure><svg aria-label="三张账本分别测量loss响应、当前工作和共同floor上的剩余" class="chart" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 220" role="img"><style>text{font-family:PingFang SC,Noto Sans CJK SC,Arial,sans-serif;fill:#141413}</style><path d="M0 11H700" stroke="#e8e6dc"/><text x="8" y="34" font-size="18" font-weight="600">输出响应</text><text x="154" y="34" font-size="16">这次 loss 怎样改变？</text><text x="154" y="59" font-size="14" style="fill:#5e5d59">一阶、二阶、实测高阶</text><path d="M0 75H700" stroke="#e8e6dc"/><text x="8" y="98" font-size="18" font-weight="600">当前来源</text><text x="154" y="98" font-size="16">哪些动作提供了收益？</text><text x="154" y="123" font-size="14" style="fill:#5e5d59">温度、形状、其余参数</text><path d="M0 139H700" stroke="#e8e6dc"/><text x="8" y="162" font-size="18" font-weight="600">剩余误差</text><text x="154" y="162" font-size="16">充分补偿后还剩多少？</text><text x="154" y="187" font-size="14" style="fill:#5e5d59">共同最低值、温度剩余、其他剩余</text></svg></figure>
+
+<p>长期主导还要证明 O/B 趋零、路径交互余项相对 B 消失，并用实际时钟预报新未来。一次收益中的小份额、剩余误差中的大份额、无限时间的主导是不同命题。RGI 侧线还发现，共同冻结参考能解释约 96.657%–97.582% 的 raw loss 方差，但更强的优化器差和跨前缀恒定差检验仍有失败。背景相关性不能替代对小机制项的核验。</p>
+<h2>自然语言短窗的收益主要来自一阶作用和分数形状学习</h2>
+<p>这一组使用 Pythia70M 官方 143000 状态，在 FineWeb 64 篇训练文档上更新全部 76 个参数张量，八步 SGD 的步长为 2×10⁻⁷。在固定 128 篇评价文档上，每篇使用 224 个真实标签与完整 50304 词表。起点 CE 为 3.960422449 nats/label，实测下降 54.928387 微nats/label，按配对文档计算的 95% 区间为 34.5888–75.2680。一个微nats等于 10⁻⁶ nats。</p>
+<p>A₁（参数一阶作用）、Q_F（正 Fisher 二阶曲率）、R₂（有符号的 logit 二阶表示响应）、E≥3（三阶以上实测余项）沿起终点参数直线计算。下面的比例以实际平均收益为分母，正贡献表示降低 CE。</p>
+<div class="equation" role="math">ΔL = A₁ + Q_F + R₂ + E≥3</div>
+
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>分阶项</th>
+<th style="text-align: right;">均值，微nats/label</th>
+<th style="text-align: right;">对收益的有符号贡献</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>参数一阶作用</td>
+<td style="text-align: right;">−56.164477</td>
+<td style="text-align: right;">+102.250%</td>
+</tr>
+<tr>
+<td>正 Fisher 二阶曲率</td>
+<td style="text-align: right;">+1.233747</td>
+<td style="text-align: right;">−2.246%</td>
+</tr>
+<tr>
+<td>表示二阶响应</td>
+<td style="text-align: right;">−0.059072</td>
+<td style="text-align: right;">+0.108%</td>
+</tr>
+<tr>
+<td>三阶以上余项</td>
+<td style="text-align: right;">+0.061415</td>
+<td style="text-align: right;">−0.112%</td>
+</tr>
+</tbody>
+</table></div>
+<p>表示二阶的文档标准差约 5.051 微nats，均值区间跨零。高阶余项的文档均方根为 0.518 微nats，约为平均收益的 0.944%。因此小均值不意味着每篇文档都可忽略。这个短窗的分阶很准确，跨官方 checkpoint 的大位移中，固定起点近似已经失效。</p>
+<figure><svg aria-label="自然八步收益中形状占51.95%、固定scores参数47.98%、纯锐化净负" class="chart" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 509.14 205.845" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ 
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="natural-source-figure_1">
+  <g id="natural-source-patch_1">
+   <path d="M 0 205.845 
+L 509.14 205.845 
+L 509.14 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="natural-source-axes_1">
+   <g id="natural-source-patch_2">
+    <path d="M 114.2 166.12 
+L 501.94 166.12 
+L 501.94 7.2 
+L 114.2 7.2 
+z
+" style="fill: #ffffff"/>
+   </g>
+   <g id="natural-source-matplotlib.axis_1">
+    <g id="natural-source-xtick_1">
+     <g id="natural-source-line2d_1">
+      <path d="M 147.916522 166.12 
+L 147.916522 7.2 
+" clip-path="url(#natural-source-p9893a3d8e4)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="natural-source-line2d_2">
+      <defs>
+       <path id="natural-source-mad0911a71d" d="M 0 0 
+L 0 3.5 
+" style="stroke: #5e5d59; stroke-width: 0.8"/>
+      </defs>
+      <g>
+       <use xlink:href="#natural-source-mad0911a71d" x="147.916522" y="166.12" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="natural-source-text_1">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" x="147.916522" y="181.079375" transform="rotate(-0 147.916522 181.079375)">0</text>
+     </g>
+    </g>
+    <g id="natural-source-xtick_2">
+     <g id="natural-source-line2d_3">
+      <path d="M 204.110725 166.12 
+L 204.110725 7.2 
+" clip-path="url(#natural-source-p9893a3d8e4)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="natural-source-line2d_4">
+      <g>
+       <use xlink:href="#natural-source-mad0911a71d" x="204.110725" y="166.12" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="natural-source-text_2">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" x="204.110725" y="181.079375" transform="rotate(-0 204.110725 181.079375)">10</text>
+     </g>
+    </g>
+    <g id="natural-source-xtick_3">
+     <g id="natural-source-line2d_5">
+      <path d="M 260.304928 166.12 
+L 260.304928 7.2 
+" clip-path="url(#natural-source-p9893a3d8e4)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="natural-source-line2d_6">
+      <g>
+       <use xlink:href="#natural-source-mad0911a71d" x="260.304928" y="166.12" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="natural-source-text_3">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" x="260.304928" y="181.079375" transform="rotate(-0 260.304928 181.079375)">20</text>
+     </g>
+    </g>
+    <g id="natural-source-xtick_4">
+     <g id="natural-source-line2d_7">
+      <path d="M 316.49913 166.12 
+L 316.49913 7.2 
+" clip-path="url(#natural-source-p9893a3d8e4)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="natural-source-line2d_8">
+      <g>
+       <use xlink:href="#natural-source-mad0911a71d" x="316.49913" y="166.12" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="natural-source-text_4">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" x="316.49913" y="181.079375" transform="rotate(-0 316.49913 181.079375)">30</text>
+     </g>
+    </g>
+    <g id="natural-source-xtick_5">
+     <g id="natural-source-line2d_9">
+      <path d="M 372.693333 166.12 
+L 372.693333 7.2 
+" clip-path="url(#natural-source-p9893a3d8e4)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="natural-source-line2d_10">
+      <g>
+       <use xlink:href="#natural-source-mad0911a71d" x="372.693333" y="166.12" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="natural-source-text_5">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" x="372.693333" y="181.079375" transform="rotate(-0 372.693333 181.079375)">40</text>
+     </g>
+    </g>
+    <g id="natural-source-xtick_6">
+     <g id="natural-source-line2d_11">
+      <path d="M 428.887536 166.12 
+L 428.887536 7.2 
+" clip-path="url(#natural-source-p9893a3d8e4)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="natural-source-line2d_12">
+      <g>
+       <use xlink:href="#natural-source-mad0911a71d" x="428.887536" y="166.12" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="natural-source-text_6">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" x="428.887536" y="181.079375" transform="rotate(-0 428.887536 181.079375)">50</text>
+     </g>
+    </g>
+    <g id="natural-source-xtick_7">
+     <g id="natural-source-line2d_13">
+      <path d="M 485.081739 166.12 
+L 485.081739 7.2 
+" clip-path="url(#natural-source-p9893a3d8e4)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="natural-source-line2d_14">
+      <g>
+       <use xlink:href="#natural-source-mad0911a71d" x="485.081739" y="166.12" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="natural-source-text_7">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" x="485.081739" y="181.079375" transform="rotate(-0 485.081739 181.079375)">60</text>
+     </g>
+    </g>
+    <g id="natural-source-text_8">
+     <text style="font-size: 11px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #141413" x="308.07" y="196.125312" transform="rotate(-0 308.07 196.125312)">对同一平均收益的有符号份额（%）</text>
+    </g>
+   </g>
+   <g id="natural-source-matplotlib.axis_2">
+    <g id="natural-source-ytick_1">
+     <g id="natural-source-line2d_15">
+      <defs>
+       <path id="natural-source-m9513e9540b" d="M 0 0 
+L -3.5 0 
+" style="stroke: #5e5d59; stroke-width: 0.8"/>
+      </defs>
+      <g>
+       <use xlink:href="#natural-source-m9513e9540b" x="114.2" y="22.734014" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="natural-source-text_9">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="107.2" y="26.713702" transform="rotate(-0 107.2 26.713702)">形状学习</text>
+     </g>
+    </g>
+    <g id="natural-source-ytick_2">
+     <g id="natural-source-line2d_16">
+      <g>
+       <use xlink:href="#natural-source-m9513e9540b" x="114.2" y="54.697007" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="natural-source-text_10">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="107.2" y="58.676695" transform="rotate(-0 107.2 58.676695)">固定 scores 后的参数</text>
+     </g>
+    </g>
+    <g id="natural-source-ytick_3">
+     <g id="natural-source-line2d_17">
+      <g>
+       <use xlink:href="#natural-source-m9513e9540b" x="114.2" y="86.66" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="natural-source-text_11">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="107.2" y="90.639687" transform="rotate(-0 107.2 90.639687)">变暖</text>
+     </g>
+    </g>
+    <g id="natural-source-ytick_4">
+     <g id="natural-source-line2d_18">
+      <g>
+       <use xlink:href="#natural-source-m9513e9540b" x="114.2" y="118.622993" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="natural-source-text_12">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="107.2" y="122.60268" transform="rotate(-0 107.2 122.60268)">锐化净作用</text>
+     </g>
+    </g>
+    <g id="natural-source-ytick_5">
+     <g id="natural-source-line2d_19">
+      <g>
+       <use xlink:href="#natural-source-m9513e9540b" x="114.2" y="150.585986" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="natural-source-text_13">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="107.2" y="154.565673" transform="rotate(-0 107.2 154.565673)">有利锐化正部（子集）</text>
+     </g>
+    </g>
+   </g>
+   <g id="natural-source-patch_3">
+    <path d="M 147.916522 14.423636 
+L 439.852655 14.423636 
+L 439.852655 31.044393 
+L 147.916522 31.044393 
+z
+" clip-path="url(#natural-source-p9893a3d8e4)" style="fill: #d97757"/>
+   </g>
+   <g id="natural-source-patch_4">
+    <path d="M 147.916522 46.386629 
+L 417.537233 46.386629 
+L 417.537233 63.007385 
+L 147.916522 63.007385 
+z
+" clip-path="url(#natural-source-p9893a3d8e4)" style="fill: #6a9bcc"/>
+   </g>
+   <g id="natural-source-patch_5">
+    <path d="M 147.916522 78.349622 
+L 150.44137 78.349622 
+L 150.44137 94.970378 
+L 147.916522 94.970378 
+z
+" clip-path="url(#natural-source-p9893a3d8e4)" style="fill: #788c5d"/>
+   </g>
+   <g id="natural-source-patch_6">
+    <path d="M 147.916522 110.312615 
+L 145.776843 110.312615 
+L 145.776843 126.933371 
+L 147.916522 126.933371 
+z
+" clip-path="url(#natural-source-p9893a3d8e4)" style="fill: #b0aea5"/>
+   </g>
+   <g id="natural-source-patch_7">
+    <path d="M 147.916522 142.275607 
+L 188.200737 142.275607 
+L 188.200737 158.896364 
+L 147.916522 158.896364 
+L 147.916522 142.275607 
+z
+" clip-path="url(#natural-source-p9893a3d8e4)" style="fill: none; stroke: #d97757; stroke-width: 1.6; stroke-linejoin: miter"/>
+   </g>
+   <g id="natural-source-line2d_20">
+    <path d="M 147.916522 166.12 
+L 147.916522 7.2 
+" clip-path="url(#natural-source-p9893a3d8e4)" style="fill: none; stroke: #b0aea5; stroke-width: 0.8; stroke-linecap: square"/>
+   </g>
+   <g id="natural-source-patch_8">
+    <path d="M 114.2 166.12 
+L 114.2 7.2 
+" style="fill: none; stroke: #b0aea5; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="natural-source-patch_9">
+    <path d="M 114.2 166.12 
+L 501.94 166.12 
+" style="fill: none; stroke: #b0aea5; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="natural-source-text_14">
+    <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" x="446.595959" y="25.568389" transform="rotate(-0 446.595959 25.568389)">+51.951%</text>
+   </g>
+   <g id="natural-source-text_15">
+    <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" x="424.280537" y="57.531382" transform="rotate(-0 424.280537 57.531382)">+47.980%</text>
+   </g>
+   <g id="natural-source-text_16">
+    <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" x="157.184674" y="89.494375" transform="rotate(-0 157.184674 89.494375)">+0.449%</text>
+   </g>
+   <g id="natural-source-text_17">
+    <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" x="154.659826" y="121.457368" transform="rotate(-0 154.659826 121.457368)">-0.381%</text>
+   </g>
+   <g id="natural-source-text_18">
+    <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" x="194.944041" y="153.420361" transform="rotate(-0 194.944041 153.420361)">+7.169%</text>
+   </g>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="natural-source-p9893a3d8e4">
+   <rect x="114.2" y="7.2" width="387.74" height="158.92"/>
+  </clipPath>
+ </defs>
+</svg></figure>
+
+<p>来源积分中，形状学习占 51.951%，固定 scores 后参数作用占 47.980%，变暖占 0.449%，锐化净作用为 −0.381%。所有有利锐化累计约 7.169%，有害部分更多。固定近打平集合以起点 δ≤0.25 定义，覆盖约 49.02% 的常规行，按交互平均分摊的有限归因规则占约 51.35% 的收益，其中 shape 工作远大于径向尺度工作。近打平有任务作用，并不能单独证明纯锐化主导。</p>
+<details><summary>当前分解的数值边界</summary><p>独立实现核对原温度与自然端点，最大差约 4.21×10⁻¹³ nats。全参数自然直线与把 scores 独立输入的直线，是两条不同路径，其分阶系数不互换。来源实验中 17/128 篇进行了分项积分细化，剩余 111 篇的总闭合不能排除分项抵消。固定 near 集合的完整实验保留跨平台端点、部分 AD 和原积分门槛失败。补充复核支持所展示量级，原整轮资格仍未全过。这些是既有评价池的数值诊断，不是新语料的独立总体确认，也不是官方 AdamW 长期历史。</p></details>
+
+<h2>小温度干预可以量出每阶，但更尖锐并不总是更好</h2>
+<p>在同一个 143000 自然状态附近冻结模型，用 b（score 乘数）作小幅干预，b=1 是自然尺度。全六层同时改变 ±0.5%，分别得到下面的响应。表中负号表示 CE 降低，单位为微nats/label。</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>score 改变</th>
+<th style="text-align: right;">一阶</th>
+<th style="text-align: right;">Fisher 二阶</th>
+<th style="text-align: right;">表示二阶</th>
+<th style="text-align: right;">三阶以上</th>
+<th style="text-align: right;">实际 ΔCE</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>−0.5%</td>
+<td style="text-align: right;">−105.804</td>
+<td style="text-align: right;">+33.927</td>
+<td style="text-align: right;">−0.705</td>
+<td style="text-align: right;">+0.375</td>
+<td style="text-align: right;">−72.207</td>
+</tr>
+<tr>
+<td>+0.5%</td>
+<td style="text-align: right;">+105.804</td>
+<td style="text-align: right;">+33.927</td>
+<td style="text-align: right;">−0.705</td>
+<td style="text-align: right;">−0.360</td>
+<td style="text-align: right;">+138.665</td>
+</tr>
+</tbody>
+</table></div>
+<figure><svg aria-label="全层自然尺度±0.5%的实际CE响应及各阶作用" class="chart" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 508.145312 221.21" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ 
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="small-temperature-figure_1">
+  <g id="small-temperature-patch_1">
+   <path d="M 0 221.21 
+L 508.145312 221.21 
+L 508.145312 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="small-temperature-axes_1">
+   <g id="small-temperature-patch_2">
+    <path d="M 49.705313 196.76 
+L 500.945312 196.76 
+L 500.945312 7.2 
+L 49.705313 7.2 
+z
+" style="fill: #ffffff"/>
+   </g>
+   <g id="small-temperature-matplotlib.axis_1">
+    <g id="small-temperature-xtick_1">
+     <g id="small-temperature-line2d_1">
+      <defs>
+       <path id="small-temperature-m40323495da" d="M 0 0 
+L 0 3.5 
+" style="stroke: #5e5d59; stroke-width: 0.8"/>
+      </defs>
+      <g>
+       <use xlink:href="#small-temperature-m40323495da" x="146.730271" y="196.76" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="small-temperature-text_1">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" x="146.730271" y="211.719375" transform="rotate(-0 146.730271 211.719375)">−0.5%</text>
+     </g>
+    </g>
+    <g id="small-temperature-xtick_2">
+     <g id="small-temperature-line2d_2">
+      <g>
+       <use xlink:href="#small-temperature-m40323495da" x="403.920354" y="196.76" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="small-temperature-text_2">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" x="403.920354" y="211.719375" transform="rotate(-0 403.920354 211.719375)">+0.5%</text>
+     </g>
+    </g>
+   </g>
+   <g id="small-temperature-matplotlib.axis_2">
+    <g id="small-temperature-ytick_1">
+     <g id="small-temperature-line2d_3">
+      <path d="M 49.705313 170.103125 
+L 500.945312 170.103125 
+" clip-path="url(#small-temperature-pf2e5763b41)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="small-temperature-line2d_4">
+      <defs>
+       <path id="small-temperature-mac926055ae" d="M 0 0 
+L -3.5 0 
+" style="stroke: #5e5d59; stroke-width: 0.8"/>
+      </defs>
+      <g>
+       <use xlink:href="#small-temperature-mac926055ae" x="49.705313" y="170.103125" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="small-temperature-text_3">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="42.705313" y="174.082812" transform="rotate(-0 42.705313 174.082812)">-100</text>
+     </g>
+    </g>
+    <g id="small-temperature-ytick_2">
+     <g id="small-temperature-line2d_5">
+      <path d="M 49.705313 140.484375 
+L 500.945312 140.484375 
+" clip-path="url(#small-temperature-pf2e5763b41)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="small-temperature-line2d_6">
+      <g>
+       <use xlink:href="#small-temperature-mac926055ae" x="49.705313" y="140.484375" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="small-temperature-text_4">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="42.705313" y="144.464062" transform="rotate(-0 42.705313 144.464062)">-50</text>
+     </g>
+    </g>
+    <g id="small-temperature-ytick_3">
+     <g id="small-temperature-line2d_7">
+      <path d="M 49.705313 110.865625 
+L 500.945312 110.865625 
+" clip-path="url(#small-temperature-pf2e5763b41)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="small-temperature-line2d_8">
+      <g>
+       <use xlink:href="#small-temperature-mac926055ae" x="49.705313" y="110.865625" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="small-temperature-text_5">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="42.705313" y="114.845312" transform="rotate(-0 42.705313 114.845312)">0</text>
+     </g>
+    </g>
+    <g id="small-temperature-ytick_4">
+     <g id="small-temperature-line2d_9">
+      <path d="M 49.705313 81.246875 
+L 500.945312 81.246875 
+" clip-path="url(#small-temperature-pf2e5763b41)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="small-temperature-line2d_10">
+      <g>
+       <use xlink:href="#small-temperature-mac926055ae" x="49.705313" y="81.246875" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="small-temperature-text_6">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="42.705313" y="85.226562" transform="rotate(-0 42.705313 85.226562)">50</text>
+     </g>
+    </g>
+    <g id="small-temperature-ytick_5">
+     <g id="small-temperature-line2d_11">
+      <path d="M 49.705313 51.628125 
+L 500.945312 51.628125 
+" clip-path="url(#small-temperature-pf2e5763b41)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="small-temperature-line2d_12">
+      <g>
+       <use xlink:href="#small-temperature-mac926055ae" x="49.705313" y="51.628125" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="small-temperature-text_7">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="42.705313" y="55.607812" transform="rotate(-0 42.705313 55.607812)">100</text>
+     </g>
+    </g>
+    <g id="small-temperature-ytick_6">
+     <g id="small-temperature-line2d_13">
+      <path d="M 49.705313 22.009375 
+L 500.945312 22.009375 
+" clip-path="url(#small-temperature-pf2e5763b41)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="small-temperature-line2d_14">
+      <g>
+       <use xlink:href="#small-temperature-mac926055ae" x="49.705313" y="22.009375" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="small-temperature-text_8">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="42.705313" y="25.989063" transform="rotate(-0 42.705313 25.989063)">150</text>
+     </g>
+    </g>
+    <g id="small-temperature-text_9">
+     <text style="font-size: 11px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #141413" x="16.065313" y="101.98" transform="rotate(-90 16.065313 101.98)">ΔCE（微nats/label）；负值改善</text>
+    </g>
+   </g>
+   <g id="small-temperature-patch_3">
+    <path d="M 70.216222 110.865625 
+L 107.508784 110.865625 
+L 107.508784 173.541078 
+L 70.216222 173.541078 
+z
+" clip-path="url(#small-temperature-pf2e5763b41)" style="fill: #d97757"/>
+   </g>
+   <g id="small-temperature-patch_4">
+    <path d="M 327.406304 110.865625 
+L 364.698866 110.865625 
+L 364.698866 48.190172 
+L 327.406304 48.190172 
+z
+" clip-path="url(#small-temperature-pf2e5763b41)" style="fill: #d97757"/>
+   </g>
+   <g id="small-temperature-patch_5">
+    <path d="M 108.794734 110.865625 
+L 146.087296 110.865625 
+L 146.087296 90.768318 
+L 108.794734 90.768318 
+z
+" clip-path="url(#small-temperature-pf2e5763b41)" style="fill: #6a9bcc"/>
+   </g>
+   <g id="small-temperature-patch_6">
+    <path d="M 365.984817 110.865625 
+L 403.277379 110.865625 
+L 403.277379 90.768318 
+L 365.984817 90.768318 
+z
+" clip-path="url(#small-temperature-pf2e5763b41)" style="fill: #6a9bcc"/>
+   </g>
+   <g id="small-temperature-patch_7">
+    <path d="M 147.373246 110.865625 
+L 184.665808 110.865625 
+L 184.665808 111.28316 
+L 147.373246 111.28316 
+z
+" clip-path="url(#small-temperature-pf2e5763b41)" style="fill: #788c5d"/>
+   </g>
+   <g id="small-temperature-patch_8">
+    <path d="M 404.563329 110.865625 
+L 441.855891 110.865625 
+L 441.855891 111.28316 
+L 404.563329 111.28316 
+z
+" clip-path="url(#small-temperature-pf2e5763b41)" style="fill: #788c5d"/>
+   </g>
+   <g id="small-temperature-patch_9">
+    <path d="M 185.951759 110.865625 
+L 223.244321 110.865625 
+L 223.244321 110.64361 
+L 185.951759 110.64361 
+z
+" clip-path="url(#small-temperature-pf2e5763b41)" style="fill: #b0aea5"/>
+   </g>
+   <g id="small-temperature-patch_10">
+    <path d="M 443.141841 110.865625 
+L 480.434403 110.865625 
+L 480.434403 111.079015 
+L 443.141841 111.079015 
+z
+" clip-path="url(#small-temperature-pf2e5763b41)" style="fill: #b0aea5"/>
+   </g>
+   <g id="small-temperature-line2d_15">
+    <path d="M 49.705313 110.865625 
+L 500.945312 110.865625 
+" clip-path="url(#small-temperature-pf2e5763b41)" style="fill: none; stroke: #b0aea5; stroke-width: 0.8; stroke-linecap: square"/>
+   </g>
+   <g id="small-temperature-patch_11">
+    <path d="M 49.705313 196.76 
+L 49.705313 7.2 
+" style="fill: none; stroke: #b0aea5; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="small-temperature-patch_12">
+    <path d="M 49.705313 196.76 
+L 500.945312 196.76 
+" style="fill: none; stroke: #b0aea5; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="small-temperature-text_10">
+    <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" x="166.730271" y="163.639291" transform="rotate(-0 166.730271 163.639291)">-72.207</text>
+   </g>
+   <g id="small-temperature-text_11">
+    <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" x="423.920354" y="25.72379" transform="rotate(-0 423.920354 25.72379)">+138.665</text>
+   </g>
+   <g id="small-temperature-PathCollection_1">
+    <defs>
+     <path id="small-temperature-m892164087a" d="M -0 4.472136 
+L 4.472136 0 
+L 0 -4.472136 
+L -4.472136 -0 
+z
+" style="stroke: #141413"/>
+    </defs>
+    <g clip-path="url(#small-temperature-pf2e5763b41)">
+     <use xlink:href="#small-temperature-m892164087a" x="146.730271" y="153.639291" style="fill: #141413; stroke: #141413"/>
+     <use xlink:href="#small-temperature-m892164087a" x="403.920354" y="28.72379" style="fill: #141413; stroke: #141413"/>
+    </g>
+   </g>
+   <g id="small-temperature-legend_1">
+    <g id="small-temperature-PathCollection_2">
+     <g>
+      <use xlink:href="#small-temperature-m892164087a" x="66.805313" y="20.100937" style="fill: #141413; stroke: #141413"/>
+     </g>
+    </g>
+    <g id="small-temperature-text_12">
+     <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" x="83.005313" y="22.463437" transform="rotate(-0 83.005313 22.463437)">实测 ΔCE</text>
+    </g>
+    <g id="small-temperature-patch_13">
+     <path d="M 57.805313 36.188437 
+L 75.805313 36.188437 
+L 75.805313 29.888437 
+L 57.805313 29.888437 
+z
+" style="fill: #d97757"/>
+    </g>
+    <g id="small-temperature-text_13">
+     <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" x="83.005313" y="36.188437" transform="rotate(-0 83.005313 36.188437)">一阶</text>
+    </g>
+    <g id="small-temperature-patch_14">
+     <path d="M 137.968594 22.463437 
+L 155.968594 22.463437 
+L 155.968594 16.163437 
+L 137.968594 16.163437 
+z
+" style="fill: #6a9bcc"/>
+    </g>
+    <g id="small-temperature-text_14">
+     <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" x="163.168594" y="22.463437" transform="rotate(-0 163.168594 22.463437)">Fisher 二阶</text>
+    </g>
+    <g id="small-temperature-patch_15">
+     <path d="M 137.968594 36.188437 
+L 155.968594 36.188437 
+L 155.968594 29.888437 
+L 137.968594 29.888437 
+z
+" style="fill: #788c5d"/>
+    </g>
+    <g id="small-temperature-text_15">
+     <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" x="163.168594" y="36.188437" transform="rotate(-0 163.168594 36.188437)">表示二阶</text>
+    </g>
+    <g id="small-temperature-patch_16">
+     <path d="M 226.781719 22.463437 
+L 244.781719 22.463437 
+L 244.781719 16.163437 
+L 226.781719 16.163437 
+z
+" style="fill: #b0aea5"/>
+    </g>
+    <g id="small-temperature-text_16">
+     <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" x="251.981719" y="22.463437" transform="rotate(-0 251.981719 22.463437)">三阶以上</text>
+    </g>
+   </g>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="small-temperature-pf2e5763b41">
+   <rect x="49.705313" y="7.2" width="451.24" height="189.56"/>
+  </clipPath>
+ </defs>
+</svg></figure>
+
+<p>在 ±0.25% 与 ±0.5% 中，二阶近似的平均余项约占净响应 0.072%–0.519%。仅最后层 ±2% 时，变暖改善约 39.431 微nats，锐化恶化约 38.672 微nats。全层变暖的改善区间仍跨零，不能直接宣布总体有益。</p>
+<p>小温度区是看到原 ±1%/2% 失败后另登记的补充，不能称完全盲选。它量出冻结状态的局部敏感度，没有将人工温度收益当成真实训练占比，也没有提供长期剩余误差。</p>
+<h2>受限自然模型已量出共同最低值，温度份额随补偿与时钟改变</h2>
+<p>另一组使用官方 32000 状态、FineWeb 128 篇训练文档和相同标签数、完整词表。允许最后层八个 head 的 K weight/bias 沿官方射线改变尺度，完整读出层在官方中心的 5% 范数球内补偿，其他参数冻结。温度范围为 0.5–2。这是声明过的有限模型集合，其 floor 不等于整网最优或自然文本熵。</p>
+<p>共同 floor 已收紧到 2.129327063–2.129590128 nats/label，区间宽度约 0.000263。在官方未补偿读出的同轨迹末态，温度剩余 B 约为 0.008726–0.009046，其他剩余 O 约为 1.879800–1.879857；B 份额不超过 0.479%。若先把读出补偿好，O 大幅降低，B 份额就可以超过 99%。这是不同初始化，不能写成实际训练已观察到自动接管。</p>
+<p>原生欧氏几何下，温度尺度的参数度量约为 147534.322，读出度量为 1。在一个共同日历的联合短窗里，温度只移动约 2.06×10⁻⁸，工作小于登记数值预算。显式加速温度相对运动约 590137 倍的对照里，score 尺度只增加 0.9833%，温度工作却达到当前收益的 66.406%。这证明时钟改变贡献，不能把显式加速叫原生预训练。</p>
+<figure><svg aria-label="同一显式时钟轨迹的来源账本与剩余账本不同，温度profile改善被读出滞后抵消" class="chart" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 509.1 335.555" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ 
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="profile-work-figure_1">
+  <g id="profile-work-patch_1">
+   <path d="M 0 335.555 
+L 509.1 335.555 
+L 509.1 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="profile-work-axes_1">
+   <g id="profile-work-patch_2">
+    <path d="M 74.2 295.72 
+L 501.9 295.72 
+L 501.9 7.2 
+L 74.2 7.2 
+z
+" style="fill: #ffffff"/>
+   </g>
+   <g id="profile-work-matplotlib.axis_1">
+    <g id="profile-work-xtick_1">
+     <g id="profile-work-line2d_1">
+      <path d="M 80.398551 295.72 
+L 80.398551 7.2 
+" clip-path="url(#profile-work-p00ee905a46)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="profile-work-line2d_2">
+      <defs>
+       <path id="profile-work-m1cc5a663ff" d="M 0 0 
+L 0 3.5 
+" style="stroke: #5e5d59; stroke-width: 0.8"/>
+      </defs>
+      <g>
+       <use xlink:href="#profile-work-m1cc5a663ff" x="80.398551" y="295.72" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="profile-work-text_1">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" x="80.398551" y="310.679375" transform="rotate(-0 80.398551 310.679375)">-50</text>
+     </g>
+    </g>
+    <g id="profile-work-xtick_2">
+     <g id="profile-work-line2d_3">
+      <path d="M 157.880435 295.72 
+L 157.880435 7.2 
+" clip-path="url(#profile-work-p00ee905a46)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="profile-work-line2d_4">
+      <g>
+       <use xlink:href="#profile-work-m1cc5a663ff" x="157.880435" y="295.72" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="profile-work-text_2">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" x="157.880435" y="310.679375" transform="rotate(-0 157.880435 310.679375)">0</text>
+     </g>
+    </g>
+    <g id="profile-work-xtick_3">
+     <g id="profile-work-line2d_5">
+      <path d="M 235.362319 295.72 
+L 235.362319 7.2 
+" clip-path="url(#profile-work-p00ee905a46)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="profile-work-line2d_6">
+      <g>
+       <use xlink:href="#profile-work-m1cc5a663ff" x="235.362319" y="295.72" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="profile-work-text_3">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" x="235.362319" y="310.679375" transform="rotate(-0 235.362319 310.679375)">50</text>
+     </g>
+    </g>
+    <g id="profile-work-xtick_4">
+     <g id="profile-work-line2d_7">
+      <path d="M 312.844203 295.72 
+L 312.844203 7.2 
+" clip-path="url(#profile-work-p00ee905a46)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="profile-work-line2d_8">
+      <g>
+       <use xlink:href="#profile-work-m1cc5a663ff" x="312.844203" y="295.72" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="profile-work-text_4">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" x="312.844203" y="310.679375" transform="rotate(-0 312.844203 310.679375)">100</text>
+     </g>
+    </g>
+    <g id="profile-work-xtick_5">
+     <g id="profile-work-line2d_9">
+      <path d="M 390.326087 295.72 
+L 390.326087 7.2 
+" clip-path="url(#profile-work-p00ee905a46)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="profile-work-line2d_10">
+      <g>
+       <use xlink:href="#profile-work-m1cc5a663ff" x="390.326087" y="295.72" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="profile-work-text_5">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" x="390.326087" y="310.679375" transform="rotate(-0 390.326087 310.679375)">150</text>
+     </g>
+    </g>
+    <g id="profile-work-xtick_6">
+     <g id="profile-work-line2d_11">
+      <path d="M 467.807971 295.72 
+L 467.807971 7.2 
+" clip-path="url(#profile-work-p00ee905a46)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="profile-work-line2d_12">
+      <g>
+       <use xlink:href="#profile-work-m1cc5a663ff" x="467.807971" y="295.72" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="profile-work-text_6">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" x="467.807971" y="310.679375" transform="rotate(-0 467.807971 310.679375)">200</text>
+     </g>
+    </g>
+    <g id="profile-work-text_7">
+     <text style="font-size: 11px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #141413" x="288.05" y="325.835312" transform="rotate(-0 288.05 325.835312)">改善量（微nats/label）：来源账本与存量账本分别闭合</text>
+    </g>
+   </g>
+   <g id="profile-work-matplotlib.axis_2">
+    <g id="profile-work-ytick_1">
+     <g id="profile-work-line2d_13">
+      <defs>
+       <path id="profile-work-m60c42ff01b" d="M 0 0 
+L -3.5 0 
+" style="stroke: #5e5d59; stroke-width: 0.8"/>
+      </defs>
+      <g>
+       <use xlink:href="#profile-work-m60c42ff01b" x="74.2" y="30.402657" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="profile-work-text_8">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="67.2" y="34.382345" transform="rotate(-0 67.2 34.382345)">温度工作</text>
+     </g>
+    </g>
+    <g id="profile-work-ytick_2">
+     <g id="profile-work-line2d_14">
+      <g>
+       <use xlink:href="#profile-work-m60c42ff01b" x="74.2" y="70.755105" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="profile-work-text_9">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="67.2" y="74.734792" transform="rotate(-0 67.2 74.734792)">读出工作</text>
+     </g>
+    </g>
+    <g id="profile-work-ytick_3">
+     <g id="profile-work-line2d_15">
+      <g>
+       <use xlink:href="#profile-work-m60c42ff01b" x="74.2" y="111.107552" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="profile-work-text_10">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="67.2" y="115.08724" transform="rotate(-0 67.2 115.08724)">实际收益</text>
+     </g>
+    </g>
+    <g id="profile-work-ytick_4">
+     <g id="profile-work-line2d_16">
+      <g>
+       <use xlink:href="#profile-work-m60c42ff01b" x="74.2" y="191.812448" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="profile-work-text_11">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="67.2" y="195.792135" transform="rotate(-0 67.2 195.792135)">温度剩余改善</text>
+     </g>
+    </g>
+    <g id="profile-work-ytick_5">
+     <g id="profile-work-line2d_17">
+      <g>
+       <use xlink:href="#profile-work-m60c42ff01b" x="74.2" y="232.164895" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="profile-work-text_12">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="67.2" y="236.144583" transform="rotate(-0 67.2 236.144583)">其他剩余改善</text>
+     </g>
+    </g>
+    <g id="profile-work-ytick_6">
+     <g id="profile-work-line2d_18">
+      <g>
+       <use xlink:href="#profile-work-m60c42ff01b" x="74.2" y="272.517343" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="profile-work-text_13">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="67.2" y="276.49703" transform="rotate(-0 67.2 276.49703)">实际收益</text>
+     </g>
+    </g>
+   </g>
+   <g id="profile-work-patch_3">
+    <path d="M 157.880435 20.314545 
+L 322.824525 20.314545 
+L 322.824525 40.490769 
+L 157.880435 40.490769 
+z
+" clip-path="url(#profile-work-p00ee905a46)" style="fill: #d97757"/>
+   </g>
+   <g id="profile-work-patch_4">
+    <path d="M 157.880435 60.666993 
+L 241.323333 60.666993 
+L 241.323333 80.843217 
+L 157.880435 80.843217 
+z
+" clip-path="url(#profile-work-p00ee905a46)" style="fill: #6a9bcc"/>
+   </g>
+   <g id="profile-work-patch_5">
+    <path d="M 157.880435 101.019441 
+L 406.267423 101.019441 
+L 406.267423 121.195664 
+L 157.880435 121.195664 
+z
+" clip-path="url(#profile-work-p00ee905a46)" style="fill: #141413"/>
+   </g>
+   <g id="profile-work-patch_6">
+    <path d="M 157.880435 181.724336 
+L 431.087806 181.724336 
+L 431.087806 201.900559 
+L 157.880435 201.900559 
+z
+" clip-path="url(#profile-work-p00ee905a46)" style="fill: #d97757"/>
+   </g>
+   <g id="profile-work-patch_7">
+    <path d="M 157.880435 222.076783 
+L 133.060052 222.076783 
+L 133.060052 242.253007 
+L 157.880435 242.253007 
+z
+" clip-path="url(#profile-work-p00ee905a46)" style="fill: #6a9bcc"/>
+   </g>
+   <g id="profile-work-patch_8">
+    <path d="M 157.880435 262.429231 
+L 406.267423 262.429231 
+L 406.267423 282.605455 
+L 157.880435 282.605455 
+z
+" clip-path="url(#profile-work-p00ee905a46)" style="fill: #141413"/>
+   </g>
+   <g id="profile-work-line2d_19">
+    <path d="M 157.880435 295.72 
+L 157.880435 7.2 
+" clip-path="url(#profile-work-p00ee905a46)" style="fill: none; stroke: #b0aea5; stroke-width: 0.8; stroke-linecap: square"/>
+   </g>
+   <g id="profile-work-line2d_20">
+    <path d="M 74.2 151.46 
+L 501.9 151.46 
+" clip-path="url(#profile-work-p00ee905a46)" style="fill: none; stroke: #e8e6dc; stroke-linecap: square"/>
+   </g>
+   <g id="profile-work-patch_9">
+    <path d="M 74.2 295.72 
+L 74.2 7.2 
+" style="fill: none; stroke: #b0aea5; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="profile-work-patch_10">
+    <path d="M 74.2 295.72 
+L 501.9 295.72 
+" style="fill: none; stroke: #b0aea5; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="profile-work-text_14">
+    <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" x="327.473438" y="33.237032" transform="rotate(-0 327.473438 33.237032)">+106.44</text>
+   </g>
+   <g id="profile-work-text_15">
+    <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" x="245.972246" y="73.58948" transform="rotate(-0 245.972246 73.58948)">+53.85</text>
+   </g>
+   <g id="profile-work-text_16">
+    <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" x="410.916336" y="113.941927" transform="rotate(-0 410.916336 113.941927)">+160.29</text>
+   </g>
+   <g id="profile-work-text_17">
+    <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" x="435.736719" y="194.646823" transform="rotate(-0 435.736719 194.646823)">+176.30</text>
+   </g>
+   <g id="profile-work-text_18">
+    <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" x="162.529348" y="234.99927" transform="rotate(-0 162.529348 234.99927)">-16.02</text>
+   </g>
+   <g id="profile-work-text_19">
+    <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" x="410.916336" y="275.351718" transform="rotate(-0 410.916336 275.351718)">+160.29</text>
+   </g>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="profile-work-p00ee905a46">
+   <rect x="74.2" y="7.2" width="427.7" height="288.52"/>
+  </clipPath>
+ </defs>
+</svg></figure>
+
+<p>在该显式时钟路径，实际收益为 160.287 微nats，温度工作为 106.440，读出工作为 53.847。温度 profile（每个温度下充分补偿的最优 CE）改善为 175.359–177.319 微nats，读出滞后反而增长 15.052–17.051 微nats。来源工作与存量减少之间的差已直接量出，不能令它们相等。</p>
+<h2>新未来预测与候选对分解开始区分具体机制</h2>
+<p>J（冻结起点的完整 Jacobian）预测只保留 logits 对参数的一阶响应。完整参数二阶预测增加表示二阶和温度/读出混合响应。二者在实际未来执行前封存，用自己的状态递推。受限自然模型的两个较宽温度窗口中，固定 J 与局部逆温度预测失败；加入二阶后，下一个新窗口的收益误差约 1.63%，通过 5% 门槛。</p>
+<figure><svg aria-label="三个独立新未来窗口中冻结J、逆温度和二阶预测的收益误差" class="chart" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 508.015 228.41" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ 
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="future-forecasts-figure_1">
+  <g id="future-forecasts-patch_1">
+   <path d="M 0 228.41 
+L 508.015 228.41 
+L 508.015 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="future-forecasts-axes_1">
+   <g id="future-forecasts-patch_2">
+    <path d="M 40.575 203.96 
+L 500.815 203.96 
+L 500.815 7.2 
+L 40.575 7.2 
+z
+" style="fill: #ffffff"/>
+   </g>
+   <g id="future-forecasts-matplotlib.axis_1">
+    <g id="future-forecasts-xtick_1">
+     <g id="future-forecasts-line2d_1">
+      <defs>
+       <path id="future-forecasts-m788a190956" d="M 0 0 
+L 0 3.5 
+" style="stroke: #5e5d59; stroke-width: 0.8"/>
+      </defs>
+      <g>
+       <use xlink:href="#future-forecasts-m788a190956" x="114.283785" y="203.96" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="future-forecasts-text_1">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" x="114.283785" y="218.919375" transform="rotate(-0 114.283785 218.919375)">首个温度窗口</text>
+     </g>
+    </g>
+    <g id="future-forecasts-xtick_2">
+     <g id="future-forecasts-line2d_2">
+      <g>
+       <use xlink:href="#future-forecasts-m788a190956" x="270.695" y="203.96" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="future-forecasts-text_2">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" x="270.695" y="218.919375" transform="rotate(-0 270.695 218.919375)">下一个温度窗口</text>
+     </g>
+    </g>
+    <g id="future-forecasts-xtick_3">
+     <g id="future-forecasts-line2d_3">
+      <g>
+       <use xlink:href="#future-forecasts-m788a190956" x="427.106215" y="203.96" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="future-forecasts-text_3">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" x="427.106215" y="218.919375" transform="rotate(-0 427.106215 218.919375)">联合短窗口</text>
+     </g>
+    </g>
+   </g>
+   <g id="future-forecasts-matplotlib.axis_2">
+    <g id="future-forecasts-ytick_1">
+     <g id="future-forecasts-line2d_4">
+      <path d="M 40.575 203.96 
+L 500.815 203.96 
+" clip-path="url(#future-forecasts-p206aae38bf)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="future-forecasts-line2d_5">
+      <defs>
+       <path id="future-forecasts-m704e762aff" d="M 0 0 
+L -3.5 0 
+" style="stroke: #5e5d59; stroke-width: 0.8"/>
+      </defs>
+      <g>
+       <use xlink:href="#future-forecasts-m704e762aff" x="40.575" y="203.96" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="future-forecasts-text_4">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="33.575" y="207.939687" transform="rotate(-0 33.575 207.939687)">0</text>
+     </g>
+    </g>
+    <g id="future-forecasts-ytick_2">
+     <g id="future-forecasts-line2d_6">
+      <path d="M 40.575 162.968333 
+L 500.815 162.968333 
+" clip-path="url(#future-forecasts-p206aae38bf)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="future-forecasts-line2d_7">
+      <g>
+       <use xlink:href="#future-forecasts-m704e762aff" x="40.575" y="162.968333" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="future-forecasts-text_5">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="33.575" y="166.948021" transform="rotate(-0 33.575 166.948021)">10</text>
+     </g>
+    </g>
+    <g id="future-forecasts-ytick_3">
+     <g id="future-forecasts-line2d_8">
+      <path d="M 40.575 121.976667 
+L 500.815 121.976667 
+" clip-path="url(#future-forecasts-p206aae38bf)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="future-forecasts-line2d_9">
+      <g>
+       <use xlink:href="#future-forecasts-m704e762aff" x="40.575" y="121.976667" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="future-forecasts-text_6">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="33.575" y="125.956354" transform="rotate(-0 33.575 125.956354)">20</text>
+     </g>
+    </g>
+    <g id="future-forecasts-ytick_4">
+     <g id="future-forecasts-line2d_10">
+      <path d="M 40.575 80.985 
+L 500.815 80.985 
+" clip-path="url(#future-forecasts-p206aae38bf)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="future-forecasts-line2d_11">
+      <g>
+       <use xlink:href="#future-forecasts-m704e762aff" x="40.575" y="80.985" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="future-forecasts-text_7">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="33.575" y="84.964688" transform="rotate(-0 33.575 84.964688)">30</text>
+     </g>
+    </g>
+    <g id="future-forecasts-ytick_5">
+     <g id="future-forecasts-line2d_12">
+      <path d="M 40.575 39.993333 
+L 500.815 39.993333 
+" clip-path="url(#future-forecasts-p206aae38bf)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="future-forecasts-line2d_13">
+      <g>
+       <use xlink:href="#future-forecasts-m704e762aff" x="40.575" y="39.993333" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="future-forecasts-text_8">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="33.575" y="43.973021" transform="rotate(-0 33.575 43.973021)">40</text>
+     </g>
+    </g>
+    <g id="future-forecasts-text_9">
+     <text style="font-size: 11px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #141413" x="15.955313" y="105.58" transform="rotate(-90 15.955313 105.58)">新未来收益最大相对误差（%）</text>
+    </g>
+   </g>
+   <g id="future-forecasts-patch_3">
+    <path d="M 61.495 203.96 
+L 95.123411 203.96 
+L 95.123411 69.362664 
+L 61.495 69.362664 
+z
+" clip-path="url(#future-forecasts-p206aae38bf)" style="fill: #6a9bcc"/>
+   </g>
+   <g id="future-forecasts-patch_4">
+    <path d="M 217.906215 203.96 
+L 251.534626 203.96 
+L 251.534626 116.604568 
+L 217.906215 116.604568 
+z
+" clip-path="url(#future-forecasts-p206aae38bf)" style="fill: #6a9bcc"/>
+   </g>
+   <g id="future-forecasts-patch_5">
+    <path d="M 374.31743 203.96 
+L 407.945841 203.96 
+L 407.945841 193.804878 
+L 374.31743 193.804878 
+z
+" clip-path="url(#future-forecasts-p206aae38bf)" style="fill: #6a9bcc"/>
+   </g>
+   <g id="future-forecasts-patch_6">
+    <path d="M 97.469579 203.96 
+L 131.097991 203.96 
+L 131.097991 42.38894 
+L 97.469579 42.38894 
+z
+" clip-path="url(#future-forecasts-p206aae38bf)" style="fill: #788c5d"/>
+   </g>
+   <g id="future-forecasts-patch_7">
+    <path d="M 253.880794 203.96 
+L 287.509206 203.96 
+L 287.509206 71.710346 
+L 253.880794 71.710346 
+z
+" clip-path="url(#future-forecasts-p206aae38bf)" style="fill: #788c5d"/>
+   </g>
+   <g id="future-forecasts-patch_8">
+    <path d="M 289.855374 203.96 
+L 323.483785 203.96 
+L 323.483785 197.280191 
+L 289.855374 197.280191 
+z
+" clip-path="url(#future-forecasts-p206aae38bf)" style="fill: #d97757"/>
+   </g>
+   <g id="future-forecasts-patch_9">
+    <path d="M 446.266589 203.96 
+L 479.895 203.96 
+L 479.895 203.818289 
+L 446.266589 203.818289 
+z
+" clip-path="url(#future-forecasts-p206aae38bf)" style="fill: #d97757"/>
+   </g>
+   <g id="future-forecasts-line2d_14">
+    <path d="M 40.575 183.464167 
+L 500.815 183.464167 
+" clip-path="url(#future-forecasts-p206aae38bf)" style="fill: none; stroke-dasharray: 4.07,1.76; stroke-dashoffset: 0; stroke: #b0aea5; stroke-width: 1.1"/>
+   </g>
+   <g id="future-forecasts-patch_10">
+    <path d="M 40.575 203.96 
+L 40.575 7.2 
+" style="fill: none; stroke: #b0aea5; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="future-forecasts-patch_11">
+    <path d="M 40.575 203.96 
+L 500.815 203.96 
+" style="fill: none; stroke: #b0aea5; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="future-forecasts-text_10">
+    <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #141413" x="78.309206" y="64.431685" transform="rotate(-0 78.309206 64.431685)">32.84%</text>
+   </g>
+   <g id="future-forecasts-text_11">
+    <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #141413" x="234.720421" y="111.673589" transform="rotate(-0 234.720421 111.673589)">21.31%</text>
+   </g>
+   <g id="future-forecasts-text_12">
+    <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #141413" x="391.131636" y="188.873899" transform="rotate(-0 391.131636 188.873899)">2.48%</text>
+   </g>
+   <g id="future-forecasts-text_13">
+    <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #141413" x="114.283785" y="37.457961" transform="rotate(-0 114.283785 37.457961)">39.42%</text>
+   </g>
+   <g id="future-forecasts-text_14">
+    <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #141413" x="270.695" y="66.779367" transform="rotate(-0 270.695 66.779367)">32.26%</text>
+   </g>
+   <g id="future-forecasts-text_15">
+    <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #141413" x="306.669579" y="192.349211" transform="rotate(-0 306.669579 192.349211)">1.63%</text>
+   </g>
+   <g id="future-forecasts-text_16">
+    <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #141413" x="463.080794" y="198.88731" transform="rotate(-0 463.080794 198.88731)">0.03%</text>
+   </g>
+   <g id="future-forecasts-text_17">
+    <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="489.670701" y="180.184833" transform="rotate(-0 489.670701 180.184833)">5% 门槛</text>
+   </g>
+   <g id="future-forecasts-legend_1">
+    <g id="future-forecasts-patch_12">
+     <path d="M 257.283438 22.463438 
+L 275.283438 22.463438 
+L 275.283438 16.163438 
+L 257.283438 16.163438 
+z
+" style="fill: #6a9bcc"/>
+    </g>
+    <g id="future-forecasts-text_18">
+     <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" x="282.483438" y="22.463438" transform="rotate(-0 282.483438 22.463438)">冻结完整 J</text>
+    </g>
+    <g id="future-forecasts-patch_13">
+     <path d="M 343.315 22.463438 
+L 361.315 22.463438 
+L 361.315 16.163438 
+L 343.315 16.163438 
+z
+" style="fill: #788c5d"/>
+    </g>
+    <g id="future-forecasts-text_19">
+     <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" x="368.515" y="22.463438" transform="rotate(-0 368.515 22.463438)">局部逆温度</text>
+    </g>
+    <g id="future-forecasts-patch_14">
+     <path d="M 431.515 22.463438 
+L 449.515 22.463438 
+L 449.515 16.163438 
+L 431.515 16.163438 
+z
+" style="fill: #d97757"/>
+    </g>
+    <g id="future-forecasts-text_20">
+     <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" x="456.715" y="22.463438" transform="rotate(-0 456.715 22.463438)">完整二阶</text>
+    </g>
+   </g>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="future-forecasts-p206aae38bf">
+   <rect x="40.575" y="7.2" width="460.24" height="196.76"/>
+  </clipPath>
+ </defs>
+</svg></figure>
+
+<p>较小的联合窗口里，J 误差约 2.48%，二阶误差约 0.0346%，两者都通过。这说明所需状态随窗口改变。它没有把 J 宣判永久失效，也没有把二阶成功称作已经解释原 1/3 渐近。原 raw-score 独立二阶 AD 有失败，后续等价 score 平移的稳定化复核通过，两种资格分开保留。</p>
+<p>最新静态诊断在同一个 b≈1.18734 上，把允许读出补偿后的温度导数分到候选对。Near（近打平行）由起点 δ≤0.25 冻结，top2（起点固定前两名候选对）只是全部 pair 的一项。经精化与条件 FP64 区间认证，near 占总改善方向导数 50.478%–51.208%，top2 只占总量 1.640%–1.729%；其余 near pair 承担主要净响应。完整响应包含真实标签、value、后续 norm 和读出。这里没有将当前 argmax 充当正确 teacher。</p>
+<figure><svg aria-label="固定温度的profile导数中near约一半，固定top2只占总量约1.64%至1.73%" class="chart" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 509.000625 170.44875" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ 
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="profile-pairs-figure_1">
+  <g id="profile-pairs-patch_1">
+   <path d="M 0 170.44875 
+L 509.000625 170.44875 
+L 509.000625 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="profile-pairs-axes_1">
+   <g id="profile-pairs-patch_2">
+    <path d="M 118.290625 130.06375 
+L 501.800625 130.06375 
+L 501.800625 7.2 
+L 118.290625 7.2 
+z
+" style="fill: #ffffff"/>
+   </g>
+   <g id="profile-pairs-matplotlib.axis_1">
+    <g id="profile-pairs-xtick_1">
+     <g id="profile-pairs-line2d_1">
+      <path d="M 118.290625 130.06375 
+L 118.290625 7.2 
+" clip-path="url(#profile-pairs-pde00cff00b)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="profile-pairs-line2d_2">
+      <defs>
+       <path id="profile-pairs-mfb7c42c887" d="M 0 0 
+L 0 3.5 
+" style="stroke: #5e5d59; stroke-width: 0.8"/>
+      </defs>
+      <g>
+       <use xlink:href="#profile-pairs-mfb7c42c887" x="118.290625" y="130.06375" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="profile-pairs-text_1">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" x="118.290625" y="145.023125" transform="rotate(-0 118.290625 145.023125)">0</text>
+     </g>
+    </g>
+    <g id="profile-pairs-xtick_2">
+     <g id="profile-pairs-line2d_3">
+      <path d="M 163.946577 130.06375 
+L 163.946577 7.2 
+" clip-path="url(#profile-pairs-pde00cff00b)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="profile-pairs-line2d_4">
+      <g>
+       <use xlink:href="#profile-pairs-mfb7c42c887" x="163.946577" y="130.06375" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="profile-pairs-text_2">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" x="163.946577" y="145.023125" transform="rotate(-0 163.946577 145.023125)">10</text>
+     </g>
+    </g>
+    <g id="profile-pairs-xtick_3">
+     <g id="profile-pairs-line2d_5">
+      <path d="M 209.60253 130.06375 
+L 209.60253 7.2 
+" clip-path="url(#profile-pairs-pde00cff00b)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="profile-pairs-line2d_6">
+      <g>
+       <use xlink:href="#profile-pairs-mfb7c42c887" x="209.60253" y="130.06375" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="profile-pairs-text_3">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" x="209.60253" y="145.023125" transform="rotate(-0 209.60253 145.023125)">20</text>
+     </g>
+    </g>
+    <g id="profile-pairs-xtick_4">
+     <g id="profile-pairs-line2d_7">
+      <path d="M 255.258482 130.06375 
+L 255.258482 7.2 
+" clip-path="url(#profile-pairs-pde00cff00b)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="profile-pairs-line2d_8">
+      <g>
+       <use xlink:href="#profile-pairs-mfb7c42c887" x="255.258482" y="130.06375" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="profile-pairs-text_4">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" x="255.258482" y="145.023125" transform="rotate(-0 255.258482 145.023125)">30</text>
+     </g>
+    </g>
+    <g id="profile-pairs-xtick_5">
+     <g id="profile-pairs-line2d_9">
+      <path d="M 300.914435 130.06375 
+L 300.914435 7.2 
+" clip-path="url(#profile-pairs-pde00cff00b)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="profile-pairs-line2d_10">
+      <g>
+       <use xlink:href="#profile-pairs-mfb7c42c887" x="300.914435" y="130.06375" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="profile-pairs-text_5">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" x="300.914435" y="145.023125" transform="rotate(-0 300.914435 145.023125)">40</text>
+     </g>
+    </g>
+    <g id="profile-pairs-xtick_6">
+     <g id="profile-pairs-line2d_11">
+      <path d="M 346.570387 130.06375 
+L 346.570387 7.2 
+" clip-path="url(#profile-pairs-pde00cff00b)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="profile-pairs-line2d_12">
+      <g>
+       <use xlink:href="#profile-pairs-mfb7c42c887" x="346.570387" y="130.06375" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="profile-pairs-text_6">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" x="346.570387" y="145.023125" transform="rotate(-0 346.570387 145.023125)">50</text>
+     </g>
+    </g>
+    <g id="profile-pairs-xtick_7">
+     <g id="profile-pairs-line2d_13">
+      <path d="M 392.226339 130.06375 
+L 392.226339 7.2 
+" clip-path="url(#profile-pairs-pde00cff00b)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="profile-pairs-line2d_14">
+      <g>
+       <use xlink:href="#profile-pairs-mfb7c42c887" x="392.226339" y="130.06375" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="profile-pairs-text_7">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" x="392.226339" y="145.023125" transform="rotate(-0 392.226339 145.023125)">60</text>
+     </g>
+    </g>
+    <g id="profile-pairs-xtick_8">
+     <g id="profile-pairs-line2d_15">
+      <path d="M 437.882292 130.06375 
+L 437.882292 7.2 
+" clip-path="url(#profile-pairs-pde00cff00b)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="profile-pairs-line2d_16">
+      <g>
+       <use xlink:href="#profile-pairs-mfb7c42c887" x="437.882292" y="130.06375" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="profile-pairs-text_8">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" x="437.882292" y="145.023125" transform="rotate(-0 437.882292 145.023125)">70</text>
+     </g>
+    </g>
+    <g id="profile-pairs-xtick_9">
+     <g id="profile-pairs-line2d_17">
+      <path d="M 483.538244 130.06375 
+L 483.538244 7.2 
+" clip-path="url(#profile-pairs-pde00cff00b)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="profile-pairs-line2d_18">
+      <g>
+       <use xlink:href="#profile-pairs-mfb7c42c887" x="483.538244" y="130.06375" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="profile-pairs-text_9">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" x="483.538244" y="145.023125" transform="rotate(-0 483.538244 145.023125)">80</text>
+     </g>
+    </g>
+    <g id="profile-pairs-text_10">
+     <text style="font-size: 11px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #141413" x="310.045625" y="160.729062" transform="rotate(-0 310.045625 160.729062)">固定 b 的改善方向 profile 导数份额（%）</text>
+    </g>
+   </g>
+   <g id="profile-pairs-matplotlib.axis_2">
+    <g id="profile-pairs-ytick_1">
+     <g id="profile-pairs-line2d_19">
+      <defs>
+       <path id="profile-pairs-mdbfec98fa1" d="M 0 0 
+L -3.5 0 
+" style="stroke: #5e5d59; stroke-width: 0.8"/>
+      </defs>
+      <g>
+       <use xlink:href="#profile-pairs-mdbfec98fa1" x="118.290625" y="40.708295" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="profile-pairs-text_11">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="111.290625" y="44.687983" transform="rotate(-0 111.290625 44.687983)">全部 near 候选对</text>
+     </g>
+    </g>
+    <g id="profile-pairs-ytick_2">
+     <g id="profile-pairs-line2d_20">
+      <g>
+       <use xlink:href="#profile-pairs-mdbfec98fa1" x="118.290625" y="96.555455" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="profile-pairs-text_12">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="111.290625" y="100.790611" transform="rotate(-0 111.290625 100.790611)">near 中固定前两名 pair</text>
+     </g>
+    </g>
+   </g>
+   <g id="profile-pairs-LineCollection_1">
+    <path d="M 348.751409 40.708295 
+L 352.087502 40.708295 
+" clip-path="url(#profile-pairs-pde00cff00b)" style="fill: none; stroke: #d97757; stroke-width: 1.8"/>
+    <path d="M 125.777928 96.555455 
+L 126.185464 96.555455 
+" clip-path="url(#profile-pairs-pde00cff00b)" style="fill: none; stroke: #d97757; stroke-width: 1.8"/>
+   </g>
+   <g id="profile-pairs-line2d_21">
+    <defs>
+     <path id="profile-pairs-m5d0a0413ce" d="M 0 4 
+L 0 -4 
+" style="stroke: #d97757"/>
+    </defs>
+    <g clip-path="url(#profile-pairs-pde00cff00b)">
+     <use xlink:href="#profile-pairs-m5d0a0413ce" x="348.751409" y="40.708295" style="fill: #d97757; stroke: #d97757"/>
+     <use xlink:href="#profile-pairs-m5d0a0413ce" x="125.777928" y="96.555455" style="fill: #d97757; stroke: #d97757"/>
+    </g>
+   </g>
+   <g id="profile-pairs-line2d_22">
+    <g clip-path="url(#profile-pairs-pde00cff00b)">
+     <use xlink:href="#profile-pairs-m5d0a0413ce" x="352.087502" y="40.708295" style="fill: #d97757; stroke: #d97757"/>
+     <use xlink:href="#profile-pairs-m5d0a0413ce" x="126.185464" y="96.555455" style="fill: #d97757; stroke: #d97757"/>
+    </g>
+   </g>
+   <g id="profile-pairs-line2d_23">
+    <defs>
+     <path id="profile-pairs-mb26247260f" d="M 0 3 
+C 0.795609 3 1.55874 2.683901 2.12132 2.12132 
+C 2.683901 1.55874 3 0.795609 3 0 
+C 3 -0.795609 2.683901 -1.55874 2.12132 -2.12132 
+C 1.55874 -2.683901 0.795609 -3 0 -3 
+C -0.795609 -3 -1.55874 -2.683901 -2.12132 -2.12132 
+C -2.683901 -1.55874 -3 -0.795609 -3 0 
+C -3 0.795609 -2.683901 1.55874 -2.12132 2.12132 
+C -1.55874 2.683901 -0.795609 3 0 3 
+z
+" style="stroke: #d97757"/>
+    </defs>
+    <g clip-path="url(#profile-pairs-pde00cff00b)">
+     <use xlink:href="#profile-pairs-mb26247260f" x="350.419455" y="40.708295" style="fill: #d97757; stroke: #d97757"/>
+     <use xlink:href="#profile-pairs-mb26247260f" x="125.981696" y="96.555455" style="fill: #d97757; stroke: #d97757"/>
+    </g>
+   </g>
+   <g id="profile-pairs-patch_3">
+    <path d="M 118.290625 130.06375 
+L 118.290625 7.2 
+" style="fill: none; stroke: #b0aea5; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="profile-pairs-patch_4">
+    <path d="M 118.290625 130.06375 
+L 501.800625 130.06375 
+" style="fill: none; stroke: #b0aea5; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="profile-pairs-text_13">
+    <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" x="361.218692" y="43.54267" transform="rotate(-0 361.218692 43.54267)">50.478%–51.208%</text>
+   </g>
+   <g id="profile-pairs-text_14">
+    <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" x="135.316654" y="99.38983" transform="rotate(-0 135.316654 99.38983)">1.640%–1.729%</text>
+   </g>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="profile-pairs-pde00cff00b">
+   <rect x="118.290625" y="7.2" width="383.51" height="122.86375"/>
+  </clipPath>
+ </defs>
+</svg></figure>
+
+<p>同一 score 几何下，读出补偿甚至会使固定 top2 的 signed 温度作用反号。因此 gap 密度、候选内容差和真实任务边界之间的桥必须直接计算。上述百分比是固定温度的局部 profile 导数份额，不是 SGD 工作、B 存量或长期指数份额。原宽导数界、精化超时和保存错误都保留，精度 successor 不回填原失败。</p>
+<h2>四个流派需要交出同一干预下的不同预测</h2>
+<p>这些流派存在重叠。一次幂律拟合不能给它们投票。我们已把每派改成具体的、能失败的预测：先冻结它需要的状态、坐标和时钟，再检验同任务的新干预。</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>流派及它保留的状态</th>
+<th>本项目已有裁决</th>
+<th>仍然保留的条件分支</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>普适边界：任务加权边界阶、补偿和实际时钟</td>
+<td>裸 gate→task 迁移与无条件导数结论失败，指定类有完整时间正例。</td>
+<td>边界非退化、快项弛豫与原生几何明确的条件机制。</td>
+</tr>
+<tr>
+<td>数据/曝光：不同 token 的学习事件和出现频率</td>
+<td>同宽事件与 mean-exposure 的普遍充分性版本失败，顺序和异质谱仍需检验。</td>
+<td>工业 per-token 描述没有被整篇推翻；事件谱可由边界或核产生。</td>
+</tr>
+<tr>
+<td>分辨率：有限规模只能分辨有限结构</td>
+<td>维数单独决定必要指数的强版本已被解析反例否定。</td>
+<td>原 generic/有效维数饱和猜想、Lipschitz 上界、带目标谱的分辨率理论未全被反驳。</td>
+</tr>
+<tr>
+<td>NTK（神经切线核）：起点 Jacobian、核谱和任务投影</td>
+<td>指定有限初始核的长期容量在受控任务上失败，小自然窗口仍能成功预测。</td>
+<td>无限宽定理、随训练演化的核和含目标谱的模型。</td>
+</tr>
+</tbody>
+</table></div>
+<p>分辨率支线有更扎实的区分：同一圆周、核和有界正则类内，密集目标谱改变，独立样本数轴的长期对数指数可连续经过 4–4.5，随机参数轴仍为三次量级。另一个非线性全交互解析任务只需有限条一维 ridge，就能达到参数规模的负四次方误差。它否定无条件维数必要律，但仍是非 generic 结构，不能宣布整个分辨率流派死亡。比上界收敛更快也不会违反上界。</p>
+<details><summary>公开文献与本地结果来源</summary><p>边界机制：<a href="https://arxiv.org/html/2609.32100v1">Liu 第一版</a>。数据学习谱：<a href="https://arxiv.org/html/2606.29858v2">Wang 第二版</a>。维数分辨率：<a href="https://jmlr.org/papers/v23/20-1111.html">Sharma–Kaplan</a>。谱分辨率：<a href="https://arxiv.org/html/2102.06701v2">Bahri 第二版</a>。NTK：<a href="https://arxiv.org/abs/1806.07572v4">Jacot 第四版</a>，<a href="https://proceedings.mlr.press/v119/bordelon20a.html">核学习曲线</a>，<a href="https://arxiv.org/html/2402.01092v4">动力学谱</a>。本地反例、任务类、时钟、分阶与 profile 的数值入口和文件校验值保存在同行的<a href="scaling-project-overview-20261007.evidence.json">证据登记</a>；它仅导出本报告使用的读数，未经重新训练。</p></details>
+
+<h2>条件正例已能预测接管，最终目标是在自然语言中完成同等解释</h2>
+<p>项目同时保留对 Liu 有利的证据。完整 18 参数 K/V 的受控平方损失任务，在任务边界可观测、形状稳定、value 快弛豫和原生度量明确时，提前计算的曲线通过了新未来门槛，硬 teacher 的晚期指数接近 1/3。同一个任务里，完整有限初始核存在正 floor，真实非线性模型继续下降到它以下。</p>
+<p>另一个普通二分类 CE 任务给定完整 teacher 概率，四个 key/value 参数都自由更新。真实不可约熵为 0.365333855 nats，起点温度剩余为 0.006943927、其他剩余为 0.000140616，边界系数为 0.113352676、原生温度度量为 2。起点 B 占可约剩余 98.02%，key 只占当前下降 0.698%；后续其他剩余消退后，key 接管几乎全部下降。冻结有限温度 profile 和时钟的未来 KL 最大相对误差约 2.277×10⁻⁶。</p>
+<figure><svg aria-label="受控普通CE中剩余温度误差从起点就很大，而当前下降贡献后续才接管" class="chart" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 507.985 212.999225" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ 
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="controlled-takeover-figure_1">
+  <g id="controlled-takeover-patch_1">
+   <path d="M 0 212.999225 
+L 507.985 212.999225 
+L 507.985 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="controlled-takeover-axes_1">
+   <g id="controlled-takeover-patch_2">
+    <path d="M 46.125 160.305336 
+L 500.785 160.305336 
+L 500.785 7.2 
+L 46.125 7.2 
+z
+" style="fill: #ffffff"/>
+   </g>
+   <g id="controlled-takeover-matplotlib.axis_1">
+    <g id="controlled-takeover-xtick_1">
+     <g id="controlled-takeover-line2d_1">
+      <defs>
+       <path id="controlled-takeover-mad58ba5f24" d="M 0 0 
+L 0 3.5 
+" style="stroke: #5e5d59; stroke-width: 0.8"/>
+      </defs>
+      <g>
+       <use xlink:href="#controlled-takeover-mad58ba5f24" x="66.791364" y="160.305336" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="controlled-takeover-text_1">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; fill: #5e5d59" transform="translate(47.697148 182.971345) rotate(-25)">起点</text>
+     </g>
+    </g>
+    <g id="controlled-takeover-xtick_2">
+     <g id="controlled-takeover-line2d_2">
+      <g>
+       <use xlink:href="#controlled-takeover-mad58ba5f24" x="118.457273" y="160.305336" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="controlled-takeover-text_2">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; fill: #5e5d59" transform="translate(96.462872 184.323724) rotate(-25)">t=.05</text>
+     </g>
+    </g>
+    <g id="controlled-takeover-xtick_3">
+     <g id="controlled-takeover-line2d_3">
+      <g>
+       <use xlink:href="#controlled-takeover-mad58ba5f24" x="170.123182" y="160.305336" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="controlled-takeover-text_3">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; fill: #5e5d59" transform="translate(155.678042 180.803445) rotate(-25)">t=1</text>
+     </g>
+    </g>
+    <g id="controlled-takeover-xtick_4">
+     <g id="controlled-takeover-line2d_4">
+      <g>
+       <use xlink:href="#controlled-takeover-mad58ba5f24" x="221.789091" y="160.305336" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="controlled-takeover-text_4">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; fill: #5e5d59" transform="translate(202.313943 183.148977) rotate(-25)">t=10</text>
+     </g>
+    </g>
+    <g id="controlled-takeover-xtick_5">
+     <g id="controlled-takeover-line2d_5">
+      <g>
+       <use xlink:href="#controlled-takeover-mad58ba5f24" x="273.455" y="160.305336" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="controlled-takeover-text_5">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; fill: #5e5d59" transform="translate(247.64561 186.102682) rotate(-25)">β≈24</text>
+     </g>
+    </g>
+    <g id="controlled-takeover-xtick_6">
+     <g id="controlled-takeover-line2d_6">
+      <g>
+       <use xlink:href="#controlled-takeover-mad58ba5f24" x="325.120909" y="160.305336" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="controlled-takeover-text_6">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; fill: #5e5d59" transform="translate(299.311519 186.102682) rotate(-25)">β≈32</text>
+     </g>
+    </g>
+    <g id="controlled-takeover-xtick_7">
+     <g id="controlled-takeover-line2d_7">
+      <g>
+       <use xlink:href="#controlled-takeover-mad58ba5f24" x="376.786818" y="160.305336" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="controlled-takeover-text_7">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; fill: #5e5d59" transform="translate(350.977428 186.102682) rotate(-25)">β≈64</text>
+     </g>
+    </g>
+    <g id="controlled-takeover-xtick_8">
+     <g id="controlled-takeover-line2d_8">
+      <g>
+       <use xlink:href="#controlled-takeover-mad58ba5f24" x="428.452727" y="160.305336" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="controlled-takeover-text_8">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; fill: #5e5d59" transform="translate(397.613329 188.448214) rotate(-25)">β≈128</text>
+     </g>
+    </g>
+    <g id="controlled-takeover-xtick_9">
+     <g id="controlled-takeover-line2d_9">
+      <g>
+       <use xlink:href="#controlled-takeover-mad58ba5f24" x="480.118636" y="160.305336" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="controlled-takeover-text_9">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; fill: #5e5d59" transform="translate(449.279238 188.448214) rotate(-25)">β≈256</text>
+     </g>
+    </g>
+    <g id="controlled-takeover-text_10">
+     <text style="font-size: 11px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #141413" x="273.455" y="203.279537" transform="rotate(-0 273.455 203.279537)">保存状态按时间排列，横轴非等距物理时钟</text>
+    </g>
+   </g>
+   <g id="controlled-takeover-matplotlib.axis_2">
+    <g id="controlled-takeover-ytick_1">
+     <g id="controlled-takeover-line2d_10">
+      <path d="M 46.125 154.885678 
+L 500.785 154.885678 
+" clip-path="url(#controlled-takeover-p88764216a1)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="controlled-takeover-line2d_11">
+      <defs>
+       <path id="controlled-takeover-m6381df1cf8" d="M 0 0 
+L -3.5 0 
+" style="stroke: #5e5d59; stroke-width: 0.8"/>
+      </defs>
+      <g>
+       <use xlink:href="#controlled-takeover-m6381df1cf8" x="46.125" y="154.885678" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="controlled-takeover-text_11">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="39.125" y="158.865366" transform="rotate(-0 39.125 158.865366)">0</text>
+     </g>
+    </g>
+    <g id="controlled-takeover-ytick_2">
+     <g id="controlled-takeover-line2d_12">
+      <path d="M 46.125 127.787389 
+L 500.785 127.787389 
+" clip-path="url(#controlled-takeover-p88764216a1)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="controlled-takeover-line2d_13">
+      <g>
+       <use xlink:href="#controlled-takeover-m6381df1cf8" x="46.125" y="127.787389" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="controlled-takeover-text_12">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="39.125" y="131.767076" transform="rotate(-0 39.125 131.767076)">20</text>
+     </g>
+    </g>
+    <g id="controlled-takeover-ytick_3">
+     <g id="controlled-takeover-line2d_14">
+      <path d="M 46.125 100.689099 
+L 500.785 100.689099 
+" clip-path="url(#controlled-takeover-p88764216a1)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="controlled-takeover-line2d_15">
+      <g>
+       <use xlink:href="#controlled-takeover-m6381df1cf8" x="46.125" y="100.689099" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="controlled-takeover-text_13">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="39.125" y="104.668787" transform="rotate(-0 39.125 104.668787)">40</text>
+     </g>
+    </g>
+    <g id="controlled-takeover-ytick_4">
+     <g id="controlled-takeover-line2d_16">
+      <path d="M 46.125 73.59081 
+L 500.785 73.59081 
+" clip-path="url(#controlled-takeover-p88764216a1)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="controlled-takeover-line2d_17">
+      <g>
+       <use xlink:href="#controlled-takeover-m6381df1cf8" x="46.125" y="73.59081" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="controlled-takeover-text_14">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="39.125" y="77.570497" transform="rotate(-0 39.125 77.570497)">60</text>
+     </g>
+    </g>
+    <g id="controlled-takeover-ytick_5">
+     <g id="controlled-takeover-line2d_18">
+      <path d="M 46.125 46.49252 
+L 500.785 46.49252 
+" clip-path="url(#controlled-takeover-p88764216a1)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="controlled-takeover-line2d_19">
+      <g>
+       <use xlink:href="#controlled-takeover-m6381df1cf8" x="46.125" y="46.49252" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="controlled-takeover-text_15">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="39.125" y="50.472207" transform="rotate(-0 39.125 50.472207)">80</text>
+     </g>
+    </g>
+    <g id="controlled-takeover-ytick_6">
+     <g id="controlled-takeover-line2d_20">
+      <path d="M 46.125 19.39423 
+L 500.785 19.39423 
+" clip-path="url(#controlled-takeover-p88764216a1)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="controlled-takeover-line2d_21">
+      <g>
+       <use xlink:href="#controlled-takeover-m6381df1cf8" x="46.125" y="19.39423" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="controlled-takeover-text_16">
+      <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="39.125" y="23.373918" transform="rotate(-0 39.125 23.373918)">100</text>
+     </g>
+    </g>
+    <g id="controlled-takeover-text_17">
+     <text style="font-size: 11px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #141413" x="15.955313" y="83.752668" transform="rotate(-90 15.955313 83.752668)">份额（%）</text>
+    </g>
+   </g>
+   <g id="controlled-takeover-line2d_22">
+    <path d="M 66.791364 22.083494 
+L 118.457273 22.070448 
+L 170.123182 21.834187 
+L 221.789091 20.409347 
+L 273.455 19.39423 
+L 325.120909 19.39423 
+L 376.786818 19.39423 
+L 428.452727 19.39423 
+L 480.118636 19.39423 
+" clip-path="url(#controlled-takeover-p88764216a1)" style="fill: none; stroke: #6a9bcc; stroke-width: 1.8; stroke-linecap: square"/>
+    <defs>
+     <path id="controlled-takeover-m6cabf8db5a" d="M 0 2 
+C 0.530406 2 1.03916 1.789267 1.414214 1.414214 
+C 1.789267 1.03916 2 0.530406 2 0 
+C 2 -0.530406 1.789267 -1.03916 1.414214 -1.414214 
+C 1.03916 -1.789267 0.530406 -2 0 -2 
+C -0.530406 -2 -1.03916 -1.789267 -1.414214 -1.414214 
+C -1.789267 -1.03916 -2 -0.530406 -2 0 
+C -2 0.530406 -1.789267 1.03916 -1.414214 1.414214 
+C -1.03916 1.789267 -0.530406 2 0 2 
+z
+" style="stroke: #6a9bcc"/>
+    </defs>
+    <g clip-path="url(#controlled-takeover-p88764216a1)">
+     <use xlink:href="#controlled-takeover-m6cabf8db5a" x="66.791364" y="22.083494" style="fill: #6a9bcc; stroke: #6a9bcc"/>
+     <use xlink:href="#controlled-takeover-m6cabf8db5a" x="118.457273" y="22.070448" style="fill: #6a9bcc; stroke: #6a9bcc"/>
+     <use xlink:href="#controlled-takeover-m6cabf8db5a" x="170.123182" y="21.834187" style="fill: #6a9bcc; stroke: #6a9bcc"/>
+     <use xlink:href="#controlled-takeover-m6cabf8db5a" x="221.789091" y="20.409347" style="fill: #6a9bcc; stroke: #6a9bcc"/>
+     <use xlink:href="#controlled-takeover-m6cabf8db5a" x="273.455" y="19.39423" style="fill: #6a9bcc; stroke: #6a9bcc"/>
+     <use xlink:href="#controlled-takeover-m6cabf8db5a" x="325.120909" y="19.39423" style="fill: #6a9bcc; stroke: #6a9bcc"/>
+     <use xlink:href="#controlled-takeover-m6cabf8db5a" x="376.786818" y="19.39423" style="fill: #6a9bcc; stroke: #6a9bcc"/>
+     <use xlink:href="#controlled-takeover-m6cabf8db5a" x="428.452727" y="19.39423" style="fill: #6a9bcc; stroke: #6a9bcc"/>
+     <use xlink:href="#controlled-takeover-m6cabf8db5a" x="480.118636" y="19.39423" style="fill: #6a9bcc; stroke: #6a9bcc"/>
+    </g>
+   </g>
+   <g id="controlled-takeover-line2d_23">
+    <path d="M 66.791364 153.940244 
+L 118.457273 153.935701 
+L 170.123182 153.84514 
+L 221.789091 152.431347 
+L 273.455 19.394543 
+L 325.120909 19.394325 
+L 376.786818 19.394236 
+L 428.452727 19.394231 
+L 480.118636 19.39423 
+" clip-path="url(#controlled-takeover-p88764216a1)" style="fill: none; stroke: #d97757; stroke-width: 1.8; stroke-linecap: square"/>
+    <defs>
+     <path id="controlled-takeover-m395566f55f" d="M 0 2 
+C 0.530406 2 1.03916 1.789267 1.414214 1.414214 
+C 1.789267 1.03916 2 0.530406 2 0 
+C 2 -0.530406 1.789267 -1.03916 1.414214 -1.414214 
+C 1.03916 -1.789267 0.530406 -2 0 -2 
+C -0.530406 -2 -1.03916 -1.789267 -1.414214 -1.414214 
+C -1.789267 -1.03916 -2 -0.530406 -2 0 
+C -2 0.530406 -1.789267 1.03916 -1.414214 1.414214 
+C -1.03916 1.789267 -0.530406 2 0 2 
+z
+" style="stroke: #d97757"/>
+    </defs>
+    <g clip-path="url(#controlled-takeover-p88764216a1)">
+     <use xlink:href="#controlled-takeover-m395566f55f" x="66.791364" y="153.940244" style="fill: #d97757; stroke: #d97757"/>
+     <use xlink:href="#controlled-takeover-m395566f55f" x="118.457273" y="153.935701" style="fill: #d97757; stroke: #d97757"/>
+     <use xlink:href="#controlled-takeover-m395566f55f" x="170.123182" y="153.84514" style="fill: #d97757; stroke: #d97757"/>
+     <use xlink:href="#controlled-takeover-m395566f55f" x="221.789091" y="152.431347" style="fill: #d97757; stroke: #d97757"/>
+     <use xlink:href="#controlled-takeover-m395566f55f" x="273.455" y="19.394543" style="fill: #d97757; stroke: #d97757"/>
+     <use xlink:href="#controlled-takeover-m395566f55f" x="325.120909" y="19.394325" style="fill: #d97757; stroke: #d97757"/>
+     <use xlink:href="#controlled-takeover-m395566f55f" x="376.786818" y="19.394236" style="fill: #d97757; stroke: #d97757"/>
+     <use xlink:href="#controlled-takeover-m395566f55f" x="428.452727" y="19.394231" style="fill: #d97757; stroke: #d97757"/>
+     <use xlink:href="#controlled-takeover-m395566f55f" x="480.118636" y="19.39423" style="fill: #d97757; stroke: #d97757"/>
+    </g>
+   </g>
+   <g id="controlled-takeover-patch_3">
+    <path d="M 46.125 160.305336 
+L 46.125 7.2 
+" style="fill: none; stroke: #b0aea5; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="controlled-takeover-patch_4">
+    <path d="M 46.125 160.305336 
+L 500.785 160.305336 
+" style="fill: none; stroke: #b0aea5; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="controlled-takeover-legend_1">
+    <g id="controlled-takeover-line2d_24">
+     <path d="M 386.485 76.038684 
+L 395.485 76.038684 
+L 404.485 76.038684 
+" style="fill: none; stroke: #6a9bcc; stroke-width: 1.8; stroke-linecap: square"/>
+     <g>
+      <use xlink:href="#controlled-takeover-m6cabf8db5a" x="395.485" y="76.038684" style="fill: #6a9bcc; stroke: #6a9bcc"/>
+     </g>
+    </g>
+    <g id="controlled-takeover-text_18">
+     <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" x="411.685" y="79.188684" transform="rotate(-0 411.685 79.188684)">温度剩余占可约误差</text>
+    </g>
+    <g id="controlled-takeover-line2d_25">
+     <path d="M 386.485 90.223528 
+L 395.485 90.223528 
+L 404.485 90.223528 
+" style="fill: none; stroke: #d97757; stroke-width: 1.8; stroke-linecap: square"/>
+     <g>
+      <use xlink:href="#controlled-takeover-m395566f55f" x="395.485" y="90.223528" style="fill: #d97757; stroke: #d97757"/>
+     </g>
+    </g>
+    <g id="controlled-takeover-text_19">
+     <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" x="411.685" y="93.373528" transform="rotate(-0 411.685 93.373528)">key 占当前下降率</text>
+    </g>
+   </g>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="controlled-takeover-p88764216a1">
+   <rect x="46.125" y="7.2" width="454.66" height="153.105336"/>
+  </clipPath>
+ </defs>
+</svg></figure>
+
+<p>这个例子让“当前贡献小，但未来可能主导”成为可以预测的命题。它的二候选 normalized gap 恒为 2，不覆盖原文零-gap 密度条件。它不是自然语言结果。两种条件正例验证各自任务，不能把数字拼成自然模型的完整解释。</p>
+<p>我们预期最终交付一个可以复算的自然语言机制模型：固定评价前缀和真实标签，逐项给出绝对量级、符号、逐文档波动、交互和余项；在同一训练轨迹上，量准温度剩余与其他剩余的共同 floor；再用冻结的系数与原生时钟预测未见的 loss、温度运动和接管时刻。若温度项未接管，也要明确指出它缺少任务响应、被别的慢项压过，还是优化几何使它不可见。</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>最终解释必须回答</th>
+<th>可以交付的证据</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>近打平是否真的留下未解决任务误差？</td>
+<td>正任务边界系数、允许补偿后的剩余，以及候选对的作用区间。</td>
+</tr>
+<tr>
+<td>当前学习与未来剩余是否属于同一机制？</td>
+<td>同轨迹的来源→存量差、补偿滞后、交互和 tail-window 变化。</td>
+</tr>
+<tr>
+<td>何时成为主导，换优化器后怎样改变？</td>
+<td>其他剩余与温度剩余的比值、实际参数度量和事前接管预报。</td>
+</tr>
+<tr>
+<td>哪个流派解释得更完整？</td>
+<td>同任务、同预算的曝光、几何、表示与规模干预，比较未见 token 向量和未来曲线。</td>
+</tr>
+</tbody>
+</table></div>
+<p>自然原生慢时钟实验已经登记，但本报告采用的本地材料还没有完整的新未来、来源、存量和连续流资格，不能提前宣布成功。整网开放后的共同 floor、跨模型与独立语料验证仍有责任。文章级近期成果是任务边界类、扰动交叉和来源/存量区分；完整自然预训练解释是后续研究目标，不是已经获得的结论。</p>
+<details><summary>怎样理解可靠性与公开范围</summary><p>解析反例承担全称命题的证伪责任。保存数组与独立 AD 复核承担数值实现责任。新未来预测承担有限机制模型的预测责任。检查数量不能当独立实验数量，固定语料的文档区间不能当跨训练或自然语料总体确认。FP64 优化区间依赖声明误差模型，不是全部向外取整的实数证明。公开包包含总览、图与最小数值登记；没有发布自然文本原片段、模型权重、凭证、集群地址或原始私有仓库历史。原逐轮 Markdown 和失败证据在本地保持。</p></details>
+
+<footer>来源：已保存逐轮结果与独立审核，读数截至 2026-10-07；新报告只重绘、核对与汇总既有结果。</footer></main></body></html>
