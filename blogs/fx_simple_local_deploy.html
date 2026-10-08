@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>《FX 简单!》逆向调查:本地部署、API 接入点与 242 万行行情库存</title>
+<style>
+body{font:15px/1.7 -apple-system,"PingFang SC","Noto Sans CJK SC",sans-serif;max-width:860px;margin:2rem auto;padding:0 1rem;color:#1a1a1a}
+h1{font-size:1.6rem} h2{font-size:1.2rem;margin-top:2rem;border-bottom:1px solid #ddd;padding-bottom:.3rem}
+table{border-collapse:collapse;width:100%;font-size:.9rem;margin:1rem 0}
+th,td{border:1px solid #ccc;padding:.35rem .6rem;text-align:left}
+code{background:#f4f4f4;padding:.1rem .3rem;border-radius:3px;font-size:.85em}
+pre{background:#f6f6f6;border:1px solid #ddd;padding:.7rem .9rem;overflow-x:auto;font-size:.85rem}
+.note{background:#fafafa;border-left:3px solid #bbb;padding:.6rem .9rem;font-size:.92rem}
+</style></head><body>
+<h1>《FX 简单!》逆向调查:本地部署、API 接入点与行情库存</h1>
+<p class="note">2026-10-08 · 项目 <code>fx-simple-local</code> · 对象:B 站 toy 平台游戏《FX 简单!》(FX PLAYROOM,UP 主「-会飞的蝈蝈-」,《FX战士久留美》同人)</p>
+
+<h2>1. 开源状态</h2>
+<p><b>原作未开源</b>:作者主页与视频简介(BV1L5hd6FEi6)无源码链接,GitHub 无官方仓库。但游戏是纯静态前端——
+单个未混淆的 vanilla JS(<code>app.js</code> 约 109KB)+ <code>styles.css</code> + 一张头像,无自有后端,
+因此整套站点可完整镜像本地运行。B 站 toy-sdk(云存档/排行榜/分享)缺失时代码自动降级,核心玩法不受影响。</p>
+<p>相关第三方仓库:<code>chentianxiong123/fx-simple-trading-bot</code>(Playwright 自动化逆向,结论与本调查一致:
+模拟行情为本地随机游走、存档在 localStorage);<code>zeroa234/kurumi-fx-rogue</code>(另一个久留美同人开源游戏,Godot,与本镜像无关)。</p>
+
+<h2>2. 本地部署(已验证)</h2>
+<pre>cd fx-simple-local
+python3 -m http.server 8471 --bind 127.0.0.1   # 打开 http://127.0.0.1:8471/index.html</pre>
+<p>实测:零 console 报错;模拟行情、真实历史数据两模式均可用;真实数据模式从 localhost 直连外部 API 成功(CORS 允许)。
+index.html 仅移除 B 站 toy-sdk 与平台埋点,游戏本体原样。</p>
+
+<h2>3. 数学 kernel 与数据源</h2>
+<ul>
+<li><b>模拟/挑战模式</b>:纯本地合成行情。播种 = 正弦波 + 均匀噪声;每 1.5s 一 tick:正弦漂移 + 均匀噪声(±0.21%)+ 1.8% 概率冲击(±0.95%)+ 内置虚构新闻偏置。无外部请求。</li>
+<li><b>真实/战役模式</b>:ECB 历史日线,源为免费无 key 的 Frankfurter API(<code>api.frankfurter.dev/v1</code>),时间尺度 = 1 帧/交易日。</li>
+</ul>
+
+<h2>4. API 接入点</h2>
+<ul>
+<li>换数据源:改 <code>app.js</code> 约 1092-1142 行 <code>fetchFrankfurter()</code> / <code>parseFrankfurter()</code>(后者把 ECB 各币种换算成 7 个货币对)。</li>
+<li>bot/agent 接入:账户与持仓全在 localStorage:<code>fx-heartbeat-save-v3</code>(主存档)、<code>fx-settings-v1</code>、<code>fx-achievements-v1</code>、<code>fx-challenge-*</code>;可直读写或经 Playwright 注入。</li>
+</ul>
+
+<h2>5. 行情数据库存(2026-10-08 爬取,共 242 万行 / 271MB)</h2>
+<table>
+<tr><th>数据集</th><th>粒度</th><th>覆盖</th><th>规模</th></tr>
+<tr><td>data/yahoo/*_1m.csv</td><td>1 分钟</td><td>近 7 天</td><td>62 标的 × 48.3 万行</td></tr>
+<tr><td>data/yahoo/*_5m.csv</td><td>5 分钟</td><td>近 60 天</td><td>62 标的 × 90.9 万行</td></tr>
+<tr><td>data/yahoo/*_1h.csv</td><td>1 小时</td><td>近 730 天</td><td>62 标的 × 95.1 万行</td></tr>
+<tr><td>data/yahoo/*_1d.csv</td><td>日线</td><td>近 20 年</td><td>62 标的 × 30.9 万行</td></tr>
+<tr><td>data/ecb_daily_matrix.csv</td><td>日线</td><td>1999-01-04 → 今</td><td>44 币种 × 7,109 天宽表</td></tr>
+</table>
+<p>标的 62 个:游戏 7 对 + 全部 FX 交叉盘/新兴货币 + 金银(GC=F/SI=F)+ 原油 + 7 大股指 + BTC/ETH/SOL。
+清单见 <code>data/yahoo/manifest.json</code>。</p>
+<p class="note">爬取坑位:Yahoo 对 FX 的 <code>1d+range=max</code> 会降采样成月线,须用 <code>range=20y</code>;
+<code>XAUUSD=X</code> 无效,金属用期货符号。不可达源(本机网络):Dukascopy tick(TLS 阻断)、stooq(JS 工作量验证)、HistData(DNS 失败)——本机可爬上限为 1 分钟线。</p>
+
+<h2>6. 版权提醒</h2>
+<p>镜像与库存仅供个人学习研究;游戏代码与素材版权归原作者「-会飞的蝈蝈-」所有,请勿再分发或商用。</p>
+</body></html>
