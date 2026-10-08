@@ -12,7 +12,7 @@
 <li><a class="t" href="D1_u_effective_time.html">D1：等效训练时间 U</a><span class="s">$U$ 是沿恒定梯度方向的参数位移标定量，单位为参数单位。</span></li>
 <li><a class="t" href="D2_overfitting_u_curve.html">D2：风险何时回升、回升后如何增长</a><span class="s">上升起点用已有最低点预测换算。上升后的短段公式是保存数据事后拟合（development，即已见数据上的拟合）：</span></li>
 <li><a class="t" href="D3_capacity_resolution.html">D3：容量与分辨率的描述量</a><span class="s">在固定特征、零初始化且更新不会发散的模型中，训练量超过拟合阈值后，残余由下式确定。有限训练留下各方向尚未消去的误差。长期尾部由慢方向主导。无限训练只留下模型不能学习的方向；浮点计算还需考虑数值底。</span></li>
-<li><a class="t" href="D4_sigmoid_training_curve.html">D4：单 sigmoid 拟合何时成功、何时失败</a><span class="s">在已测的两种下降分量系统中，单 sigmoid 拟合成功，当且仅当均方根误差与最差点误差同时过关；任一超阈值即失败：</span></li>
+<li><a class="t" href="D4_sigmoid_training_curve.html">D4：单 sigmoid 拟合何时成功、何时失败</a><span class="s">(a) 经验判定映射：固定特征、全批量 SGD（每步使用全部样本）、样本数与参数数均为 2、学习率 0.1、无动量与衰减时，单 sigmoid 是否通过取决于谱比（快/慢方向曲率比）、慢损失占比 α 和选解协议。 等初始损失五点设计中，最小二乘（选平方误差和最小的保存解）在谱比 1/3/10 各通过 3/3、30/10…</span></li>
 <li><a class="t" href="D5_ln_geometry.html">D5：LN同宽度收益的机制</a><span class="s">LN同宽度收益的机制仍未确立。真实训练收益成立，但已检验的初始化几何候选量没有达到预注册的解释判据。共享Linear与LN affine初始化核采用旧实际batch64顺序后，仍与真实train方向0/20匹配。范围限于四个development（开发条件，未封存）函数和以下配方：width64（隐藏层宽度64）、固定…</span></li>
 <li><a class="t" href="D6_kernel_drift.html">D6：核漂移与晚期预测</a><span class="s">核心问题的答案是：在固定四个 recipe、三初始化和三条冻结早期公式下，dataseed260610 仍得到 Δ=MAEE−MAET<0（−0.029842999），所以“加入标签早期读数不会改善晚期预测”这一符号判据再次成立；但点预期 −0.20 未实现，四个 recipe 的区间均跨零，不能把它当作稳定的逐 re…</span></li>
 <li><a class="t" href="D7_train_gain_test_harm.html">D7：train增益与test损害的机制边界</a><span class="s">训练误差降低，仍不能判定继续训练是否提高 test（未参与训练的样本）风险。晚期损害由 C=Ltest(512)−Ltest(128)>0 描述；C 是同一模型两时点的风险差。这个判据需要事后查看 test。现有实验尚未建立只靠 train（训练样本）的前瞻信号，也未识别三种候选机制的比例。</span></li>
@@ -23,5 +23,5 @@
 <li><a class="t" href="D12_cascade_sigmoid.html">D12：延迟跃迁与级联 sigmoid</a><span class="s">已验证的逐模态参数公式是 hi=log2/[-2log(1−ηλi)]、b=2log2，双段候选为 C(t)=α/[1+(t/hs)^b]+(1−α)/[1+(t/hf)^b]。t 与 h 是更新步数和半幅度时间；λ 是模态特征值，η 是学习率，b 是对数时间陡度，α 是初始慢损失占比。局部半幅度与斜率匹配给出这些参数…</span></li>
 <li><a class="t" href="D13_linear_flow_world.html">D13：Linear Flow World</a><span class="s">目前尚未建立从架构与初始化预测相变时间、再读出有效深度的可靠标定式。相变时间指曲线的拟合中点或陡降位置；有效深度指用该时间换算的链深度。固定深度 4、宽度 32、正交目标和逐 seed 初始矩阵，只把全批量 GD 学习率 0.02 降到 0.00125，原协议 A/B 一致性从 0/3 提升至 3/3，但固定时间轴后的…</span></li>
 </ul>
-<div class="stamp">同步于 2026-10-08 17:31（北京时间）· 源文件在研究仓库内随轮次更新，本页为快照</div>
+<div class="stamp">同步于 2026-10-08 18:33（北京时间）· 源文件在研究仓库内随轮次更新，本页为快照</div>
 </main></body></html>
