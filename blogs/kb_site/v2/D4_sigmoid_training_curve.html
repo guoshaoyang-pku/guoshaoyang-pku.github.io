@@ -407,5 +407,56 @@ E2 = sqrt(mean_grid((H−f)^2)); Einf = max_grid|H−f|
 <p>alpha=0.75 最大误差对照冻结提交bd67bcf22d3bae14b35eb58a9a03d0501a13d5d1早于全部3新拟合。P1/P2均supported，0新训练。报告按 inbox 六节顺序的单独重排提交为020116c，旧数字和结论保留。证据：r094 findings（<code>findings/r094_alpha075_maxabs.md</code>）、summary（<code>studies/r094_alpha075_maxabs/summary.json</code>）、预注册（<code>studies/r094_alpha075_maxabs/preregistration.json</code>）、提交核验（<code>studies/r094_alpha075_maxabs/executed/preregistration_commit_verification.json</code>）、旧收尾审计（<code>studies/r094_alpha075_maxabs/executed/previous_closeout_audit.json</code>）、独立证书（<code>studies/r094_alpha075_maxabs/executed/certificate_verification.json</code>）、恢复后独立复算（<code>studies/r094_alpha075_maxabs/executed/independent_review.json</code>）、恢复核验（<code>studies/r094_alpha075_maxabs/executed/resume_verification.json</code>）、科学收尾回执（<code>studies/r094_alpha075_maxabs/executed/final_commit_verification.json</code>）。</p>
 <p>报告修正的补充来源：同条件单段边界 summary（<code>../D12_cascade_sigmoid/studies/r028_gap_cascade/summary.json</code>），仅引用其 single 字段的谱比 12/15/20/25 保存结果，不引用双段候选判定。</p>
 <p>点图及复算：图 1 SVG（<code>figs/decision_map.svg</code>）、图 2 SVG（<code>figs/pointwise_errors.svg</code>）、只读绘图源码（<code>figs/plot_report_fix.py</code>）、定义与科学自查（<code>findings/report_fix_audit.md</code>）。</p>
-<div class="stamp">同步于 2026-10-08 18:41（北京时间）· 源文件在研究仓库内随轮次更新，本页为快照</div>
+<h2>整合证据清单（协调者 2026-10-08 抽取）</h2>
+<table>
+<thead>
+<tr>
+<th>轮</th>
+<th>问题</th>
+<th>注册判据</th>
+<th>结果</th>
+<th>范围</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>r002/r010</td>
+<td>等初始损失双模态，谱比何时超阈值</td>
+<td>RMSE≤.03 且 maxabs≤.05，LS 选解</td>
+<td>1/3/10 各 3/3 过；30/100 各 0/3</td>
+<td>n=d=2，η=.1，float64，全批量，平台 1/0，3 坐标 seed</td>
+</tr>
+<tr>
+<td>r018</td>
+<td>谱比 100 下 α 的作用</td>
+<td>同上</td>
+<td>仅 α=.99/1 各 3/3 过；α=0/.01/.1/.25/.5/.75/.9 各 0/3；P2（.01 与 .99 都过）refuted</td>
+<td>同上，9 点 α</td>
+</tr>
+<tr>
+<td>r038</td>
+<td>α=0/.01 改 min-maxabs 选解</td>
+<td>同上 + 配对增幅判据</td>
+<td>各 3/3 过；P2（RMSE 增 ≥.003）refuted（增 .00250/.00206）；证书 gap 5.82e-11</td>
+<td>0 新训练，6 拟合 cell</td>
+</tr>
+<tr>
+<td>r050/r082/r094</td>
+<td>α=.25/.5/.75 的 min-maxabs 下界</td>
+<td>下界 &gt;.05</td>
+<td>各 3/3 支持；下界 .083383/.082684/.097975</td>
+<td>0 新训练，各 3 拟合 cell</td>
+</tr>
+<tr>
+<td>r028（D12 引用）</td>
+<td>谱比 12/15/20/25 空档</td>
+<td>单段阈值</td>
+<td>12/15 过、20/25 失败</td>
+<td>仅 single 字段</td>
+</tr>
+</tbody>
+</table>
+<p>常量：级联无拟合公式 h_i=log2/a_i、b=2log2≈1.386294（D12 验证）；a_i=−2log(1−ηλ_i)；中点相对偏差 −8.99/−6.53/+3.95/+21.96/+72.40%（谱比 1/3/10/30/100）；斜率偏差 +4.36/+4.15/+8.39/+26.28/+86.73%；min-maxabs 参数域证书区间宽度均 5.820766091346741e-11；网格=150 点整数化对数 0..4997 等权；min-maxabs 参数界 t50∈[0.01,1e5] 步、β∈[0.1,10]，二分容差 1e-10。</p>
+<p>未入 summary 的痕迹数字（仅存于 findings/executed）：r010 执行调用 0.490s、expit 重构 ≤1.11e-16、α=.25 见证 β 界（≥.822477112273925 与 ≤.487369166379817）、60 位 Decimal 复核、各轮 commit 哈希。读者如需复核这些细节，按证据节链接到 executed/ 原件。</p>
+<div class="stamp">同步于 2026-10-08 19:08（北京时间）· 源文件在研究仓库内随轮次更新，本页为快照</div>
 </main></body></html>
