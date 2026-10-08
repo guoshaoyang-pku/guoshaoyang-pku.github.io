@@ -1,7 +1,10 @@
 <!doctype html>
 <html lang="zh-CN"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>D13：Linear Flow World</title><link rel="stylesheet" href="style.css"></head>
+<title>D13：Linear Flow World</title><link rel="stylesheet" href="style.css">
+<script>window.MathJax={tex:{inlineMath:[['\\(','\\)'],['$','$']],displayMath:[['\\[','\\]'],['$$','$$']]}};</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
 <body><main><div class="nav"><a href="index.html">← 报告索引</a></div>
 <h1>D13：Linear Flow World</h1>
 <h2>结论</h2>
@@ -17,7 +20,7 @@
 <h2>Formulation</h2>
 <p>协议 A 的操作定义是：</p>
 <p>$$
-\widehat\ell(t)=c+\frac{a-c}{1+\exp{k[\log(1+t)-\log(1+t_{c,A})]}}.
+\widehat\ell(t)=c+\frac{a-c}{1+\exp\{k[\log(1+t)-\log(1+t_{c,A})]\}}.
 $$</p>
 <p>ell(t) 是第 t 步的均方误差（MSE）；t 和 t_c 的单位为 step。a 是拟合上平台，c 是自由拟合下平台，单位同 MSE。k&gt;0 是无量纲的 log-time 斜率。实际约束为 t_c&gt;=0；A 对全部步做有界局部最小二乘。</p>
 <p>协议 B 固定下基线为实测 final loss，对 loss 做 11 点移动平均，再取对 log(1+t) 的最大负斜率位置 t_c,B。B 是导数峰值估计，未另做固定平台 sigmoid 拟合；常数下基线不改变导数。</p>
@@ -115,5 +118,5 @@ seed33 新细步长也没有新增失败预测。训练再次出现同类 matmul
 </li>
 <li>seed11 核验：独立源码（<code>studies/r105_seed11_refinement/executed/verify.py</code>）、独立回执（<code>studies/r105_seed11_refinement/executed/independent_verification.json</code>）、恢复回执（<code>studies/r105_seed11_refinement/executed/recovery_verification.json</code>）、执行审计（<code>studies/r105_seed11_refinement/executed/execution_audit.json</code>）、原始警告（<code>studies/r105_seed11_refinement/executed/training_stderr.log</code>）。</li>
 </ul>
-<div class="stamp">同步于 2026-10-08 17:16（北京时间）· 源文件在研究仓库内随轮次更新，本页为快照</div>
+<div class="stamp">同步于 2026-10-08 17:29（北京时间）· 源文件在研究仓库内随轮次更新，本页为快照</div>
 </main></body></html>

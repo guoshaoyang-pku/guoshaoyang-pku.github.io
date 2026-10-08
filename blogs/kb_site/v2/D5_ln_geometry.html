@@ -1,7 +1,10 @@
 <!doctype html>
 <html lang="zh-CN"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>D5：LN同宽度收益的机制</title><link rel="stylesheet" href="style.css"></head>
+<title>D5：LN同宽度收益的机制</title><link rel="stylesheet" href="style.css">
+<script>window.MathJax={tex:{inlineMath:[['\\(','\\)'],['$','$']],displayMath:[['\\[','\\]'],['$$','$$']]}};</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
 <body><main><div class="nav"><a href="index.html">← 报告索引</a></div>
 <h1>D5：LN同宽度收益的机制</h1>
 <h2>结论</h2>
@@ -16,66 +19,66 @@
 <li>固定核方向冲突仍未定位原因。在上述20配对中，补入LN affine仍为0/20匹配。核漂移（Jacobian随训练变化）和weight decay（权重衰减）仍未区分。本次只区分固定核的批次算子，真实非线性训练中的小批量作用仍未知。</li>
 </ul>
 <h2>Formulation</h2>
-<p>[
+<p>\[
 P_n=I_n-\mathbf1\mathbf1^\top/n,\quad
 G_t=(P_nH_t)^\top(P_nH_t)/n,\quad
 \kappa_t=\frac{\max(\lambda_{\max}(G_t),10^{-12})}{\max(\lambda_{\min}(G_t),10^{-12})}.
-]
-[
-E_m=|P_{n_v}(f_{256,m}(X_v)-y_{v,m})|^2/n_v,\quad
+\]
+\[
+E_m=\|P_{n_v}(f_{256,m}(X_v)-y_{v,m})\|^2/n_v,\quad
 C=\tfrac12(E_{-3}+E_{+3})-E_0,\quad
 \Delta C=C_{\rm LN}-C_{\rm noLN}.
-]
-[
+\]
+\[
 J_0=\partial f_0(X)/\partial\theta_h,\quad
 K_c=P_nJ_0J_0^\top P_n/n,\quad y_c=P_ny_0,\quad
 q_0=\frac{y_c^\top K_cy_c}{y_c^\top y_c}
- =\frac{|J_0^\top y_c|^2}{n|y_c|^2}.
-]
-[
+ =\frac{\|J_0^\top y_c\|^2}{n\|y_c\|^2}.
+\]
+\[
 X_R=\log_{10}(q_{0,\rm LN}/q_{0,\rm noLN}),\quad
-X_G=\tfrac13\sum_{m\in{-3,0,+3}}(\log_{10}\kappa_{256,m,\rm noLN}-\log_{10}\kappa_{256,m,\rm LN}),\quad
+X_G=\tfrac13\sum_{m\in\{-3,0,+3\}}(\log_{10}\kappa_{256,m,\rm noLN}-\log_{10}\kappa_{256,m,\rm LN}),\quad
 B=-\Delta C.
-]</p>
-<p>[
+\]</p>
+<p>\[
 K=J_0J_0^\top/n,\quad u=P_nK\mathbf1,\quad
-\ell=|u|^2/n=|P_nJ_0(J_0^\top\mathbf1)|^2/n^3,\quad
+\ell=\|u\|^2/n=\|P_nJ_0(J_0^\top\mathbf1)\|^2/n^3,\quad
 L=\log_{10}(\ell_{\rm LN}/\ell_{\rm noLN}),\quad X_L=-L.
-]
-[
-A=I-2\eta K,\quad C_t^{\rm linear,train}=a^2|P_nA^t\mathbf1|^2/n,\quad
+\]
+\[
+A=I-2\eta K,\quad C_t^{\rm linear,train}=a^2\|P_nA^t\mathbf1\|^2/n,\quad
 C_1^{\rm linear,train}=4\eta^2a^2\ell.
-]
-[
+\]
+\[
 J_{\rm aff}=\partial f_0(X)/\partial(\gamma_{\rm LN},\beta_{\rm LN}),\quad
 K_{\rm total}=K_{\rm linear}+J_{\rm aff}J_{\rm aff}^{\top}/n,\quad
 A_{\rm total}=I-2\eta K_{\rm total}.
-]</p>
+\]</p>
 <p>$I_n$ 是$n$维单位矩阵。$\lambda_{\max}$与$\lambda_{\min}$分别是最大与最小特征值。条件数是最大与最小特征值按下限处理后的比值。$n=n_v=256$ 是训练/测试样本数。$P$ 去掉样本均值。$H_t$ 是第 $t$ 步最后隐藏层激活，列数为width64。$G_t$ 是列居中表示的Gram矩阵，特征值单位为激活平方。$\kappa_t$ 是无量纲条件数。$m=-3,0,+3$ 是标签偏移，单位为归一化标签。$X_v,y_{v,m},f_{256,m}$ 是测试输入、偏移后标签、256步预测。$E_m,C,\Delta C$ 单位为归一化标签平方，负的 $\Delta C$ 表示LN的标签偏移下的去均值chord更低。$t$ 单位为SGD更新次数。$10^{-12}$ 是固定特征值下限（floor）。</p>
 <p>$X,y_0,f_0$ 是训练输入、offset0标签及初始化预测。$\theta_h$ 是input/三个hidden Linear的weight与bias，排除head和LN affine，共d8（输入维度8）13056/d12（输入维度12）13312个坐标。weight与bias分别指权重与偏置。$J_0$ 是输出对这些参数的Jacobian，单位为归一化标签/参数坐标。$K_c,q_0$ 使用固定模型参数坐标，单位为归一化标签平方/参数坐标平方，数值依赖参数化。$\Delta\log_{10}\kappa$ 是LN−noLN的条件数对数差。$X_R,X_G$ 无量纲，$B$ 单位为归一化标签平方，越大表示LN chord收益越大。居中后加性offset抵消，$q_0$ 只算一次。模型及autograd（自动微分）为float32（32位浮点）。目标、VJP（向量与Jacobian的乘积）平方和与Gram汇总为float64（64位浮点）。</p>
 <p>$\mathbf1$ 是无量纲全1向量。$u$ 是均值方向经未居中核传播后的居中部分，单位与$K$相同。$\ell$ 单位为归一化标签四次方/参数坐标四次方，依赖固定参数化。$L,X_L$ 无量纲。$a$ 是标签offset幅度，单位为归一化标签。$\eta$ 是MSE（残差平方均值）学习率（参数坐标平方/标签平方），$A$ 无量纲，$C_t^{\rm linear,train}$ 单位为归一化标签平方。最后一式仅适用于固定Jacobian、全批量、无weight decay、损失为mean(residual²)（残差平方均值）的train线性化，是解析关系。train线性化指用初始化处的一阶导数近似网络训练。</p>
 <p>LN010指只在三个隐藏块中的第二个块启用LN。$J_{\rm aff}$ 是LN010配方第二个hidden block（隐藏块，模块名net.3.norm）的LayerNorm scale（缩放）$\gamma_{\rm LN}$ 与 bias $\beta_{\rm LN}$（共128坐标）对应的逐样本Jacobian。$K_{\rm linear}$ 来自共享input与三个hidden Linear层weight/bias，两个参数子集互不相交，因此核相加不含交叉项。$K_{\rm total}$ 是共享Linear+LN affine核，仍排除固定head，与$K$同单位。Jacobian由float32模型/autograd生成后转float64，核构造和传播使用float64。$A_{\rm total}$按同一固定核迭代256步，仅用于全批量、无decay（权重衰减）的train线性化。</p>
-<p>[
-E^{\rm train}<em>m=|P_n(f</em>{256,m}(X)-y_m)|^2/n,\quad
-C^{\rm real,train}=\tfrac12(E^{\rm train}<em>{-3}+E^{\rm train}</em>{+3})-E^{\rm train}<em>0,\quad
-\Delta C^{\rm real,train}=C^{\rm real,train}</em>{\rm LN}-C^{\rm real,train}<em>{\rm noLN}.
-]
-[
-\Delta C_t^{\rm fixed}=C</em>{t,\rm LN}^{\rm linear,train}-C_{t,\rm noLN}^{\rm linear,train},\quad
-M_t=\sum_{f,s}\mathbf1{\operatorname{sgn}<em>{10^{-12}}(\Delta C_t^{\rm fixed})
-=\operatorname{sgn}</em>{10^{-12}}(\Delta C^{\rm real,train})\ne0}.
-]</p>
-<p>$y_m$ 与$f_{256,m}(X)$ 是各offset的训练标签与256步train预测。$E^{\rm train}<em>m,C^{\rm real,train},\Delta C^{\rm real,train},\Delta C_t^{\rm fixed}$ 单位为归一化标签平方。$f,s$ 是四函数与五初始化seed，$M_t$ 是20同函数同seed配对的方向匹配数，单位为对。$\operatorname{sgn}</em>{10^{-12}}$ 将绝对值≤$10^{-12}$的差值按零方向处理，零方向算不匹配。</p>
-<p>[
+<p>\[
+E^{\rm train}_m=\|P_n(f_{256,m}(X)-y_m)\|^2/n,\quad
+C^{\rm real,train}=\tfrac12(E^{\rm train}_{-3}+E^{\rm train}_{+3})-E^{\rm train}_0,\quad
+\Delta C^{\rm real,train}=C^{\rm real,train}_{\rm LN}-C^{\rm real,train}_{\rm noLN}.
+\]
+\[
+\Delta C_t^{\rm fixed}=C_{t,\rm LN}^{\rm linear,train}-C_{t,\rm noLN}^{\rm linear,train},\quad
+M_t=\sum_{f,s}\mathbf1\{\operatorname{sgn}_{10^{-12}}(\Delta C_t^{\rm fixed})
+=\operatorname{sgn}_{10^{-12}}(\Delta C^{\rm real,train})\ne0\}.
+\]</p>
+<p>$y_m$ 与$f_{256,m}(X)$ 是各offset的训练标签与256步train预测。$E^{\rm train}_m,C^{\rm real,train},\Delta C^{\rm real,train},\Delta C_t^{\rm fixed}$ 单位为归一化标签平方。$f,s$ 是四函数与五初始化seed，$M_t$ 是20同函数同seed配对的方向匹配数，单位为对。$\operatorname{sgn}_{10^{-12}}$ 将绝对值≤$10^{-12}$的差值按零方向处理，零方向算不匹配。</p>
+<p>\[
 Q_t=\operatorname{diag}(c_{t,1},\ldots,c_{t,n}),\quad
-c_{t,i}=#{j\in B_t:j=i},\quad
+c_{t,i}=\#\{j\in B_t:j=i\},\quad
 r_{t+1}=\left(I-\frac{2\eta n}{b}KQ_t\right)r_t.
-]
-[
+\]
+\[
 v_0=\mathbf1,\quad v_{t+1}=v_t-.008K[:,B_t]v_t[B_t],\quad
-C^{\rm batch,train}<em>{256}=a^2|P_nv</em>{256}|^2/n,\quad
-\Delta C^{\rm batch}=C^{\rm batch}<em>{\rm LN}-C^{\rm batch}</em>{\rm noLN}.
-]</p>
+C^{\rm batch,train}_{256}=a^2\|P_nv_{256}\|^2/n,\quad
+\Delta C^{\rm batch}=C^{\rm batch}_{\rm LN}-C^{\rm batch}_{\rm noLN}.
+\]</p>
 <p>$B_t$是第$t$个batch的64个有放回样本索引，含重复。$c_{t,i}$是样本$i$出现次数，$Q_t$无量纲。$b=64$，$n=256$，$\eta=.001$，所以$2\eta n/b=.008$。$r_t$是训练残差，单位为归一化标签；$v_t$是加性offset残差差除以offset幅度后的无量纲向量。索引重复必须重复求和。三offset和LN/noLN使用同函数同seed的同一已保存顺序。该等式适用于固定初始化Jacobian、无decay、每batch损失为残差平方均值的train线性化。它由线性递推解析导出；$C^{\rm batch}$与$\Delta C^{\rm batch}$单位为归一化标签平方。一“步”是一次batch更新。本次测得的匹配数沿用$10^{-12}$方向门槛。</p>
 <h2>成立程度</h2>
 <p>结论仅在以下范围成立：四个旧函数、width64、固定head、GELU、SGD lr=.001/mom0/weight_decay1e-4、batch64、256步。终点条件数下降通过12/12函数×offset单元（54/60 seed配对），但offset0 $\Delta\log_{10}\kappa$ 与 $\Delta C$ 的相关为 .420774419，未达注册 0.5。720 checkpoint（保存的训练时点）均未命中特征值下限。</p>
@@ -309,7 +312,7 @@ C^{\rm batch,train}<em>{256}=a^2|P_nv</em>{256}|^2/n,\quad
 <p>补入LN affine初始化核项的方向预测也refuted：4函数×5 seed的real train差20/20为负，共享Linear+LN affine固定核差20/20为正，匹配0/20，低于注册16/20。该核传播稳定性门槛通过。这个对照只否定“遗漏LN affine参数单独解释方向冲突”，不支持核漂移、小批量或decay中的任何一个作为原因。冻结核验脚本因读取不存在的NPZ字段无法完成其原定核pin检查。文件按冻结要求保留，独立核验另行重建核并通过，不把它报告为冻结脚本通过。</p>
 <h2>未决问题</h2>
 <p>最后hidden Gram不是参数Jacobian神经切线核（由输出对参数的Jacobian构造的核）。局部曲率（损失随参数变化的二阶性质）、hidden bias（隐藏层偏置）、LN affine与目标谱投影（目标在核特征向量上的分量）的独立作用仍未区分。没有人工谱干预，也没有新width/函数前瞻复现。</p>
-<p>目标Rayleigh是初始化几何读数，不是未居中MSE的残差下降率。解析上，在固定Jacobian、全批量、无weight decay的MSE线性化中，$A=I-2\eta JJ^\top/n$，offset大小为 $a$ 的chord满足 $C_t=a^2|P_nA^t\mathbf1|^2/n$。$\eta$ 是学习率，$A$ 是无量纲残差更新矩阵。其直接耦合来自 $P_nK\mathbf1$，$K=JJ^\top/n$，而非clean-target（未加偏移的目标）Rayleigh。此等式是简化动力学的已知解析关系，不能当作非线性、mini-batch（小批量）、weight decay及test chord的实测机制结论。原训练中LN affine可更新。旧Rayleigh、coupling及共享Linear固定核算子排除它，本次共享Linear+LN affine核已纳入它。旧关联阈值失败只反驳具体候选量及聚合规则，不排除所有Jacobian机制。</p>
+<p>目标Rayleigh是初始化几何读数，不是未居中MSE的残差下降率。解析上，在固定Jacobian、全批量、无weight decay的MSE线性化中，$A=I-2\eta JJ^\top/n$，offset大小为 $a$ 的chord满足 $C_t=a^2\|P_nA^t\mathbf1\|^2/n$。$\eta$ 是学习率，$A$ 是无量纲残差更新矩阵。其直接耦合来自 $P_nK\mathbf1$，$K=JJ^\top/n$，而非clean-target（未加偏移的目标）Rayleigh。此等式是简化动力学的已知解析关系，不能当作非线性、mini-batch（小批量）、weight decay及test chord的实测机制结论。原训练中LN affine可更新。旧Rayleigh、coupling及共享Linear固定核算子排除它，本次共享Linear+LN affine核已纳入它。旧关联阈值失败只反驳具体候选量及聚合规则，不排除所有Jacobian机制。</p>
 <p>下一小问题仅development：保持全部保存核、实际batch顺序、eta=.001、a=3、T=256，单独加入原SGD的weight_decay=1e−4，方向匹配是否仍0/20？先冻结offset差递推$v_{t+1}=(1-\eta\,wd)v_t+\eta\,wd\mathbf1-.008K[:,B_t]v_t[B_t]$，其中$wd$是参数衰减系数，$\eta\,wd$无量纲。保留常数项，再预注册数值预测和输入hash、pinned源码单一commit，之后才计算。0新训练。核漂移、非线性和test机制仍未区分。</p>
 <h2>证据</h2>
 <ul>
@@ -332,5 +335,5 @@ C^{\rm batch,train}<em>{256}=a^2|P_nv</em>{256}|^2/n,\quad
 <p>batch64预注册与逐配对数值区间（<code>studies/r107_fixed_kernel_batch64/preregistration.json</code>）。40评价和20配对结果（<code>studies/r107_fixed_kernel_batch64/summary.json</code>）。旧收尾及实际批次重建（<code>studies/r107_fixed_kernel_batch64/executed/precommit_audit.json</code>）。独立完整轨迹与标量核验（<code>studies/r107_fixed_kernel_batch64/executed/saved_evidence_verification.json</code>）。恢复不覆盖核验（<code>studies/r107_fixed_kernel_batch64/executed/recovery_verification.json</code>）。本轮记录（<code>findings/r107_fixed_kernel_batch64.md</code>）。收尾提交核验（<code>studies/r107_fixed_kernel_batch64/executed/final_commit_verification.json</code>）。</p>
 </li>
 </ul>
-<div class="stamp">同步于 2026-10-08 17:16（北京时间）· 源文件在研究仓库内随轮次更新，本页为快照</div>
+<div class="stamp">同步于 2026-10-08 17:29（北京时间）· 源文件在研究仓库内随轮次更新，本页为快照</div>
 </main></body></html>

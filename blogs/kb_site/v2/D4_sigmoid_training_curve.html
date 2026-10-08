@@ -1,17 +1,20 @@
 <!doctype html>
 <html lang="zh-CN"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>D4：单 sigmoid 拟合何时成功、何时失败</title><link rel="stylesheet" href="style.css"></head>
+<title>D4：单 sigmoid 拟合何时成功、何时失败</title><link rel="stylesheet" href="style.css">
+<script>window.MathJax={tex:{inlineMath:[['\\(','\\)'],['$','$']],displayMath:[['\\[','\\]'],['$$','$$']]}};</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
 <body><main><div class="nav"><a href="index.html">← 报告索引</a></div>
 <h1>D4：单 sigmoid 拟合何时成功、何时失败</h1>
 <h2>结论</h2>
 <p>在已测的两种下降分量系统中，单 sigmoid 拟合成功，当且仅当均方根误差与最差点误差同时过关；任一超阈值即失败：</p>
-<p>[
+<p>\[
 \text{成功}\iff E_2\le0.03\ \land\ E_\infty\le0.05;\qquad
-\text{失败}\iff E_2&gt;0.03\ \lor\ E_\infty&gt;0.05.
-]</p>
-<p>(E_2) 是均方根误差，表示各采样点误差平方的平均值再开平方。
-(E_\infty) 是最大绝对误差，表示最差采样点的误差。
+\text{失败}\iff E_2>0.03\ \lor\ E_\infty>0.05.
+\]</p>
+<p>\(E_2\) 是均方根误差，表示各采样点误差平方的平均值再开平方。
+\(E_\infty\) 是最大绝对误差，表示最差采样点的误差。
 两种误差都除以初始到最终的真实损失差；本报告该差为 1。
 以下规则只适用于对数时间轴上的单 sigmoid（把更新步数取对数后呈单段 S 形的函数），且初始/最终平台固定为 1/0。
 系统的输入特征在训练中不变，样本数与参数数均为 2。
@@ -382,5 +385,5 @@ E2 = sqrt(mean_grid((H−f)^2)); Einf = max_grid|H−f|
 <p>科学收尾提交与核验回执：final_commit_verification.json（<code>studies/r050_alpha025_maxabs/executed/final_commit_verification.json</code>）。</p>
 <p>alpha=0.5 最大误差对照冻结提交6f7c3355e6936f7648156ba89c89d6a8f4edec3e早于全部3新拟合。P1/P2均supported，0新训练。证据：r082 findings（<code>findings/r082_alpha050_maxabs.md</code>）、summary（<code>studies/r082_alpha050_maxabs/summary.json</code>）、预注册（<code>studies/r082_alpha050_maxabs/preregistration.json</code>）、提交核验（<code>studies/r082_alpha050_maxabs/executed/preregistration_commit_verification.json</code>）、旧收尾审计（<code>studies/r082_alpha050_maxabs/executed/previous_closeout_audit.json</code>）、独立证书（<code>studies/r082_alpha050_maxabs/executed/certificate_verification.json</code>）、独立复算（<code>studies/r082_alpha050_maxabs/executed/independent_review.json</code>）、恢复核验（<code>studies/r082_alpha050_maxabs/executed/resume_verification.json</code>）、科学收尾回执（<code>studies/r082_alpha050_maxabs/executed/final_commit_verification.json</code>）。</p>
 <p>alpha=0.75 最大误差对照冻结提交bd67bcf22d3bae14b35eb58a9a03d0501a13d5d1早于全部3新拟合。P1/P2均supported，0新训练。报告按 inbox 六节顺序的单独重排提交为020116c，旧数字和结论保留。证据：r094 findings（<code>findings/r094_alpha075_maxabs.md</code>）、summary（<code>studies/r094_alpha075_maxabs/summary.json</code>）、预注册（<code>studies/r094_alpha075_maxabs/preregistration.json</code>）、提交核验（<code>studies/r094_alpha075_maxabs/executed/preregistration_commit_verification.json</code>）、旧收尾审计（<code>studies/r094_alpha075_maxabs/executed/previous_closeout_audit.json</code>）、独立证书（<code>studies/r094_alpha075_maxabs/executed/certificate_verification.json</code>）、恢复后独立复算（<code>studies/r094_alpha075_maxabs/executed/independent_review.json</code>）、恢复核验（<code>studies/r094_alpha075_maxabs/executed/resume_verification.json</code>）、科学收尾回执（<code>studies/r094_alpha075_maxabs/executed/final_commit_verification.json</code>）。</p>
-<div class="stamp">同步于 2026-10-08 17:16（北京时间）· 源文件在研究仓库内随轮次更新，本页为快照</div>
+<div class="stamp">同步于 2026-10-08 17:29（北京时间）· 源文件在研究仓库内随轮次更新，本页为快照</div>
 </main></body></html>

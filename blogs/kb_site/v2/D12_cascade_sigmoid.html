@@ -1,13 +1,16 @@
 <!doctype html>
 <html lang="zh-CN"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>D12：延迟跃迁与级联 sigmoid</title><link rel="stylesheet" href="style.css"></head>
+<title>D12：延迟跃迁与级联 sigmoid</title><link rel="stylesheet" href="style.css">
+<script>window.MathJax={tex:{inlineMath:[['\\(','\\)'],['$','$']],displayMath:[['\\[','\\]'],['$$','$$']]}};</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
 <body><main><div class="nav"><a href="index.html">← 报告索引</a></div>
 <h1>D12：延迟跃迁与级联 sigmoid</h1>
 <h2>结论</h2>
 <p>已验证的逐模态参数公式是 h_i=log2/[-2log(1−ηλ_i)]、b=2log2，双段候选为 C(t)=α/[1+(t/h_s)^b]+(1−α)/[1+(t/h_f)^b]。t 与 h 是更新步数和半幅度时间；λ 是模态特征值，η 是学习率，b 是对数时间陡度，α 是初始慢损失占比。局部半幅度与斜率匹配给出这些参数。保存曲线验证表明：固定特征、全批量 SGD η=0.1、n=d=2、原150点网格与平台1/0下，α=0.5 的八个谱比格点通过；r=100、α=0.25 失败，α=0.75 通过。这里的“通过”要求均方根误差≤0.03且最大误差≤0.05。没有 learned features（训练中改变的特征）的延迟跃迁证据。</p>
 <p>初始模态损失不等时，已知精确递推及已评价的描述候选为</p>
-<p>[f_\alpha(t)=\alpha e^{-a_st}+(1-\alpha)e^{-a_ft},\qquad C_\alpha(t)=\alpha H(t;\log2/a_s,2\log2)+(1-\alpha)H(t;\log2/a_f,2\log2).]</p>
+<p>\[f_\alpha(t)=\alpha e^{-a_st}+(1-\alpha)e^{-a_ft},\qquad C_\alpha(t)=\alpha H(t;\log2/a_s,2\log2)+(1-\alpha)H(t;\log2/a_f,2\log2).\]</p>
 <p>α=L_s(0)/L(0) 是无量纲慢模态初始损失占比，从保存的模态损失权重取得。它不是参数、特征或梯度能量占比。f_α 是精确归一化损失，C_α 是加权候选，均无量纲。h/b 仍按上式固定，幅度不从曲线拟合。α=0.5 还原等权候选。加权评价覆盖 α=0.25/0.75、r=100，hs/hf=346.400275/3.289407 步，平台 1/0。</p>
 <p>以下结论限于固定特征的双模态系统。模态指沿特征 Gram 矩阵（特征内积矩阵）的特征向量分解的误差分量。共同条件为 n=d=2（样本数与参数维度均为 2）、float64（64 位浮点数）、half-MSE（均方误差的一半）、全批量 SGD（随机梯度下降，此处每步使用全部样本）。学习率 η=0.1，momentum=0（无动量），无 weight decay（权重衰减）。慢特征值 λs=0.01，初始总损失 L0=1，平台固定为 1/0（曲线起点为 1、终点为 0）。评价使用原 150 点整数对数网格，各点等权。通过要求 RMSE（均方根误差）≤0.03 且最大误差≤0.05。</p>
 <p>等初始损失的单段 logistic（在对数时间上呈 S 形的下降曲线）在谱比 r=12/15 通过，在 r=20/25 失败。谱比是快、慢特征值之比。两模态初始损失各为 0.5。单段判定只在 15 与 20 两个格点之间改变，尚未得到连续临界值。</p>
@@ -18,10 +21,10 @@
 <p>“接近纯模态即可通过”的旧预测失败。在同一固定特征、全批量 SGD recipe（实验条件组合）下，固定 r=100、慢损失占比为 0.01 时，原单段拟合最大误差为 0.06476095。纯快模态为 0.07462910。两者均超过 0.05。r=3/10/12 的双段公式两项误差均高于原单段拟合，也保留为“多段公式总更好”这一未注册泛化说法的反例。</p>
 <h2>Formulation</h2>
 <p>固定特征、等初始模态损失的损失曲线可由已知递推精确给出：</p>
-<p>[f(t)=\tfrac12e^{-a_st}+\tfrac12e^{-a_ft},\quad a_i=-2\log(1-\eta\lambda_i).]</p>
+<p>\[f(t)=\tfrac12e^{-a_st}+\tfrac12e^{-a_ft},\quad a_i=-2\log(1-\eta\lambda_i).\]</p>
 <p>本方向评价的是以下双段描述候选与无拟合参数公式：</p>
-<p>[H(t;h,b)=\frac{1}{1+(t/h)^b},\quad C(t)=\tfrac12H(t;h_f,b_f)+\tfrac12H(t;h_s,b_s),\quad H(0)=C(0)=1.]</p>
-<p>[C_{\mathrm{formula}}(t)=\tfrac12H(t;\log2/a_f,2\log2)+\tfrac12H(t;\log2/a_s,2\log2).]</p>
+<p>\[H(t;h,b)=\frac{1}{1+(t/h)^b},\quad C(t)=\tfrac12H(t;h_f,b_f)+\tfrac12H(t;h_s,b_s),\quad H(0)=C(0)=1.\]</p>
+<p>\[C_{\mathrm{formula}}(t)=\tfrac12H(t;\log2/a_f,2\log2)+\tfrac12H(t;\log2/a_s,2\log2).\]</p>
 <p>式中 t 是 SGD 更新步数，单位为步。L(t) 是第 t 步损失。f=L(t)/L(0) 是无量纲归一化损失，L(0)=1。下标 s/f 分别指慢/快模态。i 指任一模态。λs=0.01、λf=rλs 是特征 Gram 矩阵的慢/快特征值，单位为损失/参数²。η=0.1 是学习率，单位为参数²/损失。a 是衰减率，单位为步⁻¹。r 是无量纲特征值比。log 表示自然对数。</p>
 <p>h 是各段达到自身半幅度的时间，单位为步。b 是对数时间上的下降陡度，无量纲。H 是单段候选，C 是等权双段候选，C_formula 是无拟合公式，三者均为无量纲归一化损失。拟合候选的 f/s 标签只按 h 排序，尚未证明与模态一一对应。公式候选直接使用谱模态标签。精确时间尺度比为 ρ=af/as，无量纲，不等于 r。</p>
 <p>公式候选的 hs=346.400275 步，r=3/10/12/15/20/25/30/100 的 hf=115.351157/34.483782/28.707497/22.931183/17.154809/13.688926/11.378287/3.289407 步，两段 b=1.386294361。系数未做校准。指数模态在 h=log2/a 处的值为 0.5，对 log(t) 的导数为 −log2/2。H 的相应导数为 −b/4，因此局部匹配给出 b=2log2。该推导是已知解析工具。全窗口是否通过误差阈值须实测。</p>
@@ -162,5 +165,5 @@
 <li>慢占比0.75预注册（<code>studies/r106_weighted_slow_formula/preregistration.json</code>），唯一冻结提交232da3a19d8b43ce2ed421e67bb71535191e82c1；finding（<code>findings/r106_weighted_slow_formula.md</code>）、summary（<code>studies/r106_weighted_slow_formula/summary.json</code>）、分析源码（<code>studies/r106_weighted_slow_formula/analysis.py</code>）。</li>
 <li>执行源码（<code>studies/r106_weighted_slow_formula/executed/run.py</code>）、独立核验（<code>studies/r106_weighted_slow_formula/executed/independent_verification.json</code>）、恢复核验（<code>studies/r106_weighted_slow_formula/executed/resume_verification.json</code>）、历史收尾审计（<code>studies/r106_weighted_slow_formula/executed/previous_closeout_audit.json</code>）、只读审查与写作自查（<code>studies/r106_weighted_slow_formula/executed/independent_review.json</code>）、交付验证（<code>studies/r106_weighted_slow_formula/executed/delivery_validation.json</code>）、收尾提交核验（<code>studies/r106_weighted_slow_formula/executed/final_commit_verification.json</code>）。</li>
 </ul>
-<div class="stamp">同步于 2026-10-08 17:16（北京时间）· 源文件在研究仓库内随轮次更新，本页为快照</div>
+<div class="stamp">同步于 2026-10-08 17:29（北京时间）· 源文件在研究仓库内随轮次更新，本页为快照</div>
 </main></body></html>

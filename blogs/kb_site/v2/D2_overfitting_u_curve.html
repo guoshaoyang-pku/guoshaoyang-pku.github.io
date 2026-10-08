@@ -1,23 +1,26 @@
 <!doctype html>
 <html lang="zh-CN"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>D2：风险何时回升、回升后如何增长</title><link rel="stylesheet" href="style.css"></head>
+<title>D2：风险何时回升、回升后如何增长</title><link rel="stylesheet" href="style.css">
+<script>window.MathJax={tex:{inlineMath:[['\\(','\\)'],['$','$']],displayMath:[['\\[','\\]'],['$$','$$']]}};</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
 <body><main><div class="nav"><a href="index.html">← 报告索引</a></div>
 <h1>D2：风险何时回升、回升后如何增长</h1>
 <h2>结论</h2>
 <p>上升起点用已有最低点预测换算。上升后的短段公式是保存数据事后拟合（development，即已见数据上的拟合）：</p>
-<p>[
+<p>\[
 \widehat U_{\rm rise}\approx
 \begin{cases}
-0.214514(n/\sigma^2)^{1.05557},&amp;n=32,\
-0.328362(n/\sigma^2)^{0.96928},&amp;n=64,\
-0.202563(n/\sigma^2)^{1.09019},&amp;n=128,
+0.214514(n/\sigma^2)^{1.05557},&n=32,\\
+0.328362(n/\sigma^2)^{0.96928},&n=64,\\
+0.202563(n/\sigma^2)^{1.09019},&n=128,
 \end{cases}
 \qquad
 L_{\rm test}(U)-L_{\min}\approx
 C\left(\frac{U-U_{\rm rise}}{U_{\rm rise}}\right)^{1.545565},
 \quad 0.1\lesssim\frac{U-U_{\rm rise}}{U_{\rm rise}}\le1.
-]
+\]
 U=ηt 是累计训练量。η=0.3 是每步学习率。t 是更新步数。
 U_rise=ηt<em> 是实测回升起点。t</em> 是保存窗口内第一个最低点的步数。帽号表示预测值。
 n 是训练样本数。σ² 是归一化训练标签的噪声方差。
@@ -32,29 +35,29 @@ C=L_test(2U_rise)−L_min 是每条曲线在两倍起点处的回升量，单位
 <li>这个幂律不能覆盖整条后期上升支。保存数据事后拟合（development）延伸到第 16384 步时，78/78 超过两倍误差，预测回升量为实测的 4.89–2634.75 倍。</li>
 </ul>
 <h2>Formulation</h2>
-<p>将已有步数幂律换成累计训练量，有 (\widehat U_{\rm rise}=\eta e^a(n/\sigma^2)^b)。留出 n32/64/128 的 (a,b) 仍为 (-0.33541,1.05557)、(0.09033,0.96928)、(-0.39273,1.09019)。系数分别为 0.2145143101、0.3283616599、0.2025632721。a 为以更新步为单位的截距，b 为幂次；这不是三个独立的样本量分段机制，而是三次留出拟合。</p>
-<p>保存数据事后拟合（development）的上升支写为 (L_{\rm test}(U)-L_{\min}\approx Cx^p)，其中 (x=(U-U_{\rm rise})/U_{\rm rise})，(p=1.5455654305138984)。x 是超过最低点的相对训练量，无量纲；C 是该曲线在 x=1 处的实测风险增量。式子只描述 x 约为 0.1–1 的短段。保存曲线的 (L_{\rm test}(\eta t)=R(t))，以下解析式则覆盖已保存的全部整数步。</p>
+<p>将已有步数幂律换成累计训练量，有 \(\widehat U_{\rm rise}=\eta e^a(n/\sigma^2)^b\)。留出 n32/64/128 的 (a,b) 仍为 (-0.33541,1.05557)、(0.09033,0.96928)、(-0.39273,1.09019)。系数分别为 0.2145143101、0.3283616599、0.2025632721。a 为以更新步为单位的截距，b 为幂次；这不是三个独立的样本量分段机制，而是三次留出拟合。</p>
+<p>保存数据事后拟合（development）的上升支写为 \(L_{\rm test}(U)-L_{\min}\approx Cx^p\)，其中 \(x=(U-U_{\rm rise})/U_{\rm rise}\)，\(p=1.5455654305138984\)。x 是超过最低点的相对训练量，无量纲；C 是该曲线在 x=1 处的实测风险增量。式子只描述 x 约为 0.1–1 的短段。保存曲线的 \(L_{\rm test}(\eta t)=R(t)\)，以下解析式则覆盖已保存的全部整数步。</p>
 <p>固定特征、零初始化线性输出层、全批量 GD 与平方损失下，条件期望风险按以下已知解析式计算。风险递推与 population 矩不作为新发现。</p>
-<p>[
+<p>\[
 K=\Phi\Phi^\top/n=V\operatorname{diag}(\lambda_j)V^\top,\quad q_j=1-2\eta\lambda_j,\quad
-f_j(t)=\begin{cases}(1-q_j^t)/\lambda_j,&amp;\lambda_j\ne0,\2\eta t,&amp;\lambda_j=0,\end{cases}
-]
-[
+f_j(t)=\begin{cases}(1-q_j^t)/\lambda_j,&\lambda_j\ne0,\\2\eta t,&\lambda_j=0,\end{cases}
+\]
+\[
 A_t=\Phi^\top V\operatorname{diag}(f_j(t))V^\top/n,\quad
-R(t)=|\Phi_a A_t y-y_a|<em>2^2/m+\sigma^2|\Phi_a A_t|_F^2/m,\quad
-t</em><em>=\min\operatorname</em>{argmin}<em>{t\in{0,\ldots,16384}}R(t).
-]
-[
+R(t)=\|\Phi_a A_t y-y_a\|_2^2/m+\sigma^2\|\Phi_a A_t\|_F^2/m,\quad
+t_*=\min\operatorname*{argmin}_{t\in\{0,\ldots,16384\}}R(t).
+\]
+\[
 y^{\rm train}=(g-\mu_n)/s_n,\quad y^{\rm pop}=g/\sqrt{1.25},\quad
 g(x)=x_0+0.5x_0x_1,\quad E[g]=0,\quad E[g^2]=1.25.
-]
-[
-R(t;s)=B(t)+sN(t),\quad t</em><em>(s)=\min\operatorname</em>{argmin}<em>{t\in{0,\ldots,T}}R(t;s),
-]
-[
-\Delta_T(s)=B(T)-B(t</em><em>(s))+s[N(T)-N(t_</em>(s))],\quad
-U_{.05}(s)=\mathbf 1{0&lt;t_*(s)&lt;T\;\land\;\Delta_T(s)\ge .05}.
-]</p>
+\]
+\[
+R(t;s)=B(t)+sN(t),\quad t_*(s)=\min\operatorname*{argmin}_{t\in\{0,\ldots,T\}}R(t;s),
+\]
+\[
+\Delta_T(s)=B(T)-B(t_*(s))+s[N(T)-N(t_*(s))],\quad
+U_{.05}(s)=\mathbf 1\{0&lt;t_*(s)&lt;T\;\land\;\Delta_T(s)\ge .05\}.
+\]</p>
 <p>n 和 m=2048 是训练与风险审计样本数，单位为行。Φ、Φₐ 是含常数 bias（偏置）列的固定特征矩阵。K 是训练 Gram 矩阵（训练特征两两内积除以 n），V 的列为其特征向量，λⱼ 为对应特征值。η=0.3 是学习率，qⱼ 是每步收缩因子，fⱼ(t) 是累计响应，j 是特征模态索引。Aₜ 把训练标签映射为第 t 步输出层参数。y、yₐ 是 clean（无噪声）训练与审计标签。σ² 是归一化标签单位下的独立训练噪声方差。R 的单位为标签平方，t、t* 的单位为更新步。标签与特征无量纲；diag 表示对角矩阵，⊤ 表示转置，‖·‖₂ 是欧氏范数，F 下标表示矩阵所有元素平方和的平方根。</p>
 <p>g 是原始目标，x₀、x₁ 是独立标准 Gaussian 输入坐标。μₙ、sₙ 是原始训练目标的均值与中心化均方根（RMS）。train/pop 上标表示训练样本与分布归一化，E 表示分布期望。B(t) 是无噪声 GD 的 clean 审计均方误差（MSE），单位为标签平方。N(t) 是单位训练噪声方差的审计响应，保存数组名为 variance_unit，单位为风险除以标签方差。s=σ² 是噪声方差；T=16384 是窗口终点，单位为更新步。t*(s) 是该方差下首个全局最低点；Δ_T 是终点减最低风险，单位为标签平方。U₍.05₎ 是取 0 或 1 的操作性判据，𝟙 表示条件成立时取 1，0.05 的单位为标签平方。</p>
 <p>经验式为 log(t<em>)=a+b log(n/σ²)。a 是截距，b 是斜率，log 表示自然对数；拟合使用以更新步计的 t</em> 和归一化标签单位下的 σ²。它是本组条件的经验预测，不是解析定律。</p>
@@ -308,5 +311,5 @@ U_{.05}(s)=\mathbf 1{0&lt;t_*(s)&lt;T\;\land\;\Delta_T(s)\ge .05}.
 <li>首 cell 序列化错误（<code>studies/r019_population_label_normalization/executed/first_cell_verification.json</code>）、修复入口后的首 cell 核验（<code>studies/r019_population_label_normalization/executed/first_cell_verification_after_serialization_fix.json</code>）、全量分析记录（<code>studies/r019_population_label_normalization/executed/full_analysis_run.json</code>）与独立保存证据核验（<code>studies/r019_population_label_normalization/executed/independent_verification.json</code>）。</li>
 <li>完成与状态边界核验（<code>studies/r019_population_label_normalization/executed/round019_completion.json</code>）记录计数未改、旧证据未改及报告链接检查。</li>
 </ul>
-<div class="stamp">同步于 2026-10-08 17:16（北京时间）· 源文件在研究仓库内随轮次更新，本页为快照</div>
+<div class="stamp">同步于 2026-10-08 17:29（北京时间）· 源文件在研究仓库内随轮次更新，本页为快照</div>
 </main></body></html>

@@ -1,7 +1,10 @@
 <!doctype html>
 <html lang="zh-CN"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>D1：等效训练时间 U</title><link rel="stylesheet" href="style.css"></head>
+<title>D1：等效训练时间 U</title><link rel="stylesheet" href="style.css">
+<script>window.MathJax={tex:{inlineMath:[['\\(','\\)'],['$','$']],displayMath:[['\\[','\\]'],['$$','$$']]}};</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
 <body><main><div class="nav"><a href="index.html">← 报告索引</a></div>
 <h1>D1：等效训练时间 U</h1>
 <h2>结论</h2>
@@ -79,13 +82,13 @@
 <p>下面给出自适应优化器的解析定义，未作 D1 实测验证。$\theta_{t,j}$ 是更新 $t$ 步后的第 $j$ 个参数；$g_{t,j}$ 是第 $t$ 步更新前计算的梯度。$m_{t,j}$ 是梯度的指数平均，$v_{t,j}$ 是梯度平方的指数平均；$\beta_1/\beta_2$ 是两种平均各自的系数。帽号表示除去零初始化造成的偏差，$\hat m_{t,j}=m_{t,j}/(1-\beta_1^t)$，$\hat v_{t,j}=v_{t,j}/(1-\beta_2^t)$。这些梯度记账量不等于目标函数进度。</p>
 <p>$$
 \begin{aligned}
-m_{t,j}&amp;=\beta_1m_{t-1,j}+(1-\beta_1)g_{t,j},\quad
-v_{t,j}=\beta_2v_{t-1,j}+(1-\beta_2)g_{t,j}^2,\quad m_{0,j}=v_{0,j}=0,\
-\text{Adam: }\theta_{t,j}&amp;=\theta_{t-1,j}-\eta\hat m_{t,j}/(\sqrt{\hat v_{t,j}}+\epsilon),\
-\text{AdamW: }\theta_{t,j}&amp;=(1-\eta\omega)\theta_{t-1,j}-\eta\hat m_{t,j}/(\sqrt{\hat v_{t,j}}+\epsilon),\
-\text{RMSprop: }v_{t,j}&amp;=\beta v_{t-1,j}+(1-\beta)g_{t,j}^2,\quad v_{0,j}=0,\quad
-\theta_{t,j}=\theta_{t-1,j}-\eta g_{t,j}/(\sqrt{v_{t,j}}+\epsilon),\
-\text{Adagrad: }a_{t,j}&amp;=a_{0j}+\sum_{s=1}^{t}g_{s,j}^2,\quad
+m_{t,j}&=\beta_1m_{t-1,j}+(1-\beta_1)g_{t,j},\quad
+v_{t,j}=\beta_2v_{t-1,j}+(1-\beta_2)g_{t,j}^2,\quad m_{0,j}=v_{0,j}=0,\\
+\text{Adam: }\theta_{t,j}&=\theta_{t-1,j}-\eta\hat m_{t,j}/(\sqrt{\hat v_{t,j}}+\epsilon),\\
+\text{AdamW: }\theta_{t,j}&=(1-\eta\omega)\theta_{t-1,j}-\eta\hat m_{t,j}/(\sqrt{\hat v_{t,j}}+\epsilon),\\
+\text{RMSprop: }v_{t,j}&=\beta v_{t-1,j}+(1-\beta)g_{t,j}^2,\quad v_{0,j}=0,\quad
+\theta_{t,j}=\theta_{t-1,j}-\eta g_{t,j}/(\sqrt{v_{t,j}}+\epsilon),\\
+\text{Adagrad: }a_{t,j}&=a_{0j}+\sum_{s=1}^{t}g_{s,j}^2,\quad
 \theta_{t,j}=\theta_{t-1,j}-\eta g_{t,j}/(\sqrt{a_{t,j}}+\epsilon).
 \end{aligned}
 $$</p>
@@ -102,7 +105,7 @@ U_{\rm startup}(t)=\eta\left[\frac{t}{1-\mu}-\frac{\mu(1-\mu^t)}{(1-\mu)^2}\righ
 $$
 $$
 t_\mu^{\rm steady}=\lceil t_0/10\rceil,\qquad
-t_\mu^{\rm startup}=\min{t\in\mathbb N:10t-90(1-.9^t)\ge t_0},\qquad
+t_\mu^{\rm startup}=\min\{t\in\mathbb N:10t-90(1-.9^t)\ge t_0\},\qquad
 E=\frac{|t_\mu^{\rm pred}-t_\mu^{\rm obs}|}{t_\mu^{\rm obs}}.
 $$</p>
 <p>$t$ 是整数训练步数，单位为步。$\mu$ 是无单位动量系数。$\eta$ 是学习率，$\lambda_i$ 是损失 Hessian 的第 $i$ 个特征值；采用 $\eta\lambda_i$ 无单位的参数单位。$i$ 是模态索引，$r_i$ 是第 $i$ 模态残差相对初值的比例，无单位。初值为 $r_i(-1)=r_i(0)=1$。</p>
@@ -198,7 +201,7 @@ $$</p>
 <h2>失败与反例</h2>
 <p>晚期启动预测比稳态更差的原失败保留。单模态 $q=0.01$、持续至 $T=40000$ 时，6/10 个配对条件推翻了“启动换算在晚期不比稳态差”。$h=0.0001/0.001/0.005$ 的动量实测为 2290/217/37 步，稳态预测为 2303/231/46 步，启动预测为 2312/240/55 步。对应稳态误差为 13/14/9 步，启动误差为 22/23/18 步。双模态 $\alpha=0.1/0.5$ 的启动误差仍大于稳态。</p>
 <p>震荡使首次端点与持续端点不同。单模态 $h=0.01/0.05$、$q=0.01$ 的动量首次达标为 21/7 步，持续达标为 46/44 步。谱 $[0.001,0.5]$ 中，低占比三条件的首次 7/8/22 步也不同于持续 44/46/59 步。高占比三条件首次和持续一致。</p>
-<p>$\alpha&gt;q$ 不能据现有格点当作充分条件。谱 $[0.001,0.5]$、$q=0.01$ 下，$\alpha=0.01$ 仍有 85%/73.3333% 误差，$\alpha=0.011$ 为 35.1351%/22.9730%。两点预先只作描述，不能从 8 个占比点报告连续临界。改变 $\alpha$ 同时改变初始梯度范数、目标 Rayleigh 商（目标加权的平均特征值）、参数范数和第一步下降。现有实验没有独立区分这些伴随量的解释。</p>
+<p>$\alpha>q$ 不能据现有格点当作充分条件。谱 $[0.001,0.5]$、$q=0.01$ 下，$\alpha=0.01$ 仍有 85%/73.3333% 误差，$\alpha=0.011$ 为 35.1351%/22.9730%。两点预先只作描述，不能从 8 个占比点报告连续临界。改变 $\alpha$ 同时改变初始梯度范数、目标 Rayleigh 商（目标加权的平均特征值）、参数范数和第一步下降。现有实验没有独立区分这些伴随量的解释。</p>
 <p>等号处仍有启动误差反例。谱 $[0.001,0.05]$、$q=0.001$ 下，$\alpha=q=0.001$ 的 mom0/mom0.9 持续端点为 872/89 步，稳态/启动预测为 88/97 步。启动误差 8.988764% 反驳“$\alpha\ge q$ 足以使两种换算均≤5%”。该命题并非此次预注册预测；此次预先预测的启动误差区间为 &gt;5% 且≤25%，实测落在区间内。动量首次端点 46 步也不同于持续 89 步。$\alpha=0.005/0.009/0.02/0.1/0.5$ 的两种端点相同。</p>
 <p>原矩阵乘法浮点警告的根因仍未确定。独立逐元素核验得到 Hessian 最大误差 5.55e−17，60 个保存数组全部有限；这证明保存证据可用，没有确定警告的根因。</p>
 <p>$q=0.005$ 等号格点的审计仍只作为失败记录。六个数组的数值计算因端点目录混用了两个预注册 commit（版本提交）而拒绝登记，不更新已有科学结论。</p>
@@ -215,5 +218,5 @@ $$</p>
 <li>λ_fast=.05 的科学收尾7794b596164022b0f2a6cb79856ff2c88cb65d9d、86个文件与144旧训练cell核验见旧收尾审计（<code>studies/r049_lower_threshold/executed/previous_closeout_audit.json</code>）。q=.001新阈值合同、36端点与独立复核：预注册（<code>studies/r049_lower_threshold/preregistration.json</code>）、summary（<code>studies/r049_lower_threshold/summary.json</code>）、finding（<code>findings/r049_lower_threshold.md</code>）、证据复核（<code>studies/r049_lower_threshold/executed/saved_evidence_verification.json</code>）；预注册0e4611721fff53516125f3a1934ffdce81d514a6早于全部新端点评价。</li>
 <li>r081 q=.005 等号格点的审计结果仅作为失败记录：finding（<code>findings/r081_equal_threshold.md</code>）、失败审计（<code>studies/r081_equal_threshold/executed/analysis_failure.json</code>）。六个数组的数值计算因端点目录混用了两个预注册 commit 而拒绝登记，不更新已有科学结论。</li>
 </ul>
-<div class="stamp">同步于 2026-10-08 17:16（北京时间）· 源文件在研究仓库内随轮次更新，本页为快照</div>
+<div class="stamp">同步于 2026-10-08 17:29（北京时间）· 源文件在研究仓库内随轮次更新，本页为快照</div>
 </main></body></html>

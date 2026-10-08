@@ -1,7 +1,10 @@
 <!doctype html>
 <html lang="zh-CN"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>D11：宽度与样本量的标度律</title><link rel="stylesheet" href="style.css"></head>
+<title>D11：宽度与样本量的标度律</title><link rel="stylesheet" href="style.css">
+<script>window.MathJax={tex:{inlineMath:[['\\(','\\)'],['$','$']],displayMath:[['\\[','\\]'],['$$','$$']]}};</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
 <body><main><div class="nav"><a href="index.html">← 报告索引</a></div>
 <h1>D11：宽度与样本量的标度律</h1>
 <h2>结论</h2>
@@ -17,41 +20,41 @@
 </ul>
 <h2>Formulation</h2>
 <p>固定特征、零初始化、全批量半平方损失 SGD 的谱递推是已知结果。经验幂律来自网格内拟合；trace=1 的近似系数来自已知谱递推，不是新理论。</p>
-<p>[
-L_t=\frac{|X\theta_t-y|^2}{2n},\quad H=XX^\top/n,\quad
+<p>\[
+L_t=\frac{\|X\theta_t-y\|^2}{2n},\quad H=XX^\top/n,\quad
 \frac{L_t}{L_0}=\sum_iw_i(1-\eta\lambda_i)^{2t},\quad
-T_\varepsilon=\min{t\in\mathbb N_0:L_t/L_0\le\varepsilon}.
-]
-[
-\lambda_i=i^{-1}\ (i\le d),\quad n\in{d,8192},\quad m_1=\sum_iw_i\lambda_i=2/d,\quad
-w_i=\begin{cases}\mathbf1_{i=d/2}&amp;\text{中间目标},\
-\frac1{d-1}\mathbf1_{i=1}+\frac{d-2}{d-1}\mathbf1_{i=d}&amp;\text{首尾目标},\end{cases}
+T_\varepsilon=\min\{t\in\mathbb N_0:L_t/L_0\le\varepsilon\}.
+\]
+\[
+\lambda_i=i^{-1}\ (i\le d),\quad n\in\{d,8192\},\quad m_1=\sum_iw_i\lambda_i=2/d,\quad
+w_i=\begin{cases}\mathbf1_{i=d/2}&\text{中间目标},\\
+\frac1{d-1}\mathbf1_{i=1}+\frac{d-2}{d-1}\mathbf1_{i=d}&\text{首尾目标},\end{cases}
 \quad T_R=\left\lceil\frac{\log\varepsilon}{2\log(1-\eta m_1)}\right\rceil.
-]
-[
+\]
+\[
 \widehat T_{1\%}(d)=\begin{cases}
-2.249735\,d^{1.003161}&amp;\text{中间目标；最大相对拟合误差 }0.868262\%,\
-4.438350\,d^{1.005095}&amp;\text{首尾目标；最大相对拟合误差 }2.528432\%.
+2.249735\,d^{1.003161}&\text{中间目标；最大相对拟合误差 }0.868262\%,\\
+4.438350\,d^{1.005095}&\text{首尾目标；最大相对拟合误差 }2.528432\%.
 \end{cases}
-]</p>
+\]</p>
 <p>固定 n 的零填充构造为：
-[
+\[
 X_{i,\pi(i)}=\sqrt{n\lambda_i}\,s_i,\quad y_i=\sqrt{nw_i}\quad(i\le d),\qquad
 X_{i,:}=0,\ y_i=0\quad(d&lt;i\le n).
-]
-[
+\]
+\[
 X^\top X/n=P^\top\operatorname{diag}(\lambda_1,\ldots,\lambda_d)P,\qquad
 \Delta T=T_{1\%}^{n=8192}-T_{1\%}^{n=d}=0\quad\text{（66 个实测配对）}.
-]
+\]
 固定 n=8192、仅整体归一化非零谱后，公式为：
-[
+\[
 h_d=\sum_{i=1}^d\frac1i,\quad \lambda_i^{\rm tr}=\frac1{i h_d},\quad
 \operatorname{tr}H=1,\quad m_1^{\rm tr}=\frac2{d h_d},\qquad
 \widehat T_{1\%}^{\rm tr}=\begin{cases}
-\frac{\log100}{2}\,d h_d=2.302585\,d h_d&amp;\text{中间目标；最大系数误差 }2.126802\%,\
-\log100\,d h_d=4.605170\,d h_d&amp;\text{首尾目标；最大系数误差 }4.124214\%.
+\frac{\log100}{2}\,d h_d=2.302585\,d h_d&\text{中间目标；最大系数误差 }2.126802\%,\\
+\log100\,d h_d=4.605170\,d h_d&\text{首尾目标；最大系数误差 }4.124214\%.
 \end{cases}
-]</p>
+\]</p>
 <p>n 是样本数，d 是固定特征参数数，i 是从 1 开始的谱索引。X 是 n×d 特征矩阵，θₜ 是第 t 步参数，y 是目标。H=XXᵀ/n 是归一化样本 Gram 矩阵（样本特征内积组成的矩阵），λᵢ 是其特征值。wᵢ 是对应目标能量比例，总和为 1。</p>
 <p>m₁ 是目标 Rayleigh 商，η 是学习率，ε 是相对损失阈值。Lₜ 是每样本半平方损失，L₀=0.5。特征、目标、λ、w、m₁、η、ε 均采用无量纲数值。t、T、T_R、Ť 的单位是更新步；ℕ₀ 是非负整数，𝟙 是指示函数，ceil 表示上取整。</p>
 <p>T_R 是单 Rayleigh 的单指数预算近似。Ť 是在双对数坐标上、按各维数等权拟合的预算。经验系数的单位是步/d^β，β 是无量纲指数。拟合误差为 max_d|Ť/T−1|，不是概率置信区间。</p>
@@ -59,16 +62,16 @@ h_d=\sum_{i=1}^d\frac1i,\quad \lambda_i^{\rm tr}=\frac1{i h_d},\quad
 <p>h_d 是无量纲调和和，λᵢᵗʳ 是 trace=1 条件的特征值，m₁ᵗʳ 是其目标 Rayleigh 商，Ťᵗʳ 的单位是步。系数误差为 |T/Ťᵗʳ−1|，与拟合误差 |Ť/T−1| 使用不同分母。</p>
 <p>两目标的渐近差异可由已知递推解释。中间目标只占用 λ=2/d 的模态。首尾目标在 λ=1/d 的最慢模态上保留 (d−2)/(d−1) 的能量，只用少量最快模态能量匹配 m₁。两预算的渐近斜率均为 1，渐近系数分别为 log(100)/2 和 log(100)。实测指数与约两倍预算比符合这一解释；这不是新谱理论。参数目标范数平方分别为 d/2 和 d−1，二阶谱矩（目标加权的特征值平方均值）也不同，不能独立归因于慢模态质量。</p>
 <p>固定权重的新目标记为 q（quarter_tail，四分之一位置与尾部的两个模态）：
-[
+\[
 w_i^q=\tfrac13\mathbf1_{i=d/4}+\tfrac23\mathbf1_{i=d},\quad
 m_1^q=\frac2{d h_d}=m_1^{\rm middle},\quad
-m_2^q=\frac6{d^2h_d^2},\quad |\theta_*^q|^2=\frac34d h_d.
-]
-[
+m_2^q=\frac6{d^2h_d^2},\quad \|\theta_*^q\|^2=\frac34d h_d.
+\]
+\[
 \frac{L_t^q}{L_0^q}=\frac13\left(1-\frac2{d h_d}\right)^{2t}
 +\frac23\left(1-\frac1{2d h_d}\right)^{2t},\quad
 \frac13 e^{-4C_q}+\frac23 e^{-C_q}=0.01,\quad C_q=4.199706765.
-]</p>
+\]</p>
 <p>q 是目标标签，θ* 是能精确拟合目标的参数；其范数平方采用无量纲数值。m₂ 是目标加权的特征值平方均值。C_q 是从已知递推取 d 增大极限后的无量纲系数，T≈C_q d h_d 的单位仍为更新步。该根在注册后计算，只作解析解释。它不是新理论、拟合参数或注册判据。中间目标的 m₂=4/(d²h_d²)、参数目标范数平方=d h_d/2；这两个量没有与 q 匹配。</p>
 <h2>成立程度</h2>
 <p>原谱结果只在 d=8–8192 的 11 个二倍网格内成立。n=d 或 n=8192 零填充、λᵢ=i⁻¹、η=0.5、无动量、无衰减、ε=0.01 时，两条幂律误差均≤2.528432%。完整目标加权谱对 66 个 cell（一个条件与一个坐标 seed 的运行）的整数阈值全部预测正确。66 个样本记账配对的 ΔT 全为 0，差范围为 [0,0] 步。d≥256 的同 Rayleigh 预算比为 1.998302–2.000000。</p>
@@ -316,5 +319,5 @@ m_2^q=\frac6{d^2h_d^2},\quad |\theta_*^q|^2=\frac34d h_d.
 <p>固定权重目标预注册（<code>studies/r099_quarter_tail/preregistration.json</code>）、参数训练源码（<code>studies/r099_quarter_tail/executed/run.py</code>）、分析源码（<code>studies/r099_quarter_tail/analysis.py</code>）与独立检查源码（<code>studies/r099_quarter_tail/executed/verify.py</code>）在唯一提交 78390d0 冻结，早于首个新训练 cell 15.646525 秒。开始记录（<code>studies/r099_quarter_tail/executed/experiment_start.json</code>）核对空结果目录与冻结字节；旧文件清单（<code>studies/r099_quarter_tail/executed/baseline_manifest.json</code>）锁定 603 个文件。</p>
 <p>固定权重目标汇总（<code>studies/r099_quarter_tail/summary.json</code>）保存 33 个新 cell 与旧中间目标配对、全部整数预算及描述性系数误差；独立检查（<code>studies/r099_quarter_tail/executed/independent_verification.json</code>）、恢复审计（<code>studies/r099_quarter_tail/executed/resume_audit.json</code>）、旧证据审计（<code>studies/r099_quarter_tail/executed/prior_evidence_audit.json</code>）和本轮记录（<code>findings/r099_quarter_tail.md</code>）提供复算与科学边界。</p>
 <p>独立只读审查（<code>studies/r099_quarter_tail/executed/independent_review.json</code>）、报告自查（<code>studies/r099_quarter_tail/executed/report_style_audit.json</code>）和中心更新审计（<code>studies/r099_quarter_tail/executed/central_update_audit.json</code>）记录保存结果与两项判据的独立检查、原报告数字保全、六节骨架及仅修改本方向交接字段的核验。</p>
-<div class="stamp">同步于 2026-10-08 17:16（北京时间）· 源文件在研究仓库内随轮次更新，本页为快照</div>
+<div class="stamp">同步于 2026-10-08 17:29（北京时间）· 源文件在研究仓库内随轮次更新，本页为快照</div>
 </main></body></html>

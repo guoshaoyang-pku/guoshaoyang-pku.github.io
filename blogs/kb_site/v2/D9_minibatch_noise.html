@@ -1,7 +1,10 @@
 <!doctype html>
 <html lang="zh-CN"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>D9：小批量噪声与有效时间</title><link rel="stylesheet" href="style.css"></head>
+<title>D9：小批量噪声与有效时间</title><link rel="stylesheet" href="style.css">
+<script>window.MathJax={tex:{inlineMath:[['\\(','\\)'],['$','$']],displayMath:[['\\[','\\]'],['$$','$$']]}};</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
 <body><main><div class="nav"><a href="index.html">← 报告索引</a></div>
 <h1>D9：小批量噪声与有效时间</h1>
 <h2>结论</h2>
@@ -21,26 +24,26 @@
 </ul>
 <h2>Formulation</h2>
 <p>风险比值区分固定标签与期望标签两个分母。固定特征线性头更新及风险定义为
-[
+\[
 w_{t+1}=w_t-\frac{2\eta}{B}\sum_{i\in S_t}\phi_i(\phi_i^\top w_t-y_i-\sigma\epsilon_i),\qquad
-\widehat R_B(t;\epsilon)=\frac1M\sum_{r=1}^{M}\frac1{N_a}|\Phi_a w_{B,r,t}(\epsilon)-y_a|^2,
-]
-[
+\widehat R_B(t;\epsilon)=\frac1M\sum_{r=1}^{M}\frac1{N_a}\|\Phi_a w_{B,r,t}(\epsilon)-y_a\|^2,
+\]
+\[
 R_{64}^{E}(t)=\mathbb E_{\epsilon'}R_{64}(t;\epsilon'),\qquad
-t^<em>[R]=\min\arg\min_{t\in{0,\ldots,T}}R(t),\qquad
-\rho_F=\frac{t^</em>[\widehat R_B(\cdot;\epsilon)]}{t^<em>[R_{64}(\cdot;\epsilon)]},\quad
-\rho_E=\frac{t^</em>[\widehat R_B(\cdot;\epsilon)]}{t^*[R_{64}^{E}]},\quad d=|\rho_F-1|.
-]</p>
+t^*[R]=\min\arg\min_{t\in\{0,\ldots,T\}}R(t),\qquad
+\rho_F=\frac{t^*[\widehat R_B(\cdot;\epsilon)]}{t^*[R_{64}(\cdot;\epsilon)]},\quad
+\rho_E=\frac{t^*[\widehat R_B(\cdot;\epsilon)]}{t^*[R_{64}^{E}]},\quad d=|\rho_F-1|.
+\]</p>
 <p>w 是含常数特征的129维 head 参数，初值为零。φ_i 是128维冻结 ReLU 特征加常数项，φ_i、Φ、Φ_a无量纲。y_i 是 clean（无噪声）训练标签。ε_i 是保存的一次单位 Gaussian（高斯）标签噪声。σ² 是标签归一化单位下的噪声方差，取0.25/0.5/1。</p>
 <p>S_t 是每步独立无放回均匀抽取的 B 个训练样本。轨迹测量 B=8/32/64，条件矩另测 B=4，并新增 B=2；B 的单位是样本数。η=0.3/0.1 是更新系数。Φ_a、y_a 是固定 clean audit（无噪声审计）特征与标签，N_a=2048是审计样本数。M 是小批量抽样轨迹数：广网格（已测的多条件组合） M=8；两个指定反例补足到 M=64；另测独立 r=64–127 的 M=64 流块，r 为轨迹编号；全批量 M=1。每个流块分别求均值，不合并旧新块。</p>
 <p>R 的单位是归一化标签平方。t 和 T 的单位是参数更新次数，T=768/2304分别对应η=0.3/0.1，ηT=230.4。t* 是给定窗口内风险的首个全局最低点；min argmin 表示有多个同值最低点时取最早一次更新。R_{64} 指 B=64 的全批量风险；ε′表示对标签噪声积分使用的噪声变量，𝔼表示期望。ρ_F、ρ_E、d 无量纲。F 分母固定同一次标签噪声；E 分母对标签噪声积分，二者不同。这里 d 是比值偏离1的量；方法中的 d=4 表示输入维度。</p>
 <p>固定 data（数据）/ε 时，独立 batch（小批量）的解析条件矩（参数均值和协方差）闭合为
-[
+\[
 m_{t+1}=A m_t+a b,\qquad C_{t+1}=A C_t A^\top+a^2\gamma\left[\frac{q^\top\operatorname{diag}(\operatorname{diag}(qC_tq^\top)+(qm_t-z)^2)q}{n}-HC_tH-(Hm_t-b)(Hm_t-b)^\top\right],
-]
-[
-R_B^{\mathrm{batch}}(t;\epsilon)=\frac{|q_a m_t-y_a|^2}{N_a}+\operatorname{tr}(H_aC_t),\qquad\rho_{\mathrm{batch}}=\frac{t^<em>[R_B^{\mathrm{batch}}(\cdot;\epsilon)]}{t^</em>[R_{64}(\cdot;\epsilon)]}.
-]</p>
+\]
+\[
+R_B^{\mathrm{batch}}(t;\epsilon)=\frac{\|q_a m_t-y_a\|^2}{N_a}+\operatorname{tr}(H_aC_t),\qquad\rho_{\mathrm{batch}}=\frac{t^*[R_B^{\mathrm{batch}}(\cdot;\epsilon)]}{t^*[R_{64}(\cdot;\epsilon)]}.
+\]</p>
 <p>Φ 的各行是φ_iᵀ，n=64是训练样本数。V 是训练行空间（训练特征行向量张成的空间）的正交基，两个条件的数值秩均为36。q=ΦV、q_a=Φ_aV、z=y+σε、a=2η、H=qᵀq/n、b=qᵀz/n、A=I−aH、H_a=q_aᵀq_a/N_a。I 是单位矩阵，ᵀ表示转置。i 是训练样本索引；w_{B,r,t} 是批量 B、轨迹 r、更新 t 的参数。</p>
 <p>m、C 是 Vᵀw 对 batch（小批量）抽样的均值和协方差，初值均为零。协方差描述参数围绕均值的变化；条件矩指固定数据与 ε 后这些均值和二阶变化。平方按元素计算，diag 提取对角或将向量组成对角矩阵，tr 表示矩阵对角线之和。</p>
 <p>V、q、q_a、a、H、A、H_a 无量纲。m、b、z 的单位为归一化标签，C 与 R 的单位为归一化标签平方。γ=(n−B)/(B(n−1)) 与ρ_batch无量纲；γ是无放回抽样的有限总体因子。B=n时γ=0、C=0。任意 B 的 m 都遵循同标签 full（全批量）更新。该公式是已知线性矩递推，不是本方向的新发现。“精确”表示没有 Monte Carlo 抽样误差，实际数值计算仍有 float64 误差。</p>
@@ -120,5 +123,5 @@ R_B^{\mathrm{batch}}(t;\epsilon)=\frac{|q_a m_t-y_a|^2}{N_a}+\operatorname{tr}(H
 <p>B2独立只读审查（<code>studies/r097_batch2_exact/executed/independent_review.json</code>）、收尾环境事件（<code>studies/r097_batch2_exact/executed/environment_incident.json</code>）、显式Git目录通过记录（<code>studies/r097_batch2_exact/executed/closeout_explicit_git.log</code>）。</p>
 </li>
 </ul>
-<div class="stamp">同步于 2026-10-08 17:16（北京时间）· 源文件在研究仓库内随轮次更新，本页为快照</div>
+<div class="stamp">同步于 2026-10-08 17:29（北京时间）· 源文件在研究仓库内随轮次更新，本页为快照</div>
 </main></body></html>

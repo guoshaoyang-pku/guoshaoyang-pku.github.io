@@ -1,7 +1,10 @@
 <!doctype html>
 <html lang="zh-CN"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>D10：深度增加时的拟合时间</title><link rel="stylesheet" href="style.css"></head>
+<title>D10：深度增加时的拟合时间</title><link rel="stylesheet" href="style.css">
+<script>window.MathJax={tex:{inlineMath:[['\\(','\\)'],['$','$']],displayMath:[['\\[','\\]'],['$$','$$']]}};</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
 <body><main><div class="nav"><a href="index.html">← 报告索引</a></div>
 <h1>D10：深度增加时的拟合时间</h1>
 <h2>结论</h2>
@@ -14,25 +17,25 @@
 <li>实测学习率配对保留了候选的通过率边界。width16从eta=.02降至.005，实际时间增长2.000000–4.000000倍，全核仍10/12在两倍内。width32从eta=.005升至.02，固定全部初始参数，全核仍12/12在两倍内；实际新/旧时间比值为.166667–.294118。再将 eta 从 .02 升至 .04，width32 全核仍12/12在两倍内，最慢组仍12/12超过两倍；实际新/旧时间比值为 .4–1，depth6_seed1151 为 1→1 步。结论只覆盖已测学习率，不外推任意学习率。</li>
 </ul>
 <h2>Formulation</h2>
-<p>[
-r_t=f_{\theta_t}(X)-y,\quad L_t=\frac{|r_t|^2}{2n},\quad
+<p>\[
+r_t=f_{\theta_t}(X)-y,\quad L_t=\frac{\|r_t\|^2}{2n},\quad
 J_{\ell,0}=\frac{\partial f_{\theta_0}(X)}{\partial\theta_\ell},\quad
 K_{\ell,0}=J_{\ell,0}J_{\ell,0}^{\top}/n,\quad K_0=\sum_{\ell=0}^{D}K_{\ell,0}.
-]
-[
+\]
+\[
 S_K(t)=\sum_i w_i(1-\eta\lambda_i)^{2t},\quad
-w_i=\frac{(v_i^{\top}r_0)^2}{|r_0|^2},\quad
-\tau(K)=\min{t\in\mathbb N_{\ge1}:S_K(t)\le1/2},\quad
+w_i=\frac{(v_i^{\top}r_0)^2}{\|r_0\|^2},\quad
+\tau(K)=\min\{t\in\mathbb N_{\ge1}:S_K(t)\le1/2\},\quad
 \widehat T_{\rm slow}=\max_\ell\tau(K_{\ell,0}),\quad
 \widehat T_{\rm sum}=\tau(K_0),\quad
-T_{50}=\min{t\ge1:L_t\le L_0/2}.
-]</p>
+T_{50}=\min\{t\ge1:L_t\le L_0/2\}.
+\]</p>
 <p>残差 $r$ 是预测与标签之差。$S_K(t)$ 是冻结切线模型在第 $t$ 步的损失与初始损失之比，无量纲。$\lambda_{\max}$ 为相应核的最大特征值。</p>
 <p>其中 $w$ 表示每个隐藏层的宽度（神经元数，取16或32）；它改变参数形状与初始函数。</p>
 <p>目标式中的 $x_0,x_1$ 是输入的坐标分量。$X$ 为固定训练输入（输入坐标沿用生成数据的单位）。$y$ 为按训练均值及均方根（RMS）归一化的标签，$f$ 为预测，$r$ 为同一个输出残差，其中 $y,f,r$ 的单位均为归一化标签。$L$ 的单位为标签平方。</p>
 <p>$n=32$ 为样本数，$D=1/2/4/6$ 为隐藏层数；$\theta_\ell$ 是第 $\ell$ 个权重矩阵的参数坐标，$\ell=0\ldots D-1$ 为隐藏层，$\ell=D$ 为输出 head。参数坐标以初始化权重的数值尺度计；$n,D,\ell$ 是计数或编号，无量纲。</p>
 <p>$J$ 是 Jacobian（输出对参数的一阶导数矩阵），单位为标签/参数坐标，$K$ 与特征值 $\lambda_i$ 的单位为标签平方/参数坐标平方；$\lambda_i,v_i$ 是计算 $S_K$ 时所用核 $K$ 的特征值和单位特征向量，$i$ 为特征方向编号，$w_i$ 为无量纲初始残差能量占比。</p>
-<p>$\eta\in{.005,.02,.04}$ 为学习率，$w\in{16,32}$ 为隐藏宽度，使 $\eta K$ 无量纲。$\eta$ 的单位为参数坐标平方/标签平方。$t$ 为更新步编号，$\tau,T$ 单位为更新步。$\widehat T_{\rm slow}$ 为最慢单组候选，$\widehat T_{\rm sum}$ 为全核候选，$T_{50}$ 为实际半损失时间。$\tau$ 是只更新一个参数组的冻结切线模型的时间，不是网络前向传播等待时间。</p>
+<p>$\eta\in\{.005,.02,.04\}$ 为学习率，$w\in\{16,32\}$ 为隐藏宽度，使 $\eta K$ 无量纲。$\eta$ 的单位为参数坐标平方/标签平方。$t$ 为更新步编号，$\tau,T$ 单位为更新步。$\widehat T_{\rm slow}$ 为最慢单组候选，$\widehat T_{\rm sum}$ 为全核候选，$T_{50}$ 为实际半损失时间。$\tau$ 是只更新一个参数组的冻结切线模型的时间，不是网络前向传播等待时间。</p>
 <h2>成立程度</h2>
 <p>实测边界：在 d3、width16、无 bias/LN/残差的 SiLU、全批量 SGD、depth1/2/4/6 与三个初始化中，$\eta=.02$ 时最慢组比值为 4.727273–2053.176796（12/12 超出 [.5,2]），全核比值为 .333333–3.320442（10/12 在区间内）；$\eta=.005$ 时分别为 5.097561–2067.454798（12/12 超出）与 .328638–3.339360（10/12 在区间内），且每个深度均至少 2/3 通过全核判据。</p>
 <p>width32、eta=.005 的实测边界：同一 d3/n32/SiLU/full-batch SGD 条件下，最慢组比值18.333333–60.562500（12/12超过2），全核比值.666667–1.052632（12/12在[.5,2]内）。这是离散已测宽度的适用边界，未拟合经验系数。</p>
@@ -44,8 +47,8 @@ T_{50}=\min{t\ge1:L_t\le L_0/2}.
 <p>核相加与 $S_K(t)$ 是固定 Jacobian、全批量 half-MSE（均方误差的一半）的已知解析关系。特征值不大于 $10^{-12}\lambda_{\max}$ 时按零处理；零空间（核不改变的输出方向）的能量占比至少 .5 时 $\tau=\infty$。实测全部初始化核稳定；width32、eta=.005 时最大 eta·lambda_max=.1928343819&lt;2，eta=.02 时为 .7713375275&lt;2，eta=.04 时为 1.5426750551&lt;2；width16 的 $\eta=.02$ 时最大 $\eta\lambda_{\max}=1.364826&lt;2$，width16 的 $\eta=.005$ 时为 $0.3412064351&lt;2$，没有无限或删失时间（训练结束仍未达到半损失阈值）。</p>
 <p>仅在 development（用于开发和反复检查的已见条件）中验证。通过率按每个宽度/学习率族的12个cell分别报告，不合并成独立recipe计数。width16保留两个全核反例，width32保留跨宽度两个变慢cell。只测早期半损失；未测任意学习率、其他宽度/深度、优化器、mini-batch（每步仅用部分样本）、测试误差、泛化、LN机制或封存 OOD（未查看的新条件）。</p>
 <h2>方法与条件</h2>
-<p>width16 的训练输入来自 data_seed260071 的32个三维标准 Gaussian（高斯分布）样本，目标为 $x_0+.5x_0x_1$，按同一训练均值/RMS归一化。每层 Linear（线性变换）后接 SiLU，最后为标量 Linear；全部无 bias。隐藏权重为 $N(0,2/\mathrm{fan_in})$，输出 head 权重为 $N(0,1/16)$。fan_in 为该层输入维度，$N$ 表示正态分布。各隐藏位置独立固定随机流；同初始化跨深度逐位共享隐藏前缀和输出 head。参数量为64/320/832/1344。深度同时改变初始函数和参数量，未控制这两者。</p>
-<p>每个学习率/宽度族的四个深度为4个 recipe（固定深度、宽度、学习率等条件的一组实验配置），三个初始化仅为稳健性重复，共12个 cell（一个深度与初始化的实验单元）。float64（64位浮点数）、CPU单线程，全批量 SGD、momentum0、weight_decay0、4096步。损失为 $|r|^2/(2n)$；width16 的 $\eta=.02$ 实验累计 5.345299 秒，$\eta=.005$ 实验累计 5.585031 秒。保存每步损失和 0/1/8/32/128/512/2048/4096 步的每组完整 Jacobian、核、谱与输出残差投影；投影不是独立的隐藏层损失。</p>
+<p>width16 的训练输入来自 data_seed260071 的32个三维标准 Gaussian（高斯分布）样本，目标为 $x_0+.5x_0x_1$，按同一训练均值/RMS归一化。每层 Linear（线性变换）后接 SiLU，最后为标量 Linear；全部无 bias。隐藏权重为 $N(0,2/\mathrm{fan\_in})$，输出 head 权重为 $N(0,1/16)$。fan_in 为该层输入维度，$N$ 表示正态分布。各隐藏位置独立固定随机流；同初始化跨深度逐位共享隐藏前缀和输出 head。参数量为64/320/832/1344。深度同时改变初始函数和参数量，未控制这两者。</p>
+<p>每个学习率/宽度族的四个深度为4个 recipe（固定深度、宽度、学习率等条件的一组实验配置），三个初始化仅为稳健性重复，共12个 cell（一个深度与初始化的实验单元）。float64（64位浮点数）、CPU单线程，全批量 SGD、momentum0、weight_decay0、4096步。损失为 $\|r\|^2/(2n)$；width16 的 $\eta=.02$ 实验累计 5.345299 秒，$\eta=.005$ 实验累计 5.585031 秒。保存每步损失和 0/1/8/32/128/512/2048/4096 步的每组完整 Jacobian、核、谱与输出残差投影；投影不是独立的隐藏层损失。</p>
 <p>两候选均采用完整冻结谱（初始化核的全部特征值及残差投影），不以 Rayleigh 商（目标加权的平均特征值）替代半衰时间。width16 的 $\eta=.02$ 的两个候选都以每个深度至少2/3比值在[.5,2]内为通过判据；$\eta=.005$ 的新预测则为最慢组12/12比值&gt;2、全核至少10/12在区间内且每深度至少2/3。初始化重复的逐值配对是主证据；原报告表述“仅3个重复的t95区间很宽且可跨零”原样保留。t95指基于 t 分布的95%区间；原报告未列出区间宽度数值。不视为跨任务总体精度或显著性。只测早期半损失时间，不推断1%阈值、测试误差或LN机制。</p>
 <p>width16、$\eta=.02$ 的12个结果和96个 checkpoint（保存参数和导数的训练步）已通过hash（文件或数组内容的哈希校验值）、数据重生成、共同初始化、解析Jacobian、half-MSE首步更新、核相加与谱重建核验。解析Jacobian最大绝对误差4.44×10⁻¹⁵，首步预测2.22×10⁻¹⁵，谱重建2.31×10⁻¹⁴；独立矩阵平方递推的过线损失占比与谱计算差不超过7.71×10⁻¹²。</p>
 <p>width16、$\eta=.005$ 的12个结果和96个checkpoint通过同样核验；Jacobian误差4.44×10⁻¹⁵、首步预测2.00×10⁻¹⁵、谱重建2.49×10⁻¹⁴、过线占比误差3.85×10⁻¹¹。width16 的两个学习率之间，输入、标签、参数与全部初始化J/K/谱逐位一致；恢复调用核对合同和数组hash后跳过12个成功cell，hash和mtime（文件修改时间）不变，无新训练。</p>
@@ -225,5 +228,5 @@ T_{50}=\min{t\ge1:L_t\le L_0/2}.
 <li>本轮科学收尾字节回执（<code>studies/r042_width32_eta02/executed/final_commit_verification.json</code>）。</li>
 <li>eta=.04 预注册（<code>studies/r098_width32_eta04/preregistration.json</code>）；逐值汇总（<code>studies/r098_width32_eta04/summary.json</code>）；训练与分析日志（<code>studies/r098_width32_eta04/executed/training.log</code>）；修正独立核验（<code>studies/r098_width32_eta04/executed/verification.json</code>）；本轮科学收尾字节回执（<code>studies/r098_width32_eta04/executed/final_commit_verification.json</code>）。</li>
 </ul>
-<div class="stamp">同步于 2026-10-08 17:16（北京时间）· 源文件在研究仓库内随轮次更新，本页为快照</div>
+<div class="stamp">同步于 2026-10-08 17:29（北京时间）· 源文件在研究仓库内随轮次更新，本页为快照</div>
 </main></body></html>
