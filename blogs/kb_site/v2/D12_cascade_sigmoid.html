@@ -122,7 +122,7 @@
 </tr>
 </tbody>
 </table>
-<p>4 个谱条件×3 个旋转坐标 seed=12 个 cell，科学条件数为 4。seed0/1/2 用同一种 QR 旋转（由矩阵分解生成的正交坐标变换）构造，只检查坐标数值稳健性，不给统计置信区间。每个 cell 保存 X（特征矩阵）、y（目标）、θ<em>（目标参数）、旋转矩阵、初始误差及完整 0–10000 步的损失和模态误差。改变 λf 时调整 θ</em>，以固定各模态初始损失。参数范数和初始梯度未固定。</p>
+<p>4 个谱条件×3 个旋转坐标 seed=12 个 cell，科学条件数为 4。seed0/1/2 用同一种 QR 旋转（由矩阵分解生成的正交坐标变换）构造，只检查坐标数值稳健性，不给统计置信区间。每个 cell 保存 X（特征矩阵）、y（目标）、θ*（目标参数）、旋转矩阵、初始误差及完整 0–10000 步的损失和模态误差。改变 λf 时调整 θ*，以固定各模态初始损失。参数范数和初始梯度未固定。</p>
 <p>沿用原执行器及原网格：201 点 geomspace（等比取样）经 rint（四舍五入取整）去重并加 0，共 150 点、终点 4997，各点等权，平台固定 1/0。双段幅度各 0.5 固定。单段 6 起点、双段 36 起点，SciPy least_squares（最小二乘求解器）取成功解中 SSE（残差平方和）最小者。h∈[0.01,100000]、b∈[0.1,10]，ftol/xtol/gtol（目标值、参数与梯度的停止容差）=10⁻¹²，最多 2000 次函数调用。504/504 起点成功。多起点局部优化没有全局最优保证。</p>
 <p>预注册与两份执行/分析源码同提交冻结，早于全部训练。完整曲线与解析递推的误差≤1.67×10⁻¹⁵。独立坐标递推误差≤3.34×10⁻¹⁶。拟合误差复算差异≤2.78×10⁻¹⁷。恢复未新训练、未重新拟合，36 个结果文件 hash（内容指纹）与修改时间不变。训练调用累计约 0.39 秒，首次拟合约 0.53 秒，均为本机 CPU（中央处理器）计算。</p>
 <p>无拟合公式评估复用其中 r=20/25 的 6 条成功曲线，共 2 个 recipe 条件×3 个坐标 seed。0 新训练、0 新拟合。预测明确规定六个 cell 均同时通过 0.03/0.05，预注册、23 个输入 hash 与三份执行/分析/核验源码同提交冻结后才评估，首次评估 0.082148 秒。独立标量计算与向量曲线最大差 2.22×10⁻¹⁶，指标差≤6.94×10⁻¹⁸。旧研究 55 个文件和新成功结果 12 个文件 hash/mtime（内容指纹/修改时间）均不变。配对固定同一曲线、原网格、平台、幅度与误差判据，只改变参数取得方式。不为坐标 seed 计算统计置信区间。</p>
@@ -165,5 +165,5 @@
 <li>慢占比0.75预注册（<code>studies/r106_weighted_slow_formula/preregistration.json</code>），唯一冻结提交232da3a19d8b43ce2ed421e67bb71535191e82c1；finding（<code>findings/r106_weighted_slow_formula.md</code>）、summary（<code>studies/r106_weighted_slow_formula/summary.json</code>）、分析源码（<code>studies/r106_weighted_slow_formula/analysis.py</code>）。</li>
 <li>执行源码（<code>studies/r106_weighted_slow_formula/executed/run.py</code>）、独立核验（<code>studies/r106_weighted_slow_formula/executed/independent_verification.json</code>）、恢复核验（<code>studies/r106_weighted_slow_formula/executed/resume_verification.json</code>）、历史收尾审计（<code>studies/r106_weighted_slow_formula/executed/previous_closeout_audit.json</code>）、只读审查与写作自查（<code>studies/r106_weighted_slow_formula/executed/independent_review.json</code>）、交付验证（<code>studies/r106_weighted_slow_formula/executed/delivery_validation.json</code>）、收尾提交核验（<code>studies/r106_weighted_slow_formula/executed/final_commit_verification.json</code>）。</li>
 </ul>
-<div class="stamp">同步于 2026-10-08 17:29（北京时间）· 源文件在研究仓库内随轮次更新，本页为快照</div>
+<div class="stamp">同步于 2026-10-08 17:31（北京时间）· 源文件在研究仓库内随轮次更新，本页为快照</div>
 </main></body></html>

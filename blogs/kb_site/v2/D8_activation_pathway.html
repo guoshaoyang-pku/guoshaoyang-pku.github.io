@@ -39,11 +39,11 @@ R = mean(E²) / mean(O²)
 F_s(λ) = mean([f‴(b*)λU₂/2 + f⁗(b*)U₄/24]²) / [f′(b*)²M₂]
 </code></pre>
 <p>x 为四维输入，W 为冻结的 4×64 投影权重，u=xW 是 128×64 的训练投影。O/E 为反射定义的奇/居中偶特征，R 为它们的均方能量比。a&gt;0 是输入尺度，b 是所有隐藏单元共用的加性偏置；反射输入时保持 b 固定。mean_train 按训练样本逐列平均，mean 对样本与单元一起平均。</p>
-<p>Uₖ=uᵏ−mean_train(uᵏ) 为逐列居中幂，k 为幂次。f′、f″、f‴、f⁗ 分别为一至四阶导数。b<em> 是二阶导数正零点，δ=b−b</em> 是根附近偏移。c₂=f″(b)/2、c₄=f⁗(b)/24；M₂=mean(u²)、M₂₂=mean(U₂²)、M₂₄=mean(U₂U₄)、M₄₄=mean(U₄²)。</p>
-<p>R₂₄ 为二次、四次偶项的混合预测，a_eq 为两分项能量相等的尺度，κ 为解析近根系数。六 seed 的 κ=1.088258–2.154200，f‴(b<em>)=−0.09153052016419218、f⁗(b</em>)=0.15259173097310152。系数由导数和各 seed 的投影矩确定，未拟合经验系数；a_eq 不是总能量增长或性能的临界点。</p>
+<p>Uₖ=uᵏ−mean_train(uᵏ) 为逐列居中幂，k 为幂次。f′、f″、f‴、f⁗ 分别为一至四阶导数。b* 是二阶导数正零点，δ=b−b* 是根附近偏移。c₂=f″(b)/2、c₄=f⁗(b)/24；M₂=mean(u²)、M₂₂=mean(U₂²)、M₂₄=mean(U₂U₄)、M₄₄=mean(U₄²)。</p>
+<p>R₂₄ 为二次、四次偶项的混合预测，a_eq 为两分项能量相等的尺度，κ 为解析近根系数。六 seed 的 κ=1.088258–2.154200，f‴(b*)=−0.09153052016419218、f⁗(b*)=0.15259173097310152。系数由导数和各 seed 的投影矩确定，未拟合经验系数；a_eq 不是总能量增长或性能的临界点。</p>
 <p>λ 是偏移与尺度平方之比，s 表示权重初始化 seed。Q=R/a⁶，F_s 是固定 λ、a→0 的解析极限。输入、特征、偏置、尺度、矩、系数及比值均无量纲。RMS 表示均方根；公共特征 RMS 归一化不改变 R。</p>
 <h2>成立程度</h2>
-<p>普通 bias 与精确根的注册判据均通过。b=0/1 的增长均满足 [3.6,4.4]；b<em> 的增长均满足 [48,80]。a=0.025 的全部 18 个领先系数相对误差 ≤0.001327；按 b=0/1/b</em> 分组最大为 0.001326/0.000277/0.000234，均低于注册阈值 0.10。</p>
+<p>普通 bias 与精确根的注册判据均通过。b=0/1 的增长均满足 [3.6,4.4]；b* 的增长均满足 [48,80]。a=0.025 的全部 18 个领先系数相对误差 ≤0.001327；按 b=0/1/b* 分组最大为 0.001326/0.000277/0.000234，均低于注册阈值 0.10。</p>
 <p>近根混合式只验证了离散网格。δ=0、±1e−5、±1e−4、±1e−3、±1e−2，a=0.025/0.05 的 108 cell 最大误差为 0.119285%；a=0.0125/0.025/0.05/0.1 全尺度最大误差为 0.591217%。去掉交叉项时，主尺度最大误差为 86.129939%；该模型消融（去掉一项后的对照）只作描述证据，未另设预测判据。</p>
 <table>
 <thead>
@@ -149,7 +149,7 @@ F_s(λ) = mean([f‴(b*)λU₂/2 + f⁗(b*)U₄/24]²) / [f′(b*)²M₂]
 <p>固定 λ 的旧收尾审计（<code>studies/r048_lambda_collapse/executed/prior_closeout_audit.json</code>）、独立与恢复核验（<code>studies/r048_lambda_collapse/executed/independent_verification.json</code>）：旧599文件与新180结果hash/mtime未改，原计算和协议偏差分别保留。</p>
 </li>
 <li>
-<p>原始提交失败与零训练记录（<code>findings/r008_bias_inflection.md</code>）：预注册与收尾均无法写 .git/index.lock，0/72 cell、P1–P3 未评估，未登记科学 claim；只用函数公式核验根与导数 f′(b<em>)=1.0998393201288668、f″(b</em>)≈−3.39e−17、f⁗(b*)=.15259173097310152。</p>
+<p>原始提交失败与零训练记录（<code>findings/r008_bias_inflection.md</code>）：预注册与收尾均无法写 .git/index.lock，0/72 cell、P1–P3 未评估，未登记科学 claim；只用函数公式核验根与导数 f′(b*)=1.0998393201288668、f″(b*)≈−3.39e−17、f⁗(b*)=.15259173097310152。</p>
 </li>
 <li>恢复测量（<code>findings/r016_bias_inflection_resume.md</code>）、全量 summary（<code>studies/r008_bias_inflection/summary.json</code>）：训练前匹配预注册与 pinned 源码提交 d4c63f8；72/72 cell 完成，科学收尾提交 3ad423e，首 cell 成功结果未覆盖。</li>
 <li>首 cell 独立核验（<code>studies/r008_bias_inflection/executed/r016_first_cell_independent_check.json</code>）、恢复收据（<code>studies/r008_bias_inflection/executed/r016_resume_commit_receipt.json</code>）与纯函数解析核验（<code>studies/r008_bias_inflection/executed/analytic_design.json</code>）。</li>
@@ -158,5 +158,5 @@ F_s(λ) = mean([f‴(b*)λU₂/2 + f⁗(b*)U₄/24]²) / [f′(b*)²M₂]
 <li>独立标量复算（<code>studies/r024_near_root_crossover/executed/independent_verification.json</code>）、恢复防覆盖核验（<code>studies/r024_near_root_crossover/executed/resume_verification.json</code>）、旧收尾审计（<code>studies/r024_near_root_crossover/executed/r016_closeout_audit.json</code>）。</li>
 <li>首 cell 审计及输出错误（<code>studies/r024_near_root_crossover/executed/first_cell_audit.json</code>）、分析输出修正源码（<code>studies/r024_near_root_crossover/executed/run_analysis.py</code>）：保留原 pinned analysis.py；修正只处理空统计打印和删除无采样解释的 pooled CI，不改变科学量或预测结论。</li>
 </ul>
-<div class="stamp">同步于 2026-10-08 17:29（北京时间）· 源文件在研究仓库内随轮次更新，本页为快照</div>
+<div class="stamp">同步于 2026-10-08 17:31（北京时间）· 源文件在研究仓库内随轮次更新，本页为快照</div>
 </main></body></html>

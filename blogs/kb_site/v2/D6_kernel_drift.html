@@ -112,7 +112,7 @@ Delta_T = MAE_E − MAE_T
 <p>260610 的 12/12 cell 完整，唯一注册判据 Δ&lt;0 成立。点预期 −0.20 与实测相差 +0.170157001；四 recipe 中两个平均改善、两个变差，三初始化 95% t 区间分别为 [−1.530861524,1.475262549]、[−.475478929,.313948362]、[−.759560449,1.170744637]、[−.866375070,.433576436]，全部跨零。</p>
 <p>全部测量属于 development，仅限上述四个 draw、函数、宽度和 seed。新 draw 验证不等于 sealed OOD（未用于开发、事先封存的分布外条件验证）。不外推新函数、其他优化器、LN（层归一化）、深度、rt 拟合或泛化。固定 r0 的方向持续也不保证晚期 rt 拟合或 test 改善。</p>
 <h2>方法与条件</h2>
-<p>输入和标签合同在各批中保持相同，仅按计划更换 seed。输入为 d=3、n=32 的 Gaussian draw；product=tanh(x0<em>x1)，mixed_sine=sin(1.7</em>x0)+0.4<em>sin(x1</em>x2)。x0/x1/x2 是输入的三个坐标。两函数使用相同输入。标签仅在 train（训练集）减样本均值并除 ddof=0 标准差（方差分母用样本数），无噪声、无 test。方向测量用 data_seed260606、init611/629/647；冻结幅度验证用同 draw、init701/719/737。新 draw 为 data_seed260607/260608/260609/260610，初始化 seed 不变。</p>
+<p>输入和标签合同在各批中保持相同，仅按计划更换 seed。输入为 d=3、n=32 的 Gaussian draw；product=tanh(x0*x1)，mixed_sine=sin(1.7*x0)+0.4*sin(x1*x2)。x0/x1/x2 是输入的三个坐标。两函数使用相同输入。标签仅在 train（训练集）减样本均值并除 ddof=0 标准差（方差分母用样本数），无噪声、无 test。方向测量用 data_seed260606、init611/629/647；冻结幅度验证用同 draw、init701/719/737。新 draw 为 data_seed260607/260608/260609/260610，初始化 seed 不变。</p>
 <p>网络有两个隐藏层。架构为 Linear(3,w,bias)→SiLU→Linear(w,w,bias)→SiLU→Linear(w,1,bias)，w=8/32。Linear 是含偏置的线性层，SiLU 是层间激活函数。PyTorch float32 默认 Linear 初始化后转 float64。训练用 full-batch halfMSE（均方误差的一半）、SGD η=0.05/momentum0/weight_decay0，共 256 步，checkpoint0/32/256（保存参数的步数）。新旧 cell 初始参数逐位相同；width 之间不是参数匹配的因果干预。旧合同 depth=1 是 legacy 元数据，实际架构有两个 hidden 层。</p>
 <p>校准使用旧 12 cell，按初始化 seed 整组留出。E/W/T MAE 为 0.732049731/0.721367713/0.632144327；三个设计满列 rank（设计矩阵的各列线性独立），但跨组系数不稳。冻结后，原 draw 的 E/W/T MAE 为 0.550345073/0.498007947/0.441188817，W/T 相对 E 改善 0.052337126/0.109156256，两项预测通过。固定 y 的早期核读数在原 draw 的新初始化中补充了固定 r0 的预测信息；这一收益没有在另一输入 draw 保持。</p>
 <p>比较以 recipe 为条件，cell 内配对。四个 function×width recipe 各有三个初始化 seed；MAE 对四 recipe 等权，对 recipe 内三 seed 等权。三公式在同 cell 配对，报告绝对误差差值均值及 95% t 区间。不把 12 cell 当 12 个独立 recipe，不算 iid p 值（假设 cell 独立同分布的检验概率）。step32 保存 E/Q/三预测后才继续训练；12/12 cell 全部核验后判断联合 0.70/0.08 门槛。所有负早期读数和失败 cell 保留，系数与门槛不重拟合。</p>
@@ -388,5 +388,5 @@ Delta_T = MAE_E − MAE_T
 <p>data260610预注册（<code>studies/r108_data_seed_transfer/preregistration.json</code>）、结果复算（<code>studies/r108_data_seed_transfer/summary.json</code>）、独立重建（<code>studies/r108_data_seed_transfer/executed/independent_verification.json</code>）、恢复核验（<code>studies/r108_data_seed_transfer/executed/saved_evidence_verification.json</code>）、本轮finding（<code>findings/r108_data_seed_transfer.md</code>）。</p>
 </li>
 </ul>
-<div class="stamp">同步于 2026-10-08 17:29（北京时间）· 源文件在研究仓库内随轮次更新，本页为快照</div>
+<div class="stamp">同步于 2026-10-08 17:31（北京时间）· 源文件在研究仓库内随轮次更新，本页为快照</div>
 </main></body></html>
