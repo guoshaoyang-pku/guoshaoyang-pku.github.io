@@ -11,7 +11,7 @@
 <ul>
 <li><strong>(a) 经验判定映射：固定特征、全批量 SGD（每步使用全部样本）、样本数与参数数均为 2、学习率 0.1、无动量与衰减时，单 sigmoid 是否通过取决于谱比（快/慢方向曲率比）、慢损失占比 α 和选解协议。</strong> 等初始损失五点设计中，最小二乘（选平方误差和最小的保存解）在谱比 1/3/10 各通过 3/3、30/100 各失败 3/3；谱比 100 的九点 α 设计仅 α=0.99/1 各通过 3/3，其余七点各失败 3/3；同条件补充格点在谱比 15 通过 3/3、20 失败 3/3，均方根/最差点误差分别为 0.027550353/0.047113104 与 0.032733550/0.052902145，只把判定变化夹在 15 与 20 之间。</li>
 </ul>
-<p>!图 1：保存 cell 的误差判定映射，颜色区分协议，形状区分通过与失败（<code>figs/decision_map.png</code>）</p>
+<p><img alt="图 1：保存 cell 的误差判定映射，颜色区分协议，形状区分通过与失败" src="figs/decision_map.png" /></p>
 <ul>
 <li>
 <p><strong>(b) 结构结论：谱比 100、两时间尺度均占一定初始损失时，单段形状不足以同时覆盖快降与慢尾，最差点误差不能靠换选解协议消除。</strong> α=0.25/0.5/0.75 的最小二乘最差点误差为 0.17433681/0.08556858/0.11474926；min-maxabs（选最差点误差最小的参数）的数值下界分别为 0.08338322414783761、0.08268412546021864、0.09797454939689487，均 &gt;0.05，各 3/3 坐标核验支持注册网格与参数域内不存在达标参数，图 2 展示 α=0.25 的逐点误差结构。</p>
@@ -20,7 +20,7 @@
 <p><strong>(c) 协议代价：min-maxabs 压低局部误差峰值、使多个位置的误差上限接近，代价是均方根误差增大和拟合中点偏移。</strong> α=0/0.01 各由最小二乘 0/3 通过变为 3/3 通过，均方根/最差点误差降峰后为 0.01437779613/0.03702806721 与 0.01227958828/0.03337965078，均方根误差分别增加 0.00249738653/0.00205599340，中点分别从 3.18633600430/3.21456987380 步移至 3.02359036549/3.08045127144 步（提前 0.16274563882/0.13411860236 步），推翻了增幅至少 0.003 的预测。</p>
 </li>
 </ul>
-<p>!图 2：谱比 100、α=0 与 0.25 的逐采样点绝对误差，两协议使用相同保存曲线（<code>figs/pointwise_errors.png</code>）</p>
+<p><img alt="图 2：谱比 100、α=0 与 0.25 的逐采样点绝对误差，两协议使用相同保存曲线" src="figs/pointwise_errors.png" /></p>
 <ul>
 <li><strong>(d) 参数含义：拟合中点和拟合斜率不能直接读作真实半衰期和半高处局部斜率。</strong> 等初始损失的谱比 1/3/10/30/100 下，中点相对偏差依次为 −8.99%/−6.53%/+3.95%/+21.96%/+72.40%，斜率相对偏差为 +4.36%/+4.15%/+8.39%/+26.28%/+86.73%。</li>
 </ul>
@@ -407,5 +407,5 @@ E2 = sqrt(mean_grid((H−f)^2)); Einf = max_grid|H−f|
 <p>alpha=0.75 最大误差对照冻结提交bd67bcf22d3bae14b35eb58a9a03d0501a13d5d1早于全部3新拟合。P1/P2均supported，0新训练。报告按 inbox 六节顺序的单独重排提交为020116c，旧数字和结论保留。证据：r094 findings（<code>findings/r094_alpha075_maxabs.md</code>）、summary（<code>studies/r094_alpha075_maxabs/summary.json</code>）、预注册（<code>studies/r094_alpha075_maxabs/preregistration.json</code>）、提交核验（<code>studies/r094_alpha075_maxabs/executed/preregistration_commit_verification.json</code>）、旧收尾审计（<code>studies/r094_alpha075_maxabs/executed/previous_closeout_audit.json</code>）、独立证书（<code>studies/r094_alpha075_maxabs/executed/certificate_verification.json</code>）、恢复后独立复算（<code>studies/r094_alpha075_maxabs/executed/independent_review.json</code>）、恢复核验（<code>studies/r094_alpha075_maxabs/executed/resume_verification.json</code>）、科学收尾回执（<code>studies/r094_alpha075_maxabs/executed/final_commit_verification.json</code>）。</p>
 <p>报告修正的补充来源：同条件单段边界 summary（<code>../D12_cascade_sigmoid/studies/r028_gap_cascade/summary.json</code>），仅引用其 single 字段的谱比 12/15/20/25 保存结果，不引用双段候选判定。</p>
 <p>点图及复算：图 1 SVG（<code>figs/decision_map.svg</code>）、图 2 SVG（<code>figs/pointwise_errors.svg</code>）、只读绘图源码（<code>figs/plot_report_fix.py</code>）、定义与科学自查（<code>findings/report_fix_audit.md</code>）。</p>
-<div class="stamp">同步于 2026-10-08 18:35（北京时间）· 源文件在研究仓库内随轮次更新，本页为快照</div>
+<div class="stamp">同步于 2026-10-08 18:38（北京时间）· 源文件在研究仓库内随轮次更新，本页为快照</div>
 </main></body></html>
