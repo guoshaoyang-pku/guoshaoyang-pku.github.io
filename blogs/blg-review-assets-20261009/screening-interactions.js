@@ -37,7 +37,7 @@
     for(let i=0;i<3;i++)body+=text(192+i*155,275,data.axes.n_1e12_cm2[i],'text-anchor="middle"');
     for(let i=0;i<3;i++)body+=text(105,82+(2-i)*69,data.axes.D_V_nm[i],'text-anchor="end"');
     body+=text(348,302,'载流子密度 n（10¹² cm⁻²）','text-anchor="middle"')+text(36,146,'位移场 D','text-anchor="middle" transform="rotate(-90 36 146)"');
-    body+=text(330,328,'每格为一个实际计算点；点击看共同观测。'+(log?'颜色采用对数刻度。':'所有样品共用颜色范围。'),'text-anchor="middle" font-size="14"')+'</g>';
+    body+=text(330,328,'每格为一个实际计算点；点击看共同观测。'+(log?'共用对数颜色范围。':'所有样品共用颜色范围。'),'text-anchor="middle" font-size="14"')+'</g>';
     el('screen-map').innerHTML=svg(body,348,'20组样品的实际微观响应图');
     el('screen-map').querySelectorAll('.screen-point').forEach(point=>{
       const select=()=>{selectedN=Number(point.dataset.n);selectedD=Number(point.dataset.d);renderMap();};
@@ -69,7 +69,7 @@
       body+=p.square?'<rect x="'+(x-4)+'" y="'+(y-4)+'" width="8" height="8" fill="'+color+'"><title>'+esc(title)+'</title></rect>':'<circle cx="'+x+'" cy="'+y+'" r="4" fill="'+color+'" fill-opacity=".72"><title>'+esc(title)+'</title></circle>';
     }
     body+=text((left+right)/2,height-21,xLabel,'text-anchor="middle"')+text(18,150,yLabel,'text-anchor="middle" transform="rotate(-90 18 150)"');
-    if(options.annotation)body+=text(left+10,23,options.annotation,'fill="'+colors.grey+'"');
+    if(options.annotation)body+=text(left+10,23,options.annotation,'fill="#5e5d59"');
     body+='</g>';
     el(target).innerHTML=svg(body,height,yLabel+'与'+xLabel+'的实际计算比较');
   }
@@ -97,6 +97,38 @@
       :selection==='stress'
       ?'4个高密度条件：最大误差升到 1.316 和 1.397 meV。数值对照仍通过，两条简化关系都超出原预测范围。'
       :'首轮能预测，不代表任意密度都能预测。后续压力测试保留同一系数与误差范围，没有重新拟合失败点。';
+    renderResiduals(selected);
+  }
+  function renderResiduals(selected) {
+    const width=660,height=325,left=78,right=638,top=32,bottom=247;
+    const xp=n=>left+(n+.65)/1.3*(right-left),yp=e=>bottom-e/1.6*(bottom-top);
+    let body='<g font-family="PingFang SC,system-ui,sans-serif" font-size="14" fill="'+colors.dark+'">';
+    for(let e=0;e<=1.5;e+=.5)body+='<path d="M'+left+' '+yp(e)+'H'+right+'" stroke="#e8e6dc"/>'+text(left-10,yp(e)+4,fmt(e,1),'text-anchor="end"');
+    body+='<path d="M'+left+' '+yp(data.prediction_tolerance_meV)+'H'+right+'" stroke="#5e5d59" stroke-dasharray="5 4"/>'+text(right-5,yp(.5)-8,'冻结范围 0.5','text-anchor="end"');
+    for(const n of [-.6,-.3,0,.3,.6])body+=text(xp(n),bottom+25,fmt(n,1),'text-anchor="middle"');
+    for(const p of selected)for(const name of ['linear','log']){
+      const x=xp(p.controls.n_1e12_cm2),y=yp(p.prediction_errors_meV[name]),color=name==='linear'?'#426787':'#98523c';
+      const title=esc('ε='+p.sample.epsilon_r+'，n='+p.controls.n_1e12_cm2+'，D='+p.controls.D_V_nm+'；最大绝对误差点值 '+fmt(p.prediction_errors_meV[name])+' meV');
+      body+=p.wave==='stress'?'<rect x="'+(x-4)+'" y="'+(y-4)+'" width="8" height="8" fill="'+color+'"><title>'+title+'</title></rect>':'<circle cx="'+x+'" cy="'+y+'" r="4" fill="'+color+'"><title>'+title+'</title></circle>';
+    }
+    body+='<path d="M'+left+' '+top+'V'+bottom+'H'+right+'" fill="none" stroke="'+colors.grey+'"/>'+text((left+right)/2,305,'载流子密度 n（10¹² cm⁻²）','text-anchor="middle"')+text(20,138,'层势绝对误差（meV）','text-anchor="middle" transform="rotate(-90 20 138)"')+'</g>';
+    el('screen-residuals').innerHTML=svg(body,height,'冻结预测的误差随密度变化');
+  }
+  function renderOccupancy(selection='neutral') {
+    const o=data.highlight[selection],gap=o.sampled_indirect_gap_meV,sigma=o.boltzmann_sigma_tensor_e2_over_h[0][0];
+    el('screen-case-readout').textContent=(selection==='neutral'?'中性点 n=0':'加入空穴 n=−0.1 ×10¹² cm⁻²')+'：谱隙 '+fmt(gap)+' meV，电导 '+fmt(sigma)+' e²/h。两点电导之比 '+fmt(data.highlight.conductivity_ratio,1)+'。';
+    Object.assign(el('screen-case-readout').dataset,{case:selection,gap,sigma});
+    document.querySelectorAll('#screen-case-controls button').forEach(button=>button.setAttribute('aria-pressed',button.dataset.case===selection));
+    let body='<g font-family="PingFang SC,system-ui,sans-serif" font-size="15" fill="'+colors.dark+'">';
+    body+=text(38,28,'采样谱隙（meV）')+text(352,28,'均匀材料电导（e²/h）');
+    for(const [i,name] of ['neutral','doped'].entries()){
+      const obs=data.highlight[name],g=obs.sampled_indirect_gap_meV,s=obs.boltzmann_sigma_tensor_e2_over_h[0][0],y=66+76*i,active=selection===name;
+      body+=text(38,y-10,name==='neutral'?'中性点':'加入空穴','font-weight="'+(active?'600':'400')+'"');
+      body+='<rect x="38" y="'+y+'" width="'+(g/12*230)+'" height="20" fill="'+colors.orange+'" fill-opacity="'+(active?1:.45)+'"/>'+text(44+g/12*230,y+16,fmt(g));
+      body+='<rect x="352" y="'+y+'" width="'+(s/7*220)+'" height="20" fill="'+colors.blue+'" fill-opacity="'+(active?1:.45)+'"/>'+text(358+s/7*220,y+16,fmt(s));
+    }
+    body+=text(330,204,'同一样品、同一外场、同一温度；只改变密度。','text-anchor="middle" font-size="14"')+'</g>';
+    el('screen-occupancy').innerHTML=svg(body,222,'相近带隙的两个计算点与导电差异');
   }
   el('screen-epsilon').innerHTML=[3,4,6,8,12].map(x=>'<option value="'+x+'">'+x+'</option>').join('');
   el('screen-gate').innerHTML=[10,20,40,60].map(x=>'<option value="'+x+'">'+x+' nm</option>').join('');
@@ -104,6 +136,7 @@
   el('screen-epsilon').value='6';el('screen-gate').value='20';el('screen-metric').value='sampled_indirect_gap_meV';
   for(const id of ['screen-epsilon','screen-gate','screen-metric'])el(id).addEventListener('change',renderMap);
   el('screen-prediction-wave').addEventListener('change',renderPrediction);
-  renderMap();renderCommon();renderPrediction();
+  document.querySelectorAll('#screen-case-controls button').forEach(button=>button.addEventListener('click',()=>renderOccupancy(button.dataset.case)));
+  renderMap();renderCommon();renderPrediction();renderOccupancy();
   window.screeningReady=true;
 })();
