@@ -4,7 +4,7 @@
 <title>D2：风险何时回升，以及这个规律能否跨任务</title><link rel="stylesheet" href="style.css">
 <script>window.MathJax={tex:{inlineMath:[['\\(','\\)'],['$','$']],displayMath:[['\\[','\\]'],['$$','$$']]}};</script>
 <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-</head>
+<style>img{max-width:100%;height:auto} .table-wrap{overflow-x:auto}table{min-width:620px}body{overflow-wrap:break-word}</style></head>
 <body><main><div class="nav"><a href="index.html">← 报告索引</a></div>
 <h1>D2：风险何时回升，以及这个规律能否跨任务</h1>
 <h2>结论</h2>
@@ -28,9 +28,9 @@ R(U)-R(U_*)\approx\tfrac12 R''(U_*)(U-U_*)^2.
 <p>此式是光滑非退化最低点的局部解析展开。旧保存谱复算在相对偏移 0.001 时，60/60 曲线的实际增量与二次近似之比为 0.997–1.000。旧有限区间描述可保留为 C·[(U−U_*)/U_*]^1.55，其中 C 取两倍最低点时间处的实测增量；不是整个后期的渐近定律。稳定有限维冻结特征 GD 的风险最终趋向有限极限。</p>
 <p><strong>注册定义。</strong> rise 是 0..262144 整数步窗口内第一个全局最低点；落在两端的 103 条曲线不算内部 rise，并在缩放检验中计失败。极低 train 定义为 noisy train MSE/初始 noisy train MSE≤0.1。曲率拐点指线性 U 坐标下二阶导换号，不是 log 时间图里的弯曲位置。两倍内定义为预测/实测在 [0.5,2]。以上阈值是约定。</p>
 <h2>成立程度</h2>
-<p>原报告的高精度系数只是有限格点拟合。把指数固定为 1 后要重新估系数，得到 0.28334，正文显示 0.28。未舍入模型为 57/60、显示 0.28 模型为 58/60；两者都是原数据拟合。三次留出 n 的系数约 0.28/0.29/0.29，合计 57/60 通过，才是此处的交叉验证数。不能直接将旧 0.214/0.328/0.203 配套的指数抹成 1 并保留其通过率。</p>
+<p>原报告的系数只是有限格点拟合。把指数固定为 1 后重新估系数，得到约 0.28。未舍入模型为 57/60、显示 0.28 模型为 58/60；两者都是原数据拟合。三次留出 n 的系数约 0.28/0.29/0.29，合计 57/60 通过，才是此处的交叉验证数。旧系数约 0.21/0.33/0.20，搭配各自指数；固定指数为 1 时不沿用旧通过率。完整精度只留在存档。</p>
 <p>新扫描只在 n=32/64/128、σ²=0.25/0.5/1/2/4 估系数；每任务 45 个 seed 条件。其余格点每任务 225 条作冻结模型的扩展验证；包括边界失败。自由幂律和对数候选也只用相同校准集拟合。</p>
-<table>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>任务与特征条件</th>
@@ -152,7 +152,7 @@ R(U)-R(U_*)\approx\tfrac12 R''(U_*)(U-U_*)^2.
 <td style="text-align: right;">168/225</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <p>同一系数跨任务的模型为 970/2700 通过；每任务一个系数提高到 1232/2700；自由指数为 1708/2700；对数候选为 1830/2700。后两者多一个参数，改善说明简单线性不足，不确立普适替代式。</p>
 <p><img alt="原交互任务的扩展格点。颜色区分样本数；右图标出边界最低点，原公式在低噪声与大样本区弯折。" src="figs/d2_20261009_expanded_scaling.png" /></p>
 <p><img alt="跨任务的系数、指数与扩展验证。自由指数和对数候选均只在校准集估参；虚线是注册的 80% 门槛。" src="figs/d2_20261009_cross_task_laws.png" /></p>
@@ -184,5 +184,5 @@ R(U)-R(U_*)\approx\tfrac12 R''(U_*)(U-U_*)^2.
 <li>原曲线重建：summary.json（<a href="d2_evidence_20261009/legacy_summary.json">存档</a>）、analysis.py。原60 cell最小点差0；train重建差≤5.2e−13，val尾部直接预测差≤3.5e−12。</li>
 <li>历史 r113 的 summary 与原报告保持原路径只读。旧失败预测保留；本轮没有修轮账、改变旧supervisor预算或启动其研究会话。</li>
 </ul><p><a href="d2_evidence_20261009/report.md">下载 Markdown</a> · <a href="d2_evidence_20261009/sources.zip">重建源码</a></p>
-<div class="stamp">同步于 2026-10-09 18:10（北京时间）· 源文件在研究仓库内随轮次更新，本页为快照</div>
+<div class="stamp">同步于 2026-10-09 18:14（北京时间）· 源文件在研究仓库内随轮次更新，本页为快照</div>
 </main></body></html>
