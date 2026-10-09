@@ -1,328 +1,188 @@
 <!doctype html>
 <html lang="zh-CN"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>D2：风险何时回升、回升后如何增长</title><link rel="stylesheet" href="style.css">
+<title>D2：风险何时回升，以及这个规律能否跨任务</title><link rel="stylesheet" href="style.css">
 <script>window.MathJax={tex:{inlineMath:[['\\(','\\)'],['$','$']],displayMath:[['\\[','\\]'],['$$','$$']]}};</script>
 <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 <body><main><div class="nav"><a href="index.html">← 报告索引</a></div>
-<h1>D2：风险何时回升、回升后如何增长</h1>
+<h1>D2：风险何时回升，以及这个规律能否跨任务</h1>
 <h2>结论</h2>
-<p>上升起点的三个分支是沿 σ² 轴的三次留出拟合；系数对 n 的依赖尚未建模，跨 n 散布约为 ±60%，只适用已测格点 n∈{32,64,128}、σ²∈{0.25,0.5,1,2,4}。上升后的短段公式是保存数据事后拟合（development，即已见数据上的拟合）：</p>
-<p>\[
-\widehat U_{\rm rise}\approx
-\begin{cases}
-0.214514(n/\sigma^2)^{1.05557},&n=32,\\
-0.328362(n/\sigma^2)^{0.96928},&n=64,\\
-0.202563(n/\sigma^2)^{1.09019},&n=128,
-\end{cases}
-\qquad
-L_{\rm test}(U)-L_{\min}\approx
-C\left(\frac{U-U_{\rm rise}}{U_{\rm rise}}\right)^{1.545565},
-\quad 0.1\lesssim\frac{U-U_{\rm rise}}{U_{\rm rise}}\le1.
-\]
-U=ηt 是累计训练量。η=0.3 是每步学习率。t 是更新步数。
-U_rise=ηt* 是实测回升起点。t* 是保存窗口内第一个最低点的步数。帽号表示预测值。
-n 是训练样本数。σ² 是归一化训练标签的噪声方差。
-L_test 是无噪声审计标签上的期望均方误差。L_min 是它的最低值。
-C=L_test(2U_rise)−L_min 是每条曲线在两倍起点处的回升量，单位为标签平方。</p>
-<p>上述公式限于四维高斯输入、目标 x₀+0.5x₀x₁、宽度 128 的冻结特征和全批量梯度下降优化平方损失。x₀、x₁ 是独立标准高斯输入坐标。冻结特征指训练时不改变隐藏层。全批量梯度下降指每步使用全部训练样本更新参数。
-起点预测只用原训练样本标签归一化扫描检验；后续归一化与降噪曲线只复核上升支描述。</p>
-<p>这三个 U_rise 分支是沿 σ² 轴的三次留出拟合，不是已经建立的跨 n 定律。系数的 n 依赖尚未建模，跨 n 的散布约为 ±60%；公式只适用于已测格点 n∈{32,64,128}、σ²∈{0.25,0.5,1,2,4}。</p>
-<ul>
-<li>起点大致随“样本数除以噪声方差”增加。原 n=32/64/128、σ²=0.25/0.5/1/2/4 的留出样本量预测中，57/60 起点在实测值的两倍内，实测 U_rise 为 2.4–166.5。</li>
-<li>实测最低点就是首次回升的转折点。全部 78 条保存曲线都在最低点后的下一步升高，之后至第 16384 步没有下降区间，起点的网格分辨率为 0.3。</li>
-<li>短段回升约按距起点的 1.546 次方增长。保存数据事后拟合（development）在原扫描 54/60 条曲线、其余归一化与降噪条件 17/18 条曲线上，全部取样点均在两倍误差内，C 的范围为 0.00101845–0.119553。</li>
-<li>这个幂律不能覆盖整条后期上升支。保存数据事后拟合（development）延伸到第 16384 步时，78/78 超过两倍误差，预测回升量为实测的 4.89–2634.75 倍。</li>
-<li>不要把这些式子外推到未测协议。学到特征、非线性读出、交叉熵、小批量训练、其他目标或输入维度均未测；上升支的 1.545565 幂律只在 x∈[0.1,1] 的短段内描述。</li>
-</ul>
+<p><strong>旧范围可以简写为 U_rise≈0.28·n/σ²；扩域后不能只为每个任务换一个系数。</strong> 原交互任务在 n=32/64/128、σ²=0.25–4 上，固定指数 1 的留出 n 预测为 57/60 在两倍内。新扫描把 n 扩到 16–1024、σ² 扩到 1/32–8；任务各拟合一个系数后，12/12 个任务与特征条件都未达到扩展格点 80% 通过率。U=ηt 是累计训练量，η=0.3，n 是训练样本数，σ² 是训练标签噪声方差。</p>
+<p><strong>单变量和多变量都能发生回升，但不能据此认定它们共有指数 1。</strong> 同一冻结特征下，4 维线性＋交互任务的校准指数为 0.99，单变量线性任务为 0.31。前者线性模型在校准范围 45/45 通过，扩展范围 139/225；后者仅 49/225 通过，换成自由幂律后为 224/225。这些是固定特征回归证据，尚不覆盖学习特征或分类。</p>
+<p><strong>回升前已经在拟合噪声，只是净收益仍为正。</strong> 新扫描有 3137 个内部最低点；到半个最低点时间时，噪声风险已达到最低点时该项的 35%–100%，中位 77%。3137/3137 超过注册的 25% 判据。“积累”指噪声带来的 validation 误差，不等于总 validation 误差已经上升。</p>
+<p><strong>回升不要求 train loss 先接近零。</strong> 最低点处，期望 noisy train MSE 保留初值的 0.5%–93%，中位 33%；仅 766/3137 低于初值的 10%。旧实际训练曲线则保留 11%–88%，中位 42%，0/60 低于 10%。因此当前证据推翻了“至少 90% 回升点必须先低于 10%”这一具体预测。</p>
+<p><strong>最低点是斜率转折，数学拐点通常更晚。</strong> 新扫描内部最低点 3137/3137 为正曲率；旧 60 条曲线的后续曲率换号在约 1.2–8.1 倍最低点时间。最低点局部是二次形状；旧上升支约 1.55 次方仅描述相对距离 0.1–1 的短段，尾部外推 78/78 失败。</p>
+<p><img alt="逻辑示意：上方为解析机制，下方为原保存曲线。噪声损害从回升前积累；最低点两种速度相等；train 无须接近零。" src="figs/d2_20261009_legacy_mechanism_logic.png" /></p>
 <h2>Formulation</h2>
-<p>将已有步数幂律换成累计训练量，有 \(\widehat U_{\rm rise}=\eta e^a(n/\sigma^2)^b\)。留出 n32/64/128 的 (a,b) 仍为 (-0.33541,1.05557)、(0.09033,0.96928)、(-0.39273,1.09019)。系数分别为 0.2145143101、0.3283616599、0.2025632721。a 为以更新步为单位的截距，b 为幂次；这不是三个独立的样本量分段机制，而是三次留出拟合。</p>
-<p>保存数据事后拟合（development）的上升支写为 \(L_{\rm test}(U)-L_{\min}\approx Cx^p\)，其中 \(x=(U-U_{\rm rise})/U_{\rm rise}\)，\(p=1.5455654305138984\)。x 是超过最低点的相对训练量，无量纲；C 是该曲线在 x=1 处的实测风险增量。式子只描述 x 约为 0.1–1 的短段。保存曲线的 \(L_{\rm test}(\eta t)=R(t)\)，以下解析式则覆盖已保存的全部整数步。</p>
-<p>从固定特征的风险分解可写出 \(R(t;s)=B(t)+sN(t)\)，其中 \(N(t)=\|\Phi_aA_t\|_F^2/m\)，而 \(A_t\) 由训练 Gram 矩阵除以 n 的递推得到。写成 Mₙ(t)=nNₙ(t) 后有 Rₙ(t;s)=Bₙ(t)+(s/n)Mₙ(t)。只有 Mₙ 与 Bₙ 在跨 n 条件下接近，s/n 才足以折叠风险；Aₜ 的显式 1/n 不单独保证这种接近。“噪声拟合速率随 s/n 变化、信号项在谱集中后近似不随 n 变化”是待检验的机制解释；它不替代三次留出拟合，也不把谱量关系当作已测结果。</p>
-<p>保存曲线评价的注册定义为 Δ_T(s)=R(T;s)−R(t*(s);s)，其中 T=16384；“操作性 U 型”定义为 0&lt;t*&lt;T 且 Δ_T≥.05。n=32、seed=411 的旧 σ²=.125 与新 σ²=.0625 只改变 s，signal_bias、variance_unit 和全部输入特征保持不变。</p>
-<p>固定特征、零初始化线性输出层、全批量 GD 与平方损失下，条件期望风险按以下已知解析式计算。风险递推与 population 矩不作为新发现。</p>
+<p>冻结特征与平方损失下，对训练标签噪声取条件期望，有精确分解：</p>
 <p>\[
-K=\Phi\Phi^\top/n=V\operatorname{diag}(\lambda_j)V^\top,\quad q_j=1-2\eta\lambda_j,\quad
-f_j(t)=\begin{cases}(1-q_j^t)/\lambda_j,&\lambda_j\ne0,\\2\eta t,&\lambda_j=0,\end{cases}
-\]
-\[
-A_t=\Phi^\top V\operatorname{diag}(f_j(t))V^\top/n,\quad
-R(t)=\|\Phi_a A_t y-y_a\|_2^2/m+\sigma^2\|\Phi_a A_t\|_F^2/m,\quad
-t_*=\min\operatorname*{argmin}_{t\in\{0,\ldots,16384\}}R(t).
-\]
-\[
-y^{\rm train}=(g-\mu_n)/s_n,\quad y^{\rm pop}=g/\sqrt{1.25},\quad
-g(x)=x_0+0.5x_0x_1,\quad E[g]=0,\quad E[g^2]=1.25.
-\]
-\[
-R(t;s)=B(t)+sN(t),\quad t_*(s)=\min\operatorname*{argmin}_{t\in\{0,\ldots,T\}}R(t;s),
-\]
-\[
-\Delta_T(s)=B(T)-B(t_*(s))+s[N(T)-N(t_*(s))],\quad
-U_{.05}(s)=\mathbf 1\{0&lt;t_*(s)&lt;T\;\land\;\Delta_T(s)\ge .05\}.
+R_k(U)=B_k(U)+\sigma^2N(U),\qquad
+B_k'(U_*)+\sigma^2N'(U_*)=0.
 \]</p>
-<p>n 和 m=2048 是训练与风险审计样本数，单位为行。Φ、Φₐ 是含常数 bias（偏置）列的固定特征矩阵。K 是训练 Gram 矩阵（训练特征两两内积除以 n），V 的列为其特征向量，λⱼ 为对应特征值。η=0.3 是学习率，qⱼ 是每步收缩因子，fⱼ(t) 是累计响应，j 是特征模态索引。Aₜ 把训练标签映射为第 t 步输出层参数。y、yₐ 是 clean（无噪声）训练与审计标签。σ² 是归一化标签单位下的独立训练噪声方差。R 的单位为标签平方，t、t* 的单位为更新步。标签与特征无量纲；diag 表示对角矩阵，⊤ 表示转置，‖·‖₂ 是欧氏范数，F 下标表示矩阵所有元素平方和的平方根。</p>
-<p>g 是原始目标，x₀、x₁ 是独立标准 Gaussian 输入坐标。μₙ、sₙ 是原始训练目标的均值与中心化均方根（RMS）。train/pop 上标表示训练样本与分布归一化，E 表示分布期望。B(t) 是无噪声 GD 的 clean 审计均方误差（MSE），单位为标签平方。N(t) 是单位训练噪声方差的审计响应，保存数组名为 variance_unit，单位为风险除以标签方差。s=σ² 是噪声方差；T=16384 是窗口终点，单位为更新步。t*(s) 是该方差下首个全局最低点；Δ_T 是终点减最低风险，单位为标签平方。U₍.05₎ 是取 0 或 1 的操作性判据，𝟙 表示条件成立时取 1，0.05 的单位为标签平方。</p>
-<p>机制表达为 t*=f(σ²/n；谱)：固定特征分解中的噪声响应含有 1/n 因子，信号项在谱集中后对 n 近似不变；已测范围内的 t* 对 σ²/n 呈近线性趋势，但这不是解析定律。</p>
-<p>经验式为 log(t*)=a+b log(n/σ²)。a 是截距，b 是斜率，log 表示自然对数；拟合使用以更新步计的 t* 和归一化标签单位下的 σ²。它是本组条件的经验预测，不是解析定律。</p>
+<p>R 是独立 clean validation 样本上的期望均方误差。B 是没有训练标签噪声时的 validation 误差。N 是单位训练噪声方差造成的 validation 响应。k 标记任务；同输入与特征下换 scalar 目标只改变 B，N 不变。多输出结果对输出通道平均，单通道噪声独立。撇号表示对累计训练量 U 的变化率。这里的 validation 是新生成的合成审计样本，不是 benchmark test。</p>
+<p>最低点前若 −B′&gt;σ²N′，风险下降；最低点两种速度相等；其后噪声成本速度超过信号收益时风险回升。B 在新任务上未必始终下降，这个条件描述不能代替逐曲线检查。</p>
+<p>\[
+R(U)-R(U_*)\approx\tfrac12 R''(U_*)(U-U_*)^2.
+\]</p>
+<p>此式是光滑非退化最低点的局部解析展开。旧保存谱复算在相对偏移 0.001 时，60/60 曲线的实际增量与二次近似之比为 0.997–1.000。旧有限区间描述可保留为 C·[(U−U_*)/U_*]^1.55，其中 C 取两倍最低点时间处的实测增量；不是整个后期的渐近定律。稳定有限维冻结特征 GD 的风险最终趋向有限极限。</p>
+<p><strong>注册定义。</strong> rise 是 0..262144 整数步窗口内第一个全局最低点；落在两端的 103 条曲线不算内部 rise，并在缩放检验中计失败。极低 train 定义为 noisy train MSE/初始 noisy train MSE≤0.1。曲率拐点指线性 U 坐标下二阶导换号，不是 log 时间图里的弯曲位置。两倍内定义为预测/实测在 [0.5,2]。以上阈值是约定。</p>
 <h2>成立程度</h2>
-<p>起点公式保留原来“用另两个样本量拟合，再预测留出样本量”的检验口径。每次拟合 40 条曲线，留出 n=32/64/128 各通过 19/20，共 57/60，达到至少 48/60 的原判据。三个失败预测的倍数误差为 2.286/2.099/2.571。实测最低点为 8–555 步，换算成 U 为 2.4–166.5。这里只测了学习率 0.3；乘以学习率是单位换算，没有检验换学习率后是否仍重合。</p>
-<p>上升支公式是保存数据事后拟合（development）。指数 1.5455654305138984 由原 60 条曲线共同拟合。原 15 个实验条件各有四个随机种子重复；54/60 的通过率是拟合内描述。其余 18 条曲线通过 17/18；它们共享部分输入和特征，是已见条件上的复核，不是事前封存的分布外验证。</p>
-<p>每条曲线的 C 都使用该曲线自身的已知风险。判据要求距最低点约 0.1–1 倍最低点步数内的全部几何间隔取样点都在两倍误差内；整数取样有至多 0.5 步的取整差。逐曲线单独拟合的指数为 0.919789–1.886455；共同指数的最大倍数误差为 3.077841。不能把共同指数当作每个条件都成立的精确指数，也不能把取样点通过解释为区间内每一步都通过。</p>
-<p>尾部验证没有重新拟合。78/78 条曲线在第 16384 步都未通过两倍误差判据；该时刻 U=4915.2。报告没有测出覆盖整个上升支的单一增长指数。需要整条风险时，应使用固定特征的已知解析递推，而不是外推短段幂律。</p>
-<p>所有结果为 development。最低点和 C 都依赖无噪声训练/审计标签；它们不是只用训练标签的早停信号。没有检验参与训练的隐藏层、Adam 自适应优化器、小批量训练、交叉熵损失、其他宽度或无限训练。</p>
+<p>原报告的高精度系数只是有限格点拟合。把指数固定为 1 后要重新估系数，得到 0.28334，正文显示 0.28。未舍入模型为 57/60、显示 0.28 模型为 58/60；两者都是原数据拟合。三次留出 n 的系数约 0.28/0.29/0.29，合计 57/60 通过，才是此处的交叉验证数。不能直接将旧 0.214/0.328/0.203 配套的指数抹成 1 并保留其通过率。</p>
+<p>新扫描只在 n=32/64/128、σ²=0.25/0.5/1/2/4 估系数；每任务 45 个 seed 条件。其余格点每任务 225 条作冻结模型的扩展验证；包括边界失败。自由幂律和对数候选也只用相同校准集拟合。</p>
+<table>
+<thead>
+<tr>
+<th>任务与特征条件</th>
+<th style="text-align: right;">固定指数 1 的 c</th>
+<th style="text-align: right;">校准通过</th>
+<th style="text-align: right;">扩展通过</th>
+<th style="text-align: right;">自由指数 b</th>
+<th style="text-align: right;">自由幂律扩展通过</th>
+<th style="text-align: right;">对数候选扩展通过</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>4 维 · 线性</td>
+<td style="text-align: right;">0.11</td>
+<td style="text-align: right;">28/45</td>
+<td style="text-align: right;">69/225</td>
+<td style="text-align: right;">0.40</td>
+<td style="text-align: right;">186/225</td>
+<td style="text-align: right;">174/225</td>
+</tr>
+<tr>
+<td>4 维 · 加性二次</td>
+<td style="text-align: right;">0.24</td>
+<td style="text-align: right;">41/45</td>
+<td style="text-align: right;">126/225</td>
+<td style="text-align: right;">0.85</td>
+<td style="text-align: right;">149/225</td>
+<td style="text-align: right;">174/225</td>
+</tr>
+<tr>
+<td>4 维 · 线性＋交互</td>
+<td style="text-align: right;">0.25</td>
+<td style="text-align: right;">45/45</td>
+<td style="text-align: right;">139/225</td>
+<td style="text-align: right;">0.99</td>
+<td style="text-align: right;">142/225</td>
+<td style="text-align: right;">150/225</td>
+</tr>
+<tr>
+<td>4 维 · 纯交互</td>
+<td style="text-align: right;">0.81</td>
+<td style="text-align: right;">31/45</td>
+<td style="text-align: right;">74/225</td>
+<td style="text-align: right;">0.61</td>
+<td style="text-align: right;">116/225</td>
+<td style="text-align: right;">138/225</td>
+</tr>
+<tr>
+<td>4 维 · 正弦</td>
+<td style="text-align: right;">0.089</td>
+<td style="text-align: right;">26/45</td>
+<td style="text-align: right;">69/225</td>
+<td style="text-align: right;">0.42</td>
+<td style="text-align: right;">166/225</td>
+<td style="text-align: right;">160/225</td>
+</tr>
+<tr>
+<td>4 维 · 双输出</td>
+<td style="text-align: right;">0.17</td>
+<td style="text-align: right;">43/45</td>
+<td style="text-align: right;">144/225</td>
+<td style="text-align: right;">0.81</td>
+<td style="text-align: right;">181/225</td>
+<td style="text-align: right;">201/225</td>
+</tr>
+<tr>
+<td>1 维 · 线性，无偏置</td>
+<td style="text-align: right;">0.024</td>
+<td style="text-align: right;">26/45</td>
+<td style="text-align: right;">49/225</td>
+<td style="text-align: right;">0.31</td>
+<td style="text-align: right;">224/225</td>
+<td style="text-align: right;">214/225</td>
+</tr>
+<tr>
+<td>1 维 · 二次，无偏置</td>
+<td style="text-align: right;">0.19</td>
+<td style="text-align: right;">22/45</td>
+<td style="text-align: right;">85/225</td>
+<td style="text-align: right;">0.73</td>
+<td style="text-align: right;">84/225</td>
+<td style="text-align: right;">123/225</td>
+</tr>
+<tr>
+<td>1 维 · 线性，有偏置</td>
+<td style="text-align: right;">0.028</td>
+<td style="text-align: right;">30/45</td>
+<td style="text-align: right;">129/225</td>
+<td style="text-align: right;">0.58</td>
+<td style="text-align: right;">107/225</td>
+<td style="text-align: right;">117/225</td>
+</tr>
+<tr>
+<td>1 维 · 二次，有偏置</td>
+<td style="text-align: right;">0.4</td>
+<td style="text-align: right;">33/45</td>
+<td style="text-align: right;">143/225</td>
+<td style="text-align: right;">1.08</td>
+<td style="text-align: right;">155/225</td>
+<td style="text-align: right;">143/225</td>
+</tr>
+<tr>
+<td>1 维 · 正弦，有偏置</td>
+<td style="text-align: right;">2.2</td>
+<td style="text-align: right;">19/45</td>
+<td style="text-align: right;">37/225</td>
+<td style="text-align: right;">0.56</td>
+<td style="text-align: right;">72/225</td>
+<td style="text-align: right;">68/225</td>
+</tr>
+<tr>
+<td>4 维 · 线性＋交互，有偏置</td>
+<td style="text-align: right;">0.37</td>
+<td style="text-align: right;">41/45</td>
+<td style="text-align: right;">168/225</td>
+<td style="text-align: right;">1.21</td>
+<td style="text-align: right;">126/225</td>
+<td style="text-align: right;">168/225</td>
+</tr>
+</tbody>
+</table>
+<p>同一系数跨任务的模型为 970/2700 通过；每任务一个系数提高到 1232/2700；自由指数为 1708/2700；对数候选为 1830/2700。后两者多一个参数，改善说明简单线性不足，不确立普适替代式。</p>
+<p><img alt="原交互任务的扩展格点。颜色区分样本数；右图标出边界最低点，原公式在低噪声与大样本区弯折。" src="figs/d2_20261009_expanded_scaling.png" /></p>
+<p><img alt="跨任务的系数、指数与扩展验证。自由指数和对数候选均只在校准集估参；虚线是注册的 80% 门槛。" src="figs/d2_20261009_cross_task_laws.png" /></p>
 <h2>方法与条件</h2>
-<p>在 n=32、seed=411 的同一 population 曲线上把 σ² 从 .125 降到 .0625，最低点从 331 步移到 528 步，终点减最低风险从 .1773813165 降到 .0820704085；内部最低点和 .05 回升幅度仍保留。该结果支持本次注册的有限区间，不能扩展为跨 seed 规律。</p>
-<p>事后拟合只读取五组已完成研究的 78 条风险曲线，不组合新噪声条件。每条曲线取偏移步数 round(geomspace(max(1,0.1t*),t*,40))，去重后在对数坐标拟合；geomspace 指按固定倍数递增取样。C 锚定该曲线在两倍最低点步数处的回升量。原 60 条曲线共同最小化对数误差平方和，再固定指数复核其余 18 条曲线。首次探索曾使用逐曲线指数的平均值 1.547336137459214；正式汇总按合并取样点最小二乘得到 1.5455654305138984，没有搜索模型或改窗口。</p>
-<table>
-<thead>
-<tr>
-<th>保存条件</th>
-<th style="text-align: right;">曲线数</th>
-<th style="text-align: right;">全部取样点在两倍内</th>
-<th style="text-align: right;">C 范围（标签平方）</th>
-<th style="text-align: right;">单独拟合指数范围</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>原样本归一化扫描</td>
-<td style="text-align: right;">60</td>
-<td style="text-align: right;">54/60</td>
-<td style="text-align: right;">0.001304866–0.119552851</td>
-<td style="text-align: right;">0.919789–1.886455</td>
-</tr>
-<tr>
-<td>共享分布标签归一化</td>
-<td style="text-align: right;">8</td>
-<td style="text-align: right;">7/8</td>
-<td style="text-align: right;">0.007384145–0.010573359</td>
-<td style="text-align: right;">1.497946–1.806720</td>
-</tr>
-<tr>
-<td>噪声减半</td>
-<td style="text-align: right;">8</td>
-<td style="text-align: right;">8/8</td>
-<td style="text-align: right;">0.003186545–0.009593888</td>
-<td style="text-align: right;">1.364350–1.687821</td>
-</tr>
-<tr>
-<td>更低噪声 seed412</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">1/1</td>
-<td style="text-align: right;">0.003591390</td>
-<td style="text-align: right;">1.473977</td>
-</tr>
-<tr>
-<td>更低噪声 seed413</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">1/1</td>
-<td style="text-align: right;">0.001018452</td>
-<td style="text-align: right;">1.384854</td>
-</tr>
-</tbody>
-</table>
-<p>原严格折叠预测要求相同 n/σ² 的最低点全部相差不超过两倍，实测只有 40/44 配对通过，预测被推翻。11 个条件配对组各有四次重复，不能当作 44 个独立实验条件。这个失败与容许部分误差的 57/60 留出预测通过可以同时成立。</p>
-<p>共享 population 标签归一化（按分布均值与均方根归一化）未消除 seed414 反例。其比值由 2.8125 变为 3.24194，满足事前区间 (2,4]；标签归一化差异不足以单独解释反例。四个种子仍只有 3/4 配对在两倍内，比值范围 1.00543–3.24194，log₂ 范围 0.0078195–1.6968554；归一化干预对 log₂ 比值的改变量范围为 −0.1190926–1.0780025。8 个最低点为 62–201 步，全部满足内部最低点且终点回升至少 0.05 的原操作性 U 型判据。</p>
-<p>噪声减半也未恢复严格折叠。等 n/σ²=256 的四个种子仍只有 3/4 达标；8/8 最低点延后 1.403226–2.298611 倍，范围为 87–383 步，终点回升量为 0.051388874–0.177381316。只有 seed414 注册了 (2,4] 的科学预测。预测数值已由保存的 development 曲线算出，实际 GD 是受控复核，不是盲发现。</p>
-<p>低噪声阈值只描述指定配对。seed412 的最低点延后 1.472843450 倍，差值由独立复算核对至 6.19e−15；seed413 延后 1.882608695652174 倍，新差值低于事前下界的偏差为 −0.000811885920745061，独立差值误差为 6.467049e−15。两条曲线均保留内部最低点和正回升。它们不给跨种子概率或连续噪声临界值。噪声方差只线性缩放方差项，最低点随之重选；终点减最低风险不能按噪声比例精确缩放。</p>
-<p>所有比较沿用冻结特征与有限整数步窗口。输入为 d4（输入维度为四）对称 Gaussian，目标为 x₀+0.5x₀x₁。冻结 ReLU 的 width128/scale 0.03 表示宽度与权重尺度。训练特征居中并按总 RMS 归一化，head（线性输出层）含 bias 且从零初始化。全批量 GD 使用 η=0.3/mom0/nodecay（无动量、无权重衰减）及 float64（双精度浮点数）。逐整数步 0..16384 计算期望 clean-risk（无噪声审计风险）。原扫描为 n32/64/128×σ²0.25/0.5/1/2/4、seed411–414。跨 n 保持 W（特征权重）的 seed，但原始输入分别抽取。经验谱（样本 Gram 矩阵的特征值）与目标投影（目标在特征模态上的分量）均可变化。</p>
-<p>归一化对照只改变每个 n/seed 内的 clean 标签归一化。它使用 n32/0.25 与 n64/0.5 的原始输入、W、特征和 epsilon（标准化噪声向量），不重抽数据。噪声方差固定在归一化标签单位。mean（均值）与 RMS 联合改变，未分别识别两者作用，也没有固定原始标签单位的信噪比。</p>
-<table>
-<thead>
-<tr>
-<th>seed</th>
-<th style="text-align: right;">train 归一化 t*：n32 / n64</th>
-<th style="text-align: right;">pop 归一化 t*：n32 / n64</th>
-<th style="text-align: right;">原比值</th>
-<th style="text-align: right;">新比值</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>411</td>
-<td style="text-align: right;">274 / 137</td>
-<td style="text-align: right;">144 / 152</td>
-<td style="text-align: right;">0.50000</td>
-<td style="text-align: right;">1.05556</td>
-</tr>
-<tr>
-<td>412</td>
-<td style="text-align: right;">174 / 190</td>
-<td style="text-align: right;">184 / 185</td>
-<td style="text-align: right;">1.09195</td>
-<td style="text-align: right;">1.00543</td>
-</tr>
-<tr>
-<td>413</td>
-<td style="text-align: right;">174 / 120</td>
-<td style="text-align: right;">129 / 141</td>
-<td style="text-align: right;">0.68966</td>
-<td style="text-align: right;">1.09302</td>
-</tr>
-<tr>
-<td>414</td>
-<td style="text-align: right;">64 / 180</td>
-<td style="text-align: right;">62 / 201</td>
-<td style="text-align: right;">2.81250</td>
-<td style="text-align: right;">3.24194</td>
-</tr>
-</tbody>
-</table>
-<p>噪声减半对照只在每个 n/seed 内改变 σ²。固定 population 标签、输入、W、特征与 epsilon，把 σ² 从 0.25/0.5 减半到 0.125/0.25，共一组 recipe 配对、四 seed 重复、8 cell。九项控制数组和 76 个旧输入 pin（预先绑定的输入指纹）均固定。signal_bias（无噪声风险数组）与 variance_unit 全步与原 population 基线相同。</p>
-<table>
-<thead>
-<tr>
-<th>seed</th>
-<th style="text-align: right;">population 基线 t*：n32/0.25 / n64/0.5</th>
-<th style="text-align: right;">减半后 t*：n32/0.125 / n64/0.25</th>
-<th style="text-align: right;">减半后比值</th>
-<th style="text-align: right;">配对 log₂ 比值改变量</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>411</td>
-<td style="text-align: right;">144 / 152</td>
-<td style="text-align: right;">331 / 278</td>
-<td style="text-align: right;">0.839879</td>
-<td style="text-align: right;">−0.329749</td>
-</tr>
-<tr>
-<td>412</td>
-<td style="text-align: right;">184 / 185</td>
-<td style="text-align: right;">313 / 383</td>
-<td style="text-align: right;">1.223642</td>
-<td style="text-align: right;">0.283362</td>
-</tr>
-<tr>
-<td>413</td>
-<td style="text-align: right;">129 / 141</td>
-<td style="text-align: right;">230 / 212</td>
-<td style="text-align: right;">0.921739</td>
-<td style="text-align: right;">−0.245894</td>
-</tr>
-<tr>
-<td>414</td>
-<td style="text-align: right;">62 / 201</td>
-<td style="text-align: right;">87 / 324</td>
-<td style="text-align: right;">3.724138</td>
-<td style="text-align: right;">0.200051</td>
-</tr>
-</tbody>
-</table>
-<p>低噪声评价未新增训练。它只用 n32、seed412 的已保存 signal_bias 与 variance_unit，计算 B(t)+0.0625N(t)，与同一条件的 0.125 保存风险配对。一新 recipe×一 seed=1 个评价 cell，0 新训练，无筛选排除。条件按旧差值接近 0.05 选择；新风险是在冻结区间与来源后首次组合的保存曲线评价。事前区间 [0.01,0.04] 来自旧 0.051388874 余量与粗略降噪判断，注册前未组合新风险、端点或最低点。</p>
-<table>
-<thead>
-<tr>
-<th style="text-align: right;">σ²</th>
-<th style="text-align: right;">最低点（步）</th>
-<th style="text-align: right;">最低风险</th>
-<th style="text-align: right;">第 16384 步风险</th>
-<th style="text-align: right;">终点减最低风险</th>
-<th>0.05 判据</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align: right;">0.125</td>
-<td style="text-align: right;">313</td>
-<td style="text-align: right;">0.1043385144583564</td>
-<td style="text-align: right;">0.15572738849959528</td>
-<td style="text-align: right;">0.051388874041238874</td>
-<td>满足</td>
-</tr>
-<tr>
-<td style="text-align: right;">0.0625</td>
-<td style="text-align: right;">461</td>
-<td style="text-align: right;">0.07359224980542978</td>
-<td style="text-align: right;">0.09574445181880534</td>
-<td style="text-align: right;">0.02215220201337556</td>
-<td>不满足</td>
-</tr>
-</tbody>
-</table>
-<p>seed413 评价复用其原九项数据数组与保存分解，不新增训练。只将 σ²=.125 改为 .0625，新增一个评价 cell。它由上一轮交接预指定；事前区间 [0.015,0.045] 来自旧 .058105292 差值、粗略减半判断和已见 seed412 结果。注册前未组合该 seed 的新风险、端点或最低点。</p>
-<table>
-<thead>
-<tr>
-<th style="text-align: right;">seed413 的 σ²</th>
-<th style="text-align: right;">最低点（步）</th>
-<th style="text-align: right;">最低风险</th>
-<th style="text-align: right;">第 16384 步风险</th>
-<th style="text-align: right;">终点减最低风险</th>
-<th>0.05 判据</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align: right;">0.125</td>
-<td style="text-align: right;">230</td>
-<td style="text-align: right;">0.15135295688426875</td>
-<td style="text-align: right;">0.20945824923686374</td>
-<td style="text-align: right;">0.058105292352594984</td>
-<td>满足</td>
-</tr>
-<tr>
-<td style="text-align: right;">0.0625</td>
-<td style="text-align: right;">433</td>
-<td style="text-align: right;">0.11506551092432435</td>
-<td style="text-align: right;">0.1292536250035793</td>
-<td style="text-align: right;">0.014188114079254938</td>
-<td>不满足</td>
-</tr>
-</tbody>
-</table>
-<h3>失败与反例</h3>
-<p>短段共同幂律在七条保存曲线上失败。原扫描失败条件为 n32/seed411/σ²0.5、n32/seed413/σ²2、n32/seed413/σ²4、n32/seed414/σ²4、n64/seed411/σ²4、n128/seed413/σ²4；共享分布归一化中 n32/seed411/σ²0.25 也失败。最大倍数误差分别为 2.784528、3.077841、2.041362、2.315551、2.370309、2.356628、2.006392。失败条件没有排除。</p>
-<p>短段幂律延伸到终点的回升预测全部偏高。原扫描为实测的 4.890795–2634.745466 倍，共享分布归一化为 29.541671–133.263526 倍，噪声减半为 12.613862–67.674343 倍，更低噪声 seed412/413 分别为 38.674616/18.916244 倍。这个失败只否定该幂律的尾部外推，不否定已保存风险曲线或固定特征解析递推。</p>
-<p>本轮 n32/seed411 的单一配对评价给出 t*=528、最低风险 .12486673374136117、终点风险 .2069371422480195、Δ_T=.08207040850665834；注册区间 [.05,.15] 支持。相同曲线的 σ²=.125 基线为 t*=331、最低风险 .16812179640849967、终点风险 .3455031129056644、Δ_T=.1773813164971647。</p>
-<p>“全部折叠”的预测被四个反例推翻。seed414 在 n32/0.25、n64/0.5、n128/1 时 t* 为 64、180、176 步；seed412 在 n64/0.25 与 n128/0.5 时为 390、160 步；seed413 在 n64/2 与 n128/4 时为 20、47 步。前两个反例共享 n32 结果，不是独立重复。</p>
-<p>幂律仍有三个失败预测，倍数误差为 2.286/2.099/2.571。斜率 b 为 1.05557/0.96928/1.09019。零反例的严格折叠与容许 20% 失败的粗略预测可以分别失败与通过，不能用 57/60 的通过结果撤销 40/44 的失败结果。</p>
-<p>共享归一化和降噪后，seed414 仍超过两倍。共享归一化使其比值从 2.8125 变为 3.24194；随后噪声减半使最低点从 62/201 步变为 87/324 步，跨 n 比值从 3.241935 变为 3.724138。不同条件的最低点延后幅度仍不同。输入抽样、经验谱与目标在特征上的投影仍是竞争解释。</p>
-<p>“降噪后仍达到 0.05”在 n32、seed412、σ²=0.0625 的有限窗口条件不成立：终点差值 0.022152202，阈值余量为 −0.027847798。该条件仍有内部最低点和风险回升。事前预测的是阈值未通过，且得到支持；这不是事前区间预测失败。噪声减弱使终点风险比最低风险下降更多，原操作性 U 型判据失效只说明回升幅度未达到阈值。</p>
-<p>seed413 的差值区间 [0.015,0.045] 被推翻。实测 0.014188114079254938 低于下界；不能因同一预测中“低于 0.05”的方向符合结果，就把整个 P1 写成支持。原 .05 操作性 U 型判据同样失败，保留内部最低点与正回升。</p>
-<p>seed411 的同协议评价与 seed412/413 不同：σ² 减半后 Δ_T=.0820704085，仍高于 .05；t* 比值为 528/331=1.5951661631，Δ_T 改变量为 −.0953109080。四个 seed 的低噪声结果仍只构成四个有界 development 配对，不能估计跨 seed 概率或连续临界值。</p>
-<p>执行失败保留为执行失败，不算科学反驳。原执行因预注册提交受阻而未训练，随后恢复；噪声减半准备因临时脚本写出工作区而失效，没有新实测数字或 KB claim（知识库短结论），也没有执行独立实际 GD。原 matmul（矩阵乘法）警告的底层原因未定。归一化分析曾因 NumPy 布尔值不能直接写 JSON 而失败；固定源码和原错误保留，单独入口只把 NumPy scalar（标量）转为 Python scalar，未改风险公式或预测。</p>
+<p>本轮 12 个任务与特征 recipe、90 个 n×σ² 条件、3 个 seed，共 3240 次有限样本谱轨迹评价；其中 3137 个内部最低点、103 个边界最低点。12 个 recipe 包含同任务的特征偏置对照，不是 12 类互不相关的现实任务。数据与特征 draw 为 120 个。计算为 CPU 闭式轨迹扫描，无模型 API、solver 或 GPU；新曲线计算约 54 秒。</p>
+<p>输入为 1 或 4 维标准 Gaussian，train 使用 nested 正负配对样本；独立 validation 为 2048 行。ReLU 隐藏特征固定，宽度 128，输出 head 从零开始。目标按分布均方根归一化：线性 x₀；二次 x₀+0.5(x₀²−1)；加性 x₀+0.5(x₁²−1)；交互 x₀+0.5x₀x₁；纯乘积 x₀x₁；正弦；双输出为线性与交互的组合。特征按 train 的均值与整体尺度归一化。隐藏偏置作为单独协议。全批量 GD、η=0.3、无动量或衰减、float64、MSE，每通道按因子 2 更新。</p>
+<p>整数 0..256 全记录；之后保存 4096 个对数格点至 262144，并在每个粗网格最小点附近求整数最低点。导数来自稳定离散 GD 因子的连续谱插值。小于最大特征值 1e−12 的特征值按零处理；本轮不宣称找出全部连续时间极值。</p>
+<p><strong>train 与 val 的口径要同时画出。</strong> 实线显示同一次噪声训练的 noisy train、clean val 和 noisy val；另画对训练噪声平均的 clean risk。独立同方差 noisy-val 的期望只比 clean risk 多 σ²，但单次 realized 曲线可因噪声实现改变形状。原 60 cell 中，单次 clean-val 最低点/期望风险最低点为 0.24–86.72 倍，中位 1.37，不能把期望比例系数直接用于单次早停。</p>
+<p><img alt="新扫描的 train/val、信号与噪声及速率平衡。实线为训练噪声期望，细虚线为同一次噪声实现。示例 n64、σ²=0.5、seed6101；最低点处 train 保留初值 26%，半时噪声已累积 74%。" src="figs/d2_20261009_train_val_shapes.png" /></p>
+<p><img alt="旧实际 train/val 与噪声期望风险；两种最低点分开显示。" src="figs/d2_20261009_legacy_train_val.png" /></p>
+<p><img alt="最低点的局部二次形状与旧有限区间 1.55 次方描述。" src="figs/d2_20261009_legacy_local_shape.png" /></p>
+<h2>失败与反例</h2>
+<ol>
+<li><strong>统一线性外推失败。</strong> 原交互任务在 n128→n256→n512、σ²=1、seed6101 时，最低点 139→173→209 步；样本数每次加倍而时间没有加倍。其线性模型在 n512 和 n1024 的全部噪声格点仅 10/27、8/27 通过。该描述属于扩域后的 development，不是另一次盲预测。</li>
+<li><strong>单变量模型有容量退化。</strong> 无偏置 ReLU 在一维中只提供正半轴、负半轴及常数三个方向，本轮所有 n 的秩均为 3。它仍会回升，但时间主要缓慢增长。加入隐藏偏置后秩与形状改变；偏置协议本身不恢复普适指数 1。</li>
+<li><strong>原 population 归一化的聚合减半预测仍为 refuted。</strong> 跨 n 起点系数极差 0.0158→0.0741、增至 4.68 倍；单 seed 则 3/4 缩小，seed414 增大。不得用有利子集或另一事后散布指标覆盖该注册失败；剩余差异尚未做谱干预归因。</li>
+<li><strong>旧上升支的尾部外推失败。</strong> 1.55 次方描述延伸至窗口末时，78/78 超出两倍误差，不能称完整上升支定律。</li>
+<li><strong>train 极低的必要条件预测失败。</strong> 只 766/3137 达到注册 10% 阈值，未达到至少 90%。这些计数并不估计跨现实任务概率。</li>
+</ol>
 <h2>未决问题</h2>
-<p>短段幂律尚不能由 n、噪声方差和训练侧量独立预测系数 C。整个上升支的增长公式也未建立；尾部需要饱和项或完整的固定特征响应，现有数据没有给出前瞻验证。</p>
-<p>输入抽样、目标投影与经验谱的独立作用尚未区分。共享标签归一化与噪声减半后仍有反例，现有对照不足以独立归因。</p>
-<p>四个指定 seed 的低噪声评价仍不给跨 seed 概率或连续噪声临界值。下一小问题优先先审计本轮提交与来源不可变性，再在保存的 population 曲线上检验噪声响应与 σ²/n 机制量；若继续做新条件，必须先注册具体数值区间、来源 hash 与 pinned 源码，且不先组合新端点后称盲预测。</p>
+<p>目前更可信的跨任务结构是“信号误差变化与噪声风险变化的速率平衡”，而非统一 n/σ² 时间律。任务改变信号在快慢学习方向上的分布，因而既可改系数，也可改指数和曲线形状；这个解释有冻结特征代数基础，尚无学习特征干预。</p>
+<p>下一步应针对任务的谱能量建立可预测的 B 与 N 描述，再检验共同函数 U*=F(σ²/n;任务谱)。若 B≈A·U^−a、nN≈D·U^b，只在这段条件下得到 U*≈[(aA/bD)·n/σ²]^(1/(a+b))；共有指数 1 要求 a+b≈1。这是待检验机制候选，不是本轮发现。分类、交叉熵、小批量、Adam、学习特征及 train-only 早停均未验证。</p>
+<p><img alt="单模态逻辑示意，非测量数据：最低点是速率平衡，曲率拐点更晚。共享噪声形状不自动推出共享时间指数。" src="figs/d2_20261009_d2_logic.png" /></p>
 <h2>证据</h2>
 <ul>
-<li>
-<p>r112 seed411 低噪声 findings（<code>findings/r112_seed411_low_noise.md</code>）、预注册（<code>studies/r112_seed411_low_noise/preregistration.json</code>）、汇总（<code>studies/r112_seed411_low_noise/summary.json</code>）、独立核验（<code>studies/r112_seed411_low_noise/executed/independent_verification.json</code>）与阈值点图（<code>figs/r112_seed411_delta.svg</code>）。预注册提交 d4da9f6 早于评价；1/1 新评价、0 新训练，保存来源数组逐点复算误差为 0。</p>
-</li>
-<li>
-<p>本次保存曲线事后分析脚本（<code>studies/rewrite_20261007/analysis.py</code>）与汇总（<code>studies/rewrite_20261007/summary.json</code>）保存全部取样点、系数、指数、失败条件、尾部误差和来源 SHA-256；标签为“保存数据事后拟合（development）”，0 新训练、0 新评价 cell、0 新 seed。</p>
-</li>
-<li>报告内容对齐审计（<code>findings/report_rewrite_audit.md</code>）记录核心问题、原稿跑题位置、数字保留与人话自查。</li>
-</ul>
-<p>seed413 新评价耗时 0.025099708 秒。唯一预注册 cdea628 早于新评价 37.962684 秒；18 项来源 hash、4 份源码及 300 个旧 study 文件 hash/mtime 固定。独立风险误差≤1.437739e−14，60 位 Decimal 与 argmin 一致。恢复为 0 新 cell，四个成功结果/summary 文件 hash/mtime 不变。旧低噪声科学收尾存在，但缺少最终提交回执，本次按真实提交重核并记录缺口。</p>
-<ul>
-<li>seed413 预测失败 findings（<code>findings/r095_low_noise_seed413.md</code>）、预注册（<code>studies/r095_low_noise_seed413/preregistration.json</code>）、summary（<code>studies/r095_low_noise_seed413/summary.json</code>）、独立复算（<code>studies/r095_low_noise_seed413/executed/independent_verification.json</code>）、历史收尾审计（<code>studies/r095_low_noise_seed413/executed/prior_closeout_audit.json</code>）与恢复核验（<code>studies/r095_low_noise_seed413/executed/resume_verification.json</code>）。</li>
-</ul>
-<p>执行核验只支持数值一致性，不登记为新科学发现。v1 的固定特征风险预测同样使用 clean train/audit 标签，作为背景证据。</p>
-<p>旧 60 cell 的已保存产物与实际收尾提交一致，未重跑或覆盖。旧执行核验的全步信号风险误差为 6.22e−15，独立终点期望风险误差为 9.59e−14；原 matmul 警告保留。归一化执行器用逐项乘积实现相同 GD 与谱运算，8/8 cell 数组有限，六项控制变量逐字节一致。训练与保存累计 10.116 秒，原始 stderr（标准错误输出）为空。完整分析用时 1.412 秒。信号风险同时由实际 head、独立谱统计和旧曲线的仿射关系复算，噪声响应另由最终矩阵直接核验。</p>
-<p>噪声减半训练与保存累计 9.770942 秒，stderr 为空。独立闭式响应复算的全步信号/单位方差/期望风险误差分别 ≤9.769963e−15/5.235812e−13/7.038814e−14，三 head 误差 ≤4.092283e−12。229 个旧文件及 33 个新成功文件 hash/mtime（内容指纹与修改时间）未改。</p>
-<p>低噪声评价耗时 0.025457 秒。独立从原数据重新构造 K 并做 eigh（对称矩阵特征分解），以闭式响应复算；全步风险误差≤1.283695e−14，差值误差≤6.189494e−15。60 位 Decimal（十进制高精度运算）复算得到同一最低点与判据。281 个历史文件、三个新成功文件及恢复时 summary 的 hash/mtime 保持；恢复没有新增评价。</p>
-<ul>
-<li>
-<p>低噪声幅度阈值 findings（<code>findings/r083_low_noise_u_threshold.md</code>）、预注册（<code>studies/r083_low_noise_u_threshold/preregistration.json</code>）、唯一提交绑定（<code>studies/r083_low_noise_u_threshold/executed/execution_binding.json</code>）、summary（<code>studies/r083_low_noise_u_threshold/summary.json</code>）、独立复算（<code>studies/r083_low_noise_u_threshold/executed/independent_verification.json</code>）与恢复核验（<code>studies/r083_low_noise_u_threshold/executed/resume_verification.json</code>）。预注册 86f82ac 早于新曲线评价 24.078096 秒，1/1 新评价、0 新训练；旧来源与本轮历史审计均保存在新 study 中。</p>
-</li>
-<li>
-<p>噪声减半受控复核（<code>findings/r051_noise_halving.md</code>）、新预注册（<code>studies/r051_noise_halving/preregistration.json</code>）、新汇总（<code>studies/r051_noise_halving/summary.json</code>）、训练前提交核验（<code>studies/r051_noise_halving/executed/pretraining_commit_verification.json</code>）与独立保存证据核验（<code>studies/r051_noise_halving/executed/independent_verification.json</code>）。新预注册 ba83884 早于 8 个新 cell；数值预测的旧 development 算术来源已披露。</p>
-</li>
-<li>
-<p>噪声减半准备失败记录（<code>findings/r039_noise_halving.md</code>）、零新训练摘要（<code>studies/r039_noise_halving/summary.json</code>）与本轮历史证据只读核验（<code>studies/r039_noise_halving/executed/prior_closeout_audit.json</code>）。该准备轮因临时脚本写出工作区违反硬边界而失效，没有新实测数字或 KB claim；该失效轮没有执行独立实际 GD；新有效对照见上条。</p>
-</li>
-<li>
-<p>原执行失败 findings（<code>findings/r003_noise_sample_scaling.md</code>）、原恢复实验 findings（<code>findings/r011_noise_sample_scaling_resume.md</code>）与原汇总（<code>studies/r003_noise_sample_scaling/summary.json</code>）保留旧预测及反例；原冻结提交 d5fae2c、实际收尾提交 11d6ba8，149 个产物的匹配见收尾审计（<code>studies/r019_population_label_normalization/executed/r011_closeout_audit.json</code>）。</p>
-</li>
-<li>归一化对照 findings（<code>findings/r019_population_label_normalization.md</code>）、新冻结合同（<code>studies/r019_population_label_normalization/preregistration.json</code>）、训练前提交核验（<code>studies/r019_population_label_normalization/executed/pretraining_commit_verification.json</code>）与新汇总（<code>studies/r019_population_label_normalization/summary.json</code>）。预注册提交 214a8b2 早于所有新训练。</li>
-<li>首 cell 序列化错误（<code>studies/r019_population_label_normalization/executed/first_cell_verification.json</code>）、修复入口后的首 cell 核验（<code>studies/r019_population_label_normalization/executed/first_cell_verification_after_serialization_fix.json</code>）、全量分析记录（<code>studies/r019_population_label_normalization/executed/full_analysis_run.json</code>）与独立保存证据核验（<code>studies/r019_population_label_normalization/executed/independent_verification.json</code>）。</li>
-<li>完成与状态边界核验（<code>studies/r019_population_label_normalization/executed/round019_completion.json</code>）记录计数未改、旧证据未改及报告链接检查。</li>
-</ul>
-<div class="stamp">同步于 2026-10-08 19:23（北京时间）· 源文件在研究仓库内随轮次更新，本页为快照</div>
+<li>本轮预注册（<a href="d2_evidence_20261009/preregistration.json">存档</a>）与源码：aiq_kb/research/d2_scaling_20261009/run.py；冻结 commit 07d79b7 早于本轮计算。</li>
+<li>新扫描：summary.json（<a href="d2_evidence_20261009/summary.json">存档</a>）、results/、execution.json；补充描述（<a href="d2_evidence_20261009/supplement_summary.json">存档</a>）。</li>
+<li>直接数值核验（<a href="d2_evidence_20261009/verification.json">存档</a>）。3360 个结果/data hash通过；8 个指定cell、0/1/16/64/256 步的独立GD/噪声响应最大差 1.4e−13；缩放分母含全部103边界。</li>
+<li>原曲线重建：summary.json（<a href="d2_evidence_20261009/legacy_summary.json">存档</a>）、analysis.py。原60 cell最小点差0；train重建差≤5.2e−13，val尾部直接预测差≤3.5e−12。</li>
+<li>历史 r113 的 summary 与原报告保持原路径只读。旧失败预测保留；本轮没有修轮账、改变旧supervisor预算或启动其研究会话。</li>
+</ul><p><a href="d2_evidence_20261009/report.md">下载 Markdown</a> · <a href="d2_evidence_20261009/sources.zip">重建源码</a></p>
+<div class="stamp">同步于 2026-10-09 18:10（北京时间）· 源文件在研究仓库内随轮次更新，本页为快照</div>
 </main></body></html>
