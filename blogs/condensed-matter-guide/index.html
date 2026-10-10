@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="用三张交互图理解密度泛函理论、有效理论、凝聚态计算与实验，以及双层石墨烯的精度证据。">
+<title>计算解释材料，实验检验解释</title>
+<!-- Adapted from report-to-human/assets/panel-template.html. Palette and reading typography follow the requested template. -->
+<!-- avoid-ai-design-ignore: SD1 T7 SD4d -- requested template palette, local Chinese font fallbacks, and scientific object labels. -->
+<style>
+:root{--dark:#141413;--light:#faf9f5;--mid:#b0aea5;--soft:#e8e6dc;--muted:#5e5d59;--orange:#d97757;--blue:#6a9bcc;--green:#788c5d;--head:"Poppins","PingFang SC","Noto Sans CJK SC","Hiragino Sans GB",Arial,sans-serif;--body:"Lora","Noto Serif CJK SC","Songti SC",Georgia,serif;--mono:"SF Mono",Menlo,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--light);color:var(--dark);font:17px/1.85 var(--body)}main{max-width:760px;margin:auto;padding:70px 24px 90px}
+h1,h2,h3{font-family:var(--head);font-weight:600;line-height:1.4;letter-spacing:-.015em;text-wrap:balance}h1{font-size:38px;margin:0 0 18px}h2{font-size:25px;margin:70px 0 16px}h3{font-size:18px;margin:28px 0 12px}p{margin:0 0 16px}.lede{font-size:19px;max-width:36em}
+a{color:inherit;text-decoration-color:var(--orange);text-underline-offset:4px}a:hover{text-decoration-thickness:2px}strong{font-weight:600}code{font:.86em var(--mono);background:var(--soft);padding:2px 5px;border-radius:3px}::selection{background:#edc4b4;color:var(--dark)}:focus-visible{outline:2px solid var(--dark);outline-offset:5px}button{font-family:var(--head);cursor:pointer}button:disabled{cursor:default}
+.settings{display:flex;flex-wrap:wrap;gap:8px 22px;list-style:none;padding:0;margin:24px 0 0;font:14px/1.6 var(--head);color:var(--muted)}.settings li{display:inline-flex;align-items:center;gap:7px}.settings svg{width:16px;height:16px;stroke:var(--dark);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}.settings b{font-weight:500;color:var(--dark)}
+figure{margin:30px 0 18px;padding:22px 0 0;border-top:1px solid var(--soft)}figure svg{display:block;width:100%;height:auto;overflow:visible;font-family:var(--head)}.mobile-diagram{display:none!important}.diagram .node{cursor:pointer}.diagram .node .shape{fill:#fff;stroke:#c5c3ba;stroke-width:1.1}.diagram .node.orange .shape{fill:#f9eee7;stroke:var(--orange)}.diagram .node.blue .shape{fill:#eef3f8;stroke:var(--blue)}.diagram .node.green .shape{fill:#f1f4ed;stroke:var(--green)}.diagram .node:hover .shape,.diagram .node:focus .shape,.diagram .node.is-selected .shape{stroke:var(--dark);stroke-width:2}.diagram .node:focus{outline:none}.diagram .node .selection-mark{opacity:0}.diagram .node.is-selected .selection-mark{opacity:1}.diagram text{fill:var(--dark);pointer-events:none}.diagram .t{font-size:18px;font-weight:500}.diagram .s{font-size:14px;fill:var(--muted)}.diagram .xs{font-size:12px;fill:var(--muted)}.diagram .ink{fill:var(--dark)}.diagram .orange-ink{fill:#9e4a31}.diagram .connector{stroke:#939186;stroke-width:1.25;fill:none}.diagram .secondary{stroke:#b0aea5;stroke-dasharray:4 5}.diagram .orange-line{stroke:var(--orange);stroke-width:1.7;fill:none}.diagram .blue-line{stroke:var(--blue);stroke-width:1.7;fill:none}.diagram .green-line{stroke:var(--green);stroke-width:1.7;fill:none}
+figcaption{font:13px/1.7 var(--head);color:var(--muted);margin:12px 0 0}.detail-pane{border-bottom:1px solid var(--soft);padding:18px 0 20px;min-height:128px}.detail-pane h3{margin:0 0 8px;font-size:17px}.detail-pane p{font-size:16px;margin:0;line-height:1.8}.detail-pane .citation{font:13px var(--head);margin:10px 0 0;color:var(--muted)}
+.controls{display:flex;gap:6px;flex-wrap:wrap;margin:18px 0 10px}.controls button{background:transparent;border:1px solid #c5c3ba;border-radius:4px;color:var(--muted);padding:7px 12px;font-size:13px;line-height:1.5}.controls button[aria-pressed="true"]{border-color:var(--dark);color:var(--dark);background:var(--soft)}.controls button:hover{border-color:var(--dark)}.small{font:14px/1.8 var(--head);color:var(--muted)}
+details{margin:22px 0;border-top:1px solid var(--soft);padding-top:14px}summary{cursor:pointer;font:15px/1.7 var(--head);color:var(--muted)}summary:hover{color:var(--dark)}details[open] summary{color:var(--dark);margin-bottom:15px}details p{font-size:16px}details ul{padding-left:1.3em;font-size:16px}details li{margin:9px 0}.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;font:14px/1.7 var(--head);margin:14px 0;font-variant-numeric:tabular-nums}th,td{text-align:left;vertical-align:top;padding:10px 8px;border-bottom:1px solid var(--soft)}th{font-weight:500;color:var(--muted)}.note{padding:14px 0 14px 17px;border-left:1px solid var(--orange);font-size:16px;margin:24px 0}.formula{font:15px/1.8 var(--head);padding:12px 0;letter-spacing:.005em}.research-trail{padding-left:20px}.references li{font:14px/1.8 var(--head)}footer{margin-top:70px;padding-top:18px;border-top:1px solid var(--soft);font:13px/1.8 var(--head);color:var(--muted)}
+@media(max-width:620px){main{padding:36px 20px 60px}h1{font-size:30px}h2{font-size:22px;margin-top:54px}body{font-size:16px}.lede{font-size:17px}.settings{gap:7px 16px;font-size:12px}figure{margin-top:24px;padding-top:16px}.desktop-diagram{display:none!important}.mobile-diagram{display:block!important}.diagram .t{font-size:16px}.diagram .s{font-size:13px}.diagram .xs{font-size:12px}.detail-pane{min-height:0}th,td{padding:8px 5px;font-size:13px}.controls button{font-size:12px;padding:6px 9px}}
+@media(prefers-reduced-motion:no-preference){.detail-pane{animation:detail-in .2s ease-out}@keyframes detail-in{from{clip-path:inset(0 0 10% 0)}to{clip-path:inset(0)}}}
+</style>
+</head>
+<body>
+<main>
+<h1>计算解释材料，实验检验解释</h1>
+<p class="lede">从原子到器件信号，计算要选择保留哪些物理，实验要区分哪些解释成立。</p>
+<ul class="settings">
+<li><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="12" cy="17" r="2"/><path d="M8 6h8M7 8l4 7M17 8l-4 7"/></svg>对象 <b>材料与器件</b></li>
+<li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8l9-4 9 4-9 4-9-4zM3 14l9 4 9-4M3 19l9 4 9-4"/></svg>例子 <b>普通双层石墨烯</b></li>
+<li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18h18M6 15l4-6 4 3 4-8"/><circle cx="10" cy="9" r="1.5"/></svg>关注 <b>计算、模型与证据</b></li>
+</ul>
+<h2>从原子到响应，每次简化都有自己的误差</h2>
+<p><strong>第一性原理</strong>从元素、结构和基本相互作用出发计算，不靠拟合目标实验来决定答案。它允许近似。<strong>DFT（密度泛函理论）</strong>用电子密度描述基态能量。<strong>有效理论</strong>只保留目标能量与长度尺度需要的自由度，并把其余自由度的影响写进参数和测量算符。</p>
+<p>电子激发可以用 <strong>GW（电子自能修正）</strong>处理，电子与空穴组成的激子可以用 <strong>BSE（Bethe–Salpeter 方程）</strong>处理。两者常用于修正能谱与光学响应。</p>
+<figure>
+<svg class="diagram desktop-diagram" viewBox="0 0 712 690" role="group" aria-label="第一性原理计算、有效理论与误差的关系" data-detail="calculation-detail">
+<defs><marker id="arrow1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10" fill="#939186"/></marker></defs>
+<g class="node" role="button" tabindex="0" data-key="input" aria-label="材料输入与微观规则"><rect class="shape" x="20" y="12" width="672" height="65" rx="5"/><text class="t" x="40" y="39">原子位置 · 元素 · 电子相互作用 · 外场与环境</text><text class="s" x="40" y="61">微观规则可以写出，真实器件的结构仍需确定</text></g>
+<path class="connector" d="M240 77V114M591 77V114" marker-end="url(#arrow1)"/>
+<g class="node orange is-selected" role="button" tabindex="0" data-key="dft" aria-label="DFT 如何自洽计算"><rect class="shape" x="20" y="124" width="440" height="150" rx="5"/><text class="t" x="40" y="153">DFT：求密度、总能量与辅助轨道</text><path class="orange-line" d="M58 187H198M225 187H394" marker-end="url(#arrow1)"/><text class="s ink" x="40" y="184">猜密度</text><text class="s ink" x="166" y="184">求有效势</text><text class="s ink" x="321" y="184">求轨道</text><path class="orange-line" d="M398 196V215H57V199" marker-end="url(#arrow1)"/><text class="s" x="190" y="212">更新密度，直到自洽</text><text class="s orange-ink" x="40" y="250">物理近似：交换与相关的泛函</text><circle class="selection-mark" cx="439" cy="146" r="3" fill="#141413"/></g>
+<g class="node green" role="button" tabindex="0" data-key="wavefunction" aria-label="直接求多电子波函数"><rect class="shape" x="502" y="124" width="190" height="150" rx="5"/><text class="t" x="521" y="153">直接多体计算</text><text class="s" x="521" y="184">求多电子波函数</text><text class="s" x="521" y="206">例如量子 Monte Carlo</text><text class="s" x="521" y="250">绕开近似 DFT 泛函</text></g>
+<path class="connector" d="M90 274V321M339 274V321M444 291H592V321" marker-end="url(#arrow1)"/><path class="connector secondary" d="M444 274V291"/>
+<g class="node" role="button" tabindex="0" data-key="structure" aria-label="计算结构与稳定性"><rect class="shape" x="20" y="333" width="155" height="91" rx="5"/><text class="t" x="37" y="364">结构与稳定性</text><text class="s" x="37" y="391">能量 · 力 · 密度</text><text class="xs" x="37" y="409">可直接从 DFT 得到</text></g>
+<g class="node orange" role="button" tabindex="0" data-key="effective" aria-label="第一性原理导出的有效理论"><rect class="shape" x="211" y="333" width="249" height="104" rx="5"/><text class="t" x="230" y="364">第一性原理导出的有效理论</text><text class="s" x="230" y="390">低能轨道 · 屏蔽作用 · 算符</text><text class="s orange-ink" x="230" y="417">物理近似：消去与截断</text></g>
+<g class="node blue" role="button" tabindex="0" data-key="gw" aria-label="修正激发与光谱"><rect class="shape" x="502" y="333" width="190" height="104" rx="5"/><text class="t" x="521" y="364">修正激发与光谱</text><text class="s" x="521" y="390">GW 自能 · BSE 激子</text><text class="s" x="521" y="417">仍有相关与顶角近似</text></g>
+<path class="connector" d="M335 437V475" marker-end="url(#arrow1)"/>
+<g class="node orange" role="button" tabindex="0" data-key="solver" aria-label="求解低能多体问题"><rect class="shape" x="211" y="487" width="249" height="104" rx="5"/><text class="t" x="230" y="518">多体求解</text><text class="s" x="230" y="544">平均场 · 涨落 · 数值波函数</text><text class="s orange-ink" x="230" y="571">物理近似：求解器与有限尺寸</text></g>
+<path class="connector" d="M335 591V619M596 437V619M692 199H704V643H697" marker-end="url(#arrow1)"/>
+<g class="node" role="button" tabindex="0" data-key="response" aria-label="从理论状态得到可测响应"><rect class="shape" x="211" y="632" width="481" height="54" rx="5"/><text class="t" x="232" y="665">可测响应：光谱、磁矩、压缩率、电流……</text></g>
+<g><path class="connector secondary" d="M89 424V497"/><text class="s" x="21" y="523">所有路径都要检查</text><text class="s" x="21" y="547">网格、基组和收敛</text><text class="s" x="21" y="575">电阻还要散射与边界</text></g>
+</svg>
+<svg class="diagram mobile-diagram" viewBox="0 0 340 671" role="group" aria-label="手机上的计算链与误差" data-detail="calculation-detail">
+<defs><marker id="arrow1m" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10" fill="#939186"/></marker></defs>
+<g class="node" role="button" tabindex="0" data-key="input"><rect class="shape" x="6" y="10" width="328" height="66" rx="5"/><text class="t" x="22" y="37">原子、电子、外场与环境</text><text class="s" x="22" y="60">微观规则可以写出，结构仍需确定</text></g><path class="connector" d="M170 76V106" marker-end="url(#arrow1m)"/>
+<g class="node orange is-selected" role="button" tabindex="0" data-key="dft"><rect class="shape" x="6" y="118" width="328" height="121" rx="5"/><text class="t" x="22" y="146">DFT：求密度、能量与辅助轨道</text><text class="s" x="22" y="172">猜密度 → 求有效势 → 求轨道</text><text class="s" x="22" y="197">更新密度，反复直到自洽</text><text class="s orange-ink" x="22" y="220">物理近似：交换与相关的泛函</text></g><path class="connector" d="M170 239V269" marker-end="url(#arrow1m)"/>
+<g class="node orange" role="button" tabindex="0" data-key="effective"><rect class="shape" x="6" y="281" width="328" height="90" rx="5"/><text class="t" x="22" y="309">第一性原理导出的有效理论</text><text class="s" x="22" y="334">保留低能轨道、作用与测量算符</text><text class="s orange-ink" x="22" y="355">物理近似：消去与截断</text></g><path class="connector" d="M170 371V401" marker-end="url(#arrow1m)"/>
+<g class="node orange" role="button" tabindex="0" data-key="solver"><rect class="shape" x="6" y="413" width="328" height="90" rx="5"/><text class="t" x="22" y="441">多体求解</text><text class="s" x="22" y="466">平均场、涨落或数值波函数</text><text class="s orange-ink" x="22" y="487">物理近似：求解器与有限尺寸</text></g><path class="connector" d="M170 503V533" marker-end="url(#arrow1m)"/>
+<g class="node" role="button" tabindex="0" data-key="response"><rect class="shape" x="6" y="545" width="328" height="64" rx="5"/><text class="t" x="22" y="573">可测响应</text><text class="s" x="22" y="595">光谱、磁矩、压缩率、电流……</text></g><text class="xs" x="7" y="636">旁路：DFT → 结构；GW/BSE → 光谱</text><text class="xs" x="7" y="657">也可直接求多电子波函数，不必经过 DFT</text>
+</svg>
+<figcaption>点击图中步骤，查看它在算什么。DFT 不等于无相互作用，有效理论也不等于经验拟合。</figcaption>
+</figure>
+<div class="detail-pane" id="calculation-detail" aria-live="polite"><h3>DFT 算的是密度与能量，辅助能带还不是完整的真实光谱</h3><p>常用的 Kohn–Sham 算法构造一组辅助单电子轨道，使它们给出所需电子密度。电子相互作用通过有效势计入。未知的交换与相关部分通常用近似泛函处理。自洽只说明这个近似内部算一致了。</p><p class="citation"><a href="https://doi.org/10.1103/PhysRev.140.A1133">Kohn–Sham，1965</a></p></div>
+<details><summary>DFT 实际做了哪些运算？温度如何进入？</summary><p>给定原子位置，程序先猜电子密度。它由密度算出有效势，再把微分方程离散成矩阵，求辅助轨道与占据数。新轨道给出新密度。程序反复更新，直到密度与能量变化满足阈值。随后可算原子受力，再优化结构。</p><p>概念上，总能量由辅助电子的动能、原子对电子的势能、平均静电作用、交换相关能和原子间作用组成。“泛函”就是输入整幅密度分布，输出一个数的规则。精确泛函若已知，基态 DFT 在理论上可以精确。实际泛函、赝势与基组通常有近似。</p><p><a href="https://doi.org/10.1103/PhysRev.137.A1441">Mermin 的有限温理论</a>把目标改为热平衡自由能。有限温本身不是禁止计算的障碍。电子热占据、原子热运动与动力学需要分别处理。为积分方便加入的“展宽”，也不总等于真实器件温度。</p></details>
+<details><summary>有效理论为什么能保留第一性原理来源？</summary><p>低能电子可以虚跃迁到高能态再回来。因此，删掉高能态时必须把它们的影响写回低能描述。对双层石墨烯，这可能留下四个碳轨道、修正后的跃迁与屏蔽相互作用。算光、磁与电流响应时，还必须修正对应的测量算符。</p><p>精确消去高能态可定义为能量相关的有效 Hamiltonian（编码能量与时间演化的算符）。实际模型通常只保留少量静态参数、两体作用和有限空间范围。它是可改进的近似。不能仅因为低能能带拟合得好，就认定全部响应准确。</p><p>第一性原理导出的模型与直接拟合实验的模型都可以有用，但证据来源不同。用于比较实验准确度时，要说明哪些参数曾用实验校准。</p></details>
+<details><summary>误差如何减少？算力能减少其中哪一部分？</summary><div class="table-wrap"><table><thead><tr><th>误差来源</th><th>增加什么</th><th>仅加算力是否足够</th></tr></thead><tbody><tr><td>网格、基组、统计与有限尺寸</td><td>更密采样、更多轨道、更大系统与外推</td><td>可以改进，需观察收敛</td></tr><tr><td>近似交换相关与电子激发</td><td>更完整的多体方法与交叉核验</td><td>固定近似的偏差会保留</td></tr><tr><td>有效理论截断</td><td>扩大空间，保留动态作用与测量算符</td><td>需要扩展模型内容</td></tr><tr><td>平均场与波函数限制</td><td>加入涨落，用更强求解器</td><td>部分问题可改进，部分遇到指数代价</td></tr><tr><td>实际堆垛、应变、散射与接触</td><td>结构表征、微观散射与器件边界</td><td>未知输入不能由收敛自动识别</td></tr></tbody></table></div></details>
+<details><summary>“低密度”和“小能标”具体有多小？</summary><p>无隙、忽略三角翘曲的抛物线双层石墨烯，载流子密度 10¹⁰ 与 10¹¹ cm⁻² 对应费米能量约 0.35 与 3.5 meV（毫电子伏）。这只是量级换算。有位移场、关联作用或三角翘曲时，要重新算实际能谱。</p><p>三角翘曲会把低能费米线拆成多个口袋，其参考能标约 1 meV。1 K 的热能是 0.086 meV。因此 0.1 meV 相对 eV（电子伏）级原子能量很小，却相当于上述 0.35 meV 的约 29%，足以影响低温响应。相排序是否翻转，要与候选相自由能差比较。</p><p>小绝对能量本身可以计算。第一性原理文献算出过约 24 μeV（微电子伏）的本征自旋轨道劈裂。这个数值不等于对现实器件已认证同样小的总误差。</p><p class="small"><a href="https://doi.org/10.1088/0034-4885/76/5/056503">McCann–Koshino 综述，式 95</a> · <a href="https://doi.org/10.1103/PhysRevB.85.115423">Konschuh 等，2012</a></p></details>
+
+<h2>凝聚态计算研究材料的状态、激发和响应</h2>
+<p>共同对象是<strong>原子或格点、相互作用、外场与温度</strong>。研究者求量子态或热平衡分布，再计算能量、关联和测量信号。研究方向按问题划分，方法跨方向使用。DFT、量子 Monte Carlo 和张量网络不是互斥的研究领域。</p>
+<figure>
+<svg class="diagram desktop-diagram" viewBox="0 0 712 706" role="group" aria-label="凝聚态计算的研究方向、共同对象与资源跨度" data-detail="field-detail">
+<defs><marker id="arrow2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10" fill="#939186"/></marker></defs>
+<g class="node" role="button" tabindex="0" data-key="material"><rect class="shape" x="10" y="16" width="205" height="108" rx="5"/><text class="t" x="29" y="49">材料结构</text><text class="s" x="29" y="76">能量 · 力 · 声子</text><text class="xs" x="29" y="101">稳定性、缺陷与材料设计</text></g>
+<g class="node" role="button" tabindex="0" data-key="excitation"><rect class="shape" x="253" y="16" width="205" height="108" rx="5"/><text class="t" x="272" y="49">电子与光</text><text class="s" x="272" y="76">能带 · 寿命 · 激子</text><text class="xs" x="272" y="101">光谱、磁响应与拓扑</text></g>
+<g class="node" role="button" tabindex="0" data-key="correlated"><rect class="shape" x="496" y="16" width="205" height="108" rx="5"/><text class="t" x="515" y="49">强关联与新相</text><text class="s" x="515" y="76">关联 · 序参量 · 自由能</text><text class="xs" x="515" y="101">磁性、超导与量子 Hall</text></g>
+<path class="connector secondary" d="M113 124V174H356M356 124V174M598 124V174H356"/>
+<g class="node orange is-selected" role="button" tabindex="0" data-key="common"><rect class="shape" x="85" y="201" width="542" height="134" rx="5"/><text class="t" x="111" y="234">共同计算对象</text><text class="s ink" x="111" y="265">原子／格点 + 相互作用 + 外场 + 温度</text><path class="orange-line" d="M111 283H598" marker-end="url(#arrow2)"/><text class="s" x="111" y="314">量子态或热分布 → 能量、关联、激发与响应</text><circle class="selection-mark" cx="604" cy="224" r="3" fill="#141413"/></g>
+<path class="connector secondary" d="M356 174V201M113 409V369H356M356 335V409M598 409V369H356"/>
+<g class="node" role="button" tabindex="0" data-key="transport"><rect class="shape" x="10" y="409" width="205" height="108" rx="5"/><text class="t" x="29" y="442">输运与器件</text><text class="s" x="29" y="469">电流 · 散射 · 空间势</text><text class="xs" x="29" y="494">电阻、噪声与非线性响应</text></g>
+<g class="node" role="button" tabindex="0" data-key="dynamics"><rect class="shape" x="253" y="409" width="205" height="108" rx="5"/><text class="t" x="272" y="442">温度与动力学</text><text class="s" x="272" y="469">热分布 · 原子运动 · 演化</text><text class="xs" x="272" y="494">相变、热输运与泵浦响应</text></g>
+<g class="node" role="button" tabindex="0" data-key="methods"><rect class="shape" x="496" y="409" width="205" height="108" rx="5"/><text class="t" x="515" y="442">计算方法</text><text class="s" x="515" y="469">泛函 · 算法 · 数据模型</text><text class="xs" x="515" y="494">扩大可算范围、控制误差</text></g>
+<text class="s" x="356" y="551" text-anchor="middle">同一材料可以同时属于多个方向</text>
+<path class="connector secondary" d="M20 585H692"/><text class="xs" x="20" y="609">常见资源跨度 · 规划量级</text>
+<text class="t" x="20" y="642">工作站</text><text class="s" x="20" y="666">小型有效模型</text>
+<text class="t" x="249" y="642">一个或数个节点</text><text class="s" x="249" y="666">常规电子结构</text>
+<text class="t" x="496" y="642">小集群至超算</text><text class="s" x="496" y="666">精细多体、大材料与扫描</text>
+<text class="xs" x="20" y="697">具体实例见下表。单点计算与完整研究的资源不同。</text>
+</svg>
+<svg class="diagram mobile-diagram" viewBox="0 0 340 780" role="group" aria-label="手机上的计算领域与资源跨度" data-detail="field-detail">
+<g class="node orange is-selected" role="button" tabindex="0" data-key="common"><rect class="shape" x="6" y="12" width="328" height="114" rx="5"/><text class="t" x="23" y="39">共同计算对象</text><text class="s" x="23" y="65">原子／格点、相互作用、外场、温度</text><text class="s" x="23" y="89">求量子态或热分布</text><text class="s" x="23" y="111">再求能量、关联、激发与响应</text></g>
+<g class="node" role="button" tabindex="0" data-key="material"><rect class="shape" x="6" y="156" width="156" height="116" rx="5"/><text class="t" x="19" y="186">材料结构</text><text class="s" x="19" y="213">能量、力、声子</text><text class="xs" x="19" y="245">稳定性与材料设计</text></g>
+<g class="node" role="button" tabindex="0" data-key="excitation"><rect class="shape" x="178" y="156" width="156" height="116" rx="5"/><text class="t" x="191" y="186">电子与光</text><text class="s" x="191" y="213">能带、寿命、激子</text><text class="xs" x="191" y="245">光谱与拓扑响应</text></g>
+<g class="node" role="button" tabindex="0" data-key="correlated"><rect class="shape" x="6" y="295" width="156" height="116" rx="5"/><text class="t" x="19" y="325">强关联与新相</text><text class="s" x="19" y="352">关联、序参量</text><text class="xs" x="19" y="384">磁性、超导、量子 Hall</text></g>
+<g class="node" role="button" tabindex="0" data-key="transport"><rect class="shape" x="178" y="295" width="156" height="116" rx="5"/><text class="t" x="191" y="325">输运与器件</text><text class="s" x="191" y="352">电流、散射、空间势</text><text class="xs" x="191" y="384">电阻与噪声</text></g>
+<g class="node" role="button" tabindex="0" data-key="dynamics"><rect class="shape" x="6" y="434" width="156" height="116" rx="5"/><text class="t" x="19" y="464">温度与动力学</text><text class="s" x="19" y="491">热分布、运动、演化</text><text class="xs" x="19" y="523">相变与泵浦响应</text></g>
+<g class="node" role="button" tabindex="0" data-key="methods"><rect class="shape" x="178" y="434" width="156" height="116" rx="5"/><text class="t" x="191" y="464">计算方法</text><text class="s" x="191" y="491">泛函、算法、数据</text><text class="xs" x="191" y="523">规模与误差控制</text></g>
+<path class="connector secondary" d="M170 126V570"/><text class="s" x="170" y="599" text-anchor="middle">方法跨方向使用</text><text class="xs" x="170" y="623" text-anchor="middle">同一材料可以同时属于多个方向</text>
+<path class="connector secondary" d="M6 649H334"/><text class="xs" x="7" y="674">常见资源跨度 · 规划量级</text><text class="s" x="7" y="704">工作站：小型有效模型</text><text class="s" x="7" y="732">一个或数个节点：常规电子结构</text><text class="s" x="7" y="760">小集群至超算：精细多体、大材料与扫描</text>
+</svg>
+<figcaption>点击方向，查看典型问题与方法。声子是晶格振动的量子，序参量是区分有序状态的量。</figcaption>
+</figure>
+<div class="detail-pane" id="field-detail" aria-live="polite"><h3>材料只是输入，真正要计算的是它如何组织与响应</h3><p>常见输出包括总能量、电子密度、相关函数、激发谱与响应函数。相关函数描述两个位置或时刻之间的联系。响应函数描述外加电场、磁场或光改变后，电流、磁化或吸收如何变化。</p></div>
+<details open><summary>通常用多少算力？先分清一次任务与完整研究</summary><p>简单能带与有效模型可在工作站上运行。复杂电子结构常用一个或多个计算节点。高精度多体波函数和大型材料计算会使用数十到数千张 GPU（图形处理器）。CPU（中央处理器）也用于这些任务。领域没有统一的平均成本。下列是公开任务的实测点，不能按电子数直接横向比较。V100 与 A100 是两代 GPU 型号。</p>
+<div class="controls" aria-label="切换算力口径"><button type="button" data-cost="elapsed" aria-pressed="true">看机器与耗时</button><button type="button" data-cost="total" aria-pressed="false">看累计资源时</button></div>
+<div class="table-wrap"><table><thead><tr><th>公开算例</th><th id="cost-heading">机器与耗时</th><th>任务边界</th></tr></thead><tbody>
+<tr><td>钨原胞，密集动量网格</td><td class="cost-cell" data-elapsed="32 CPU 核 × 134 分钟" data-total="约 71.5 CPU 核时">32 CPU 核 × 134 分钟</td><td>单个振动波矢响应与前置电子态</td></tr>
+<tr><td>431 原子、6034 电子</td><td class="cost-cell" data-elapsed="24 V100 GPU × 335 秒" data-total="约 2.23 GPU 时">24 V100 GPU × 335 秒</td><td>有限元 DFT 的一次基态计算</td></tr>
+<tr><td>8191 原子、114674 电子</td><td class="cost-cell" data-elapsed="3600 V100 GPU × 3250 秒" data-total="约 3250 GPU 时">3600 V100 GPU × 3250 秒</td><td>大型有限元 DFT 基态计算</td></tr>
+<tr><td>石墨烯，8 个碳原子、48 全电子</td><td class="cost-cell" data-elapsed="32 A100 GPU × 3 天" data-total="约 2304 GPU 时">32 A100 GPU × 3 天</td><td>直接多体神经波函数的一次训练</td></tr>
+</tbody></table></div><p class="small">CPU 核时 = CPU 核数 × 小时。GPU 时 = GPU 数 × 小时。不同硬件、方法与精度不能据此直接比较。结构优化、尺寸外推、外场扫描和重复验证需另计。</p><p class="small"><a href="https://arxiv.org/abs/2203.07820">有限元 DFT 大规模计算</a> · <a href="https://doi.org/10.1038/s41467-022-35627-1">DeepSolid 直接波函数计算</a> · <a href="compute-sources.md">算力原始来源与限定</a></p></details>
+<details><summary>为什么小有效模型有时比数千电子 DFT 更难？</summary><p>DFT 主要处理辅助单电子轨道。直接多体求解要描述电子配置之间的量子关联。后者的状态空间可随轨道数指数增长。一个小模型的所有多电子配置，仍可能比大材料的近似单电子计算更昂贵。</p><p>例如固定半填充、固定自旋分量的 Hubbard 模型，16、20、24 个格点，仅保存一个双精度复数状态向量就约需 2.65 GB、546 GB、117 TB。实际求解还需要多个向量与矩阵运算。这是精确对角化的规模示例，不是所有算法都必须支付的代价。</p><p>有符号问题的 Monte Carlo，采样代价还会受到正负贡献抵消影响。张量网络与神经波函数能避开部分难点，但精度仍要用尺寸、表示能力和方法交叉检查。</p></details>
+<h2>测到新信号以后，还要判别内部发生了什么</h2>
+<p>实验学家制备、表征和控制样品，测电流、电压、吸收、磁化或局部信号。器件把内部量子状态转成可读取的响应。理论与计算把候选机制转成可检验预测。<strong>一条曲线通常不能唯一确定一个相。</strong>实验学家也会建模，理论学家也会计算，角色彼此重叠。</p>
+<figure>
+<svg class="diagram desktop-diagram" viewBox="0 0 712 584" role="group" aria-label="实验测量、发现现象与理论解释的关系" data-detail="experiment-detail">
+<defs><marker id="arrow3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10" fill="#939186"/></marker></defs>
+<g class="node" role="button" tabindex="0" data-key="device"><rect class="shape" x="18" y="18" width="201" height="93" rx="5"/><text class="t" x="36" y="50">制备与表征</text><text class="s" x="36" y="77">样品、栅极、接触、结构</text><text class="xs" x="36" y="97">知道实际测的是什么</text></g>
+<g class="node" role="button" tabindex="0" data-key="control"><rect class="shape" x="257" y="18" width="199" height="93" rx="5"/><text class="t" x="275" y="50">改变实验条件</text><text class="s" x="275" y="77">电场、磁场、温度、光</text><text class="xs" x="275" y="97">控制系统受到的扰动</text></g>
+<g class="node blue" role="button" tabindex="0" data-key="signal"><rect class="shape" x="494" y="18" width="200" height="93" rx="5"/><text class="t" x="512" y="50">读出信号</text><text class="s" x="512" y="77">电流、电压、吸收、电容</text><text class="xs" x="512" y="97">测量有误差与器件影响</text></g>
+<path class="connector" d="M219 64H245M456 64H482M594 111V162H357V190" marker-end="url(#arrow3)"/>
+<g class="node blue" role="button" tabindex="0" data-key="phenomenon"><rect class="shape" x="154" y="202" width="404" height="94" rx="5"/><text class="t" x="176" y="235">找到可重复的现象</text><text class="s" x="176" y="261">峰、平台、高阻区、临界温度、对称性变化</text><text class="xs" x="176" y="281">“出现异常”还不是“知道是哪一种相”</text></g>
+<path class="connector" d="M280 296V338H179V365M436 296V338H537V365" marker-end="url(#arrow3)"/>
+<g class="node orange" role="button" tabindex="0" data-key="model"><rect class="shape" x="18" y="377" width="318" height="107" rx="5"/><text class="t" x="39" y="410">理论与计算提出候选机制</text><text class="s" x="39" y="437">模型 → 内部状态 → 多个观测预测</text><text class="xs" x="39" y="465">同一信号可以有不同来源</text></g>
+<g class="node green is-selected" role="button" tabindex="0" data-key="test"><rect class="shape" x="375" y="377" width="319" height="107" rx="5"/><text class="t" x="396" y="410">实验设计判别测量</text><text class="s" x="396" y="437">第二种探针、新条件、新样品</text><text class="xs" x="396" y="465">检验没有参与拟合的预测</text><circle class="selection-mark" cx="673" cy="400" r="3" fill="#141413"/></g>
+<path class="connector" d="M336 428H363" marker-end="url(#arrow3)"/><path class="connector secondary" d="M535 484V528H177V490" marker-end="url(#arrow3)"/>
+<text class="s" x="354" y="551" text-anchor="middle">检验结果更新模型，也决定下一次实验</text>
+</svg>
+<svg class="diagram mobile-diagram" viewBox="0 0 340 641" role="group" aria-label="手机上的实验与解释链条" data-detail="experiment-detail">
+<defs><marker id="arrow3m" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10" fill="#939186"/></marker></defs>
+<g class="node" role="button" tabindex="0" data-key="device"><rect class="shape" x="6" y="10" width="328" height="66" rx="5"/><text class="t" x="22" y="37">制备、表征并控制器件</text><text class="s" x="22" y="59">结构、栅极、接触、电场、磁场、温度</text></g><path class="connector" d="M170 76V105" marker-end="url(#arrow3m)"/>
+<g class="node blue" role="button" tabindex="0" data-key="signal"><rect class="shape" x="6" y="117" width="328" height="66" rx="5"/><text class="t" x="22" y="144">读出信号</text><text class="s" x="22" y="166">电流、电压、吸收、电容等</text></g><path class="connector" d="M170 183V212" marker-end="url(#arrow3m)"/>
+<g class="node blue" role="button" tabindex="0" data-key="phenomenon"><rect class="shape" x="6" y="224" width="328" height="80" rx="5"/><text class="t" x="22" y="251">找到可重复的现象</text><text class="s" x="22" y="276">峰、平台、高阻区、临界温度</text><text class="xs" x="22" y="294">异常信号不唯一确定内部状态</text></g><path class="connector" d="M170 304V333" marker-end="url(#arrow3m)"/>
+<g class="node orange" role="button" tabindex="0" data-key="model"><rect class="shape" x="6" y="345" width="328" height="80" rx="5"/><text class="t" x="22" y="372">候选机制与可检验预测</text><text class="s" x="22" y="397">模型连接内部状态与多个观测</text><text class="xs" x="22" y="415">理论、计算、实验共同建模</text></g><path class="connector" d="M170 425V454" marker-end="url(#arrow3m)"/>
+<g class="node green is-selected" role="button" tabindex="0" data-key="test"><rect class="shape" x="6" y="466" width="328" height="80" rx="5"/><text class="t" x="22" y="493">判别测量</text><text class="s" x="22" y="518">新条件、新样品、第二种探针</text><text class="xs" x="22" y="536">检验没有参与拟合的预测</text></g><path class="connector secondary" d="M170 546V580H324V386H334" marker-end="url(#arrow3m)"/><text class="s" x="170" y="619" text-anchor="middle">检验结果更新解释与下一次实验</text>
+</svg>
+<figcaption>模型解释看不见的自由度，判别测量减少解释的歧义。</figcaption>
+</figure>
+<div class="detail-pane" id="experiment-detail" aria-live="polite"><h3>判别实验问的是：哪一个解释还能预测新数据？</h3><p>把同一组参数用于不同探针和新条件，解释才受到更强约束。例如双层石墨烯中的高阻区，可以进一步测温度依赖、Hall 响应、压缩率、光谱或倾斜磁场。各探针对能带、关联与无序的敏感性不同。</p></div>
+<details><summary>实验学家还做什么？为什么需要理论与计算？</summary><p>实验不仅测器件。还包括材料生长、结构与局部探针、光谱、散射、磁测量、超快动力学和低温高压。器件是其中一种组织样品、控制条件并读取信号的方法。</p><p>模型能说明哪些自由度重要、哪些对称性受到破坏，以及不同机制会给出什么预测。计算能把模型变成定量曲线，并检查在实际参数下是否足够大。实验能确认器件输入、筛掉机制，并发现现有模型没有解释的事实。</p><p>例如高阻区可以来自能带开隙、关联有序、无序局域化或接触。单独拟合一条电阻曲线不能唯一选择机制。额外探针和跨条件预测能增加证据，但仍需说明排除了哪些替代解释。</p></details>
+
+<h2>双层石墨烯的文献支持改进，尚未认证全面超过实验</h2>
+<p>普通 AB（Bernal 堆垛）双层石墨烯的已有工作显示：电子结构修正、有效模型和响应公式都可能带来大变化。能隙是指定激发的最低能量门槛，定义随观测量不同。谷 g 因子是磁场引起两谷能量差的响应系数。更密的数值网格不能代替更完整的物理描述。</p>
+<div class="table-wrap"><table><thead><tr><th>加了什么</th><th>计算怎样变化</th><th>证据能支持什么</th></tr></thead><tbody><tr><td>GW 修正电子自能</td><td>准粒子能隙比 DFT 增大 56–81%</td><td>电子结构近似可影响几十 meV</td></tr><tr><td>有效模型加入层内极化</td><td>修复低掺杂能隙约两倍的差别</td><td>降阶可以改进，旧简单模型漏了物理</td></tr><tr><td>补齐激子磁响应</td><td>p 激子谷 g 因子 13.03 → 1.79，实验 1.4±0.8</td><td>响应公式漏项可造成数量级偏差</td></tr><tr><td>高精度有效模型求解</td><td>量子 Hall 激活隙 5.6 K，实验 5.1±0.2 K</td><td>定量成功，仍不是完整第一性原理认证</td></tr></tbody></table></div>
+<details><summary>调研中，哪些判断被具体证据修正？</summary><ul class="research-trail"><li><strong>“DFT 没有电子相互作用”不成立。</strong> 相互作用已进入理论。困难在实际交换相关泛函、激发与响应近似。</li><li><strong>“第一性原理转不成有效理论”不成立。</strong> 转换能做。保留几条能带还不够，作用与测量算符也要转过去。</li><li><strong>“能标小就算不出来”不成立。</strong> 微电子伏劈裂可以计算。要检查总误差相对于目标劈裂和相竞争能量有多大。</li><li><strong>“与实验接近就比实验准”不成立。</strong> 最新激子磁矩预印本中，s 激子谷 g 因子理论 20.32，实验 19.8±0.1。残差约 2.6%，实验报告的是约 0.5% 拟合误差。理论总误差和实验系统误差都未完整给出。</li><li><strong>“增加统一的算力倍数就能解决”尚无证据。</strong> 数值、物理近似和实际器件输入需要分别检验。有些多体问题还会遇到指数代价。</li></ul><p class="small">2026 激子结果是预印本。其两种假定 hBN（六方氮化硼封装层）堆垛给 s 激子谷 g 因子 13.48 和 20.32。更接近实验的结构不是对真实器件结构的独立确认。BSE 激子能量收敛至 5 meV，也不能当成 g 因子的总误差。</p></details>
+<details class="references"><summary>原始文献与完整调研证据</summary><ul>
+<li><a href="https://doi.org/10.1103/PhysRev.136.B864">Hohenberg–Kohn，1964</a>：基态密度理论。<a href="https://doi.org/10.1103/PhysRev.140.A1133">Kohn–Sham，1965</a>：常用自洽算法。<a href="https://doi.org/10.1103/PhysRev.137.A1441">Mermin，1965</a>：有限温扩展。</li>
+<li><a href="https://doi.org/10.1088/0034-4885/76/5/056503">McCann–Koshino，2013</a>：普通双层石墨烯的有效模型、能谱与输运。</li>
+<li><a href="https://doi.org/10.1103/PhysRevB.86.205423">Liang–Yang，2012</a>：GW/BSE gap 与激子修正。<a href="https://doi.org/10.1103/PhysRevB.79.165431">Gava 等，2009</a>：层内极化与 gap。</li>
+<li><a href="https://arxiv.org/abs/2509.07284v3">Sethi 等，2026 修订预印本</a>：完整激子磁响应。<a href="https://doi.org/10.1126/science.aam9175">Ju 等，2017</a>：相应实验。</li>
+<li><a href="https://doi.org/10.1103/PhysRevLett.132.046603">Assouline 等，2024</a>：分数量子 Hall 的激活与热力学隙。<a href="https://doi.org/10.1103/PhysRevLett.132.176401">Li 等，2024</a>：多体神经波函数电极化，算例为 AA（两层同位对齐）堆垛。</li>
+<li><a href="https://doi.org/10.1016/j.cpc.2022.108473">Das 等，2022</a>：有限元 DFT 算力。<a href="https://doi.org/10.1016/j.cpc.2024.109439">Gong–Dal Corso，2025</a>：电子态与声子算力。<a href="https://doi.org/10.1038/s41467-022-35627-1">Li 等，2022</a>：DeepSolid 波函数训练算力。</li>
+<li><a href="accuracy-notes.md">双层石墨烯精度的证据笔记</a>与<a href="compute-sources.md">凝聚态计算算力的证据笔记</a>保留方法条件、核查位置和误差限定。</li>
+</ul></details>
+<footer>来源：原始论文、公开计算基准与前述文献核查 · 2026-10-10</footer>
+</main>
+<script>
+const explanations={
+input:{title:'先确定材料与环境，才能定义要解的问题',text:'原子位置、元素、电子数和电磁场给出微观问题。实际器件还包含栅极、封装、应变、杂质和接触。第一性原理不要求不用近似，但要求说明物理输入和参数从何而来。'},
+dft:{title:'DFT 算的是密度与能量，辅助能带还不是完整的真实光谱',text:'常用的 Kohn–Sham 算法构造一组辅助单电子轨道，使它们给出所需电子密度。电子相互作用通过有效势计入。未知的交换与相关部分通常用近似泛函处理。自洽只说明这个近似内部算一致了。',url:'https://doi.org/10.1103/PhysRev.140.A1133',source:'Kohn–Sham，1965'},
+wavefunction:{title:'也能直接求多电子波函数，代价通常更高',text:'多电子波函数包含电子配置之间的量子关联。量子 Monte Carlo 和神经波函数可直接从微观相互作用求能量与部分响应，绕开近似 DFT 泛函。但有限尺寸、统计、节点约束和波函数表达偏差仍需检查。',url:'https://doi.org/10.1038/s41467-022-35627-1',source:'DeepSolid，2022'},
+structure:{title:'结构问题不必全部经过低能有效理论',text:'DFT 给总能量与受力，可优化原子位置，比较结构、缺陷和化学成分的稳定性。计算精度需检查交换相关近似、基组、赝势和结构收敛。热稳定性还要自由能与原子振动。'},
+effective:{title:'高能态被消去，它们的影响必须留在低能描述里',text:'有效理论保留目标尺度的轨道或集体自由度。高能虚跃迁改变低能跃迁、屏蔽、相互作用和测量算符。增加保留的轨道与作用项可以检验截断。只拟合能带不能保证磁、电或光响应正确。',url:'https://doi.org/10.1088/0034-4885/76/5/056503',source:'McCann–Koshino，2013'},
+gw:{title:'激发与光谱需要计算加减电子和电子空穴的关联',text:'GW 用自能修正电子的激发能。BSE（Bethe–Salpeter 方程）计算电子与空穴之间的关联，可产生激子与光学吸收峰。它们能大幅修正 DFT 辅助能带，但仍有屏蔽、顶角和数值近似。',url:'https://doi.org/10.1103/PhysRevB.86.205423',source:'Liang–Yang，2012'},
+solver:{title:'同一个有效模型，也可以被不同精度的求解器处理',text:'平均场用平均影响代替部分涨落。量子 Monte Carlo 采样多体量，DMRG（密度矩阵重整化群）用受限但可扩大的张量网络表示量子态。模型、尺寸与表示能力决定是否可控。求解器收敛不自动消除模型遗漏。'},
+response:{title:'状态与测量之间还需要响应算符、散射和边界',text:'光谱、磁矩和压缩率需要对应的测量算符。输运还需要电子如何散射，以及器件边界和接触如何影响电流。一个干净周期材料的能带，不能单独给出某台器件的电阻。'},
+common:{title:'材料只是输入，真正要计算的是它如何组织与响应',text:'常见输出包括总能量、电子密度、相关函数、激发谱与响应函数。相关函数描述两个位置或时刻之间的联系。响应函数描述外加电场、磁场或光改变后，电流、磁化或吸收如何变化。'},
+material:{title:'材料结构研究能量、受力和稳定性',text:'研究哪个晶体结构稳定、缺陷形成是否有利、压力如何改变材料。常用 DFT、分子动力学与机器学习势。声子是晶格振动的量子。单点能量、结构优化和热力学采样的成本不同。'},
+excitation:{title:'电子与光研究激发能和外场响应',text:'研究加入或移去电子需要多少能量，以及光如何被吸收。常用 DFT、GW、自能、BSE 与响应理论。目标包括能带、寿命、激子、磁矩和拓扑相关的响应。拓扑描述量子态的全局结构。'},
+correlated:{title:'强关联研究相互作用如何重组量子态',text:'磁性、关联绝缘体、超导和分数量子 Hall 都可能需要多体描述。研究者比较自由能、序参量与关联函数。序参量是区分有序状态的量。常用平均场、量子 Monte Carlo、张量网络和变分波函数。'},
+transport:{title:'输运要把微观运动连接到器件信号',text:'研究电流、电阻、噪声和非线性响应。能带告诉电子可如何运动，散射告诉运动如何被打断。常用 Boltzmann 方程、Kubo 响应、非平衡 Green 函数或量子输运方法。Green 函数描述激发的传播。'},
+dynamics:{title:'温度与动力学研究系统怎样变化',text:'热分布决定温度下有哪些状态被占据。原子运动、散射和非平衡演化决定随时间变化的信号。常用分子动力学、有限温多体方法、时间依赖 DFT 与实时演化。时间、尺寸和采样都增加成本。'},
+methods:{title:'方法研究扩大可算范围，并检验近似的误差',text:'研究更好的泛函、求解器、波函数表示与机器学习势。高通量研究把同一流程用于许多材料。算法优化能节省大量算力，但代码间数值一致与实验准确度是两个验证问题。'},
+device:{title:'先知道实际样品，才能解释它的响应',text:'制备与表征要确定材料、厚度、堆垛、接触与环境。实验学家还会测稳定性和重复性。高质量样品减少无序，但不自动消除结构未知、接触或热化误差。'},
+control:{title:'改变条件是主动检验机制的方法',text:'电场改变密度和层间势差，磁场耦合轨道与自旋，温度改变热占据，光驱动激发。不同机制对这些控制量的响应不同，因而可用来设计判别实验。'},
+signal:{title:'仪器读到响应，内部状态仍需推断',text:'电压、电流、吸收与电容是读出的信号。仪器噪声、校准、接触和热化会影响它们。需要把信号变成可靠的材料响应，才能比较理论。'},
+phenomenon:{title:'可重复的新规律是发现的起点',text:'新峰、平台、临界温度或对称性变化提供线索。它们可能来自新相，也可能来自已知物理在新条件下的表现。需要重复、控制实验和额外探针，才能确定内部机制。'},
+model:{title:'模型把看不见的自由度变成可检验预测',text:'模型说明哪些电子、轨道、自旋或集体模式重要。计算给出它们在实际参数下的信号大小。一个有用解释应同时约束多个观测，并指出什么新测量能将它推翻。'},
+test:{title:'判别实验问的是：哪一个解释还能预测新数据？',text:'把同一组参数用于不同探针和新条件，解释才受到更强约束。例如双层石墨烯中的高阻区，可以进一步测温度依赖、Hall 响应、压缩率、光谱或倾斜磁场。各探针对能带、关联与无序的敏感性不同。'}
+};
+document.querySelectorAll('.diagram .node').forEach(node=>{
+node.setAttribute('aria-pressed',node.classList.contains('is-selected')?'true':'false');
+const activate=()=>{const svg=node.closest('svg');const entry=explanations[node.dataset.key];const target=document.getElementById(svg.dataset.detail);if(!entry||!target)return;document.querySelectorAll('svg[data-detail="'+svg.dataset.detail+'"] .node').forEach(item=>{const selected=item.dataset.key===node.dataset.key;item.classList.toggle('is-selected',selected);item.setAttribute('aria-pressed',String(selected));});target.replaceChildren();const heading=document.createElement('h3');heading.textContent=entry.title;const paragraph=document.createElement('p');paragraph.textContent=entry.text;target.append(heading,paragraph);if(entry.url){const source=document.createElement('p');source.className='citation';const link=document.createElement('a');link.href=entry.url;link.textContent=entry.source;source.append(link);target.append(source);}};
+node.addEventListener('click',activate);node.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();activate();}});
+});
+document.querySelectorAll('[data-cost]').forEach(button=>button.addEventListener('click',()=>{document.querySelectorAll('[data-cost]').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));document.getElementById('cost-heading').textContent=button.dataset.cost==='total'?'累计资源时':'机器与耗时';document.querySelectorAll('.cost-cell').forEach(cell=>cell.textContent=cell.dataset[button.dataset.cost]);}));
+</script>
+</body>
+</html>
