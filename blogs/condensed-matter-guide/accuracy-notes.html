@@ -1,0 +1,296 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>双层石墨烯的精度要逐项检验</title><style>
+:root{--dark:#141413;--light:#faf9f5;--mid:#b0aea5;--soft:#e8e6dc;--muted:#5e5d59;--orange:#d97757;--blue:#6a9bcc;--green:#788c5d;--head:"Poppins","PingFang SC","Noto Sans CJK SC","Hiragino Sans GB",Arial,sans-serif;--body:"Lora","Noto Serif CJK SC","Songti SC",Georgia,serif;--mono:"SF Mono",Menlo,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--light);color:var(--dark);font:17px/1.85 var(--body)}main{max-width:760px;margin:auto;padding:70px 24px 90px}
+h1,h2,h3{font-family:var(--head);font-weight:600;line-height:1.4;letter-spacing:-.015em;text-wrap:balance}h1{font-size:38px;margin:0 0 18px}h2{font-size:25px;margin:70px 0 16px}h3{font-size:18px;margin:28px 0 12px}p{margin:0 0 16px}.lede{font-size:19px;max-width:36em}
+a{color:inherit;text-decoration-color:var(--orange);text-underline-offset:4px}a:hover{text-decoration-thickness:2px}strong{font-weight:600}code{font:.86em var(--mono);background:var(--soft);padding:2px 5px;border-radius:3px}::selection{background:#edc4b4;color:var(--dark)}:focus-visible{outline:2px solid var(--dark);outline-offset:5px}button{font-family:var(--head);cursor:pointer}button:disabled{cursor:default}
+.settings{display:flex;flex-wrap:wrap;gap:8px 22px;list-style:none;padding:0;margin:24px 0 0;font:14px/1.6 var(--head);color:var(--muted)}.settings li{display:inline-flex;align-items:center;gap:7px}.settings svg{width:16px;height:16px;stroke:var(--dark);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}.settings b{font-weight:500;color:var(--dark)}
+figure{margin:30px 0 18px;padding:22px 0 0;border-top:1px solid var(--soft)}figure svg{display:block;width:100%;height:auto;overflow:visible;font-family:var(--head)}.mobile-diagram{display:none!important}.diagram .node{cursor:pointer}.diagram .node .shape{fill:#fff;stroke:#c5c3ba;stroke-width:1.1}.diagram .node.orange .shape{fill:#f9eee7;stroke:var(--orange)}.diagram .node.blue .shape{fill:#eef3f8;stroke:var(--blue)}.diagram .node.green .shape{fill:#f1f4ed;stroke:var(--green)}.diagram .node:hover .shape,.diagram .node:focus .shape,.diagram .node.is-selected .shape{stroke:var(--dark);stroke-width:2}.diagram .node:focus{outline:none}.diagram .node .selection-mark{opacity:0}.diagram .node.is-selected .selection-mark{opacity:1}.diagram text{fill:var(--dark);pointer-events:none}.diagram .t{font-size:18px;font-weight:500}.diagram .s{font-size:14px;fill:var(--muted)}.diagram .xs{font-size:13px;fill:var(--muted)}.diagram .ink{fill:var(--dark)}.diagram .orange-ink{fill:#9e4a31}.diagram .connector{stroke:#939186;stroke-width:1.25;fill:none}.diagram .secondary{stroke:#b0aea5;stroke-dasharray:4 5}.diagram .orange-line{stroke:var(--orange);stroke-width:1.7;fill:none}.diagram .blue-line{stroke:var(--blue);stroke-width:1.7;fill:none}.diagram .green-line{stroke:var(--green);stroke-width:1.7;fill:none}
+figcaption{font:13px/1.7 var(--head);color:var(--muted);margin:12px 0 0}.detail-pane{border-bottom:1px solid var(--soft);padding:18px 0 20px;min-height:128px}.detail-pane h3{margin:0 0 8px;font-size:17px}.detail-pane p{font-size:16px;margin:0;line-height:1.8}.detail-pane .citation{font:13px var(--head);margin:10px 0 0;color:var(--muted)}
+.controls{display:flex;gap:6px;flex-wrap:wrap;margin:18px 0 10px}.controls button{background:transparent;border:1px solid #c5c3ba;border-radius:4px;color:var(--muted);padding:7px 12px;font-size:13px;line-height:1.5}.controls button[aria-pressed="true"]{border-color:var(--dark);color:var(--dark);background:var(--soft)}.controls button:hover{border-color:var(--dark)}.small{font:14px/1.8 var(--head);color:var(--muted)}
+details{margin:22px 0;border-top:1px solid var(--soft);padding-top:14px}summary{cursor:pointer;font:15px/1.7 var(--head);color:var(--muted)}summary:hover{color:var(--dark)}details[open] summary{color:var(--dark);margin-bottom:15px}details p{font-size:16px}details ul{padding-left:1.3em;font-size:16px}details li{margin:9px 0}.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;font:14px/1.7 var(--head);margin:14px 0;font-variant-numeric:tabular-nums}th,td{text-align:left;vertical-align:top;padding:10px 8px;border-bottom:1px solid var(--soft)}th{font-weight:500;color:var(--muted)}.note{padding:14px 0 14px 17px;border-left:1px solid var(--orange);font-size:16px;margin:24px 0}.formula{font:15px/1.8 var(--head);padding:12px 0;letter-spacing:.005em}.research-trail{padding-left:20px}.references li{font:14px/1.8 var(--head)}footer{margin-top:70px;padding-top:18px;border-top:1px solid var(--soft);font:13px/1.8 var(--head);color:var(--muted)}
+@media(max-width:740px){main{padding:36px 20px 60px}h1{font-size:30px}h2{font-size:22px;margin-top:54px}body{font-size:16px}.lede{font-size:17px}.settings{gap:7px 16px;font-size:12px}figure{margin-top:24px;padding-top:16px}.desktop-diagram{display:none!important}.mobile-diagram{display:block!important;max-width:380px;margin:auto}.diagram .t{font-size:17px}.diagram .s{font-size:14px}.diagram .xs{font-size:14px}.detail-pane{min-height:0}th,td{padding:8px 5px;font-size:13px}.controls button{font-size:12px;padding:6px 9px}}
+@media(max-width:360px){main{padding-left:12px;padding-right:12px}}
+@media(prefers-reduced-motion:no-preference){.detail-pane{animation:detail-in .2s ease-out}@keyframes detail-in{from{clip-path:inset(0 0 10% 0)}to{clip-path:inset(0)}}}
+
+.table-wrap table{min-width:620px}.table-wrap{margin:22px 0}.table-wrap table p{margin:0}li{margin:8px 0}ol{padding-left:1.6em}.settings li{margin:0}
+</style></head><body><main><h1>双层石墨烯的精度要逐项检验</h1><p class="lede">已有定量成功，但尚未证明现实高质量器件的全部响应比优秀实验更准确。</p><ul class="settings"><li>对象 <b>普通双层石墨烯</b></li><li>证据 <b>原始论文</b></li><li>关注 <b>精度与近似</b></li></ul><h2
+id="文献尚未认证现实器件全面超过实验">文献尚未认证现实器件全面超过实验</h2>
+<p>普通 AB（Bernal 错位堆垛）双层石墨烯简称
+BLG（本文的普通双层石墨烯）。hBN（六方氮化硼）是常见封装材料。扭转双层与
+AA（同位对齐）堆垛只作为方法参照。</p>
+<p>DFT（密度泛函理论）描述基态密度与能量。HF（Hartree–Fock）用单个 Slater 行列式（由单电子轨道构成的反对称多电子态）处理交换，遗漏该表示以外的电子相关。</p>
+<p>目前核查到的文献没有证明：现实高质量 AB
+器件的完整第一性原理计算，已经在总误差上超越优秀实验。这个结论不等于原则上不可能。对能带、层外屏蔽、激子和部分磁响应，已有定量成功；对关联相界、超导和器件输运，没有普适的精度保证。</p>
+<p>三类误差没有固定排序。扩大同一 DFT/HF
+计算只能降低数值误差；改变电子相关近似、扩大降阶空间、匹配响应算符和升级多体求解器，才能减少对应的物理近似误差。真实器件的结构和散射输入另需确定。</p>
+<h2 id="电子结构修正可以大于数值误差">电子结构修正可以大于数值误差</h2>
+<p>LDA（局域密度近似）与
+PBE（梯度修正泛函）是两种常用交换相关近似。GW（电子自能方法）修正加减电子的激发，G0W0
+表示一次修正。BSE（Bethe–Salpeter
+方程）处理电子空穴关联。SOC（自旋轨道耦合）描述自旋与轨道的联系。</p>
+<p>eV（电子伏）、meV（毫电子伏）与 μeV（微电子伏）是能量单位。εz（层外介电系数）描述层外屏蔽，γ1（层间跃迁能量）描述层间电子混合。</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>证据</th>
+<th>增加的物理</th>
+<th>量化结果</th>
+<th>精度边界</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Liang &amp; Yang 2012 [1]，加偏置 AB BLG</td>
+<td>LDA → G0W0 自能 → BSE 电子空穴相互作用</td>
+<td>采样场强下，GW 准粒子 gap 比 DFT 增大 56%、67%、78%、81%；激子结合能
+35、54、76、80 meV</td>
+<td>这些是方法间修正，不是已知总误差；当时不能分辨 &lt;10 meV
+的能量差，且实际介电环境与孤立模型不同</td>
+</tr>
+<tr>
+<td>Slizovskiy 等 2021 [2]</td>
+<td>DFT 层外极化率与自洽静电</td>
+<td>PBE 11.0 Å³、LDA 10.8 Å³；得到 BLG εz≈2.6</td>
+<td>Bernal 光学 gap 的更好匹配需要 εz≈2.35、γ1≈0.35
+eV，或处理未完全抵消的自能/激子作用。泛函差约 2% 不能当作总误差 2%</td>
+</tr>
+<tr>
+<td>Konschuh 等 2012 [3]</td>
+<td>增加名义未占据的碳 d 及更高轨道</td>
+<td>本征 SOC 劈裂约 24 μeV；删去这些轨道后只剩 &lt;1 μeV</td>
+<td>小绝对能标可以计算；这是劈裂和基组完整性的证据，不是现实器件的 μeV
+总误差认证</td>
+</tr>
+</tbody>
+</table></div>
+<p>网格、空带和基组可以用算力检验收敛。固定交换相关泛函的偏差不会随网格消失；固定
+G0W0/BSE
+仍有自能与相互作用顶角近似。增加自洽程度也不是保证单调接近精确解的误差控制。</p>
+<h2 id="降阶必须保留作用与响应算符">降阶必须保留作用与响应算符</h2>
+<p>Gava 等 2009 [4] 对比 DFT 与当时简单 tight binding：低掺杂时 DFT 的 K（布里渊区角点）处能隙
+约为简单模型的一半。差异来自模型只保留层间电荷转移、遗漏层内极化。论文给出了修正描述。这是可修复的模型误差，不能说现代模型必然错一倍。</p>
+<p>对磁、电和光响应，低能 Hamiltonian
+与响应算符必须一起降阶。高能带虽然不占据，仍通过虚跃迁贡献磁矩、屏蔽和顶角；拟合能带好，不保证响应好。Sethi
+等的补充 Fig. S4 [5] 中，低能态几乎完全来自四个碳原子的 p_z（垂直于层面的）轨道，但只用四带求磁矩仍显著低估完整远带求和。</p>
+<p>Hamiltonian 用 H 表示，E 是目标能量。P 表示保留的低能空间，Q 表示被消去的高能空间。精确消去高能自由度的表达式可以写出，例如 Feshbach 投影
+H_eff(E)=PHP+PHQ(E−QHQ)⁻¹QHP；也可用路径积分定义低能有效作用量。困难是计算并保留能量/频率依赖、非局域作用、多体项与响应算符。静态少带模型只是进一步截断。扩大活性空间和保留这些项有实际路线，但没有适用于所有
+BLG 响应的统一总误差界。</p>
+<h3 id="最直接的响应改进2026-年激子磁矩预印本">最直接的响应改进：2026
+年激子磁矩预印本</h3>
+<p>Sethi 等 [5] 用第一性原理 LDA/GW/BSE 描述 hBN 封装、偏置 AB
+BLG，并补齐 Berry 相位、电子空穴相对运动和质心量子几何项。主文 Table
+1，PDF 物理第 12 页：</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>处理</th>
+<th style="text-align: right;">s 激子谷 g 因子</th>
+<th style="text-align: right;">p 激子谷 g 因子</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>仅带边电子/空穴磁矩</td>
+<td style="text-align: right;">15.06</td>
+<td style="text-align: right;">15.06</td>
+</tr>
+<tr>
+<td>由激子包络波函数加权</td>
+<td style="text-align: right;">18.45</td>
+<td style="text-align: right;">13.03</td>
+</tr>
+<tr>
+<td>完整响应表达式 + GW/BSE</td>
+<td style="text-align: right;">20.32</td>
+<td style="text-align: right;">1.79</td>
+</tr>
+<tr>
+<td>实验 Ju 等 2017 [6]</td>
+<td style="text-align: right;">19.8 ± 0.1</td>
+<td style="text-align: right;">1.4 ± 0.8</td>
+</tr>
+</tbody>
+</table></div>
+<p>p 响应从约一个数量级的偏差变为进入实验误差范围；s 的残差 0.52，即约
+2.6%，大于实验报告的拟合误差 ±0.1，即约
+0.5%。实验拟合误差不是全部系统误差，不能把它直接解释为严格的 5.2σ
+物理矛盾。理论也没有完整总误差条，因而不能认证比实验更准。</p>
+<p>这项巨大改进属于补齐响应公式，不能全归因于
+DFT，也不能严格全叫降阶误差。它说明正确的响应算符与相关电子空穴态不可缺少。</p>
+<p>补充材料 PDF 物理第 15–16 页：BSE 激子能量数值收敛至 5 meV，未给出 g
+因子同等完整的收敛误差；采用共格 hBN 单层，忽略 graphene/hBN
+不共格结构；hBN 封装时的介电矩阵近似沿用 pristine BLG。两种 hBN 堆垛给
+g_s=13.48 与
+20.32，后者更接近实验，不能当作已知真实器件结构下的盲预测。主表
+g_p=1.79；补充比较段写 1.76，存在小的稿件内差异，此处采用主表。</p>
+<h2 id="求解器收敛还不足以认证器件">求解器收敛还不足以认证器件</h2>
+<p>DMRG（密度矩阵重整化群）用可扩大的张量网络表示量子态。RPA（随机相位近似）是一种屏蔽近似。QMC（量子
+Monte Carlo）采样多体量，DQMC（行列式量子 Monte Carlo）使用行列式组织采样。它们都要检查数值与模型误差。</p>
+<p>Assouline 等 2024 [7] 在高质量 AB BLG 分数量子 Hall
+器件中，用四带波函数、栅极屏蔽、高 Landau 能级 RPA 屏蔽与 DMRG
+计算激活隙：12 T（特斯拉，磁场单位）下理论 5.6 K，实验 5.1 ± 0.2 K，差约
+10%。这是有效模型的成功，没有构成端到端第一性原理精度证明。</p>
+<p>ℓB（磁长）是磁场下的轨道长度尺度。χ（张量网络的连接维数）控制可表示的纠缠复杂度。补充材料检查圆柱周长 12–24 ℓB，χ≥1600 时对 bond dimension
+不敏感；半填充仍需周长与缺陷区域外推。遗漏可能的自旋纹理、高能级屏蔽的
+RPA 近似，以及器件无序，不会因增加 DMRG 迭代自动消失。热力学 gap
+与输运激活 gap 是不同量，不能混作同一精度比较。</p>
+<p>Leaw 等 2019 [8] 的 Bernal 晶格 QMC 达到 900 格点，但真实
+t⊥/t≈0.10–0.15 的低能动量尺度仍超出可达尺寸；为揭示机制使用
+t⊥/t=1–10。这是有限尺度瓶颈的直接例子，不是现实器件的精密模拟。</p>
+<p>Sun 等 2014 [9] 的偏压 Bernal Hubbard DQMC 遇到 sign
+problem，并用平均场补充相界。示例参数下平均符号约
+0.1，但该参数并非真实器件，不能据此报我们所需算力。固定统计精度的采样代价含
+1/〈s〉²：若符号从 0.1 降到 0.001，需要再增加约 10⁴ 倍工作；若符号为
+10⁻¹⁰，则相对无符号问题的惩罚约 10²⁰。一般符号问题的复杂性结果 [10]
+不证明特定 AB BLG 目标一定指数困难。</p>
+<h2 id="直接多体计算也需要误差检验">直接多体计算也需要误差检验</h2>
+<p>Mostaani 等 2015 [11] 用 DMC（扩散量子 Monte Carlo）算 AB 结合能 17.7±0.9
+meV/atom；呼吸模约 83±7 cm⁻¹，对照实验 80±2 cm⁻¹。论文明确保留未知
+fixed-node（固定波函数节点约束）偏差、赝势与有限尺寸误差。Monte Carlo
+统计误差不等于总误差。</p>
+<p>Li、Qian、Chen 2024 [12] 的 DeepSolid
+多体神经波函数直接计算极化，不依赖近似 DFT 交换相关泛函：双层极化率
+11.6(1) Bohr³，统计约 0.9%。但算例是 AA 堆垛，2×2 超胞、16 个碳原子和 64
+价电子；不是 AB
+器件的精度认证，也未把变分波函数和热力学极限误差全部认证到 0.9%。</p>
+<p>Saritas 等 2026 预印本 [13] 的 DMC 已做到最多 256 原子、1024 电子；AB
+结合能 15.4(4) meV/atom，呼吸模 73(1) cm⁻¹，对照实验 80(2)
+cm⁻¹。它展示可扩展性，也展示统计误差变小仍不能认证准确度；fixed-node
+等偏差仍在。不同年份结果不是受控的同一方法/条件算力曲线。</p>
+<h2
+id="算力降低数值误差物理近似需升级">算力降低数值误差，物理近似需升级</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>增加的工作</th>
+<th>可减少的误差</th>
+<th>尚不能据此保证的事</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>更密网格、更多空带/轨道、有限尺寸外推</td>
+<td>积分、基组、截断、尺寸误差</td>
+<td>所选电子相关近似的总准确度</td>
+</tr>
+<tr>
+<td>更多独立 Monte Carlo 样本</td>
+<td>固定条件下统计误差约随样本数平方根下降；缩小 10 倍通常需约 100
+倍样本</td>
+<td>fixed-node、波函数/模型和器件误差</td>
+</tr>
+<tr>
+<td>更大活性空间，动态相互作用，匹配响应算符</td>
+<td>降阶遗漏与部分屏蔽误差</td>
+<td>没有验证就给全流程误差界</td>
+</tr>
+<tr>
+<td>QMC/DMRG/变分波函数与 HF 交叉求解</td>
+<td>可识别和降低部分求解器近似</td>
+<td>所有二维低温、掺杂问题都有可负担的收敛路径</td>
+</tr>
+<tr>
+<td>真实结构、应变、hBN/栅极与散射建模</td>
+<td>理想模型到特定器件的偏差</td>
+<td>未知输入能靠数值收敛自动辨识</td>
+</tr>
+</tbody>
+</table></div>
+<p>因此不能把“充足算力”换成一个通用倍数。可 scale
+的数值部分、需升级方法的近似部分、可能指数困难的多体部分同时存在；表达式本身可以写出。</p>
+<h2
+id="当前模拟器尚未建立完整第一性原理链条">当前模拟器尚未建立完整第一性原理链条</h2>
+<p>当前 README 记录的是四带 Hartree/部分低能
+Fock、单粒子/Berry/interband 响应与常数 τ（输运散射时间）Boltzmann 输运。未建立完整的第一性原理参数—相互作用—响应算符链条。扩大当前扫描能改进有限网格结果，不能自动去掉动态关联、高能与谷间交换遗漏，也不能由常数
+τ 得到特定真实器件的散射与 Rxx。</p>
+<p>合理的第一阶段是选定一个已知器件结构下的正常态响应，例如层外极化或磁光激子响应，建立
+ab initio → 降阶 Hamiltonian、作用与算符 →
+多体响应的链条。分别记录数值误差、方法间变化和结构不确定度，再用未参与校准的实验条件检验。光学和分数量子
+Hall 的成功不能迁移成零场器件 Rxx、超导或完整相图的准确度认证。</p>
+<h2 id="每个数值都能追溯到原始论文">每个数值都能追溯到原始论文</h2>
+<ol type="1">
+<li>Liang &amp; Yang, “Enhanced Many-Electron Effects on Excited States
+of Gated Bilayer Graphene,” PRB 86, 205423 (2012). <a
+href="https://doi.org/10.1103/PhysRevB.86.205423">DOI</a>；<a
+href="https://arxiv.org/html/1210.6018v1">arXiv v1 全文</a>，GW
+gap、Fig. 3–4、能量分辨率讨论。</li>
+<li>Slizovskiy 等, “Out-of-plane dielectric susceptibility of graphene
+in twistronic and Bernal bilayers,” Nano Lett. 21, 6678 (2021). <a
+href="https://doi.org/10.1021/acs.nanolett.1c02211">DOI</a>；<a
+href="https://arxiv.org/html/1912.10067v3">arXiv v3
+全文</a>，单层极化率及 Bernal 光学 gap 比较。</li>
+<li>Konschuh 等, PRB 85, 115423 (2012). <a
+href="https://doi.org/10.1103/PhysRevB.85.115423">DOI</a>；<a
+href="https://arxiv.org/html/1111.7223v2">arXiv v2 全文</a>，SOC
+与高轨道讨论。</li>
+<li>Gava 等, “Ab initio study of gap opening and screening effects in
+gated bilayer graphene,” PRB 79, 165431 (2009). <a
+href="https://doi.org/10.1103/PhysRevB.79.165431">DOI</a>；<a
+href="https://arxiv.org/html/0902.4615v2">arXiv v2 全文</a>，DFT/TB
+比较与层内屏蔽。</li>
+<li>Sethi 等, “Quantum Theory of Exciton Magnetic Moment: Interaction
+and Topological Effects,” <a
+href="https://arxiv.org/abs/2509.07284v3">arXiv:2509.07284v3</a>，2026-06-22
+修订，预印本。主表 PDF 物理第 12 页；方法第 15 页；堆垛第 16
+页；远带效应 Fig. S4 第 27 页。</li>
+<li>Ju 等, “Tunable excitons in bilayer graphene,” Science 358, 907–910
+(2017). <a
+href="https://doi.org/10.1126/science.aam9175">DOI</a>。磁响应实验数值及拟合误差亦由
+[5] 主表和正文复核。</li>
+<li>Assouline 等, “Energy gap of the even-denominator fractional quantum
+Hall state in bilayer graphene,” PRL 132, 046603 (2024). <a
+href="https://doi.org/10.1103/PhysRevLett.132.046603">DOI</a>；<a
+href="https://arxiv.org/html/2308.05729">arXiv 全文及补充</a>，Fig. 2c
+及 DMRG 方法。</li>
+<li>Leaw 等, PRB 100, 125116 (2019). <a
+href="https://arxiv.org/html/1903.06177">全文</a>，有限格点和层间耦合范围。</li>
+<li>Sun 等, “Electrically controllable magnetic order in the bilayer
+Hubbard model on honeycomb lattice — a determinant quantum Monte Carlo
+study,” PRB 90, 125429 (2014). <a
+href="https://arxiv.org/html/1405.1186">全文</a>，平均符号与平均场补充。</li>
+<li>Troyer &amp; Wiese, “Computational Complexity and Fundamental
+Limitations to Fermionic Quantum Monte Carlo Simulations,” PRL 94,
+170201 (2005). <a
+href="https://arxiv.org/abs/cond-mat/0408370">arXiv</a>。一般复杂性结果，非
+BLG 具体下界。</li>
+<li>Mostaani、Drummond、Fal’ko, “Quantum Monte Carlo Calculation of the
+Binding Energy of Bilayer Graphene,” PRL 115, 115501 (2015). <a
+href="https://doi.org/10.1103/PhysRevLett.115.115501">DOI</a>；<a
+href="https://arxiv.org/abs/1506.08920v1">arXiv
+v1</a>，主文结合能、呼吸模与误差讨论。</li>
+<li>Li、Qian、Chen, “Electric Polarization from Many-Body Neural Network
+Ansatz,” PRL 132, 176401 (2024). <a
+href="https://doi.org/10.1103/PhysRevLett.132.176401">DOI</a>；<a
+href="https://arxiv.org/abs/2307.02212v2">arXiv v2</a>，AA
+超胞、极化率与方法。</li>
+<li>Saritas 等, <a
+href="https://arxiv.org/abs/2609.05845v1">arXiv:2609.05845v1</a>，2026-09
+预印本；<a href="https://arxiv.org/html/2609.05845v1">全文</a>，BLG
+结构/呼吸模表与 fixed-node 讨论。</li>
+</ol>
+<h2
+id="小能标要相对目标能量差检验误差">小能标要相对目标能量差检验误差</h2>
+<p>下式中，v 是电子速度参数，m* 是低能有效质量，me 是自由电子质量，EF 是相对于带接触点的费米能量，n 是载流子面密度，ℏ 是约化普朗克常数。v3 是产生三角翘曲的速度参数，εL 是费米面拓扑改变的参考能量。</p>
+<p>“低密度”没有对所有位移场都适用的固定阈值。为说明本次讨论：在理想、无隙、四重自旋/谷简并的抛物线
+AB BLG 中，γ1=0.39 eV、v=10⁶ m/s 给出 m*=0.0343
+me，EF=πℏ²|n|/(2m*)。|n|=10¹⁰、10¹¹ cm⁻² 对应约 0.35、3.5 meV。这里的 EF
+只是参考尺度；有位移场、三角翘曲或关联破缺时需重新计算。</p>
+<p>McCann &amp; Koshino 综述 [14] Eq. 95 给三角翘曲的 Lifshitz 能量
+εL=γ1(v3/v)²/4≈1 meV；用上述抛物线关系映射是约 3×10¹⁰ cm⁻²
+的密度数量级，不能当成精确翘曲带的转变密度。此处“细小”指相对于 eV 级微观
+hopping 的绝对能量小，却可能与 EF、kBT（玻尔兹曼常数乘温度，即热能）、序参量 gap
+或两候选相的自由能差相当。</p>
+<p>例如 1 K 的 kBT=0.086 meV；0.1 meV 的误差在 eV 尺度上很小，但相对于
+0.35 meV 的参考 EF 已约 29%，也超过 1 K 热能。它可能改变费米面口袋、gap
+的符号、相排序与激活输运。究竟会不会翻转相排序，需同候选相自由能差及其误差比较，不能从这个参考
+EF 单独推断。小绝对能标本身不是不可算的证明，[3] 的 24 μeV SOC
+劈裂就是反例。</p>
+<ol start="14" type="1">
+<li>McCann &amp; Koshino, “The electronic properties of bilayer
+graphene,” Rep. Prog. Phys. 76, 056503 (2013). <a
+href="https://doi.org/10.1088/0034-4885/76/5/056503">DOI</a>；<a
+href="https://arxiv.org/html/1205.6953v2">arXiv v2
+全文</a>，§II.3–II.5、Eq. 95。上述 EF
+与参考密度由所列公式和参数计算，未作为实验值引用。</li>
+</ol>
+<footer><a href="index.html">返回三图科普</a> · <a href="accuracy-notes.md">原始证据笔记</a> · 文献核查 2026-10-10</footer></main></body></html>

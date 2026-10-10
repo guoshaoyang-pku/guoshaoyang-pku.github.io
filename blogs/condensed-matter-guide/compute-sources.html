@@ -1,0 +1,190 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>凝聚态计算的算力跨越工作站与超算</title><style>
+:root{--dark:#141413;--light:#faf9f5;--mid:#b0aea5;--soft:#e8e6dc;--muted:#5e5d59;--orange:#d97757;--blue:#6a9bcc;--green:#788c5d;--head:"Poppins","PingFang SC","Noto Sans CJK SC","Hiragino Sans GB",Arial,sans-serif;--body:"Lora","Noto Serif CJK SC","Songti SC",Georgia,serif;--mono:"SF Mono",Menlo,Consolas,monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--light);color:var(--dark);font:17px/1.85 var(--body)}main{max-width:760px;margin:auto;padding:70px 24px 90px}
+h1,h2,h3{font-family:var(--head);font-weight:600;line-height:1.4;letter-spacing:-.015em;text-wrap:balance}h1{font-size:38px;margin:0 0 18px}h2{font-size:25px;margin:70px 0 16px}h3{font-size:18px;margin:28px 0 12px}p{margin:0 0 16px}.lede{font-size:19px;max-width:36em}
+a{color:inherit;text-decoration-color:var(--orange);text-underline-offset:4px}a:hover{text-decoration-thickness:2px}strong{font-weight:600}code{font:.86em var(--mono);background:var(--soft);padding:2px 5px;border-radius:3px}::selection{background:#edc4b4;color:var(--dark)}:focus-visible{outline:2px solid var(--dark);outline-offset:5px}button{font-family:var(--head);cursor:pointer}button:disabled{cursor:default}
+.settings{display:flex;flex-wrap:wrap;gap:8px 22px;list-style:none;padding:0;margin:24px 0 0;font:14px/1.6 var(--head);color:var(--muted)}.settings li{display:inline-flex;align-items:center;gap:7px}.settings svg{width:16px;height:16px;stroke:var(--dark);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}.settings b{font-weight:500;color:var(--dark)}
+figure{margin:30px 0 18px;padding:22px 0 0;border-top:1px solid var(--soft)}figure svg{display:block;width:100%;height:auto;overflow:visible;font-family:var(--head)}.mobile-diagram{display:none!important}.diagram .node{cursor:pointer}.diagram .node .shape{fill:#fff;stroke:#c5c3ba;stroke-width:1.1}.diagram .node.orange .shape{fill:#f9eee7;stroke:var(--orange)}.diagram .node.blue .shape{fill:#eef3f8;stroke:var(--blue)}.diagram .node.green .shape{fill:#f1f4ed;stroke:var(--green)}.diagram .node:hover .shape,.diagram .node:focus .shape,.diagram .node.is-selected .shape{stroke:var(--dark);stroke-width:2}.diagram .node:focus{outline:none}.diagram .node .selection-mark{opacity:0}.diagram .node.is-selected .selection-mark{opacity:1}.diagram text{fill:var(--dark);pointer-events:none}.diagram .t{font-size:18px;font-weight:500}.diagram .s{font-size:14px;fill:var(--muted)}.diagram .xs{font-size:13px;fill:var(--muted)}.diagram .ink{fill:var(--dark)}.diagram .orange-ink{fill:#9e4a31}.diagram .connector{stroke:#939186;stroke-width:1.25;fill:none}.diagram .secondary{stroke:#b0aea5;stroke-dasharray:4 5}.diagram .orange-line{stroke:var(--orange);stroke-width:1.7;fill:none}.diagram .blue-line{stroke:var(--blue);stroke-width:1.7;fill:none}.diagram .green-line{stroke:var(--green);stroke-width:1.7;fill:none}
+figcaption{font:13px/1.7 var(--head);color:var(--muted);margin:12px 0 0}.detail-pane{border-bottom:1px solid var(--soft);padding:18px 0 20px;min-height:128px}.detail-pane h3{margin:0 0 8px;font-size:17px}.detail-pane p{font-size:16px;margin:0;line-height:1.8}.detail-pane .citation{font:13px var(--head);margin:10px 0 0;color:var(--muted)}
+.controls{display:flex;gap:6px;flex-wrap:wrap;margin:18px 0 10px}.controls button{background:transparent;border:1px solid #c5c3ba;border-radius:4px;color:var(--muted);padding:7px 12px;font-size:13px;line-height:1.5}.controls button[aria-pressed="true"]{border-color:var(--dark);color:var(--dark);background:var(--soft)}.controls button:hover{border-color:var(--dark)}.small{font:14px/1.8 var(--head);color:var(--muted)}
+details{margin:22px 0;border-top:1px solid var(--soft);padding-top:14px}summary{cursor:pointer;font:15px/1.7 var(--head);color:var(--muted)}summary:hover{color:var(--dark)}details[open] summary{color:var(--dark);margin-bottom:15px}details p{font-size:16px}details ul{padding-left:1.3em;font-size:16px}details li{margin:9px 0}.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;font:14px/1.7 var(--head);margin:14px 0;font-variant-numeric:tabular-nums}th,td{text-align:left;vertical-align:top;padding:10px 8px;border-bottom:1px solid var(--soft)}th{font-weight:500;color:var(--muted)}.note{padding:14px 0 14px 17px;border-left:1px solid var(--orange);font-size:16px;margin:24px 0}.formula{font:15px/1.8 var(--head);padding:12px 0;letter-spacing:.005em}.research-trail{padding-left:20px}.references li{font:14px/1.8 var(--head)}footer{margin-top:70px;padding-top:18px;border-top:1px solid var(--soft);font:13px/1.8 var(--head);color:var(--muted)}
+@media(max-width:740px){main{padding:36px 20px 60px}h1{font-size:30px}h2{font-size:22px;margin-top:54px}body{font-size:16px}.lede{font-size:17px}.settings{gap:7px 16px;font-size:12px}figure{margin-top:24px;padding-top:16px}.desktop-diagram{display:none!important}.mobile-diagram{display:block!important;max-width:380px;margin:auto}.diagram .t{font-size:17px}.diagram .s{font-size:14px}.diagram .xs{font-size:14px}.detail-pane{min-height:0}th,td{padding:8px 5px;font-size:13px}.controls button{font-size:12px;padding:6px 9px}}
+@media(max-width:360px){main{padding-left:12px;padding-right:12px}}
+@media(prefers-reduced-motion:no-preference){.detail-pane{animation:detail-in .2s ease-out}@keyframes detail-in{from{clip-path:inset(0 0 10% 0)}to{clip-path:inset(0)}}}
+
+.table-wrap table{min-width:620px}.table-wrap{margin:22px 0}.table-wrap table p{margin:0}li{margin:8px 0}ol{padding-left:1.6em}.settings li{margin:0}
+</style></head><body><main><h1>凝聚态计算的算力跨越工作站与超算</h1><p class="lede">公开算例的资源跨度很大，具体数字只对应其任务、方法与精度。</p><ul class="settings"><li>对象 <b>凝聚态计算</b></li><li>证据 <b>原始论文</b></li><li>关注 <b>资源与任务边界</b></li></ul><h2
+id="公开算例从单节点扩展到大型超算">公开算例从单节点扩展到大型超算</h2>
+<p>CPU（中央处理器）核时是核数乘运行小时。GPU（图形处理器）时是加速器数乘运行小时。V100（NVIDIA 加速器）与 A100 是不同代硬件。DFT（密度泛函理论）计算基态电子结构。GW（电子自能方法）计算激发修正。</p>
+<p>Γ
+点表示只采样布里渊区中心动量。DFT-FE（用有限元离散的 DFT）采用空间网格而非平面波基组。BSE（Bethe–Salpeter 方程）计算电子空穴关联。QMC（量子 Monte Carlo）采样多体量。全电子与赝势计算处理的电子不同。软件、采样、精度和一次任务的边界也会影响成本。</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>任务</th>
+<th>计算对象</th>
+<th>论文报告的硬件与时间</th>
+<th>换算后的总量</th>
+<th>核查位置与限定</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>常规电子结构与声子响应</td>
+<td>体心立方钨原胞，45³ k 网格，单个 q 点声子及前置电子态计算</td>
+<td>32 CPU 核，8040 s；优化后 8 张 Ampere GPU，2153 s</td>
+<td>71.5 CPU 核时；4.8 GPU 时</td>
+<td>Gong &amp; Dal Corso，CPC 308, 109439 (2025)，§6.1、Tables
+4/6。这里不只是一次基态自洽计算。标准 GPU
+路线反而更慢，算法与工作负载影响很大。[1]</td>
+</tr>
+<tr>
+<td>数千电子 DFT 基态</td>
+<td>含单空位的钼超胞，431 原子、6034 电子，Γ 点</td>
+<td>24 V100 GPU，0.372 Summit 节点时、4 节点</td>
+<td>335 s，2.23 GPU 时</td>
+<td>Das 等 DFT-FE 1.0，CPC 280, 108473 (2022)，Table
+4。包含初始化、自洽和离子力。有限元、赝势特定基准。[2]</td>
+</tr>
+<tr>
+<td>大规模 DFT 基态</td>
+<td>含单空位的钼超胞，8191 原子、114674 电子，Γ 点</td>
+<td>3600 V100 GPU，3250.1 s</td>
+<td>约 3250 GPU 时</td>
+<td>同上 Table 7。约 54 分钟墙钟不等于工作站 54
+分钟。它展示大规模数值求解，不证明交换相关近似准确到所需物理尺度。[2]</td>
+</tr>
+<tr>
+<td>直接多电子神经波函数</td>
+<td>石墨烯 2×2 超胞，8 个碳原子、48 全电子</td>
+<td>32 A100 GPU，3 天训练</td>
+<td>约 2304 GPU 时</td>
+<td>Li、Li、Chen，Nat. Commun. 13, 7895 (2022)，补充 Table 2、Note
+3。表给单次训练配置，多个 twist、尺寸和结构仍要额外计算。[3]</td>
+</tr>
+<tr>
+<td>更大直接多电子神经波函数</td>
+<td>LiH 3×3×3 超胞，108 全电子</td>
+<td>128 A100 GPU，4 周训练</td>
+<td>约 86016 GPU 时</td>
+<td>同上补充 Table 2、Note
+4.5。单次训练并不等于热力学极限和全部误差已经验证。[3]</td>
+</tr>
+<tr>
+<td>超算级 GW 自能</td>
+<td>998 原子 Si 基准、特定非对角自能任务</td>
+<td>9408 Frontier 节点，604.96 s，含 I/O</td>
+<td>约 1581 节点时</td>
+<td>Zhang 等 SC 2025，Table 5。仅此自能任务，不能当作完整
+DFT→介电矩阵→GW→BSE 的总成本。峰值 1.069 EFLOP/s 是内核性能。[4]</td>
+</tr>
+</tbody>
+</table></div>
+<p>Frontier 每节点有 4 块 MI250X 物理加速板，每板含 2 个计算芯粒。论文把
+9408 节点写成 75264 GPU devices。网页建议保留节点计数，避免与 A100
+的物理板计数混淆。[4]</p>
+<h2 id="单点任务与完整研究的成本不同">单点任务与完整研究的成本不同</h2>
+<p>用“工作站 → 小集群 →
+大型超算”表示资源跨度，用上表实例锚定实际数量。把“单个参数点”和“扫描很多材料、温度、密度、几何”区分开。一个小矩阵参数点可以很便宜，大扫描仍会消耗大量总算力。不要把不同任务连成一条“算力越多、精度越高”的普适曲线。</p>
+<p>以下属于规划经验，不是统计意义的行业平均：小型 tight
+binding／平均场常在工作站上完成；常规单位胞 DFT 常用一个或数个 CPU
+节点／GPU；复杂
+GW/BSE、二维强关联和系统收敛研究可以从小集群扩展到大型超算。具体硬件和时间要由活性空间、k
+网格、温度、对称性、目标误差和软件实测决定。</p>
+<h2
+id="研究问题不同共同对象彼此关联">研究问题不同，共同对象彼此关联</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>研究问题</th>
+<th>共同计算对象</th>
+<th>常见输出</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>哪个结构、成分更稳定</td>
+<td>总能量、自由能、原子受力</td>
+<td>晶体结构、缺陷能、相稳定性</td>
+</tr>
+<tr>
+<td>电子如何运动</td>
+<td>能带、单电子 Green 函数（加入或移去电子的传播规律）</td>
+<td>光电子谱、有效质量、准粒子寿命</td>
+</tr>
+<tr>
+<td>相互作用让电子形成什么状态</td>
+<td>多电子波函数／密度矩阵、关联函数（两处物理量怎样一起变化）</td>
+<td>磁序、关联绝缘体、超导、拓扑相</td>
+</tr>
+<tr>
+<td>外场如何产生信号</td>
+<td>响应函数（输入外场到输出信号的对应关系）</td>
+<td>光学吸收、电导、磁化率、介电常数</td>
+</tr>
+<tr>
+<td>原子如何振动与传热</td>
+<td>声子、原子轨迹、散射率</td>
+<td>振动谱、热导、结构相变</td>
+</tr>
+<tr>
+<td>如何找到新材料与快算法</td>
+<td>上述量的数据库、近似模型、代理模型</td>
+<td>材料筛选、机器学习势、数值方法</td>
+</tr>
+</tbody>
+</table></div>
+<p>这些方向互相重叠。DFT 是一类计算框架，GW/BSE 与 QMC/DMRG
+是不同用途的方法，材料筛选是工作方式，不能作为同一层的互斥“学科分类”。</p>
+<h2
+id="数值算法和多体规模各有增长规律">数值、算法和多体规模各有增长规律</h2>
+<p><strong>固定近似下的数值收敛。</strong>
+更密网格、更多空带、更大基组可以消除对应数值误差，但不会自动修复所选交换相关泛函和响应公式的偏差。Bosoni
+等的 960 种晶体验证项目明确把代码间 numerical precision 与对实验的
+accuracy 分开。[5]</p>
+<p><strong>算法升级。</strong> Gerard 等 2024 的可迁移神经波函数在 LiH
+的 32→108 电子算例上，用约原 DeepSolid 1/50
+的成本得到更低变分能。它说明算法收益可能很大，不构成所有材料/响应都有 50
+倍加速的结论。[6]</p>
+<p><strong>多体空间增长。</strong> 半填充、总自旋 z 分量为零的 L（格点数）个格点的有自旋 Hubbard 模型，在不进一步使用空间对称性前，基底维数为
+C(L,L/2)²。L=16、20、24 时约为
+1.66×10⁸、3.41×10¹⁰、7.31×10¹²。仅保存一个 complex128（每个复数占 16 字节的双精度）向量就约需 2.65 GB（十亿字节）、546 GB、117 TB（万亿字节）。这是说明精确对角化如何迅速变难的算术实例，实际
+Krylov
+求解需更多向量，可进一步利用对称性。不是这些格点数的统一算力报价。</p>
+<p>QMC 的统计误差一般随有效独立样本平方根下降。存在 sign problem
+时，采样代价还包含约 1/〈sign〉²
+的惩罚。张量网络在固定纠缠复杂度时可以很好地
+scale，二维宽度增加时所需纠缠容量可以迅速增长。这两类求解器不能用“多加
+1000 倍算力就精确”概括。</p>
+<h2 id="实测数字有各自的原始来源">实测数字有各自的原始来源</h2>
+<ol type="1">
+<li>Xuejun Gong &amp; Andrea Dal Corso, <em>An alternative GPU
+acceleration for a pseudopotential plane-waves density functional theory
+code with applications to metallic systems</em>, Computer Physics
+Communications 308, 109439 (2025). <a
+href="https://doi.org/10.1016/j.cpc.2024.109439">DOI</a>，<a
+href="https://arxiv.org/html/2412.01695v2">全文 v2</a>。</li>
+<li>Sambit Das 等, <em>DFT-FE 1.0: A massively parallel hybrid CPU-GPU
+density functional theory code using finite-element discretization</em>,
+Computer Physics Communications 280, 108473 (2022). <a
+href="https://doi.org/10.1016/j.cpc.2022.108473">DOI</a>，<a
+href="https://arxiv.org/html/2203.07820v2">全文 v2</a>。</li>
+<li>Xiang Li、Zhe Li、Ji Chen, <em>Ab initio calculation of real solids
+via neural network ansatz</em>, Nature Communications 13, 7895 (2022).
+<a href="https://doi.org/10.1038/s41467-022-35627-1">DOI</a>，<a
+href="https://arxiv.org/html/2203.15472v2">全文 v2</a>，<a
+href="https://media.springernature.com/original/springer-static/esm/art%3A10.1038%2Fs41467-022-35627-1/MediaObjects/41467_2022_35627_MOESM1_ESM.pdf">期刊补充
+PDF</a>。</li>
+<li>Benran Zhang 等, <em>Advancing Quantum Many-Body GW Calculations on
+Exascale Supercomputing Platforms</em>, SC 2025, pp. 48–59. <a
+href="https://doi.org/10.1145/3712285.3772093">DOI</a>，<a
+href="https://arxiv.org/html/2509.23018v1">全文 v1</a>。</li>
+<li>Bosoni 等, <em>How to verify the precision of
+density-functional-theory implementations via reproducible and universal
+workflows</em>, <a href="https://arxiv.org/html/2305.17274v1">全文
+v1</a>。本笔记只引用其正文明确说明的 verification/validation 区别。</li>
+<li>Leon Gerard 等, <em>Transferable Neural Wavefunctions for
+Solids</em>, <a href="https://arxiv.org/html/2405.07599v1">预印本全文
+v1</a>。成本比较见摘要、§2.3，A100 timing 设置见 Supplement §S2。</li>
+</ol>
+<footer><a href="index.html">返回三图科普</a> · <a href="compute-sources.md">原始证据笔记</a> · 文献核查 2026-10-10</footer></main></body></html>
