@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ArchitectureIQ：15 类数据原型与架构选择题</title>
+<!--
+  report-to-human panel template v2
+  Palette and type: Anthropic brand-guidelines (github.com/anthropics/skills, skills/brand-guidelines).
+  Rules: keep only what the reader needs. No subtitle, no KPI cards, no section numbers, no status banners.
+  Every term is explained in plain words where it first appears.
+-->
+<style>
+  :root {
+    --dark: #141413;   /* primary text */
+    --light: #faf9f5;  /* page background */
+    --mid: #b0aea5;    /* borders, axes */
+    --soft: #e8e6dc;   /* subtle fills */
+    --muted: #5e5d59;  /* secondary text (darker than --mid for contrast) */
+    --orange: #d97757; /* primary accent: the main result */
+    --blue: #6a9bcc;   /* secondary accent */
+    --green: #788c5d;  /* tertiary accent */
+    --head: "Poppins", "PingFang SC", "Noto Sans CJK SC", "Hiragino Sans GB", Arial, sans-serif;
+    --body: "Lora", "Noto Serif CJK SC", "Songti SC", Georgia, serif;
+    --mono: "SF Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--light); color: var(--dark); font: 17px/1.8 var(--body); }
+  main { max-width: 760px; margin: 0 auto; padding: 72px 24px 96px; }
+  h1, h2, h3 { font-family: var(--head); font-weight: 600; line-height: 1.35; letter-spacing: -0.01em; }
+  h1 { font-size: 32px; margin: 0 0 16px; }
+  h2 { font-size: 22px; margin: 64px 0 12px; }
+  p { margin: 0 0 16px; }
+  .lede { font-size: 19px; }
+  a { color: inherit; text-decoration: underline; text-decoration-color: var(--orange); text-underline-offset: 3px; }
+  code, .id { font-family: var(--mono); font-size: 0.86em; background: var(--soft); padding: 1px 5px; border-radius: 4px; }
+
+  /* L2 settings row: monochrome line icons + label, never color emoji */
+  .settings { display: flex; flex-wrap: wrap; gap: 8px 20px; list-style: none; padding: 0; margin: 24px 0 0;
+              font: 14px/1.6 var(--head); color: var(--muted); }
+  .settings li { display: inline-flex; align-items: center; gap: 6px; }
+  .settings svg { width: 15px; height: 15px; stroke: var(--dark); fill: none; stroke-width: 1.6;
+                  stroke-linecap: round; stroke-linejoin: round; }
+  .settings b { color: var(--dark); font-weight: 500; }
+
+  figure { margin: 28px 0; padding: 20px; background: #fff; border: 1px solid var(--soft); border-radius: 10px; }
+  figure img, figure svg.chart { display: block; width: 100%; height: auto; }
+  figcaption { margin-top: 12px; font: 14px/1.6 var(--head); color: var(--muted); }
+  .legend { display: flex; gap: 18px; font: 13px var(--head); color: var(--muted); margin-bottom: 8px; }
+  .legend i { display: inline-block; width: 14px; height: 2px; vertical-align: middle; margin-right: 6px; }
+
+  .warn { border-left: 3px solid var(--orange); padding: 4px 0 4px 16px; margin: 24px 0; }
+  .warn strong { font-family: var(--head); }
+
+  /* sample browser: compare outputs side by side */
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--soft); margin-bottom: 12px; }
+  .tabs button { font: 14px var(--head); background: none; border: 0; padding: 8px 12px; cursor: pointer;
+                 color: var(--muted); border-bottom: 2px solid transparent; }
+  .tabs button[aria-selected="true"] { color: var(--dark); border-bottom-color: var(--orange); }
+  .sample { display: none; white-space: pre-wrap; font: 14px/1.7 var(--mono); }
+  .sample.on { display: block; }
+
+  details { margin: 16px 0; }
+  summary { cursor: pointer; font: 15px var(--head); color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font: 14px/1.6 var(--head); margin: 16px 0; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--soft); }
+  th { font-weight: 500; color: var(--muted); }
+  footer { margin-top: 80px; font: 13px var(--head); color: var(--mid); }
+.table-scroll{overflow-x:auto}td{vertical-align:top}#tasks{table-layout:fixed;font-size:12px}#tasks th,#tasks td{padding:8px 6px;overflow-wrap:anywhere}#tasks th:nth-child(1){width:18%}#tasks th:nth-child(2){width:25%}#tasks th:nth-child(3){width:24%}#tasks th:nth-child(4){width:17%}#tasks th:nth-child(5){width:16%}.tags{font-size:11px}.filter{display:block;font:14px var(--head);margin:24px 0 8px}select{font:14px var(--head);background:var(--light);color:var(--dark);border:1px solid var(--mid);padding:6px}@media(max-width:600px){#tasks{min-width:680px}}</style>
+</head>
+<body>
+<main><h1>15 类数据原型已能生成架构选择题</h1>
+<p class="lede">从 token、图像到图与空间场，每类都已有实际训练过的候选选项，并用少量标签保留可组合的结构。</p>
+<ul class="settings"><li><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18"/><path d="M3 9h18M9 3v18"/></svg>题型 <b>15 类</b></li><li><svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg>标签 <b>每题 1–3 个</b></li><li><svg viewBox="0 0 24 24"><path d="M4 19l5-7 4 4 7-10"/></svg>答案依据 <b>三个训练 seed</b></li></ul>
+<h2>每行都定义了可执行的数据生成与验收</h2>
+<p>Meta 标签描述数据的结构和需要完成的操作。token、vector、image、graph、field 分别表示符号、向量、图像、图、空间场。time_series 表示随序列预测，hidden_state 表示只观测到部分状态，long_memory 表示必须保留远处信息。teacher 表示冻结神经模型提供监督，generative 表示验收实际生成样本，conditional 表示生成须符合条件。</p>
+<p>交叉熵评价 token 概率。相对 L2 是预测误差的欧氏范数除以真实场的欧氏范数。OPD（on-policy distillation）让学生在自己生成的前缀上学习 teacher。GRU 是带门控的循环网络。</p>
+<label class="filter" for="tag">按可组合结构筛选 <select id="tag"><option value="all">全部题型</option><option value="token">token — 离散符号</option><option value="vector">vector — 连续向量</option><option value="image">image — 图像或规则网格</option><option value="graph">graph — 节点与边</option><option value="field">field — 空间场</option><option value="time_series">time_series — 沿序列预测或演化</option><option value="hidden_state">hidden_state — 观测不足以确定完整状态</option><option value="long_memory">long_memory — 必须保留远处信息</option><option value="teacher">teacher — 冻结神经模型提供监督</option><option value="generative">generative — 验收实际生成样本</option><option value="conditional">conditional — 生成须符合给定条件</option></select></label>
+<div class="table-scroll"><table id="tasks"><thead><tr><th>数据集／题型</th><th>当前输入 → 输出</th><th>数据怎么生成</th><th>如何验收</th><th>Meta 标签</th></tr></thead><tbody><tr data-tags="token time_series teacher"><td>随机小模型 next-token</td><td>随机 8 token 前缀 → 16 token 续写</td><td>冻结随机 GRU，64 token 词表</td><td>续写位置交叉熵</td><td class="tags">token · time_series · teacher</td></tr><tr data-tags="token time_series"><td>混合阶数 token 预测</td><td>63 token 前缀 → 逐位置下一 token</td><td>混合 1、2、4 阶概率表，16 token 词表</td><td>逐 token 交叉熵</td><td class="tags">token · time_series</td></tr><tr data-tags="token long_memory"><td>带干扰的延迟复制</td><td>4 token 源串＋8 token 干扰＋查询 → 源串</td><td>独立随机 token 与固定分隔符</td><td>自由生成后整串错误率</td><td class="tags">token · long_memory</td></tr><tr data-tags="token time_series"><td>小型语言模型从头预训练</td><td>128 token 语法序列 → 下一 token</td><td>递归语法，独立解析器检查合法性</td><td>有效位置交叉熵</td><td class="tags">token · time_series</td></tr><tr data-tags="token time_series teacher"><td>从头 on-policy 蒸馏</td><td>学生自己生成的前缀 → teacher 概率</td><td>冻结随机 GRU，训练时在线查询</td><td>固定测试前缀上的前向 KL</td><td class="tags">token · time_series · teacher</td></tr><tr data-tags="vector time_series hidden_state"><td>隐状态时间序列预测</td><td>16 步、4 维历史 → 后续 4 步观测</td><td>稳定隐状态递推、机制切换和观测噪声</td><td>未来观测均方误差</td><td class="tags">vector · time_series · hidden_state</td></tr><tr data-tags="vector time_series long_memory"><td>延迟动力系统预测</td><td>64 步、4 维历史 → 后续 16 步向量</td><td>稳定递推引用 32 步前状态</td><td>未来向量均方误差</td><td class="tags">vector · time_series · long_memory</td></tr><tr data-tags="image"><td>合成图像关系分类</td><td>两个 32×32 形状通道 → 四类空间关系</td><td>按几何规则采样位置与大小，再绘制</td><td>独立几何标签上的错误率</td><td class="tags">image</td></tr><tr data-tags="image generative conditional"><td>条件图像 diffusion</td><td>几何条件＋噪声 → 16×16 图像</td><td>渲染形状，加噪后学习去噪</td><td>实际采样的条件不满足率</td><td class="tags">image · generative · conditional</td></tr><tr data-tags="image time_series"><td>移动形状视频预测</td><td>4 帧、16×16、单物体 → 后续 2 帧</td><td>匀速运动并在边界反弹</td><td>两帧直接预测均方误差</td><td class="tags">image · time_series</td></tr><tr data-tags="graph"><td>图上的最短路</td><td>32 节点图＋源节点 → 节点距离</td><td>连通无权图，按层遍历计算距离</td><td>取整距离的节点错误率</td><td class="tags">graph</td></tr><tr data-tags="graph time_series"><td>图上的动态扩散</td><td>32 节点图＋初始值 → 后续 16 步节点值</td><td>归一化图上的稳定扩散递推</td><td>16 步直接预测均方误差</td><td class="tags">graph · time_series</td></tr><tr data-tags="field"><td>Poisson 解映射</td><td>32×32 源项、系数 → 解场</td><td>零边界有限差分求解，检查方程残差</td><td>相对 L2 解误差</td><td class="tags">field</td></tr><tr data-tags="field time_series"><td>热方程时间推进</td><td>32×32 初始温度、系数 → 后续 16 个场</td><td>周期边界 Fourier 解，检查质量与能量</td><td>16 个场直接预测均方误差</td><td class="tags">field · time_series</td></tr><tr data-tags="field time_series hidden_state"><td>稀疏传感器场重建</td><td>8 步稀疏读数、观测位置 → 完整场</td><td>热方程演化，每步观测固定 10% 网格</td><td>完整场相对 L2 误差</td><td class="tags">field · time_series · hidden_state</td></tr></tbody></table></div>
+<h2>时间、观测与生成操作能跨数据结构组合</h2>
+<p>算子是对数据或训练过程执行的操作。架构的 residual、attention、ngram 另存于候选 spec。</p>
+<table><thead><tr><th>组合操作</th><th>已实现的具体题型</th><th>可延伸的题型</th></tr></thead><tbody><tr><td>时间推进 → 稀疏观测 → 重建</td><td>稀疏传感器热场重建</td><td>图扩散的稀疏节点重建</td></tr><tr><td>时间推进 → 绘制 → 预测</td><td>移动形状视频预测</td><td>隐状态动力系统的视频预测</td></tr><tr><td>学生生成 → teacher 查询 → 概率匹配</td><td>从头 OPD</td><td>语法模型的在线蒸馏</td></tr><tr><td>条件生成 → 加噪 → 去噪采样</td><td>条件几何图像 diffusion</td><td>带条件的场生成</td></tr></tbody></table>
+<h2>答案来自相同数据和预算下的实际训练</h2>
+<p>候选包含模型、loss、优化器与训练预算。当前架构候选支持 ngram、GRU、Transformer、卷积、频域卷积和图消息传递，也能比较残差连接。15 类各有至少一个三选一题目，其三个训练 seed 的测试误差区间完整分离。选择题要求评测模型预测哪个训练方案效果最好。</p>
+<figure><svg class="chart" viewBox="0 0 640 120" role="img" aria-label="数据、候选训练、题目的生成流程"><g fill="none" stroke="var(--soft)" stroke-width="1.5"><rect x="4" y="18" width="176" height="82" rx="6"/><rect x="231" y="18" width="176" height="82" rx="6"/><rect x="458" y="18" width="176" height="82" rx="6"/></g><g stroke="var(--orange)" stroke-width="2" fill="none"><path d="M187 59h35m-7-6 7 6-7 6M415 59h35m-7-6 7 6-7 6"/></g><g font-family="Poppins, PingFang SC, sans-serif" text-anchor="middle" fill="var(--dark)" font-size="16"><text x="92" y="49">冻结一个数据实例</text><text x="319" y="49">训练候选架构</text><text x="546" y="49">生成三选一题目</text></g><g font-family="Poppins, PingFang SC, sans-serif" text-anchor="middle" fill="var(--muted)" font-size="12"><text x="92" y="76">生成器＋四份数据</text><text x="319" y="76">相同数据与预算，三个 seed</text><text x="546" y="76">测试误差区间完整分离</text></g></svg></figure>
+<p>训练、验证、测试和参数变化后的测试按完整样本划分。预算写成训练过程中累计看到的样本数。候选源码和数据都冻结保存，可以重新执行。语法解析、图距离、方程残差和图像几何分别由独立规则检查。</p>
+<details><summary>各类胜者、预算与三个 seed 的实测误差</summary><p>这些数值评价被训练的候选，不是答题模型准确率。跨类指标不能直接比较。test_ce 是交叉熵，test_error 是错误率，test_kl 是前向 KL，test_mse 是均方误差，test_relative_l2 是相对 L2，test_distance_error 是节点距离错误率，test_condition_error 是条件不满足率。FNO 用频域卷积拟合场映射，TCN 是时间卷积网络，GNN 是图消息传递网络。</p><div class="table-scroll"><table><thead><tr><th>数据集</th><th>胜者架构</th><th>看到的样本数</th><th>指标</th><th>三个 seed</th></tr></thead><tbody><tr><td>随机小模型 next-token</td><td>transformer，宽 16，深 1</td><td>4,800</td><td>test_ce</td><td>3.4806, 3.4825, 3.4907</td></tr><tr><td>混合阶数 token 预测</td><td>bigram，宽 32，深 3</td><td>4,800</td><td>test_ce</td><td>2.5912, 2.5922, 2.592</td></tr><tr><td>带干扰的延迟复制</td><td>gru，宽 64，深 2</td><td>16,000</td><td>test_error</td><td>0, 0, 0</td></tr><tr><td>小型语言模型从头预训练</td><td>transformer，宽 16，深 2</td><td>4,800</td><td>test_ce</td><td>1.3659, 1.3815, 1.3417</td></tr><tr><td>从头 on-policy 蒸馏</td><td>gru，宽 32，深 3</td><td>4,800</td><td>test_kl</td><td>0.14121, 0.15678, 0.16431</td></tr><tr><td>隐状态时间序列预测</td><td>tcn，宽 48，深 1</td><td>16,000</td><td>test_mse</td><td>0.015961, 0.015591, 0.015329</td></tr><tr><td>延迟动力系统预测</td><td>mlp，宽 32，深 3</td><td>4,800</td><td>test_mse</td><td>0.0071463, 0.0072147, 0.0071111</td></tr><tr><td>合成图像关系分类</td><td>mlp，宽 32，深 3</td><td>4,800</td><td>test_error</td><td>0, 0, 0</td></tr><tr><td>条件图像 diffusion</td><td>预测干净图像的去噪网络，宽 32，深 3</td><td>16,000</td><td>test_condition_error</td><td>0.125, 0.27344, 0.14844</td></tr><tr><td>移动形状视频预测</td><td>cnn，宽 32，深 3</td><td>16,000</td><td>test_mse</td><td>0.0056797, 0.0056961, 0.0055838</td></tr><tr><td>图上的最短路</td><td>gnn，宽 32，深 2</td><td>4,800</td><td>test_distance_error</td><td>0.20801, 0.22461, 0.27856</td></tr><tr><td>图上的动态扩散</td><td>gnn，宽 32，深 2</td><td>4,800</td><td>test_mse</td><td>0.0044069, 0.0042068, 0.0044835</td></tr><tr><td>Poisson 解映射</td><td>fno，宽 16，深 2</td><td>4,800</td><td>test_relative_l2</td><td>0.55345, 0.51068, 0.50748</td></tr><tr><td>热方程时间推进</td><td>fno，宽 32，深 2</td><td>4,800</td><td>test_mse</td><td>0.0042548, 0.0047314, 0.0051049</td></tr><tr><td>稀疏传感器场重建</td><td>fno，宽 32，深 2</td><td>4,800</td><td>test_relative_l2</td><td>0.14762, 0.15549, 0.15601</td></tr></tbody></table></div></details>
+<h2>生成图像已通过独立新条件检查，长序列仍有边界</h2>
+<p>条件图像 diffusion（从噪声反复去噪生成图像）学习确定的几何条件映射。按前景交并比至少 0.7 且图像非空验收。源码冻结后另采 256 个未重复条件，三个训练 seed 的满足率为 90.63%、76.17%、91.80%，平均 86.20%。位置变化后的平均满足率为 83.33%。</p>
+<figure><img src="data:image/png;base64,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" alt="条件图像生成真实样本，上行生成，下行目标"><figcaption>八个真实条件，上行为生成结果，下行为目标。</figcaption></figure>
+<p>短复制验证了 4 token 源串、8 token 干扰，三个 seed 的整串错误率均为零。长复制参数变化后的测试失败。视频只验证了 16×16 单物体的 4 帧到 2 帧预测。原始 4 帧到 8 帧尚未解决。多步向量、图和场原型直接输出未来多个时刻，尚未验证预测结果递归回填的长期稳定性。</p>
+<figure><img src="data:image/png;base64,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" alt="三组真实视频预测样本"><figcaption>三组真实样本，各组两列为未来两帧。四行依次为目标、卷积网络预测、全零预测、重复最后输入帧。</figcaption></figure>
+<p>这些实例和候选经过探索筛选，当前结果证明原型可运行和生成题目。跨数据生成 seed 的稳定难度尚未验证，也不能代表自然图像或真实语言建模。</p>
+<h2>同一组题目上的答对率可与平衡选项基线比较</h2><p>每类取一道冻结的三选一题目。模型只读题目和选项，预测相同预算下哪个候选效果最好。所有模型读相同题目，不调用工具。GPT 使用聊天接口，最多输出 8192 token，medium reasoning effort，temperature 使用服务默认值。Claude 使用 CLI，显式指定系统提示并禁用工具。</p><p>两类模型的请求路径不同。耗时包含接口传输与服务等待，不能据此比较模型架构的推理效率。token 按各服务返回口径统计。</p><p>评测前仅重排选项位置，候选和训练结果不变。正确答案分布为 A 5 道、B 5 道、C 5 道。随机选项基线为 33.3%，始终选同一字母的最佳基线为 33.3%。每类只有一道题，结果只能描述这组样本，不能证明整个题型的难度。</p>
+<p>部分模型未取得全部 15 道题的有效回答。图中准确率的分母不同，当前不能对四个模型做完整排名。</p><p>四个模型都取得有效回答的题目中，7 道全对，0 道结果分歧，2 道全错。全对例子包括带干扰的延迟复制、小型语言模型从头预训练、条件图像 diffusion。全错例子包括随机小模型 next-token、混合阶数 token 预测。这只描述当前候选组合下的单道题表现，架构与预算变化会改变难度。</p>
+<figure><svg class="chart" xmlns:xlink="http://www.w3.org/1999/xlink" width="522.629687pt" height="222.283pt" viewBox="0 0 522.629687 222.283" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-10-11T21:19:12.626078</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.10.9, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}.table-scroll{overflow-x:auto}td{vertical-align:top}#tasks{table-layout:fixed;font-size:12px}#tasks th,#tasks td{padding:8px 6px;overflow-wrap:anywhere}#tasks th:nth-child(1){width:18%}#tasks th:nth-child(2){width:25%}#tasks th:nth-child(3){width:24%}#tasks th:nth-child(4){width:17%}#tasks th:nth-child(5){width:16%}.tags{font-size:11px}.filter{display:block;font:14px var(--head);margin:24px 0 8px}select{font:14px var(--head);background:var(--light);color:var(--dark);border:1px solid var(--mid);padding:6px}@media(max-width:600px){#tasks{min-width:680px}}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 222.283 
+L 522.629687 222.283 
+L 522.629687 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="axes_1">
+   <g id="patch_2">
+    <path d="M 113.669687 184.608 
+L 515.429688 184.608 
+L 515.429688 7.2 
+L 113.669687 7.2 
+z
+" style="fill: #ffffff"/>
+   </g>
+   <g id="matplotlib.axis_1">
+    <g id="xtick_1">
+     <g id="line2d_1">
+      <path d="M 113.669687 184.608 
+L 113.669687 7.2 
+" clip-path="url(#p331d6da122)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_2">
+      <defs>
+       <path id="md27c84f42f" d="M 0 0 
+L 0 3.5 
+" style="stroke: #5e5d59; stroke-width: 0.8"/>
+      </defs>
+      <g>
+       <use xlink:href="#md27c84f42f" x="113.669687" y="184.608" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_1">
+      <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" x="113.669687" y="198.771437" transform="rotate(-0 113.669687 198.771437)">0%</text>
+     </g>
+    </g>
+    <g id="xtick_2">
+     <g id="line2d_3">
+      <path d="M 227.161213 184.608 
+L 227.161213 7.2 
+" clip-path="url(#p331d6da122)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_4">
+      <g>
+       <use xlink:href="#md27c84f42f" x="227.161213" y="184.608" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_2">
+      <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" x="227.161213" y="198.771437" transform="rotate(-0 227.161213 198.771437)">33.3%</text>
+     </g>
+    </g>
+    <g id="xtick_3">
+     <g id="line2d_5">
+      <path d="M 340.652738 184.608 
+L 340.652738 7.2 
+" clip-path="url(#p331d6da122)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_6">
+      <g>
+       <use xlink:href="#md27c84f42f" x="340.652738" y="184.608" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_3">
+      <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" x="340.652738" y="198.771437" transform="rotate(-0 340.652738 198.771437)">66.7%</text>
+     </g>
+    </g>
+    <g id="xtick_4">
+     <g id="line2d_7">
+      <path d="M 454.144264 184.608 
+L 454.144264 7.2 
+" clip-path="url(#p331d6da122)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_8">
+      <g>
+       <use xlink:href="#md27c84f42f" x="454.144264" y="184.608" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_4">
+      <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" x="454.144264" y="198.771437" transform="rotate(-0 454.144264 198.771437)">100%</text>
+     </g>
+    </g>
+    <g id="text_5">
+     <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #141413" x="314.549688" y="212.792375" transform="rotate(-0 314.549688 212.792375)">有效回答准确率</text>
+    </g>
+   </g>
+   <g id="matplotlib.axis_2">
+    <g id="ytick_1">
+     <g id="line2d_9">
+      <defs>
+       <path id="m56e8c69ec0" d="M 0 0 
+L -3.5 0 
+" style="stroke: #5e5d59; stroke-width: 0.8"/>
+      </defs>
+      <g>
+       <use xlink:href="#m56e8c69ec0" x="113.669687" y="27.176727" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_6">
+      <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="106.669687" y="30.812587" transform="rotate(-0 106.669687 30.812587)">6-luna〔15/15 有效〕</text>
+     </g>
+    </g>
+    <g id="ytick_2">
+     <g id="line2d_10">
+      <g>
+       <use xlink:href="#m56e8c69ec0" x="113.669687" y="72.994909" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_7">
+      <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="106.669687" y="76.630768" transform="rotate(-0 106.669687 76.630768)">6.1 sol〔15/15 有效〕</text>
+     </g>
+    </g>
+    <g id="ytick_3">
+     <g id="line2d_11">
+      <g>
+       <use xlink:href="#m56e8c69ec0" x="113.669687" y="118.813091" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_8">
+      <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="106.669687" y="122.67395" transform="rotate(-0 106.669687 122.67395)">opus 5.5〔11/15 有效〕</text>
+     </g>
+    </g>
+    <g id="ytick_4">
+     <g id="line2d_12">
+      <g>
+       <use xlink:href="#m56e8c69ec0" x="113.669687" y="164.631273" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_9">
+      <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="106.669687" y="168.267132" transform="rotate(-0 106.669687 168.267132)">haiku 5.5〔12/15 有效〕</text>
+     </g>
+    </g>
+   </g>
+   <g id="patch_3">
+    <path d="M 113.669687 15.264 
+L 340.652738 15.264 
+L 340.652738 39.089455 
+L 113.669687 39.089455 
+z
+" clip-path="url(#p331d6da122)" style="fill: #d97757"/>
+   </g>
+   <g id="patch_4">
+    <path d="M 113.669687 61.082182 
+L 363.351043 61.082182 
+L 363.351043 84.907636 
+L 113.669687 84.907636 
+z
+" clip-path="url(#p331d6da122)" style="fill: #d97757"/>
+   </g>
+   <g id="patch_5">
+    <path d="M 113.669687 106.900364 
+L 361.287561 106.900364 
+L 361.287561 130.725818 
+L 113.669687 130.725818 
+z
+" clip-path="url(#p331d6da122)" style="fill: #d97757"/>
+   </g>
+   <g id="patch_6">
+    <path d="M 113.669687 152.718545 
+L 369.02562 152.718545 
+L 369.02562 176.544 
+L 113.669687 176.544 
+z
+" clip-path="url(#p331d6da122)" style="fill: #d97757"/>
+   </g>
+   <g id="line2d_13">
+    <path d="M 227.161213 184.608 
+L 227.161213 7.2 
+" clip-path="url(#p331d6da122)" style="fill: none; stroke-dasharray: 6.66,2.88; stroke-dashoffset: 0; stroke: #6a9bcc; stroke-width: 1.8"/>
+   </g>
+   <g id="patch_7">
+    <path d="M 113.669687 184.608 
+L 113.669687 7.2 
+" style="fill: none; stroke: #b0aea5; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="patch_8">
+    <path d="M 113.669687 184.608 
+L 515.429688 184.608 
+" style="fill: none; stroke: #b0aea5; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="text_10">
+    <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" x="347.46223" y="30.011102" transform="rotate(-0 347.46223 30.011102)">66.7%</text>
+   </g>
+   <g id="text_11">
+    <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" x="370.160535" y="75.829284" transform="rotate(-0 370.160535 75.829284)">73.3%</text>
+   </g>
+   <g id="text_12">
+    <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" x="368.097053" y="121.647466" transform="rotate(-0 368.097053 121.647466)">72.7%</text>
+   </g>
+   <g id="text_13">
+    <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" x="375.835111" y="167.465648" transform="rotate(-0 375.835111 167.465648)">75.0%</text>
+   </g>
+   <g id="legend_1">
+    <g id="line2d_14">
+     <path d="M 401.129688 171.296437 
+L 410.129688 171.296437 
+L 419.129688 171.296437 
+" style="fill: none; stroke-dasharray: 6.66,2.88; stroke-dashoffset: 0; stroke: #6a9bcc; stroke-width: 1.8"/>
+    </g>
+    <g id="text_14">
+     <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" x="426.329688" y="174.446438" transform="rotate(-0 426.329688 174.446438)">随机／固定字母基线</text>
+    </g>
+   </g>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="p331d6da122">
+   <rect x="113.669687" y="7.2" width="401.76" height="177.408"/>
+  </clipPath>
+ </defs>
+</svg>
+<figcaption>橙条只统计有效回答，请求失败不视为能力错误。</figcaption></figure>
+<p>6-luna 首轮接口配额不足后，在另一接口重测整组题。Claude 只对传输失败的请求恢复一次，保留已有有效回答。恢复过程只处理请求失败，不按答题对错重试。</p>
+<details open><summary>答题准确率、请求失败与推理开销</summary><p>答对数以全部 15 道题为分母单独列出。有效回答列按成功解析且模型身份相符的回答计算准确率。请求失败／格式失败分别计数。耗时是有效回答的请求耗时中位数，单位秒。token 是有效回答累计的输入／输出数。Claude 输入数包含普通输入、写入缓存与读取缓存，GPT 使用服务返回的总输入数。</p><div class="table-scroll"><table><thead><tr><th>模型</th><th>答对／题目</th><th>有效回答，准确率</th><th>请求／格式失败</th><th>耗时中位数</th><th>输入／输出 token</th></tr></thead><tbody><tr><td>6-luna<br><code>gpt-6-luna</code></td><td>10/15</td><td>15，66.7%</td><td>0 / 0</td><td>36.0</td><td>93,440 / 7,898</td></tr><tr><td>6.1 sol<br><code>gpt-6.1-sol</code></td><td>11/15</td><td>15，73.3%</td><td>0 / 0</td><td>8.7</td><td>93,440 / 3,029</td></tr><tr><td>opus 5.5<br><code>claude-opus-5-5</code></td><td>8/15</td><td>11，72.7%</td><td>4 / 0</td><td>22.2</td><td>110,454 / 12,641</td></tr><tr><td>haiku 5.5<br><code>claude-haiku-5-5</code></td><td>9/15</td><td>12，75.0%</td><td>3 / 0</td><td>15.4</td><td>120,060 / 12,215</td></tr></tbody></table></div></details>
+<details><summary>每道题的结果</summary><table><thead><tr><th>题型</th><th>6-luna</th><th>6.1 sol</th><th>opus 5.5</th><th>haiku 5.5</th></tr></thead><tbody><tr><td>随机小模型 next-token</td><td>错</td><td>错</td><td>错</td><td>错</td></tr><tr><td>混合阶数 token 预测</td><td>错</td><td>错</td><td>错</td><td>错</td></tr><tr><td>带干扰的延迟复制</td><td>对</td><td>对</td><td>对</td><td>对</td></tr><tr><td>小型语言模型从头预训练</td><td>对</td><td>对</td><td>对</td><td>对</td></tr><tr><td>从头 on-policy 蒸馏</td><td>对</td><td>对</td><td>错</td><td>请求失败</td></tr><tr><td>隐状态时间序列预测</td><td>错</td><td>对</td><td>对</td><td>请求失败</td></tr><tr><td>延迟动力系统预测</td><td>错</td><td>对</td><td>请求失败</td><td>对</td></tr><tr><td>合成图像关系分类</td><td>对</td><td>对</td><td>请求失败</td><td>对</td></tr><tr><td>条件图像 diffusion</td><td>对</td><td>对</td><td>对</td><td>对</td></tr><tr><td>移动形状视频预测</td><td>错</td><td>错</td><td>请求失败</td><td>错</td></tr><tr><td>图上的最短路</td><td>对</td><td>对</td><td>对</td><td>对</td></tr><tr><td>图上的动态扩散</td><td>对</td><td>对</td><td>对</td><td>对</td></tr><tr><td>Poisson 解映射</td><td>对</td><td>错</td><td>请求失败</td><td>请求失败</td></tr><tr><td>热方程时间推进</td><td>对</td><td>对</td><td>对</td><td>对</td></tr><tr><td>稀疏传感器场重建</td><td>对</td><td>对</td><td>对</td><td>对</td></tr></tbody></table></details>
+<h2>任务和可执行验收必须一起保存</h2>
+<p><a href="https://huggingface.co/datasets/XiaomiMiMo/MiMo-V2.6-RL-oss/blob/f819cd203f804f4bc6861a933592f8f62fbbdd7c/README.md">MiMo 的固定版本 README</a>把领域、题型与验收方式一起组织。这里借用这一结构，没有在此核验整个语料的质量。可复用经验记录保存任务 spec、候选对照、相同预算、seed 波动、适用范围与失败案例。</p>
+<footer>来源：ArchitectureIQ 冻结题目、训练诊断、原型审计与 MiMo 固定版本 README · 2026-10-11</footer></main>
+<script>document.querySelector("#tag").onchange=e=>{document.querySelectorAll("#tasks tbody tr").forEach(r=>r.hidden=e.target.value!=="all"&&!r.dataset.tags.split(" ").includes(e.target.value));};
+document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => {
+  const box = b.closest('.browser');
+  box.querySelectorAll('.tabs button').forEach(x => x.setAttribute('aria-selected', x === b));
+  box.querySelectorAll('.sample').forEach(s => s.classList.toggle('on', s.id === b.dataset.t));
+});
+</script>
+</body>
+</html>
