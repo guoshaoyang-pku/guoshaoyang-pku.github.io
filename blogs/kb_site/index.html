@@ -3,263 +3,460 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Science of AI · KB 科学循环</title>
+<title>知识积累有正向得分信号，仍需新题验证 · 实验线 1</title>
 <style>
-:root{--bg:#f6f7fb;--card:#fff;--ink:#111827;--mute:#6b7280;--line:#e5e7eb;--luna:#2563eb;--qwen:#ea580c;--opus:#7c3aed;--green:#059669;--red:#dc2626}
-*{box-sizing:border-box}body{margin:0;font:14px/1.6 -apple-system,"PingFang SC","Noto Sans SC",sans-serif;background:var(--bg);color:var(--ink)}
-.hero{background:linear-gradient(120deg,#0f172a,#1e3a8a 60%,#4c1d95);color:#fff;padding:22px 36px}
-.hero h1{margin:0;font-size:24px}
-nav.top{position:sticky;top:0;z-index:5;background:#fff;border-bottom:1px solid var(--line);padding:8px 36px;display:flex;gap:18px}
-nav.top a{color:#374151;text-decoration:none;font-weight:600}nav.top a:hover{color:var(--luna)}
-section{max-width:1240px;margin:0 auto;padding:10px 36px}
-h2{font-size:18px;margin:26px 0 8px;display:flex;align-items:center;gap:8px}
-h2 .ico{width:26px;height:26px;border-radius:7px;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:14px}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(520px,1fr));gap:16px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;box-shadow:0 1px 2px rgba(0,0,0,.03)}
-.card h3{margin:0 0 4px;font-size:15px}.card .sub{color:var(--mute);font-size:12px;margin-bottom:6px}
-svg text{font-family:inherit}
-.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:#374151;margin-top:4px}
-.legend i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:5px;border-radius:2px}
-table{border-collapse:collapse;width:100%;font-size:13px}td,th{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}th{color:var(--mute);font-weight:600;background:#fafafa}
-.pill{display:inline-block;padding:1px 8px;border-radius:10px;font-size:12px;background:#eef2ff;color:#3730a3;margin-right:4px}
-.pos{color:var(--green);font-weight:600}.neg{color:var(--red);font-weight:600}
-.runs{display:grid;grid-template-columns:repeat(auto-fit,minmax(350px,1fr));gap:14px}
-.run{border-left:5px solid var(--luna)}.run a.btn{display:inline-block;margin-top:8px;background:#111827;color:#fff;text-decoration:none;padding:5px 12px;border-radius:8px;font-size:13px}
-.run .muted{color:var(--mute);font-size:13px}
-#history{scroll-margin-top:48px}#runs{display:block;scroll-margin-top:48px}
-#runarchive{margin-top:16px}#runarchive>summary{cursor:pointer;font-weight:600;padding:8px 0}#archivecards{margin-top:8px}
-#runcards{grid-template-columns:repeat(2,minmax(0,1fr))}
-@media(max-width:760px){#runcards{grid-template-columns:1fr}.runs,.grid{grid-template-columns:1fr}section{padding:10px 18px}nav.top{padding:8px 18px;gap:14px;flex-wrap:wrap}.flow{grid-template-columns:repeat(2,minmax(0,1fr))}.step{min-width:0;overflow-wrap:anywhere}}
-.flow{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-.step{border-radius:12px;padding:12px;background:#fff;border:1px solid var(--line);position:relative}
-.step .n{width:30px;height:30px;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;margin-bottom:6px}
-.note{color:var(--mute);font-size:12px}
-.tip{position:fixed;pointer-events:none;background:#111827;color:#fff;font-size:12px;padding:6px 8px;border-radius:6px;display:none;z-index:9;max-width:320px}
-footer{color:var(--mute);font-size:12px;text-align:center;padding:30px}
+  :root {
+    --dark: #141413;   /* primary text */
+    --light: #faf9f5;  /* page background */
+    --mid: #b0aea5;    /* borders, axes */
+    --soft: #e8e6dc;   /* subtle fills */
+    --muted: #5e5d59;  /* secondary text (darker than --mid for contrast) */
+    --orange: #d97757; /* primary accent: the main result */
+    --blue: #6a9bcc;   /* secondary accent */
+    --green: #788c5d;  /* tertiary accent */
+    --head: "Poppins", "PingFang SC", "Noto Sans CJK SC", "Hiragino Sans GB", Arial, sans-serif;
+    --body: "Lora", "Noto Serif CJK SC", "Songti SC", Georgia, serif;
+    --mono: "SF Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--light); color: var(--dark); font: 17px/1.8 var(--body); }
+  main { max-width: 760px; margin: 0 auto; padding: 72px 24px 96px; }
+  h1, h2, h3 { font-family: var(--head); font-weight: 600; line-height: 1.35; letter-spacing: -0.01em; }
+  h1 { font-size: 32px; margin: 0 0 16px; }
+  h2 { font-size: 22px; margin: 64px 0 12px; }
+  p { margin: 0 0 16px; }
+  .lede { font-size: 19px; }
+  a { color: inherit; text-decoration: underline; text-decoration-color: var(--orange); text-underline-offset: 3px; }
+  code, .id { font-family: var(--mono); font-size: 0.86em; background: var(--soft); padding: 1px 5px; border-radius: 4px; }
+
+  .settings { display: flex; flex-wrap: wrap; gap: 8px 20px; list-style: none; padding: 0; margin: 24px 0 0;
+              font: 14px/1.6 var(--head); color: var(--muted); }
+  .settings li { display: inline-flex; align-items: center; gap: 6px; }
+  .settings svg { width: 15px; height: 15px; stroke: var(--dark); fill: none; stroke-width: 1.6;
+                  stroke-linecap: round; stroke-linejoin: round; }
+  .settings b { color: var(--dark); font-weight: 500; }
+
+  figure { margin: 28px 0; padding: 20px; background: #fff; border: 1px solid var(--soft); border-radius: 10px; }
+  figure img, figure svg.chart { display: block; width: 100%; height: auto; }
+
+
+
+  details { margin: 16px 0; }
+  summary { cursor: pointer; font: 15px var(--head); color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font: 14px/1.6 var(--head); margin: 16px 0; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--soft); }
+  th { font-weight: 500; color: var(--muted); }
+  footer { margin-top: 80px; font: 13px var(--head); color: var(--muted); }
+
+  h1 { text-wrap:balance; }
+  .line-link { font:14px/1.6 var(--head); margin:16px 0 24px; }
+  .flow-list { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px; list-style:none; padding:0; margin:24px 0; font:14px/1.6 var(--head); }
+  .flow-list li { position:relative; padding-top:10px; border-top:1px solid var(--mid); }
+  .flow-list li:not(:last-child)::after { content:"→"; position:absolute; right:-13px; top:8px; color:var(--muted); }
+  .flow-list b { display:block; margin-bottom:6px; }
+  .flow-list span { color:var(--muted); }
+  .round-picker { display:flex; flex-wrap:wrap; align-items:center; gap:8px; font:14px/1.6 var(--head); margin:20px 0; }
+  select { padding:6px 28px 6px 10px; color:var(--dark); background:var(--light); border:1px solid var(--mid); border-radius:4px; font:inherit; }
+  .rounds { display:flex; flex-wrap:wrap; gap:8px; margin:16px 0; font:14px/1.6 var(--head); }
+  .rounds a { min-width:36px; padding:5px 9px; text-align:center; border:1px solid var(--soft); border-radius:4px; text-decoration:none; }
+  .rounds a:hover { background:var(--soft); }
+  .record-links { display:flex; flex-wrap:wrap; gap:10px 24px; margin:20px 0; font:15px/1.6 var(--head); }
+  .table-wrap { overflow:auto; }
+  .table-wrap table { min-width:480px; }
+  td { vertical-align:top; font-variant-numeric:tabular-nums; }
+  .archive-list { padding-left:22px; font:14px/1.8 var(--head); }
+  .archive-list li { margin:12px 0; }
+  .archive-list p { margin:3px 0; color:var(--muted); }
+  .small { font:14px/1.7 var(--head); color:var(--muted); }
+  a:focus-visible,button:focus-visible,select:focus-visible,summary:focus-visible { outline:2px solid var(--blue); outline-offset:4px; }
+  ::selection { background:var(--soft); color:var(--dark); }
+  @media(max-width:600px) { main { padding:32px 20px 60px; } h1 { font-size:28px; } h2 { margin-top:44px; font-size:21px; } .flow-list { grid-template-columns:repeat(2,minmax(0,1fr)); } .flow-list li:nth-child(2)::after { display:none; } figure { padding:10px; } }
 </style>
 </head>
-<body>
-<div class="hero">
- <h1>Science of AI · KB 科学循环</h1>
-</div>
-<nav class="top"><a href="#flow">流程</a><a href="#history">实验</a><a href="#charts">指标</a><a href="#early-results">早期结果</a><a href="#findings">结论</a></nav>
+<body><main>
+<h1>知识积累有正向得分信号，仍需新题验证</h1>
+<p class="lede">知识库（KB）保存可复用的解题规律。最新循环完成 15 轮，在开发集上比不带知识库高 4.21 ± 2.37 个百分点，尚不能排除零增益。</p>
+<ul class="settings">
+<li><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="5" width="14" height="14" rx="2"/><path d="M9 1v4M15 1v4M9 19v4M15 19v4M1 9h4M1 15h4M19 9h4M19 15h4"/></svg>模型 <b>gpt-6.1-sol</b></li>
+<li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19l5-7 4 4 7-10"/></svg>循环 <b>15 轮 × 30 题</b></li>
+<li><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/></svg>开发集 <b>105 道排序题 × 3 次</b></li>
+<li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 12h10M12 7v10"/></svg>参数更新 <b>无</b></li>
+</ul>
 
-<section id="flow">
-  <h2><span class="ico" style="background:#0f172a">⟳</span>Luna / Qwen 的早期循环结构</h2>
- <div class="flow">
-  <div class="step"><div class="n" style="background:#2563eb">1</div><b>解题</b><div class="note">只看题目 + 只读 KB（上一轮快照中可信度前 40 条 + 最新 10 条）。不给工具，effort=low。输出答案和引用的条目。</div></div>
-  <div class="step"><div class="n" style="background:#d97706">2</div><b>发现</b><div class="note">同一会话续写：揭示答案与得分。可查前序轮次的历史、跑 python 沙箱回测。答对 low（可跳过），答错 medium。写评论和假说。</div></div>
-  <div class="step"><div class="n" style="background:#7c3aed">3</div><b>总结</b><div class="note">每轮结束，effort=xhigh。读本轮全部记录，回测后对 KB 做新增 / 合并 / 改写 / 删除，并写科学总结。</div></div>
-  <div class="step"><div class="n" style="background:#059669">4</div><b>KB 快照</b><div class="note">被引用的条目按得分记胜负（胜 += 得分，负 += 1 − 得分），加上总结者的结构操作，形成下一轮的 KB。</div></div>
- </div>
-</section>
+<h2>开发集得分上升，仍不能证明新题收益</h2>
+<p class="line-link"><strong>实验线 1 · KB 迭代</strong>　<a href="https://guoshaoyang-pku.github.io/science-of-ai-prototype/%E6%A8%A1%E7%B3%8A%E6%96%B9%E5%90%91/">实验线 2 · 模糊方向 →</a></p>
+<p>模型反复经历解题、发现和整理。每 5 轮用同一开发集检查知识库。第 15 轮平均得分为 70.08%，不带知识库为 65.87%。排序题包含部分分，得分不是全题答对率。</p>
+<figure><svg xmlns:xlink="http://www.w3.org/1999/xlink" class="chart" role="img" aria-label="带知识库的开发集得分从初始约60.4%升至第15轮70.08%，不带知识库为65.87%" viewBox="0 0 447.4 220.320719" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-10-12T00:25:59.655751</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.10.9, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 220.320719
+L 447.4 220.320719
+L 447.4 0
+L 0 0
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="axes_1">
+   <g id="patch_2">
+    <path d="M 38.44 182.645719
+L 440.2 182.645719
+L 440.2 10.781719
+L 38.44 10.781719
+z
+" style="fill: #ffffff"/>
+   </g>
+   <g id="matplotlib.axis_1">
+    <g id="xtick_1">
+     <g id="line2d_1">
+      <path d="M 56.701818 182.645719
+L 56.701818 10.781719
+" clip-path="url(#pa7f25b0750)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_2">
+      <defs>
+       <path id="m4f60683e0e" d="M 0 0
+L 0 3.5
+" style="stroke: #5e5d59; stroke-width: 0.8"/>
+      </defs>
+      <g>
+       <use xlink:href="#m4f60683e0e" x="56.701818" y="182.645719" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_1">
+      <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" x="56.701818" y="196.809156" transform="rotate(-0 56.701818 196.809156)">0</text>
+     </g>
+    </g>
+    <g id="xtick_2">
+     <g id="line2d_3">
+      <path d="M 178.447273 182.645719
+L 178.447273 10.781719
+" clip-path="url(#pa7f25b0750)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_4">
+      <g>
+       <use xlink:href="#m4f60683e0e" x="178.447273" y="182.645719" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_2">
+      <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" x="178.447273" y="196.809156" transform="rotate(-0 178.447273 196.809156)">5</text>
+     </g>
+    </g>
+    <g id="xtick_3">
+     <g id="line2d_5">
+      <path d="M 300.192727 182.645719
+L 300.192727 10.781719
+" clip-path="url(#pa7f25b0750)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_6">
+      <g>
+       <use xlink:href="#m4f60683e0e" x="300.192727" y="182.645719" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_3">
+      <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" x="300.192727" y="196.809156" transform="rotate(-0 300.192727 196.809156)">10</text>
+     </g>
+    </g>
+    <g id="xtick_4">
+     <g id="line2d_7">
+      <path d="M 421.938182 182.645719
+L 421.938182 10.781719
+" clip-path="url(#pa7f25b0750)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_8">
+      <g>
+       <use xlink:href="#m4f60683e0e" x="421.938182" y="182.645719" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_4">
+      <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" x="421.938182" y="196.809156" transform="rotate(-0 421.938182 196.809156)">15</text>
+     </g>
+    </g>
+    <g id="text_5">
+     <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #141413" x="239.32" y="210.830094" transform="rotate(-0 239.32 210.830094)">迭代轮次</text>
+    </g>
+   </g>
+   <g id="matplotlib.axis_2">
+    <g id="ytick_1">
+     <g id="line2d_9">
+      <path d="M 38.44 182.645719
+L 440.2 182.645719
+" clip-path="url(#pa7f25b0750)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_10">
+      <defs>
+       <path id="m0fadeb3c4b" d="M 0 0
+L -3.5 0
+" style="stroke: #5e5d59; stroke-width: 0.8"/>
+      </defs>
+      <g>
+       <use xlink:href="#m0fadeb3c4b" x="38.44" y="182.645719" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_6">
+      <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="31.44" y="186.227438" transform="rotate(-0 31.44 186.227438)">58</text>
+     </g>
+    </g>
+    <g id="ytick_2">
+     <g id="line2d_11">
+      <path d="M 38.44 161.162719
+L 440.2 161.162719
+" clip-path="url(#pa7f25b0750)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_12">
+      <g>
+       <use xlink:href="#m0fadeb3c4b" x="38.44" y="161.162719" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_7">
+      <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="31.44" y="164.744438" transform="rotate(-0 31.44 164.744438)">60</text>
+     </g>
+    </g>
+    <g id="ytick_3">
+     <g id="line2d_13">
+      <path d="M 38.44 139.679719
+L 440.2 139.679719
+" clip-path="url(#pa7f25b0750)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_14">
+      <g>
+       <use xlink:href="#m0fadeb3c4b" x="38.44" y="139.679719" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_8">
+      <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="31.44" y="143.261437" transform="rotate(-0 31.44 143.261437)">62</text>
+     </g>
+    </g>
+    <g id="ytick_4">
+     <g id="line2d_15">
+      <path d="M 38.44 118.196719
+L 440.2 118.196719
+" clip-path="url(#pa7f25b0750)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_16">
+      <g>
+       <use xlink:href="#m0fadeb3c4b" x="38.44" y="118.196719" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_9">
+      <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="31.44" y="121.778438" transform="rotate(-0 31.44 121.778438)">64</text>
+     </g>
+    </g>
+    <g id="ytick_5">
+     <g id="line2d_17">
+      <path d="M 38.44 96.713719
+L 440.2 96.713719
+" clip-path="url(#pa7f25b0750)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_18">
+      <g>
+       <use xlink:href="#m0fadeb3c4b" x="38.44" y="96.713719" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_10">
+      <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="31.44" y="100.295438" transform="rotate(-0 31.44 100.295438)">66</text>
+     </g>
+    </g>
+    <g id="ytick_6">
+     <g id="line2d_19">
+      <path d="M 38.44 75.230719
+L 440.2 75.230719
+" clip-path="url(#pa7f25b0750)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_20">
+      <g>
+       <use xlink:href="#m0fadeb3c4b" x="38.44" y="75.230719" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_11">
+      <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="31.44" y="78.812438" transform="rotate(-0 31.44 78.812438)">68</text>
+     </g>
+    </g>
+    <g id="ytick_7">
+     <g id="line2d_21">
+      <path d="M 38.44 53.747719
+L 440.2 53.747719
+" clip-path="url(#pa7f25b0750)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_22">
+      <g>
+       <use xlink:href="#m0fadeb3c4b" x="38.44" y="53.747719" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_12">
+      <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="31.44" y="57.329437" transform="rotate(-0 31.44 57.329437)">70</text>
+     </g>
+    </g>
+    <g id="ytick_8">
+     <g id="line2d_23">
+      <path d="M 38.44 32.264719
+L 440.2 32.264719
+" clip-path="url(#pa7f25b0750)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_24">
+      <g>
+       <use xlink:href="#m0fadeb3c4b" x="38.44" y="32.264719" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_13">
+      <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="31.44" y="35.846438" transform="rotate(-0 31.44 35.846438)">72</text>
+     </g>
+    </g>
+    <g id="ytick_9">
+     <g id="line2d_25">
+      <path d="M 38.44 10.781719
+L 440.2 10.781719
+" clip-path="url(#pa7f25b0750)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_26">
+      <g>
+       <use xlink:href="#m0fadeb3c4b" x="38.44" y="10.781719" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_14">
+      <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="31.44" y="14.363438" transform="rotate(-0 31.44 14.363438)">74</text>
+     </g>
+    </g>
+    <g id="text_15">
+     <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #141413" x="15.159375" y="96.713719" transform="rotate(-90 15.159375 96.713719)">开发集平均得分（%）</text>
+    </g>
+   </g>
+   <g id="line2d_27">
+    <path d="M 56.701818 156.901924
+L 178.447273 78.453169
+L 300.192727 58.903639
+L 421.938182 52.888399
+" clip-path="url(#pa7f25b0750)" style="fill: none; stroke: #d97757; stroke-width: 1.8; stroke-linecap: square"/>
+    <defs>
+     <path id="m2aff6166dd" d="M 0 2
+C 0.530406 2 1.03916 1.789267 1.414214 1.414214
+C 1.789267 1.03916 2 0.530406 2 0
+C 2 -0.530406 1.789267 -1.03916 1.414214 -1.414214
+C 1.03916 -1.789267 0.530406 -2 0 -2
+C -0.530406 -2 -1.03916 -1.789267 -1.414214 -1.414214
+C -1.789267 -1.03916 -2 -0.530406 -2 0
+C -2 0.530406 -1.789267 1.03916 -1.414214 1.414214
+C -1.03916 1.789267 -0.530406 2 0 2
+z
+" style="stroke: #d97757"/>
+    </defs>
+    <g clip-path="url(#pa7f25b0750)">
+     <use xlink:href="#m2aff6166dd" x="56.701818" y="156.901924" style="fill: #d97757; stroke: #d97757"/>
+     <use xlink:href="#m2aff6166dd" x="178.447273" y="78.453169" style="fill: #d97757; stroke: #d97757"/>
+     <use xlink:href="#m2aff6166dd" x="300.192727" y="58.903639" style="fill: #d97757; stroke: #d97757"/>
+     <use xlink:href="#m2aff6166dd" x="421.938182" y="52.888399" style="fill: #d97757; stroke: #d97757"/>
+    </g>
+   </g>
+   <g id="line2d_28">
+    <path d="M 38.44 98.074309
+L 440.2 98.074309
+" clip-path="url(#pa7f25b0750)" style="fill: none; stroke-dasharray: 6.66,2.88; stroke-dashoffset: 0; stroke: #6a9bcc; stroke-width: 1.8"/>
+   </g>
+   <g id="patch_3">
+    <path d="M 38.44 182.645719
+L 38.44 10.781719
+" style="fill: none; stroke: #b0aea5; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="patch_4">
+    <path d="M 38.44 182.645719
+L 440.2 182.645719
+" style="fill: none; stroke: #b0aea5; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="legend_1">
+    <g id="line2d_29">
+     <path d="M 46.54 22.895156
+L 55.54 22.895156
+L 64.54 22.895156
+" style="fill: none; stroke: #d97757; stroke-width: 1.8; stroke-linecap: square"/>
+     <g>
+      <use xlink:href="#m2aff6166dd" x="55.54" y="22.895156" style="fill: #d97757; stroke: #d97757"/>
+     </g>
+    </g>
+    <g id="text_16">
+     <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" x="71.74" y="26.045156" transform="rotate(-0 71.74 26.045156)">带知识库</text>
+    </g>
+    <g id="line2d_30">
+     <path d="M 46.54 36.620156
+L 55.54 36.620156
+L 64.54 36.620156
+" style="fill: none; stroke-dasharray: 6.66,2.88; stroke-dashoffset: 0; stroke: #6a9bcc; stroke-width: 1.8"/>
+    </g>
+    <g id="text_17">
+     <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" x="71.74" y="39.770156" transform="rotate(-0 71.74 39.770156)">不带知识库</text>
+    </g>
+   </g>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="pa7f25b0750">
+   <rect x="38.44" y="10.781719" width="401.76" height="171.864"/>
+  </clipPath>
+ </defs>
+</svg>
+</figure>
+<p class="small">这批题已经用于研发。± 表示同题配对差值的 1 个标准误，衡量估计波动。曲线连接三次重复的平均分，没有用重复之间的波动替代题级误差。</p>
+<details><summary>展开各检查点的数字与限制</summary>
+<div class="table-wrap"><table><thead><tr><th>轮次</th><th>带知识库</th><th>相对不带知识库</th></tr></thead><tbody>
+<tr><td>初始</td><td>60.40%</td><td>−5.48 个百分点</td></tr>
+<tr><td>第 5 轮</td><td>67.70%</td><td>+1.83 ± 2.61 个百分点</td></tr>
+<tr><td>第 10 轮</td><td>69.52%</td><td>+3.65 ± 2.57 个百分点</td></tr>
+<tr><td>第 15 轮</td><td>70.08%</td><td>+4.21 ± 2.37 个百分点</td></tr>
+</tbody></table></div>
+<p class="small">初始差值由已保存平均分相减，未补算其配对误差。各检查点沿用保存的宏观评测数字。新增题池上的效果尚未验证。</p>
+</details>
 
-<section id="history">
- <span id="runs"></span>
- <h2><span class="ico" style="background:#7c3aed">🗂</span>建议先看这四条</h2>
- <p class="note">两条 Sol 解题线，加上历史 Luna 主实验与 Qwen3.8-Max 同题对照。下方链接直达代表轮次的 KB 变化；每条实验保留逐题解题、发现和总结记录。</p>
- <p class="note">新研究线：<a href="v2/index.html">science_program_v2 · 公式与受控测量报告</a>。</p>
- <div class="runs" id="runcards"></div>
- <details id="runarchive"><summary>其余实验与诊断</summary><div class="runs" id="archivecards"></div></details>
-</section>
+<h2>每轮先冻结知识库，再用解题反馈修订规律</h2>
+<ol class="flow-list" aria-label="知识库迭代流程">
+<li><b>解题</b><span>只看题目与冻结知识库。</span></li>
+<li><b>发现</b><span>揭示答案，提出解释和待验证问题。</span></li>
+<li><b>整理与研究</b><span>测量、补条件、合并重复或撤回规则。</span></li>
+<li><b>保存下一版本</b><span>记录理由，供下一轮使用。</span></li>
+</ol>
+<p>总结与研究任务可以跨轮继续。每条修改分别记录发起轮和应用轮。一次解题使用的知识库版本保持不变。</p>
 
-<section id="charts">
- <h2><span class="ico" style="background:#2563eb">📈</span>各模型在 KB 下的指标</h2>
- <div class="grid">
-  <div class="card"><h3>同一 40 题评测集：各 KB 版本得分</h3><div id="c_abs"></div><div class="legend" id="l_abs"></div></div>
-  <div class="card"><h3>相对不带 KB 的提升（逐题配对，百分点）</h3><div id="c_delta"></div><div class="legend" id="l_delta"></div></div>
-  <div class="card"><h3>gpt-6-luna 主实验：分题源得分</h3><div id="c_src"></div><div class="legend" id="l_src"></div></div>
-  <div class="card"><h3>训练流：每轮 15 道新题的均分</h3><div id="c_train"></div><div class="legend" id="l_train"></div></div>
-  <div class="card"><h3>gpt-6-luna 主实验：KB 规模与总结者操作</h3><div id="c_ops"></div><div class="legend" id="l_ops"></div></div>
-  <div class="card"><h3>各模型评测汇总</h3><div id="t_sum"></div></div>
- </div>
-</section>
+<h2>第 5 轮合并重复证据，15 轮变化都能追溯</h2>
+<span id="runs"></span><span id="history"></span>
+<p>第 5 轮把重复条目合并，知识库从 73 条变为 68 条。第 15 轮结束时有 139 条，晚到研究又应用到 143 条。条目增加不等于发现增加，修改理由和测量报告可以分别查看。</p>
+<div class="round-picker"><label for="round">选择迭代</label><select id="round" aria-label="选择迭代轮次"><option value="1">第 1 轮</option><option value="2">第 2 轮</option><option value="3">第 3 轮</option><option value="4">第 4 轮</option><option value="5" selected>第 5 轮</option><option value="6">第 6 轮</option><option value="7">第 7 轮</option><option value="8">第 8 轮</option><option value="9">第 9 轮</option><option value="10">第 10 轮</option><option value="11">第 11 轮</option><option value="12">第 12 轮</option><option value="13">第 13 轮</option><option value="14">第 14 轮</option><option value="15">第 15 轮</option></select><a id="round-diff" href="runs/soa_async_v1.html#epoch=5&amp;view=diff">查看知识库变化 →</a><a id="round-records" href="runs/soa_async_v1.html#epoch=5&amp;view=records">查看解题与发现</a></div>
+<div class="rounds" aria-label="全部15轮知识库变化"><a href="runs/soa_async_v1.html#epoch=1&amp;view=diff" aria-label="第1轮知识库变化">1</a><a href="runs/soa_async_v1.html#epoch=2&amp;view=diff" aria-label="第2轮知识库变化">2</a><a href="runs/soa_async_v1.html#epoch=3&amp;view=diff" aria-label="第3轮知识库变化">3</a><a href="runs/soa_async_v1.html#epoch=4&amp;view=diff" aria-label="第4轮知识库变化">4</a><a href="runs/soa_async_v1.html#epoch=5&amp;view=diff" aria-label="第5轮知识库变化">5</a><a href="runs/soa_async_v1.html#epoch=6&amp;view=diff" aria-label="第6轮知识库变化">6</a><a href="runs/soa_async_v1.html#epoch=7&amp;view=diff" aria-label="第7轮知识库变化">7</a><a href="runs/soa_async_v1.html#epoch=8&amp;view=diff" aria-label="第8轮知识库变化">8</a><a href="runs/soa_async_v1.html#epoch=9&amp;view=diff" aria-label="第9轮知识库变化">9</a><a href="runs/soa_async_v1.html#epoch=10&amp;view=diff" aria-label="第10轮知识库变化">10</a><a href="runs/soa_async_v1.html#epoch=11&amp;view=diff" aria-label="第11轮知识库变化">11</a><a href="runs/soa_async_v1.html#epoch=12&amp;view=diff" aria-label="第12轮知识库变化">12</a><a href="runs/soa_async_v1.html#epoch=13&amp;view=diff" aria-label="第13轮知识库变化">13</a><a href="runs/soa_async_v1.html#epoch=14&amp;view=diff" aria-label="第14轮知识库变化">14</a><a href="runs/soa_async_v1.html#epoch=15&amp;view=diff" aria-label="第15轮知识库变化">15</a></div>
+<div class="record-links"><a href="runs/soa_async_v1.html#kb=latest_saved">最新知识库与研究报告</a><a href="runs/soa_async_v1.html">条目演化与修改日志</a></div>
 
-<section id="early-results">
- <h2><span class="ico" style="background:#ea580c">⏱</span>早期结果</h2>
- <div class="grid">
-  <div class="card"><h3>早期循环：Qwen3.8-Max + 规则式更新</h3><div id="c_early"></div></div>
-  <div class="card"><h3>KB 渲染方式消融</h3><div id="c_abl"></div></div>
- </div>
-</section>
-
-<section id="findings">
- <h2><span class="ico" style="background:#059669">✓</span>10月3日阶段结论</h2>
- <div class="card">
-  <ul>
-   <li><b>闭环已跑通：</b>解题 → 发现 → 总结 → commit 全自动；gpt-6-luna 主实验 12 轮共 180 条解题与发现轨迹、69 条假说、244 条 commit、12 份科学总结。</li>
-   <li><b>有提升但不稳：</b>gpt-6-luna 第 8 轮 KB 比不带 KB 高约 7.5 个百分点（±4.4），之后回落到接近种子 KB。单次评测噪声约 ±5 个百分点，必须重复采样。</li>
-   <li><b>提升主要来自筛选，不是新科学：</b>第 8 轮解题者看到的 50 条里有 26 条是新进入视野的种子条目，新增条目只占 3 条；评测中 361 次引用只有 8 次指向新增条目。最可靠的条目（胜负证据 ≥4 且可信度 ≥0.6 的 14 条）全部来自种子 KB。</li>
-   <li><b>总结者擅长证伪，不擅长深化：</b>它删掉了说得过宽的条目（如“平滑激活在回归上更快”，最终 0.75 胜 5.9 负），并把绝对说法改成带条件的；但新增条目多为窄范围经验，没有提出新机制。</li>
-   <li><b>下一步：</b>在发现阶段允许 CPU 上的小规模 torch 实验，要求每条机制性规律附可复现的最小实验；门控版（快照择优 + 回滚 + 独立测试集）已实现，待有预算后运行。</li>
-  </ul>
- </div>
-</section>
-<footer id="foot"></footer>
-<div class="tip" id="tip"></div>
+<h2>历史对照显示，收益依赖模型与循环方式</h2>
+<p>不同实验使用不同题池，不能把它们排成模型排行榜。下表保留代表性读数和完整记录入口。</p>
+<div class="table-wrap"><table><thead><tr><th>实验</th><th>保存结果</th><th>逐轮记录</th></tr></thead><tbody>
+<tr><td>同步整理循环<br><span class="small">gpt-6.1-sol · 10 轮</span></td><td>第 8 轮开发集 +5.67 ± 1.84 个百分点。第 9 轮候选被拒，其改动仍可审查。</td><td><a href="runs/soa_v3.html#epoch=9&amp;view=diff">撤回与修订</a></td></tr>
+<tr><td>早期知识库循环<br><span class="small">gpt-6-luna · 12 轮</span></td><td>第 8 轮 +7.50 ± 4.37，第 12 轮回落至 +0.83 ± 4.12 个百分点。40 题，每题重复 3 次。</td><td><a href="runs/luna_main.html#epoch=1&amp;view=diff">合并与删除</a></td></tr>
+<tr><td>早期同题对照<br><span class="small">Qwen3.8-Max · 4 轮完成</span></td><td>第 4 轮 −6.25 ± 6.44 个百分点。与早期循环使用同一 40 题，每题仅 1 次。</td><td><a href="runs/qwen_6ep_40eval.html#epoch=1&amp;view=diff">对照记录</a></td></tr>
+</tbody></table></div>
+<details id="runarchive"><summary>展开其余实验与诊断</summary><ul class="archive-list" id="archive-list"></ul></details>
+<footer>来源：已保存的解题、知识库版本与开发集评测 · 2026-10-11</footer>
+</main>
 <script>
 const D = {"runs": [{"name": "sol_tool", "title": "gpt-6.1-sol · 初始工具 KB", "note": "保存了 e1–e4 各 15 条逐题记录；metrics 只有 e1、e2、e4。默认现任 kb_0001 共 19 条。", "model": "gpt-6.1-sol", "provider": "cctq", "batch": 15, "eval_n": 100, "same_val": false, "page": "runs/sol_tool.html", "evals": [], "epochs": [{"epoch": 1, "n": 15, "mean": 0.4667, "hyp": 5, "ops": {"credit": 2, "add": 3, "revise": 5}, "kb_size": 19}, {"epoch": 2, "n": 15, "mean": 0.55, "hyp": 5, "ops": {"credit": 1, "revise": 4, "add": 1, "delete": 1}, "kb_size": 19}, {"epoch": 4, "n": 15, "mean": 0.6167, "hyp": 6, "ops": {"revise": 5, "adjust": 1}, "kb_size": 19}], "archive_only": true}, {"name": "_smoke_soa", "title": "gpt-6.1-sol · Science 功能烟测", "note": "4 题功能验证；两份 KB 快照均为 19 条，不用于涨分结论。", "model": "gpt-6.1-sol", "provider": "cctq", "batch": 4, "eval_n": 0, "same_val": false, "page": "runs/_smoke_soa.html", "evals": [], "epochs": [{"epoch": 1, "n": 4, "mean": 0.875, "hyp": 0, "ops": {"revise": 2, "adjust": 4}, "kb_size": 19}], "archive_only": true}, {"name": "soa_v1", "title": "gpt-6.1-sol · Science v1", "note": "保存了 e1–e13 的逐题记录和评测；e12 指标文件只有恢复后的 gate。e14 另有 30 条解题记录，未保存整轮指标。默认 kb_0013 共 28 条。反复选择后的 val 不是独立收益证据。", "model": "gpt-6.1-sol", "provider": "cctq", "batch": 30, "eval_n": 100, "same_val": false, "page": "runs/soa_v1.html", "evals": [{"label": "kb_0010 / val", "delta": 0.0683, "delta_se": 0.0213}], "epochs": [{"epoch": 1, "n": 30, "mean": 0.6667, "hyp": 10, "ops": {"credit": 2, "add": 3, "annotate": 6, "revise": 1}, "kb_size": 22}, {"epoch": 2, "n": 30, "mean": 0.6917, "hyp": 10, "ops": {"add": 2, "revise": 3, "merge": 1, "annotate": 3}, "kb_size": 23}, {"epoch": 3, "n": 30, "mean": 0.5417, "hyp": 15, "ops": {"credit": 1, "revise": 7, "add": 2, "annotate": 1}, "kb_size": 24}, {"epoch": 4, "n": 30, "mean": 0.6667, "hyp": 13, "ops": {"revise": 7, "add": 2, "annotate": 3}, "kb_size": 24}, {"epoch": 5, "n": 30, "mean": 0.6917, "hyp": 11, "ops": {"credit": 1, "revise": 7, "add": 1, "merge": 1, "annotate": 3}, "kb_size": 22}, {"epoch": 6, "n": 30, "mean": 0.675, "hyp": 12, "ops": {"revise": 3, "annotate": 2}, "kb_size": 22}, {"epoch": 7, "n": 30, "mean": 0.6667, "hyp": 8, "ops": {"revise": 6, "add": 2}, "kb_size": 24}, {"epoch": 8, "n": 30, "mean": 0.5, "hyp": 13, "ops": {"credit": 2, "revise": 7, "add": 1, "annotate": 2}, "kb_size": 25}, {"epoch": 9, "n": 30, "mean": 0.725, "hyp": 9, "ops": {"credit": 1, "revise": 2, "add": 3, "annotate": 6}, "kb_size": 27}, {"epoch": 10, "n": 30, "mean": 0.6, "hyp": 14, "ops": {"credit": 1, "add": 3, "revise": 6}, "kb_size": 27}, {"epoch": 11, "n": 30, "mean": 0.6667, "hyp": 12, "ops": {"revise": 6, "add": 4}, "kb_size": 31}, {"epoch": 12, "n": 30, "mean": null, "hyp": null, "ops": {}, "kb_size": null}, {"epoch": 13, "n": 30, "mean": 0.5917, "hyp": 16, "ops": {"credit": 1, "revise": 12, "add": 1, "annotate": 2}, "kb_size": 28}], "archive_only": true}, {"name": "soa_v2", "title": "gpt-6.1-sol · 训练对照诊断", "note": "只有种子 kb_0000 的 22 条完整正文，未保存完整 epoch 或有效评测。", "model": "gpt-6.1-sol", "provider": "cctq", "batch": 30, "eval_n": 100, "same_val": false, "page": "runs/soa_v2.html", "evals": [], "epochs": [], "archive_only": true}, {"name": "soa_v3", "title": "GPT · 条件纠错与合并", "note": "10轮有完整逐题记录。GRU优势被收窄到宽度条件；第9轮候选删除了过宽的深度规则。该轮候选被拒，操作保留供审查，未被现任KB采纳。", "model": "gpt-6.1-sol", "provider": "cctq", "batch": 30, "eval_n": 200, "same_val": false, "page": "runs/soa_v3.html", "evals": [{"label": "kb_0008 / val", "delta": 0.0567, "delta_se": 0.0184}], "epochs": [{"epoch": 1, "n": 27, "mean": null, "hyp": null, "ops": {"rollback": 1}, "kb_size": 27, "complete": true}, {"epoch": 2, "n": 22, "mean": 0.6023, "hyp": 10, "ops": {"merge": 6, "revise": 8, "rollback": 1}, "kb_size": 27, "complete": true}, {"epoch": 3, "n": 23, "mean": 0.7065, "hyp": 8, "ops": {"merge": 4, "revise": 10, "annotate": 3, "add": 1, "rollback": 1}, "kb_size": 27, "complete": true}, {"epoch": 4, "n": 23, "mean": 0.5326, "hyp": 11, "ops": {"revise": 6, "add": 1, "rollback": 1}, "kb_size": 27, "complete": true}, {"epoch": 5, "n": 22, "mean": 0.6477, "hyp": 9, "ops": {"merge": 1, "revise": 4, "add": 1, "rollback": 1}, "kb_size": 27, "complete": true}, {"epoch": 6, "n": 22, "mean": 0.6136, "hyp": 9, "ops": {"revise": 7, "rollback": 1}, "kb_size": 27, "complete": true}, {"epoch": 7, "n": 23, "mean": 0.5543, "hyp": 8, "ops": {"revise": 7, "annotate": 1, "rollback": 1}, "kb_size": 27, "complete": true}, {"epoch": 8, "n": 23, "mean": 0.6087, "hyp": 8, "ops": {"revise": 5, "add": 1, "annotate": 2}, "kb_size": 28, "complete": true}, {"epoch": 9, "n": 22, "mean": 0.5, "hyp": 12, "ops": {"delete": 1, "revise": 7, "merge": 1, "rollback": 1}, "kb_size": 28, "complete": true}, {"epoch": 10, "n": 22, "mean": 0.4773, "hyp": 8, "ops": {"revise": 1, "rollback": 1}, "kb_size": 28, "complete": true}], "archive_only": true}, {"name": "soa_v4", "title": "gpt-6.1-sol · 集邮与宏观整理", "note": "第 1–6 轮各 30 条完整记录；第 7 轮有 28 条已保存解题记录，未完成。配置 batch 为 40，完整轮实际各 30 题。最新 kb_0006 共 35 条。e5 val +1.04 ±1.82pt，旧 test +1.65 ±2.95pt，尚不能排除零增益。", "model": "gpt-6.1-sol", "provider": "cctq", "batch": 40, "eval_n": 200, "same_val": false, "page": "runs/soa_v4.html", "evals": [], "epochs": [{"epoch": 1, "n": 30, "mean": 0.525, "hyp": 19, "ops": {"credit": 1}, "kb_size": 28}, {"epoch": 2, "n": 30, "mean": 0.55, "hyp": 14, "ops": {"add": 4, "revise": 1}, "kb_size": 32}, {"epoch": 3, "n": 30, "mean": 0.6, "hyp": 10, "ops": {"credit": 1, "add": 7, "revise": 1}, "kb_size": 39}, {"epoch": 4, "n": 30, "mean": 0.6833, "hyp": 9, "ops": {"credit": 1, "add": 4, "revise": 2, "delete": 2}, "kb_size": 41}, {"epoch": 5, "n": 30, "mean": 0.675, "hyp": 19, "ops": {"credit": 1, "merge": 5, "revise": 5, "annotate": 1}, "kb_size": 35}, {"epoch": 6, "n": 30, "mean": 0.6583, "hyp": 7, "ops": {"credit": 7}, "kb_size": 35}], "archive_only": true}, {"name": "soa_async_v1", "title": "GPT · 持久知识库研究", "note": "15轮×30题，450份解题与发现记录。KB从35条增至139条，后续研究保存到143条。第15轮开发集平均排序得分70.08%，相对不带KB +4.21±2.37个百分点（105题、3次重复、1个标准误），尚不能排除零增益。", "model": "gpt-6.1-sol", "provider": "cctq", "batch": 30, "eval_n": 105, "same_val": false, "page": "runs/soa_async_v1.html", "evals": [], "epochs": [{"epoch": 1, "n": 30, "mean": 0.625, "hyp": 2, "ops": {"revise": 14, "add": 2, "annotate": 2}, "kb_size": 37, "complete": true}, {"epoch": 2, "n": 30, "mean": 0.55, "hyp": 1, "ops": {"annotate": 9, "revise": 14, "add": 22}, "kb_size": 59, "complete": true}, {"epoch": 3, "n": 30, "mean": 0.7, "hyp": 2, "ops": {"revise": 11, "annotate": 1, "add": 5}, "kb_size": 64, "complete": true}, {"epoch": 4, "n": 30, "mean": 0.6833, "hyp": 1, "ops": {"add": 9, "revise": 4, "annotate": 1}, "kb_size": 73, "complete": true}, {"epoch": 5, "n": 30, "mean": 0.6167, "hyp": 2, "ops": {"merge": 6, "annotate": 9, "revise": 17, "add": 1}, "kb_size": 68, "complete": true}, {"epoch": 6, "n": 30, "mean": 0.5833, "hyp": 3, "ops": {"revise": 9, "annotate": 7, "add": 5}, "kb_size": 73, "complete": true}, {"epoch": 7, "n": 30, "mean": 0.6, "hyp": 2, "ops": {"add": 8, "annotate": 3, "revise": 3}, "kb_size": 81, "complete": true}, {"epoch": 8, "n": 30, "mean": 0.6333, "hyp": 2, "ops": {"add": 11, "annotate": 4, "revise": 8}, "kb_size": 92, "complete": true}, {"epoch": 9, "n": 30, "mean": 0.6083, "hyp": 7, "ops": {"add": 5, "annotate": 1, "revise": 3}, "kb_size": 97, "complete": true}, {"epoch": 10, "n": 30, "mean": 0.7833, "hyp": 1, "ops": {"add": 4, "annotate": 1, "revise": 9}, "kb_size": 101, "complete": true}, {"epoch": 11, "n": 30, "mean": 0.625, "hyp": 6, "ops": {"add": 12, "annotate": 6, "revise": 4}, "kb_size": 113, "complete": true}, {"epoch": 12, "n": 30, "mean": 0.6917, "hyp": 0, "ops": {"add": 5, "annotate": 10, "revise": 4}, "kb_size": 118, "complete": true}, {"epoch": 13, "n": 30, "mean": 0.7167, "hyp": 2, "ops": {"revise": 4, "add": 9, "annotate": 2}, "kb_size": 127, "complete": true}, {"epoch": 14, "n": 30, "mean": 0.675, "hyp": 2, "ops": {"add": 12, "annotate": 18, "revise": 4}, "kb_size": 139, "complete": true}, {"epoch": 15, "n": 30, "mean": 0.8333, "hyp": 2, "ops": {"add": 3, "annotate": 6, "revise": 7, "merge": 3}, "kb_size": 139, "complete": true}], "archive_only": true}, {"name": "luna_main", "title": "Luna · 历史主实验", "note": "12轮×15题，KB从294条压缩到267条。第8轮相对不带KB +7.50±4.37个百分点，第12轮回落至+0.83±4.12；40题、3次重复、1个标准误。", "model": "gpt-6-luna", "provider": "cctq", "batch": 15, "eval_n": 40, "same_val": true, "page": "runs/luna_main.html", "evals": [{"label": "kb_0000", "epoch": 0, "n_q": 40, "samples": 120, "errors": 0, "mean": 0.3729166666666667, "se": 0.061294463191618846, "by_source": {"arch170": 0.23333333333333334, "dataflip500": 0.43333333333333335, "ranking_v2": 0.5916666666666667, "ranking_v3": 0.23333333333333334}, "delta": 0.006250000000000005, "delta_se": 0.04759039793680523}, {"label": "kb_0002", "epoch": 2, "n_q": 40, "samples": 40, "errors": 0, "mean": 0.3875, "se": 0.06872814337887859, "by_source": {"arch170": 0.2, "dataflip500": 0.5, "ranking_v2": 0.6, "ranking_v3": 0.25}, "delta": 0.02083333333333334, "delta_se": 0.05643665611857379}, {"label": "kb_0004", "epoch": 4, "n_q": 40, "samples": 120, "errors": 0, "mean": 0.4270833333333333, "se": 0.06372988621860153, "by_source": {"arch170": 0.26666666666666666, "dataflip500": 0.5333333333333333, "ranking_v2": 0.6416666666666666, "ranking_v3": 0.26666666666666666}, "delta": 0.06041666666666667, "delta_se": 0.04857179423448031}, {"label": "kb_0006", "epoch": 6, "n_q": 40, "samples": 120, "errors": 0, "mean": 0.4125, "se": 0.06495875855795208, "by_source": {"arch170": 0.3, "dataflip500": 0.43333333333333335, "ranking_v2": 0.6083333333333333, "ranking_v3": 0.30833333333333335}, "delta": 0.04583333333333334, "delta_se": 0.05159061814266117}, {"label": "kb_0008", "epoch": 8, "n_q": 40, "samples": 120, "errors": 0, "mean": 0.44166666666666665, "se": 0.06442546876539607, "by_source": {"arch170": 0.3, "dataflip500": 0.6666666666666666, "ranking_v2": 0.6166666666666667, "ranking_v3": 0.18333333333333332}, "delta": 0.07500000000000001, "delta_se": 0.043730917694386}, {"label": "kb_0010", "epoch": 10, "n_q": 40, "samples": 120, "errors": 0, "mean": 0.40625, "se": 0.0633796712512792, "by_source": {"arch170": 0.26666666666666666, "dataflip500": 0.6666666666666666, "ranking_v2": 0.5166666666666667, "ranking_v3": 0.175}, "delta": 0.03958333333333334, "delta_se": 0.035928305370287454}, {"label": "kb_0012", "epoch": 12, "n_q": 40, "samples": 120, "errors": 0, "mean": 0.375, "se": 0.0663856255679743, "by_source": {"arch170": 0.26666666666666666, "dataflip500": 0.5, "ranking_v2": 0.5583333333333333, "ranking_v3": 0.175}, "delta": 0.008333333333333337, "delta_se": 0.04121550616840643}, {"label": "nokb", "epoch": -1, "n_q": 40, "samples": 120, "errors": 0, "mean": 0.36666666666666664, "se": 0.06193117216289455, "by_source": {"arch170": 0.3, "dataflip500": 0.5333333333333333, "ranking_v2": 0.5, "ranking_v3": 0.13333333333333333}}], "epochs": [{"epoch": 1, "n": 15, "mean": 0.35, "hyp": 2, "ops": {"merge": 6, "revise": 3, "delete": 11}, "kb_size": 274, "complete": true}, {"epoch": 2, "n": 15, "mean": 0.2333, "hyp": 10, "ops": {"merge": 1}, "kb_size": 273, "complete": true}, {"epoch": 3, "n": 15, "mean": 0.3167, "hyp": 4, "ops": {"revise": 1, "delete": 1}, "kb_size": 272, "complete": true}, {"epoch": 4, "n": 15, "mean": 0.3667, "hyp": 8, "ops": {"revise": 1, "add": 1}, "kb_size": 273, "complete": true}, {"epoch": 5, "n": 15, "mean": 0.3667, "hyp": 7, "ops": {"revise": 2, "merge": 1, "delete": 1, "add": 4}, "kb_size": 271, "complete": true}, {"epoch": 6, "n": 15, "mean": 0.3167, "hyp": 4, "ops": {"merge": 1, "add": 2, "revise": 1}, "kb_size": 272, "complete": true}, {"epoch": 7, "n": 15, "mean": 0.55, "hyp": 3, "ops": {"add": 2, "merge": 1, "revise": 1}, "kb_size": 273, "complete": true}, {"epoch": 8, "n": 15, "mean": 0.5833, "hyp": 6, "ops": {}, "kb_size": 273, "complete": true}, {"epoch": 9, "n": 15, "mean": 0.4167, "hyp": 5, "ops": {}, "kb_size": 273, "complete": true}, {"epoch": 10, "n": 15, "mean": 0.35, "hyp": 6, "ops": {"add": 4, "merge": 1, "revise": 1, "delete": 5}, "kb_size": 271, "complete": true}, {"epoch": 11, "n": 15, "mean": 0.3833, "hyp": 6, "ops": {"revise": 2, "delete": 1}, "kb_size": 270, "complete": true}, {"epoch": 12, "n": 15, "mean": 0.4667, "hyp": 8, "ops": {"add": 2, "revise": 1, "delete": 5}, "kb_size": 267, "complete": true}]}, {"name": "qwen_6ep_40eval", "title": "Qwen3.8-Max · 历史对照", "note": "与Luna使用同一40题评测集，但每题只采样1次。4轮完整，第5轮中断，KB从294条压缩到255条；第4轮相对不带KB −6.25±6.44个百分点（1个标准误）。", "model": "qwen3.8-max-0902", "provider": "aliyun", "batch": 15, "eval_n": 40, "same_val": true, "page": "runs/qwen_6ep_40eval.html", "evals": [{"label": "kb_0000", "epoch": 0, "n_q": 40, "samples": 40, "errors": 0, "mean": 0.4625, "se": 0.07411334874055052, "by_source": {"arch170": 0.3, "dataflip500": 0.5, "ranking_v2": 0.775, "ranking_v3": 0.275}, "delta": 0.01875, "delta_se": 0.05546099056417018}, {"label": "kb_0002", "epoch": 2, "n_q": 40, "samples": 40, "errors": 0, "mean": 0.375, "se": 0.07048367696104338, "by_source": {"arch170": 0.4, "dataflip500": 0.3, "ranking_v2": 0.475, "ranking_v3": 0.325}, "delta": -0.06875, "delta_se": 0.0669789361263329}, {"label": "kb_0004", "epoch": 4, "n_q": 40, "samples": 40, "errors": 0, "mean": 0.38125, "se": 0.06990578595693213, "by_source": {"arch170": 0.3, "dataflip500": 0.6, "ranking_v2": 0.475, "ranking_v3": 0.15}, "delta": -0.0625, "delta_se": 0.0643943678855893}, {"label": "nokb", "epoch": -1, "n_q": 40, "samples": 40, "errors": 0, "mean": 0.44375, "se": 0.0678702452648264, "by_source": {"arch170": 0.3, "dataflip500": 0.5, "ranking_v2": 0.65, "ranking_v3": 0.325}}], "epochs": [{"epoch": 1, "n": 15, "mean": 0.2, "hyp": 14, "ops": {"revise": 19, "merge": 11, "add": 2, "delete": 6}, "kb_size": 268, "complete": true}, {"epoch": 2, "n": 15, "mean": 0.4, "hyp": 14, "ops": {"merge": 4}, "kb_size": 258, "complete": true}, {"epoch": 3, "n": 15, "mean": 0.4833, "hyp": 14, "ops": {"revise": 4, "delete": 2, "add": 2}, "kb_size": 258, "complete": true}, {"epoch": 4, "n": 15, "mean": 0.6667, "hyp": 15, "ops": {"revise": 8, "add": 2, "delete": 5}, "kb_size": 255, "complete": true}, {"epoch": 5, "n": 15, "mean": null, "hyp": null, "ops": {}, "kb_size": null, "complete": false}]}, {"name": "luna_gate", "title": "gpt-6-luna · 门控版", "note": "快照择优 + 回滚 + 删除门槛 + 独立测试集；第 1 轮中途停止，暂无结果（表中种子 KB 和不带 KB 的评测是从主实验复制的）。", "model": "gpt-6-luna", "provider": "cctq", "batch": 15, "eval_n": 40, "same_val": true, "page": "runs/luna_gate.html", "evals": [{"label": "kb_0000", "epoch": 0, "n_q": 40, "samples": 120, "errors": 0, "mean": 0.3729166666666667, "se": 0.061294463191618846, "by_source": {"arch170": 0.23333333333333334, "dataflip500": 0.43333333333333335, "ranking_v2": 0.5916666666666667, "ranking_v3": 0.23333333333333334}, "delta": 0.006250000000000005, "delta_se": 0.04759039793680523}, {"label": "nokb", "epoch": -1, "n_q": 40, "samples": 120, "errors": 0, "mean": 0.36666666666666664, "se": 0.06193117216289455, "by_source": {"arch170": 0.3, "dataflip500": 0.5333333333333333, "ranking_v2": 0.5, "ranking_v3": 0.13333333333333333}}], "epochs": [{"epoch": 1, "mean": 0.45, "n": 15, "hyp": 6, "ops": {}, "kb_size": null}]}, {"name": "smoke_qwen", "title": "Qwen3.8-Max · 烟测", "note": "首次端到端跑通 2 轮；评测集只有 8 题，不可用于结论。", "model": "qwen3.8-max-0902", "provider": "aliyun", "batch": 15, "eval_n": 8, "same_val": false, "page": "runs/smoke_qwen.html", "evals": [{"label": "kb_0000", "epoch": 0, "n_q": 8, "samples": 8, "errors": 0, "mean": 0.5, "se": 0.17034628596731172, "by_source": {"arch170": 0.5, "dataflip500": 1.0, "ranking_v2": 0.5, "ranking_v3": 0.0}, "delta": 0.125, "delta_se": 0.0944911182523068}, {"label": "kb_0001", "epoch": 1, "n_q": 8, "samples": 8, "errors": 0, "mean": 0.375, "se": 0.18298126367784995, "by_source": {"arch170": 0.5, "dataflip500": 1.0, "ranking_v2": 0.0, "ranking_v3": 0.0}, "delta": 0.0, "delta_se": 0.0}, {"label": "kb_0002", "epoch": 2, "n_q": 8, "samples": 8, "errors": 0, "mean": 0.5, "se": 0.17034628596731172, "by_source": {"arch170": 0.5, "dataflip500": 1.0, "ranking_v2": 0.5, "ranking_v3": 0.0}, "delta": 0.125, "delta_se": 0.0944911182523068}, {"label": "nokb", "epoch": -1, "n_q": 8, "samples": 8, "errors": 0, "mean": 0.375, "se": 0.18298126367784995, "by_source": {"arch170": 0.5, "dataflip500": 1.0, "ranking_v2": 0.0, "ranking_v3": 0.0}}], "epochs": [{"epoch": 1, "mean": 0.5, "n": 15, "hyp": 13, "ops": {"add": 3, "revise": 4, "delete": 3}, "kb_size": 294}, {"epoch": 2, "mean": 0.4, "n": 15, "hyp": 14, "ops": {"add": 2}, "kb_size": 296}]}, {"name": "luna_b15", "title": "gpt-6-luna · 试跑", "note": "cctq 首次试跑 1 轮；评测集 20 题（每题源 5 题）。", "model": "gpt-6-luna", "provider": "cctq", "batch": 15, "eval_n": 20, "same_val": false, "page": "runs/luna_b15.html", "evals": [{"label": "kb_0000", "epoch": 0, "n_q": 20, "samples": 20, "errors": 0, "mean": 0.4875, "se": 0.09332138864669431, "by_source": {"arch170": 0.2, "dataflip500": 1.0, "ranking_v2": 0.5, "ranking_v3": 0.25}, "delta": -0.025, "delta_se": 0.09579995604877577}, {"label": "kb_0001", "epoch": 1, "n_q": 20, "samples": 20, "errors": 0, "mean": 0.425, "se": 0.0978384812895858, "by_source": {"arch170": 0.2, "dataflip500": 0.8, "ranking_v2": 0.6, "ranking_v3": 0.1}, "delta": -0.0875, "delta_se": 0.10462181265974378}, {"label": "nokb", "epoch": -1, "n_q": 20, "samples": 20, "errors": 0, "mean": 0.5125, "se": 0.10012327927426057, "by_source": {"arch170": 0.6, "dataflip500": 0.8, "ranking_v2": 0.55, "ranking_v3": 0.1}}], "epochs": [{"epoch": 1, "mean": 0.36666666666666664, "n": 15, "hyp": 4, "ops": {"merge": 2}, "kb_size": 291}]}, {"name": "smoke", "title": "Claude Opus 5.5 · 烟测", "note": "vapi 余额耗尽前只完成了 8 题评测（不带 KB 与种子 KB），循环没有跑起来。", "model": "claude-opus-5-5", "provider": "vapi", "batch": 15, "eval_n": 8, "same_val": false, "page": null, "evals": [{"label": "kb_0000", "epoch": 0, "n_q": 8, "samples": 8, "errors": 0, "mean": 0.5, "se": 0.17034628596731172, "by_source": {"arch170": 0.5, "dataflip500": 1.0, "ranking_v2": 0.5, "ranking_v3": 0.0}, "delta": -0.03125, "delta_se": 0.03125}, {"label": "nokb", "epoch": -1, "n_q": 8, "samples": 8, "errors": 0, "mean": 0.53125, "se": 0.15978151935868998, "by_source": {"arch170": 0.5, "dataflip500": 1.0, "ranking_v2": 0.5, "ranking_v3": 0.125}}], "epochs": []}, {"name": "opus_mini", "title": "Claude Opus 5.5 · 迷你", "note": "vapi 余额耗尽，8 次评测调用全部失败，没有可用结果。", "model": "claude-opus-5-5", "provider": "vapi", "batch": 5, "eval_n": 8, "same_val": false, "page": null, "evals": [], "epochs": []}], "early": [["混合题（150 题）", 0.66, 0.72], ["仅架构题（240 题）", 0.454, 0.596]], "render_abl": [["可信度 top-40 + 新条目 10", 15.8], ["PUCT top-40", 3.3], ["PUCT top-20（旧默认）", -3.3]], "built": "2026-10-09", "curated": [{"name": "soa_async_v1", "epoch": 5, "reason": "看多轮解题后的自然生长，以及重复研究如何合并去重。"}, {"name": "soa_v3", "epoch": 9, "reason": "看宽度混杂如何纠正，以及过宽规则如何在候选中撤回。"}, {"name": "luna_main", "epoch": 1, "reason": "看早期完整循环怎样压缩大种子KB，以及涨分后回落。"}, {"name": "qwen_6ep_40eval", "epoch": 1, "reason": "配合Luna比较同一题池上的改写、合并与删除。"}]};
-const $ = id => document.getElementById(id);
-const COLORS = {"gpt-6-luna": "#2563eb", "qwen3.8-max-0902": "#ea580c", "claude-opus-5-5": "#7c3aed"};
-const SRC_C = {arch170: "#0d9488", ranking_v2: "#2563eb", ranking_v3: "#7c3aed", dataflip500: "#ea580c"};
-const SRC_N = {arch170: "仅架构题", ranking_v2: "排序 v2", ranking_v3: "排序 v3", dataflip500: "dataflip"};
-const OP_C = {add: "#059669", merge: "#2563eb", revise: "#d97706", delete: "#dc2626", adjust: "#6b7280", rollback: "#111827"};
-const OP_N = {add: "新增", merge: "合并", revise: "改写", delete: "删除", adjust: "调整计数", rollback: "回滚"};
-const runBy = Object.fromEntries(D.runs.map(r => [r.name, r]));
-const tip = $("tip");
-function showTip(e, t) { tip.style.display = "block"; tip.innerHTML = t; tip.style.left = (e.clientX + 12) + "px"; tip.style.top = (e.clientY + 12) + "px"; }
-function hideTip() { tip.style.display = "none"; }
-
-/* generic chart: series [{name,color,dash,pts:[{x,y,lo,hi,tip}]}] */
-function chart(el, series, o = {}) {
-  const W = o.w || 560, H = o.h || 260, m = {l: 46, r: o.right ? 46 : 14, t: 12, b: 34};
-  const all = series.flatMap(s => s.pts || []).concat(series.filter(s => s.hline != null).map(s => ({y: s.hline})));
-  const xs = o.xs || [...new Set(all.filter(p => p.x != null).map(p => p.x))].sort((a, b) => a - b);
-  let ymin = o.ymin ?? (all.length ? Math.min(...all.map(p => p.lo ?? p.y)) : 0), ymax = o.ymax ?? (all.length ? Math.max(...all.map(p => p.hi ?? p.y)) : 1);
-  if (o.zero) { ymin = Math.min(ymin, 0); ymax = Math.max(ymax, 0); }
-  const pad = (ymax - ymin) * 0.08 || 0.05; ymin -= o.ymin != null ? 0 : pad; ymax += o.ymax != null ? 0 : pad;
-  const inset = o.bars ? (W - m.l - m.r) / xs.length / 2 : 8;
-  const X = x => m.l + inset + (xs.length > 1 ? (xs.indexOf(x) / (xs.length - 1)) : 0.5) * (W - m.l - m.r - 2 * inset);
-  const Y = y => H - m.b - (y - ymin) / (ymax - ymin) * (H - m.t - m.b);
-  let g = "";
-  const ticks = 5;
-  for (let i = 0; i <= ticks; i++) {
-    const v = ymin + (ymax - ymin) * i / ticks;
-    g += `<line x1="${m.l}" x2="${W - m.r}" y1="${Y(v)}" y2="${Y(v)}" stroke="#eef0f3"/><text x="${m.l - 6}" y="${Y(v) + 4}" font-size="11" text-anchor="end" fill="#6b7280">${o.fmt ? o.fmt(v) : v.toFixed(2)}</text>`;
-  }
-  if (o.zero) g += `<line x1="${m.l}" x2="${W - m.r}" y1="${Y(0)}" y2="${Y(0)}" stroke="#9ca3af" stroke-width="1.2"/>`;
-  xs.forEach(x => g += `<text x="${X(x)}" y="${H - m.b + 16}" font-size="11" text-anchor="middle" fill="#6b7280">${o.xl ? o.xl(x) : x}</text>`);
-  if (o.xTitle) g += `<text x="${(W + m.l - m.r) / 2}" y="${H - 4}" font-size="11" text-anchor="middle" fill="#9ca3af">${o.xTitle}</text>`;
-  if (o.bars) {
-    const bw = (W - m.l - m.r) / Math.max(1, xs.length) * 0.55;
-    o.bars.forEach(b => { let acc = 0; b.stack.forEach(s => { const y0 = Y(acc), y1 = Y(acc + s.v); g += `<rect x="${X(b.x) - bw / 2}" y="${y1}" width="${bw}" height="${Math.max(0, y0 - y1)}" fill="${s.c}" opacity=".85" onmousemove="showTip(event,'${s.t}')" onmouseleave="hideTip()"/>`; acc += s.v; }); });
-  }
-  if (o.right) {
-    const R = o.right, rmin = R.min, rmax = R.max, RY = y => H - m.b - (y - rmin) / (rmax - rmin) * (H - m.t - m.b);
-    for (let i = 0; i <= ticks; i++) { const v = rmin + (rmax - rmin) * i / ticks; g += `<text x="${W - m.r + 6}" y="${RY(v) + 4}" font-size="11" fill="#6b7280">${v.toFixed(0)}</text>`; }
-    const pts = R.pts.map(p => `${X(p.x)},${RY(p.y)}`).join(" ");
-    g += `<polyline points="${pts}" fill="none" stroke="${R.color}" stroke-width="2.2"/>` + R.pts.map(p => `<circle cx="${X(p.x)}" cy="${RY(p.y)}" r="3.5" fill="${R.color}" onmousemove="showTip(event,'第 ${p.x} 轮：KB ${p.y} 条')" onmouseleave="hideTip()"/>`).join("");
-  }
-  series.forEach(s => {
-    if (s.hline == null && !s.pts) return;
-    const pts = (s.pts || []).slice().sort((a, b) => xs.indexOf(a.x) - xs.indexOf(b.x));
-    if (s.hline != null) { g += `<line x1="${m.l}" x2="${W - m.r}" y1="${Y(s.hline)}" y2="${Y(s.hline)}" stroke="${s.color}" stroke-dasharray="6 4" stroke-width="1.6" opacity=".8" onmousemove="showTip(event,'${s.tip}')" onmouseleave="hideTip()"/>`; return; }
-    pts.forEach(p => { if (p.lo != null) g += `<line x1="${X(p.x)}" x2="${X(p.x)}" y1="${Y(p.lo)}" y2="${Y(p.hi)}" stroke="${s.color}" stroke-width="1.2" opacity=".5"/>`; });
-    if (pts.length > 1) g += `<polyline points="${pts.map(p => `${X(p.x)},${Y(p.y)}`).join(" ")}" fill="none" stroke="${s.color}" stroke-width="2.4" ${s.dash ? 'stroke-dasharray="5 4"' : ""}/>`;
-    pts.forEach(p => g += `<circle cx="${X(p.x)}" cy="${Y(p.y)}" r="4.2" fill="#fff" stroke="${s.color}" stroke-width="2.2" onmousemove="showTip(event,'${(p.tip || "").replace(/'/g, "")}')" onmouseleave="hideTip()"/>`);
-  });
-  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="100%">${g}</svg>`;
-}
-const legend = (el, items) => el.innerHTML = items.map(([n, c, d]) => `<span><i style="background:${d ? `repeating-linear-gradient(90deg,${c} 0 5px,transparent 5px 9px)` : c}"></i>${n}</span>`).join("");
-const pct = v => (v * 100).toFixed(1);
-
-/* ---- abs + delta charts (same val set) ---- */
-(() => {
-  const runs = D.runs.filter(r => r.same_val && r.epochs.length >= 2 && r.evals.some(e => e.epoch > 0 && e.n_q >= 30));
-  const sA = [], sD = [], lA = [], lD = [];
-  runs.forEach((r, i) => {
-    const c = r.name === "luna_main" ? COLORS[r.model] : r.name.startsWith("qwen") ? COLORS[r.model] : "#94a3b8";
-    const kb = r.evals.filter(e => e.epoch >= 0), nk = r.evals.find(e => e.label === "nokb");
-    sA.push({color: c, pts: kb.map(e => ({x: e.epoch, y: e.mean, lo: e.mean - e.se, hi: e.mean + e.se, tip: `${r.title}<br>${e.label}：${e.mean.toFixed(3)} ± ${e.se.toFixed(3)}<br>${e.n_q} 题 · ${e.samples} 次采样`}))});
-    if (nk) sA.push({color: c, hline: nk.mean, tip: `${r.title} 不带 KB：${nk.mean.toFixed(3)}（${nk.samples} 次采样）`});
-    lA.push([r.title, c], [r.title + " 不带 KB", c, true]);
-    sD.push({color: c, pts: kb.filter(e => e.delta != null).map(e => ({x: e.epoch, y: e.delta * 100, lo: (e.delta - e.delta_se) * 100, hi: (e.delta + e.delta_se) * 100, tip: `${r.title}<br>${e.label}：${e.delta >= 0 ? "+" : ""}${pct(e.delta)} ± ${pct(e.delta_se)} pt`}))});
-    lD.push([r.title, c]);
-  });
-  const xs = [...new Set(runs.flatMap(r => r.evals.filter(e => e.epoch >= 0).map(e => e.epoch)))].sort((a, b) => a - b);
-  chart($("c_abs"), sA, {xs, ymin: 0.25, ymax: 0.55, xTitle: "KB 快照（第几轮之后）", xl: x => x === 0 ? "种子" : x});
-  legend($("l_abs"), lA);
-  chart($("c_delta"), sD, {xs, zero: true, ymin: -16, ymax: 16, fmt: v => v.toFixed(0), xTitle: "KB 快照（第几轮之后）", xl: x => x === 0 ? "种子" : x});
-  legend($("l_delta"), lD);
-})();
-
-/* ---- per source ---- */
-(() => {
-  const r = runBy.luna_main; if (!r) return;
-  const ev = r.evals.slice().sort((a, b) => a.epoch - b.epoch).filter(e => e.samples >= 80 || e.label === "nokb");
-  const srcs = Object.keys(ev[0].by_source);
-  chart($("c_src"), srcs.map(s => ({color: SRC_C[s], pts: ev.map(e => ({x: e.epoch, y: e.by_source[s], tip: `${SRC_N[s]} · ${e.label === "nokb" ? "不带 KB" : e.label}：${e.by_source[s].toFixed(3)}`}))})),
-    {xs: ev.map(e => e.epoch), xl: x => x < 0 ? "无 KB" : x === 0 ? "种子" : x, xTitle: "KB 快照", ymin: 0, ymax: 1});
-  legend($("l_src"), srcs.map(s => [SRC_N[s], SRC_C[s]]));
-})();
-
-/* ---- train stream ---- */
-(() => {
-  const runs = D.runs.filter(r => r.epochs.filter(e => e.mean != null).length >= 2);
-  chart($("c_train"), runs.map(r => ({color: COLORS[r.model] || "#94a3b8", dash: r.name !== "luna_main" && !r.name.startsWith("qwen_6"), pts: r.epochs.filter(e => e.mean != null).map(e => ({x: e.epoch, y: e.mean, tip: `${r.title}<br>第 ${e.epoch} 轮：${e.mean.toFixed(3)}（${e.n} 题，${e.hyp} 条假说）`}))})),
-    {xTitle: "轮次", ymin: 0, ymax: 0.8});
-  legend($("l_train"), runs.map(r => [r.title, COLORS[r.model] || "#94a3b8", r.name !== "luna_main" && !r.name.startsWith("qwen_6")]));
-})();
-
-/* ---- ops ---- */
-(() => {
-  const r = runBy.luna_main; if (!r) return;
-  const ops = ["add", "merge", "revise", "delete", "adjust", "rollback"];
-  const bars = r.epochs.map(e => ({x: e.epoch, stack: ops.filter(o => e.ops[o]).map(o => ({v: e.ops[o], c: OP_C[o], t: `第 ${e.epoch} 轮 ${OP_N[o]} ${e.ops[o]}`}))}));
-  const mx = Math.max(...bars.map(b => b.stack.reduce((a, s) => a + s.v, 0)), 1);
-  const ks = r.epochs.map(e => e.kb_size);
-  chart($("c_ops"), [], {xs: r.epochs.map(e => e.epoch), bars, ymin: 0, ymax: mx * 1.1, fmt: v => v.toFixed(0), xTitle: "轮次",
-    right: {color: "#059669", min: Math.min(...ks) - 10, max: Math.max(...ks, 294) + 6, pts: r.epochs.map(e => ({x: e.epoch, y: e.kb_size}))}});
-  legend($("l_ops"), ops.filter(o => r.epochs.some(e => e.ops[o])).map(o => [OP_N[o], OP_C[o]]).concat([["KB 条目数", "#059669"]]));
-})();
-
-/* ---- summary table ---- */
-(() => {
-  let h = `<table><tr><th>实验</th><th>KB 版本</th><th>题数</th><th>采样</th><th>均分</th><th>相对不带 KB</th></tr>`;
-  D.runs.forEach(r => r.evals.slice().sort((a, b) => a.epoch - b.epoch).forEach((e, i) => {
-    const d = e.delta == null ? "" : `<span class="${e.delta >= 0 ? "pos" : "neg"}">${e.delta >= 0 ? "+" : ""}${pct(e.delta)} ± ${pct(e.delta_se)}</span>`;
-    h += `<tr><td>${i === 0 ? `<b>${r.title}</b>` : ""}</td><td>${e.label === "nokb" ? "不带 KB" : e.label === "kb_0000" ? "种子 KB" : e.label}</td><td>${e.n_q ?? r.eval_n}</td><td>${e.samples ?? "—"}${e.errors ? ` <span class="neg">(失败 ${e.errors})</span>` : ""}</td><td>${e.mean != null ? e.mean.toFixed(3) : "—"}</td><td>${d}</td></tr>`;
-  }));
-  $("t_sum").innerHTML = h + "</table>";
-})();
-
-/* ---- run cards ---- */
-const recommended = ["soa_async_v1", "soa_v3", "luna_main", "qwen_6ep_40eval"];
-const reading = {
-  soa_async_v1: "先看第 5 轮：把使用同一批测量的重复 claim 合并，避免当作独立证据；再看第 15 轮的整理。研究报告保留跨轮更新。",
-  soa_v3: "先看第 9 轮 K1007 + K1015 → K1056：比较原文、合并理由与新规则；再追踪 K1011 的宽度条件如何修正 GRU 优势。",
-  luna_main: "先看第 1 轮的 6 次合并与 11 次删除，再看第 8–12 轮的得分回落与 KB 变化。",
-  qwen_6ep_40eval: "先看第 1 轮的 11 次合并；连续合并保留中间条目，可与 Luna 的第 1 轮比较。"
-};
-function runCard(r, featured = false) {
-  const best = r.evals.filter(e => e.delta != null).sort((a, b) => b.delta - a.delta)[0];
-  const selected = (D.curated || []).find(c => c.name === r.name);
-  const target = r.page + (featured && selected ? `#epoch=${selected.epoch}&view=diff` : "");
-  const complete = r.epochs.filter(e => e.complete).length;
-  const rounds = r.epochs.some(e => e.complete != null) ? `完成 ${complete} 轮${complete < r.epochs.length ? ` · 另有 ${r.epochs.length-complete} 轮未完成记录` : ""}` : `保存 ${r.epochs.length} 轮`;
-  return `<div class="card run" data-run="${r.name}" style="border-left-color:${COLORS[r.model] || "#94a3b8"}"><h3>${r.title}</h3>
-   ${featured ? `<p>${reading[r.name]}</p>` : ""}
-   <div class="note">每轮 ${r.batch} 题 · 评测 ${r.eval_n} 题 · ${rounds}</div>
-   ${r.note ? `<p class="note">${r.note}</p>` : ""}
-   ${best && !featured ? `<div class="note">历史最大提升：${best.label}，${best.delta >= 0 ? "+" : ""}${pct(best.delta)} ± ${pct(best.delta_se)} 个百分点（1 SE）</div>` : ""}
-   ${r.page ? `<a class="btn" href="${target}">查看 KB 变化与解题记录 →</a>` : `<span class="note">无循环数据，不生成详情页</span>`}</div>`;
-}
-const featured = recommended.map(name => runBy[name]).filter(Boolean);
-const archived = D.runs.filter(r => !recommended.includes(r.name));
-$("runcards").innerHTML = featured.map(r => runCard(r, true)).join("");
-$("archivecards").innerHTML = archived.map(r => runCard(r)).join("");
-$("runarchive").hidden = !archived.length;
-if (archived.length) $("runarchive").querySelector("summary").textContent = `其余 ${archived.length} 次实验与诊断`;
-
-/* ---- history ---- */
-(() => {
-  const W = 560, H = 200; let g = "";
-  D.early.forEach(([n, a, b], i) => {
-    const y = 30 + i * 80, X = v => 150 + v * 380;
-    g += `<text x="0" y="${y + 14}" font-size="12" fill="#374151">${n}</text>
-     <rect x="150" y="${y}" width="${a * 380}" height="18" fill="#cbd5e1" rx="3"/><text x="${X(a) + 6}" y="${y + 13}" font-size="11" fill="#6b7280">不带 KB ${a.toFixed(3)}</text>
-     <rect x="150" y="${y + 24}" width="${b * 380}" height="18" fill="#ea580c" rx="3"/><text x="${X(b) + 6}" y="${y + 37}" font-size="11" fill="#9a3412">带 KB ${b.toFixed(3)}（+${((b - a) * 100).toFixed(1)} pt）</text>`;
-  });
-  $("c_early").innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="100%">${g}</svg>`;
-  g = ""; const mx = 17;
-  D.render_abl.forEach(([n, v], i) => {
-    const y = 20 + i * 52, z = 300, X = d => z + d / mx * 170;
-    g += `<text x="0" y="${y + 18}" font-size="12" fill="#374151">${n}</text><rect x="${Math.min(z, X(v))}" y="${y + 4}" width="${Math.abs(X(v) - z)}" height="22" fill="${v >= 0 ? "#059669" : "#dc2626"}" rx="3"/><text x="${v >= 0 ? X(v) + 6 : X(v) - 6}" y="${y + 20}" font-size="12" text-anchor="${v >= 0 ? "start" : "end"}" fill="#111827">${v > 0 ? "+" : ""}${v} pt</text>`;
-  });
-  g += `<line x1="300" x2="300" y1="10" y2="${20 + D.render_abl.length * 52}" stroke="#9ca3af"/>`;
-  $("c_abl").innerHTML = `<svg viewBox="0 0 560 190" width="100%">${g}</svg>`;
-})();
-$("foot").textContent = "生成时间 " + D.built + " · 数据目录由 AIQ_KB_DATA_ROOT 指定 · 重新生成：aiq-kb-site";
+const round = document.getElementById('round');
+round.addEventListener('change', () => {
+  document.getElementById('round-diff').href = 'runs/soa_async_v1.html#epoch=' + round.value + '&view=diff';
+  document.getElementById('round-records').href = 'runs/soa_async_v1.html#epoch=' + round.value + '&view=records';
+});
+const primary = new Set(['soa_async_v1','soa_v3','luna_main','qwen_6ep_40eval']);
+const names = {sol_tool:'初始工具读取实验',soa_v1:'第一版同步研究循环',soa_v2:'第二版同步研究循环',soa_v4:'后续同步研究诊断',luna_gate:'早期择优与回滚实验',smoke_qwen:'Qwen端到端试跑',luna_b15:'Luna单轮试跑',smoke:'Opus初次试跑',opus_mini:'Opus调用诊断',_smoke_soa:'研究工具试跑'};
+const escapeHTML = text => String(text ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+document.getElementById('archive-list').innerHTML = D.runs.filter(r => !primary.has(r.name)).map(r => '<li>' + (r.page ? '<a href="' + escapeHTML(r.page) + '">' + escapeHTML(names[r.name] || r.title) + '</a>' : escapeHTML(names[r.name] || r.title)) + ' <code>' + escapeHTML(r.name) + '</code><p>' + escapeHTML(r.note || '仅保存诊断记录。') + '</p></li>').join('');
 </script>
-</body>
-</html>
+</body></html>
