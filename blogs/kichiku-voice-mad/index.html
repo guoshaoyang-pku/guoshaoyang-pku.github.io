@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>让动漫角色的台词唱歌：一个鬼畜调音引擎 | guoshaoyang</title>
+<style>
+body{font-family:-apple-system,"PingFang SC",sans-serif;max-width:760px;margin:0 auto;padding:2.5rem 1.2rem 4rem;color:#24292f;line-height:1.75}
+h1{font-size:1.6rem;line-height:1.4;margin-bottom:.2rem}
+.meta{color:#8b949e;font-size:.85rem;margin-bottom:2rem}
+h2{font-size:1.15rem;margin-top:2.4rem;border-bottom:1px solid #eaecef;padding-bottom:.3rem}
+audio{width:100%;height:36px;display:block;margin:.25rem 0 .1rem}
+table{border-collapse:collapse;width:100%;font-size:.88rem;margin:.6rem 0}
+th,td{border:1px solid #d8dee4;padding:.35rem .55rem;text-align:left;vertical-align:top}
+th{background:#f6f8fa;white-space:nowrap}
+.cap{font-size:.8rem;color:#8b949e;margin:0 0 .8rem}
+code{background:#eff1f3;padding:.08rem .35rem;border-radius:4px;font-size:.85em}
+a{color:#0969da;text-decoration:none}a:hover{text-decoration:underline}
+blockquote{border-left:3px solid #d0d7de;margin:1rem 0;padding:.2rem 1rem;color:#57606a}
+.fig{border:1px solid #eaecef;border-radius:6px;padding:.9rem 1rem;background:#f6f8fa;font-size:.85rem;line-height:1.9;overflow-x:auto;white-space:nowrap}
+</style>
+</head>
+<body>
+
+<h1>让动漫角色的台词唱歌：一个鬼畜调音引擎</h1>
+<p class="meta">2026-10 · 项目代号 kichiku-voice-mad · <a href="https://github.com/guoshaoyang-pku/kichiku-voice-mad">GitHub</a></p>
+
+<p>B 站鬼畜区有一类作品：把歌曲的每个音替换成动漫角色的台词音效，让长崎素世"唱"《春日影》。做得好的全靠 up 主手搓，一首歌要磨很多天。这个项目想回答一个问题：<b>这件事能不能全自动，而且机器能不能找到人想不到的贴法？</b></p>
+
+<p>先听成品。下面这首《春日影》，没有一个音是乐器，全部 659 个音都是长崎素世的台词原句：</p>
+
+<p class="cap">鬼畜版（素世台词 × 659 句，连带伴奏拟合）</p>
+<audio controls preload="none" src="audio/kichiku_haruhikage.mp3"></audio>
+<p class="cap">原曲对照</p>
+<audio controls preload="none" src="audio/orig_haruhikage.mp3"></audio>
+
+<h2>怎么做到的</h2>
+
+<p>直觉做法是把旋律拆成一个个音符，每个音符找一个音高最接近的音效填进去。我们的前七个版本就是这么做的，全部失败：几千个 0.1 秒的碎片拼起来像"近似傅里叶变换"，音效听不清、旋律也糊掉了。</p>
+
+<p>最后的方案退回一步，反而成立了：<b>不切碎，整句往上贴</b>。素材库里每句台词（1–4 秒的完整句子，带基频轮廓）是一个"token"；渲染变成一个有约束的搜索问题——</p>
+
+<div class="fig">
+原曲人声 ──分离──▶ 旋律轮廓（CREPE 基频）──┐<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├──▶ 分段 Viterbi 搜索 ──▶ 逐句摆放 ──▶ 混音<br>
+台词库 2381 句 ──预分析──▶ 音高/响度/词 ──┘&nbsp;&nbsp;&nbsp;↑ 关键帧硬约束：每句的起音必须卡住节拍
+</div>
+
+<p>几条关键设计，每条都来自一次失败：</p>
+
+<p><b>不用 AI 声码器。</b>试过 VQ-VAE 式生成路线，音质上去了，但"听得出这是素世那句话"的感觉没了——鬼畜的灵魂是 meme 本身。所以码本只能是真实台词原句，一句都不能合成。</p>
+
+<p><b>拟合可以作弊，播放必须完整。</b>搜索时允许算法裁剪句子（这样才知道哪句的哪个片段最贴旋律），但播放时永远从句首放完整、零掐断，句与句自然叠加。这是 v10.1 的 "play-full" 模式：之前版本里那些 0.1 秒的碎 glitch 由此从机制上消失，剩下的短音都是"あっ"这类天然短句。</p>
+
+<p><b>一个人把整首哼完。</b>伴奏不另建声部：主旋律唱到长间隙，同一条流自动切去接贝斯线（贝斯升两个八度进入人声可唱音域）。听感像一个人边唱边在换气间隙哼 bass。</p>
+
+<p><b>只允许降调，最多 4 个半音。</b>升调会让音色变得不像本人；降一点还有"压嗓子"的节目效果。音域够不到的高音宁可空着也不硬掰。</p>
+
+<h2>更多成品</h2>
+
+<table>
+<tr><th>曲目</th><th>鬼畜版</th><th>原曲</th></tr>
+<tr><td>Ave Mujica</td><td><audio controls preload="none" src="audio/kichiku_avemujica.mp3"></audio></td><td><audio controls preload="none" src="audio/orig_avemujica.mp3"></audio></td></tr>
+<tr><td>Bloody Stream（JOJO）</td><td><audio controls preload="none" src="audio/kichiku_bloodystream.mp3"></audio></td><td><audio controls preload="none" src="audio/orig_bloodystream.mp3"></audio></td></tr>
+<tr><td>Roundabout（JOJO）</td><td><audio controls preload="none" src="audio/kichiku_roundabout.mp3"></audio></td><td><audio controls preload="none" src="audio/orig_roundabout.mp3"></audio></td></tr>
+</table>
+
+<p>已知的短板也直说：Bloody Stream 副歌的拖长高音超出素世音域，52% 的高音区找不到合适的句子，只能空着或大幅降调——这是"不许硬掰音高"原则的直接代价。解决办法不是放宽原则，而是补码本（换一个音域更高的角色）。</p>
+
+<h2>一个实验：码本合身度 ≫ 码本规模</h2>
+
+<p>同一首歌、同一搜索配置，只换素材库：原神丽莎 533 句 vs 长崎素世 2381 句。丽莎的语音更"大制作"，但音域和语气跟这首歌不合：±50 音分音准 50% vs 65%，高音区覆盖 4% vs 78%，"该唱的时候在唱"42% vs 82%。结论：<b>素材和歌的匹配度远比素材数量重要</b>——这让我们省下了下载原神 95G 全量语音包的开销。</p>
+
+<h2>离人类天花板还有多远</h2>
+
+<p>我们拆了 B 站 88 万播放的同类标杆《春日影，但是用素世扣出来》（纯手搓）做对照：</p>
+
+<p class="cap">标杆正歌段（手搓，人工作品）</p>
+<audio controls preload="none" src="audio/benchmark_soyo.mp3"></audio>
+
+<p>实测差距最大的一项不在算法，在混音：标杆的人声压过伴奏 <b>+11~13 dB</b>，我们的人声比伴奏还低 5.6 dB——18 dB 的落差，这就是"机器版旋律不够突出"的主因。另外标杆会先放 10 秒无伴奏名场面台词"交代梗的场景"，唱完再收一句 punchline，本质上是个带音乐的小剧场；我们目前只做了音乐部分。这两条的修复都已在排队。</p>
+
+<p>也有接近的地方：标杆 42% 的台词起音卡在 ±30ms 节拍网格上，我们的引擎在慢歌上做到 44–59%；标杆靠选句贴旋律、基本不变调，和我们"只允许小幅度降调"的原则不谋而合。</p>
+
+<h2>数字一角</h2>
+
+<p>春日影：±50 音分音准 59%，"该唱在唱" 82%，659 个音效、最多 5 句同响；八首歌全部在 A100 集群 8 卡并行渲染，单首分钟级。所有逐句对照（每个音效配原句 + 原曲片段）都在仓库的 review 页里可查。</p>
+
+<p>代码、引擎、全部指标：<a href="https://github.com/guoshaoyang-pku/kichiku-voice-mad">github.com/guoshaoyang-pku/kichiku-voice-mad</a>（MIT）。</p>
+
+</body>
+</html>
