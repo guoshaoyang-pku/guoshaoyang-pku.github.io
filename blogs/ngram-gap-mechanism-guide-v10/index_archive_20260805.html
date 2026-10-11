@@ -1,0 +1,967 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>N-gram Gap 机制指南</title>
+  <style>
+    :root {
+      --bg: #f7f5ef;
+      --ink: #232426;
+      --muted: #686d73;
+      --line: #c8c1b6;
+      --panel: #fffdf8;
+      --panel-2: #f0eee7;
+      --gap: #c4493d;
+      --nogap: #236b70;
+      --pending: #747a83;
+      --weak: #b67524;
+      --anchor: #353d79;
+      --train: #2d6f9f;
+      --val: #c4493d;
+      --epoch: #8a8176;
+      --code-bg: #1e1e2e;
+      --code-fg: #cdd6f4;
+      --code-key: #cba6f7;
+      --code-str: #a6e3a1;
+      --code-num: #fab387;
+      --code-com: #6c7086;
+      --code-fn: #89b4fa;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--ink); }
+    main { width: min(1140px, calc(100vw - 32px)); margin: 0 auto; padding: 28px 0 48px; }
+    h1 { margin: 0 0 8px; font-size: clamp(24px, 3vw, 36px); line-height: 1.08; font-weight: 650; }
+    h1, h2, h3, p, .subtitle, .note, .node-detail, .code-block, pre { overflow-wrap: anywhere; }
+    .subtitle { max-width: 860px; margin: 0 0 24px; color: var(--muted); font-size: 15px; line-height: 1.55; }
+    section { margin-bottom: 36px; }
+    h2 { margin: 0 0 12px; font-size: 22px; font-weight: 650; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+    h3 { margin: 20px 0 8px; font-size: 16px; font-weight: 650; color: var(--anchor); }
+    p { margin: 0 0 12px; font-size: 14.5px; line-height: 1.65; }
+    .note { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; margin: 12px 0; font-size: 13.5px; line-height: 1.6; color: var(--muted); }
+    .note strong { color: var(--ink); }
+    .note.gap-note { border-left: 3px solid var(--gap); }
+    .note.nogap-note { border-left: 3px solid var(--nogap); }
+    .note.anchor-note { border-left: 3px solid var(--anchor); }
+
+    /* Diagram container */
+    .diagram { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 20px; margin: 16px 0; overflow-x: auto; }
+    .diagram svg { display: block; max-width: 100%; height: auto; }
+
+    /* Code blocks */
+    .code-block { background: var(--code-bg); color: var(--code-fg); border-radius: 8px; padding: 16px 18px; margin: 12px 0; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; font-size: 12.5px; line-height: 1.6; overflow-x: auto; white-space: pre; }
+    .code-block .kw { color: var(--code-key); }
+    .code-block .str { color: var(--code-str); }
+    .code-block .num { color: var(--code-num); }
+    .code-block .com { color: var(--code-com); font-style: italic; }
+    .code-block .fn { color: var(--code-fn); }
+    .code-block .hl { background: rgba(250, 179, 135, 0.15); border-radius: 3px; padding: 1px 3px; margin: 0 -3px; }
+    .code-label { font-size: 12px; color: var(--muted); margin-bottom: -8px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+
+    /* Comparison tables */
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13px; }
+    th { text-align: left; padding: 8px 10px; border-bottom: 2px solid var(--line); font-weight: 650; color: var(--anchor); white-space: nowrap; }
+    td { padding: 7px 10px; border-bottom: 1px solid rgba(35,36,38,.08); vertical-align: top; }
+    tr:hover td { background: rgba(53,61,121,.03); }
+    .td-num { font-family: ui-monospace, monospace; text-align: right; white-space: nowrap; }
+    .tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+    .tag.gap { background: rgba(196,73,61,.12); color: var(--gap); }
+    .tag.nogap { background: rgba(35,107,112,.12); color: var(--nogap); }
+    .tag.weak { background: rgba(182,117,36,.12); color: var(--weak); }
+
+    /* Flow diagram nodes */
+    .flow { display: grid; gap: 0; margin: 16px 0; }
+    .flow-row { display: grid; grid-template-columns: 40px 1fr; align-items: stretch; }
+    .flow-marker { display: flex; flex-direction: column; align-items: center; }
+    .flow-dot { width: 14px; height: 14px; border-radius: 50%; border: 3px solid var(--bg); box-shadow: 0 0 0 1px var(--line); flex-shrink: 0; margin-top: 10px; z-index: 1; }
+    .flow-dot.gap { background: var(--gap); } .flow-dot.nogap { background: var(--nogap); } .flow-dot.anchor { background: var(--anchor); } .flow-dot.weak { background: var(--weak); } .flow-dot.pending { background: var(--pending); }
+    .flow-line { flex: 1; width: 2px; background: var(--line); margin-top: -2px; }
+    .flow-row:last-child .flow-line { display: none; }
+    .flow-content { padding: 6px 0 16px 12px; }
+    .flow-title { font-size: 14.5px; font-weight: 650; line-height: 1.3; }
+    .flow-detail { margin-top: 3px; color: var(--muted); font-size: 13px; line-height: 1.5; }
+    .flow-tag { display: inline-block; padding: 1px 7px; border-radius: 999px; font-size: 11px; font-weight: 600; margin-left: 8px; vertical-align: middle; }
+    .flow-tag.gap { background: rgba(196,73,61,.12); color: var(--gap); }
+    .flow-tag.nogap { background: rgba(35,107,112,.12); color: var(--nogap); }
+
+    /* Two-column comparison */
+    .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+    .compare-col { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; }
+    .compare-col.gap { border-top: 3px solid var(--gap); }
+    .compare-col.nogap { border-top: 3px solid var(--nogap); }
+    .compare-title { font-size: 14px; font-weight: 650; margin-bottom: 8px; }
+    .compare-col.gap .compare-title { color: var(--gap); }
+    .compare-col.nogap .compare-title { color: var(--nogap); }
+    .compare-col p { font-size: 13px; margin-bottom: 6px; }
+    .compare-col .code-block { font-size: 11.5px; margin: 8px 0; }
+
+    /* Math */
+    .math { font-family: "Cambria Math", "Latin Modern Math", "STIX Two Math", Georgia, serif; font-style: italic; }
+    .math-block { background: var(--panel-2); border-radius: 6px; padding: 10px 14px; margin: 10px 0; font-family: "Cambria Math", "Latin Modern Math", "STIX Two Math", Georgia, serif; font-size: 14px; line-height: 1.8; overflow-x: auto; }
+
+    /* Chart */
+    .chart-section { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; margin: 16px 0; }
+    .chart-wrap { width: 100%; position: relative; }
+    svg { display: block; width: 100%; height: 100%; }
+    .grid-line, .axis-line { stroke: var(--line); stroke-width: 1; }
+    .train-line { fill: none; stroke: var(--train); stroke-width: 2.2; }
+    .val-line { fill: none; stroke: var(--val); stroke-width: 2.2; }
+    .epoch-line { stroke: var(--epoch); stroke-width: 1; stroke-dasharray: 4 4; }
+    .chart-label { fill: var(--muted); font-size: 10px; font-family: ui-monospace, monospace; }
+    .gap-band { fill: rgba(196,73,61,.06); }
+    .series-legend { display: flex; gap: 16px; align-items: center; margin-top: 10px; color: var(--muted); font-size: 12px; }
+    .series-legend span { display: inline-flex; align-items: center; gap: 7px; }
+    .line-swatch { width: 22px; height: 2px; background: currentColor; }
+    .line-swatch.train { color: var(--train); } .line-swatch.val { color: var(--val); }
+
+    /* Data table mini */
+    .data-mini { font-size: 12.5px; }
+    .data-mini td { padding: 5px 8px; }
+    .data-mini .neg { color: var(--gap); font-weight: 600; }
+    .data-mini .pos { color: var(--nogap); font-weight: 600; }
+
+    @media (max-width: 760px) {
+      .compare { grid-template-columns: 1fr; }
+      main { width: min(100vw - 20px, 1140px); }
+    }
+  </style>
+  <style>
+    .toc {
+      position: fixed;
+      top: 28px;
+      left: max(16px, calc((100vw - 1140px) / 2 - 170px));
+      width: 140px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px 8px;
+      box-shadow: 0 4px 16px rgba(35,36,38,.06);
+      z-index: 10;
+    }
+    .toc-title {
+      margin: 0 0 7px;
+      color: var(--anchor);
+      font-size: 12px;
+      font-weight: 650;
+    }
+    .toc a {
+      display: block;
+      padding: 4px 5px;
+      border-radius: 5px;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.35;
+      text-decoration: none;
+    }
+    .toc a:hover {
+      background: rgba(53,61,121,.08);
+      color: var(--anchor);
+    }
+    @media (min-width: 761px) {
+      main {
+        width: min(1140px, calc(100vw - 200px));
+        margin-left: max(200px, calc((100vw - 1140px) / 2 + 85px));
+        margin-right: 20px;
+      }
+    }
+    @media (max-width: 760px) {
+      .toc { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Agents: a terse machine-oriented index + experiment log lives at agent-experiment-log.html -->
+  <nav class="toc" aria-label="全文目录">
+    <div class="toc-title">全文目录</div>
+    <a href="#chapter-0">术语表</a>
+    <a href="#chapter-1">1. 实验设置</a>
+    <a href="#chapter-2">2. Gap 现象与因果链</a>
+    <a href="#chapter-7">7. Loss × Norm（视图 A）</a>
+    <a href="#chapter-7-9" style="padding-left:16px;font-size:10px;">7.9 loss↔norm 复合图</a>
+    <a href="#chapter-9">9. Loss × 频次（视图 B/C）</a>
+    <a href="#chapter-9-1" style="padding-left:16px;font-size:10px;">9.1 频次分桶 train/val/gap</a>
+    <a href="#chapter-9-2" style="padding-left:16px;font-size:10px;">9.2 命中频次分布</a>
+    <a href="#chapter-10">10. 扩展实验：干预验证</a>
+    <a href="#chapter-10-1" style="padding-left:16px;font-size:10px;">10.1 实验4 hash错位</a>
+    <a href="#chapter-10-2" style="padding-left:16px;font-size:10px;">10.2 实验5 低频gate=0</a>
+    <a href="#chapter-10-3" style="padding-left:16px;font-size:10px;">10.3 结果复合图</a>
+    <a href="#chapter-10-4" style="padding-left:16px;font-size:10px;">10.4 结论</a>
+    <a href="#chapter-11">11. 精确重复次数 vs gap（exp6）</a>
+  </nav>
+  <main>
+    <header>
+      <h1>N-gram Gap 机制指南</h1>
+      <p class="subtitle">本文档解释 n-gram gap 实验中的核心概念：什么是 table、gate、shell、optimizer grouping，它们如何组合产生 train/val gap，以及关键实验数据。目标读者是刚接手项目的研究者。</p>
+    </header>
+
+    <!-- ==================== 0. 术语表 ==================== -->
+    <section>
+      <h2 id="chapter-0">术语表</h2>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">以下是本文档中频繁出现的核心术语。每个术语首次在正文中出现时用 <strong>加粗</strong> 标记，在此处可快速查阅定义。</p>
+      <div class="note" style="font-size:13px;line-height:1.8;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <tr style="background:var(--panel-2);"><th style="padding:6px 10px;text-align:left;width:25%;">术语</th><th style="padding:6px 10px;text-align:left;">定义</th></tr>
+          <tr><td style="padding:5px 10px;font-weight:600;">n-gram table / VE</td><td style="padding:5px 10px;">一张巨大的查找表（lookup table），用几个连续 token 的 hash 值做 key 来查表。等价于 "value embedding"（VE）。包含 bigram（2-gram）和 trigram（3-gram）两种。</td></tr>
+          <tr><td style="padding:5px 10px;font-weight:600;">gate（门控）</td><td style="padding:5px 10px;">控制 n-gram table 输出注入 attention 强度的机制：<code>2×sigmoid(Linear(x))</code>，输出范围 [0, 2]。gate 初始化为 1.0（中性），训练中模型自主调节。</td></tr>
+          <tr><td style="padding:5px 10px;font-weight:600;">shell（外壳）</td><td style="padding:5px 10px;">指 transformer block 的架构实现。本文档涉及两种：<strong>nanoGPT shell</strong>（经典 nanoGPT 架构）和 <strong>current shell</strong>（从 current/GPT 架构移植，含 x0 residual、resid_lambda、split QKV）。gap 仅在 current shell 下出现。</td></tr>
+          <tr><td style="padding:5px 10px;font-weight:600;">gap / gap onset</td><td style="padding:5px 10px;">train loss 阶梯下降同时 val loss 上升的现象。"gap onset"（也称 "fork"）指 gap 开始出现的具体训练步数。</td></tr>
+          <tr><td style="padding:5px 10px;font-weight:600;">hit / hit count</td><td style="padding:5px 10px;">某个 n-gram context（如 trigram 的 2-token 前缀）在整个训练集中总共出现的次数。是数据的静态属性，不随训练变化。在 §9 中用于按频率分组分析 loss。</td></tr>
+          <tr><td style="padding:5px 10px;font-weight:600;">novel / novel bucket</td><td style="padding:5px 10px;">指 train 中从未出现过的 context（hit count = 0）。在 §9 的 hit count 分析中，novel bucket 是 val 翘起的最大单一来源。</td></tr>
+          <tr><td style="padding:5px 10px;font-weight:600;">baseline_current / B.1</td><td style="padding:5px 10px;">本文档 §2 现象图、§7.9 norm 图、§9 频次分解<strong>统一使用</strong> <strong>baseline_current</strong>（current shell + current-style grouping + bigram+trigram RMSProp，seed42，1000 step，vocab=8192，n_layer=8；epoch 边界 [338, 687]，epoch3 gap 从 ~0.5 扩大到 1.33）。旧的 <strong>B.1</strong>（<code>20260725e_nano_rmsprop_fixv3</code>，nanogpt_original，gap 0.688）仍作为 §10 干预实验的 nanogpt_original 基线。</td></tr>
+          <tr><td style="padding:5px 10px;font-weight:600;">fixv2 / fixv3</td><td style="padding:5px 10px;">实验方法论的两个迭代版本。fixv2 使用 epoch 冻结的在线累积计数器，fixv3 替换为完全离线预计算的频率表。本文档当前所有数据均来自 fixv3（详见 <a href="agent-experiment-log.html">agent-experiment-log.html</a> §Gotchas G7）。</td></tr>
+          <tr><td style="padding:5px 10px;font-weight:600;">obcurves</td><td style="padding:5px 10px;">observable curves 的缩写。训练过程中记录的结构化指标数据（gate norm、table content RMS、hit bucket loss 等），存储在 <code>observable_curves.obcurves.json</code> 中。</td></tr>
+          <tr><td style="padding:5px 10px;font-weight:600;">context / context_hash</td><td style="padding:5px 10px;">n-gram 的条件前缀。如 trigram 的 context = (token[i-2], token[i-1])，bigram 的 context = (token[i-1])。context_hash 是 hash 后的整数标识。</td></tr>
+          <tr><td style="padding:5px 10px;font-weight:600;">gated_value_rms / raw_value_rms</td><td style="padding:5px 10px;"><strong>raw_value_rms</strong> = n-gram table 查出的 value 在 gate 之前的 RMS；<strong>gated_value_rms</strong> = gate × table value 的 RMS，即实际注入 attention value head 的量。</td></tr>
+          <tr><td style="padding:5px 10px;font-weight:600;">optimizer grouping</td><td style="padding:5px 10px;">参数分组与 LR 分配策略。nanoGPT-style grouping 给 n-gram table LR=0.004，current-style grouping 给 LR=0.6（差 150 倍），这是 gap 出现的必要条件。</td></tr>
+          <tr><td style="padding:5px 10px;font-weight:600;">epoch boundary</td><td style="padding:5px 10px;">训练数据遍历完一轮的分界步数。当前数据集：epoch 1→2 在 step 337，epoch 2→3 在 step 686，epoch 3→4（moredata）在 step 1384/2082。</td></tr>
+          <tr><td style="padding:5px 10px;font-weight:600;">warmdown</td><td style="padding:5px 10px;">LR schedule 的衰减阶段。当前实验在 step 750 附近 lrm_adam 从 0.33 降到 0.05，触发 train loss 的同步坍塌（memorize 突变）。</td></tr>
+          <tr><td style="padding:5px 10px;font-weight:600;">RMSProp（table optimizer）</td><td style="padding:5px 10px;">用于 n-gram table 的优化器。无 first moment（momentum），β₂=0.999 使二阶矩 v 能跨 epoch 持久化（半衰期 ~693 步 ≈ 2 个 epoch）。与 AdamW 的关键区别在于写入方向 = 当前梯度，不被历史 momentum 稀释。</td></tr>
+          <tr><td style="padding:5px 10px;font-weight:600;">Muon（matrix optimizer）</td><td style="padding:5px 10px;">用于 transformer 矩阵参数的优化器。在 nanogpt_original shell 下，table RMSProp + matrix Muon 的组合产生 delayed gap（onset 在 epoch2 而非 epoch3）。</td></tr>
+          <tr><td style="padding:5px 10px;font-weight:600;">collision</td><td style="padding:5px 10px;">hash 冲突：不同的 n-gram context 被映射到同一个 table row。实测 batch 内 bigram collision ~20%，trigram ~8%。每层用不同 hash prime 降低有效 collision。</td></tr>
+          <tr><td style="padding:5px 10px;font-weight:600;">per-token loss / total contribution</td><td style="padding:5px 10px;"><strong>per-token loss</strong> = 该 bucket 内每个 token 的平均 loss；<strong>total contribution</strong> = frac × loss（该 bucket 对总 loss 的贡献，考虑了 token 占比）。§9 的交互式图表可切换两种视角。</td></tr>
+        </table>
+      </div>
+    </section>
+
+    <!-- ==================== 1. 什么是 n-gram table ==================== -->
+    <section>
+      <h2 id="chapter-1">1.1 什么是 n-gram table</h2>
+      <p>n-gram table 就是一张巨大的查表（lookup table），和 token embedding 没有本质区别。区别在于：token embedding 用 token id 做 key，n-gram table 用<strong>几个连续 token 组成的 context 做 key</strong>。</p>
+
+      <div class="diagram">
+        <svg viewBox="0 0 900 260" xmlns="http://www.w3.org/2000/svg">
+          <!-- Token embedding -->
+          <text x="20" y="25" font-size="13" font-weight="650" fill="#353d79">Token embedding (对照)</text>
+          <rect x="20" y="35" width="120" height="50" fill="none" stroke="#c8c1b6" stroke-width="1" rx="4"/>
+          <text x="80" y="58" font-size="11" fill="#686d73" text-anchor="middle">key = token id</text>
+          <text x="80" y="74" font-size="11" fill="#686d73" text-anchor="middle">如 " Apple" → 313</text>
+          <rect x="150" y="35" width="200" height="50" fill="#f0eee7" stroke="#c8c1b6" rx="4"/>
+          <text x="250" y="58" font-size="11" fill="#232426" text-anchor="middle">nn.Embedding(32768, 768)</text>
+          <text x="250" y="74" font-size="11" fill="#686d73" text-anchor="middle">每个 token 一行</text>
+          <line x1="140" y1="60" x2="150" y2="60" stroke="#686d73" stroke-width="1" marker-end="url(#arrow)"/>
+
+          <!-- Bigram table -->
+          <text x="20" y="120" font-size="13" font-weight="650" fill="#353d79">Bigram table</text>
+          <rect x="20" y="130" width="120" height="50" fill="none" stroke="#c8c1b6" stroke-width="1" rx="4"/>
+          <text x="80" y="153" font-size="11" fill="#686d73" text-anchor="middle">key = hash(wₜ₋₁, wₜ)</text>
+          <text x="80" y="169" font-size="11" fill="#686d73" text-anchor="middle">两个 token → 一个整数</text>
+          <rect x="150" y="130" width="200" height="50" fill="#f0eee7" stroke="#c8c1b6" rx="4"/>
+          <text x="250" y="153" font-size="11" fill="#232426" text-anchor="middle">nn.Embedding(2M, 64)</text>
+          <text x="250" y="169" font-size="11" fill="#686d73" text-anchor="middle">每行 64 维，共 2M 行</text>
+          <line x1="140" y1="155" x2="150" y2="155" stroke="#686d73" stroke-width="1" marker-end="url(#arrow)"/>
+
+          <!-- Trigram table -->
+          <text x="20" y="215" font-size="13" font-weight="650" fill="#353d79">Trigram table</text>
+          <rect x="20" y="225" width="120" height="25" fill="none" stroke="#c8c1b6" stroke-width="1" rx="4"/>
+          <text x="80" y="242" font-size="11" fill="#686d73" text-anchor="middle">key = hash(wₜ₋₂, wₜ₋₁, wₜ)</text>
+          <rect x="150" y="225" width="200" height="25" fill="#f0eee7" stroke="#c8c1b6" rx="4"/>
+          <text x="250" y="242" font-size="11" fill="#232426" text-anchor="middle">nn.Embedding(2M, 64) × 2 sub-tables</text>
+          <line x1="140" y1="237" x2="150" y2="237" stroke="#686d73" stroke-width="1" marker-end="url(#arrow)"/>
+
+          <!-- Arrow marker -->
+          <defs>
+            <marker id="arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+              <path d="M0,0 L6,3 L0,6 Z" fill="#686d73"/>
+            </marker>
+          </defs>
+        </svg>
+      </div>
+
+      <h3>table 的规模</h3>
+      <table>
+        <tr><th>table 类型</th><th>context</th><th>行数</th><th>每行维度</th><th>hash 方式</th></tr>
+        <tr><td>unigram</td><td>单个 token</td><td class="td-num">32,768</td><td class="td-num">768</td><td>直接用 token id</td></tr>
+        <tr><td>bigram</td><td>前一个 + 当前 token</td><td class="td-num">2,097,152 (32K × 64)</td><td class="td-num">64 × 2 = 128</td><td>乘法 XOR hash</td></tr>
+        <tr><td>trigram</td><td>前两个 + 当前 token</td><td class="td-num">2,097,152</td><td class="td-num">64 × 2 = 128</td><td>乘法 XOR hash</td></tr>
+        <tr><td>fourgram</td><td>前三个 + 当前 token</td><td class="td-num">2,097,152</td><td class="td-num">64 × 2 = 128</td><td>乘法 XOR hash</td></tr>
+      </table>
+      <p>bigram/trigram/fourgram 的行数都是 <code>vocab_size × 64 = 32768 × 64 = 2,097,152</code>。hash 把 n 个 token 映射到这个范围内的一个整数。每层用不同的 hash prime，使不同层的同一 context 映射到不同行。</p>
+
+      <div class="note">
+        <strong>为什么不用直接查表？</strong> 因为 bigram 的可能组合有 32768² ≈ 10 亿种，trigram 有 32768³ ≈ 3.5 万亿种。直接建表不现实。hash 到 2M 行会产生 collision（不同 context 映射到同一行），但 collision 率很低（batch 内 bigram ~20%，trigram ~8%），而且每层用不同 prime + K=2 双 hash 进一步降低有效 collision。
+      </div>
+    </section>
+
+    <!-- ==================== 2. Hash 机制 ==================== -->
+    <section>
+      <h2>1.2 Hash 机制详解</h2>
+      <p>hash 的作用是把 n 个 token id 压缩成一个 row 号。具体实现是<strong>乘法 + XOR + 取模</strong>，全部在 GPU 上以 tensor 整数运算完成。</p>
+
+      <div class="code-label">train.py:1536-1546 — hash 计算</div>
+      <div class="code-block"><span class="com"># 输入: prev_idx, prev2_idx 是 shifted token id tensor [batch, seq_len]</span>
+<span class="com"># idx 是当前 token id tensor [batch, seq_len]</span>
+
+<span class="com"># Bigram: 两个 token → 一个 row</span>
+row = ((prev_idx * <span class="num">p1</span>) <span class="kw">^</span> (idx * <span class="num">p2</span>)) <span class="kw">%</span> <span class="num">2_097_152</span>
+
+<span class="com"># Trigram: 三个 token → 一个 row</span>
+row = ((prev2_idx * <span class="num">lp[0]</span>) <span class="kw">^</span> (prev_idx * <span class="num">lp[1]</span>) <span class="kw">^</span> (idx * <span class="num">lp[2]</span>)) <span class="kw">%</span> <span class="num">2_097_152</span></div>
+
+      <p>每层使用不同的 prime 组（来自 MurmurHash/FNV/golden-ratio 家族），保证不同层的同一 context 映射到完全不同的行。K=2 multi-hash 是指每个 n-gram 查两次独立 hash，各取半个维度（64 维），拼成完整的 128 维。</p>
+
+      <h3>collision 的实测数据</h3>
+      <table>
+        <tr><th>指标</th><th>bigram</th><th>trigram</th><th>含义</th></tr>
+        <tr><td>batch 内 unique_frac</td><td class="td-num">0.80</td><td class="td-num">0.92</td><td>trigram 的 collision 更低 (92% unique vs 80%)</td></tr>
+        <tr><td>within_batch_repeat</td><td class="td-num">20%</td><td class="td-num">8%</td><td>同一 batch 内有多少 token 共享 row</td></tr>
+        <tr><td>entropy_norm</td><td class="td-num">0.983</td><td class="td-num">0.993</td><td>trigram 的 row 分布更均匀</td></tr>
+        <tr><td>rows_ever_seen (step 1000)</td><td class="td-num">97%</td><td class="td-num">99%</td><td>到训练结束时大部分 row 都被访问过</td></tr>
+        <tr><td>rows_epoch_lag</td><td class="td-num">10%</td><td class="td-num">1.5%</td><td>epoch 间同位置 row overlap 很低</td></tr>
+      </table>
+      <p>关键发现：<strong>epoch 间同一文本映射到的 row 几乎完全不同</strong>（trigram 只有 1.5% overlap）。gap 不是来自"精确同 row 重复读"，而是来自 row 内容的统计积累。</p>
+    </section>
+
+    <!-- ==================== 3. Gate 机制 ==================== -->
+    <section>
+      <h2>1.3 Gate 机制：table 如何注入到模型</h2>
+      <p>n-gram table 查出的 value 不会直接加到模型输出上——它经过一个 <strong>input-dependent gate</strong> 控制注入强度。gate 本身是一个小 linear layer + sigmoid。</p>
+
+      <div class="diagram">
+        <svg viewBox="0 0 880 200" xmlns="http://www.w3.org/2000/svg">
+          <!-- Step 1: hash -->
+          <rect x="10" y="20" width="120" height="55" fill="#f0eee7" stroke="#c8c1b6" rx="6"/>
+          <text x="70" y="42" font-size="11" font-weight="600" text-anchor="middle" fill="#232426">1. Hash</text>
+          <text x="70" y="58" font-size="10" text-anchor="middle" fill="#686d73">tokens → row #</text>
+          <text x="70" y="68" font-size="10" text-anchor="middle" fill="#686d73">GPU 整数运算</text>
+
+          <!-- Step 2: lookup -->
+          <rect x="160" y="20" width="120" height="55" fill="#f0eee7" stroke="#c8c1b6" rx="6"/>
+          <text x="220" y="42" font-size="11" font-weight="600" text-anchor="middle" fill="#232426">2. 查表</text>
+          <text x="220" y="58" font-size="10" text-anchor="middle" fill="#686d73">Embedding(row)</text>
+          <text x="220" y="68" font-size="10" text-anchor="middle" fill="#686d73">→ value [B,T,128]</text>
+
+          <!-- Step 3: gate -->
+          <rect x="310" y="20" width="120" height="55" fill="#fffdf8" stroke="#c4493d" stroke-width="1.5" rx="6"/>
+          <text x="370" y="42" font-size="11" font-weight="600" text-anchor="middle" fill="#c4493d">3. Gate</text>
+          <text x="370" y="58" font-size="10" text-anchor="middle" fill="#686d73">2×sigmoid(Linear(x))</text>
+          <text x="370" y="68" font-size="10" text-anchor="middle" fill="#686d73">→ gate [B,T,heads]</text>
+
+          <!-- Step 4: multiply -->
+          <circle cx="480" cy="47" r="16" fill="none" stroke="#353d79" stroke-width="1.5"/>
+          <text x="480" y="52" font-size="14" font-weight="700" text-anchor="middle" fill="#353d79">×</text>
+
+          <!-- Step 5: add -->
+          <rect x="520" y="20" width="120" height="55" fill="#f0eee7" stroke="#c8c1b6" rx="6"/>
+          <text x="580" y="42" font-size="11" font-weight="600" text-anchor="middle" fill="#232426">5. 加到 value</text>
+          <text x="580" y="58" font-size="10" text-anchor="middle" fill="#686d73">v_heads += gated</text>
+          <text x="580" y="68" font-size="10" text-anchor="middle" fill="#686d73">残差注入</text>
+
+          <!-- Arrows -->
+          <line x1="130" y1="47" x2="160" y2="47" stroke="#686d73" stroke-width="1" marker-end="url(#arrow2)"/>
+          <line x1="280" y1="47" x2="310" y2="47" stroke="#686d73" stroke-width="1" marker-end="url(#arrow2)"/>
+          <line x1="430" y1="47" x2="464" y2="47" stroke="#686d73" stroke-width="1" marker-end="url(#arrow2)"/>
+          <line x1="496" y1="47" x2="520" y2="47" stroke="#686d73" stroke-width="1" marker-end="url(#arrow2)"/>
+
+          <!-- Hidden state input -->
+          <rect x="310" y="100" width="120" height="35" fill="none" stroke="#c8c1b6" stroke-dasharray="4 3" rx="4"/>
+          <text x="370" y="122" font-size="10" text-anchor="middle" fill="#686d73">hidden state x</text>
+          <line x1="370" y1="100" x2="370" y2="75" stroke="#686d73" stroke-width="1" stroke-dasharray="3 3" marker-end="url(#arrow2)"/>
+
+          <!-- Attention V input -->
+          <rect x="520" y="100" width="120" height="35" fill="none" stroke="#c8c1b6" stroke-dasharray="4 3" rx="4"/>
+          <text x="580" y="122" font-size="10" text-anchor="middle" fill="#686d73">attention V heads</text>
+          <line x1="580" y1="100" x2="580" y2="75" stroke="#686d73" stroke-width="1" stroke-dasharray="3 3" marker-end="url(#arrow2)"/>
+
+          <!-- After -->
+          <text x="680" y="52" font-size="12" fill="#686d73">→ attention 继续计算</text>
+          <text x="680" y="68" font-size="11" fill="#686d73">softmax(QK/√d)·(V+gated)</text>
+
+          <defs>
+            <marker id="arrow2" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+              <path d="M0,0 L6,3 L0,6 Z" fill="#686d73"/>
+            </marker>
+          </defs>
+        </svg>
+      </div>
+
+      <div class="code-label">train.py:1721-1728 — gate 注入</div>
+      <div class="code-block"><span class="kw">def</span> <span class="fn">_add_value_residual</span>(self, branch, v_heads, residual, gate, x, channel_start, heads):
+    <span class="com"># residual = table 查出的 value [B, T, heads, head_dim]</span>
+    residual = residual.view(x.size(<span class="num">0</span>), x.size(<span class="num">1</span>), heads, self.head_dim)
+
+    <span class="com"># gate: 从 hidden state 取前 32 维 → linear → sigmoid → ×2</span>
+    gate_input = x[..., channel_start : channel_start + self.ve_gate_channels]
+    <span class="hl">value_gate = <span class="num">2</span> * torch.<span class="fn">sigmoid</span>(gate(gate_input))</span>  <span class="com"># 范围 [0, 2]</span>
+
+    <span class="com"># 逐位置乘 gate</span>
+    gated = value_gate.unsqueeze(<span class="num">-1</span>) * residual
+
+    <span class="com"># 加到 attention value 上</span>
+    <span class="kw">return</span> v_heads + gated</div>
+
+      <p>gate 初始化为全 0 权重，所以 <code>2×sigmoid(0) = 1.0</code>——训练初期 gate 全开（中性），之后模型自己学习该在什么时候、什么位置放大或抑制 n-gram value 的注入。</p>
+
+      <div class="note anchor-note">
+        <strong>gate 是 gap 的关键放大器</strong>。实验数据显示：epoch1 期间 trigram gate_rms 只有 0.088（几乎不工作），但进入 epoch2 中段后 gate_rms 上升到 0.29——gate 被训练起来后，table 中积累的历史内容才被"放大"为可见的 train loss 下降。
+      </div>
+    </section>
+
+    <!-- ==================== 4. Shell 概念 ==================== -->
+    <section>
+      <h2>1.4 Shell 是什么：nanoGPT vs current shell</h2>
+      <p>项目中有两类模型架构，称为 "shell"（外壳）。它们的区别在于 transformer block 的内部结构。</p>
+
+      <div class="compare">
+        <div class="compare-col nogap">
+          <div class="compare-title">nanoGPT shell</div>
+          <p>经典 nanoGPT 架构。标准 LayerNorm、标准 attention、标准 MLP。</p>
+          <div class="code-block"><span class="com"># NanoGPTBlock</span>
+x = LayerNorm(x)
+x = x + SelfAttention(x)
+x = LayerNorm(x)
+x = x + MLP(x)</div>
+          <p>即使加 n-gram table + RMSProp + 高 LR，也<strong>不产生 gap</strong>。</p>
+        </div>
+        <div class="compare-col gap">
+          <div class="compare-title">current shell (GPT)</div>
+          <p>从 current/GPT 架构移植的 block。包含 x0 residual、resid_lambda、split QKV 等额外结构。</p>
+          <div class="code-block"><span class="com"># Block (current shell)</span>
+x = resid_lambda*x + x0_lambda*x0_gate*x0
+x = x + SelfAttention_splitQKV(x)
+x = x + MLP(x)
+<span class="com"># attention 内部: V += ngram_gate × table_value</span></div>
+          <p>n-gram table 注入到 attention value stream 的方式<strong>和 nanoGPT shell 不同</strong>。在 current shell 下，gap 出现。</p>
+        </div>
+      </div>
+
+      <p>关键区别不在 table 本身（两者都可以有相同的 n-gram table），而在于 <strong>reader 的传输路径</strong>：current shell 的 attention split QKV + 残差路径使 n-gram value 在后层 residual 中被更有效地放大。这是为什么 nanoGPT shell 即使加上所有组件仍然无 gap，而切到 current shell 后 gap 出现。</p>
+
+      <div class="note">
+        <strong>"current-style n-gram injection"</strong> 指的是 n-gram value 被注入到 attention value stream 的具体坐标和方式。nanoGPT-style injection 和 current-style injection 的数学结构不同（注入位置、gate 通道分配、与 attention 的交互方式），这决定了 reader Jacobian <span class="math">J<sub>i,a</sub></span> 的大小。
+      </div>
+    </section>
+
+    <!-- ==================== 5. Optimizer grouping ==================== -->
+    <section>
+      <h2>1.5 Optimizer grouping：两个独立的概念</h2>
+      <p>项目中 "optimizer" 相关的配置有两个独立维度，经常被混淆。这里明确区分。</p>
+
+      <h3>维度一：n-gram table 用什么 optimizer</h3>
+      <p>由 <code>nanogpt_ngram_optimizer</code> 控制，决定 table 参数的更新算法：</p>
+      <table>
+        <tr><th>取值</th><th>unigram table</th><th>bigram/trigram table</th><th>含义</th></tr>
+        <tr><td><code>"adamw"</code></td><td>AdamW</td><td>AdamW</td><td>全部用 AdamW（有 momentum）</td></tr>
+        <tr><td><code>"rmsprop"</code></td><td>RMSProp</td><td>RMSProp</td><td>全部用 RMSProp（无 momentum）</td></tr>
+        <tr><td><code>"mixed"</code></td><td>AdamW</td><td>RMSProp</td><td>unigram 用 AdamW，high-order 用 RMSProp</td></tr>
+      </table>
+
+      <h3>维度二：参数分组与 LR 分配</h3>
+      <p>由 <code>optimizer_grouping</code> 控制，决定<strong>每类参数的学习率</strong>：</p>
+      <table>
+        <tr><th>参数类型</th><th>nanoGPT-style grouping</th><th>current-style grouping</th></tr>
+        <tr><td>embedding (wte + wpe)</td><td class="td-num">0.004</td><td class="td-num"><strong>0.6</strong></td></tr>
+        <tr><td>lm_head (unembedding)</td><td class="td-num">0.004</td><td class="td-num">0.004</td></tr>
+        <tr><td>unigram VE</td><td class="td-num">0.004</td><td class="td-num"><strong>0.6</strong></td></tr>
+        <tr><td>bigram/trigram VE</td><td class="td-num">0.004</td><td class="td-num"><strong>0.6</strong></td></tr>
+        <tr><td>norm params</td><td class="td-num">0.004</td><td class="td-num">0.004</td></tr>
+        <tr><td>matrix (Muon)</td><td class="td-num">0.04</td><td class="td-num">0.04</td></tr>
+      </table>
+
+      <div class="note gap-note">
+        <strong>关键差异</strong>：current-style grouping 给 n-gram table 的 LR 是 0.6，而 nanoGPT-style 只有 0.004——<strong>差 150 倍</strong>。这个 LR 差异是 gap 出现的必要条件：高 LR 使 table 在 epoch1 内快速积累 train-specific content，到 epoch2 时形成足够强的 history state。
+      </div>
+
+      <h3>RMSProp 对比 AdamW：为什么对 sparse table 更合适</h3>
+      <div class="compare">
+        <div class="compare-col nogap">
+          <div class="compare-title">AdamW（有 first moment）</div>
+          <div class="code-block">m = β₁·m + (1-β₁)·grad   <span class="com"># momentum</span>
+v = β₂·v + (1-β₂)·grad²
+update = lr · m / (√v + ε)
+
+<span class="com"># β₁ = 0.8 → 半衰期 ~3 步</span>
+<span class="com"># sparse row 隔几十步才被访问</span>
+<span class="com"># → m 已衰减到 ~0，等于每次"重启"</span></div>
+        </div>
+        <div class="compare-col gap">
+          <div class="compare-title">RMSProp（无 first moment）</div>
+          <div class="code-block">v = β₂·v + (1-β₂)·grad²
+update = lr · grad / (√v + ε)
+
+<span class="com"># β₂ = 0.999 → 半衰期 ~693 步</span>
+<span class="com"># ≈ 2 个 epoch 的长度</span>
+<span class="com"># → v 能跨 epoch 持久化</span>
+<span class="com"># → 写入方向 = 当前梯度，不被稀释</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 6. 现象 ==================== -->
+    <section>
+      <h2 id="chapter-2">2. Gap 现象与因果链</h2>
+      <p>以下为 <code>baseline_current</code> 的真实 loss 记录（current shell + current-style grouping + bigram+trigram RMSProp，seed42，1000 step，vocab=8192，n_layer=8）——与 §7.9 / §9 的 norm / 频次分解<strong>同一 run</strong>。</p>
+
+      <div class="chart-section">
+        <div class="chart-wrap" style="aspect-ratio: 2.2/1; min-height: 320px;">
+          <svg viewBox="0 0 820 320" xmlns="http://www.w3.org/2000/svg" style="font-family:Inter,ui-sans-serif,system-ui,sans-serif">
+<rect width="820" height="320" fill="#fffdf8" rx="6"/>
+<line x1="55" y1="272.4" x2="800" y2="272.4" stroke="#c8c1b6" stroke-width="0.5"/>
+<text x="49" y="275.4" text-anchor="end" fill="#686d73" font-size="9">3</text>
+<line x1="55" y1="234.5" x2="800" y2="234.5" stroke="#c8c1b6" stroke-width="0.5"/>
+<text x="49" y="237.5" text-anchor="end" fill="#686d73" font-size="9">4</text>
+<line x1="55" y1="196.7" x2="800" y2="196.7" stroke="#c8c1b6" stroke-width="0.5"/>
+<text x="49" y="199.7" text-anchor="end" fill="#686d73" font-size="9">5</text>
+<line x1="55" y1="158.8" x2="800" y2="158.8" stroke="#c8c1b6" stroke-width="0.5"/>
+<text x="49" y="161.8" text-anchor="end" fill="#686d73" font-size="9">6</text>
+<line x1="55" y1="120.9" x2="800" y2="120.9" stroke="#c8c1b6" stroke-width="0.5"/>
+<text x="49" y="123.9" text-anchor="end" fill="#686d73" font-size="9">7</text>
+<line x1="55" y1="83.0" x2="800" y2="83.0" stroke="#c8c1b6" stroke-width="0.5"/>
+<text x="49" y="86.0" text-anchor="end" fill="#686d73" font-size="9">8</text>
+<line x1="55" y1="45.2" x2="800" y2="45.2" stroke="#c8c1b6" stroke-width="0.5"/>
+<text x="49" y="48.2" text-anchor="end" fill="#686d73" font-size="9">9</text>
+<line x1="55.0" y1="280" x2="55.0" y2="284" stroke="#c8c1b6" stroke-width="0.5"/>
+<text x="55.0" y="296" text-anchor="middle" fill="#686d73" font-size="9">0</text>
+<line x1="129.5" y1="280" x2="129.5" y2="284" stroke="#c8c1b6" stroke-width="0.5"/>
+<text x="129.5" y="296" text-anchor="middle" fill="#686d73" font-size="9">100</text>
+<line x1="204.0" y1="280" x2="204.0" y2="284" stroke="#c8c1b6" stroke-width="0.5"/>
+<text x="204.0" y="296" text-anchor="middle" fill="#686d73" font-size="9">200</text>
+<line x1="278.5" y1="280" x2="278.5" y2="284" stroke="#c8c1b6" stroke-width="0.5"/>
+<text x="278.5" y="296" text-anchor="middle" fill="#686d73" font-size="9">300</text>
+<line x1="353.0" y1="280" x2="353.0" y2="284" stroke="#c8c1b6" stroke-width="0.5"/>
+<text x="353.0" y="296" text-anchor="middle" fill="#686d73" font-size="9">400</text>
+<line x1="427.5" y1="280" x2="427.5" y2="284" stroke="#c8c1b6" stroke-width="0.5"/>
+<text x="427.5" y="296" text-anchor="middle" fill="#686d73" font-size="9">500</text>
+<line x1="502.0" y1="280" x2="502.0" y2="284" stroke="#c8c1b6" stroke-width="0.5"/>
+<text x="502.0" y="296" text-anchor="middle" fill="#686d73" font-size="9">600</text>
+<line x1="576.5" y1="280" x2="576.5" y2="284" stroke="#c8c1b6" stroke-width="0.5"/>
+<text x="576.5" y="296" text-anchor="middle" fill="#686d73" font-size="9">700</text>
+<line x1="651.0" y1="280" x2="651.0" y2="284" stroke="#c8c1b6" stroke-width="0.5"/>
+<text x="651.0" y="296" text-anchor="middle" fill="#686d73" font-size="9">800</text>
+<line x1="725.5" y1="280" x2="725.5" y2="284" stroke="#c8c1b6" stroke-width="0.5"/>
+<text x="725.5" y="296" text-anchor="middle" fill="#686d73" font-size="9">900</text>
+<line x1="800.0" y1="280" x2="800.0" y2="284" stroke="#c8c1b6" stroke-width="0.5"/>
+<text x="800.0" y="296" text-anchor="middle" fill="#686d73" font-size="9">1000</text>
+<line x1="306.8" y1="30" x2="306.8" y2="280" stroke="#8a8176" stroke-width="1" stroke-dasharray="4 3"/>
+<line x1="566.8" y1="30" x2="566.8" y2="280" stroke="#8a8176" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="180.9" y="24" text-anchor="middle" fill="#8a8176" font-size="9" font-weight="600">epoch 1</text>
+<text x="436.8" y="24" text-anchor="middle" fill="#8a8176" font-size="9" font-weight="600">epoch 2</text>
+<text x="683.4" y="24" text-anchor="middle" fill="#8a8176" font-size="9" font-weight="600">epoch 3</text>
+<text x="427.5" y="314" text-anchor="middle" fill="#686d73" font-size="10">training step</text>
+<text x="12" y="155.0" text-anchor="middle" fill="#686d73" font-size="10" transform="rotate(-90,12,155.0)">loss</text>
+<text x="427.5" y="16" text-anchor="middle" fill="#232426" font-size="12" font-weight="650">Train & Val Loss Overview</text>
+<line x1="55" y1="30" x2="55" y2="280" stroke="#c8c1b6" stroke-width="1"/>
+<line x1="55" y1="280" x2="800" y2="280" stroke="#c8c1b6" stroke-width="1"/>
+<polyline points="55.7,44.7 58.0,49.0 60.2,66.2 62.5,88.3 64.7,96.6 66.9,104.8 69.2,105.7 71.4,106.4 73.6,107.0 75.9,106.8 78.1,107.3 80.3,106.8 82.6,107.4 84.8,107.4 87.0,107.8 89.3,107.3 91.5,107.8 93.7,107.3 96.0,107.2 98.2,107.3 100.4,108.3 102.7,107.5 104.9,109.6 107.2,109.8 109.4,112.2 111.6,113.4 113.9,114.4 116.1,115.3 118.3,119.1 120.6,121.9 122.8,120.5 125.0,127.6 127.3,131.0 129.5,133.9 131.7,134.6 134.0,137.7 136.2,141.1 138.4,141.8 140.7,144.8 142.9,140.0 145.1,146.6 147.4,149.0 149.6,150.8 151.9,152.4 154.1,151.9 156.3,155.5 158.6,156.1 160.8,157.9 163.0,160.3 165.3,162.0 167.5,160.6 169.7,162.5 172.0,164.5 174.2,165.7 176.4,166.2 178.7,166.7 180.9,167.7 183.1,168.1 185.4,167.5 187.6,169.1 189.8,170.4 192.1,171.5 194.3,171.2 196.6,173.7 198.8,172.4 201.0,172.8 203.3,171.7 205.5,173.9 207.7,174.5 210.0,175.0 212.2,175.4 214.4,175.8 216.7,173.6 218.9,175.2 221.1,175.7 223.4,176.4 225.6,177.8 227.8,178.2 230.1,181.0 232.3,180.9 234.5,181.1 236.8,182.1 239.0,184.5 241.2,184.6 243.5,184.4 245.7,185.1 248.0,185.7 250.2,187.9 252.4,186.7 254.7,188.2 256.9,189.2 259.1,190.3 261.4,191.0 263.6,191.3 265.8,191.6 268.1,191.1 270.3,191.7 272.5,193.2 274.8,195.0 277.0,194.5 279.2,195.1 281.5,196.0 283.7,196.9 285.9,194.7 288.2,195.6 290.4,196.9 292.7,198.7 294.9,199.1 297.1,199.4 299.4,198.2 301.6,199.2 303.8,200.2 306.1,199.2 308.3,201.1 310.5,197.5 312.8,201.3 315.0,200.6 317.2,201.8 319.5,201.3 321.7,203.5 323.9,203.0 326.2,204.1 328.4,202.5 330.6,204.7 332.9,205.5 335.1,206.6 337.4,205.3 339.6,206.9 341.8,205.0 344.1,204.7 346.3,208.5 348.5,208.9 350.8,207.9 353.0,208.1 355.2,208.4 357.5,206.6 359.7,210.3 361.9,209.5 364.2,208.0 366.4,208.2 368.6,208.1 370.9,210.9 373.1,208.6 375.4,210.1 377.6,212.0 379.8,212.3 382.1,212.1 384.3,212.1 386.5,209.1 388.8,212.1 391.0,213.1 393.2,210.9 395.5,213.8 397.7,213.1 399.9,216.0 402.2,214.8 404.4,213.2 406.6,215.3 408.9,214.6 411.1,215.5 413.3,215.0 415.6,218.1 417.8,217.4 420.1,216.7 422.3,218.9 424.5,215.3 426.8,218.5 429.0,218.5 431.2,219.1 433.5,217.4 435.7,217.5 437.9,220.9 440.2,218.7 442.4,217.4 444.6,217.7 446.9,217.4 449.1,218.2 451.3,220.7 453.6,219.8 455.8,220.1 458.0,218.6 460.3,219.8 462.5,219.5 464.8,217.8 467.0,216.1 469.2,220.6 471.5,221.2 473.7,222.4 475.9,223.4 478.2,222.9 480.4,222.3 482.6,222.2 484.9,225.7 487.1,223.7 489.3,228.1 491.6,226.7 493.8,228.6 496.0,227.1 498.3,229.8 500.5,228.1 502.7,230.2 505.0,227.1 507.2,228.1 509.4,231.1 511.7,230.6 513.9,231.1 516.2,233.6 518.4,231.0 520.6,233.5 522.9,231.7 525.1,232.6 527.3,233.3 529.6,232.0 531.8,233.4 534.0,235.7 536.3,235.5 538.5,234.8 540.7,236.2 543.0,235.9 545.2,234.1 547.4,234.2 549.7,235.1 551.9,235.5 554.2,238.3 556.4,236.4 558.6,237.1 560.9,236.5 563.1,237.9 565.3,237.1 567.6,236.6 569.8,236.5 572.0,236.0 574.3,238.8 576.5,238.6 578.7,239.7 581.0,239.0 583.2,238.5 585.4,241.1 587.7,241.4 589.9,240.0 592.1,239.4 594.4,240.7 596.6,240.7 598.9,240.8 601.1,241.0 603.3,240.8 605.6,242.0 607.8,242.9 610.0,242.5 612.3,240.0 614.5,242.8 616.7,240.9 619.0,241.5 621.2,242.9 623.4,243.8 625.7,242.9 627.9,240.8 630.1,242.6 632.4,242.7 634.6,243.7 636.8,245.0 639.1,247.7 641.3,244.6 643.6,242.2 645.8,242.3 648.0,245.4 650.3,245.4 652.5,245.9 654.7,246.9 657.0,242.4 659.2,246.3 661.4,246.0 663.7,246.6 665.9,245.7 668.1,245.7 670.4,246.5 672.6,247.7 674.8,247.7 677.1,246.8 679.3,249.0 681.5,247.4 683.8,246.6 686.0,249.2 688.2,249.3 690.5,247.1 692.7,249.0 695.0,250.2 697.2,249.4 699.4,247.3 701.7,250.0 703.9,248.6 706.1,249.2 708.4,250.0 710.6,251.4 712.8,252.4 715.1,250.4 717.3,250.3 719.5,248.5 721.8,250.8 724.0,249.0 726.2,246.4 728.5,250.5 730.7,252.0 733.0,252.6 735.2,251.9 737.4,251.2 739.7,253.9 741.9,252.9 744.1,252.4 746.4,254.9 748.6,255.4 750.8,256.7 753.1,258.3 755.3,257.5 757.5,257.8 759.8,259.6 762.0,258.7 764.2,257.5 766.5,259.4 768.7,262.0 770.9,261.2 773.2,262.6 775.4,262.5 777.6,261.2 779.9,264.1 782.1,262.3 784.4,263.3 786.6,260.0 788.8,261.0 791.1,261.6 793.3,265.0 795.5,264.0 797.8,265.0 800.0,264.9" fill="none" stroke="#2d6f9f" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="92.2,106.9 94.5,106.9 96.7,106.9 99.0,106.9 101.2,106.9 103.4,106.9 105.7,106.9 107.9,106.9 110.1,106.9 112.4,106.9 114.6,106.9 116.8,106.9 119.1,106.9 121.3,106.9 123.5,106.9 125.8,106.9 128.0,106.9 130.2,134.4 132.5,134.4 134.7,134.4 136.9,134.4 139.2,134.4 141.4,134.4 143.7,134.4 145.9,134.4 148.1,134.4 150.4,134.4 152.6,134.4 154.8,134.4 157.1,134.4 159.3,134.4 161.5,134.4 163.8,134.4 166.0,134.4 168.2,161.0 170.5,161.0 172.7,161.0 174.9,161.0 177.2,161.0 179.4,161.0 181.7,161.0 183.9,161.0 186.1,161.0 188.4,161.0 190.6,161.0 192.8,161.0 195.1,161.0 197.3,161.0 199.5,161.0 201.8,161.0 204.0,173.7 206.2,173.7 208.5,173.7 210.7,173.7 212.9,173.7 215.2,173.7 217.4,173.7 219.6,173.7 221.9,173.7 224.1,173.7 226.3,173.7 228.6,173.7 230.8,173.7 233.1,173.7 235.3,173.7 237.5,173.7 239.8,173.7 242.0,184.4 244.2,184.4 246.5,184.4 248.7,184.4 250.9,184.4 253.2,184.4 255.4,184.4 257.6,184.4 259.9,184.4 262.1,184.4 264.3,184.4 266.6,184.4 268.8,184.4 271.0,184.4 273.3,184.4 275.5,184.4 277.8,184.4 280.0,195.2 282.2,195.2 284.5,195.2 286.7,195.2 288.9,195.2 291.2,195.2 293.4,195.2 295.6,195.2 297.9,195.2 300.1,195.2 302.3,195.2 304.6,195.2 306.8,195.2 309.0,195.2 311.3,195.2 313.5,195.2 315.8,201.7 318.0,201.7 320.2,201.7 322.5,201.7 324.7,201.7 326.9,201.7 329.2,201.7 331.4,201.7 333.6,201.7 335.9,201.7 338.1,201.7 340.3,201.7 342.6,201.7 344.8,201.7 347.0,201.7 349.3,201.7 351.5,201.7 353.7,207.1 356.0,207.1 358.2,207.1 360.4,207.1 362.7,207.1 364.9,207.1 367.2,207.1 369.4,207.1 371.6,207.1 373.9,207.1 376.1,207.1 378.3,207.1 380.6,207.1 382.8,207.1 385.0,207.1 387.3,207.1 389.5,207.1 391.7,212.1 394.0,212.1 396.2,212.1 398.4,212.1 400.7,212.1 402.9,212.1 405.1,212.1 407.4,212.1 409.6,212.1 411.9,212.1 414.1,212.1 416.3,212.1 418.6,212.1 420.8,212.1 423.0,212.1 425.3,212.1 427.5,216.5 429.7,216.5 432.0,216.5 434.2,216.5 436.4,216.5 438.7,216.5 440.9,216.5 443.1,216.5 445.4,216.5 447.6,216.5 449.9,216.5 452.1,216.5 454.3,216.5 456.6,216.5 458.8,216.5 461.0,216.5 463.3,216.5 465.5,215.9 467.7,215.9 470.0,215.9 472.2,215.9 474.4,215.9 476.7,215.9 478.9,215.9 481.1,215.9 483.4,215.9 485.6,215.9 487.8,215.9 490.1,215.9 492.3,215.9 494.5,215.9 496.8,215.9 499.0,215.9 501.3,215.9 503.5,218.6 505.7,218.6 508.0,218.6 510.2,218.6 512.4,218.6 514.7,218.6 516.9,218.6 519.1,218.6 521.4,218.6 523.6,218.6 525.8,218.6 528.1,218.6 530.3,218.6 532.5,218.6 534.8,218.6 537.0,218.6 539.2,218.5 541.5,218.5 543.7,218.5 546.0,218.5 548.2,218.5 550.4,218.5 552.7,218.5 554.9,218.5 557.1,218.5 559.4,218.5 561.6,218.5 563.8,218.5 566.1,218.5 568.3,218.5 570.5,218.5 572.8,218.5 575.0,218.5 577.2,217.2 579.5,217.2 581.7,217.2 583.9,217.2 586.2,217.2 588.4,217.2 590.7,217.2 592.9,217.2 595.1,217.2 597.4,217.2 599.6,217.2 601.8,217.2 604.1,217.2 606.3,217.2 608.5,217.2 610.8,217.2 613.0,217.2 615.2,219.3 617.5,219.3 619.7,219.3 621.9,219.3 624.2,219.3 626.4,219.3 628.6,219.3 630.9,219.3 633.1,219.3 635.4,219.3 637.6,219.3 639.8,219.3 642.1,219.3 644.3,219.3 646.5,219.3 648.8,219.3 651.0,220.3 653.2,220.3 655.5,220.3 657.7,220.3 659.9,220.3 662.2,220.3 664.4,220.3 666.6,220.3 668.9,220.3 671.1,220.3 673.4,220.3 675.6,220.3 677.8,220.3 680.1,220.3 682.3,220.3 684.5,220.3 686.8,220.3 689.0,221.3 691.2,221.3 693.5,221.3 695.7,221.3 697.9,221.3 700.2,221.3 702.4,221.3 704.6,221.3 706.9,221.3 709.1,221.3 711.3,221.3 713.6,221.3 715.8,221.3 718.0,221.3 720.3,221.3 722.5,221.3 724.8,221.3 727.0,220.8 729.2,220.8 731.5,220.8 733.7,220.8 735.9,220.8 738.2,220.8 740.4,220.8 742.6,220.8 744.9,220.8 747.1,220.8 749.3,220.8 751.6,220.8 753.8,220.8 756.0,220.8 758.3,220.8 760.5,220.8 762.8,218.4 765.0,218.4 767.2,218.4 769.5,218.4 771.7,218.4 773.9,218.4 776.2,218.4 778.4,218.4 780.6,218.4 782.9,218.4 785.1,218.4 787.3,218.4 789.6,218.4 791.8,218.4 794.0,218.4 796.3,218.4 798.5,218.4" fill="none" stroke="#c4493d" stroke-width="2" stroke-linejoin="round"/>
+<line x1="65" y1="42" x2="81" y2="42" stroke="#2d6f9f" stroke-width="2.5"/>
+<text x="85" y="45.5" fill="#686d73" font-size="9">train</text>
+<line x1="65" y1="56" x2="81" y2="56" stroke="#c4493d" stroke-width="2.5"/>
+<text x="85" y="59.5" fill="#686d73" font-size="9">val</text>
+</svg>
+        </div>
+        <div class="series-legend">
+        <span><i class="line-swatch train"></i>train loss</span>
+          <span><i class="line-swatch val"></i>val loss</span>
+        </div>
+        <div style="padding:0 12px 8px;font-size:10px;color:var(--weak);text-align:center;">
+          📊 数据来源：baseline_current (current shell + current-style grouping + bigram+trigram RMSProp, vocab=8192, n_layer=8, seed42, 1000 step)
+        </div>
+      </div>
+
+      <p>关键现象：epoch2 时 train 与 val 基本贴合（gap ~0.04）；进入 epoch3 后 train 持续阶梯下降、val 停滞并回升，gap 从 ~0.5 扩大到 1.33。图中曲线直接来自真实训练记录，与下方 §7.9 / §9 同一 run。</p>
+      <table>
+        <tr><th>step</th><th>train loss</th><th>val loss</th><th>gap</th><th>现象</th></tr>
+        <tr><td class="td-num">338</td><td class="td-num">4.854</td><td class="td-num">5.038</td><td class="td-num">0.184</td><td>epoch1→2 边界，gap 极小</td></tr>
+        <tr><td class="td-num">500</td><td class="td-num">4.437</td><td class="td-num">4.476</td><td class="td-num">0.040</td><td>epoch2 中段，train 与 val 贴合</td></tr>
+        <tr><td class="td-num">687</td><td class="td-num">3.911</td><td class="td-num">4.424</td><td class="td-num">0.513</td><td>epoch2→3 边界，gap 开始扩大</td></tr>
+        <tr><td class="td-num">800</td><td class="td-num">3.718</td><td class="td-num">4.377</td><td class="td-num">0.659</td><td><span class="tag gap">train 持续下降</span></td></tr>
+        <tr><td class="td-num">900</td><td class="td-num">3.596</td><td class="td-num">4.362</td><td class="td-num">0.766</td><td>val 停滞，gap 扩大</td></tr>
+        <tr><td class="td-num">1000</td><td class="td-num">3.197</td><td class="td-num">4.527</td><td class="td-num">1.330</td><td>epoch3 末，val 回升、gap 超过 1.3</td></tr>
+      </table>
+
+      <h3>因果链：gap 是如何产生的</h3>
+      <p>以下因果链基于 <code>baseline_current</code> 的 observable 数据（与 §7.9 / §9 同一 run）。每个环节都有直接测量证据。</p>
+
+      <div class="flow">
+        <div class="flow-row">
+          <div class="flow-marker"><div class="flow-dot anchor"></div><div class="flow-line"></div></div>
+          <div class="flow-content">
+            <div class="flow-title">epoch1-2: table 积累 train-specific content</div>
+            <div class="flow-detail">高 LR + RMSProp（无 momentum 稀释）使每个被访问的 row 写入纯 train 方向的 gradient，table content RMS（raw_value_rms）在训练中持续增长。<strong>但此时 reader gate 还没训练起来</strong>，注入幅度（gated value RMS = gate × table）有限，所以 epoch2 时 train 与 val 基本贴合（gap ~0.04）。</div>
+          </div>
+        </div>
+        <div class="flow-row">
+          <div class="flow-marker"><div class="flow-dot weak"></div><div class="flow-line"></div></div>
+          <div class="flow-content">
+            <div class="flow-title">epoch2→3 边界: gate 通道建立</div>
+            <div class="flow-detail">gate_rms 在 epoch2-3 抬升，gate 通道被激活，table 中已积累的历史内容开始被放大为 logits 上的有效 signal（gated value RMS 同步增长，见 §7.9 双轴图）。</div>
+          </div>
+        </div>
+        <div class="flow-row">
+          <div class="flow-marker"><div class="flow-dot gap"></div><div class="flow-line"></div></div>
+          <div class="flow-content">
+            <div class="flow-title">train 阶梯下降 <span class="flow-tag gap">gap</span></div>
+            <div class="flow-detail">table 中的历史 row 内容在 train probe 上大幅降低 loss。train loss 从 4.44（step 500）阶梯下降到 3.20（step 1000）。</div>
+          </div>
+        </div>
+        <div class="flow-row">
+          <div class="flow-marker"><div class="flow-dot gap"></div><div class="flow-line"></div></div>
+          <div class="flow-content">
+            <div class="flow-title">val loss 翘起 <span class="flow-tag gap">gap</span></div>
+            <div class="flow-detail">table 中的 train-specific row content 被 val 文本访问时，因 residual 方向不对齐而产生 cross-penalty。val loss 从 4.48（step 500）停滞并回升到 4.53（step 1000）。</div>
+          </div>
+        </div>
+        <div class="flow-row">
+          <div class="flow-marker"><div class="flow-dot gap"></div></div>
+          <div class="flow-content">
+            <div class="flow-title">gap 持续扩大 <span class="flow-tag gap">gap</span></div>
+            <div class="flow-detail">train loss 持续下降，val loss 停滞/回升。gap 从 0.04（epoch2）扩大到 1.33（epoch3 末），且仍在上升。频次分解（§9）显示这些被放大的 pattern 主要让 novel / 低中频 context 过拟合。</div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- ==================== 7. Table Norm × Gate（loss↔norm，与 §9 同 setting） ==================== -->
+    <section>
+      <h2 id="chapter-7">7. Table Norm × Gate：loss↔norm 时间关系</h2>
+      <p style="color:var(--anchor);font-weight:600;font-size:15px;margin-bottom:6px">
+        视图 A：loss↔norm。<strong>与 §9 的 loss↔频次分解同一实验</strong>（baseline_current，current shell）。
+      </p>
+      <div class="note" style="background:#faf7f0;border-left:4px solid var(--anchor);border-radius:8px;padding:12px 16px;margin:10px 0;font-size:13px;line-height:1.7;">
+        <strong>统一 setting</strong>：本图与 §9 都用 <code>baseline_current</code>
+        （current shell + current-style grouping + bigram+trigram RMSProp，seed42，1000 step，vocab=8192，n_layer=8，
+        epoch 边界 [338, 687]，epoch3 gap 从 ~0.5 扩大到 1.33）——
+        与上方 §2 现象图<strong>同一 setting 系</strong>（current shell，gap 量级远大于 nanogpt_original），
+        且同时记录了<strong>逐 step 的 gate/table/gated norm</strong>与<strong>按频次分桶的 loss</strong>。
+      </div>
+
+      <h3 id="chapter-7-9">§7.9 Loss × n-gram Norm（双轴复合图）</h3>
+      <p style="font-size:14px;line-height:1.65;margin-bottom:10px">
+        左轴 train/val/gap loss，右轴 n-gram norm（gate_rms / table content RMS / gated value RMS）。
+        切 context（unigram/bigram/trigram）、切 loss 曲线、开关各 norm。<strong>判据</strong>：注入 norm
+        （gated value RMS = gate × table）的增长时点是否与 gap 爆发对齐。
+      </p>
+      <div class="chart-section">
+        <div class="chart-wrap" style="width:100%;position:relative;">
+          <iframe src="interactive/fig_loss_norm.html" style="width:100%;max-width:1040px;height:620px;border:1px solid var(--line);border-radius:8px;" title="Loss × Norm 时间关系"></iframe>
+        </div>
+        <div style="padding:4px 12px 8px;font-size:11px;color:var(--muted);text-align:center;">
+          图 7.9：loss（左轴）与 n-gram norm（右轴）随 step 演化。下方表格给出每 epoch 变化率，可直接读出 norm 增长峰值 epoch 是否与 gap 峰值 epoch 对齐。
+        </div>
+        <div style="padding:0 12px 8px;font-size:10px;color:var(--weak);text-align:center;">
+          📊 数据来源：baseline_current (current shell + current-style grouping + bigram+trigram RMSProp, vocab=8192, n_layer=8, seed42, 1000 step)
+        </div>
+      </div>
+      <div class="note" style="background:#fbf7ef;border-left:4px solid #c4493d;border-radius:8px;padding:14px 16px;margin:12px 0;font-size:13.5px;line-height:1.7;">
+        <strong style="color:#c4493d;">读图</strong>：table content RMS 持续增长，gate 部分调节，
+        <strong>gated value RMS（注入）= gate × table</strong> 才是真正加到 value head 的量。把 loss 切到 <em>gap (val−train)</em>、
+        norm 留 <em>gated value RMS</em>，可见注入幅度的增长与 gap 的扩大在时间上<strong>对齐</strong>（epoch3 train 降到 3.2、val 升到 4.5，注入 norm 同步抬升）——
+        gap 不是 gate 单独造成，而是 table 累积的 train-specific pattern 经 gate 通道被持续放大。
+        下一节 <a href="#chapter-9">§9</a> 从频次角度补充：这些被放大的 pattern 主要让低中频 / novel context 过拟合。
+      </div>
+    </section>
+
+    <!-- ==================== 9. 频次分解分析 ==================== -->
+    <section>
+      <h2 id="chapter-9">9. 频次分解分析</h2>
+      <p style="color:var(--anchor);font-weight:600;font-size:15px;margin-bottom:10px">
+        把 loss 按 n-gram context 的<strong>训练频次</strong>分解，是定位 gap 来源的核心观测量。
+      </p>
+      <div class="note anchor-note">
+        <strong>频次定义（统一口径）</strong>
+        <p style="margin:8px 0 0;font-size:14px;line-height:1.7;">
+          每个 n-gram context 的频次 = 它在<strong>单个 train epoch</strong> 内出现的精确次数，由训练前一次性离线扫描的
+          <strong>精确频率索引</strong>（<code>GlobalNgramFrequencyIndex</code>）给出，整个训练过程不变。
+          <strong>频次定义仅在 train 上</strong>；val 的 token 按"其 context 在 train 中的频次"归类到同一套桶，
+          因此 val 有 <code>novel</code> 桶（context 在 train 中从未出现），而 train 按定义没有 novel 桶。
+        </p>
+        <p style="margin:8px 0 0;font-size:13px;line-height:1.7;">
+          桶的边界（精确频次，上下界闭区间）：<code>novel(0) / 1 / 2 / 3 / 4 / 5 / 6-10 / 11-20 / 21-50 / 51-100 / 101-200 / 201-500 / 501-1k / 1k-5k / 5k+</code>。
+          低频段被细分为单值桶（1/2/3/4/5），便于直接观察最低频 context 的过拟合。
+        </p>
+      </div>
+      <div class="note gap-note">
+        <strong>与 §7 同 setting（视图 B）</strong>
+        <p style="margin:8px 0 0;font-size:13px;line-height:1.7;">
+          本章频次分解与 §7 的 loss↔norm 图用<strong>同一 run</strong>：<code>baseline_current</code>
+          （current shell + current-style grouping + bigram+trigram RMSProp，seed42，1000 step，vocab=8192，n_layer=8，
+          epoch3 gap 从 ~0.5 扩大到 1.33）——与 §2 现象图同一 setting 系，gap 量级远大于 nanogpt_original。
+          §7（视图 A）说"<strong>注入 norm 在增长、与 gap 时间对齐</strong>"，本章（视图 B/C）补充"<strong>这些被放大的 pattern 主要让 novel / 低中频 context 过拟合</strong>"——同一现象的两个测量面。
+        </p>
+      </div>
+
+      <h3 id="chapter-9-1">9.1 频次分桶：train / val / gap 损失曲线</h3>
+      <p>
+        下面这张复合图把<strong>每个频次桶</strong>的 train loss、val loss、gap(val−train) 放进同一个面板，可切换：
+      </p>
+      <ul style="font-size:14px;line-height:1.7;margin:0 0 12px 24px;">
+        <li><strong>曲线 (curve)</strong>：train loss / val loss / <strong>train+val 同图</strong>（默认，train 蓝实线、val 红虚线）/ gap(val−train)。
+            按用户要求，<em>所有 gap 图都自动带上 val 和 train 两条曲线</em>，切换到 gap 视图时 0 线固定为坐标轴。</li>
+        <li><strong>指标 (metric)</strong>：per-token loss / 总贡献 = frac × loss（衡量该桶对总 loss/gap 的实际贡献量级）。</li>
+        <li><strong>context</strong>：bigram / trigram。每个桶可用复选框单独开关。</li>
+      </ul>
+      <div class="chart-section">
+        <div class="chart-wrap" style="width:100%;position:relative;">
+          <iframe src="interactive/fig_gap_by_freq.html" style="width:100%;max-width:1000px;height:850px;border:1px solid var(--line);border-radius:8px;overflow:hidden;" scrolling="no" title="频次分桶 train/val/gap 复合图"></iframe>
+        </div>
+        <div style="padding:4px 12px 8px;font-size:11px;color:var(--muted);text-align:center;">
+          图 9.1：频次分桶复合图（也可直接打开 <code>interactive/fig_gap_by_freq.html</code> 单独查看/放大）。
+          bigram 与 trigram 均拥有完整频段（含 novel 与 1/2/3/4/5 单值低频桶）；trigram 的 novel 桶在 val 上占 ~30%，是 val 翘起的主要来源。
+        </div>
+        <div style="padding:0 12px 8px;font-size:10px;color:var(--weak);text-align:center;">
+          📊 数据来源：baseline_current (current shell + current-style grouping + bigram+trigram RMSProp, vocab=8192, n_layer=8, seed42, 1000 step)
+        </div>
+      </div>
+
+      <div class="note anchor-note">
+        <strong>关键读图结论</strong>
+        <ol style="margin:8px 0 0;padding-left:20px;font-size:14px;line-height:1.7;">
+          <li><strong>gap 是全局性的，低中频 bucket 最严重</strong>：所有非高频桶的 gap 在 epoch3 爆发。
+              切到 <em>gap</em> 视图可见低中频（1/2/3、6-10、11-20、21-50）bucket 的 gap 最大，高频（5k+）bucket 的 gap 最小。</li>
+          <li><strong>train 与 val 的分离在低频端最明显</strong>：切到 <em>train+val</em> 视图，低频桶的 train loss 显著低于 val（过拟合），
+              高频桶两者接近（QA pattern 天然可预测）。</li>
+          <li><strong>novel 桶是 val 翘起的最大单一来源</strong>：切到 <em>总贡献</em> 视图，novel 桶（仅 val，占 trigram val token 的 ~30%）贡献最大，
+              其次是 21-50/51-100 等中频桶；高频桶虽然 per-token gap 小，但若 token 占比高也会有一定的总贡献。</li>
+          <li><strong>trigram 的 novel 占比远高于 bigram</strong>：trigram 组合空间远大于 train 文本，~30% 的 val trigram context 从未在 train 出现；
+              bigram 的 novel 占比仅 ~4%。这正是 trigram 对 gap 贡献更大的结构性原因。</li>
+        </ol>
+      </div>
+
+      <h3 id="chapter-9-2">9.2 命中频次分布（单 train epoch 内）</h3>
+      <p>
+        在解释 gap 之前，先看训练数据的频次结构本身。<strong>频次定义仅在 train</strong>：统计每个 context 在一个 train epoch 内出现的精确次数。
+        下面这张复合图分别统计 <strong>bigram / trigram</strong>，提供 token 占比视角与两个 split：
+      </p>
+      <ul style="font-size:14px;line-height:1.7;margin:0 0 12px 24px;">
+        <li><strong>视图</strong>：token 占比（按出现次数加权）。</li>
+        <li><strong>split</strong>：train（按 train 频次）/ val（val token 按 train 频次归类，故 val 有 novel 桶）。</li>
+      </ul>
+      <div class="chart-section">
+        <div class="chart-wrap" style="width:100%;position:relative;">
+          <iframe src="interactive/fig_hitcount_dist.html" style="width:100%;max-width:1000px;height:520px;border:1px solid var(--line);border-radius:8px;overflow:hidden;" scrolling="no" title="命中频次分布复合图"></iframe>
+        </div>
+        <div style="padding:4px 12px 8px;font-size:11px;color:var(--muted);text-align:center;">
+          图 9.2：命中频次分布（柱状 + 累积）。左：分桶占比；右：从低频到高频的累积分布。
+          trigram 的 val novel 占 ~30%（大量 val context 从未在 train 出现）；bigram 的 val novel 仅 ~4%。train 侧呈典型幂律分布，中高频 context 承载大部分 token。
+        </div>
+        <div style="padding:0 12px 8px;font-size:10px;color:var(--weak);text-align:center;">
+          📊 数据来源：baseline_current (current shell + current-style grouping + bigram+trigram RMSProp, vocab=8192, n_layer=8)
+        </div>
+      </div>
+
+      <div class="note" style="background:#fbf7ef;border-left:4px solid #c4493d;border-radius:8px;padding:16px;margin:12px 0;">
+        <strong style="color:#c4493d;">机制解读：频次结构如何决定 gap</strong>
+        <p style="margin:8px 0 0;font-size:14px;line-height:1.7;">
+          训练集的 context 频次呈典型<strong>幂律分布</strong>：train 侧大部分 token 来自少数高频 context，
+          但 val 侧有大量 context（尤其 trigram，~30%）在 train 中从未出现（novel）。gap 的成因正是这种分布与多 epoch 重复训练的交互：
+        </p>
+        <ol style="margin:8px 0 0;padding-left:20px;font-size:14px;line-height:1.7;">
+          <li><strong>novel / 低频 context</strong>：模型在 train 中见过几次（低频）或没见过（novel），
+              到 epoch3 配合 gate 通道建立，模型把这些 context 的特定后续 token memorize 下来（train loss 坍塌），
+              但 val 中即使遇到相同 context，后续 token 也不同，模型"过度自信"反而出错（val loss 翘起）。trigram 的 ~30% val novel 是其 gap 尤为显著的结构性原因。</li>
+          <li><strong>高频 context</strong>：多为 QA pattern（<code>? Answer:</code> 等），后续 token 天然可预测，
+              train 和 val 的 loss 都相对低且接近，对 gap 贡献最小。</li>
+          <li><strong>启示</strong>：用 BPE 把高频 token 组合 over-encode 成单个 token、避免对低频 context 建 hash 表，
+              可以从源头减少低频过拟合——这是后续干预实验的方向（见 <a href="agent-experiment-log.html">agent-experiment-log.html</a>）。</li>
+        </ol>
+      </div>
+
+      <div class="note">
+        <strong>关于 unigram</strong>：本 run（<code>baseline_current</code>）的 n-gram value tables 只启用 bigram 与 trigram
+        （<code>ENABLE_UNIGRAM_VE=0</code>），unigram 不参与训练，故无 unigram 频次分解。
+        如需 unigram 视角，需要一次 <code>ENABLE_UNIGRAM_VE=1</code> 且把 unigram 纳入频次分解的新 run；
+        服务器环境已就绪（见 <a href="agent-experiment-log.html">实验日志</a>），可在需要时补跑。
+      </div>
+    </section>
+
+    <!-- ==================== 10. 扩展实验：干预验证 ==================== -->
+    <section>
+      <h2 id="chapter-10">10. 扩展实验：干预验证（gap 是否能被消除）</h2>
+      <p style="color:var(--anchor);font-weight:600;font-size:15px;margin-bottom:10px">
+        §9 的频次分解定位了 gap 的来源（低中频 n-gram context 过拟合）。本章用两个干预实验直接验证：
+        若假设成立，干预应能消除/减弱 gap。
+      </p>
+
+      <div class="note anchor-note">
+        <strong>实验设置</strong>
+        <p style="margin:8px 0 0;font-size:14px;line-height:1.7;">
+          两个干预都在 <code>20260725e_nano_rmsprop_fixv3</code> 同款设置上跑（table RMSProp, nanogpt_original shell, vocab=8192, n_layer=8, seed42, 1000 step, 单 shard tr1），
+          并各加一个 <strong>current-shell</strong> 版本（同 rmsprop，对照 current-shell baseline <code>baseline_current</code>，即 §2/§7.9/§9 用的同款 setting）。
+          共 4 个干预 run，各自对照同 shell 的 baseline。所有 run 都到 step 1000、含 3 个 epoch（边界 step 337/686）。<br>
+          <em>注</em>：§9 的频次分解现已统一到 <code>baseline_current</code>（current shell，gap 量级更大、现象更典型）；本章干预在两个 shell 上都验证，nanogpt_original 用 B.1，current-shell 用 baseline_current 同款配置。
+        </p>
+      </div>
+
+      <h3 id="chapter-10-1">10.1 实验 4：per-epoch hash 错位</h3>
+      <div class="note" style="background:#f2f6f5;border-left:4px solid var(--nogap);border-radius:8px;padding:14px 16px;margin:12px 0;">
+        <strong style="color:var(--nogap);">假设</strong>
+        <p style="margin:8px 0 0;font-size:14px;line-height:1.7;">
+          n-gram table 的 gap 根因是"同一 context 跨 epoch 重复查到同一行，table 在该行累积 train-specific pattern"。
+          若每个 epoch 用 epoch 号做 seed 重生成全部 hash primes，使同一 context 跨 epoch 落到完全不同的 row，
+          则 table 无法跨 epoch 累积 → <strong>应该没有 gap</strong>。
+        </p>
+        <p style="margin:8px 0 0;font-size:13px;line-height:1.7;">
+          实现：新增 env <code>NGRAM_HASH_RESEED_PER_EPOCH=1</code>；epoch 1 保留 canonical primes（与 baseline 一致），
+          epoch≥2 边界调用 <code>_reseed_ngram_hash_primes(model, epoch_seed)</code> 用 epoch 号重生成 bigram/trigram/fourgram 全部 primes。
+          reseed 只改 hash 映射、不改 table 行内容——正好实现"新 epoch 同一 context 查到另一行（未被该 context 训练污染）"。
+        </p>
+      </div>
+
+      <h3 id="chapter-10-2">10.2 实验 5：低频 context 强制 gate=0</h3>
+      <div class="note" style="background:#f2f6f5;border-left:4px solid var(--nogap);border-radius:8px;padding:14px 16px;margin:12px 0;">
+        <strong style="color:var(--nogap);">假设</strong>
+        <p style="margin:8px 0 0;font-size:14px;line-height:1.7;">
+          §9 显示低中频 n-gram context 是 gap 的主要 driver。若用离线 train 频次表（<code>ngram_global_frequency_v2</code>，
+          一个"与训练完全解耦的独立统计者"）判定低频区间（hit count 1-200），并在这些 context 上把 n-gram 注入 gate 强制置零，
+          则低频 context 不再注入 n-gram → <strong>gap 应减弱/消除</strong>。
+        </p>
+        <p style="margin:8px 0 0;font-size:13px;line-height:1.7;">
+          实现：新增 env <code>NGRAM_LOWFREQ_GATE_ZERO=1</code> + <code>NGRAM_GLOBAL_FREQUENCY_CUSTOM_RANGES=bigram:1-200;trigram:1-200</code>；
+          在模型主 forward 里用 <code>GlobalNgramFrequencyIndex.mask_for_ranges</code> 算出低频位置的 [B,T] 布尔 mask，
+          在 <code>_add_value_residual</code> 里把该位置的 <code>value_gate</code> 置零（gate=0 → n-gram value 不注入）。
+          mask 从 epoch 1 起全程生效（不是 step 338 后），目的是"杜绝"低频 context 的 n-gram 注入。
+          与已有 readout-mask（value 置零）的区别：本实验置零 gate（直接关闭注入通道，且 gate 仍收梯度但被强制为 0）。
+        </p>
+      </div>
+
+      <h3 id="chapter-10-3">10.3 结果：复合对比图</h3>
+      <p>
+        下面这张复合图把 4 个干预 run 与各自 baseline 的 gap/train/val 曲线放进同一面板，可切 shell 与曲线类型；
+        下方表格给出每 epoch 最大 gap 与 final gap 的数值对比。
+      </p>
+      <div class="chart-section">
+        <div class="chart-wrap" style="width:100%;position:relative;">
+          <iframe src="interactive/fig_exp45_results.html" style="width:100%;max-width:1000px;height:620px;border:1px solid var(--line);border-radius:8px;" title="扩展实验 4&5 结果复合图"></iframe>
+        </div>
+        <div style="padding:4px 12px 8px;font-size:11px;color:var(--muted);text-align:center;">
+          图 10.1：干预验证复合图（也可直接打开 <code>interactive/fig_exp45_results.html</code>）。
+          红虚线=baseline，青实线=exp4(hash reseed)，绿实线=exp5(low-freq gate=0)。切 shell 看 nanogpt_original / current-shell。
+        </div>
+        <div style="padding:0 12px 8px;font-size:10px;color:var(--weak);text-align:center;">
+          📊 数据来源：exp4/exp5 runs（ophis-gpu, 2026-07-30）vs B.1 baseline (nanogpt_original) / allgram-mask-baseline (current-shell)
+        </div>
+      </div>
+
+      <h3 id="chapter-10-4">10.4 结论</h3>
+      <table style="width:100%;border-collapse:collapse;font-size:13px;margin:12px 0;">
+        <tr style="background:var(--panel-2);"><th style="padding:7px 10px;text-align:left;">run</th><th style="padding:7px 10px;text-align:right;">epoch2 max gap</th><th style="padding:7px 10px;text-align:right;">epoch3 max gap</th><th style="padding:7px 10px;text-align:right;">final gap</th><th style="padding:7px 10px;text-align:right;">vs baseline</th></tr>
+        <tr style="font-style:italic;color:var(--muted);"><td style="padding:6px 10px;">B.1 baseline (nanogpt_original)</td><td style="padding:6px 10px;text-align:right;font-family:ui-monospace,monospace;">0.383</td><td style="padding:6px 10px;text-align:right;font-family:ui-monospace,monospace;">0.688</td><td style="padding:6px 10px;text-align:right;font-family:ui-monospace,monospace;">0.688</td><td style="padding:6px 10px;text-align:right;">—</td></tr>
+        <tr><td style="padding:6px 10px;">exp4 hash-reseed (nanogpt_original)</td><td style="padding:6px 10px;text-align:right;font-family:ui-monospace,monospace;">0.257</td><td style="padding:6px 10px;text-align:right;font-family:ui-monospace,monospace;color:var(--nogap);font-weight:600;">0.371</td><td style="padding:6px 10px;text-align:right;font-family:ui-monospace,monospace;color:var(--nogap);font-weight:600;">0.047</td><td style="padding:6px 10px;text-align:right;color:var(--nogap);font-weight:600;">−93%</td></tr>
+        <tr><td style="padding:6px 10px;">exp5 low-freq gate=0 (nanogpt_original)</td><td style="padding:6px 10px;text-align:right;font-family:ui-monospace,monospace;">0.166</td><td style="padding:6px 10px;text-align:right;font-family:ui-monospace,monospace;color:var(--nogap);font-weight:600;">0.102</td><td style="padding:6px 10px;text-align:right;font-family:ui-monospace,monospace;color:var(--nogap);font-weight:600;">0.040</td><td style="padding:6px 10px;text-align:right;color:var(--nogap);font-weight:600;">−94%</td></tr>
+        <tr style="font-style:italic;color:var(--muted);"><td style="padding:6px 10px;">baseline (current-shell)</td><td style="padding:6px 10px;text-align:right;font-family:ui-monospace,monospace;">1.300</td><td style="padding:6px 10px;text-align:right;font-family:ui-monospace,monospace;">3.937</td><td style="padding:6px 10px;text-align:right;font-family:ui-monospace,monospace;">3.658</td><td style="padding:6px 10px;text-align:right;">—</td></tr>
+        <tr><td style="padding:6px 10px;">exp4 hash-reseed (current-shell)</td><td style="padding:6px 10px;text-align:right;font-family:ui-monospace,monospace;">0.307</td><td style="padding:6px 10px;text-align:right;font-family:ui-monospace,monospace;color:var(--nogap);font-weight:600;">0.351</td><td style="padding:6px 10px;text-align:right;font-family:ui-monospace,monospace;color:var(--nogap);font-weight:600;">0.252</td><td style="padding:6px 10px;text-align:right;color:var(--nogap);font-weight:600;">−93%</td></tr>
+        <tr><td style="padding:6px 10px;">exp5 low-freq gate=0 (current-shell)</td><td style="padding:6px 10px;text-align:right;font-family:ui-monospace,monospace;">0.543</td><td style="padding:6px 10px;text-align:right;font-family:ui-monospace,monospace;color:var(--weak);font-weight:600;">1.523</td><td style="padding:6px 10px;text-align:right;font-family:ui-monospace,monospace;color:var(--weak);font-weight:600;">1.523</td><td style="padding:6px 10px;text-align:right;color:var(--weak);font-weight:600;">−58%</td></tr>
+      </table>
+
+      <div class="note nogap-note">
+        <strong>实验 4（per-epoch hash 错位）— 假设验证成立，两个 shell 都基本消除 gap</strong>
+        <ol style="margin:8px 0 0;padding-left:20px;font-size:14px;line-height:1.7;">
+          <li>nanogpt_original：epoch3 max gap 从 0.688 → <strong>0.371</strong>，final gap 从 0.688 → <strong>0.047</strong>（−93%）。
+              epoch3 的 gap 爆发被完全压住——gap 不再随 epoch 增长。</li>
+          <li>current-shell：epoch3 max gap 从 3.937 → <strong>0.351</strong>（−91%），final gap 从 3.658 → <strong>0.252</strong>（−93%）。
+              即使在 gap 大 5 倍的 current-shell 上，reseed 仍几乎完全消除 gap。</li>
+          <li><strong>机理确认</strong>：gap 确实来自"同一 context 跨 epoch 重复查到同一行、table 在该行累积 train-specific pattern"。
+              一旦打断这个跨 epoch 的 row 对应关系，table 无法累积 → gap 消失。这是对 §7.9/§9 因果链的直接因果干预验证。</li>
+        </ol>
+      </div>
+
+      <div class="note nogap-note">
+        <strong>实验 5（低频 gate=0）— 假设验证成立（nanogpt_original），部分成立（current-shell）</strong>
+        <ol style="margin:8px 0 0;padding-left:20px;font-size:14px;line-height:1.7;">
+          <li>nanogpt_original：epoch3 max gap 从 0.688 → <strong>0.102</strong>，final gap → <strong>0.040</strong>（−94%）。
+              与 exp4 几乎一样有效——说明在 nanogpt_original 上，低频 context 确实是 gap 的几乎全部来源。</li>
+          <li>current-shell：epoch3 max gap 从 3.937 → <strong>1.523</strong>（−61%），final gap → <strong>1.523</strong>。
+              显著减弱但未消除——current-shell 的注入通道更强（split QKV + 残差路径），中高频 context 仍能过拟合，
+              仅挡低频不够。这与 §9"current-shell gap 量级大得多"一致。</li>
+          <li><strong>启示</strong>：用 BPE 把高频 token 组合 over-encode、避免对低频 context 建 hash 表（等价于永久 gate=0），
+              是从源头消除低频过拟合的方向。exp5 用 gate=0 在 nanogpt_original 上已验证可行；current-shell 需配合更强的频率截断。</li>
+        </ol>
+      </div>
+
+      <div class="note">
+        <strong>两点说明</strong>
+        <ul style="margin:8px 0 0;padding-left:20px;font-size:13px;line-height:1.7;">
+          <li>exp4 的 reseed 只在 epoch≥2 边界触发（epoch1 保留 canonical primes 以与 baseline 对齐）；
+              reseed 不改 table 行内容，只改 hash→row 映射，所以是干净的因果干预（不改变模型容量、不冻结参数）。</li>
+          <li>exp5 的频次表来自训练前一次离线扫描（<code>ngram_global_frequency_v2</code>），与训练过程完全解耦——
+              是"独立统计者"判定低频，不存在在线漂移。gate=0 是逐位置 mask（shape [B,T]），只对 bigram/trigram 分支生效，unigram 不受影响。</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ==================== 11. 精确重复次数 vs gap（exp6 细粒度分桶） ==================== -->
+    <section>
+      <h2 id="chapter-11">11. 精确重复次数 vs gap（exp6 细粒度分桶）</h2>
+      <p>
+        §9 的频次分桶用的是粗粒度区间（1, 2, 3, 4, 5, 6-10, 11-20, …）。本节在
+        <strong>同一 current-shell 设置</strong>（baseline_current 同款：current shell + bigram+trigram RMSProp，
+        seed42，但延长到 <strong>1700 step / 5 epoch</strong>，让 gap 充分展开）下，把分桶细化到
+        <strong>精确到每个重复次数</strong>（0=novel, 1, 2, 3, …, 9, 10-14, 15-20, 21-30, 31-50, …, 5k+），
+        并在 epoch 2/3/4/5 各取一个横截面，观察 gap 如何随重复次数和训练进度演化。
+      </p>
+      <p style="font-size:13px;color:var(--muted);">
+        频次定义与 §9 一致：每个 context 在<strong>单 train epoch</strong> 内的离线精确命中次数
+       （<code>GlobalNgramFrequencyIndex</code>，train-only 定义）。val token 按"其 context 在 train 中的频次"归类到同一套桶。
+        每个 epoch 的横截面取该 epoch 最后一个 probe step（epoch1=step337, epoch2=650, epoch3=1025, epoch4=1375, epoch5=1700）。
+      </p>
+
+      <div class="chart-section">
+        <div class="chart-wrap" style="width:100%;position:relative;">
+          <iframe src="interactive/fig_exp6_freq_gap.html" style="width:100%;max-width:1040px;height:620px;border:1px solid var(--line);border-radius:8px;" title="exp6 精确重复次数 vs gap"></iframe>
+        </div>
+        <div style="padding:4px 12px 8px;font-size:11px;color:var(--muted);text-align:center;">
+          图 11.1：精确重复次数 vs train/val/gap 损失（也可直接打开 <code>interactive/fig_exp6_freq_gap.html</code>）。
+          切 epoch（2/3/4/5）· 切曲线（train / val / train+val / gap）· 切指标（per-token / 总贡献=frac×loss）· 切 context（bigram / trigram）。
+        </div>
+      </div>
+
+      <h3 id="chapter-11-1">11.1 关键发现</h3>
+      <div class="note nogap-note" style="margin:12px 0;">
+        <strong>gap 随重复次数的变化不是单调的——低频最大，但高频也有显著 gap（尤其多 epoch 后）</strong>
+        <ol style="margin:8px 0 0;padding-left:20px;font-size:14px;line-height:1.7;">
+          <li><strong>epoch 2</strong>：gap 已经在低频桶（1-2 次重复）出现（bigram bucket "1" gap≈1.12，bucket "2" gap≈1.39），
+              但高频桶（5k+）gap≈0.02（几乎为 0）。此时 gap 几乎完全由低频驱动。</li>
+          <li><strong>epoch 3</strong>：低频桶 gap 急剧扩大（bigram bucket "1" gap≈3.57），中频（51-100）gap≈1.79，
+              高频（5k+）gap≈0.94——gap 开始向高频蔓延。</li>
+          <li><strong>epoch 4-5</strong>：所有频段都有大 gap（bigram e5: bucket "1" gap≈6.70，5k+ gap≈5.37）。
+              <strong>到 epoch 5，高频桶的 gap 也接近低频水平</strong>——说明多 epoch 重复训练后，
+              table 在所有频段都累积了 train-specific pattern，不再只是低频问题。</li>
+          <li><strong>trigram novel bucket</strong>（val 中占 30%）始终是大 gap 来源：
+              e5 trigram novel val loss=6.72（无 train 对照，因为 train 中按定义无 novel context），
+              总贡献 = 0.30 × 6.72 ≈ 2.0，是 trigram val 翘起的最大单一来源。</li>
+        </ol>
+      </div>
+      <div class="note">
+        <strong>与 §9 粗粒度分桶的对比</strong>
+        <p style="margin:8px 0 0;font-size:13px;line-height:1.7;">
+          §9 的 1000-step run 到 epoch 3 末 final gap≈3.66；本 exp6 延长到 1700 step / 5 epoch，
+          final gap（step 1700, train=1.38 / val=5.83）≈4.45——gap 仍在扩大。
+          精确分桶揭示了 <strong>"低频优先过拟合 → 多 epoch 后高频也沦陷"</strong> 的动态过程：
+          epoch 2 时 gap 集中在 1-5 次重复的低频桶；到 epoch 5，1 次和 5k+ 次的 gap 差距缩小到 1.3（6.70 vs 5.37）。
+          这解释了为什么 exp5（仅挡低频 1-200）在 current-shell 上只能减 58%——多 epoch 后中高频也需要干预。
+        </p>
+      </div>
+
+      <h3 id="chapter-11-2">11.2 数值表（bigram，per-token loss）</h3>
+      <table style="width:100%;border-collapse:collapse;font-size:12px;margin:12px 0;">
+        <tr style="background:var(--panel-2);"><th style="padding:6px 8px;text-align:left;">bucket</th><th style="padding:6px 8px;text-align:right;">e2 train</th><th style="padding:6px 8px;text-align:right;">e2 val</th><th style="padding:6px 8px;text-align:right;">e2 gap</th><th style="padding:6px 8px;text-align:right;">e3 gap</th><th style="padding:6px 8px;text-align:right;">e4 gap</th><th style="padding:6px 8px;text-align:right;">e5 gap</th></tr>
+        <tr><td style="padding:5px 8px;">novel</td><td colspan="2" style="padding:5px 8px;color:var(--muted);font-style:italic;">train 无（按定义）</td><td style="padding:5px 8px;text-align:right;color:var(--muted);">—</td><td style="padding:5px 8px;text-align:right;color:var(--muted);">—</td><td style="padding:5px 8px;text-align:right;color:var(--muted);">—</td><td style="padding:5px 8px;text-align:right;color:var(--muted);">—</td></tr>
+        <tr><td style="padding:5px 8px;">1</td><td style="padding:5px 8px;text-align:right;font-family:ui-monospace,monospace;">3.659</td><td style="padding:5px 8px;text-align:right;font-family:ui-monospace,monospace;">4.779</td><td style="padding:5px 8px;text-align:right;font-family:ui-monospace,monospace;">1.121</td><td style="padding:5px 8px;text-align:right;font-family:ui-monospace,monospace;color:var(--weak);">3.567</td><td style="padding:5px 8px;text-align:right;font-family:ui-monospace,monospace;color:var(--no);">5.971</td><td style="padding:5px 8px;text-align:right;font-family:ui-monospace,monospace;color:var(--no);font-weight:600;">6.700</td></tr>
+        <tr><td style="padding:5px 8px;">2</td><td style="padding:5px 8px;text-align:right;font-family:ui-monospace,monospace;">3.506</td><td style="padding:5px 8px;text-align:right;font-family:ui-monospace,monospace;">4.894</td><td style="padding:5px 8px;text-align:right;font-family:ui-monospace,monospace;">1.387</td><td style="padding:5px 8px;text-align:right;font-family:ui-monospace,monospace;color:var(--weak);">3.744</td><td style="padding:5px 8px;text-align:right;font-family:ui-monospace,monospace;color:var(--no);">5.918</td><td style="padding:5px 8px;text-align:right;font-family:ui-monospace,monospace;color:var(--no);font-weight:600;">6.552</td></tr>
+        <tr><td style="padding:5px 8px;">5</td><td style="padding:5px 8px;text-align:right;font-family:ui-monospace,monospace;">3.773</td><td style="padding:5px 8px;text-align:right;font-family:ui-monospace,monospace;">4.379</td><td style="padding:5px 8px;text-align:right;font-family:ui-monospace,monospace;">0.607</td><td style="padding:5px 8px;text-align:right;font-family:ui-monospace,monospace;">2.871</td><td style="padding:5px 8px;text-align:right;font-family:ui-monospace,monospace;color:var(--no);">4.739</td><td style="padding:5px 8px;text-align:right;font-family:ui-monospace,monospace;color:var(--no);">5.455</td></tr>
+        <tr><td style="padding:5px 8px;">10-14</td><td style="padding:5px 8px;text-align:right;font-family:ui-monospace,monospace;">3.591</td><td style="padding:5px 8px;text-align:right;font-family:ui-monospace,monospace;">4.287</td><td style="padding:5px 8px;text-align:right;font-family:ui-monospace,monospace;">0.696</td><td style="padding:5px 8px;text-align:right;font-family:ui-monospace,monospace;">2.468</td><td style="padding:5px 8px;text-align:right;font-family:ui-monospace,monospace;color:var(--no);">4.627</td><td style="padding:5px 8px;text-align:right;font-family:ui-monospace,monospace;color:var(--no);">5.140</td></tr>
+        <tr><td style="padding:5px 8px;">51-100</td><td style="padding:5px 8px;text-align:right;font-family:ui-monospace,monospace;">3.913</td><td style="padding:5px 8px;text-align:right;font-family:ui-monospace,monospace;">4.362</td><td style="padding:5px 8px;text-align:right;font-family:ui-monospace,monospace;">0.449</td><td style="padding:5px 8px;text-align:right;font-family:ui-monospace,monospace;">1.794</td><td style="padding:5px 8px;text-align:right;font-family:ui-monospace,monospace;">3.894</td><td style="padding:5px 8px;text-align:right;font-family:ui-monospace,monospace;color:var(--no);">4.884</td></tr>
+        <tr><td style="padding:5px 8px;">5k+</td><td style="padding:5px 8px;text-align:right;font-family:ui-monospace,monospace;">5.060</td><td style="padding:5px 8px;text-align:right;font-family:ui-monospace,monospace;">5.078</td><td style="padding:5px 8px;text-align:right;font-family:ui-monospace,monospace;color:var(--nogap);">0.019</td><td style="padding:5px 8px;text-align:right;font-family:ui-monospace,monospace;">0.936</td><td style="padding:5px 8px;text-align:right;font-family:ui-monospace,monospace;color:var(--weak);">3.363</td><td style="padding:5px 8px;text-align:right;font-family:ui-monospace,monospace;color:var(--no);">5.370</td></tr>
+      </table>
+      <p style="font-size:11px;color:var(--muted);margin:4px 0 12px;">
+        颜色：<span style="color:var(--nogap);font-weight:600;">绿</span>=gap<0.1（基本无 gap），
+        <span style="color:var(--weak);font-weight:600;">橙</span>=gap 1-4（中等），
+        <span style="color:var(--no);font-weight:600;">红</span>=gap>4（严重过拟合）。
+        novel 桶无 train 对照（train 中按定义无 novel context），故 gap 列为空。
+      </p>
+
+      <div class="note">
+        <strong>实验设置</strong>
+        <ul style="margin:8px 0 0;padding-left:20px;font-size:13px;line-height:1.7;">
+          <li>run：<code>exp6_freqdecomp_current</code>（服务器 <code>/data3/guoshaoyang/ngram-gap-exp/runs/</code>，2026-07-31，GPU 6）</li>
+          <li>config：与 <code>baseline_current</code> 同款 current-shell（ARCH_VARIANT=nanogpt_current_shell, table RMSProp, seed42, vocab=8192, n_layer=8），延长到 MAX_TRAINING_STEPS=1700（5 epoch）</li>
+          <li>频次分桶：<code>NGRAM_GLOBAL_FREQUENCY_BUCKET_EDGES=0,1,2,3,4,5,6,7,8,9,10,15,21,31,51,101,201,501,1001,5001</code>（精确到 1-9 次重复，10-14 合并）</li>
+          <li>epoch 边界：[338, 687, 1035, 1384]（每 epoch ~349 step）</li>
+          <li>final loss：train=1.382 / val=5.829（gap=4.447，仍在上升）</li>
+        </ul>
+      </div>
+    </section>
+
+  </main>
+</body>
+</html>
