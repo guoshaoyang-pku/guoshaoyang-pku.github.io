@@ -3,37 +3,55 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>知识库逐轮迭代 · 实验线 1</title>
+<title>KB Science Loop viewer</title>
 <style>
-:root{--bg:#faf9f5;--card:#faf9f5;--ink:#141413;--mute:#5e5d59;--line:#e8e6dc;--blue:#6a9bcc;--amber:#d97757;--violet:#5e5d59;--green:#788c5d;--red:#a24e3b;--teal:#527746;--head:"Poppins","PingFang SC","Noto Sans CJK SC",sans-serif;--body:"Lora","Noto Serif CJK SC","Songti SC",Georgia,serif;--mono:"SF Mono",Menlo,monospace}
-*{box-sizing:border-box}body{margin:0;font:16px/1.8 var(--body);background:var(--bg);color:var(--ink)}
-header{padding:20px 24px 14px;border-bottom:1px solid var(--line);font:14px/1.6 var(--head);display:flex;align-items:center;gap:12px 24px;flex-wrap:wrap}
-header b{font-size:18px;font-weight:600}header a{font-size:13px}header nav{order:3;width:100%;display:flex;gap:4px;flex-wrap:wrap}
-button{font:14px/1.6 var(--head);cursor:pointer}header nav button{background:none;border:0;border-bottom:2px solid transparent;color:var(--mute);padding:6px 10px}header nav button.on{border-bottom-color:var(--amber);color:var(--ink)}
-#meta{margin-left:auto;font:13px/1.6 var(--head);color:var(--mute)}main{display:flex;max-width:1120px;margin:auto;align-items:flex-start}
-#side{width:190px;flex:none;padding:28px 12px 28px 24px;font:13px/1.6 var(--head)}#side:empty{display:none}#view{flex:1;min-width:0;max-width:808px;padding:28px 24px 64px;margin:0 auto}
-.item{padding:7px 9px;margin-bottom:3px;border-radius:4px;cursor:pointer}.item:hover{background:var(--line)}.item.on{background:var(--line);color:var(--ink);font-weight:600}.item small{color:var(--mute);font-weight:400}
-h1,h2,h3,h4{font-family:var(--head);font-weight:600;line-height:1.4;letter-spacing:-.01em}h1{font-size:28px;margin:0 0 12px}h2{font-size:22px;margin:40px 0 12px}h3{font-size:18px;margin:0 0 12px}h4{font-size:15px;margin:0 0 8px}p{margin:8px 0 16px}
-a{color:inherit;text-decoration-color:var(--amber);text-underline-offset:3px}.card{padding:0;margin:28px 0;overflow-x:auto}.card:first-child{margin-top:8px}
-pre{white-space:pre-wrap;overflow-wrap:anywhere;margin:8px 0;font:13px/1.7 var(--mono);background:#f1efe7;border:0;border-radius:4px;padding:12px 14px;max-height:420px;overflow:auto}pre.tall{max-height:none}
-details{margin:12px 0}summary{cursor:pointer;color:var(--mute);font:14px/1.6 var(--head)}details[open]>summary{color:var(--ink);margin-bottom:12px}
-.tag{display:inline-block;font:12px/1.6 var(--head);margin-left:5px;color:var(--mute)}.ok{color:#527746}.bad{color:#914435}.mid{color:#805440}
-.turn{border-top:1px solid var(--line);padding-top:12px;margin-top:16px}.call{margin:8px 0 8px 12px;border-left:1px solid var(--line);padding-left:12px}.call .nm{font:600 13px var(--mono);color:var(--teal)}
-table{border-collapse:collapse;width:100%;font:13px/1.7 var(--head);margin:12px 0}td,th{border:0;border-bottom:1px solid var(--line);padding:9px 8px;vertical-align:top;text-align:left;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}th{color:var(--mute);font-weight:500}tr.shown td:first-child{border-left:1px solid var(--green)}
-td:first-child:has(a[onclick*="openClaim"]){min-width:70px;white-space:nowrap}
-.add{background:#edf2e7}.del{background:#f8e8e3}.chg{background:#f5eedf}.kb-merge{padding:16px 0;border-bottom:1px solid var(--line);margin:16px 0}.kb-merge>p{margin:8px 0}.merge-reason{color:var(--mute)}.kb-merge table{table-layout:fixed}.kb-merge th:first-child{width:64px}.kb-merge th:nth-child(2){width:72px}
-button:focus-visible,a:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--blue);outline-offset:3px}.sub{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:20px;font-family:var(--head)}.sub button{border:0;border-bottom:2px solid transparent;background:none;color:var(--mute);padding:6px 8px}.sub button.on{border-bottom-color:var(--amber);color:var(--ink)}
-input[type=search],select{width:100%;padding:8px 10px;border:1px solid #b0aea5;border-radius:4px;background:var(--bg);color:var(--ink);font:14px/1.6 var(--head);caret-color:var(--amber)}input::placeholder{color:var(--mute)}select{width:auto}
-.bar{height:5px;background:var(--line);border-radius:2px;overflow:hidden;width:60px;display:inline-block;vertical-align:middle}.bar i{display:block;height:100%;background:var(--green)}.note{color:var(--mute);font:13px/1.7 var(--head)}
-.flow{display:flex;gap:16px;align-items:stretch;flex-wrap:wrap;font:14px/1.7 var(--head)}.flow div{flex:1;min-width:140px;padding:8px 0;border-top:1px solid #b0aea5}mark{background:#eee0bd}
-.claim-entry{padding:22px 0;border-bottom:1px solid var(--line)}.claim-entry h3{font-size:14px;margin:0 0 8px}.claim-entry>p{margin:0 0 12px;white-space:pre-wrap;overflow-wrap:anywhere}.claim-entry .note{margin-top:12px}.round-summary{font:14px/1.7 var(--head);color:var(--mute);margin:12px 0 24px}.view-heading{margin-bottom:24px}.view-heading p{margin-bottom:8px}.round-nav{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;font:14px/1.6 var(--head)}.round-nav button{border:0;background:none;padding:6px 0;color:var(--mute)}.round-nav button:disabled{color:#b0aea5;cursor:default}.empty{color:var(--mute)}
-#pop{position:fixed;inset:0;z-index:30;background:rgba(20,20,19,.35);display:none}#popc{position:absolute;width:min(780px,94vw);max-height:84vh;overflow:auto;background:var(--bg);border-radius:12px;padding:24px;box-shadow:0 12px 40px rgba(20,20,19,.2)}#popc h3{margin:0 0 12px;font-size:16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}#popx{margin-left:auto;cursor:pointer;border:1px solid var(--line);background:none;border-radius:4px;padding:3px 10px;font:13px var(--head)}
-::selection{background:var(--line);color:var(--ink)}*{scrollbar-color:#b0aea5 var(--bg);scrollbar-width:thin}
-@media(max-width:760px){header{padding:16px 20px;gap:10px 16px}header b{font-size:16px}header nav{flex-wrap:nowrap;overflow-x:auto;white-space:nowrap}#meta{width:100%;margin-left:0}main{display:block}#side{width:100%;padding:14px 20px 0;display:flex;overflow-x:auto;gap:4px;max-height:150px}#side .item{flex:none}#side input{min-width:150px}#view{padding:24px 20px 48px}h1{font-size:25px}.flow{gap:16px}.flow>div{min-width:44%}.card{margin:24px 0}td,th{padding:8px 6px}.round-nav{flex-wrap:wrap}.kb-merge table{table-layout:auto}.kb-merge th:first-child{width:52px}.kb-merge th:nth-child(2){width:64px}}
+:root{--bg:#f7f8fa;--card:#fff;--ink:#1f2937;--mute:#6b7280;--line:#e5e7eb;--blue:#2563eb;--amber:#d97706;--violet:#7c3aed;--green:#059669;--red:#dc2626;--teal:#0d9488}
+*{box-sizing:border-box}body{margin:0;font:13px/1.5 -apple-system,"PingFang SC","Noto Sans SC",sans-serif;background:var(--bg);color:var(--ink)}
+header{position:sticky;top:0;z-index:5;background:#111827;color:#fff;padding:8px 16px;display:flex;gap:16px;align-items:center}
+header b{font-size:15px}header nav button{background:none;border:0;color:#cbd5e1;font:inherit;padding:6px 10px;border-radius:6px;cursor:pointer}
+header nav button.on{background:#374151;color:#fff}
+body{height:100vh;display:flex;flex-direction:column}
+header{flex-wrap:wrap;flex:none}
+main{display:flex;flex:1;min-height:0}
+#side{width:250px;overflow:auto;border-right:1px solid var(--line);background:#fff;flex:none}
+#view{flex:1;min-width:0;overflow:auto;padding:14px 18px}
+.item{padding:6px 10px;border-bottom:1px solid var(--line);cursor:pointer}.item:hover{background:#f3f4f6}.item.on{background:#e0e7ff}
+.item small{color:var(--mute)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:10px 0}
+.card>h3{margin:0 0 6px;font-size:14px}
+.solver{border-left:4px solid var(--blue)}.disc{border-left:4px solid var(--amber)}.summ{border-left:4px solid var(--violet)}.kbc{border-left:4px solid var(--green)}
+pre{white-space:pre-wrap;word-break:break-word;margin:4px 0;font:12px/1.45 ui-monospace,Menlo,monospace;background:#f9fafb;border:1px solid var(--line);border-radius:6px;padding:6px 8px;max-height:420px;overflow:auto}
+pre.tall{max-height:none}
+details{margin:4px 0}summary{cursor:pointer;color:#374151;font-weight:600}
+.tag{display:inline-block;padding:0 6px;border-radius:9px;font-size:11px;margin-right:4px;background:#eef2ff;color:#3730a3}
+.ok{background:#dcfce7;color:#166534}.bad{background:#fee2e2;color:#991b1b}.mid{background:#fef3c7;color:#92400e}
+.turn{border-top:1px dashed var(--line);padding-top:6px;margin-top:6px}
+.call{margin:4px 0 4px 10px;border-left:2px solid #cbd5e1;padding-left:8px}
+.call .nm{font-weight:600;color:var(--teal)}
+table{border-collapse:collapse;width:100%;background:#fff}td,th{border:1px solid var(--line);padding:3px 6px;vertical-align:top;text-align:left}
+th{background:#f3f4f6;position:sticky;top:0}
+tr.shown td:first-child{border-left:4px solid var(--green)}
+.add{background:#ecfdf5}.del{background:#fef2f2}.chg{background:#fffbeb}
+.kb-merge{background:#fffbeb;border:1px solid #fcd34d;border-radius:6px;padding:10px;margin:10px 0}
+.kb-merge h4{font-size:13px;margin:0 0 6px}.kb-merge>p{margin:6px 0}.merge-reason{color:#78350f}
+.kb-merge table{table-layout:fixed}.kb-merge th:first-child{width:62px}.kb-merge th:nth-child(2){width:68px}
+td{overflow-wrap:anywhere}.card{overflow-x:auto}
+button:focus-visible,a:focus-visible,summary:focus-visible,input:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+@media(max-width:760px){header{gap:4px 12px;padding:8px}header nav{width:100%;overflow-x:auto;white-space:nowrap}header #meta{width:100%}main{flex-direction:column}#side{width:100%;max-height:112px;display:flex;flex-wrap:wrap;overflow:auto;border-right:0;border-bottom:1px solid var(--line)}#side .item{flex:none}#view{padding:8px}.flow{display:block}.flow>div{margin:6px 0}}
+.sub button{border:1px solid var(--line);background:#fff;border-radius:6px;padding:3px 10px;margin-right:6px;cursor:pointer}.sub button.on{background:#111827;color:#fff}
+input[type=search]{width:100%;padding:5px 8px;border:1px solid var(--line);border-radius:6px}
+.bar{height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden;width:80px;display:inline-block;vertical-align:middle}.bar i{display:block;height:100%;background:var(--green)}
+.note{color:var(--mute);font-size:12px}
+.flow{display:flex;gap:8px;align-items:stretch;flex-wrap:wrap}.flow div{flex:1;min-width:180px;padding:8px;border-radius:8px;background:#fff;border:1px solid var(--line)}
+mark{background:#fde68a}
+#pop{position:fixed;inset:0;z-index:30;background:rgba(15,23,42,.35);display:none}
+#popc{position:absolute;width:min(780px,94vw);max-height:84vh;overflow:auto;background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 14px;box-shadow:0 12px 40px rgba(0,0,0,.25)}
+#popc h3{margin:0 0 6px;font-size:14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+#popx{margin-left:auto;cursor:pointer;border:1px solid var(--line);background:#fff;border-radius:6px;padding:1px 10px;font:inherit}
 </style>
 </head>
 <body>
-<header><a id="home" href="#">实验线 1</a><b id="title">知识库逐轮迭代</b><nav id="nav" aria-label="实验记录"></nav><span id="meta"></span></header>
+<header><a id="home" style="color:#93c5fd;text-decoration:none;font-weight:600" href="#">← 主站</a><b id="title">KB Science Loop</b><nav id="nav"></nav><span class="note" style="color:#9ca3af" id="meta"></span></header>
 <main><div id="side"></div><div id="view"></div></main>
 <div id="pop" onclick="if(event.target===this)closePop()"><div id="popc"></div></div>
 <script>
@@ -203,7 +221,7 @@ function kbDiffView(a, b, epoch, operations) {
     }
     return '<span class="note">未保存合并前的原文。</span>';
   }
-  const section = (title, body, cls = '') => '<div class="card ' + cls + '"><h2>' + title + '</h2>' + body + '</div>';
+  const section = (title, body, cls = '') => '<div class="card ' + cls + '"><h3>' + title + '</h3>' + body + '</div>';
   const rows = (claims, cls, revise = false) => '<table><tr><th>编号</th><th>内容</th></tr>' +
     (claims.map(c => '<tr class="' + cls + '"><td>' + linkC(c[0]) + '</td><td>' +
       (revise ? '<b>修改前</b><p>' + esc(T(ma[c[0]][4])) + '</p><b>修改后</b><p>' + esc(T(c[4])) + '</p>' : esc(T(c[4]))) + '</td></tr>').join('') || '<tr><td colspan=2>无</td></tr>') + '</table>';
@@ -212,30 +230,26 @@ function kbDiffView(a, b, epoch, operations) {
     const rolledBack = rollbackIndex >= 0 && applied.indexOf(c) < rollbackIndex;
     const destination = p.text != null ? esc(p.text) : mb[c.new_id] ? esc(T(mb[c.new_id][4])) : '<span class="note">未保存合并后的原文。</span>';
     const lineage = sourceIds.map(linkC).join(' + ') + ' → ' + linkC(c.new_id || '未保存新编号');
-    const timing = c.wrapped ? ' · 第 ' + c.origin_epoch + ' 轮发起，第 ' + c.applied_epoch + ' 轮应用' : '';
+    const timing = c.wrapped ? ' · 发起 e' + c.origin_epoch + ' / 应用 e' + c.applied_epoch : '';
     return '<section class="kb-merge"><h4>' + lineage + '</h4><p class="note">' + esc(c.commit) + timing + (B.candidate ? ' · 被拒候选中的操作，未被采纳' : rolledBack ? ' · 候选操作，随后已回滚' : '') + '</p>' +
       '<table><tr><th>阶段</th><th>编号</th><th>条目原文</th></tr>' + sourceIds.map(id => '<tr class="chg"><td>合并前</td><td>' + linkC(id) + '</td><td>' + oldText(id, c) + '</td></tr>').join('') +
       '<tr class="chg"><td>合并后</td><td>' + linkC(c.new_id || '未保存新编号') + '</td><td>' + destination + '</td></tr></table>' +
       '<p class="merge-reason"><b>合并理由</b> ' + (c.reason ? linkC(c.reason) : '未保存理由。') + '</p>' +
       (c.source_question_ids?.length ? '<p>来源题：' + esc(c.source_question_ids.join(' · ')) + '</p>' : '') + '</section>';
   }).join('') || '<p class="note">本轮没有已应用的合并操作。</p>';
-  const changes = [added.length ? '新增 ' + added.length + ' 条' : '',
-    merges.length ? '合并 ' + merges.length + ' 次' : '', removed.length ? '撤回 ' + removed.length + ' 条' : '',
-    changed.length ? '修订 ' + changed.length + ' 条' : ''].filter(Boolean);
-  let h = '<div class="view-heading"><h1>第 ' + epoch + ' 轮' + (changes.length ? '更新了解题规律' : '保留了条目原文') + '</h1>' +
-    '<p>' + (changes.join('，') || '两份保存的知识库没有条目正文变化') + '。知识条目从 ' + A.claims.length + ' 条变为 ' + B.claims.length + ' 条。</p>' +
-    '<p class="note">绿色表示新增，浅黄表示合并或修订，浅红表示撤回。合并展示来源条目和理由。</p>' +
-    (rollbackIndex >= 0 ? '<p>本轮发生回滚。回滚前的合并保留过程记录，未计作最终知识库变化。</p>' : '') + '</div>';
-  if (added.length) h += section('新增 ' + added.length + ' 条规律', rows(added, 'add'), 'kbc');
-  if (merges.length) h += section('合并 ' + merges.length + ' 次重复或相关规律', mergeBody, 'kbc');
-  if (removed.length) h += section('撤回 ' + removed.length + ' 条规律', rows(removed, 'del'), 'kbc');
-  if (changed.length) h += section('修订 ' + changed.length + ' 条规律的原文', rows(changed, 'chg', true), 'kbc');
+  let h = section('KB 变化 ' + esc(a) + ' → ' + esc(b) + '：' + A.claims.length + ' → ' + B.claims.length + ' 条',
+    '<p>绿色：新增 · 黄色：合并或修订 · 红色：删除或撤回</p><p class="note">合并按操作日志展示；增删和修订按两份快照比较。</p>' +
+    (rollbackIndex >= 0 ? '<p>本轮发生回滚；回滚前的合并保留过程记录，未计作最终 KB 的变化。</p>' : ''), 'kbc') +
+    section('新增（' + added.length + '）', rows(added, 'add'), 'kbc') +
+    section('合并（' + merges.length + ' 次）', mergeBody, 'kbc') +
+    section('删除 / 撤回（' + removed.length + '）', rows(removed, 'del'), 'kbc') +
+    section('修订（' + changed.length + '）', rows(changed, 'chg', true), 'kbc');
   if (credit.length) h += '<details><summary>引用记账：' + credit.length + ' 条的胜负计数变化</summary><table><tr><th>编号</th><th>之前</th><th>之后</th><th>内容</th></tr>' + credit.map(c => '<tr><td>' + linkC(c[0]) + '</td><td>' + ma[c[0]][1] + ' / ' + ma[c[0]][2] + '</td><td>' + c[1] + ' / ' + c[2] + '</td><td>' + esc(T(c[4])) + '</td></tr>').join('') + '</table></details>';
   if (!D.config.render || D.config.render === 'inline') {
     const inR = B.claims.filter(c => c[6] && !ma[c[0]]?.[6]), outR = A.claims.filter(c => c[6] && !mb[c[0]]?.[6]);
     h += '<details><summary>解题者视野：' + inR.length + ' 条进入，' + outR.length + ' 条移出</summary><h4>进入</h4>' + rows(inR, 'add') + '<h4>移出</h4>' + rows(outR, 'del') + '</details>';
   }
-  return h + (ops.length ? '<details><summary>完整修改记录与理由</summary>' + commitTable(ops) + '</details>' : '');
+  return h + section('操作与理由', commitTable(ops), 'summ');
 }
 
 function kbView() {
@@ -318,6 +332,7 @@ function promptView() {
 }
 readViewHash();
 addEventListener('hashchange', () => { readViewHash(); render(); });
+// Keep the six luna_main views; show the sol run's actual read protocol.
 const num = (v, d = 3) => typeof v === 'number' ? v.toFixed(d) : '—';
 const isTool = D.config.render === 'tool';
 const table = (heads, rows) => '<table><tr>' + heads.map(x => '<th>' + x + '</th>').join('') + '</tr>' + rows + '</table>';
@@ -346,18 +361,20 @@ for (const c of D.commits) {
 const operationClass = op => op === 'add' ? 'add' : op === 'delete' ? 'del' : ['merge', 'revise', 'rollback'].includes(op) ? 'chg' : '';
 state.snap = D.defaultSnap && snapBy[D.defaultSnap] ? D.defaultSnap : D.snaps.filter(s => !s.candidate).at(-1)?.label || D.snaps[0].label;
 state.epoch = D.epochs[0]?.epoch || 1;
-state.tab = D.defaultTab || (D.epochs.length ? 'epoch' : 'kb');
-state.sub = 'diff';
+state.tab = D.defaultTab || 'kb';
+if (location.hash.startsWith('#kb=')) {
+  const label = decodeURIComponent(location.hash.slice(4));
+  if (snapBy[label]) { state.tab = 'kb'; state.snap = label; }
+}
+
 readViewHash();
 
-const snapshotName = S => !S ? '未保存版本' : S.label === 'latest_saved' ? '最新知识库' : S.epoch === 0 ? '初始知识库' : (S.label.startsWith('solve') || S.label.startsWith('frozen') ? '第 ' + S.epoch + ' 轮解题版本' : '第 ' + S.epoch + ' 轮知识库') + (S.candidate ? '（未采纳候选）' : '');
-const operationName = op => ({add:'新增',merge:'合并',revise:'修订',delete:'撤回',credit:'引用反馈',annotate:'补充证据',adjust:'调整反馈',rollback:'回滚',report:'研究报告',seed:'初始条目'})[op] || op;
 function nav() {
-  const tabs = [['epoch','逐轮变化'],['kb','知识条目'],['overview','评测结果'],['claim','条目演化'],['commits','修改记录'],['prompts','实验设置']];
-  $('nav').innerHTML = tabs.map(([k,v]) => '<button class="' + (state.tab===k?'on':'') + '" aria-current="'+(state.tab===k?'page':'false')+'" onclick="go(\''+k+'\')">'+v+'</button>').join('');
-  $('title').textContent = '知识库逐轮迭代';
+  const tabs = [['overview','概览'],['epoch','每个 epoch：解题 / 发现 / 总结'],['kb','KB 快照'],['claim','单条 claim 演化'],['commits','commit 日志'],['prompts','提示词与配置']];
+  $('nav').innerHTML = tabs.map(([k,v]) => '<button class="' + (state.tab===k?'on':'') + '" onclick="go(\''+k+'\')">'+v+'</button>').join('');
+  $('title').textContent = 'KB 科学循环 · '+D.run;
   if(D.home) $('home').href=D.home; else $('home').style.display='none';
-  $('meta').textContent = (D.config.model||'') + (D.config.batch_size ? ' · 每轮 '+D.config.batch_size+' 题' : '');
+  $('meta').textContent = (D.config.model||'模型未取得')+' · effort='+(D.config.solve_effort||'—')+' · '+D.epochs.length+' 轮已有记录';
 }
 
 function overview() {
@@ -369,9 +386,9 @@ function overview() {
     for(const c of snapshotOperations(lab(e.epoch-1),lab(e.epoch),e.epoch,commitOperations)) {
       if(c.claim_status!=='deferred')counts[c.op]=(counts[c.op]||0)+1;
     }
-    const ops=Object.entries(counts).map(([k,v])=>operationName(k)+' '+v).join(' ');
+    const ops=Object.entries(counts).map(([k,v])=>k+':'+v).join(' ');
     const review=g?(g.accept===true?'接受 · 候选 − 现任':g.accept===false?'拒绝 · 候选 − 现任':'宏观审查 · KB − 不带 KB')+' '+num((g.delta??g.val_vs_nokb)*100,2)+' ±'+num((g.se??g.val_se)*100,2)+' pt':'—';
-    return '<tr>'+td(anchor('第 '+e.epoch+' 轮','state.epoch='+e.epoch+';state.sub=\'diff\';go(\'epoch\')'))+td(m.n??(e.records.length||'—'))+td(num(m.mean_score))+td((A?.claims.length??m.kb_before??'—')+' → '+(B?.claims.length??'未完成'))+td(esc(ops)+(g?.accept===false?' · 含被拒候选':''))+td(review)+'</tr>';
+    return '<tr>'+td(anchor('e'+e.epoch,'state.epoch='+e.epoch+';go(\'epoch\')'))+td(m.n??(e.records.length||'—'))+td(num(m.mean_score))+td((A?.claims.length??m.kb_before??'—')+' → '+(B?.claims.length??'未完成'))+td(esc(ops)+(g?.accept===false?' · 含被拒候选':''))+td(review)+'</tr>';
   }).join('');
   const ev=Object.entries(D.evals).sort().map(([label,e])=>'<tr>'+td(esc(label))+td(e.n??e.n_q??'—')+td(e.repeats??'—')+td(num(e.mean))+td(e.delta!=null?num(e.delta*100,2)+' ±'+num(e.delta_se*100,2)+' pt':'—')+td(esc(e.by_source?JSON.stringify(e.by_source):e.note||''))+'</tr>').join('');
   const flow=D.flow||[isTool?'① 解题：题目 + 可选 KB 工具；每题使用冻结快照，答案尚未揭示。':'① 解题：题目 + 上一轮只读 KB，答案尚未揭示。','② 发现：揭示答案，分析失败，可查历史、回测与受控实验。','③ 总结：修订、增加、合并、撤回 claim；每次改动记录理由。',D.config.macro_every?'④ KB 成长：每 '+D.config.macro_every+' 轮集中整理和宏观评测。':'④ KB 快照：在验证集比较候选与现任；整轮接受或回滚。'];
@@ -379,24 +396,21 @@ function overview() {
   const control=D.training_control;
   const pairTable=pairs?table(['配对比较','题数','重复','均分','得分差','备注'],pairs):'';
   const training=control?'<p>训练流：'+control.n+' 题，KB − 不带KB '+num(control.delta*100,2)+' ±'+num(control.se*100,2)+' pt。'+esc(control.note||'')+'</p>':'';
-  const evaluationTable=table(['知识库 / 对照','题数','重复','均分','得分差','题源 / 备注'],ev||'<tr><td colspan=6>尚无已完成评测。</td></tr>');
-  const evaluations=pairs?'<details><summary>各次评测原始数字</summary>'+evaluationTable+'</details>':evaluationTable;
-  $('view').innerHTML='<h1>知识积累的收益由同题对照检验</h1><p>知识库（KB）保存可复用的解题规律。得分包含排序题部分分。误差为题级配对标准误（1 SE）。</p>'+card('带知识库与不带知识库的得分对照',pairTable+training+evaluations+(D.evalNote?'<p class="note">'+esc(D.evalNote)+'</p>':''))+'<details><summary>逐轮解题数据</summary>'+table(['轮次','题数','解题均分','条目数','知识修改','评审'],rows||'<tr><td colspan=6>未取得逐轮记录。</td></tr>')+'</details><details><summary>解题、发现与整理如何连接</summary><div class="flow">'+flow.map(x=>'<div>'+esc(x)+'</div>').join('')+'</div></details>';
+  $('view').innerHTML=card(esc(D.run),'<p>'+esc(D.availability||'')+'</p>'+(D.summary?'<p>'+esc(D.summary)+'</p>':''))+card('流程','<div class="flow">'+flow.map(x=>'<div>'+esc(x)+'</div>').join('')+'</div>')+card('每个 epoch',table(['轮次','题数','训练题均分','KB 条数','结构操作','评审结果'],rows||'<tr><td colspan=6>未取得逐轮记录。</td></tr>'))+card('评测',pairTable+training+table(['快照 / 对照','题数','重复','均分','相对不带 KB','分题源 / 备注'],ev||'<tr><td colspan=6>尚无已完成评测。</td></tr>')+'<p class="note">得分包含排序题部分分；± 为题级配对 1 SE。</p>'+(D.evalNote?'<p class="note">'+esc(D.evalNote)+'</p>':''));
 }
 
 function detail(S,id) {
   const raw=S.claimDetails?.[id]||{};
   const meta=Object.fromEntries(Object.entries(raw).filter(([k,v])=>!['text_excerpt','text_complete','text','id','support_count','failure_count','credibility'].includes(k)&&v!=null&&v!==''&&(!Array.isArray(v)||v.length)&&(!(typeof v==='object'&&!Array.isArray(v))||Object.keys(v).length)));
   const evidence=meta&&Object.keys(meta).length?'<details><summary>条件、机制与来源</summary><pre>'+linkC(JSON.stringify(meta,null,2))+'</pre></details>':'';
-  const reports=(raw.report_ids||[]).map(rid=>reportView(S.reports?.[rid])).join('');
-  return evidence+(reports?'<details><summary>关联研究报告（'+raw.report_ids.length+'）</summary>'+reports+'</details>':'');
+  return evidence+(raw.report_ids||[]).map(rid=>reportView(S.reports?.[rid])).join('');
 }
 
 function reportView(version) {
   const R=D.reports?.[version];
   if(!R)return '';
   const code=Object.entries(R.files||{}).map(([name,f])=>'<a href="'+esc(encodeURI(f.url))+'">'+esc(name)+(f.compression==='gzip'?' (gzip)':'')+'</a>').join(' · ');
-  return '<details><summary>'+esc(R.title || R.id)+'</summary>'+(R.application_pending?'<p class="note">报告已保存，知识修改尚未应用。</p>':'')+'<pre class="tall">'+linkC(R.text||'未取得报告原文。')+'</pre><details><summary>研究来源与复算文件</summary><p class="note">第 '+R.origin_epoch+' 轮发起 · '+esc(R.id)+' · '+esc(R.repo_commit)+'</p>'+(code?'<p>'+code+'</p>':'')+'</details></details>';
+  return '<details><summary>'+esc(R.id+' · '+R.title)+'</summary><p class="note">发起轮 e'+R.origin_epoch+' · '+esc(R.job_id||'')+' · repo commit '+esc(R.repo_commit)+(R.application_pending?' · 已保存报告，KB 操作待应用':'')+'</p>'+(code?'<p>'+code+'</p>':'')+'<pre class="tall">'+linkC(R.text||'未取得报告原文。')+'</pre></details>';
 }
 
 function jobView(jobs) {
@@ -404,50 +418,34 @@ function jobView(jobs) {
 }
 
 function kbView() {
-  $('side').innerHTML='';
+  $('side').innerHTML=D.snaps.map(s=>'<div class="item '+(s.label===state.snap?'on':'')+'" onclick="state.snap=\''+s.label+'\';render()">'+esc(s.label)+' <small>'+(s.totalClaims??s.claims.length)+' 条'+(s.complete===false?' · 摘录':'')+'</small></div>').join('');
   const S=snapBy[state.snap];
-  if(!S){$('view').innerHTML=card('未取得此版本','');return;}
-  let h='<label class="round-nav">选择知识版本 <select aria-label="选择知识版本" onchange="state.snap=this.value;render()">'+D.snaps.map(s=>'<option value="'+esc(s.label)+'" '+(s.label===state.snap?'selected':'')+'>'+esc(snapshotName(s))+' · '+(s.totalClaims??s.claims.length)+' 条</option>').join('')+'</select></label><h1>'+esc(snapshotName(S))+'保存 '+(S.totalClaims??S.claims.length)+' 条解题规律</h1>';
-  if(S.complete===false)h+='<p>这里只保存了输出摘录，尚未取得完整知识库。</p>';
-  if(isTool)h+='<p>模型通过工具读取条目，完整知识库没有常驻题目中。</p>';
-  if(S.note)h+='<details><summary>这个版本怎样用于解题</summary><p>'+esc(S.note)+'</p></details>';
-  if(S.claims.length)h+='<input type="search" aria-label="搜索知识条目" placeholder="搜索条目内容" oninput="filterClaims(this.value)"><div id="claim-list">'+S.claims.map(c=>'<article class="claim-entry" data-t="'+esc((c[0]+' '+T(c[4])).toLowerCase())+'"><h3>'+linkC(c[0])+'</h3><p>'+esc(T(c[4]))+'</p>'+(S.excerptIds?.includes(c[0])?'<p class="note">保存的输出在此截断。</p>':'')+detail(S,c[0])+'<details><summary>引用反馈与来源</summary><p class="note">'+(c[5]?'第 '+c[5]+' 轮加入':'初始条目')+' · 引用后得分累计 '+num(c[1],2)+' / 未得分累计 '+num(c[2],2)+' · 反馈指数 '+num(c[3],2)+'。反馈指数是使用记录，不是规律真实的概率。</p></details></article>').join('')+'</div>';
-  h+='<details><summary>解题者可读取的知识库原文</summary><pre class="tall">'+linkC(S.render||'未取得原文。')+'</pre></details>';
-  if(S.changeReasons)h+='<details><summary>本轮修改理由原文</summary><pre class="tall">'+linkC(S.changeReasons)+'</pre></details>';
-  if(state.snap===D.defaultSnap&&Object.keys(D.latest_saved_science||{}).length)h+='<details><summary>研究报告</summary>'+Object.values(D.latest_saved_science).map(reportView).join('')+'</details>';
+  if(!S){$('view').innerHTML=card('未取得此快照','');return;}
+  let h='<div class="sub"><button onclick="state.sub=\'table\';render()">全部条目</button><button onclick="state.sub=\'render\';render()">'+(isTool?'可检索的 KB 原文':'解题者看到的 KB 原文')+'</button></div>';
+  h+=card(esc(S.label)+' · '+(S.totalClaims??S.claims.length)+' 条'+(S.complete===false?'（摘录）':''),'<p>'+esc(S.note||(S.complete===false?'这里只保存了输出摘录，尚未取得完整快照。':''))+'</p>'+(isTool?'<p class="note">本实验通过工具读取条目；完整 KB 没有常驻解题 prompt。</p>':''),'kbc');
+  if(state.sub==='render') h+=card('KB 原文','<pre class="tall">'+linkC(S.render||'未取得原文。')+'</pre>','solver');
+  else if(S.claims.length) h+=card('条目内容','<input type="search" placeholder="搜索：LayerNorm / width / Adam" oninput="filt(this.value)">'+table(['编号','引用反馈','胜 / 负','来源','条目正文'],S.claims.map(c=>'<tr data-t="'+esc(T(c[4]).toLowerCase())+'">'+td(linkC(c[0]))+td(num(c[3],2))+td((c[1]??'—')+' / '+(c[2]??'—'))+td(c[5]==null?'—':c[5]?'第 '+c[5]+' 轮':'种子')+td(esc(T(c[4]))+(S.excerptIds?.includes(c[0])?'<div class="note">保存的输出在此截断；未取得完整条目。</div>':'')+detail(S,c[0]))+'</tr>').join('')).replace('<table>','<table id="kbt">')+'<p class="note">引用反馈是解题使用后的表现记账，不是规律真实的概率。</p>','kbc');
+  if(S.changeReasons)h+=card('该轮修改理由（保存原文）','<pre class="tall">'+linkC(S.changeReasons)+'</pre>','summ');
+  if(state.snap===D.defaultSnap&&Object.keys(D.latest_saved_science||{}).length)h+='<details><summary>最新已保存的 science</summary><p class="note">持续研究的报告版本；KB 修改仍按应用日志登记。历史解题保留各自冻结版本。</p>'+Object.values(D.latest_saved_science).map(reportView).join('')+'</details>';
   $('view').innerHTML=h;
-}
-function filterClaims(value) {
-  const query=value.toLowerCase();
-  document.querySelectorAll('#claim-list [data-t]').forEach(row=>row.hidden=!row.dataset.t.includes(query));
 }
 
 function epochView() {
   const E=D.epochs.find(e=>e.epoch===state.epoch)||D.epochs[0];
   if(!E){$('side').innerHTML='';$('view').innerHTML=card('逐轮记录','未取得逐轮记录。');return;}
-  const subs=[['diff','知识变化'],['records','解题与发现'],['sci','研究报告'],['summ','整理过程']];
-  if(!subs.some(([k])=>k===state.sub))state.sub='diff';
-  $('side').innerHTML='';
-  const index=D.epochs.indexOf(E),previous=D.epochs[index-1],next=D.epochs[index+1];
-  let h='<div class="round-nav"><button '+(!previous?'disabled':'onclick="chooseEpoch('+previous.epoch+')"')+'>上一轮</button><label>选择轮次 <select aria-label="选择迭代轮次" onchange="chooseEpoch(Number(this.value))">'+D.epochs.map(e=>'<option value="'+e.epoch+'" '+(e.epoch===E.epoch?'selected':'')+'>第 '+e.epoch+' 轮</option>').join('')+'</select></label><button '+(!next?'disabled':'onclick="chooseEpoch('+next.epoch+')"')+'>下一轮</button></div><div class="sub">'+subs.map(([k,v])=>'<button class="'+(state.sub===k?'on':'')+'" onclick="state.sub=\''+k+'\';render()">'+v+'</button>').join('')+'</div>';
+  const subs=[['records','解题 + 发现（逐题）'],['summ','总结者（逐轮）'],['diff','KB 变化'],['sci','科学总结']];
+  if(!subs.some(([k])=>k===state.sub))state.sub='records';
+  $('side').innerHTML=D.epochs.map(e=>'<div class="item '+(e.epoch===E.epoch?'on':'')+'" onclick="state.epoch='+e.epoch+';state.q=null;render()">第 '+e.epoch+' 轮 <small>均分 '+num(e.metrics?.mean_score,2)+'</small></div>').join('')+(state.sub==='records'?E.records.map((r,i)=>'<div class="item '+(state.q===i?'on':'')+'" onclick="state.q='+i+';render()">'+esc(r.question_id)+' '+scoreTag(r.score)+'<br><small>'+esc(r.source)+' · '+esc(r.family)+'</small></div>').join(''):'');
+  let h='<div class="sub">'+subs.map(([k,v])=>'<button class="'+(state.sub===k?'on':'')+'" onclick="state.sub=\''+k+'\';render()">'+v+'</button>').join('')+'</div>';
   if(state.sub==='records')h+=E.records.length?state.q==null?recordsTable(E):recordView(E,E.records[state.q]):card('逐题记录',esc(E.recordNote||'未取得本轮逐题解题与发现轨迹。'));
-  if(state.sub==='summ')h+=summView(E)+(E.summarizerNote?'<p class="note">'+esc(E.summarizerNote)+'</p>':'')+(E.research||[]).map(r=>card(esc(r.file),'<pre>'+esc(r.text||JSON.stringify(r.data,null,2))+'</pre>')).join('')+(E.jobs||[]).filter(j=>j.kind==='research').map(j=>card(esc(j.id)+' · 研究工具日志','<details><summary>逐步工具记录</summary>'+turns(D.job_traces?.[j.id]||[])+'</details>')).join('');
+  if(state.sub==='summ')h+=summView(E)+(E.summarizerNote?'<p class="note">'+esc(E.summarizerNote)+'</p>':'')+(E.research||[]).map(r=>card(esc(r.file),'<pre>'+esc(r.text||JSON.stringify(r.data,null,2))+'</pre>')).join('')+(E.jobs||[]).filter(j=>j.kind==='research').map(j=>card(esc(j.id)+' · 研究工具日志',turns(D.job_traces?.[j.id]||[]))).join('');
   if(state.sub==='diff') {
     const candidate=D.snaps.find(s=>s.candidate&&s.epoch===E.epoch);
     if(candidate)h+=card('本轮候选被拒','以下展示上一轮 KB → 本轮候选的修改。候选未被采纳；本轮最终保留 '+esc(lab(E.epoch))+'，共 '+snapBy[lab(E.epoch)].claims.length+' 条。')+diffView(lab(E.epoch-1),candidate.label,E.epoch);
     else h+=diffView(lab(E.epoch-1),lab(E.epoch),E.epoch);
   }
-  if(state.sub==='sci')h+=card('科学总结 · 第 '+E.epoch+' 轮','<pre class="tall">'+linkC(E.science||(E.scienceError?'本轮科学总结未保存成功。':'未取得科学总结原文。'))+'</pre>'+(E.scienceError?'<details><summary>运行错误原文</summary><pre>'+esc(E.scienceError)+'</pre></details>':'')+(E.jobs?.length?'<details><summary>研究任务记录</summary>'+jobView(E.jobs)+'</details>':'')+(Object.keys(D.reports||{}).filter(v=>D.reports[v].origin_epoch===E.epoch).map(reportView).join('')),'summ');
+  if(state.sub==='sci')h+=card('科学总结 · 第 '+E.epoch+' 轮','<pre class="tall">'+linkC(E.science||(E.scienceError?'本轮科学总结未保存成功。':'未取得科学总结原文。'))+'</pre>'+(E.scienceError?'<details><summary>运行错误原文</summary><pre>'+esc(E.scienceError)+'</pre></details>':'')+jobView(E.jobs)+(Object.keys(D.reports||{}).filter(v=>D.reports[v].origin_epoch===E.epoch).map(reportView).join('')),'summ');
   $('view').innerHTML=h;
-}
-
-function chooseEpoch(epoch) {
-  state.epoch=epoch;state.q=null;
-  location.hash='epoch='+epoch+'&view='+state.sub;
-  render();
-}
-function recordsTable(E) {
-  return '<h1>第 '+E.epoch+' 轮保存了解题与发现</h1>'+table(['题目','得分','引用条目','发现'],E.records.map((r,i)=>'<tr>'+td(anchor(esc(r.question_id),'state.q='+i+';render()'))+td(scoreTag(r.score))+td(linkC((r.cited||[]).join(' ')))+td(esc(r.hypothesis||r.comment|| (r.skipped?'本题未继续发现。':'未保存发现结论。')) )+'</tr>').join(''));
 }
 
 function recordView(E,r) {
@@ -455,9 +453,9 @@ function recordView(E,r) {
   const brief=(D.config.progressive_disclosure||D.config.render==='brief')?'完整简洁 KB；science 按需展开':isTool?'可选 KB 工具检索':'只读 KB 注入';
   const reportVersions=Object.entries(r.report_versions||{}).map(([id,commit])=>reportView(id+'@'+commit)).join('');
   const rows=ids.map(id=>{const c=S?.claims.find(z=>z[0]===id);return '<tr>'+td(linkC(id))+td(c?esc(T(c[4]))+detail(S,id):'未取得解题时该条目的原文。')+'</tr>';}).join('');
-  return '<p>'+anchor('返回本轮题目','state.q=null;render()')+'</p>'+card(esc(r.question_id)+' · '+esc(r.source)+' · '+esc(r.family),scoreTag(r.score)+' 预测 <b>'+esc(r.prediction)+'</b> · 答案 <b>'+esc(r.answer)+'</b><details><summary>题目全文</summary><pre>'+esc(r.question)+'</pre></details>')+
-    card('模型先解题，使用固定知识版本','<p>'+brief+' · 冻结快照 '+esc(r.solver_snapshot||S?.label||'未取得')+'</p>'+(r.kb_queries?.length?'<pre>'+esc(JSON.stringify(r.kb_queries,null,2))+'</pre>':'')+(r.solver_reasoning?'<details><summary>返回的推理摘要</summary><pre>'+esc(r.solver_reasoning)+'</pre></details>':'')+'<p><b>完整输出</b></p><pre>'+linkC(r.solution||'未取得完整输出。')+'</pre>'+(r.solve_trace?.length?'<details><summary>逐步解题记录</summary>'+turns(r.solve_trace)+'</details>':'')+table(['检索 / 引用 ID','解题时内容'],rows||'<tr><td colspan=2>没有检索或引用记录。</td></tr>')+(reportVersions?'<details><summary>解题时的 science 版本</summary>'+reportVersions+'</details>':''),'solver')+
-    card('揭示答案后，模型提出解释与研究问题','<details><summary>发现过程原文</summary>'+turns(r.discover_trace||[])+'</details>'+'<p><b>评论</b></p><pre>'+linkC(r.comment||'—')+'</pre><p><b>猜想</b></p><pre>'+linkC(r.hypothesis||'—')+'</pre>','disc');
+  return card(esc(r.question_id)+' · '+esc(r.source)+' · '+esc(r.family),scoreTag(r.score)+' 预测 <b>'+esc(r.prediction)+'</b> · 答案 <b>'+esc(r.answer)+'</b><details><summary>题目全文</summary><pre>'+esc(r.question)+'</pre></details>')+
+    card('① 解题 agent（effort='+(D.config.solve_effort||'low')+'）','<p>'+brief+' · 冻结快照 '+esc(r.solver_snapshot||S?.label||'未取得')+'</p>'+(r.kb_queries?.length?'<pre>'+esc(JSON.stringify(r.kb_queries,null,2))+'</pre>':'')+(r.solver_reasoning?'<details><summary>返回的推理摘要</summary><pre>'+esc(r.solver_reasoning)+'</pre></details>':'')+'<p><b>完整输出</b></p><pre>'+linkC(r.solution||'未取得完整输出。')+'</pre>'+(r.solve_trace?.length?turns(r.solve_trace):'')+table(['检索 / 引用 ID','解题时内容'],rows||'<tr><td colspan=2>没有检索或引用记录。</td></tr>')+(reportVersions?'<details><summary>解题时的 science 版本</summary>'+reportVersions+'</details>':''),'solver')+
+    card('② 发现 agent（effort='+esc(r.discover_effort)+'）',turns(r.discover_trace||[])+'<p><b>评论</b></p><pre>'+linkC(r.comment||'—')+'</pre><p><b>猜想</b></p><pre>'+linkC(r.hypothesis||'—')+'</pre>','disc');
 }
 
 function diffView(a,b,epoch) {
@@ -468,9 +466,9 @@ function claimRows(id) {
   let last=null;
   return D.snaps.map(S=>{
     const c=S.claims.find(z=>z[0]===id);
-    if(!c)return '<tr>'+td(esc(snapshotName(S)))+'<td colspan=3>'+(S.complete===false?'摘录中未出现，不能判断是否存在。':'不存在')+'</td></tr>';
+    if(!c)return '<tr>'+td(esc(S.label))+'<td colspan=3>'+(S.complete===false?'摘录中未出现，不能判断是否存在。':'不存在')+'</td></tr>';
     const content=c[4]!==last?esc(T(c[4]))+detail(S,id):'<span class="note">文本同上</span>';last=c[4];
-    return '<tr>'+td(esc(snapshotName(S)))+td((c[1]??'—')+' / '+(c[2]??'—'))+td(num(c[3],2))+td(content+(S.excerptIds?.includes(id)?'<p class="note">此条原文被截断。</p>':''))+'</tr>';
+    return '<tr>'+td(esc(S.label))+td((c[1]??'—')+' / '+(c[2]??'—'))+td(num(c[3],2))+td(content+(S.excerptIds?.includes(id)?'<p class="note">此条原文被截断。</p>':''))+'</tr>';
   }).join('');
 }
 function claimView() {
@@ -487,27 +485,27 @@ function openClaim(id,ev) {
 
 function summView(E) {
   const ops=commitOperations.filter(c=>c.origin_epoch===E.epoch&&!['credit','seed','report'].includes(c.op));
-  return card('第 '+E.epoch+' 轮整理者留下修改理由',commitTable(ops)+(E.summarizer.length?'<details><summary>逐步整理记录</summary>'+turns(E.summarizer)+'</details>':'<p class="note">未取得逐步工具记录。</p>'),'summ');
+  return card('③ 总结者 · 第 '+E.epoch+' 轮','<p>保存的 KB 操作理由</p>'+commitTable(ops)+(E.summarizer.length?turns(E.summarizer):'<p class="note">未取得逐步工具轨迹；不能据此判断调用次数。</p>'),'summ');
 }
 
 function commitTable(cs) {
   if(!cs.length)return '<p class="note">无</p>';
-  return table(['记录','发起轮 / 应用轮','操作','条目','来源题','内容 / 理由'],cs.map(c=>{
+  return table(['commit','所属轮 / 应用轮','操作','条目','来源题','内容 / 理由'],cs.map(c=>{
     const p=c.payload||{}, deferred=c.claim_status==='deferred';
     const remap=Object.entries(c.id_remap||{}).map(([a,b])=>esc(a)+' → '+linkC(b)).join(' · ');
     const body=(p.text?'<b>新内容：</b> '+linkC(p.text)+'<br>':'')+(p.old_text?'<span class="note">旧内容：</span> '+esc(p.old_text)+'<br>':'')+(c.op==='credit'?esc(JSON.stringify(p))+'<br>':'')+(c.reason?'<b>理由：</b> '+linkC(c.reason):'')+(remap?'<p class="note">任务内 ID → 应用 ID：'+remap+'</p>':'')+(c.op==='report'?'<p class="note">science '+esc(c.report_id)+' · research repo commit '+esc(c.repo_commit)+'（报告版本）</p>':'')+(c.conflicts?.length?'<pre>冲突：'+esc(JSON.stringify(c.conflicts))+'</pre>':'');
-    const label=operationName(c.op)+(c.wrapped?deferred?' · 异步提案':' · 异步应用':'')+(c.proposal?' · 原子提案':'')+(deferred?' · 待应用':'');
+    const label=c.op+(c.wrapped?deferred?' · 异步提案':' · 异步应用':'')+(c.proposal?' · 原子提案':'')+(deferred?' · 待应用':'');
     const commit=esc(c.commit)+(c.source_commit!==c.commit?'<br><small>任务内 '+esc(c.source_commit)+'</small>':'');
-    return '<tr class="'+(deferred?'':operationClass(c.op))+'">'+td(commit)+td('<span style="white-space:nowrap">'+c.origin_epoch+' / '+c.applied_epoch+'</span>')+td(esc(label))+td(linkC((c.claim_ids||[]).join(' '))+(c.new_id?' → '+linkC(c.new_id):''))+td(esc((c.source_question_ids||[]).join(' ')))+td(body)+'</tr>';
+    return '<tr class="'+(deferred?'':operationClass(c.op))+'">'+td(commit)+td('<span style="white-space:nowrap">e'+c.origin_epoch+' / e'+c.applied_epoch+'</span>')+td(esc(label))+td(linkC((c.claim_ids||[]).join(' '))+(c.new_id?' → '+linkC(c.new_id):''))+td(esc((c.source_question_ids||[]).join(' ')))+td(body)+'</tr>';
   }).join(''));
 }
 
 function commitView() {
   const ops=[...new Set(commitOperations.map(c=>c.op))], selected=state.op||'(结构操作)';
   const filtered=o=>o.startsWith('(')?commitOperations.filter(c=>!['credit','seed','report'].includes(c.op)):commitOperations.filter(c=>c.op===o);
-  $('side').innerHTML=['(结构操作)',...ops].map(o=>`<div class="item ${selected===o?'on':''}" onclick="state.op='${o}';render()">${esc(o.startsWith('(')?'结构修改':operationName(o))} <small>${filtered(o).length}</small></div>`).join('');
+  $('side').innerHTML=['(结构操作)',...ops].map(o=>`<div class="item ${selected===o?'on':''}" onclick="state.op='${o}';render()">${esc(o)} <small>${filtered(o).length}</small></div>`).join('');
   const cs=filtered(selected);
-  $('view').innerHTML=card('知识修改记录 · '+esc(selected.startsWith('(')?'结构修改':operationName(selected))+'（'+cs.length+' 条）',commitTable(cs));
+  $('view').innerHTML=card('commit 日志 · '+esc(selected)+'（'+cs.length+' 条）',commitTable(cs));
 }
 
 function promptView() {
