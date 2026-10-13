@@ -1,0 +1,26 @@
+flowchart LR
+  T["Teacher：冻结生成模型"] -->|生成| D["数据：合成序列"]
+  D -->|拟合| C["Candidates：从头训练"]
+  T --- TI["初始化：random / α2"]
+  T --- TS["宽 × 层：[32, 48] × [1]"]
+  T --- TG["heads / FF比例 / 全局激活：[4] / [2] / ['gelu']"]
+  T --- TV["词表：[64, 128]"]
+  T --- TM["生成机制：1/full/sin；.25/full/none；0/full/none；0/4/none；0/full/sin，共5组"]
+  D --- DP["输入长度：[16, 32]"]
+  D --- DO["输出长度：[16, 32]"]
+  D --- DN["训练条数：[4096, 16384]"]
+  D --- DE["评测：默认同长，特殊输入×2"]
+  D --- DB["训练计划：3AdamW × 700/1400steps"]
+  C --- TF["默认20TF；四池并集TF34"]
+  TF --- TFV["默认：full/4/8/16；有/无位置；pre/post；2/4heads；GELU/SiLU"]
+  C --- GRU["GRU7：宽128/192/256；层1/2/3；固有门保持"]
+  C --- RNN["RNN7：宽160/384/512；层1/2/3；tanh/ReLU"]
+  C --- SSM["SSM8架构/10setting：宽128/256；层1/2；state8/16；GELU/SiLU"]
+  D --- N["640 数据条件 / 3,840 训练setting"]
+  C --- RULE["每模型全局激活统一；相对不可变anchor计数；不乘seed或选项排列"]
+  classDef teacher fill:#fff,stroke:#376f96,color:#141413
+  classDef data fill:#fff,stroke:#4c6a34,color:#141413
+  classDef candidate fill:#fff,stroke:#aa4e35,color:#141413
+  class T,TI,TS,TG,TV,TM teacher
+  class D,DP,DO,DN,DE,DB,N data
+  class C,RULE candidate

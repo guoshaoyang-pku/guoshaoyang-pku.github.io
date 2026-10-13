@@ -1,0 +1,555 @@
+{
+  "schema_version": "ntp_space_expansion_proposal_v1",
+  "status": "proposed_not_enabled_or_trained",
+  "setting_space": {
+    "schema_version": "ntp_setting_space_v2",
+    "status": "proposed_supported_axes_static_check_only_not_enabled",
+    "instance_repeats": 3,
+    "dataset_overrides": {
+      "teacher_family": "transformer",
+      "teacher_context_length": 256,
+      "teacher_probe_context": 16,
+      "context_length": 256,
+      "validation_size": 512,
+      "test_size": 512,
+      "ood_size": 128,
+      "ood_shift": {},
+      "generation_batch_size": 64,
+      "store_teacher_probs": false
+    },
+    "pools": {
+      "teacher_initialization": [
+        {
+          "teacher_init": "random",
+          "teacher_distance_alpha": 0.0
+        },
+        {
+          "teacher_init": "distance_prior",
+          "teacher_distance_alpha": 1.0
+        },
+        {
+          "teacher_init": "distance_prior",
+          "teacher_distance_alpha": 2.0
+        }
+      ],
+      "teacher_width": [
+        32,
+        48,
+        64
+      ],
+      "teacher_layers": [
+        1,
+        2
+      ],
+      "teacher_heads": [
+        2,
+        4
+      ],
+      "teacher_ff_ratio": [
+        1,
+        2,
+        4
+      ],
+      "teacher_activation": [
+        "gelu",
+        "silu"
+      ],
+      "teacher_mechanism": [
+        {
+          "teacher_residual_scale": 0.0,
+          "teacher_attention_window": null,
+          "teacher_position_mode": "none"
+        },
+        {
+          "teacher_residual_scale": 0.0,
+          "teacher_attention_window": null,
+          "teacher_position_mode": "sinusoidal"
+        },
+        {
+          "teacher_residual_scale": 0.0,
+          "teacher_attention_window": 4,
+          "teacher_position_mode": "none"
+        },
+        {
+          "teacher_residual_scale": 0.0,
+          "teacher_attention_window": 4,
+          "teacher_position_mode": "sinusoidal"
+        },
+        {
+          "teacher_residual_scale": 0.0,
+          "teacher_attention_window": 8,
+          "teacher_position_mode": "none"
+        },
+        {
+          "teacher_residual_scale": 0.0,
+          "teacher_attention_window": 8,
+          "teacher_position_mode": "sinusoidal"
+        },
+        {
+          "teacher_residual_scale": 0.0,
+          "teacher_attention_window": 16,
+          "teacher_position_mode": "none"
+        },
+        {
+          "teacher_residual_scale": 0.0,
+          "teacher_attention_window": 16,
+          "teacher_position_mode": "sinusoidal"
+        },
+        {
+          "teacher_residual_scale": 0.25,
+          "teacher_attention_window": null,
+          "teacher_position_mode": "none"
+        },
+        {
+          "teacher_residual_scale": 0.25,
+          "teacher_attention_window": null,
+          "teacher_position_mode": "sinusoidal"
+        },
+        {
+          "teacher_residual_scale": 0.25,
+          "teacher_attention_window": 4,
+          "teacher_position_mode": "none"
+        },
+        {
+          "teacher_residual_scale": 0.25,
+          "teacher_attention_window": 4,
+          "teacher_position_mode": "sinusoidal"
+        },
+        {
+          "teacher_residual_scale": 0.25,
+          "teacher_attention_window": 8,
+          "teacher_position_mode": "none"
+        },
+        {
+          "teacher_residual_scale": 0.25,
+          "teacher_attention_window": 8,
+          "teacher_position_mode": "sinusoidal"
+        },
+        {
+          "teacher_residual_scale": 0.25,
+          "teacher_attention_window": 16,
+          "teacher_position_mode": "none"
+        },
+        {
+          "teacher_residual_scale": 0.25,
+          "teacher_attention_window": 16,
+          "teacher_position_mode": "sinusoidal"
+        },
+        {
+          "teacher_residual_scale": 1.0,
+          "teacher_attention_window": null,
+          "teacher_position_mode": "none"
+        },
+        {
+          "teacher_residual_scale": 1.0,
+          "teacher_attention_window": null,
+          "teacher_position_mode": "sinusoidal"
+        },
+        {
+          "teacher_residual_scale": 1.0,
+          "teacher_attention_window": 4,
+          "teacher_position_mode": "none"
+        },
+        {
+          "teacher_residual_scale": 1.0,
+          "teacher_attention_window": 4,
+          "teacher_position_mode": "sinusoidal"
+        },
+        {
+          "teacher_residual_scale": 1.0,
+          "teacher_attention_window": 8,
+          "teacher_position_mode": "none"
+        },
+        {
+          "teacher_residual_scale": 1.0,
+          "teacher_attention_window": 8,
+          "teacher_position_mode": "sinusoidal"
+        },
+        {
+          "teacher_residual_scale": 1.0,
+          "teacher_attention_window": 16,
+          "teacher_position_mode": "none"
+        },
+        {
+          "teacher_residual_scale": 1.0,
+          "teacher_attention_window": 16,
+          "teacher_position_mode": "sinusoidal"
+        }
+      ],
+      "vocab_size": [
+        64,
+        128,
+        256
+      ],
+      "prefix_length": [
+        16,
+        32,
+        64
+      ],
+      "continuation_length": [
+        16,
+        32,
+        64
+      ],
+      "evaluation_lengths": [
+        {
+          "prefix_multiplier": 1,
+          "continuation_multiplier": 1
+        },
+        {
+          "prefix_multiplier": 2,
+          "continuation_multiplier": 1
+        },
+        {
+          "prefix_multiplier": 1,
+          "continuation_multiplier": 2
+        }
+      ],
+      "train_size": [
+        4096,
+        16384,
+        65536
+      ],
+      "optimizer": [
+        {
+          "type": "AdamW",
+          "lr": 0.0001,
+          "weight_decay": 0.0,
+          "betas": [
+            0.9,
+            0.999
+          ],
+          "eps": 1e-08,
+          "foreach": false
+        },
+        {
+          "type": "AdamW",
+          "lr": 0.0001,
+          "weight_decay": 0.01,
+          "betas": [
+            0.9,
+            0.999
+          ],
+          "eps": 1e-08,
+          "foreach": false
+        },
+        {
+          "type": "AdamW",
+          "lr": 0.0003,
+          "weight_decay": 0.0,
+          "betas": [
+            0.9,
+            0.999
+          ],
+          "eps": 1e-08,
+          "foreach": false
+        },
+        {
+          "type": "AdamW",
+          "lr": 0.0003,
+          "weight_decay": 0.01,
+          "betas": [
+            0.9,
+            0.999
+          ],
+          "eps": 1e-08,
+          "foreach": false
+        },
+        {
+          "type": "AdamW",
+          "lr": 0.0006,
+          "weight_decay": 0.0,
+          "betas": [
+            0.9,
+            0.999
+          ],
+          "eps": 1e-08,
+          "foreach": false
+        },
+        {
+          "type": "AdamW",
+          "lr": 0.0006,
+          "weight_decay": 0.01,
+          "betas": [
+            0.9,
+            0.999
+          ],
+          "eps": 1e-08,
+          "foreach": false
+        },
+        {
+          "type": "AdamW",
+          "lr": 0.001,
+          "weight_decay": 0.0,
+          "betas": [
+            0.9,
+            0.999
+          ],
+          "eps": 1e-08,
+          "foreach": false
+        },
+        {
+          "type": "AdamW",
+          "lr": 0.001,
+          "weight_decay": 0.01,
+          "betas": [
+            0.9,
+            0.999
+          ],
+          "eps": 1e-08,
+          "foreach": false
+        }
+      ],
+      "steps": [
+        300,
+        700,
+        1400
+      ]
+    },
+    "constraints": {
+      "teacher_smaller_than_every_candidate": true,
+      "teacher_width_divisible_by_heads": true,
+      "within_teacher_context_capacity": true,
+      "candidate_constraints_from_canonical_variant_records": true,
+      "global_activation_per_model": true
+    },
+    "quality_note": "Every proposed tuple is supported by current code. Static legality does not certify learning, ranking, resource fit or question quality. Expand only after independent pilot/human review.",
+    "lineage_note": "The indexed instance seed is derived from the complete dataset setting. Optimizer/steps share one teacher/data seed; mechanism, length, vocabulary or train-size changes normally change both teacher weights and data RNG. Use explicit paired-seed grids like v6/v7 for controlled same-teacher experiments. No independent teacher count follows from static capacity.",
+    "budget_note": "Default is still700 steps;300/1400 are declared alternative plans. Only steps is counted. Matched GPU time and FLOPs are separate gates, not extra factors."
+  },
+  "candidate_axes": [
+    {
+      "alternative_counts": [
+        {
+          "axis": "d_model",
+          "non_anchor_values": 2
+        },
+        {
+          "axis": "num_layers",
+          "non_anchor_values": 2
+        },
+        {
+          "axis": "activation",
+          "non_anchor_values": 1
+        },
+        {
+          "axis": "ff_ratio",
+          "non_anchor_values": 2
+        },
+        {
+          "axis": "num_heads",
+          "non_anchor_values": 2
+        },
+        {
+          "axis": "norm_first",
+          "non_anchor_values": 1
+        },
+        {
+          "axis": "attention_window",
+          "non_anchor_values": 3
+        },
+        {
+          "axis": "position_mode",
+          "non_anchor_values": 1
+        }
+      ],
+      "anchor_candidates": 1,
+      "anchor_id": "transformer_mechanisms_v1",
+      "axis_values": {
+        "activation": [
+          "gelu",
+          "silu"
+        ],
+        "attention_window": [
+          null,
+          4,
+          8,
+          16
+        ],
+        "d_model": [
+          96,
+          128,
+          160
+        ],
+        "ff_ratio": [
+          1,
+          2,
+          4
+        ],
+        "norm_first": [
+          true,
+          false
+        ],
+        "num_heads": [
+          2,
+          4,
+          8
+        ],
+        "num_layers": [
+          1,
+          2,
+          3
+        ],
+        "position_mode": [
+          "sinusoidal",
+          "none"
+        ]
+      },
+      "binary_four_cell_groups": 84,
+      "candidate_count": 99,
+      "family": "transformer",
+      "formula": "1 + sum(a_i) + sum_{i<j}(a_i*a_j), a_i=# non-anchor values per axis",
+      "single_axis_candidates": 14,
+      "two_axis_candidates": 84
+    },
+    {
+      "alternative_counts": [
+        {
+          "axis": "d_model",
+          "non_anchor_values": 2
+        },
+        {
+          "axis": "num_layers",
+          "non_anchor_values": 2
+        }
+      ],
+      "anchor_candidates": 1,
+      "anchor_id": "gru_mechanisms_v1",
+      "axis_values": {
+        "d_model": [
+          96,
+          128,
+          160
+        ],
+        "num_layers": [
+          1,
+          2,
+          3
+        ]
+      },
+      "binary_four_cell_groups": 4,
+      "candidate_count": 9,
+      "family": "gru",
+      "formula": "1 + sum(a_i) + sum_{i<j}(a_i*a_j), a_i=# non-anchor values per axis",
+      "single_axis_candidates": 4,
+      "two_axis_candidates": 4
+    },
+    {
+      "alternative_counts": [
+        {
+          "axis": "d_model",
+          "non_anchor_values": 2
+        },
+        {
+          "axis": "num_layers",
+          "non_anchor_values": 2
+        },
+        {
+          "axis": "activation",
+          "non_anchor_values": 1
+        }
+      ],
+      "anchor_candidates": 1,
+      "anchor_id": "rnn_mechanisms_v1",
+      "axis_values": {
+        "activation": [
+          "tanh",
+          "relu"
+        ],
+        "d_model": [
+          128,
+          160,
+          192
+        ],
+        "num_layers": [
+          1,
+          2,
+          3
+        ]
+      },
+      "binary_four_cell_groups": 8,
+      "candidate_count": 14,
+      "family": "rnn",
+      "formula": "1 + sum(a_i) + sum_{i<j}(a_i*a_j), a_i=# non-anchor values per axis",
+      "single_axis_candidates": 5,
+      "two_axis_candidates": 8
+    },
+    {
+      "alternative_counts": [
+        {
+          "axis": "d_model",
+          "non_anchor_values": 2
+        },
+        {
+          "axis": "num_layers",
+          "non_anchor_values": 2
+        },
+        {
+          "axis": "ff_ratio",
+          "non_anchor_values": 2
+        },
+        {
+          "axis": "activation",
+          "non_anchor_values": 1
+        },
+        {
+          "axis": "state_size",
+          "non_anchor_values": 2
+        },
+        {
+          "axis": "initialization_timescale",
+          "non_anchor_values": 2
+        }
+      ],
+      "anchor_candidates": 1,
+      "anchor_id": "diagonal_ssm_mechanisms_v1",
+      "axis_values": {
+        "activation": [
+          "gelu",
+          "silu"
+        ],
+        "d_model": [
+          96,
+          128,
+          160
+        ],
+        "ff_ratio": [
+          1,
+          2,
+          4
+        ],
+        "initialization_timescale": [
+          "fast",
+          128,
+          "slow"
+        ],
+        "num_layers": [
+          1,
+          2,
+          3
+        ],
+        "state_size": [
+          8,
+          16,
+          32
+        ]
+      },
+      "binary_four_cell_groups": 50,
+      "candidate_count": 62,
+      "family": "ssm",
+      "formula": "1 + sum(a_i) + sum_{i<j}(a_i*a_j), a_i=# non-anchor values per axis",
+      "single_axis_candidates": 11,
+      "two_axis_candidates": 50
+    }
+  ],
+  "candidate_counting_note": "184 complete model settings include164 architecture templates and20 additional SSM initialization settings. Vocabulary/context adaptation is separate from architecture-template count. Immutable original anchors remain128 context;effective task context256 is adaptation, not an edit.",
+  "sampling_note": "All up-to-two-axis local mutations have complete groups. Same-family/parameter strata or explicit budget routing select comparisons; no production dispatch in this proposal.",
+  "future_unimplemented": [
+    "RNN/GRU teachers",
+    "hybrid mixer macros",
+    "parameter sharing",
+    "per-layer exceptions",
+    "soft-label KL",
+    "variable-length mixture batches"
+  ]
+}

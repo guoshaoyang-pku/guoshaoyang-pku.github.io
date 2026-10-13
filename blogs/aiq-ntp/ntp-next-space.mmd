@@ -1,0 +1,60 @@
+flowchart LR
+  T["Teacher：冻结生成模型"] -->|生成| D["数据：合成序列"]
+  D -->|拟合| C["Candidates：从头训练"]
+  T --- TI["初始化：random / α1 / α2"]
+  T --- TS["宽 × 层：[32, 48, 64] × [1, 2]"]
+  T --- TG["heads / FF比例 / 全局激活：[2, 4] / [1, 2, 4] / ['gelu', 'silu']"]
+  T --- TV["词表：[64, 128, 256]"]
+  T --- TM["生成机制：0/.25/1 × full/4/8/16 × none/sinusoidal，共24组"]
+  D --- DP["输入长度：[16, 32, 64]"]
+  D --- DO["输出长度：[16, 32, 64]"]
+  D --- DN["训练条数：[4096, 16384, 65536]"]
+  D --- DE["评测：默认同长，特殊输入×2或输出×2"]
+  D --- DB["训练计划：8AdamW × 300/700/1400steps"]
+  subgraph transformer["Transformer99"]
+    direction LR
+    transformer_0["activation：['gelu', 'silu']"]
+    transformer_1["attention_window：[None, 4, 8, 16]"]
+    transformer_2["d_model：[96, 128, 160]"]
+    transformer_3["ff_ratio：[1, 2, 4]"]
+    transformer_4["norm_first：[True, False]"]
+    transformer_5["num_heads：[2, 4, 8]"]
+    transformer_6["num_layers：[1, 2, 3]"]
+    transformer_7["position_mode：['sinusoidal', 'none']"]
+    transformer_0 --- transformer_1 --- transformer_2 --- transformer_3 --- transformer_4 --- transformer_5 --- transformer_6 --- transformer_7
+  end
+  C --- transformer_0
+  subgraph gru["GRU9"]
+    direction LR
+    gru_0["d_model：[96, 128, 160]"]
+    gru_1["num_layers：[1, 2, 3]"]
+    gru_0 --- gru_1
+  end
+  C --- gru_0
+  subgraph rnn["普通RNN14"]
+    direction LR
+    rnn_0["activation：['tanh', 'relu']"]
+    rnn_1["d_model：[128, 160, 192]"]
+    rnn_2["num_layers：[1, 2, 3]"]
+    rnn_0 --- rnn_1 --- rnn_2
+  end
+  C --- rnn_0
+  subgraph ssm["对角SSM42架构/62setting"]
+    direction LR
+    ssm_0["activation：['gelu', 'silu']"]
+    ssm_1["d_model：[96, 128, 160]"]
+    ssm_2["ff_ratio：[1, 2, 4]"]
+    ssm_3["initialization_timescale：['fast', 128, 'slow']"]
+    ssm_4["num_layers：[1, 2, 3]"]
+    ssm_5["state_size：[8, 16, 32]"]
+    ssm_0 --- ssm_1 --- ssm_2 --- ssm_3 --- ssm_4 --- ssm_5
+  end
+  C --- ssm_0
+  D --- N["979,776 数据条件 / 23,514,624 训练setting"]
+  C --- RULE["每模型全局激活统一；相对不可变anchor计数；不乘seed或选项排列"]
+  classDef teacher fill:#fff,stroke:#376f96,color:#141413
+  classDef data fill:#fff,stroke:#4c6a34,color:#141413
+  classDef candidate fill:#fff,stroke:#aa4e35,color:#141413
+  class T,TI,TS,TG,TV,TM teacher
+  class D,DP,DO,DN,DE,DB,N data
+  class C,RULE candidate
