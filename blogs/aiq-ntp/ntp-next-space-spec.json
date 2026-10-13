@@ -1,6 +1,7 @@
 {
-  "schema_version": "ntp_space_expansion_proposal_v1",
+  "schema_version": "ntp_space_expansion_proposal_v2",
   "status": "proposed_not_enabled_or_trained",
+  "base_seed": 1353,
   "setting_space": {
     "schema_version": "ntp_setting_space_v2",
     "status": "proposed_supported_axes_static_check_only_not_enabled",
@@ -351,6 +352,10 @@
         {
           "axis": "position_mode",
           "non_anchor_values": 1
+        },
+        {
+          "axis": "residual",
+          "non_anchor_values": 1
         }
       ],
       "anchor_candidates": 1,
@@ -393,14 +398,18 @@
         "position_mode": [
           "sinusoidal",
           "none"
+        ],
+        "residual": [
+          true,
+          false
         ]
       },
-      "binary_four_cell_groups": 84,
-      "candidate_count": 99,
+      "binary_four_cell_groups": 98,
+      "candidate_count": 114,
       "family": "transformer",
       "formula": "1 + sum(a_i) + sum_{i<j}(a_i*a_j), a_i=# non-anchor values per axis",
-      "single_axis_candidates": 14,
-      "two_axis_candidates": 84
+      "single_axis_candidates": 15,
+      "two_axis_candidates": 98
     },
     {
       "alternative_counts": [
@@ -542,14 +551,1206 @@
       "two_axis_candidates": 50
     }
   ],
-  "candidate_counting_note": "184 complete model settings include164 architecture templates and20 additional SSM initialization settings. Vocabulary/context adaptation is separate from architecture-template count. Immutable original anchors remain128 context;effective task context256 is adaptation, not an edit.",
-  "sampling_note": "All up-to-two-axis local mutations have complete groups. Same-family/parameter strata or explicit budget routing select comparisons; no production dispatch in this proposal.",
+  "source_candidate_audit": {
+    "path": "docs/plans/task-expansion/coordination/ntp_candidate_space_counts.json",
+    "sha256": "6e274e5b517ec46df1c5236eee2da597544b0695d0c637557f6ac8ea3135ca21",
+    "qualification": "historical v1 baseline164/184 andexisting poolunion;v2residual subset counts rebuiltcanonically,extendedgrammar separate"
+  },
+  "candidate_counting_note": "Supported proposed subset:179 architecture templates,199 full model settings including20SSM initialization alternatives. TF114 includes15 residual-absence ablations. Extended Mamba/KDA/connection grammar is counted separately before module validity, not multiplied into canonical task capacity. Vocabulary/context and seeds are separate.",
+  "sampling_note": "Keep exposed teacher/data axes as a catalogue, not exhaustive production. Default next pilot is12representative teacher/data conditions and1AdamW/700step plan. Candidate search receives diversity priority. Every mutation is counted from its own immutable anchor; retain complete single/pair groups and controlled weak ablations.",
   "future_unimplemented": [
+    "extended connection/mixer grammar below",
     "RNN/GRU teachers",
-    "hybrid mixer macros",
     "parameter sharing",
     "per-layer exceptions",
     "soft-label KL",
     "variable-length mixture batches"
-  ]
+  ],
+  "default_sampling_plan": {
+    "status": "proposed_not_dispatched",
+    "teacher_data_conditions": 12,
+    "teacher_initialization": [
+      "random",
+      "distance_alpha1",
+      "distance_alpha2"
+    ],
+    "mechanism_tuples": [
+      {
+        "teacher_residual_scale": 0.0,
+        "teacher_attention_window": null,
+        "teacher_position_mode": "none"
+      },
+      {
+        "teacher_residual_scale": 0.0,
+        "teacher_attention_window": 4,
+        "teacher_position_mode": "none"
+      },
+      {
+        "teacher_residual_scale": 0.0,
+        "teacher_attention_window": 16,
+        "teacher_position_mode": "none"
+      },
+      {
+        "teacher_residual_scale": 0.25,
+        "teacher_attention_window": null,
+        "teacher_position_mode": "sinusoidal"
+      }
+    ],
+    "fixed_teacher": {
+      "teacher_width": 32,
+      "teacher_layers": 1,
+      "teacher_heads": 4,
+      "teacher_ff_ratio": 2,
+      "teacher_activation": "gelu"
+    },
+    "fixed_data": {
+      "vocab_size": 64,
+      "prefix_length": 32,
+      "continuation_length": 32,
+      "evaluation_route": "same_length",
+      "train_size": 4096
+    },
+    "training_plan": {
+      "optimizer": "adamw",
+      "lr": 0.0003,
+      "weight_decay": 0.01,
+      "steps": 700,
+      "batch_size": 16,
+      "precision": "fp32"
+    },
+    "budget_plans_per_condition": 1,
+    "instance_and_training_seeds": "separate repeats; not new setting types",
+    "length_generalization": "later diagnostic routes change evaluation prefix or continuation only; not default full cross",
+    "candidate_selection": "stratify operator,block,connection;sample complete local control groups;not every model on every teacher",
+    "paired_mechanism_requirement": "share actual teacher weights and calibration within a paired mechanism comparison; canonical global indices alone do not guarantee this",
+    "qualification": "staticproposal;learning/causal/gradient/cost/shortcut/human checks required",
+    "paired_initialization_requirement": "allthreepriorconditions shareunderlyingteacherweightdraw;onlyexplicitdistancebiaschanges. Entropyoutputcalibration sharedorfrozenanddisclosed;do not re-fit percondition withoutdefiningcomplete-taskcomparison."
+  },
+  "extended_candidate_grammar": {
+    "schema_version": "ntp_candidate_grammar_v1",
+    "status": "proposed_not_implemented_or_trained",
+    "maximum_changed_axes": 2,
+    "families": [
+      {
+        "id": "transformer",
+        "anchor_status": "baseline maps to existing frozen TF anchor;new wrapper axes unimplemented",
+        "prototype_anchor": {
+          "d_model": 128,
+          "num_layers": 2,
+          "activation": "gelu",
+          "ff_ratio": 2,
+          "num_heads": 4,
+          "norm_first": true,
+          "attention_window": null,
+          "position_mode": "sinusoidal",
+          "residual_route": "add",
+          "norm_type": "layernorm",
+          "ff_kind": "dense",
+          "block_layout": "serial"
+        },
+        "axis_values": {
+          "d_model": [
+            96,
+            128,
+            160
+          ],
+          "num_layers": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "residual_route": [
+            "add",
+            "scaled_half",
+            "learned_gate",
+            "long_skip2",
+            "none"
+          ],
+          "norm_type": [
+            "layernorm",
+            "rmsnorm"
+          ],
+          "activation": [
+            "gelu",
+            "silu"
+          ],
+          "ff_ratio": [
+            1,
+            2,
+            4
+          ],
+          "num_heads": [
+            2,
+            4,
+            8
+          ],
+          "norm_first": [
+            true,
+            false
+          ],
+          "attention_window": [
+            null,
+            4,
+            8,
+            16
+          ],
+          "position_mode": [
+            "sinusoidal",
+            "none"
+          ],
+          "ff_kind": [
+            "dense",
+            "gated_global_activation"
+          ],
+          "block_layout": [
+            "serial",
+            "parallel"
+          ]
+        },
+        "maximum_changed_axes": 2,
+        "count_qualification": "finite_grammar_before_module_parameter_kernel_and_learning_checks",
+        "source_urls": []
+      },
+      {
+        "id": "gru",
+        "anchor_status": "baseline maps to existing frozen recurrent anchor;new depth wrappers unimplemented",
+        "prototype_anchor": {
+          "d_model": 128,
+          "num_layers": 2,
+          "activation": "intrinsic",
+          "residual_route": "none",
+          "layer_norm": "none"
+        },
+        "axis_values": {
+          "d_model": [
+            96,
+            128,
+            160
+          ],
+          "num_layers": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "residual_route": [
+            "add",
+            "scaled_half",
+            "learned_gate",
+            "long_skip2",
+            "none"
+          ],
+          "layer_norm": [
+            "none",
+            "pre_layernorm",
+            "pre_rmsnorm"
+          ]
+        },
+        "maximum_changed_axes": 2,
+        "count_qualification": "finite_grammar_before_module_parameter_kernel_and_learning_checks",
+        "source_urls": []
+      },
+      {
+        "id": "rnn",
+        "anchor_status": "baseline maps to existing frozen recurrent anchor;new depth wrappers unimplemented",
+        "prototype_anchor": {
+          "d_model": 160,
+          "num_layers": 2,
+          "activation": "tanh",
+          "residual_route": "none",
+          "layer_norm": "none"
+        },
+        "axis_values": {
+          "d_model": [
+            128,
+            160,
+            192
+          ],
+          "num_layers": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "residual_route": [
+            "add",
+            "scaled_half",
+            "learned_gate",
+            "long_skip2",
+            "none"
+          ],
+          "layer_norm": [
+            "none",
+            "pre_layernorm",
+            "pre_rmsnorm"
+          ],
+          "activation": [
+            "tanh",
+            "relu"
+          ]
+        },
+        "maximum_changed_axes": 2,
+        "count_qualification": "finite_grammar_before_module_parameter_kernel_and_learning_checks",
+        "source_urls": []
+      },
+      {
+        "id": "diagonal_ssm",
+        "anchor_status": "baseline maps to existing frozen diagonalSSM anchor;new wrapper axes unimplemented",
+        "prototype_anchor": {
+          "d_model": 128,
+          "num_layers": 2,
+          "activation": "gelu",
+          "ff_ratio": 2,
+          "state_size": 16,
+          "initialization_timescale": 128,
+          "residual_route": "add",
+          "norm_type": "layernorm",
+          "ff_kind": "dense",
+          "block_layout": "serial"
+        },
+        "axis_values": {
+          "d_model": [
+            96,
+            128,
+            160
+          ],
+          "num_layers": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "residual_route": [
+            "add",
+            "scaled_half",
+            "learned_gate",
+            "long_skip2",
+            "none"
+          ],
+          "norm_type": [
+            "layernorm",
+            "rmsnorm"
+          ],
+          "activation": [
+            "gelu",
+            "silu"
+          ],
+          "ff_ratio": [
+            1,
+            2,
+            4
+          ],
+          "state_size": [
+            8,
+            16,
+            32
+          ],
+          "initialization_timescale": [
+            "fast",
+            128,
+            "slow"
+          ],
+          "ff_kind": [
+            "dense",
+            "gated_global_activation"
+          ],
+          "block_layout": [
+            "serial",
+            "parallel"
+          ]
+        },
+        "maximum_changed_axes": 2,
+        "count_qualification": "finite_grammar_before_module_parameter_kernel_and_learning_checks",
+        "source_urls": []
+      },
+      {
+        "id": "mamba1",
+        "anchor_status": "proposed prototype;no registered module or learning review",
+        "prototype_anchor": {
+          "d_model": 128,
+          "num_layers": 2,
+          "d_state": 16,
+          "d_conv": 4,
+          "expand": 2,
+          "residual_route": "add",
+          "norm_type": "rmsnorm"
+        },
+        "axis_values": {
+          "d_model": [
+            96,
+            128,
+            160
+          ],
+          "num_layers": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "residual_route": [
+            "add",
+            "scaled_half",
+            "learned_gate",
+            "long_skip2",
+            "none"
+          ],
+          "norm_type": [
+            "layernorm",
+            "rmsnorm"
+          ],
+          "d_state": [
+            8,
+            16,
+            32
+          ],
+          "d_conv": [
+            2,
+            4,
+            8
+          ],
+          "expand": [
+            1,
+            2
+          ]
+        },
+        "maximum_changed_axes": 2,
+        "count_qualification": "finite_grammar_before_module_parameter_kernel_and_learning_checks",
+        "source_urls": [
+          "https://github.com/state-spaces/mamba"
+        ]
+      },
+      {
+        "id": "mamba2",
+        "anchor_status": "proposed prototype;no registered module or learning review",
+        "prototype_anchor": {
+          "d_model": 128,
+          "num_layers": 2,
+          "d_state": 32,
+          "d_conv": 4,
+          "expand": 2,
+          "residual_route": "add",
+          "norm_type": "rmsnorm",
+          "head_dim": 32,
+          "n_groups": 1
+        },
+        "axis_values": {
+          "d_model": [
+            96,
+            128,
+            160
+          ],
+          "num_layers": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "residual_route": [
+            "add",
+            "scaled_half",
+            "learned_gate",
+            "long_skip2",
+            "none"
+          ],
+          "norm_type": [
+            "layernorm",
+            "rmsnorm"
+          ],
+          "d_state": [
+            16,
+            32,
+            64
+          ],
+          "d_conv": [
+            2,
+            4,
+            8
+          ],
+          "expand": [
+            1,
+            2
+          ],
+          "head_dim": [
+            16,
+            32,
+            64
+          ],
+          "n_groups": [
+            1,
+            2
+          ]
+        },
+        "maximum_changed_axes": 2,
+        "count_qualification": "finite_grammar_before_module_parameter_kernel_and_learning_checks",
+        "source_urls": [
+          "https://github.com/state-spaces/mamba"
+        ],
+        "native_parameter_mapping": {
+          "head_dim": "headdim",
+          "n_groups": "ngroups"
+        }
+      },
+      {
+        "id": "gated_deltanet",
+        "anchor_status": "proposed prototype;no registered module or learning review",
+        "prototype_anchor": {
+          "d_model": 128,
+          "num_layers": 2,
+          "head_dim": 32,
+          "expand_v": 1,
+          "short_conv": 4,
+          "activation": "gelu",
+          "ff_ratio": 2,
+          "norm_type": "rmsnorm",
+          "residual_route": "add",
+          "ff_kind": "dense",
+          "block_layout": "serial"
+        },
+        "axis_values": {
+          "d_model": [
+            96,
+            128,
+            160
+          ],
+          "num_layers": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "residual_route": [
+            "add",
+            "scaled_half",
+            "learned_gate",
+            "long_skip2",
+            "none"
+          ],
+          "norm_type": [
+            "layernorm",
+            "rmsnorm"
+          ],
+          "head_dim": [
+            16,
+            32,
+            64
+          ],
+          "expand_v": [
+            1,
+            2
+          ],
+          "short_conv": [
+            null,
+            2,
+            4,
+            8
+          ],
+          "activation": [
+            "gelu",
+            "silu"
+          ],
+          "ff_ratio": [
+            1,
+            2,
+            4
+          ],
+          "ff_kind": [
+            "dense",
+            "gated_global_activation"
+          ],
+          "block_layout": [
+            "serial",
+            "parallel"
+          ]
+        },
+        "maximum_changed_axes": 2,
+        "count_qualification": "finite_grammar_before_module_parameter_kernel_and_learning_checks",
+        "source_urls": [
+          "https://github.com/MoonshotAI/Kimi-Linear",
+          "https://github.com/fla-org/flash-linear-attention",
+          "https://arxiv.org/abs/2412.06464"
+        ]
+      },
+      {
+        "id": "kimi_delta_attention",
+        "anchor_status": "proposed prototype;no registered module or learning review",
+        "prototype_anchor": {
+          "d_model": 128,
+          "num_layers": 2,
+          "head_dim": 32,
+          "expand_v": 1,
+          "short_conv": 4,
+          "activation": "gelu",
+          "ff_ratio": 2,
+          "norm_type": "rmsnorm",
+          "residual_route": "add",
+          "ff_kind": "dense",
+          "block_layout": "serial"
+        },
+        "axis_values": {
+          "d_model": [
+            96,
+            128,
+            160
+          ],
+          "num_layers": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "residual_route": [
+            "add",
+            "scaled_half",
+            "learned_gate",
+            "long_skip2",
+            "none"
+          ],
+          "norm_type": [
+            "layernorm",
+            "rmsnorm"
+          ],
+          "head_dim": [
+            16,
+            32,
+            64
+          ],
+          "expand_v": [
+            1,
+            2
+          ],
+          "short_conv": [
+            null,
+            2,
+            4,
+            8
+          ],
+          "activation": [
+            "gelu",
+            "silu"
+          ],
+          "ff_ratio": [
+            1,
+            2,
+            4
+          ],
+          "ff_kind": [
+            "dense",
+            "gated_global_activation"
+          ],
+          "block_layout": [
+            "serial",
+            "parallel"
+          ]
+        },
+        "maximum_changed_axes": 2,
+        "count_qualification": "finite_grammar_before_module_parameter_kernel_and_learning_checks",
+        "source_urls": [
+          "https://github.com/MoonshotAI/Kimi-Linear",
+          "https://github.com/fla-org/flash-linear-attention",
+          "https://arxiv.org/abs/2412.06464"
+        ]
+      }
+    ],
+    "hybrid_macros": [
+      {
+        "id": "attention_mamba1",
+        "anchor_status": "proposed macro;no registered module or learning review",
+        "prototype_anchor": {
+          "d_model": 128,
+          "macro_repeats": 2,
+          "attention_window": null,
+          "activation": "gelu",
+          "ff_ratio": 2,
+          "norm_type": "rmsnorm",
+          "residual_route": "add",
+          "ff_kind": "dense"
+        },
+        "axis_values": {
+          "d_model": [
+            96,
+            128,
+            160
+          ],
+          "macro_repeats": [
+            1,
+            2,
+            3
+          ],
+          "attention_window": [
+            null,
+            4,
+            16
+          ],
+          "activation": [
+            "gelu",
+            "silu"
+          ],
+          "ff_ratio": [
+            1,
+            2,
+            4
+          ],
+          "norm_type": [
+            "layernorm",
+            "rmsnorm"
+          ],
+          "residual_route": [
+            "add",
+            "scaled_half",
+            "learned_gate",
+            "long_skip2",
+            "none"
+          ],
+          "ff_kind": [
+            "dense",
+            "gated_global_activation"
+          ]
+        },
+        "maximum_changed_axes": 2,
+        "count_qualification": "finite_grammar_before_module_parameter_kernel_and_learning_checks",
+        "source_urls": [
+          "https://github.com/MoonshotAI/Kimi-Linear",
+          "https://github.com/fla-org/flash-linear-attention",
+          "https://arxiv.org/abs/2412.06464",
+          "https://github.com/state-spaces/mamba"
+        ],
+        "operator_recipe": [
+          "attention",
+          "mamba1"
+        ],
+        "mixer_layout": "serial",
+        "internal_operator_parameters": "native prototype defaults above frozen;no arbitrary perlayer changes",
+        "parallel_merge": null,
+        "ff_application": "one FF stage perlogical mixer layer;parallel pair has one shared FF stage"
+      },
+      {
+        "id": "attention_mamba2",
+        "anchor_status": "proposed macro;no registered module or learning review",
+        "prototype_anchor": {
+          "d_model": 128,
+          "macro_repeats": 2,
+          "attention_window": null,
+          "activation": "gelu",
+          "ff_ratio": 2,
+          "norm_type": "rmsnorm",
+          "residual_route": "add",
+          "ff_kind": "dense"
+        },
+        "axis_values": {
+          "d_model": [
+            96,
+            128,
+            160
+          ],
+          "macro_repeats": [
+            1,
+            2,
+            3
+          ],
+          "attention_window": [
+            null,
+            4,
+            16
+          ],
+          "activation": [
+            "gelu",
+            "silu"
+          ],
+          "ff_ratio": [
+            1,
+            2,
+            4
+          ],
+          "norm_type": [
+            "layernorm",
+            "rmsnorm"
+          ],
+          "residual_route": [
+            "add",
+            "scaled_half",
+            "learned_gate",
+            "long_skip2",
+            "none"
+          ],
+          "ff_kind": [
+            "dense",
+            "gated_global_activation"
+          ]
+        },
+        "maximum_changed_axes": 2,
+        "count_qualification": "finite_grammar_before_module_parameter_kernel_and_learning_checks",
+        "source_urls": [
+          "https://github.com/MoonshotAI/Kimi-Linear",
+          "https://github.com/fla-org/flash-linear-attention",
+          "https://arxiv.org/abs/2412.06464",
+          "https://github.com/state-spaces/mamba"
+        ],
+        "operator_recipe": [
+          "attention",
+          "mamba2"
+        ],
+        "mixer_layout": "serial",
+        "internal_operator_parameters": "native prototype defaults above frozen;no arbitrary perlayer changes",
+        "parallel_merge": null,
+        "ff_application": "one FF stage perlogical mixer layer;parallel pair has one shared FF stage"
+      },
+      {
+        "id": "attention_gated_deltanet",
+        "anchor_status": "proposed macro;no registered module or learning review",
+        "prototype_anchor": {
+          "d_model": 128,
+          "macro_repeats": 2,
+          "attention_window": null,
+          "activation": "gelu",
+          "ff_ratio": 2,
+          "norm_type": "rmsnorm",
+          "residual_route": "add",
+          "ff_kind": "dense"
+        },
+        "axis_values": {
+          "d_model": [
+            96,
+            128,
+            160
+          ],
+          "macro_repeats": [
+            1,
+            2,
+            3
+          ],
+          "attention_window": [
+            null,
+            4,
+            16
+          ],
+          "activation": [
+            "gelu",
+            "silu"
+          ],
+          "ff_ratio": [
+            1,
+            2,
+            4
+          ],
+          "norm_type": [
+            "layernorm",
+            "rmsnorm"
+          ],
+          "residual_route": [
+            "add",
+            "scaled_half",
+            "learned_gate",
+            "long_skip2",
+            "none"
+          ],
+          "ff_kind": [
+            "dense",
+            "gated_global_activation"
+          ]
+        },
+        "maximum_changed_axes": 2,
+        "count_qualification": "finite_grammar_before_module_parameter_kernel_and_learning_checks",
+        "source_urls": [
+          "https://github.com/MoonshotAI/Kimi-Linear",
+          "https://github.com/fla-org/flash-linear-attention",
+          "https://arxiv.org/abs/2412.06464",
+          "https://github.com/state-spaces/mamba"
+        ],
+        "operator_recipe": [
+          "attention",
+          "gated_deltanet"
+        ],
+        "mixer_layout": "serial",
+        "internal_operator_parameters": "native prototype defaults above frozen;no arbitrary perlayer changes",
+        "parallel_merge": null,
+        "ff_application": "one FF stage perlogical mixer layer;parallel pair has one shared FF stage"
+      },
+      {
+        "id": "attention_kda",
+        "anchor_status": "proposed macro;no registered module or learning review",
+        "prototype_anchor": {
+          "d_model": 128,
+          "macro_repeats": 2,
+          "attention_window": null,
+          "activation": "gelu",
+          "ff_ratio": 2,
+          "norm_type": "rmsnorm",
+          "residual_route": "add",
+          "ff_kind": "dense"
+        },
+        "axis_values": {
+          "d_model": [
+            96,
+            128,
+            160
+          ],
+          "macro_repeats": [
+            1,
+            2,
+            3
+          ],
+          "attention_window": [
+            null,
+            4,
+            16
+          ],
+          "activation": [
+            "gelu",
+            "silu"
+          ],
+          "ff_ratio": [
+            1,
+            2,
+            4
+          ],
+          "norm_type": [
+            "layernorm",
+            "rmsnorm"
+          ],
+          "residual_route": [
+            "add",
+            "scaled_half",
+            "learned_gate",
+            "long_skip2",
+            "none"
+          ],
+          "ff_kind": [
+            "dense",
+            "gated_global_activation"
+          ]
+        },
+        "maximum_changed_axes": 2,
+        "count_qualification": "finite_grammar_before_module_parameter_kernel_and_learning_checks",
+        "source_urls": [
+          "https://github.com/MoonshotAI/Kimi-Linear",
+          "https://github.com/fla-org/flash-linear-attention",
+          "https://arxiv.org/abs/2412.06464",
+          "https://github.com/state-spaces/mamba"
+        ],
+        "operator_recipe": [
+          "attention",
+          "kimi_delta_attention"
+        ],
+        "mixer_layout": "serial",
+        "internal_operator_parameters": "native prototype defaults above frozen;no arbitrary perlayer changes",
+        "parallel_merge": null,
+        "ff_application": "one FF stage perlogical mixer layer;parallel pair has one shared FF stage"
+      },
+      {
+        "id": "parallel_attention_mamba2",
+        "anchor_status": "proposed macro;no registered module or learning review",
+        "prototype_anchor": {
+          "d_model": 128,
+          "macro_repeats": 2,
+          "attention_window": null,
+          "activation": "gelu",
+          "ff_ratio": 2,
+          "norm_type": "rmsnorm",
+          "residual_route": "add",
+          "ff_kind": "dense"
+        },
+        "axis_values": {
+          "d_model": [
+            96,
+            128,
+            160
+          ],
+          "macro_repeats": [
+            1,
+            2,
+            3
+          ],
+          "attention_window": [
+            null,
+            4,
+            16
+          ],
+          "activation": [
+            "gelu",
+            "silu"
+          ],
+          "ff_ratio": [
+            1,
+            2,
+            4
+          ],
+          "norm_type": [
+            "layernorm",
+            "rmsnorm"
+          ],
+          "residual_route": [
+            "add",
+            "scaled_half",
+            "learned_gate",
+            "long_skip2",
+            "none"
+          ],
+          "ff_kind": [
+            "dense",
+            "gated_global_activation"
+          ]
+        },
+        "maximum_changed_axes": 2,
+        "count_qualification": "finite_grammar_before_module_parameter_kernel_and_learning_checks",
+        "source_urls": [
+          "https://github.com/MoonshotAI/Kimi-Linear",
+          "https://github.com/fla-org/flash-linear-attention",
+          "https://arxiv.org/abs/2412.06464",
+          "https://github.com/state-spaces/mamba"
+        ],
+        "operator_recipe": [
+          "attention",
+          "mamba2"
+        ],
+        "mixer_layout": "parallel_mixers",
+        "internal_operator_parameters": "native prototype defaults above frozen;no arbitrary perlayer changes",
+        "parallel_merge": "sum divided bysqrt(2)",
+        "ff_application": "one FF stage perlogical mixer layer;parallel pair has one shared FF stage"
+      },
+      {
+        "id": "parallel_attention_kda",
+        "anchor_status": "proposed macro;no registered module or learning review",
+        "prototype_anchor": {
+          "d_model": 128,
+          "macro_repeats": 2,
+          "attention_window": null,
+          "activation": "gelu",
+          "ff_ratio": 2,
+          "norm_type": "rmsnorm",
+          "residual_route": "add",
+          "ff_kind": "dense"
+        },
+        "axis_values": {
+          "d_model": [
+            96,
+            128,
+            160
+          ],
+          "macro_repeats": [
+            1,
+            2,
+            3
+          ],
+          "attention_window": [
+            null,
+            4,
+            16
+          ],
+          "activation": [
+            "gelu",
+            "silu"
+          ],
+          "ff_ratio": [
+            1,
+            2,
+            4
+          ],
+          "norm_type": [
+            "layernorm",
+            "rmsnorm"
+          ],
+          "residual_route": [
+            "add",
+            "scaled_half",
+            "learned_gate",
+            "long_skip2",
+            "none"
+          ],
+          "ff_kind": [
+            "dense",
+            "gated_global_activation"
+          ]
+        },
+        "maximum_changed_axes": 2,
+        "count_qualification": "finite_grammar_before_module_parameter_kernel_and_learning_checks",
+        "source_urls": [
+          "https://github.com/MoonshotAI/Kimi-Linear",
+          "https://github.com/fla-org/flash-linear-attention",
+          "https://arxiv.org/abs/2412.06464",
+          "https://github.com/state-spaces/mamba"
+        ],
+        "operator_recipe": [
+          "attention",
+          "kimi_delta_attention"
+        ],
+        "mixer_layout": "parallel_mixers",
+        "internal_operator_parameters": "native prototype defaults above frozen;no arbitrary perlayer changes",
+        "parallel_merge": "sum divided bysqrt(2)",
+        "ff_application": "one FF stage perlogical mixer layer;parallel pair has one shared FF stage"
+      },
+      {
+        "id": "kda3_attention1",
+        "anchor_status": "proposed macro;no registered module or learning review",
+        "prototype_anchor": {
+          "d_model": 128,
+          "macro_repeats": 2,
+          "attention_window": null,
+          "activation": "gelu",
+          "ff_ratio": 2,
+          "norm_type": "rmsnorm",
+          "residual_route": "add",
+          "ff_kind": "dense"
+        },
+        "axis_values": {
+          "d_model": [
+            96,
+            128,
+            160
+          ],
+          "macro_repeats": [
+            1,
+            2,
+            3
+          ],
+          "attention_window": [
+            null,
+            4,
+            16
+          ],
+          "activation": [
+            "gelu",
+            "silu"
+          ],
+          "ff_ratio": [
+            1,
+            2,
+            4
+          ],
+          "norm_type": [
+            "layernorm",
+            "rmsnorm"
+          ],
+          "residual_route": [
+            "add",
+            "scaled_half",
+            "learned_gate",
+            "long_skip2",
+            "none"
+          ],
+          "ff_kind": [
+            "dense",
+            "gated_global_activation"
+          ]
+        },
+        "maximum_changed_axes": 2,
+        "count_qualification": "finite_grammar_before_module_parameter_kernel_and_learning_checks",
+        "source_urls": [
+          "https://github.com/MoonshotAI/Kimi-Linear",
+          "https://github.com/fla-org/flash-linear-attention",
+          "https://arxiv.org/abs/2412.06464",
+          "https://github.com/state-spaces/mamba"
+        ],
+        "operator_recipe": [
+          "kimi_delta_attention",
+          "kimi_delta_attention",
+          "kimi_delta_attention",
+          "attention"
+        ],
+        "mixer_layout": "serial",
+        "internal_operator_parameters": "native prototype defaults above frozen;no arbitrary perlayer changes",
+        "parallel_merge": null,
+        "ff_application": "one FF stage perlogical mixer layer;parallel pair has one shared FF stage"
+      }
+    ],
+    "connection_routes": [
+      {
+        "id": "add",
+        "equation": "x + F(x)",
+        "qualification": "ordinary outer residual"
+      },
+      {
+        "id": "scaled_half",
+        "equation": "x + 0.5*F(x)",
+        "qualification": "scale transformed branch, keep identity coefficient1"
+      },
+      {
+        "id": "learned_gate",
+        "equation": "x+sigmoid(g_l)*F(x),g_linitially0;onegateperlogicalblocksharedbyitsserialsubbranches",
+        "qualification": "one learned scalar gate perblock;gate form/init fixed"
+      },
+      {
+        "id": "long_skip2",
+        "equation": "h_l=LocalAdd(h_(l-1),Mixer,FF)+0.5*h_(l-2),for1basedl>=2;h_0isembeddedinput",
+        "qualification": "global two-block skip,requires at least2 blocks;coefficient fixed"
+      },
+      {
+        "id": "none",
+        "equation": "F(x)",
+        "qualification": "controlled outer-residual ablation;intrinsic recurrence/mixer skip remains"
+      }
+    ],
+    "block_layouts": {
+      "serial": "Mixer thenFF;separateouterroutes. Transformerpre/postnorm followsnorm_first;otherFFfamilies pre-normfixed. Sameglobalresidualroute onconfigurableouterbranches.",
+      "parallel": "Mixer andFF read sameblockinput. Pre-norm:bothuseoneNorm(x). Transformerpost-norm:bothusex,mergeandouterroutefirst,thenNorm. Sumbranchoutputs/dividebysqrt(2),applyouterrouteonce. ThusTFnorm_first remainsmeaningful inparallel mode.",
+      "gated_global_activation": "FF gating uses the selected global activation: GELU->GeGLU,SiLU->SwiGLU;no independent branch activation",
+      "native_operator_only": "Mamba1/Mamba2 use theirnative block withno appendedFF;recurrent wrappers also have noFF. block_layout/ff axes apply only tofamilies that listthem."
+    },
+    "activation_rule": "all configurable FF/MLP activations shareonevalue permodel. Fixed native gates/softmax/normalization remainintrinsic. Mamba nativeSiLU andGDN/KDA shortconvnativeSiLU fixed;no independentgateactivation axis. GRU intrinsicgatefunctions fixed.",
+    "geometry_constraints": [
+      "transformer width divisible byheads",
+      "mamba2(expand*width)divisible byhead_dim,headcount divisible byn_groups",
+      "GDN/KDA width divisible byhead_dim;numheads=width/head_dim,expand_v produces integer value dimension",
+      "long_skip2 needs at least2 logical blocks;oneblock duplicate isexcluded",
+      "no arbitrary layerwise mixer oractivation recipes",
+      "maximum parameter cap2M andteacher-smaller gate checked after real implementations;not certified bygrammar",
+      "TF parallel pre/postnorm followsnorm_first;cannotretaininactiveaxes. GDN/KDA num_heads derivedwidth/head_dim isbenchmarkrestriction,notnative constructorrequirement."
+    ],
+    "count_definition": "enumerate all zero/one/twoaxis mutations from each immutable/proposed prototype;filter explicit geometry constraints;dedup effective fields;architecture drops onlySSM initialization_timescale. Different recipes/operator types count separately;backend/kernel/seed do not.",
+    "promotion_rule": "new operator prototypes need causal/gradient/native numerical parity then development pilot andLLM/human review before becominganchors;no automaticpromotion",
+    "quality_gates": [
+      "causal forward andfinite gradients",
+      "generated standalone module import andnative reference parity",
+      "parameter andruntime budgets withsamebatchstream",
+      "learned loss belowinitial andtrain-fit baseline",
+      "frozen localcomparisons,freshhidden confirmation,shortcut diagnostics,humanreview"
+    ],
+    "teacher_counting_boundary": "the previous canonical teacher/data capacity is tied to the199 supportedmodel subset only;extendedgrammar must recompute minimumcandidate parameter gate afterimplementation",
+    "pure_operator_implementations": "none of Mamba1/Mamba2/GDN/KDA are registered in the current NTPmodel plugin",
+    "hybrid_internal_defaults": {
+      "attention": {
+        "num_heads": 4,
+        "position_mode": "sinusoidal",
+        "norm_first": true,
+        "attention_window": "macroaxis"
+      },
+      "mamba1": {
+        "d_state": 16,
+        "d_conv": 4,
+        "expand": 2,
+        "activation": "native_silu"
+      },
+      "mamba2": {
+        "d_state": 32,
+        "d_conv": 4,
+        "expand": 2,
+        "head_dim": 32,
+        "n_groups": 1,
+        "activation": "native_silu"
+      },
+      "gated_deltanet": {
+        "head_dim": 32,
+        "expand_v": 1,
+        "short_conv": 4,
+        "qk_normalization": "native_l2",
+        "forget_gate": "scalar_per_head"
+      },
+      "kimi_delta_attention": {
+        "head_dim": 32,
+        "expand_v": 1,
+        "short_conv": 4,
+        "qk_normalization": "native_l2",
+        "forget_gate": "vector_per_key_dim"
+      },
+      "native_defaults": "remainingoriginaloperator defaults fixed byimplementation snapshotbefore pilot;backend choicesnever addarchitecture counts",
+      "sources": {
+        "mamba2": "https://github.com/state-spaces/mamba/blob/main/mamba_ssm/modules/mamba2.py",
+        "kda": "https://github.com/fla-org/flash-linear-attention/blob/main/fla/layers/kda.py",
+        "kimilinear": "https://github.com/MoonshotAI/Kimi-Linear",
+        "reviewed_on": "2026-10-13",
+        "scope": "constructor/README checks only;no importedmodule/kernelavailability claim"
+      }
+    }
+  },
+  "public_copy_note": "Explicitaxes,finitegrammaranddefaultsampling. Registeredmodelprofile staysinlocalcanonicaldocs;newoperatorsnotimplemented. Countsnotquestionyield."
 }

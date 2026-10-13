@@ -1,48 +1,71 @@
-# 当前自由度已能组合，下一步先验证更多机制与局部对照
+# 少采teacher和数据，优先扩大模型设计空间
 
-目前出题器的默认有限池有640个teacher／数据条件，加入3档AdamW和2档steps后为3,840个题目setting。默认候选池有20个正常残差Transformer，已有四个命名池去重后共有56个架构模板、58个含初始化的模型setting。下一步建议保留四个小型起点，完整展开最多两轴的有限邻域，并增加teacher机制、长度和数据量。这份提案在静态约束后有979,776个数据条件、23,514,624个题目setting，以及164个架构模板、184个模型setting。每份固定数据的完整候选训练计划从120增至4,416。现有实测完成1,200次训练、确认26题，70道目录题均待人工review。逐层窗口匹配仍可直接解出全部9道五选一。下一步先分层pilot检验学习、稳定分离与捷径失败条件，再扩量；配置容量不能替代高质量题目产率。
+下一轮保留teacher与数据的全部自由度，默认只采12个代表条件，固定V64、前缀32、续写32、4096条和AdamW700更新。模型搜索扩到8类序列算子、7个明确混合宏块和5种外层连接。有限文法有1,970种架构、2,006个含初始化的模型setting，其中现有代码可生成的下一步子集为179架构／199模型。新Mamba、KDA、连接和混合路线尚未实现，文法数量不代表可训练或稳定。当前默认仍为20个Transformer；最新实测1,200次训练确认26题，累计70题待人工review，窗口匹配捷径仍在。
 
-## 两张图区分已有自由度与下一步提案
+## Teacher和数据先取12组，完整自由度继续保留
 
-![当前默认空间与已开放命名池](ntp-current-space.svg)
+默认3种初始化（random、距离priorα1、α2）×4个代表机制，固定一层d32、4heads、FF比例2、GELU。四机制为全历史、W4、W16（均无位置、恒等路径0），以及全历史＋sinusoidal＋恒等路径.25。V64、前缀32／续写32、train4096、评测同长。AdamW3e-4／wd.01／700steps是唯一默认训练计划，其他长度、容量、词表、优化器和预算轴保留为后续诊断。
 
-![下一步有限扩展提案](ntp-next-space.svg)
+机制配对必须共享确切teacher权重和输出校准。初始化对照须共享底层权重抽样，并只改声明的prior。Canonical全局index本身不保证这一干预关系，pilot materialization前需冻结实际谱系。seed重复另计。默认12组是小pilot建议，尚未派发。
 
-## 计数先固定词表、数据和训练合同
+![当前空间](ntp-current-space.svg)
 
-| 口径 | 当前默认池 | 下一步有限提案 |
+![扩大模型空间，保留teacher数据轴](ntp-next-space.svg)
+
+## 模型以8类算子、5种连接和7个混合宏块组合
+
+序列算子（mixer）为Transformer attention、GRU、RNN、对角SSM、Mamba-1、Mamba-2、Gated DeltaNet、Kimi Delta Attention（KDA）。对角SSM是固定线性递推，Mamba有输入相关选择机制。KDA的遗忘gate细化到每个key维，Gated DeltaNet是每head标量gate。
+
+Block可选Mixer→FF串联或Mixer∥FF并联，Dense或门控FF，LayerNorm或RMSNorm。Transformer并联仍区分pre／post-norm，避免保留无效轴。每个模型只选一种可配置activation；门控FF也使用该函数。GRU原生门、Mamba核心SiLU、GDN／KDA短卷积SiLU保持原定义。纯Mamba使用原生block，不追加FF。
+
+| 外层连接 | 定义 |
+|---|---|
+| 相加 | x＋F(x) |
+| 缩放分支 | x＋0.5F(x)，identity系数固定1 |
+| 可学习gate | x＋sigmoid(g)F(x)，每block一个标量g，初始0 |
+| 长skip | 保留局部残差，额外跨2个block加0.5倍旧隐藏状态；单block排除 |
+| 无残差 | F(x)，仅作为正常配置的受控消融；不关闭算子固有循环门和内部skip |
+
+混合宏块固定为Attention→Mamba1、Attention→Mamba2、Attention→GDN、Attention→KDA、Attention∥Mamba2、Attention∥KDA、KDA→KDA→KDA→Attention。宏块重复1／2／3次，内部算子默认参数冻结，不能用逐层自由选择绕过两轴限制。3:1宏块是benchmark设计，未接入完整Kimi Linear的MLA。
+
+## 文法约有1,970种架构，只有子集已有代码支持
+
+| 家族／固定宏块 | 架构模板 | 含初始化的模型setting |
 |---|---:|---:|
-| Teacher配置，含词表 |40|12,096|
-| Teacher／数据setting，不含预算 |640|979,776|
-| 题目setting＝数据×optimizer×steps |3,840|23,514,624|
-| 架构模板，每份固定数据 |20|164|
-| 含SSM初始化的模型setting |20|184|
-| 每份数据的候选训练计划 |120＝20×3×2|4,416＝184×8×3|
-| 题目setting×3实例重复 |11,520|70,543,872|
+|Transformer|238|238|
+|GRU|55|55|
+|普通RNN|67|67|
+|对角SSM|141|177|
+|Mamba-1|108|108|
+|Mamba-2|158|158|
+|Gated DeltaNet|214|214|
+|KDA|214|214|
+|attention_mamba1|111|111|
+|attention_mamba2|111|111|
+|attention_gated_deltanet|111|111|
+|attention_kda|111|111|
+|parallel_attention_mamba2|110|110|
+|parallel_attention_kda|110|110|
+|kda3_attention1|111|111|
 
-题目setting是一组比较实验的配置，不能直接视为一道通过质量核验的题。三次teacher／数据seed重复和五次训练seed各自另计。
+每个prototype以0／1／2轴邻域计数：1＋Σaᵢ＋Σᵢ＜ⱼaᵢaⱼ，再去除明确几何冲突和有效spec重合。aᵢ为该轴非起点值数。SSM初始timescale从架构数移除，全局activation、FF比例和外层连接各算一轴，FF宽度随width×ratio派生。prototype不是已晋升anchor，新算子先校验和pilot。
 
-当前四个命名池的并集为56个架构模板、58个模型setting。图中列出了已出现的取值；它们仍按各profile的显式变体列表采样，不做任意全乘。
+当前代码可生成的下一步子集为TF114、GRU9、RNN14、SSM42，共179架构；含20个SSM初始化对照为199模型。TF新增15个有来源的无残差单轴／双轴消融。完整文法包含这些基线，不能与179／199相加。
 
-## 下一步展开164种架构，初始化变化单独计数
-
-| 家族 | 架构模板 | 含初始化的模型setting |
+| 口径 | 当前默认 | 下一步建议 |
 |---|---:|---:|
-| Transformer |99|99|
-| GRU |9|9|
-| 普通RNN |14|14|
-| 对角SSM |42|62|
+| 默认teacher／数据条件 |640个索引条件|12个代表条件|
+| 默认训练计划／条件 |6种可选，700步基线|1种，AdamW3e-4／700步|
+| 已支持候选子集 |20架构／20模型|179架构／199模型|
+| 完整候选文法 |—|1,970架构／2,006模型|
+| 每固定数据的完整候选计划容量 |120|子集4776；大文法48,144（未实现）|
 
-每个模型只选一种全局activation。所有改动相对所属不可变anchor计数，最多两轴。FF宽度由模型宽度×FF比例派生。原anchor保留context128与hash，任务适配context256。
+保留的teacher／数据全轴目录，在199模型的可生成子集参数门槛下仍为12,096个teacher、979,776个数据条件、23,514,624个题目setting。这是备用容量，不作为默认采样目标。扩展文法尚未通过参数cap、teacher小于所有candidate、kernel、因果、梯度和学习检查，因此不能将大文法乘到该目录上认定合法总量。
 
-Teacher原始15,552个组合经最小候选参数门槛过滤，保留12,096个。每teacher配3前缀×3续写×3评测路由×3训练池＝81个数据条件，再配8AdamW×3steps＝24个训练计划。数据前缀保持独立均匀随机，续写保持teacher条件采样。
+## 先验证算子和连接，再在少量固定数据上取局部对照
 
-GPU时间和FLOPs不作为额外乘数。默认700steps继续保留。新长度、模型与数据量先重新校准成本，约10秒仅作为开发参考。RNN／GRU teacher、hybrid、参数共享、逐层例外和soft labels仍需实现，未纳入本次数量。
+先接入标准算子，核验生成代码、原生数值对齐、因果与有限梯度。再增加外层连接与明确的串并联宏块。每个局部组保留起点、单轴和组合cell，记录实际初始化谱系、batch流和预算，正常改动变弱仍保留。跨算子比较披露参数与计算量差异。
 
-## 先冻结分层pilot，再判断哪些自由度值得规模化
+默认700steps和约10秒开发校准继续保留。时间／FLOPs题需各选项预算对齐，不在空间计数中混乘。新隐藏测试只确认或拒绝，不换成员／答案。失败与未解决组保留在分母中。
 
-先按teacher机制、家族与变化轴覆盖anchor、单轴和完整双轴组。开发集核验熵、历史依赖、学习基线与配对分离。把最小参数、窗口匹配、位置匹配及组合规则在训练前登记。跨家族作为整体结构对照，容量变化需显式披露，不能由同steps推定公平计算量。
-
-比较组冻结后，新隐藏测试只确认或拒绝，不换候选或答案。失败、未解决比较和固定排序组保留在分母中。人类先review具体例题，CPU／GPU混用先对新增实现核验实际初值、batch流和数值结果。
-
-来源：[精确计数](ntp-space-counts.json)、[下一步spec](ntp-next-space-spec.json)、[完整proposal](ntp-proposal.html)。
+来源：[Mamba官方实现](https://github.com/state-spaces/mamba)、[Kimi Linear官方说明](https://github.com/MoonshotAI/Kimi-Linear)、[FLA KDA实现](https://github.com/fla-org/flash-linear-attention/blob/main/fla/layers/kda.py)、[Gated DeltaNet论文](https://arxiv.org/abs/2412.06464)。本地：[计数](ntp-space-counts.json)、[spec](ntp-next-space-spec.json)、[proposal](ntp-proposal.html)。

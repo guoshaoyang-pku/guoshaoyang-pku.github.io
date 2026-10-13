@@ -1,60 +1,132 @@
 flowchart LR
-  T["Teacher：冻结生成模型"] -->|生成| D["数据：合成序列"]
-  D -->|拟合| C["Candidates：从头训练"]
-  T --- TI["初始化：random / α1 / α2"]
-  T --- TS["宽 × 层：[32, 48, 64] × [1, 2]"]
-  T --- TG["heads / FF比例 / 全局激活：[2, 4] / [1, 2, 4] / ['gelu', 'silu']"]
-  T --- TV["词表：[64, 128, 256]"]
-  T --- TM["生成机制：0/.25/1 × full/4/8/16 × none/sinusoidal，共24组"]
-  D --- DP["输入长度：[16, 32, 64]"]
-  D --- DO["输出长度：[16, 32, 64]"]
-  D --- DN["训练条数：[4096, 16384, 65536]"]
-  D --- DE["评测：默认同长，特殊输入×2或输出×2"]
-  D --- DB["训练计划：8AdamW × 300/700/1400steps"]
-  subgraph transformer["Transformer99"]
+  T["Teacher：全轴保留，先采12组"] -->|生成| D["数据：默认V64，32→32，4096条"]
+  D -->|拟合| C["Candidates：扩大算子、block与连接"]
+  T --- TI["random / 距离prior α1 / α2"]
+  T --- TS["宽32/48/64，层1/2，heads2/4，FF比例1/2/4"]
+  T --- TM["残差0/.25/1，full/W4/W8/W16，位置none/sinusoidal"]
+  T --- TV["V64/128/256；默认1层d32"]
+  D --- DL["前缀16/32/64，续写16/32/64，训练池4096/16384/65536"]
+  D --- DE["默认train/eval同长；泛化题仅改评测输入或输出"]
+  D --- DB["默认AdamW3e-4、700steps；其他预算路线保留"]
+  C --- CAP["width3档 × depth1/2/3/4；相对起点最多两轴"]
+  C --- BLOCK["Mixer→FF / Mixer∥FF；Dense / gated FF"]
+  C --- ROUTE["相加 / 0.5分支 / learned gate / 跨2层skip / 无残差消融"]
+  subgraph transformer["Transformer · 238架构"]
     direction LR
-    transformer_0["activation：['gelu', 'silu']"]
-    transformer_1["attention_window：[None, 4, 8, 16]"]
-    transformer_2["d_model：[96, 128, 160]"]
-    transformer_3["ff_ratio：[1, 2, 4]"]
-    transformer_4["norm_first：[True, False]"]
-    transformer_5["num_heads：[2, 4, 8]"]
-    transformer_6["num_layers：[1, 2, 3]"]
-    transformer_7["position_mode：['sinusoidal', 'none']"]
-    transformer_0 --- transformer_1 --- transformer_2 --- transformer_3 --- transformer_4 --- transformer_5 --- transformer_6 --- transformer_7
+    transformer_0["d_model：[96, 128, 160]"]
+    transformer_1["num_layers：[1, 2, 3, 4]"]
+    transformer_2["residual_route：['add', 'scaled_half', 'learned_gate', 'long_skip2', 'none']"]
+    transformer_3["norm_type：['layernorm', 'rmsnorm']"]
+    transformer_4["activation：['gelu', 'silu']"]
+    transformer_5["ff_ratio：[1, 2, 4]"]
+    transformer_6["num_heads：[2, 4, 8]"]
+    transformer_7["norm_first：[True, False]"]
+    transformer_8["attention_window：[None, 4, 8, 16]"]
+    transformer_9["position_mode：['sinusoidal', 'none']"]
+    transformer_10["ff_kind：['dense', 'gated_global_activation']"]
+    transformer_11["block_layout：['serial', 'parallel']"]
+    transformer_0 --- transformer_1 --- transformer_2 --- transformer_3 --- transformer_4 --- transformer_5 --- transformer_6 --- transformer_7 --- transformer_8 --- transformer_9 --- transformer_10 --- transformer_11
   end
   C --- transformer_0
-  subgraph gru["GRU9"]
+  subgraph gru["GRU · 55架构"]
     direction LR
     gru_0["d_model：[96, 128, 160]"]
-    gru_1["num_layers：[1, 2, 3]"]
-    gru_0 --- gru_1
+    gru_1["num_layers：[1, 2, 3, 4]"]
+    gru_2["residual_route：['add', 'scaled_half', 'learned_gate', 'long_skip2', 'none']"]
+    gru_3["layer_norm：['none', 'pre_layernorm', 'pre_rmsnorm']"]
+    gru_0 --- gru_1 --- gru_2 --- gru_3
   end
   C --- gru_0
-  subgraph rnn["普通RNN14"]
+  subgraph rnn["普通RNN · 67架构"]
     direction LR
-    rnn_0["activation：['tanh', 'relu']"]
-    rnn_1["d_model：[128, 160, 192]"]
-    rnn_2["num_layers：[1, 2, 3]"]
-    rnn_0 --- rnn_1 --- rnn_2
+    rnn_0["d_model：[128, 160, 192]"]
+    rnn_1["num_layers：[1, 2, 3, 4]"]
+    rnn_2["residual_route：['add', 'scaled_half', 'learned_gate', 'long_skip2', 'none']"]
+    rnn_3["layer_norm：['none', 'pre_layernorm', 'pre_rmsnorm']"]
+    rnn_4["activation：['tanh', 'relu']"]
+    rnn_0 --- rnn_1 --- rnn_2 --- rnn_3 --- rnn_4
   end
   C --- rnn_0
-  subgraph ssm["对角SSM42架构/62setting"]
+  subgraph diagonal_ssm["对角SSM · 141架构"]
     direction LR
-    ssm_0["activation：['gelu', 'silu']"]
-    ssm_1["d_model：[96, 128, 160]"]
-    ssm_2["ff_ratio：[1, 2, 4]"]
-    ssm_3["initialization_timescale：['fast', 128, 'slow']"]
-    ssm_4["num_layers：[1, 2, 3]"]
-    ssm_5["state_size：[8, 16, 32]"]
-    ssm_0 --- ssm_1 --- ssm_2 --- ssm_3 --- ssm_4 --- ssm_5
+    diagonal_ssm_0["d_model：[96, 128, 160]"]
+    diagonal_ssm_1["num_layers：[1, 2, 3, 4]"]
+    diagonal_ssm_2["residual_route：['add', 'scaled_half', 'learned_gate', 'long_skip2', 'none']"]
+    diagonal_ssm_3["norm_type：['layernorm', 'rmsnorm']"]
+    diagonal_ssm_4["activation：['gelu', 'silu']"]
+    diagonal_ssm_5["ff_ratio：[1, 2, 4]"]
+    diagonal_ssm_6["state_size：[8, 16, 32]"]
+    diagonal_ssm_7["initialization_timescale：['fast', 128, 'slow']"]
+    diagonal_ssm_8["ff_kind：['dense', 'gated_global_activation']"]
+    diagonal_ssm_9["block_layout：['serial', 'parallel']"]
+    diagonal_ssm_0 --- diagonal_ssm_1 --- diagonal_ssm_2 --- diagonal_ssm_3 --- diagonal_ssm_4 --- diagonal_ssm_5 --- diagonal_ssm_6 --- diagonal_ssm_7 --- diagonal_ssm_8 --- diagonal_ssm_9
   end
-  C --- ssm_0
-  D --- N["979,776 数据条件 / 23,514,624 训练setting"]
-  C --- RULE["每模型全局激活统一；相对不可变anchor计数；不乘seed或选项排列"]
-  classDef teacher fill:#fff,stroke:#376f96,color:#141413
-  classDef data fill:#fff,stroke:#4c6a34,color:#141413
-  classDef candidate fill:#fff,stroke:#aa4e35,color:#141413
-  class T,TI,TS,TG,TV,TM teacher
-  class D,DP,DO,DN,DE,DB,N data
-  class C,RULE candidate
+  C --- diagonal_ssm_0
+  subgraph mamba1["Mamba-1 · 108架构"]
+    direction LR
+    mamba1_0["d_model：[96, 128, 160]"]
+    mamba1_1["num_layers：[1, 2, 3, 4]"]
+    mamba1_2["residual_route：['add', 'scaled_half', 'learned_gate', 'long_skip2', 'none']"]
+    mamba1_3["norm_type：['layernorm', 'rmsnorm']"]
+    mamba1_4["d_state：[8, 16, 32]"]
+    mamba1_5["d_conv：[2, 4, 8]"]
+    mamba1_6["expand：[1, 2]"]
+    mamba1_0 --- mamba1_1 --- mamba1_2 --- mamba1_3 --- mamba1_4 --- mamba1_5 --- mamba1_6
+  end
+  C --- mamba1_0
+  subgraph mamba2["Mamba-2 · 158架构"]
+    direction LR
+    mamba2_0["d_model：[96, 128, 160]"]
+    mamba2_1["num_layers：[1, 2, 3, 4]"]
+    mamba2_2["residual_route：['add', 'scaled_half', 'learned_gate', 'long_skip2', 'none']"]
+    mamba2_3["norm_type：['layernorm', 'rmsnorm']"]
+    mamba2_4["d_state：[16, 32, 64]"]
+    mamba2_5["d_conv：[2, 4, 8]"]
+    mamba2_6["expand：[1, 2]"]
+    mamba2_7["head_dim：[16, 32, 64]"]
+    mamba2_8["n_groups：[1, 2]"]
+    mamba2_0 --- mamba2_1 --- mamba2_2 --- mamba2_3 --- mamba2_4 --- mamba2_5 --- mamba2_6 --- mamba2_7 --- mamba2_8
+  end
+  C --- mamba2_0
+  subgraph gated_deltanet["Gated DeltaNet · 214架构"]
+    direction LR
+    gated_deltanet_0["d_model：[96, 128, 160]"]
+    gated_deltanet_1["num_layers：[1, 2, 3, 4]"]
+    gated_deltanet_2["residual_route：['add', 'scaled_half', 'learned_gate', 'long_skip2', 'none']"]
+    gated_deltanet_3["norm_type：['layernorm', 'rmsnorm']"]
+    gated_deltanet_4["head_dim：[16, 32, 64]"]
+    gated_deltanet_5["expand_v：[1, 2]"]
+    gated_deltanet_6["short_conv：[None, 2, 4, 8]"]
+    gated_deltanet_7["activation：['gelu', 'silu']"]
+    gated_deltanet_8["ff_ratio：[1, 2, 4]"]
+    gated_deltanet_9["ff_kind：['dense', 'gated_global_activation']"]
+    gated_deltanet_10["block_layout：['serial', 'parallel']"]
+    gated_deltanet_0 --- gated_deltanet_1 --- gated_deltanet_2 --- gated_deltanet_3 --- gated_deltanet_4 --- gated_deltanet_5 --- gated_deltanet_6 --- gated_deltanet_7 --- gated_deltanet_8 --- gated_deltanet_9 --- gated_deltanet_10
+  end
+  C --- gated_deltanet_0
+  subgraph kimi_delta_attention["Kimi Delta Attention · 214架构"]
+    direction LR
+    kimi_delta_attention_0["d_model：[96, 128, 160]"]
+    kimi_delta_attention_1["num_layers：[1, 2, 3, 4]"]
+    kimi_delta_attention_2["residual_route：['add', 'scaled_half', 'learned_gate', 'long_skip2', 'none']"]
+    kimi_delta_attention_3["norm_type：['layernorm', 'rmsnorm']"]
+    kimi_delta_attention_4["head_dim：[16, 32, 64]"]
+    kimi_delta_attention_5["expand_v：[1, 2]"]
+    kimi_delta_attention_6["short_conv：[None, 2, 4, 8]"]
+    kimi_delta_attention_7["activation：['gelu', 'silu']"]
+    kimi_delta_attention_8["ff_ratio：[1, 2, 4]"]
+    kimi_delta_attention_9["ff_kind：['dense', 'gated_global_activation']"]
+    kimi_delta_attention_10["block_layout：['serial', 'parallel']"]
+    kimi_delta_attention_0 --- kimi_delta_attention_1 --- kimi_delta_attention_2 --- kimi_delta_attention_3 --- kimi_delta_attention_4 --- kimi_delta_attention_5 --- kimi_delta_attention_6 --- kimi_delta_attention_7 --- kimi_delta_attention_8 --- kimi_delta_attention_9 --- kimi_delta_attention_10
+  end
+  C --- kimi_delta_attention_0
+  C --- HS["串联：Attention→Mamba1/Mamba2/GDN/KDA"]
+  C --- HP["并联：Attention∥Mamba2；Attention∥KDA"]
+  C --- HR["交替：KDA→KDA→KDA→Attention"]
+  HS --- HC["7个固定宏块；重复1/2/3；每宏块最多两轴"]
+  HP --- HC
+  HR --- HC
+  C --- N["1,970架构 / 2,006模型setting；文法提案"]
+  N --- IMPL["当前可生成子集179架构/199模型；新算子与新连接待实现"]
+  N --- CHECK["参数与teacher门槛、因果、梯度、kernel、学习和质量未核验"]
+  C --- ACT["每模型可配置激活统一；原生门函数保持；seed不计架构"]
