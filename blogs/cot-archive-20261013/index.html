@@ -1,0 +1,710 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>答案先变稳，解释还在漂：七个检查点的思维链全文存档</title>
+<style>
+  :root {
+    --dark: #141413;
+    --light: #faf9f5;
+    --mid: #b0aea5;
+    --soft: #e8e6dc;
+    --muted: #5e5d59;
+    --orange: #d97757;
+    --blue: #6a9bcc;
+    --green: #788c5d;
+    --head: "Poppins", "PingFang SC", "Noto Sans CJK SC", "Hiragino Sans GB", Arial, sans-serif;
+    --body: "Lora", "Noto Serif CJK SC", "Songti SC", Georgia, serif;
+    --mono: "SF Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--light); color: var(--dark); font: 17px/1.8 var(--body); }
+  main { max-width: 760px; margin: 0 auto; padding: 72px 24px 96px; }
+  h1, h2, h3 { font-family: var(--head); font-weight: 600; line-height: 1.35; letter-spacing: -0.01em; }
+  h1 { font-size: 32px; margin: 0 0 16px; }
+  h2 { font-size: 22px; margin: 64px 0 12px; }
+  p { margin: 0 0 16px; }
+  .lede { font-size: 19px; }
+  a { color: inherit; text-decoration: underline; text-decoration-color: var(--orange); text-underline-offset: 3px; }
+  code, .id { font-family: var(--mono); font-size: 0.86em; background: var(--soft); padding: 1px 5px; border-radius: 4px; }
+
+  .settings { display: flex; flex-wrap: wrap; gap: 8px 20px; list-style: none; padding: 0; margin: 24px 0 0;
+              font: 14px/1.6 var(--head); color: var(--muted); }
+  .settings li { display: inline-flex; align-items: center; gap: 6px; }
+  .settings svg { width: 15px; height: 15px; stroke: var(--dark); fill: none; stroke-width: 1.6;
+                  stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  .settings b { color: var(--dark); font-weight: 500; }
+
+  figure { margin: 28px 0; padding: 20px; background: #fff; border: 1px solid var(--soft); border-radius: 10px; }
+  figure img, figure svg.chart { display: block; width: 100%; height: auto; }
+  figcaption { margin-top: 12px; font: 14px/1.6 var(--head); color: var(--muted); }
+
+  .warn { border-left: 3px solid var(--orange); padding: 4px 0 4px 16px; margin: 24px 0; }
+  .warn strong { font-family: var(--head); }
+
+  blockquote { margin: 14px 0 4px; padding: 8px 16px; border-left: 3px solid var(--mid);
+               color: var(--muted); font: 14px/1.7 var(--body); background: #fff; }
+  .quote-src { font: 13px var(--head); color: var(--mid); margin: 0 0 16px; }
+
+  details { margin: 16px 0; }
+  summary { cursor: pointer; font: 15px var(--head); color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font: 14px/1.6 var(--head); margin: 16px 0; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--soft); }
+  th { font-weight: 500; color: var(--muted); }
+  footer { margin-top: 80px; font: 13px var(--head); color: var(--mid); }
+  .small { font: 13px/1.6 var(--head); color: var(--muted); }
+
+  /* archive browser */
+  .tabs { display: flex; gap: 4px; flex-wrap: wrap; border-bottom: 1px solid var(--soft); margin: 20px 0 8px; }
+  .tabs button { font: 14px var(--head); background: none; border: 0; padding: 8px 12px; cursor: pointer;
+                 color: var(--muted); border-bottom: 2px solid transparent; }
+  .tabs button[aria-selected="true"] { color: var(--dark); border-bottom-color: var(--orange); }
+  .controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 14px 0 4px; }
+  .controls input[type="search"], .controls select { font: 14px var(--head); padding: 6px 10px;
+                 border: 1px solid var(--mid); border-radius: 6px; background: #fff; color: var(--dark); }
+  .controls input[type="search"] { flex: 1 1 200px; }
+  .controls label { font: 14px var(--head); color: var(--muted); display: inline-flex; gap: 6px; align-items: center; }
+  #stagesum { margin: 4px 0 0; }
+  #count { margin: 10px 0 6px; }
+
+  .qrow { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; width: 100%; text-align: left;
+          background: #fff; border: 1px solid var(--soft); border-radius: 8px; padding: 9px 12px; margin: 6px 0 0;
+          cursor: pointer; font: 14px/1.5 var(--head); color: var(--dark); }
+  .qrow:hover { border-color: var(--mid); }
+  .qrow.open { border-color: var(--orange); }
+  .qid { font-family: var(--mono); font-size: 12.5px; background: var(--soft); padding: 1px 6px; border-radius: 4px; }
+  .meta { color: var(--muted); font-size: 12.5px; }
+  .chip { display: inline-block; min-width: 20px; text-align: center; padding: 0 8px; border-radius: 10px;
+          font: 12px/1.7 var(--head); }
+  .chip.ok { background: rgba(120, 140, 93, 0.16); color: #4c5a39; }
+  .chip.bad { background: var(--soft); color: var(--muted); }
+  .chip.fmt { background: #fff; border: 1px dashed var(--mid); color: var(--muted); }
+  .chip.gold { background: #fff; border: 1px solid var(--mid); color: var(--dark); }
+  .tokn { color: var(--mid); font-size: 12px; margin-left: auto; }
+
+  .qpanel { background: #fff; border: 1px solid var(--soft); border-radius: 8px; padding: 12px 14px 14px;
+            margin: 6px 0 0; }
+  .stage-head { font: 600 15px var(--head); margin: 20px 0 4px; padding-left: 10px;
+                border-left: 3px solid var(--orange); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .sample-head { font: 13px var(--head); color: var(--muted); margin: 12px 0 4px;
+                 display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  pre.cot, pre.prompt { white-space: pre-wrap; word-break: break-word; font: 12.5px/1.65 var(--mono);
+            background: var(--light); border: 1px solid var(--soft); border-radius: 8px; padding: 12px 14px;
+            margin: 0; }
+  .promptbox summary { font-size: 14px; }
+</style>
+</head>
+<body>
+<main>
+
+<h1>答案先变稳，解释还在漂：七个检查点的思维链全文存档</h1>
+<p class="lede">强化学习让这个 0.8B 模型的答案先变准、变稳（选择题正确率 36.9% 升到 49.2%，同题两次采样都答对的题从 31 道升到 55 道），但答案前的推理文字（思维链）没有同步变可靠，同一个正确答案可以配上互相矛盾的解释。4,300 条思维链原文全部收在页内，可按阶段和题目浏览。</p>
+<ul class="settings">
+  <li><svg viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="2"/><path d="M9 1v4M15 1v4M9 19v4M15 19v4M1 9h4M1 15h4M19 9h4M19 15h4"/></svg>模型 <b>Qwen3.5-0.8B</b></li>
+  <li><svg viewBox="0 0 24 24"><path d="M4 19l5-7 4 4 7-10"/></svg>算法 <b>GSPO（按整条回答概率比更新的强化学习）</b></li>
+  <li><svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/></svg>训练 <b>6,153 道预测训练结果的题</b></li>
+  <li><svg viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/></svg>评测 <b>290 道未参训预留题 × 2 次采样</b></li>
+  <li><svg viewBox="0 0 24 24"><path d="M6 3v18M18 3v18M6 12h12"/></svg>长度上限 <b>16k token</b></li>
+  <li><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><b>2026-10-13</b></li>
+</ul>
+
+<h2>排序题按规定格式答完的比例，从 46.6% 升到 100%</h2>
+<p>评测有两类题。选择题从 3 到 5 个候选训练配置里选出一个；排序题给 5 个候选按预留损失从低到高排序。每题描述一个数据集和若干候选配置（模型、优化器、损失、训练预算），要求模型不跑训练、只靠推理预测哪个配置的测试成绩最好。排序答案必须写进 <code>&lt;answer&gt;</code> 标签，字母是候选编号，用 <code>&lt;</code> 连接表示从左到右损失递增，例如 <code>&lt;answer&gt;B&lt;C&lt;D&lt;E&lt;A&lt;/answer&gt;</code>。</p>
+<p>强化学习的起点是 SFT（监督微调：先用示范答案训练过的模型）。它的选择题几乎都能按格式作答（99.6%），但排序题只有 46.6% 能解析出答案，169 条回答没有写出有效答案。从训练第 175 步的检查点（记作 g175：g 指全局训练步数）开始，两类题的格式错误都归零。格式合规是强化学习最早、最确定的变化。</p>
+
+<h2>选择题正确率 36.9% 升到 49.2%，排序题全对率 2.8% 升到 9.7%</h2>
+<p>下图是同一权重谱系的六个历史检查点（SFT 与 g175 到 g1300）在 290 道预留题上的成绩。每条回答都由冻结评分器判分，排序题五个字母顺序完全一致才记全对。g350 指训练第 350 步保存的检查点，其余记法相同。</p>
+<figure>
+  <svg class="chart" style="width:100%;height:auto" xmlns:xlink="http://www.w3.org/1999/xlink" width="447.4pt" height="222.488406pt" viewBox="0 0 447.4 222.488406" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-10-13T20:43:51.387342</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.10.9, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 222.488406 
+L 447.4 222.488406 
+L 447.4 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="axes_1">
+   <g id="patch_2">
+    <path d="M 38.44 188.189719 
+L 440.2 188.189719 
+L 440.2 10.781719 
+L 38.44 10.781719 
+z
+" style="fill: #ffffff"/>
+   </g>
+   <g id="matplotlib.axis_1">
+    <g id="xtick_1">
+     <g id="line2d_1">
+      <path d="M 56.701818 188.189719 
+L 56.701818 10.781719 
+" clip-path="url(#p0108d016bf)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_2">
+      <defs>
+       <path id="m93f91bf668" d="M 0 0 
+L 0 3.5 
+" style="stroke: #5e5d59; stroke-width: 0.8"/>
+      </defs>
+      <g>
+       <use xlink:href="#m93f91bf668" x="56.701818" y="188.189719" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_1">
+      <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; fill: #5e5d59" transform="translate(48.840178 202.353156)">SFT</text>
+      <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; fill: #5e5d59" transform="translate(26.660099 213.226844)">(强化学习起点)</text>
+     </g>
+    </g>
+    <g id="xtick_2">
+     <g id="line2d_3">
+      <path d="M 129.749091 188.189719 
+L 129.749091 10.781719 
+" clip-path="url(#p0108d016bf)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_4">
+      <g>
+       <use xlink:href="#m93f91bf668" x="129.749091" y="188.189719" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_2">
+      <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" x="129.749091" y="202.164719" transform="rotate(-0 129.749091 202.164719)">g175</text>
+     </g>
+    </g>
+    <g id="xtick_3">
+     <g id="line2d_5">
+      <path d="M 202.796364 188.189719 
+L 202.796364 10.781719 
+" clip-path="url(#p0108d016bf)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_6">
+      <g>
+       <use xlink:href="#m93f91bf668" x="202.796364" y="188.189719" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_3">
+      <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" x="202.796364" y="202.164719" transform="rotate(-0 202.796364 202.164719)">g350</text>
+     </g>
+    </g>
+    <g id="xtick_4">
+     <g id="line2d_7">
+      <path d="M 275.843636 188.189719 
+L 275.843636 10.781719 
+" clip-path="url(#p0108d016bf)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_8">
+      <g>
+       <use xlink:href="#m93f91bf668" x="275.843636" y="188.189719" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_4">
+      <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" x="275.843636" y="202.164719" transform="rotate(-0 275.843636 202.164719)">g775</text>
+     </g>
+    </g>
+    <g id="xtick_5">
+     <g id="line2d_9">
+      <path d="M 348.890909 188.189719 
+L 348.890909 10.781719 
+" clip-path="url(#p0108d016bf)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_10">
+      <g>
+       <use xlink:href="#m93f91bf668" x="348.890909" y="188.189719" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_5">
+      <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" x="348.890909" y="202.164719" transform="rotate(-0 348.890909 202.164719)">g1225</text>
+     </g>
+    </g>
+    <g id="xtick_6">
+     <g id="line2d_11">
+      <path d="M 421.938182 188.189719 
+L 421.938182 10.781719 
+" clip-path="url(#p0108d016bf)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_12">
+      <g>
+       <use xlink:href="#m93f91bf668" x="421.938182" y="188.189719" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_6">
+      <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" x="421.938182" y="202.164719" transform="rotate(-0 421.938182 202.164719)">g1300</text>
+     </g>
+    </g>
+   </g>
+   <g id="matplotlib.axis_2">
+    <g id="ytick_1">
+     <g id="line2d_13">
+      <path d="M 38.44 188.189719 
+L 440.2 188.189719 
+" clip-path="url(#p0108d016bf)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_14">
+      <defs>
+       <path id="me2be4e6ee5" d="M 0 0 
+L -3.5 0 
+" style="stroke: #5e5d59; stroke-width: 0.8"/>
+      </defs>
+      <g>
+       <use xlink:href="#me2be4e6ee5" x="38.44" y="188.189719" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_7">
+      <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="31.44" y="191.771437" transform="rotate(-0 31.44 191.771437)">0</text>
+     </g>
+    </g>
+    <g id="ytick_2">
+     <g id="line2d_15">
+      <path d="M 38.44 158.621719 
+L 440.2 158.621719 
+" clip-path="url(#p0108d016bf)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_16">
+      <g>
+       <use xlink:href="#me2be4e6ee5" x="38.44" y="158.621719" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_8">
+      <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="31.44" y="162.203438" transform="rotate(-0 31.44 162.203438)">10</text>
+     </g>
+    </g>
+    <g id="ytick_3">
+     <g id="line2d_17">
+      <path d="M 38.44 129.053719 
+L 440.2 129.053719 
+" clip-path="url(#p0108d016bf)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_18">
+      <g>
+       <use xlink:href="#me2be4e6ee5" x="38.44" y="129.053719" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_9">
+      <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="31.44" y="132.635437" transform="rotate(-0 31.44 132.635437)">20</text>
+     </g>
+    </g>
+    <g id="ytick_4">
+     <g id="line2d_19">
+      <path d="M 38.44 99.485719 
+L 440.2 99.485719 
+" clip-path="url(#p0108d016bf)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_20">
+      <g>
+       <use xlink:href="#me2be4e6ee5" x="38.44" y="99.485719" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_10">
+      <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="31.44" y="103.067437" transform="rotate(-0 31.44 103.067437)">30</text>
+     </g>
+    </g>
+    <g id="ytick_5">
+     <g id="line2d_21">
+      <path d="M 38.44 69.917719 
+L 440.2 69.917719 
+" clip-path="url(#p0108d016bf)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_22">
+      <g>
+       <use xlink:href="#me2be4e6ee5" x="38.44" y="69.917719" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_11">
+      <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="31.44" y="73.499437" transform="rotate(-0 31.44 73.499437)">40</text>
+     </g>
+    </g>
+    <g id="ytick_6">
+     <g id="line2d_23">
+      <path d="M 38.44 40.349719 
+L 440.2 40.349719 
+" clip-path="url(#p0108d016bf)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_24">
+      <g>
+       <use xlink:href="#me2be4e6ee5" x="38.44" y="40.349719" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_12">
+      <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="31.44" y="43.931437" transform="rotate(-0 31.44 43.931437)">50</text>
+     </g>
+    </g>
+    <g id="ytick_7">
+     <g id="line2d_25">
+      <path d="M 38.44 10.781719 
+L 440.2 10.781719 
+" clip-path="url(#p0108d016bf)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_26">
+      <g>
+       <use xlink:href="#me2be4e6ee5" x="38.44" y="10.781719" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_13">
+      <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="31.44" y="14.363437" transform="rotate(-0 31.44 14.363437)">60</text>
+     </g>
+    </g>
+    <g id="text_14">
+     <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #141413" x="15.159375" y="99.485719" transform="rotate(-90 15.159375 99.485719)">答对率（%）</text>
+    </g>
+   </g>
+   <g id="line2d_27">
+    <path d="M 56.701818 79.015565 
+L 129.749091 60.819873 
+L 202.796364 56.27095 
+L 275.843636 43.761411 
+L 348.890909 49.447565 
+L 421.938182 42.62418 
+" clip-path="url(#p0108d016bf)" style="fill: none; stroke: #d97757; stroke-width: 1.8; stroke-linecap: square"/>
+    <defs>
+     <path id="m454cb6591f" d="M 0 2 
+C 0.530406 2 1.03916 1.789267 1.414214 1.414214 
+C 1.789267 1.03916 2 0.530406 2 0 
+C 2 -0.530406 1.789267 -1.03916 1.414214 -1.414214 
+C 1.03916 -1.789267 0.530406 -2 0 -2 
+C -0.530406 -2 -1.03916 -1.789267 -1.414214 -1.414214 
+C -1.789267 -1.03916 -2 -0.530406 -2 0 
+C -2 0.530406 -1.789267 1.03916 -1.414214 1.414214 
+C -1.03916 1.789267 -0.530406 2 0 2 
+z
+" style="stroke: #d97757"/>
+    </defs>
+    <g clip-path="url(#p0108d016bf)">
+     <use xlink:href="#m454cb6591f" x="56.701818" y="79.015565" style="fill: #d97757; stroke: #d97757"/>
+     <use xlink:href="#m454cb6591f" x="129.749091" y="60.819873" style="fill: #d97757; stroke: #d97757"/>
+     <use xlink:href="#m454cb6591f" x="202.796364" y="56.27095" style="fill: #d97757; stroke: #d97757"/>
+     <use xlink:href="#m454cb6591f" x="275.843636" y="43.761411" style="fill: #d97757; stroke: #d97757"/>
+     <use xlink:href="#m454cb6591f" x="348.890909" y="49.447565" style="fill: #d97757; stroke: #d97757"/>
+     <use xlink:href="#m454cb6591f" x="421.938182" y="42.62418" style="fill: #d97757; stroke: #d97757"/>
+    </g>
+   </g>
+   <g id="line2d_28">
+    <path d="M 56.701818 179.873719 
+L 129.749091 171.557719 
+L 202.796364 167.861719 
+L 275.843636 161.393719 
+L 348.890909 162.317719 
+L 421.938182 159.545719 
+" clip-path="url(#p0108d016bf)" style="fill: none; stroke: #6a9bcc; stroke-width: 1.8; stroke-linecap: square"/>
+    <defs>
+     <path id="mdfc044e542" d="M -2 2 
+L 2 2 
+L 2 -2 
+L -2 -2 
+z
+" style="stroke: #6a9bcc; stroke-linejoin: miter"/>
+    </defs>
+    <g clip-path="url(#p0108d016bf)">
+     <use xlink:href="#mdfc044e542" x="56.701818" y="179.873719" style="fill: #6a9bcc; stroke: #6a9bcc; stroke-linejoin: miter"/>
+     <use xlink:href="#mdfc044e542" x="129.749091" y="171.557719" style="fill: #6a9bcc; stroke: #6a9bcc; stroke-linejoin: miter"/>
+     <use xlink:href="#mdfc044e542" x="202.796364" y="167.861719" style="fill: #6a9bcc; stroke: #6a9bcc; stroke-linejoin: miter"/>
+     <use xlink:href="#mdfc044e542" x="275.843636" y="161.393719" style="fill: #6a9bcc; stroke: #6a9bcc; stroke-linejoin: miter"/>
+     <use xlink:href="#mdfc044e542" x="348.890909" y="162.317719" style="fill: #6a9bcc; stroke: #6a9bcc; stroke-linejoin: miter"/>
+     <use xlink:href="#mdfc044e542" x="421.938182" y="159.545719" style="fill: #6a9bcc; stroke: #6a9bcc; stroke-linejoin: miter"/>
+    </g>
+   </g>
+   <g id="patch_3">
+    <path d="M 38.44 188.189719 
+L 38.44 10.781719 
+" style="fill: none; stroke: #b0aea5; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="patch_4">
+    <path d="M 38.44 188.189719 
+L 440.2 188.189719 
+" style="fill: none; stroke: #b0aea5; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="legend_1">
+    <g id="line2d_29">
+     <path d="M 46.54 22.895156 
+L 55.54 22.895156 
+L 64.54 22.895156 
+" style="fill: none; stroke: #d97757; stroke-width: 1.8; stroke-linecap: square"/>
+     <g>
+      <use xlink:href="#m454cb6591f" x="55.54" y="22.895156" style="fill: #d97757; stroke: #d97757"/>
+     </g>
+    </g>
+    <g id="text_15">
+     <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" x="71.74" y="26.045156" transform="rotate(-0 71.74 26.045156)">选择题答对率</text>
+    </g>
+    <g id="line2d_30">
+     <path d="M 46.54 36.620156 
+L 55.54 36.620156 
+L 64.54 36.620156 
+" style="fill: none; stroke: #6a9bcc; stroke-width: 1.8; stroke-linecap: square"/>
+     <g>
+      <use xlink:href="#mdfc044e542" x="55.54" y="36.620156" style="fill: #6a9bcc; stroke: #6a9bcc; stroke-linejoin: miter"/>
+     </g>
+    </g>
+    <g id="text_16">
+     <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" x="71.74" y="39.770156" transform="rotate(-0 71.74 39.770156)">排序题全对率</text>
+    </g>
+   </g>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="p0108d016bf">
+   <rect x="38.44" y="10.781719" width="401.76" height="177.408"/>
+  </clipPath>
+ </defs>
+</svg>
+
+  <figcaption>每题两次采样，每个检查点共 580 条回答。g1400 是续训后的另一批采样，未画入。</figcaption>
+</figure>
+<p>按题型家族看，XOR（异或：两个特征符号相反才属于正类）分类题改善最大，选择题正确率从 44% 升到 81%。bigram（相邻两个词的组合）语言模型题几乎没变，37% 对 39%。</p>
+<details>
+  <summary>逐阶段与逐家族数字</summary>
+  <table>
+    <tr><th>检查点</th><th>选择题答对</th><th>排序题全对</th><th>回答长度中位数（token）</th><th>格式失败条数</th></tr>
+    <tr><td>SFT（强化学习起点）</td><td>36.9%</td><td>2.8%</td><td>1802</td><td>172</td></tr><tr><td>g175</td><td>43.1%</td><td>5.6%</td><td>2080</td><td>2</td></tr><tr><td>g350</td><td>44.6%</td><td>6.9%</td><td>2072</td><td>0</td></tr><tr><td>g775</td><td>48.8%</td><td>9.1%</td><td>1975</td><td>0</td></tr><tr><td>g1225</td><td>46.9%</td><td>8.8%</td><td>2031</td><td>1</td></tr><tr><td>g1300</td><td>49.2%</td><td>9.7%</td><td>1992</td><td>0</td></tr>
+  </table>
+  <table>
+    <tr><th>题型家族（选择题）</th><th>回答数</th><th>SFT 答对</th><th>g1300 答对</th></tr>
+    <tr><td>多元回归</td><td>56</td><td>39.3%</td><td>55.4%</td></tr><tr><td>合成表格分类</td><td>58</td><td>37.9%</td><td>51.7%</td></tr><tr><td>XOR 交互分类</td><td>16</td><td>43.8%</td><td>81.2%</td></tr><tr><td>一元回归</td><td>44</td><td>27.3%</td><td>38.6%</td></tr><tr><td>螺旋分类</td><td>40</td><td>40.0%</td><td>47.5%</td></tr><tr><td>bigram 语言模型</td><td>46</td><td>37.0%</td><td>39.1%</td></tr>
+  </table>
+</details>
+
+<h2>判断依据在重排：更深、归一化更多的候选被更常选中</h2>
+<p>45 道多层感知机（MLP：全连接神经网络）架构选择题里，按题面真实配置统计模型选中了哪个极端候选。选中"最深候选"的比例 32% → 63%，"最宽候选" 57% → 27%，"LayerNorm（层归一化，一种稳定训练的组件）最多候选" 45% → 74%。残差连接（把层的输入加到输出上，帮助梯度回传）的偏好基本不变，64% → 66%。并列最大都算命中，没有该属性差异的题从分母剔除。</p>
+<p>思维链文字同步变化。一道 XOR 题 <code>q_79d14d</code>（题号：下文题目都用这种等宽标签）的 SFT 回答反复比较激活函数与宽度，两次都选了浅而宽的候选（错）。g1300 的两次回答都以特征交互和残差支持的深度为主线，两次都选对。在下方存档里搜索 <code>q_79d14d</code> 可以逐字对照六个阶段。</p>
+<p>这批题里深度与归一化共变，题目标注的正确答案本身偏好这类配置。这是描述性的偏好统计，不是已验证的因果规律。</p>
+
+<h2>同一个正确答案，可以配上互相矛盾的解释</h2>
+<p>130 道选择题里，两次采样都答对的题从 31 道升到 55 道，但至少一次答对只从 65 道升到 73 道。多数增益是"本来就会、后来变稳"，不是新学会的知识。同题两次采样的答案一致率从 61% 升到 81%。</p>
+<p>解释没有同步变可靠。在 g350 检查点，题目 <code>q_b556bd</code>（题号）的两条回答都正确选了 C，但对 C 的事实描述互斥。一条说 C 层数最少、更浅，另一条说 C 最深、最窄，前者还把宽 96 写成比 64 更小。答案正确和解释可靠是两回事，必须分开检查。</p>
+<blockquote>"**Depth**: Choice C has the fewest layers (2 hidden blocks), which can help with simpler optimization and faster convergence."</blockquote>
+<blockquote>"**Choice C has the most depth (2 hidden layers)** with width 96."</blockquote>
+<p class="quote-src">q_b556bd 在 g350 的两条回答，均选 C 且正确。C 实际最浅。下方存档可查全文。</p>
+<p>另一面，22 道选择题在六个检查点全部 12 次采样里始终选同一个错误答案。一道 bigram 排序题 <code>q_df1cf7</code>（题号）的回答从约 1,900 token 涨到最多 6,852 token 再回落，"reconsider"（重新考虑）出现得更频繁，排序却始终没有全对过。文字变长不等于变好。</p>
+
+<h2>续训后的新采样里，一对条件反转题整体调头</h2>
+<p>g1400（权重谱系第 1,400 步、继续训练后的独立新采样）换了训练池、优化器和采样批次，不能和前六个检查点当作"训练更久"直接对比。两道螺旋分类题只差螺旋圈数：一圈的 <code>q_3afce5</code> 金标（题目标注的正确选项）是 B，三圈的 <code>q_e6673e</code> 金标是 A。g1300 四次回答全对，g1400 四次全错，答案正好互换，文字强调的判据也随之互换。</p>
+<table>
+  <tr><th>题目</th><th>金标</th><th>g1300 两次回答</th><th>g1400 两次回答</th></tr>
+  <tr><td><code>q_3afce5</code>（一圈螺旋）</td><td>B</td><td>B/B，全对</td><td>A/A，全错</td></tr>
+  <tr><td><code>q_e6673e</code>（三圈螺旋）</td><td>A</td><td>A/A，全对</td><td>B/B，全错</td></tr>
+</table>
+<p>两个阶段都能随圈数改变答案，条件响应还在，但响应方向没有钉在正确一侧。四条回答不足以断言"遗忘"，需要固定随机种子、系统改变圈数和预算的对照实验来区分。</p>
+<p>g1400 在 290 道旧预留题上选择题 48.5%、排序题 8.8%，与 g1300 接近。它还覆盖 120 道来自另一题池的新排序题，全对率 20.0%，中位长度 2528 token。题池不同，这不是迁移能力的证据。</p>
+
+<div class="warn"><strong>注意：</strong>预留题在多轮评测里重复使用，页内全部数字都是描述性的，不是确认性结论。每题只有两次采样，不能当置信度。训练各段之间更换过优化器、约束策略偏移的冻结参考模型和裁判配置，变化不能只归因于训练时长。思维链是可见文本，不是模型内部计算的直接测量。</div>
+
+<h2 id="archive">4,300 条思维链全文，逐字节保留</h2>
+<p>六个历史检查点各含 290 题 × 2 次采样，g1400 含 410 题 × 2 次采样（旧 290 题加 120 道新排序题）。展开任一题目即可阅读完整原文。绿色为答对，灰色为答错，虚线框为格式未解析或截断。</p>
+<div id="loaderr" class="warn" hidden><strong>注意：</strong>原文数据需通过 HTTP 加载。请打开线上地址，或在本目录启动本地静态服务器后重试。</div>
+<div class="tabs" id="stagetabs" role="tablist"></div>
+<p id="stagesum" class="small"></p>
+<div class="controls">
+  <input id="qfilter" type="search" placeholder="搜索题号 / 家族 / 来源">
+  <select id="corrf">
+    <option value="all">全部结果</option>
+    <option value="both">两次都对</option>
+    <option value="none">两次都错</option>
+    <option value="mixed">一对一错</option>
+    <option value="fmt">格式失败</option>
+  </select>
+  <select id="famf"><option value="all">全部家族</option></select>
+  <label><input type="checkbox" id="cmp"> 跨阶段对比</label>
+</div>
+<p id="count" class="small"></p>
+<div id="qlist"></div>
+
+<footer>来源：六个检查点的冻结采样与 g1400 新采样的原始 jsonl，原文未改动 · 2026-10-13 · 训练与评测设置见 <a href="../poor-rl-infra-2026-10-06.html">poor-rl 主线报告</a></footer>
+</main>
+
+<script>
+const STAGES = ["SFT", "g175", "g350", "g775", "g1225", "g1300", "g1400"];
+const STAGE_LABEL = { SFT: "SFT（强化学习起点）", g175: "g175", g350: "g350", g775: "g775",
+  g1225: "g1225", g1300: "g1300", g1400: "g1400（续训新采样）" };
+const SUMMARY = {"SFT": {"n_q": 290, "n_resp": 580, "sel_exact": 0.3692, "rank_exact": 0.0281, "rank_parsed": 0.4656, "sel_parsed": 0.9962, "unparsed": 169, "trunc": 3, "tok_mean": 2030.5052, "tok_med": 1802.5}, "g175": {"n_q": 290, "n_resp": 580, "sel_exact": 0.4308, "rank_exact": 0.0563, "rank_parsed": 0.9938, "sel_parsed": 1.0, "unparsed": 2, "trunc": 0, "tok_mean": 2322.8138, "tok_med": 2079.5}, "g350": {"n_q": 290, "n_resp": 580, "sel_exact": 0.4462, "rank_exact": 0.0688, "rank_parsed": 1.0, "sel_parsed": 1.0, "unparsed": 0, "trunc": 0, "tok_mean": 2366.0603, "tok_med": 2071.5}, "g775": {"n_q": 290, "n_resp": 580, "sel_exact": 0.4885, "rank_exact": 0.0906, "rank_parsed": 1.0, "sel_parsed": 1.0, "unparsed": 0, "trunc": 0, "tok_mean": 2206.9293, "tok_med": 1975.0}, "g1225": {"n_q": 290, "n_resp": 580, "sel_exact": 0.4692, "rank_exact": 0.0875, "rank_parsed": 1.0, "sel_parsed": 0.9962, "unparsed": 0, "trunc": 1, "tok_mean": 2300.2224, "tok_med": 2031.0}, "g1300": {"n_q": 290, "n_resp": 580, "sel_exact": 0.4923, "rank_exact": 0.0969, "rank_parsed": 1.0, "sel_parsed": 1.0, "unparsed": 0, "trunc": 0, "tok_mean": 2189.2897, "tok_med": 1991.5}, "g1400": {"n_q": 410, "n_resp": 820, "sel_exact": 0.4846, "rank_exact": 0.0875, "rank_exact_new120": 0.2, "tok_med_old": 1929.0, "tok_med_new": 2528.0, "trunc": 0}};
+const FAMDICT = { xor_classification: "XOR 交互分类", multivariate_regression: "多元回归",
+  synthetic_tabular_classification: "合成表格分类", univariate_regression: "一元回归",
+  spiral_classification: "螺旋分类", bigram_lm: "bigram 语言模型" };
+const TASKDICT = { select: "选择", ranking: "排序" };
+let META = null, ANS = null, PROMPTS = null;
+const TEXTS = {};
+const state = { stage: "g1300", q: "", corr: "all", fam: "all", compare: false };
+const expanded = new Set();
+const $ = (id) => document.getElementById(id);
+function el(tag, text, cls) { const e = document.createElement(tag); if (text !== undefined) e.textContent = text; if (cls) e.className = cls; return e; }
+async function jf(p) { const r = await fetch(p); if (!r.ok) throw new Error(p + " HTTP " + r.status); return r.json(); }
+async function ensureText(st) { if (!TEXTS[st]) TEXTS[st] = await jf("data/text_" + st + ".json"); return TEXTS[st]; }
+async function ensurePrompts() { if (!PROMPTS) PROMPTS = await jf("data/prompts.json"); return PROMPTS; }
+function allQids() { return META.order.six.concat(META.order.new); }
+function qidsOf(st) { const a = ANS[st]; return allQids().filter((q) => a[q]); }
+function corrClass(qid, st) {
+  const pair = ANS[st][qid];
+  if (pair.some((x) => x[1] === "unparsed" || x[1] === "trunc")) return "fmt";
+  const n = pair.filter((x) => x[1] === "exact").length;
+  return n === 2 ? "both" : n === 1 ? "mixed" : "none";
+}
+function chipEl(pred, status) {
+  let cls = "chip bad", label = pred || "—";
+  if (status === "exact") cls = "chip ok";
+  else if (status === "unparsed" || status === "trunc") { cls = "chip fmt"; label = status === "trunc" ? "截断" : "未解析"; }
+  return el("span", label, cls);
+}
+function statusZh(x) {
+  if (x[1] === "exact") return "答对";
+  if (x[1] === "wrong") return "答错";
+  if (x[1] === "trunc") return "超长截断";
+  return "格式未解析";
+}
+function matchFilters(qid, st) {
+  const m = META.by_qid[qid];
+  if (state.fam !== "all" && m.family !== state.fam) return false;
+  if (state.corr !== "all" && corrClass(qid, st) !== state.corr) return false;
+  if (state.q) {
+    const s = state.q.toLowerCase();
+    if (!(qid.toLowerCase().includes(s) || m.family.toLowerCase().includes(s) || m.source.toLowerCase().includes(s))) return false;
+  }
+  return true;
+}
+function renderList() {
+  const list = $("qlist"); list.replaceChildren(); expanded.clear();
+  const qids = qidsOf(state.stage).filter((q) => matchFilters(q, state.stage));
+  $("count").textContent = "当前列出 " + qids.length + " / " + qidsOf(state.stage).length + " 题";
+  const frag = document.createDocumentFragment();
+  for (const qid of qids) {
+    const m = META.by_qid[qid], pair = ANS[state.stage][qid];
+    const row = el("button", undefined, "qrow"); row.type = "button"; row.dataset.qid = qid;
+    row.append(el("span", qid, "qid"));
+    row.append(el("span", (FAMDICT[m.family] || m.family) + " · " + (TASKDICT[m.task] || m.task), "meta"));
+    const gold = el("span", undefined); gold.append(el("span", "金标 ", "meta"), el("span", m.gold, "chip gold"));
+    gold.style.display = "inline-flex"; gold.style.gap = "4px"; gold.style.alignItems = "center";
+    row.append(gold);
+    for (const x of pair) row.append(chipEl(x[0], x[1]));
+    row.append(el("span", pair.map((x) => x[2].toLocaleString()).join(" / ") + " tok", "tokn"));
+    const panel = el("div", undefined, "qpanel"); panel.hidden = true;
+    row.onclick = () => toggle(qid);
+    frag.append(row, panel);
+  }
+  list.append(frag);
+}
+function renderStageSum() {
+  const s = SUMMARY[state.stage];
+  let t;
+  if (state.stage === "g1400") {
+    t = STAGE_LABEL.g1400 + " · 410 题 × 2 次采样 = 820 条 · 旧 290 题：选择题答对 " + (100 * s.sel_exact).toFixed(1) +
+      "%，排序题全对 " + (100 * s.rank_exact).toFixed(1) + "% · 新 120 道排序题全对 " +
+      (100 * s.rank_exact_new120).toFixed(1) + "%";
+  } else {
+    t = STAGE_LABEL[state.stage] + " · 290 题 × 2 次采样 = 580 条 · 选择题答对 " + (100 * s.sel_exact).toFixed(1) +
+      "% · 排序题全对 " + (100 * s.rank_exact).toFixed(1) + "% · 回答长度中位数 " + s.tok_med.toLocaleString() + " token";
+  }
+  $("stagesum").textContent = t;
+}
+function renderTabs() {
+  const tabs = $("stagetabs"); tabs.replaceChildren();
+  for (const st of STAGES) {
+    const b = el("button", STAGE_LABEL[st]); b.type = "button"; b.role = "tab";
+    b.setAttribute("aria-selected", st === state.stage ? "true" : "false");
+    b.onclick = () => { state.stage = st; renderTabs(); renderStageSum(); renderList(); };
+    tabs.append(b);
+  }
+}
+function sampleHead(st, qid, i) {
+  const x = ANS[st][qid][i];
+  const head = el("div", undefined, "sample-head");
+  head.append(el("span", "采样 " + (i + 1), "meta"));
+  head.append(chipEl(x[0], x[1]));
+  head.append(el("span", statusZh(x) + " · " + x[2].toLocaleString() + " token · " + (x[3] === "stop" ? "正常结束" : "结束原因 " + x[3]), "meta"));
+  return head;
+}
+async function fillPanel(qid, panel) {
+  panel.replaceChildren(el("p", "正在加载原文…", "small"));
+  try {
+    const stages = state.compare ? STAGES.filter((st) => ANS[st] && ANS[st][qid]) : [state.stage];
+    const nodes = [];
+    const P = await ensurePrompts();
+    const pd = el("details", undefined, "promptbox");
+    pd.append(el("summary", "题面（模型看到的完整题目）"));
+    pd.append(el("pre", P[qid], "prompt"));
+    nodes.push(pd);
+    for (const st of stages) {
+      if (state.compare) {
+        const h = el("div", undefined, "stage-head");
+        h.append(el("span", STAGE_LABEL[st]));
+        for (const x of ANS[st][qid]) h.append(chipEl(x[0], x[1]));
+        nodes.push(h);
+      }
+      const T = await ensureText(st);
+      for (let i = 0; i < 2; i++) {
+        nodes.push(sampleHead(st, qid, i));
+        nodes.push(el("pre", T[qid][i][0], "cot"));
+      }
+    }
+    panel.replaceChildren(...nodes);
+    panel.dataset.filled = state.compare ? "cmp" : "one";
+  } catch (e) {
+    panel.replaceChildren(el("p", "加载失败：" + e.message, "small"));
+  }
+}
+async function toggle(qid) {
+  const rows = $("qlist").querySelectorAll(".qrow");
+  let row = null;
+  for (const r of rows) if (r.dataset.qid === qid) { row = r; break; }
+  if (!row) return;
+  const panel = row.nextElementSibling;
+  if (expanded.has(qid)) {
+    expanded.delete(qid); panel.hidden = true; row.classList.remove("open");
+    return;
+  }
+  expanded.add(qid); panel.hidden = false; row.classList.add("open");
+  if (!panel.dataset.filled) await fillPanel(qid, panel);
+}
+async function refillExpanded() {
+  for (const qid of Array.from(expanded)) {
+    const rows = $("qlist").querySelectorAll(".qrow");
+    for (const r of rows) if (r.dataset.qid === qid) { await fillPanel(qid, r.nextElementSibling); break; }
+  }
+}
+async function init() {
+  try {
+    META = await jf("data/meta.json");
+    ANS = await jf("data/answers.json");
+  } catch (e) {
+    $("loaderr").hidden = false;
+    return;
+  }
+  const fams = Array.from(new Set(allQids().map((q) => META.by_qid[q].family))).sort();
+  for (const f of fams) {
+    const o = document.createElement("option"); o.value = f; o.textContent = FAMDICT[f] || f;
+    $("famf").append(o);
+  }
+  renderTabs(); renderStageSum(); renderList();
+  $("qfilter").oninput = (e) => { state.q = e.target.value.trim(); renderList(); };
+  $("corrf").onchange = (e) => { state.corr = e.target.value; renderList(); };
+  $("famf").onchange = (e) => { state.fam = e.target.value; renderList(); };
+  $("cmp").onchange = (e) => { state.compare = e.target.checked; refillExpanded(); };
+  const u = new URLSearchParams(location.search);
+  if (u.get("stage") && STAGES.includes(u.get("stage"))) {
+    state.stage = u.get("stage"); renderTabs(); renderStageSum(); renderList();
+  }
+  const qid = u.get("qid");
+  if (qid && META.by_qid[qid] && ANS[state.stage][qid]) {
+    await toggle(qid);
+    const rows = $("qlist").querySelectorAll(".qrow");
+    for (const r of rows) if (r.dataset.qid === qid) { r.scrollIntoView({ block: "start" }); break; }
+  }
+}
+init();
+</script>
+</body>
+</html>
