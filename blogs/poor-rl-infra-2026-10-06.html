@@ -1172,7 +1172,7 @@ L 504.019687 206.35
   }));
   async function connect() {
     try {
-      const response = await fetch('poor-rl-live-panel.json', {cache: 'no-store', signal: AbortSignal.timeout(10000)});
+      const response = await fetch('poor-rl-live-panel.json?t=' + Date.now(), {cache: 'no-store', signal: AbortSignal.timeout(10000)});
       if (!response.ok) throw new Error('endpoint unavailable');
       const endpoint = await response.json();
       if (!/^https:\/\/[a-z-]+\.trycloudflare\.com$/.test(endpoint.url)) throw new Error('invalid endpoint');
