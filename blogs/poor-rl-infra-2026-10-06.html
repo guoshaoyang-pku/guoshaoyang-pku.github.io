@@ -90,6 +90,13 @@
   .collaboration th:first-child { width: 23%; }
   .collaboration td { vertical-align: top; overflow-wrap: anywhere; }
   .collaboration code { background: none; padding: 0; }
+  .live-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin: 18px 0 12px; font: 14px/1.7 var(--head); }
+  .live-controls button { padding: 7px 12px; background: transparent; color: var(--dark); border: 1px solid var(--mid); border-radius: 4px; font: inherit; cursor: pointer; }
+  .live-controls button[aria-pressed="true"] { border-color: var(--orange); background: #fff; }
+  .live-controls button:focus-visible { outline: 2px solid var(--dark); outline-offset: 3px; }
+  .live-status { font: 14px/1.7 var(--head); color: var(--muted); }
+  .live-frame { display: block; width: 100%; height: 820px; border: 1px solid var(--soft); background: #fff; }
+  .live-frame[hidden] { display: none; }
   @media (max-width: 600px) { main { padding: 40px 20px 64px; } h1 { font-size: 27px; }
      h2 { font-size: 21px; margin-top: 44px; } body { font-size: 16px; } figure { padding: 4px; }
      .settings { gap: 6px 14px; }
@@ -627,6 +634,21 @@ L 502.300826 185.541719
 </defs>
 </svg></figure>
 <p>这里的更新信号来自答案奖励和回答格式，实验没有提供逐 token 的正确思维链标签。另一条蒸馏后训练线出现过<a href="aiq-rl-sft178-2026-10-06.html">成绩上涨、解释却失去题目依据</a>的现象。答对和解释可靠性必须分别检查。</p>
+<h2 id="dataset-release">6k 主线题集已发布为 AIQ-RL v1.0</h2>
+<p>完整公开 6,153 道训练题和 290 道留出题，包含原始题目、答案、训练实际使用的转换版本、转换脚本和来源清单。版本独立于正式 benchmark v1.5。两边仓库提供同一个题包：<a href="https://github.com/guoshaoyang-pku/poor-rl/releases/tag/aiq-rl-v1.0">poor-rl 下载</a> · <a href="https://github.com/renrua52/ArchitectureIQ/releases/tag/aiq-rl-v1.0">ArchitectureIQ 官方下载</a>。</p>
+<p>这次发布覆盖本页的 6k 主线。其他历史 RL/SFT 数据、教师回答、模型权重和训练日志不包含在题包中。留出题已用于多轮比较；历史来源的质量门槛和待复审项保留在数据说明中。</p>
+<h2 id="live-panel">训练曲线与回答可以直接在页面内查看</h2>
+<p>面板通过我的本地电脑转发；电脑关机、睡眠或断网时会断开。曲线与回答来自定期同步到本机的副本，面板中的历史运行标签不代表远端任务当前仍在训练。</p>
+<div class="live-controls" aria-label="选择实验面板">
+<button type="button" data-panel="/g32/experiment/17" aria-pressed="true">6k 主线</button>
+<button type="button" data-panel="/aiq/" aria-pressed="false">AIQ 实验</button>
+<button type="button" data-panel="/sft/" aria-pressed="false">监督微调</button>
+<a id="live-open" hidden target="_blank" rel="noopener">打开完整面板</a>
+<a id="live-samples" hidden target="_blank" rel="noopener">模型回答</a>
+</div>
+<p id="live-status" class="live-status" role="status">正在连接本机转发…</p>
+<iframe id="live-frame" class="live-frame" title="AIQ 强化学习训练曲线" hidden></iframe>
+<noscript><p>启用 JavaScript 后可以加载内嵌面板。</p></noscript>
 <h2 id="collaboration">同学可以从数值对齐、性能测量和回答分析开始开发</h2>
 <p>当前开发入口是<a href="https://github.com/guoshaoyang-pku/poor-rl">poor-rl 仓库</a>。BF16（训练与生成使用的计算精度）主线已合并进 <code>src/rlforge/</code>，主参数和优化器保持 FP32（32 位精度）。<code>production/v3_1/</code> 保留历史运行源码。下面三项可以独立推进，负责人由参与同学选择。</p>
 <table class="collaboration"><thead><tr><th scope="col">可参与方向</th><th scope="col">代码入口与验收</th></tr></thead><tbody>
@@ -1126,5 +1148,49 @@ L 504.019687 206.35
 <div aria-label="同系列文章" class="related"><a href="aiq-rl-loss-ranking-2026-10-06.html">早期排序与数据捷径</a><a href="aiq-rl-sft178-2026-10-06.html">蒸馏后训练与解释可靠性</a><a href="aiq-rl-pool-b-2026-10-06.html">6k 主线与真实回答</a><a href="aiq-rl-flash-next-2026-10-06.html">Flash-Next 大模型实验</a></div><footer>来源：<a href="aiq-rl-pool-b-2026-10-06-data.json">6k 主线数据</a>；poor-rl <a href="https://github.com/guoshaoyang-pku/poor-rl/blob/1545ead467ef3309f4a3aa4f98646a913b7693d3/docs/RECIPE_H200.md">当前 H200 配方</a>与<a href="https://github.com/guoshaoyang-pku/poor-rl/blob/1545ead467ef3309f4a3aa4f98646a913b7693d3/docs/RECIPE_FP8.md">当前 FP8 配方</a>，核对于 2026-10-13；历史图表保留 2026-10-06 的 <a href="https://github.com/guoshaoyang-pku/poor-rl/blob/69a498b9429c6524beda97269f6e49fd98707143/docs/INFRA_HISTORY.md">固定原文</a>与<a href="poor-rl-infra-2026-10-06-data.json">测量窗口</a>。</footer>
 
 </main>
+<script>
+(() => {
+  const frame = document.getElementById('live-frame');
+  const status = document.getElementById('live-status');
+  const open = document.getElementById('live-open');
+  const samples = document.getElementById('live-samples');
+  const buttons = [...document.querySelectorAll('[data-panel]')];
+  let origin = '';
+  let selected = '/g32/experiment/17';
+  function showPanel() {
+    const url = origin + selected;
+    if (frame.getAttribute('src') !== url) frame.src = url;
+    frame.hidden = false;
+    open.href = url;
+    samples.href = origin + '/samples/';
+    open.hidden = samples.hidden = false;
+  }
+  buttons.forEach(button => button.addEventListener('click', () => {
+    selected = button.dataset.panel;
+    buttons.forEach(item => item.setAttribute('aria-pressed', String(item === button)));
+    if (origin) showPanel();
+  }));
+  async function connect() {
+    try {
+      const response = await fetch('poor-rl-live-panel.json', {cache: 'no-store', signal: AbortSignal.timeout(10000)});
+      if (!response.ok) throw new Error('endpoint unavailable');
+      const endpoint = await response.json();
+      if (!/^https:\/\/[a-z-]+\.trycloudflare\.com$/.test(endpoint.url)) throw new Error('invalid endpoint');
+      const health = await fetch(endpoint.url + '/health', {cache: 'no-store', signal: AbortSignal.timeout(10000)});
+      if (!health.ok || !(await health.json()).ok) throw new Error('gateway unavailable');
+      origin = endpoint.url;
+      showPanel();
+      status.textContent = '本机转发已连接。';
+    } catch (_) {
+      origin = '';
+      frame.hidden = true;
+      open.hidden = samples.hidden = true;
+      status.textContent = '本机转发暂未连接。电脑恢复联网后，页面会自动重试；上面的报告和题包下载仍可查看。';
+    }
+  }
+  connect();
+  setInterval(() => { if (!document.hidden) connect(); }, 60000);
+})();
+</script>
 </body>
 </html>

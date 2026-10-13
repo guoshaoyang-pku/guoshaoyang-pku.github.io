@@ -16,6 +16,16 @@
 
 这里的更新信号来自答案奖励和回答格式，实验没有提供逐 token 的正确思维链标签。另一条蒸馏后训练线出现过[成绩上涨、解释却失去题目依据](aiq-rl-sft178-2026-10-06.html)的现象。答对和解释可靠性必须分别检查。
 
+## 6k 主线题集已发布为 AIQ-RL v1.0
+
+完整公开 6,153 道训练题和 290 道留出题，包含原始题目、答案、训练实际使用的转换版本、转换脚本和来源清单。版本独立于正式 benchmark v1.5。两边仓库提供同一个题包：[poor-rl 下载](https://github.com/guoshaoyang-pku/poor-rl/releases/tag/aiq-rl-v1.0) · [ArchitectureIQ 官方下载](https://github.com/renrua52/ArchitectureIQ/releases/tag/aiq-rl-v1.0)。
+
+这次发布覆盖本页的 6k 主线。其他历史 RL/SFT 数据、教师回答、模型权重和训练日志不包含在题包中。留出题已用于多轮比较；历史来源的质量门槛和待复审项保留在数据说明中。
+
+## 训练曲线与回答可以直接在页面内查看
+
+[打开网页中的面板](https://guoshaoyang-pku.github.io/blogs/poor-rl-infra-2026-10-06.html#live-panel)。面板通过我的本地电脑转发；电脑关机、睡眠或断网时会断开。曲线与回答来自定期同步到本机的副本，面板中的历史运行标签不代表远端任务当前仍在训练。
+
 ## 同学可以从数值对齐、性能测量和回答分析开始开发
 
 当前开发入口是 [poor-rl 仓库](https://github.com/guoshaoyang-pku/poor-rl)。BF16（训练与生成使用的计算精度）主线已合并进 `src/rlforge/`，主参数和优化器保持 FP32（32 位精度）。`production/v3_1/` 保留历史运行源码。下面三项可以独立推进，负责人由参与同学选择。
