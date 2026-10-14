@@ -1,0 +1,932 @@
+schema_version: ntp_question_clusters_v2
+description: 'Reusable explicit question clusters: primary triples plus complete local
+  diagnostic controls. Hypotheses and shortcut labels are analyst-only; never include
+  them in model prompts. v2: explicit per-cluster budget semantics, declared
+  statistical estimand, machine-readable changed-field audit, data-context bridge
+  variants, a third dataset seed, and hash-verified reuse of the v1 run.'
+base_profile: ntp-neighborhoods-v2.yaml
+default_num_choices: 3
+allowed_num_choices:
+- 3
+- 4
+- 5
+instance_seeds:
+- 731901
+- 731902
+- 731903
+# Discovery screen for NEW dataset instances (seed 731903). Instances covered by
+# `reuse` below keep the v1 discovery evidence (seeds 20-23), imported with hash
+# verification; they are not retrained.
+discovery_training_seeds:
+- 24
+- 25
+- 26
+- 27
+- 28
+- 29
+confirmation_training_seeds:
+- 200
+- 201
+- 202
+- 203
+- 204
+- 205
+- 206
+- 207
+- 208
+- 209
+- 210
+- 211
+- 212
+- 213
+- 214
+- 215
+reuse:
+  source_run: data/task_expansion/ntp_batch/broad_ranking3_20261013
+  source_sha256_required: true
+  instance_seeds:
+  - 731901
+  - 731902
+  source_discovery_training_seeds:
+  - 20
+  - 21
+  - 22
+  - 23
+statistics:
+  discovery:
+    n_seeds: 6
+    split: validation
+    test: one_sided_paired_sign_test
+    alpha: 0.05
+    correction: holm
+    min_mean_paired_gap_nats: 0.005
+  confirmation:
+    n_seeds: 16
+    split: test
+    test: one_sided_paired_sign_test
+    alpha: 0.05
+    correction: holm
+    min_mean_paired_gap_nats: 0.005
+  estimand: 'Under one fixed dataset instance and one fixed training protocol: the
+    per-seed paired win/loss pattern between two candidates (sign test) plus the
+    observed mean paired gap. This screens for direction stability and effect
+    size; it is NOT a test of a difference between expected CEs.'
+selection_contract:
+  discovery_split: validation
+  confirmation_split: test
+  freeze_before_confirmation:
+  - candidate IDs
+  - adjacent ranking directions
+  - comparison family
+  - gap threshold
+  - seed list
+  multiplicity: Holm across every frozen adjacent comparison, including rejected templates
+  minimum_mean_gap_nats: 0.005
+  require_nonoverlap: false
+  claim_scope: Training seed robustness conditional on the fixed materialized dataset;
+    not teacher population generalization.
+  difficulty_policy: Evaluate every admitted triple, including easy ones; report admission
+    failures without replacing choices after confirmation.
+defaults:
+  dataset:
+    teacher_family: transformer
+    teacher_init: random
+    teacher_width: 32
+    teacher_layers: 1
+    teacher_heads: 4
+    teacher_ff_ratio: 2
+    teacher_activation: gelu
+    teacher_context_length: 256
+    teacher_distance_alpha: 0.0
+    teacher_probe_context: 16
+    teacher_entropy_ratio:
+    - 0.45
+    - 0.85
+    temperature: 1.0
+    logit_scale: 1.0
+    vocab_size: 64
+    prefix_length: 16
+    continuation_length: 16
+    context_length: 128
+    generation_batch_size: 64
+    store_teacher_probs: false
+    train_size: 4096
+    validation_size: 512
+    test_size: 512
+    ood_size: 128
+    ood_shift: {}
+    teacher_residual_scale: 0.0
+    teacher_attention_window: 8
+    teacher_position_mode: none
+  optimizer:
+    type: AdamW
+    lr: 0.0003
+    weight_decay: 0.01
+    betas:
+    - 0.9
+    - 0.999
+    eps: 1.0e-08
+    foreach: false
+  training:
+    batch_size: 16
+    training_steps: 700
+    total_samples_seen: 11200
+    gradient_accumulation: 1
+    clip_norm: 1.0
+    schedule: constant
+    precision: fp32
+    tf32: false
+    deterministic_algorithms: true
+    warmup_updates: 2
+    batch_rng_device: cpu
+    paired_cpu_batch_stream: true
+    persist_initial_state: true
+    batch_seed_offset: 500000
+    evaluation_split: validation
+    eval_steps:
+    - 0
+    - 100
+    - 300
+    - 700
+models:
+  transformer:
+    type: ntp_anchor_lm
+    family: transformer
+    vocab_size: 64
+    context_length: 128
+    d_model: 96
+    num_layers: 2
+    num_heads: 4
+    d_ff: 192
+    activation: gelu
+    norm_first: true
+    residual: true
+    attention_window: null
+    position_mode: none
+    max_parameters: 2000000
+  gru:
+    type: ntp_anchor_lm
+    family: gru
+    vocab_size: 64
+    context_length: 128
+    d_model: 96
+    num_layers: 2
+    activation: intrinsic
+    max_parameters: 2000000
+  rnn:
+    type: ntp_anchor_lm
+    family: rnn
+    vocab_size: 64
+    context_length: 128
+    d_model: 128
+    num_layers: 2
+    activation: tanh
+    max_parameters: 2000000
+  ssm:
+    type: ntp_anchor_lm
+    family: ssm
+    vocab_size: 64
+    context_length: 128
+    d_model: 96
+    num_layers: 2
+    state_size: 16
+    d_ff: 192
+    activation: gelu
+    initialization_timescale: 32
+    max_parameters: 2000000
+contexts:
+  local8: {}
+  composed4:
+    teacher_layers: 2
+    teacher_attention_window: 4
+  position8:
+    teacher_attention_window: 8
+    teacher_position_mode: sinusoidal
+  global_distance:
+    teacher_attention_window: null
+    teacher_init: distance_prior
+    teacher_distance_alpha: 1.0
+  identity_mix:
+    teacher_attention_window: 8
+    teacher_residual_scale: 1.0
+  small_data:
+    teacher_attention_window: null
+    train_size: 256
+    teacher_residual_scale: 0.1
+templates:
+- id: window_depth_composition
+  budget_semantics: matched_steps
+  category: window
+  context_ref: composed4
+  hypothesis: Teacher depth composes local dependencies; matching its per-layer mask
+    alone may not determine finite-budget performance.
+  varying_axes:
+  - model.attention_window
+  - model.num_layers
+  choices:
+  - id: local4_depth1
+    model_ref: transformer
+    model_updates:
+      attention_window: 4
+      num_layers: 1
+  - id: local4_depth3
+    model_ref: transformer
+    model_updates:
+      attention_window: 4
+      num_layers: 3
+  - id: local8_depth1
+    model_ref: transformer
+    model_updates:
+      attention_window: 8
+      num_layers: 1
+  diagnostics:
+  - id: local8_depth3
+    model_ref: transformer
+    model_updates:
+      attention_window: 8
+      num_layers: 3
+  controls:
+  - Same materialized train/validation/test tensors within a question.
+  - All unlisted model, optimizer and training fields inherit the explicit defaults.
+  - Parameter counts are measured and shown; equal width/depth does not imply equal
+    parameters or FLOPs.
+  shortcut_checks:
+  - teacher mask match
+  - larger window
+  - greater depth
+  explanation_target: Use the completed 2x2 window/depth controls; distinguish lag
+    support from learnability and parameter count.
+  admission: Freeze one discovery-ranked triple before independent confirmation; do
+    not substitute after failed confirmation.
+- id: window_position_interaction
+  budget_semantics: matched_steps
+  category: window
+  context_ref: position8
+  hypothesis: Position encoding and window interact when the teacher depends on positions;
+    exact mask matching may lose to a different positional representation.
+  varying_axes:
+  - model.attention_window
+  - model.position_mode
+  choices:
+  - id: local8_none
+    model_ref: transformer
+    model_updates:
+      attention_window: 8
+  - id: local4_sin
+    model_ref: transformer
+    model_updates:
+      attention_window: 4
+      position_mode: sinusoidal
+  - id: global_sin
+    model_ref: transformer
+    model_updates:
+      position_mode: sinusoidal
+  diagnostics:
+  - id: local8_sin
+    model_ref: transformer
+    model_updates:
+      attention_window: 8
+      position_mode: sinusoidal
+  - id: local4_none
+    model_ref: transformer
+    model_updates:
+      attention_window: 4
+  - id: global_none
+    model_ref: transformer
+  controls:
+  - Same materialized train/validation/test tensors within a question.
+  - All unlisted model, optimizer and training fields inherit the explicit defaults.
+  - Parameter counts are measured and shown; equal width/depth does not imply equal
+    parameters or FLOPs.
+  shortcut_checks:
+  - teacher mask match
+  - PE always helps
+  - full context always wins
+  explanation_target: Complete 3x2 window/PE controls separate conditional PE and
+    window effects; no claim that no-PE causal stacks are permutation invariant.
+  admission: Freeze one discovery-ranked triple before independent confirmation; do
+    not substitute after failed confirmation.
+- id: window_budget_interaction
+  budget_semantics: matched_steps
+  category: window
+  context_ref: local8
+  hypothesis: At finite budget a mismatched but better-optimized mask can beat the
+    matching mask.
+  varying_axes:
+  - model.attention_window
+  - training.training_steps
+  choices:
+  - id: local8_short
+    model_ref: transformer
+    model_updates:
+      attention_window: 8
+    training_updates:
+      training_steps: 200
+  - id: local4_long
+    model_ref: transformer
+    model_updates:
+      attention_window: 4
+    training_updates:
+      training_steps: 1000
+  - id: global_long
+    model_ref: transformer
+    training_updates:
+      training_steps: 1000
+  diagnostics:
+  - id: local8_long
+    model_ref: transformer
+    model_updates:
+      attention_window: 8
+    training_updates:
+      training_steps: 1000
+  - id: local4_short
+    model_ref: transformer
+    model_updates:
+      attention_window: 4
+    training_updates:
+      training_steps: 200
+  - id: global_short
+    model_ref: transformer
+    training_updates:
+      training_steps: 200
+  controls:
+  - Same materialized train/validation/test tensors within a question.
+  - All unlisted model, optimizer and training fields inherit the explicit defaults.
+  - Parameter counts are measured and shown; equal width/depth does not imply equal
+    parameters or FLOPs.
+  shortcut_checks:
+  - teacher mask match
+  - longer training always wins
+  explanation_target: Complete 3x2 mask/budget controls; distinguish budget intervention
+    from architectural effects, no changed asymptotic-rate claim.
+  admission: Freeze one discovery-ranked triple before independent confirmation; do
+    not substitute after failed confirmation.
+- id: window_distance_prior
+  budget_semantics: matched_steps
+  category: window
+  context_ref: global_distance
+  hypothesis: An all-context teacher with a recency prior may favor a restricted student
+    at limited samples.
+  varying_axes:
+  - model.attention_window
+  choices:
+  - id: local4
+    model_ref: transformer
+    model_updates:
+      attention_window: 4
+  - id: local8
+    model_ref: transformer
+    model_updates:
+      attention_window: 8
+  - id: global
+    model_ref: transformer
+  diagnostics: []
+  controls:
+  - Same materialized train/validation/test tensors within a question.
+  - All unlisted model, optimizer and training fields inherit the explicit defaults.
+  - Parameter counts are measured and shown; equal width/depth does not imply equal
+    parameters or FLOPs.
+  shortcut_checks:
+  - teacher mask match
+  - largest receptive field
+  explanation_target: Teacher attention weights and distant-token perturbation are
+    descriptive diagnostics; a window intervention does not isolate optimization versus
+    representation.
+  admission: Freeze one discovery-ranked triple before independent confirmation; do
+    not substitute after failed confirmation.
+- id: operator_attention_gru_ssm
+  budget_semantics: matched_steps
+  category: operator
+  context_ref: identity_mix
+  hypothesis: Residual identity signal may change which sequence operator learns fastest
+    despite teacher-family matching.
+  varying_axes:
+  - model.family
+  choices:
+  - id: attention
+    model_ref: transformer
+  - id: gru
+    model_ref: gru
+  - id: diagonal_ssm
+    model_ref: ssm
+  diagnostics: []
+  controls:
+  - Same materialized train/validation/test tensors within a question.
+  - All unlisted model, optimizer and training fields inherit the explicit defaults.
+  - Parameter counts are measured and shown; equal width/depth does not imply equal
+    parameters or FLOPs.
+  shortcut_checks:
+  - teacher family match
+  - parameter count rank
+  explanation_target: Compare train/validation curves and current-token ablation.
+    Family contrast is a bundled architecture intervention, not an isolated mixer
+    test.
+  admission: Freeze one discovery-ranked triple before independent confirmation; do
+    not substitute after failed confirmation.
+- id: operator_recurrence_activation
+  budget_semantics: matched_steps
+  category: operator
+  context_ref: composed4
+  hypothesis: Ungated recurrent activation and GRU gates trade optimization against
+    local compositional structure.
+  varying_axes:
+  - model.family
+  - model.activation
+  choices:
+  - id: rnn_tanh
+    model_ref: rnn
+  - id: rnn_relu
+    model_ref: rnn
+    model_updates:
+      activation: relu
+  - id: gru
+    model_ref: gru
+  diagnostics: []
+  controls:
+  - Same materialized train/validation/test tensors within a question.
+  - All unlisted model, optimizer and training fields inherit the explicit defaults.
+  - Parameter counts are measured and shown; equal width/depth does not imply equal
+    parameters or FLOPs.
+  shortcut_checks:
+  - gated always wins
+  - parameter count rank
+  explanation_target: Tanh/ReLU is an isolated RNN activation effect; GRU comparison
+    bundles gating, parameterization and initialization.
+  admission: Freeze one discovery-ranked triple before independent confirmation; do
+    not substitute after failed confirmation.
+- id: ssm_timescale
+  budget_semantics: matched_steps
+  category: operator
+  context_ref: global_distance
+  hypothesis: Initial decay timescale need not match the useful dependency length
+    at a finite optimization horizon.
+  varying_axes:
+  - model.initialization_timescale
+  choices:
+  - id: ssm_fast
+    model_ref: ssm
+    model_updates:
+      initialization_timescale: 2
+  - id: ssm_medium
+    model_ref: ssm
+    model_updates:
+      initialization_timescale: 16
+  - id: ssm_slow
+    model_ref: ssm
+    model_updates:
+      initialization_timescale: 128
+  diagnostics: []
+  controls:
+  - Same materialized train/validation/test tensors within a question.
+  - All unlisted model, optimizer and training fields inherit the explicit defaults.
+  - Parameter counts are measured and shown; equal width/depth does not imply equal
+    parameters or FLOPs.
+  shortcut_checks:
+  - longer memory always wins
+  - timescale equals teacher span
+  explanation_target: Inspect learned decay spectrum and kernel energy by lag; timescale
+    is initialization and remains trainable, not a hard memory cutoff.
+  admission: Freeze one discovery-ranked triple before independent confirmation; do
+    not substitute after failed confirmation.
+- id: ssm_state_lr_interaction
+  budget_semantics: matched_steps
+  category: operator
+  context_ref: local8
+  hypothesis: Additional state dimensions can hurt early training under a shared learning
+    rate yet benefit from retuning.
+  varying_axes:
+  - model.state_size
+  - optimizer.lr
+  choices:
+  - id: state4_lr3e4
+    model_ref: ssm
+    model_updates:
+      state_size: 4
+  - id: state32_lr3e4
+    model_ref: ssm
+    model_updates:
+      state_size: 32
+  - id: state32_lr1e3
+    model_ref: ssm
+    model_updates:
+      state_size: 32
+    optimizer_updates:
+      lr: 0.001
+  diagnostics:
+  - id: state4_lr1e3
+    model_ref: ssm
+    model_updates:
+      state_size: 4
+    optimizer_updates:
+      lr: 0.001
+  controls:
+  - Same materialized train/validation/test tensors within a question.
+  - All unlisted model, optimizer and training fields inherit the explicit defaults.
+  - Parameter counts are measured and shown; equal width/depth does not imply equal
+    parameters or FLOPs.
+  shortcut_checks:
+  - more state always wins
+  - best lr universal
+  explanation_target: Completed 2x2 state/LR controls permit a conditional effect,
+    not a universal SSM capacity ranking.
+  admission: Freeze one discovery-ranked triple before independent confirmation; do
+    not substitute after failed confirmation.
+- id: block_norm_residual
+  budget_semantics: matched_steps
+  category: block
+  context_ref: identity_mix
+  hypothesis: Normalization placement can interact with removing both attention and
+    FF residual paths.
+  varying_axes:
+  - model.norm_first
+  - model.residual
+  choices:
+  - id: prenorm_residual
+    model_ref: transformer
+  - id: postnorm_residual
+    model_ref: transformer
+    model_updates:
+      norm_first: false
+  - id: prenorm_nores
+    model_ref: transformer
+    model_updates:
+      residual: false
+  diagnostics:
+  - id: postnorm_nores
+    model_ref: transformer
+    model_updates:
+      norm_first: false
+      residual: false
+  controls:
+  - Same materialized train/validation/test tensors within a question.
+  - All unlisted model, optimizer and training fields inherit the explicit defaults.
+  - Parameter counts are measured and shown; equal width/depth does not imply equal
+    parameters or FLOPs.
+  shortcut_checks:
+  - residual always wins
+  - prenorm always wins
+  explanation_target: Complete 2x2 norm/residual controls; removing residual changes
+    both signal transport and optimization, not merely gradient magnitude.
+  admission: Freeze one discovery-ranked triple before independent confirmation; do
+    not substitute after failed confirmation.
+- id: block_ff_width_activation
+  budget_semantics: matched_steps
+  category: block
+  context_ref: small_data
+  context_variants:
+  - id: train4096
+    context_updates:
+      train_size: 4096
+    gate: confirmation_only
+    hypothesis_source: same_seed_base_instance
+  hypothesis: A wider FF block and a different activation need not benefit a small-data
+    finite-budget fit.
+  varying_axes:
+  - model.d_ff
+  - model.activation
+  choices:
+  - id: ff96_gelu
+    model_ref: transformer
+    model_updates:
+      d_ff: 96
+  - id: ff384_gelu
+    model_ref: transformer
+    model_updates:
+      d_ff: 384
+  - id: ff384_tanh
+    model_ref: transformer
+    model_updates:
+      d_ff: 384
+      activation: tanh
+  diagnostics:
+  - id: ff96_tanh
+    model_ref: transformer
+    model_updates:
+      d_ff: 96
+      activation: tanh
+  controls:
+  - Same materialized train/validation/test tensors within a question.
+  - All unlisted model, optimizer and training fields inherit the explicit defaults.
+  - Parameter counts are measured and shown; equal width/depth does not imply equal
+    parameters or FLOPs.
+  shortcut_checks:
+  - more parameters always wins
+  - match teacher activation
+  explanation_target: Complete 2x2 width/activation controls and train-validation
+    gap; avoid asserting overfitting from validation alone.
+  admission: Freeze one discovery-ranked triple before independent confirmation; do
+    not substitute after failed confirmation.
+- id: residual_depth
+  budget_semantics: matched_steps
+  category: residual
+  context_ref: identity_mix
+  hypothesis: Residual removal can differ between shallow and deeper models under
+    identical optimizer settings.
+  varying_axes:
+  - model.num_layers
+  - model.residual
+  choices:
+  - id: depth1_nores
+    model_ref: transformer
+    model_updates:
+      num_layers: 1
+      residual: false
+  - id: depth3_nores
+    model_ref: transformer
+    model_updates:
+      num_layers: 3
+      residual: false
+  - id: depth3_residual
+    model_ref: transformer
+    model_updates:
+      num_layers: 3
+  diagnostics:
+  - id: depth1_residual
+    model_ref: transformer
+    model_updates:
+      num_layers: 1
+  controls:
+  - Same materialized train/validation/test tensors within a question.
+  - All unlisted model, optimizer and training fields inherit the explicit defaults.
+  - Parameter counts are measured and shown; equal width/depth does not imply equal
+    parameters or FLOPs.
+  shortcut_checks:
+  - residual always wins
+  - deeper always wins
+  explanation_target: Complete 2x2 depth/residual controls; initial and final gradients
+    are evidence about this run, not proof of a unique cause.
+  admission: Freeze one discovery-ranked triple before independent confirmation; do
+    not substitute after failed confirmation.
+- id: block_heads_ff_allocation
+  budget_semantics: matched_steps
+  category: block
+  context_ref: position8
+  hypothesis: Attention head count and FF allocation can trade off even at equal model
+    width.
+  varying_axes:
+  - model.num_heads
+  - model.d_ff
+  choices:
+  - id: heads1_ff192
+    model_ref: transformer
+    model_updates:
+      num_heads: 1
+  - id: heads4_ff96
+    model_ref: transformer
+    model_updates:
+      d_ff: 96
+  - id: heads4_ff384
+    model_ref: transformer
+    model_updates:
+      d_ff: 384
+  diagnostics:
+  - id: heads4_ff192
+    model_ref: transformer
+  - id: heads1_ff96
+    model_ref: transformer
+    model_updates:
+      num_heads: 1
+      d_ff: 96
+  - id: heads1_ff384
+    model_ref: transformer
+    model_updates:
+      num_heads: 1
+      d_ff: 384
+  controls:
+  - Same materialized train/validation/test tensors within a question.
+  - All unlisted model, optimizer and training fields inherit the explicit defaults.
+  - Parameter counts are measured and shown; equal width/depth does not imply equal
+    parameters or FLOPs.
+  shortcut_checks:
+  - more heads always wins
+  - parameter count rank
+  explanation_target: Complete 2x3 head/FF grid; head count preserves attention parameter
+    count but FF width does not.
+  admission: Freeze one discovery-ranked triple before independent confirmation; do
+    not substitute after failed confirmation.
+- id: learning_rate
+  budget_semantics: matched_steps
+  category: training
+  context_ref: composed4
+  hypothesis: The useful learning rate depends on the finite horizon and objective
+    conditioning.
+  varying_axes:
+  - optimizer.lr
+  choices:
+  - id: lr1e4
+    model_ref: transformer
+    optimizer_updates:
+      lr: 0.0001
+  - id: lr1e3
+    model_ref: transformer
+    optimizer_updates:
+      lr: 0.001
+  - id: lr1e2
+    model_ref: transformer
+    optimizer_updates:
+      lr: 0.01
+  diagnostics: []
+  controls:
+  - Same materialized train/validation/test tensors within a question.
+  - All unlisted model, optimizer and training fields inherit the explicit defaults.
+  - Parameter counts are measured and shown; equal width/depth does not imply equal
+    parameters or FLOPs.
+  shortcut_checks:
+  - larger learning rate learns faster
+  - smallest learning rate safest
+  explanation_target: Use finite losses, gradient clipping diagnostics and learning
+    curves; failure to converge is not an expressivity limit.
+  admission: Freeze one discovery-ranked triple before independent confirmation; do
+    not substitute after failed confirmation.
+- id: batch_fixed_samples
+  budget_semantics: matched_samples
+  category: training
+  context_ref: position8
+  hypothesis: At fixed examples processed, smaller batches provide more updates and
+    different gradient noise.
+  varying_axes:
+  - training.batch_size
+  - training.training_steps
+  choices:
+  - id: batch8
+    model_ref: transformer
+    training_updates:
+      batch_size: 8
+      training_steps: 1400
+  - id: batch32
+    model_ref: transformer
+    training_updates:
+      batch_size: 32
+      training_steps: 350
+  - id: batch112
+    model_ref: transformer
+    training_updates:
+      batch_size: 112
+      training_steps: 100
+  diagnostics: []
+  controls:
+  - Same materialized train/validation/test tensors within a question.
+  - All unlisted model, optimizer and training fields inherit the explicit defaults.
+  - Parameter counts are measured and shown; equal width/depth does not imply equal
+    parameters or FLOPs.
+  shortcut_checks:
+  - more updates always wins
+  - larger batch always wins
+  explanation_target: Exactly 11200 samples for all choices; update count and batch
+    noise both change, so neither cause is isolated.
+  admission: Freeze one discovery-ranked triple before independent confirmation; do
+    not substitute after failed confirmation.
+- id: decay_small_data
+  budget_semantics: matched_steps
+  category: training
+  context_ref: small_data
+  hypothesis: Weight decay can trade finite-sample generalization against optimization
+    at fixed data size.
+  varying_axes:
+  - optimizer.weight_decay
+  choices:
+  - id: decay0
+    model_ref: transformer
+    optimizer_updates:
+      weight_decay: 0.0
+  - id: decay01
+    model_ref: transformer
+    optimizer_updates:
+      weight_decay: 0.1
+  - id: decay1
+    model_ref: transformer
+    optimizer_updates:
+      weight_decay: 1.0
+  diagnostics: []
+  controls:
+  - Same materialized train/validation/test tensors within a question.
+  - All unlisted model, optimizer and training fields inherit the explicit defaults.
+  - Parameter counts are measured and shown; equal width/depth does not imply equal
+    parameters or FLOPs.
+  shortcut_checks:
+  - regularization always helps
+  - closest default wins
+  explanation_target: Require train-validation curves before overfitting attribution;
+    AdamW decay multiplies by learning rate and acts every update.
+  admission: Freeze one discovery-ranked triple before independent confirmation; do
+    not substitute after failed confirmation.
+- id: clip_lr_interaction
+  budget_semantics: matched_steps
+  category: training
+  context_ref: identity_mix
+  hypothesis: Gradient clipping can interact with a larger step size; clipping magnitude
+    alone does not order AdamW steps.
+  varying_axes:
+  - training.clip_norm
+  - optimizer.lr
+  choices:
+  - id: clip01_lr3e4
+    model_ref: transformer
+    training_updates:
+      clip_norm: 0.1
+  - id: clip10_lr3e4
+    model_ref: transformer
+    training_updates:
+      clip_norm: 10.0
+  - id: clip10_lr1e2
+    model_ref: transformer
+    optimizer_updates:
+      lr: 0.01
+    training_updates:
+      clip_norm: 10.0
+  diagnostics:
+  - id: clip01_lr1e2
+    model_ref: transformer
+    optimizer_updates:
+      lr: 0.01
+    training_updates:
+      clip_norm: 0.1
+  controls:
+  - Same materialized train/validation/test tensors within a question.
+  - All unlisted model, optimizer and training fields inherit the explicit defaults.
+  - Parameter counts are measured and shown; equal width/depth does not imply equal
+    parameters or FLOPs.
+  shortcut_checks:
+  - tighter clipping always safer
+  - gradient scale equals Adam step scale
+  explanation_target: Complete 2x2 clipping/LR controls, clipping frequency and loss
+    trajectories; Adam normalization may reduce simple gradient-rescaling effects.
+  admission: Freeze one discovery-ranked triple before independent confirmation; do
+    not substitute after failed confirmation.
+- id: adam_momentum
+  budget_semantics: matched_steps
+  category: training
+  context_ref: global_distance
+  hypothesis: First-moment averaging can alter transient fitting of correlated next-token
+    targets.
+  varying_axes:
+  - optimizer.betas
+  choices:
+  - id: beta0
+    model_ref: transformer
+    optimizer_updates:
+      betas:
+      - 0.0
+      - 0.999
+  - id: beta09
+    model_ref: transformer
+    optimizer_updates:
+      betas:
+      - 0.9
+      - 0.999
+  - id: beta099
+    model_ref: transformer
+    optimizer_updates:
+      betas:
+      - 0.99
+      - 0.999
+  diagnostics: []
+  controls:
+  - Same materialized train/validation/test tensors within a question.
+  - All unlisted model, optimizer and training fields inherit the explicit defaults.
+  - Parameter counts are measured and shown; equal width/depth does not imply equal
+    parameters or FLOPs.
+  shortcut_checks:
+  - default beta wins
+  - more momentum faster
+  explanation_target: Use curves and direction/step diagnostics if available; a finite
+    endpoint does not prove stochastic-noise causality.
+  admission: Freeze one discovery-ranked triple before independent confirmation; do
+    not substitute after failed confirmation.
+- id: budget_small_data
+  budget_semantics: matched_steps
+  category: training
+  context_ref: small_data
+  context_variants:
+  - id: train4096
+    context_updates:
+      train_size: 4096
+    gate: confirmation_only
+    hypothesis_source: same_seed_base_instance
+  hypothesis: Longer optimization may change generalization nonmonotonically when
+    examples repeat.
+  varying_axes:
+  - training.training_steps
+  choices:
+  - id: steps200
+    model_ref: transformer
+    training_updates:
+      training_steps: 200
+  - id: steps700
+    model_ref: transformer
+  - id: steps1600
+    model_ref: transformer
+    training_updates:
+      training_steps: 1600
+  diagnostics: []
+  controls:
+  - Same materialized train/validation/test tensors within a question.
+  - All unlisted model, optimizer and training fields inherit the explicit defaults.
+  - Parameter counts are measured and shown; equal width/depth does not imply equal
+    parameters or FLOPs.
+  shortcut_checks:
+  - longer training always wins
+  explanation_target: Use paired prefix batch streams and train-validation trajectories;
+    more updates are explicitly a budget intervention.
+  admission: Freeze one discovery-ranked triple before independent confirmation; do
+    not substitute after failed confirmation.

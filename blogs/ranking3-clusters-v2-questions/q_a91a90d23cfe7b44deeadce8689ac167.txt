@@ -1,0 +1,972 @@
+You are taking the ArchitectureIQ benchmark. Read each training setup and pick the choice that achieves the best **test_ce** after the stated training budget. Give the answer as a single letter wrapped in <answer></answer> tags.
+
+## Dataset
+Univariate regression on [0, 1]. Input and target are 1-D scalars. Train size: 256, test size: 512.
+
+### Synthesis (PyTorch)
+```python
+from __future__ import annotations
+import hashlib
+import math
+import torch
+from torch import nn
+from torch.nn import functional as F
+
+def resolve_parameters(params):
+    params = dict(params)
+    defaults = {'teacher_family': 'transformer', 'teacher_init': 'random', 'teacher_width': 64, 'teacher_layers': 1, 'teacher_heads': 4, 'teacher_ff_ratio': 4, 'teacher_activation': 'gelu', 'teacher_context_length': 256, 'teacher_probe_context': 16, 'teacher_entropy_ratio': [0.45, 0.85], 'min_teacher_context_kl': 0.0001, 'generation_batch_size': 64, 'store_teacher_probs': False, 'temperature': 1.0, 'logit_scale': 1.0, 'evaluation_shift': {}}
+    for (key, value) in defaults.items():
+        params.setdefault(key, value)
+    params.setdefault('teacher_distance_alpha', 1.0 if params['teacher_init'] == 'distance_prior' else 0.0)
+    for key in ('vocab_size', 'prefix_length', 'continuation_length', 'teacher_width', 'teacher_layers', 'teacher_heads', 'teacher_ff_ratio', 'teacher_context_length', 'teacher_probe_context', 'generation_batch_size'):
+        if isinstance(params[key], bool) or not isinstance(params[key], int) or params[key] < 1:
+            raise ValueError(f'{key} must be a positive integer')
+    if params['vocab_size'] < 2 or params['teacher_probe_context'] < 2:
+        raise ValueError('Teacher requires vocabulary and probe context of at least two')
+    if params['teacher_family'] != 'transformer' or params['teacher_init'] not in {'random', 'distance_prior'}:
+        raise ValueError('Unsupported synthetic Transformer teacher')
+    if params['teacher_width'] % params['teacher_heads']:
+        raise ValueError('Teacher width must be divisible by teacher heads')
+    if params['teacher_activation'] not in {'gelu', 'silu', 'relu', 'tanh'}:
+        raise ValueError('Teacher needs one global activation')
+    residual_scale = params.get('teacher_residual_scale', 1.0)
+    if isinstance(residual_scale, bool) or not isinstance(residual_scale, (int, float)) or (not math.isfinite(residual_scale)) or (residual_scale < 0):
+        raise ValueError('Teacher residual identity scale must be finite and nonnegative')
+    window = params.get('teacher_attention_window')
+    if window is not None and (isinstance(window, bool) or not isinstance(window, int) or window < 1):
+        raise ValueError('Teacher attention window must be a positive integer or null')
+    if params.get('teacher_position_mode', 'sinusoidal') not in {'sinusoidal', 'none'}:
+        raise ValueError('Teacher position mode must be sinusoidal or none')
+    alpha = float(params['teacher_distance_alpha'])
+    if not math.isfinite(alpha) or (params['teacher_init'] == 'random' and alpha != 0) or (params['teacher_init'] == 'distance_prior' and alpha <= 0):
+        raise ValueError('Random teacher has alpha=0; distance-prior teacher has alpha>0')
+    if any((not math.isfinite(float(params[key])) or params[key] <= 0 for key in ('temperature', 'logit_scale'))):
+        raise ValueError('Teacher temperature and initial logit scale must be positive')
+    (low, high) = params['teacher_entropy_ratio']
+    if not 0 < low < high < 1:
+        raise ValueError('Teacher entropy bounds must be inside (0,1)')
+    if not isinstance(params['store_teacher_probs'], bool):
+        raise ValueError('store_teacher_probs must be a boolean')
+    if not math.isfinite(float(params['min_teacher_context_kl'])) or params['min_teacher_context_kl'] < 0:
+        raise ValueError('Teacher context threshold must be finite and nonnegative')
+    lengths = []
+    for shift in ({}, params.get('evaluation_shift', {}), params.get('ood_shift', {})):
+        if set(shift) - {'prefix_length', 'continuation_length'}:
+            raise ValueError('NTP evaluation shifts may change only prefix or continuation length')
+        (prefix, continuation) = (shift.get(key, params[key]) for key in ('prefix_length', 'continuation_length'))
+        if any((isinstance(v, bool) or not isinstance(v, int) or v < 1 for v in (prefix, continuation))):
+            raise ValueError('Evaluation lengths must be positive integers')
+        lengths.append(prefix + continuation - 1)
+    maximum = max(*lengths, params['teacher_probe_context'])
+    if params['teacher_context_length'] < maximum:
+        raise ValueError('Teacher context capacity cannot cover the configured sequences and probe')
+    params['max_sequence_length'] = max(lengths)
+    params['context_length'] = max(int(params.get('context_length', 0)), max(lengths))
+    return params
+
+def teacher_activation(name):
+    return {'gelu': nn.GELU, 'silu': nn.SiLU, 'relu': nn.ReLU, 'tanh': nn.Tanh}[name]()
+
+class TeacherAttention(nn.Module):
+
+    def __init__(self, width, heads, alpha, window=None):
+        super().__init__()
+        (self.heads, self.head_width, self.alpha) = (heads, width // heads, alpha)
+        self.window = window
+        self.qkv = nn.Linear(width, 3 * width)
+        self.output = nn.Linear(width, width)
+
+    def forward(self, x):
+        (batch, length, width) = x.shape
+        (q, k, v) = self.qkv(x).reshape(batch, length, 3, self.heads, self.head_width).permute(2, 0, 3, 1, 4).unbind(0)
+        logits = q @ k.transpose(-2, -1) / math.sqrt(self.head_width)
+        positions = torch.arange(length, device=x.device)
+        lag = positions[:, None] - positions[None, :]
+        if self.alpha:
+            logits = logits - self.alpha * lag.clamp_min(0).to(logits.dtype).log1p()
+        masked = lag < 0
+        if self.window is not None:
+            masked = masked | (lag >= self.window)
+        logits = logits.masked_fill(masked, -torch.inf)
+        mixed = (logits.softmax(-1) @ v).transpose(1, 2).reshape(batch, length, width)
+        return self.output(mixed)
+
+class TeacherBlock(nn.Module):
+
+    def __init__(self, params):
+        super().__init__()
+        width = params['teacher_width']
+        self.residual_scale = float(params.get('teacher_residual_scale', 1.0))
+        self.attention_norm = nn.LayerNorm(width)
+        self.attention = TeacherAttention(width, params['teacher_heads'], params['teacher_distance_alpha'], params.get('teacher_attention_window'))
+        self.ff_norm = nn.LayerNorm(width)
+        self.ff = nn.Sequential(nn.Linear(width, width * params['teacher_ff_ratio']), teacher_activation(params['teacher_activation']), nn.Linear(width * params['teacher_ff_ratio'], width))
+
+    def forward(self, x):
+        identity = x if self.residual_scale == 1.0 else self.residual_scale * x
+        x = identity + self.attention(self.attention_norm(x))
+        identity = x if self.residual_scale == 1.0 else self.residual_scale * x
+        return identity + self.ff(self.ff_norm(x))
+
+class SyntheticTransformerTeacher(nn.Module):
+
+    def __init__(self, params):
+        super().__init__()
+        self.context_length = params['teacher_context_length']
+        self.position_mode = params.get('teacher_position_mode', 'sinusoidal')
+        width = params['teacher_width']
+        self.embedding = nn.Embedding(params['vocab_size'], width)
+        position = torch.arange(self.context_length).float()[:, None]
+        frequency = torch.exp(torch.arange(0, width, 2).float() * (-math.log(10000) / width))
+        angles = position * frequency
+        encoding = torch.zeros(self.context_length, width)
+        encoding[:, 0::2] = angles.sin()
+        encoding[:, 1::2] = angles[:, :width // 2].cos()
+        self.register_buffer('position_encoding', encoding)
+        self.blocks = nn.ModuleList((TeacherBlock(params) for _ in range(params['teacher_layers'])))
+        self.final_norm = nn.LayerNorm(width)
+        self.head = nn.Linear(width, params['vocab_size'])
+        self.scale = float(params['logit_scale']) / float(params['temperature'])
+        self.requires_grad_(False)
+        self.eval()
+
+    def forward(self, x, position_offset=0):
+        if x.ndim != 2:
+            raise ValueError('Teacher requires [batch,tokens] input')
+        length = x.shape[1]
+        if not 0 < length or position_offset < 0 or position_offset + length > self.context_length:
+            raise ValueError('Teacher input exceeds frozen context capacity')
+        h = self.embedding(x)
+        if self.position_mode == 'sinusoidal':
+            h = h + self.position_encoding[position_offset:position_offset + length]
+        for block in self.blocks:
+            h = block(h)
+        return self.head(self.final_norm(h)) * self.scale
+
+def state_digest(state):
+    digest = hashlib.sha256()
+    for (name, tensor) in sorted(state.items()):
+        digest.update(name.encode())
+        digest.update(str(tensor.dtype).encode())
+        digest.update(str(tuple(tensor.shape)).encode())
+        digest.update(tensor.detach().cpu().contiguous().numpy().tobytes())
+    return digest.hexdigest()
+
+def create_teacher_artifact(params):
+    params = resolve_parameters(params)
+    seed = int.from_bytes(hashlib.sha256(f"{params['structure_seed']}|random_teacher_ntp|transformer_weights".encode()).digest()[:8], 'little') % (2 ** 63 - 1)
+    with torch.random.fork_rng():
+        torch.manual_seed(seed)
+        teacher = SyntheticTransformerTeacher(params)
+    rng = torch.Generator().manual_seed((seed + 100000) % (2 ** 63 - 1))
+    length = params['teacher_probe_context']
+    probe = torch.randint(params['vocab_size'], (128, length), generator=rng)
+    (low, high) = params['teacher_entropy_ratio']
+    with torch.inference_mode():
+        raw = teacher(probe)[:, -1] / teacher.scale
+        for _ in range(32):
+            p = (raw * teacher.scale).softmax(-1)
+            entropy = float(-(p * p.clamp_min(1e-30).log()).sum(-1).mean())
+            ratio = entropy / math.log(params['vocab_size'])
+            if low <= ratio <= high:
+                break
+            teacher.scale *= 1.5 if ratio > high else 0.7
+        else:
+            raise ValueError('Teacher entropy calibration did not converge')
+        gaps = {}
+        for window in sorted({1, 2, 4, 8, length}):
+            if window > length:
+                continue
+            reset_p = teacher(probe[:, -window:], position_offset=length - window).softmax(-1)[:, -1]
+            gaps[str(window)] = float((p * (p.clamp_min(1e-30).log() - reset_p.clamp_min(1e-30).log())).sum(-1).mean())
+    if gaps['1'] < float(params['min_teacher_context_kl']):
+        raise ValueError('Teacher has insufficient same-input context dependence')
+    state = {key: tensor.detach().clone() for (key, tensor) in teacher.state_dict().items()}
+    metadata = {'teacher_architecture': 'frozen_random_causal_transformer_prenorm', 'teacher_init': params['teacher_init'], 'teacher_seed': seed, 'teacher_configuration': {key: params[key] for key in ('vocab_size', 'teacher_family', 'teacher_init', 'teacher_width', 'teacher_layers', 'teacher_heads', 'teacher_ff_ratio', 'teacher_activation', 'teacher_context_length', 'teacher_distance_alpha', 'temperature', 'logit_scale', 'teacher_probe_context', 'teacher_entropy_ratio')}, 'teacher_parameters': sum((p.numel() for p in teacher.parameters())), 'teacher_weight_sha256': state_digest(state), 'teacher_effective_scale': teacher.scale, 'teacher_temperature': params['temperature'], 'teacher_distance_alpha': params['teacher_distance_alpha'], 'teacher_distance_prior': '-alpha*log(1+historical_distance); QK logits retained', 'teacher_probe_entropy': entropy, 'teacher_probe_entropy_ratio': ratio, 'teacher_context_kl_gap': gaps['1'], 'teacher_context_ablation_kl': gaps, 'teacher_probe_context': length, 'teacher_probe_scope': 'fixed_generator_only_probe_not_train_validation_test', 'context_ablation_positions': 'absolute_positions_preserved', 'initialization_torch_version': str(torch.__version__)}
+    metadata['teacher_configuration'].update({key: params[key] for key in ('teacher_residual_scale', 'teacher_attention_window', 'teacher_position_mode') if key in params})
+    return {'state_dict': state, 'metadata': metadata}
+
+def build_teacher(params, teacher_artifact=None):
+    params = resolve_parameters(dict(params, evaluation_shift={}, ood_shift={}))
+    artifact = teacher_artifact if teacher_artifact is not None else create_teacher_artifact(params)
+    controls = {'teacher_residual_scale': 1.0, 'teacher_attention_window': None, 'teacher_position_mode': 'sinusoidal'}
+    configuration = artifact['metadata']['teacher_configuration']
+    if any((params.get(key, controls.get(key)) != value for (key, value) in configuration.items())) or any((params.get(key, default) != configuration.get(key, default) for (key, default) in controls.items())):
+        raise ValueError('Teacher configuration differs from the frozen artifact')
+    if state_digest(artifact['state_dict']) != artifact['metadata']['teacher_weight_sha256']:
+        raise ValueError('Frozen teacher weights failed hash verification')
+    with torch.random.fork_rng():
+        teacher = SyntheticTransformerTeacher(params)
+    teacher.load_state_dict(artifact['state_dict'])
+    teacher.scale = float(artifact['metadata']['teacher_effective_scale'])
+    return teacher
+
+def synthesize_task(name, params, seed, count, teacher_artifact=None):
+    params = resolve_parameters(dict(params, evaluation_shift={}, ood_shift={}))
+    if count < 1:
+        raise ValueError('Split must have at least one sequence')
+    teacher = build_teacher(params, teacher_artifact)
+    rng = torch.Generator().manual_seed(seed)
+    (prefix, continuation) = (params['prefix_length'], params['continuation_length'])
+    rows = []
+    with torch.inference_mode():
+        for start in range(0, count, params['generation_batch_size']):
+            size = min(params['generation_batch_size'], count - start)
+            sequence = torch.randint(params['vocab_size'], (size, prefix), generator=rng)
+            for _ in range(continuation):
+                probabilities = teacher(sequence)[:, -1].softmax(-1)
+                token = torch.multinomial(probabilities, 1, generator=rng)
+                sequence = torch.cat((sequence, token), dim=1)
+            (x, labels) = (sequence[:, :-1], sequence[:, 1:])
+            probabilities = teacher(x).softmax(-1)
+            mask = torch.zeros_like(labels, dtype=torch.bool)
+            mask[:, prefix - 1:] = True
+            y = labels.clone()
+            y[~mask] = -100
+            row = {'x': x, 'y': y, 'mask': mask, 'teacher_target_logp': probabilities.gather(-1, labels[..., None]).squeeze(-1).clamp_min(1e-30).log(), 'teacher_entropy': -(probabilities * probabilities.clamp_min(1e-30).log()).sum(-1)}
+            if params['store_teacher_probs']:
+                row['teacher_probs'] = probabilities
+            rows.append(row)
+    return {key: torch.cat([row[key] for row in rows]) for key in rows[0]}
+TASK = 'random_teacher_ntp'
+PARAMS = {'vocab_size': 64, 'prefix_length': 16, 'continuation_length': 16, 'context_length': 128, 'teacher_width': 32, 'teacher_layers': 1, 'temperature': 1.0, 'logit_scale': 1.0, 'teacher_family': 'transformer', 'teacher_init': 'random', 'teacher_heads': 4, 'teacher_ff_ratio': 2, 'teacher_activation': 'gelu', 'teacher_context_length': 256, 'teacher_distance_alpha': 0.0, 'teacher_probe_context': 16, 'teacher_entropy_ratio': [0.45, 0.85], 'generation_batch_size': 64, 'store_teacher_probs': False, 'train_size': 256, 'validation_size': 512, 'test_size': 512, 'ood_size': 128, 'ood_shift': {}, 'teacher_residual_scale': 0.1, 'teacher_attention_window': None, 'teacher_position_mode': 'none', 'min_teacher_context_kl': 0.0001, 'evaluation_shift': {}, 'max_sequence_length': 31, 'instance_seed': 731902, 'structure_seed': 741902, 'teacher_seed': 741902, 'input_shape': [31], 'output_shape': [31], 'model_modes': ['bigram', 'ngram', 'gru', 'transformer'], 'objective': 'token_ce', 'output_kind': 'token'}
+from pathlib import Path
+
+def _teacher_artifact():
+    return torch.load(Path(__file__).with_name('teacher.pt'), map_location='cpu', weights_only=True)
+
+def synthesize_split(seed, count, overrides=None):
+    global PARAMS
+    original = PARAMS
+    PARAMS = dict(PARAMS, **overrides or {})
+    try:
+        return synthesize_task(TASK, PARAMS, seed, count, teacher_artifact=_teacher_artifact())
+    finally:
+        PARAMS = original
+
+def synthesize():
+    tr = synthesize_split(PARAMS['instance_seed'] + 20000, PARAMS['train_size'])
+    te = synthesize_split(PARAMS['instance_seed'] + 40000, PARAMS['test_size'], PARAMS.get('evaluation_shift', {}))
+    return (tr['x'], tr['y'], te['x'], te['y'])
+```
+
+### Data splits and training protocol
+- Train / validation / test size: 256 / 512 / 512
+- Split by complete sequences, trajectories, graphs or initial conditions; no overlapping split windows.
+- Objective: token_ce; model input/output shapes: [31] → [31].
+- Curves use validation. Final ranking uses held-out test without selecting checkpoints.
+- Execution device: cuda.
+- Synthetic token vocabulary: 64
+- Training prefix / continuation length: 16 / 16
+- Teacher forcing: input length 31; 16 supervised next-token labels, starting at zero-based position 15
+- Prefix tokens are IID uniform; continuation tokens are categorical draws from the frozen teacher conditioned on the actual preceding tokens
+- Candidate training uses hard-label cross-entropy only on continuation positions; state resets for each sequence
+- Validation / test prefix / continuation length: 16 / 16
+- Validation and test use the same length setting as training, with independent sampled sequences
+- Teacher: frozen causal pre-norm Transformer, random initialization
+- Teacher width / layers / heads / FF ratio: 32 / 1 / 4 / 2
+- Teacher global activation: gelu; no positional encoding; context capacity 256
+- Attention QK scale: 1/sqrt(head dimension)
+- Attention distance prior: subtract 0.0 × log(1 + historical distance) from causal QK logits
+- Teacher scale is calibrated once on a fixed, separate generator probe of length 16; target entropy/log(vocab) is [0.45, 0.85]
+- Teacher weights, attention prior and effective output scale are fixed across all splits and choices
+- Teacher residual identity scale: 0.1; both sublayers use h = scale × h + sublayer(norm(h)); zero removes the identity contribution
+- Teacher causal attention window per layer: all available history; no future tokens
+- Frozen effective teacher output scale: 2.25; temperature setting: 1.0
+- Teacher parameter count: 12768
+
+## Sample budget (same for all choices)
+- training_steps: 700
+- batch_size: 16
+- total_samples_seen: 11200 (= training_steps × batch_size)
+
+## Comparison axes
+- Varying across choices: model
+
+## Evaluation metric
+- Ground-truth ranking uses **test_ce** on the held-out test split.
+- Each choice is trained independently for **16** seeds (`200`..`215`), one `torch.manual_seed(seed)` per run.
+- Execution device: cuda.
+- Rank all candidates by their mean test_ce over seeds; lower is better, so write the order from lowest to highest.
+
+## Training controls (same for all choices)
+- Minibatches per optimizer update: 1
+- Gradient clipping (global norm): 1.0
+- Learning-rate schedule: constant
+- Training precision: fp32
+- TF32: disabled
+- PyTorch deterministic algorithms: required
+- Warmup: 2 optimizer updates outside the stated budget; then restore actual initial weights, reset optimizer and RNG
+- Save and reuse actual initial weights for each candidate and training seed
+- Minibatches: uniform train sampling with replacement, using a separate CPU generator independent of model initialization
+- Batch generator seed: training seed + 500000
+- Validation curve checkpoints: [0, 100, 300, 700]; final held-out test uses the last trained weights
+
+## Shared base code
+Base is Choice A, chosen by presentation order, not performance.
+Every choice starts independently from this same base. Never stack patches. Unmentioned files and settings stay identical. A full replacement replaces only its named file.
+
+**settings.json**
+```json
+{
+  "budget": {
+    "batch_size": 16,
+    "total_samples_seen": 11200,
+    "training_steps": 700
+  },
+  "execution": {
+    "device": "cuda"
+  },
+  "family": "random_teacher_ntp",
+  "loss": {
+    "loss_id": "cross_entropy"
+  },
+  "model": {
+    "activation": "gelu",
+    "attention_window": null,
+    "context_length": 128,
+    "d_ff": 96,
+    "d_model": 96,
+    "family": "transformer",
+    "max_parameters": 2000000,
+    "norm_first": true,
+    "num_heads": 4,
+    "num_layers": 2,
+    "position_mode": "none",
+    "residual": true,
+    "type": "ntp_anchor_lm",
+    "vocab_size": 64
+  },
+  "optimizer": {
+    "betas": [
+      0.9,
+      0.999
+    ],
+    "eps": 1e-08,
+    "foreach": false,
+    "lr": 0.0003,
+    "type": "AdamW",
+    "weight_decay": 0.01
+  },
+  "training": {
+    "batch_rng_device": "cpu",
+    "batch_seed_offset": 500000,
+    "batch_size": 16,
+    "clip_norm": 1.0,
+    "deterministic_algorithms": true,
+    "eval_steps": [
+      0,
+      100,
+      300,
+      700
+    ],
+    "evaluation_split": "validation",
+    "gradient_accumulation": 1,
+    "paired_cpu_batch_stream": true,
+    "persist_initial_state": true,
+    "precision": "fp32",
+    "schedule": "constant",
+    "tf32": false,
+    "total_samples_seen": 11200,
+    "training_steps": 700,
+    "warmup_updates": 2
+  }
+}
+```
+
+**model.py**
+```python
+from __future__ import annotations
+import math
+from typing import Any
+import torch
+from torch import nn
+from torch.nn import functional as F
+
+
+def validate_anchor_spec(spec: dict[str, Any]) -> None:
+    required = {"type", "family", "vocab_size", "context_length", "d_model",
+                "num_layers", "activation"}
+    if spec.get("family") == "transformer":
+        required |= {"num_heads", "d_ff"}
+    elif spec.get("family") == "ssm":
+        required |= {"state_size", "d_ff"}
+    optional = {"max_parameters"}
+    if spec.get("family") == "transformer":
+        optional |= {"norm_first", "residual", "attention_window", "position_mode"}
+    elif spec.get("family") == "ssm":
+        optional.add("initialization_timescale")
+    if set(spec) - required - optional or required - set(spec):
+        raise ValueError(f"Invalid ntp_anchor_lm keys: expected {sorted(required)}")
+    if spec["type"] != "ntp_anchor_lm":
+        raise ValueError("Model type must be ntp_anchor_lm")
+    if spec["family"] not in {"rnn", "gru", "transformer", "ssm"}:
+        raise ValueError("Unknown NTP anchor family")
+    for key in required - {"type", "family", "activation"}:
+        value = spec[key]
+        if isinstance(value, bool) or not isinstance(value, int) or value < 1:
+            raise ValueError(f"{key} must be a positive integer")
+    if spec["vocab_size"] < 2:
+        raise ValueError("vocab_size must be at least two")
+    activations = ({"tanh", "relu"} if spec["family"] == "rnn" else
+                   {"intrinsic"} if spec["family"] == "gru" else
+                   {"gelu", "relu", "silu", "tanh"})
+    if not isinstance(spec["activation"], str) or spec["activation"] not in activations:
+        raise ValueError(f"One model-global activation is required: {sorted(activations)}")
+    if spec["family"] == "transformer" and spec["d_model"] % spec["num_heads"]:
+        raise ValueError("d_model must be divisible by num_heads")
+    for key in {"norm_first", "residual"} & set(spec):
+        if not isinstance(spec[key], bool):
+            raise ValueError(f"Transformer {key} must be a model-global boolean")
+    if "attention_window" in spec:
+        window = spec["attention_window"]
+        if window is not None and (isinstance(window, bool) or not isinstance(window, int) or window < 1):
+            raise ValueError("attention_window must be null or a positive integer including the current token")
+    if "position_mode" in spec and spec["position_mode"] not in ("sinusoidal", "none"):
+        raise ValueError("position_mode must be sinusoidal or none")
+    if "initialization_timescale" in spec:
+        timescale = spec["initialization_timescale"]
+        if not (isinstance(timescale, str) and timescale in {"fast", "slow"}):
+            if isinstance(timescale, bool) or not isinstance(timescale, (int, float)) or not math.isfinite(timescale) or timescale <= 0:
+                raise ValueError("initialization_timescale must be positive and finite, or fast/slow")
+    cap = spec.get("max_parameters", 2_000_000)
+    if isinstance(cap, bool) or not isinstance(cap, int) or cap < 1:
+        raise ValueError("max_parameters must be a positive integer")
+
+
+def anchor_activation(name: str) -> nn.Module:
+    return {"gelu": nn.GELU, "relu": nn.ReLU, "silu": nn.SiLU,
+            "tanh": nn.Tanh}[name]()
+
+
+class ControlledTransformerBlock(nn.TransformerEncoderLayer):
+    def __init__(self, spec: dict[str, Any]) -> None:
+        super().__init__(spec["d_model"], spec["num_heads"], spec["d_ff"],
+                         dropout=0, batch_first=True, norm_first=spec.get("norm_first", True),
+                         activation=anchor_activation(spec["activation"]))
+        self.residual = spec.get("residual", True)
+
+    def forward(self, src: torch.Tensor, src_mask=None, src_key_padding_mask=None,
+                is_causal: bool = False) -> torch.Tensor:
+        if self.residual:
+            return super().forward(src, src_mask=src_mask,
+                                   src_key_padding_mask=src_key_padding_mask, is_causal=is_causal)
+        if self.norm_first:
+            h = self._sa_block(self.norm1(src), src_mask, src_key_padding_mask, is_causal=is_causal)
+            return self._ff_block(self.norm2(h))
+        h = self.norm1(self._sa_block(src, src_mask, src_key_padding_mask, is_causal=is_causal))
+        return self.norm2(self._ff_block(h))
+
+
+class DiagonalStateSpace(nn.Module):
+    """Stable diagonal linear recurrence, evaluated as a causal convolution."""
+
+    def __init__(self, width: int, state_size: int, context_length: int,
+                 initialization_timescale: float | str | None = None) -> None:
+        super().__init__()
+        timescale = (context_length if initialization_timescale is None else
+                     min(8, context_length) if initialization_timescale == "fast" else
+                     4 * context_length if initialization_timescale == "slow" else
+                     initialization_timescale)
+        rates = torch.linspace(-math.log(timescale), 0, state_size)
+        self.log_rates = nn.Parameter(rates.expand(width, -1).clone())
+        self.input_gain = nn.Parameter(torch.ones(width, state_size))
+        self.output_gain = nn.Parameter(torch.randn(width, state_size) / math.sqrt(state_size))
+        self.skip = nn.Parameter(torch.ones(width))
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        length = x.shape[1]
+        decay = torch.exp(-self.log_rates.float().exp())
+        lag = torch.arange(length, device=x.device, dtype=torch.float32)
+        gain = (1 - decay) * self.input_gain.float() * self.output_gain.float()
+        kernel = (gain[:, :, None] * decay[:, :, None].pow(lag)).sum(1)
+        u = x.float().transpose(1, 2)
+        mixed = F.conv1d(F.pad(u, (length - 1, 0)),
+                         kernel.flip(-1)[:, None], groups=u.shape[1])
+        return (mixed + self.skip.float()[None, :, None] * u).transpose(1, 2).to(x.dtype)
+
+
+class DiagonalStateSpaceBlock(nn.Module):
+    def __init__(self, spec: dict[str, Any]) -> None:
+        super().__init__()
+        width = spec["d_model"]
+        self.mix_norm = nn.LayerNorm(width)
+        self.in_proj = nn.Linear(width, width)
+        self.ssm = DiagonalStateSpace(width, spec["state_size"], spec["context_length"],
+                                     spec.get("initialization_timescale"))
+        self.act = anchor_activation(spec["activation"])
+        self.out_proj = nn.Linear(width, width)
+        self.ff_norm = nn.LayerNorm(width)
+        self.ffn = nn.Sequential(nn.Linear(width, spec["d_ff"]),
+                                 anchor_activation(spec["activation"]),
+                                 nn.Linear(spec["d_ff"], width))
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = x + self.out_proj(self.act(self.ssm(self.in_proj(self.mix_norm(x)))))
+        return x + self.ffn(self.ff_norm(x))
+
+
+class NtpAnchorLM(nn.Module):
+    def __init__(self, spec: dict[str, Any]) -> None:
+        super().__init__()
+        validate_anchor_spec(spec)
+        self.family = spec["family"]
+        self.context_length = spec["context_length"]
+        width, depth = spec["d_model"], spec["num_layers"]
+        self.token_embed = nn.Embedding(spec["vocab_size"], width)
+        if self.family == "transformer":
+            self.position_mode = spec.get("position_mode", "sinusoidal")
+            self.attention_window = spec.get("attention_window")
+            positions = torch.arange(self.context_length).float()[:, None]
+            frequency = torch.exp(torch.arange(0, width, 2).float() * (-math.log(10000) / width))
+            angles = positions * frequency
+            encoding = torch.zeros(self.context_length, width)
+            encoding[:, 0::2] = angles.sin()
+            encoding[:, 1::2] = angles[:, :width // 2].cos()
+            self.register_buffer("position_encoding", encoding)
+            self.blocks = nn.ModuleList(ControlledTransformerBlock(spec) for _ in range(depth))
+        elif self.family == "ssm":
+            self.blocks = nn.ModuleList(DiagonalStateSpaceBlock(spec) for _ in range(depth))
+        else:
+            recurrent = nn.RNN if self.family == "rnn" else nn.GRU
+            options = {"nonlinearity": spec["activation"]} if self.family == "rnn" else {}
+            self.recurrent = recurrent(width, width, depth, batch_first=True, dropout=0, **options)
+            for name, parameter in self.recurrent.named_parameters():
+                if "weight_hh" in name:
+                    for gate in parameter.chunk(3 if self.family == "gru" else 1, dim=0):
+                        nn.init.orthogonal_(gate)
+                elif "weight_ih" in name:
+                    nn.init.xavier_uniform_(parameter)
+                else:
+                    nn.init.zeros_(parameter)
+        self.final_norm = nn.LayerNorm(width)
+        self.head = nn.Linear(width, spec["vocab_size"])
+        parameters = sum(p.numel() for p in self.parameters())
+        if parameters > spec.get("max_parameters", 2_000_000):
+            raise ValueError(f"Anchor exceeds parameter cap: {parameters}")
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        if x.ndim != 2 or not 0 < x.shape[1] <= self.context_length:
+            raise ValueError("Expected [batch, tokens] within configured context_length")
+        h = self.token_embed(x)
+        if self.family == "transformer":
+            length = x.shape[1]
+            if self.position_mode == "sinusoidal":
+                h = h + self.position_encoding[:length]
+            mask = torch.ones(length, length, device=x.device, dtype=torch.bool).triu(1)
+            if self.attention_window is not None:
+                positions = torch.arange(length, device=x.device)
+                mask |= positions[:, None] - positions[None, :] >= self.attention_window
+            for block in self.blocks:
+                h = block(h, src_mask=mask, is_causal=self.attention_window is None)
+        elif self.family == "ssm":
+            for block in self.blocks:
+                h = block(h)
+        else:
+            h, _ = self.recurrent(h)
+        return self.head(self.final_norm(h))
+
+
+SPEC = {'type': 'ntp_anchor_lm', 'family': 'transformer', 'vocab_size': 64, 'context_length': 128, 'd_model': 96, 'num_layers': 2, 'num_heads': 4, 'd_ff': 96, 'activation': 'gelu', 'norm_first': True, 'residual': True, 'attention_window': None, 'position_mode': 'none', 'max_parameters': 2000000}
+
+class Model(NtpAnchorLM):
+    def __init__(self):
+        super().__init__(SPEC)
+```
+
+**optimizer.py**
+```python
+"""Optimizer factory for this candidate."""
+from __future__ import annotations
+
+import torch
+import torch.nn as nn
+
+
+def build_optimizer(model: nn.Module) -> torch.optim.Optimizer:
+    params = model.parameters()
+    return torch.optim.AdamW(params, lr=0.0003, betas=(0.9, 0.999), weight_decay=0.01, eps=1e-08, foreach=False)
+```
+
+**loss.py**
+```python
+"""Loss function for this candidate."""
+from __future__ import annotations
+
+import torch
+import torch.nn as nn
+
+
+def loss_fn(model: nn.Module, pred: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+    if pred.ndim == 3:
+        vocab = pred.shape[-1]
+        return torch.nn.functional.cross_entropy(pred.reshape(-1, vocab), target.reshape(-1))
+    return torch.nn.functional.cross_entropy(pred, target.reshape(-1))
+```
+
+**train.py**
+```python
+from __future__ import annotations
+
+import importlib.util
+import hashlib
+import json
+import math
+from pathlib import Path
+import time
+
+import torch
+import torch.nn.functional as F
+
+from model import Model
+from optimizer import build_optimizer
+from loss import loss_fn
+
+
+def _dataset():
+    candidate = Path(__file__).parent
+    for parent in candidate.parents:
+        if (parent / "dataset_spec.json").is_file():
+            spec = json.loads((parent / "dataset_spec.json").read_text())
+            module_spec = importlib.util.spec_from_file_location("frozen_task_synthesis", parent / spec["files"]["synthesize"])
+            module = importlib.util.module_from_spec(module_spec)
+            module_spec.loader.exec_module(module)
+            return parent, spec, module
+    raise FileNotFoundError("candidate must be contained in its materialized dataset")
+
+
+def _distribution_loss(student, teacher, mode):
+    teacher_log = F.log_softmax(teacher, -1)
+    student_log = F.log_softmax(student, -1)
+    teacher_prob, student_prob = teacher_log.exp(), student_log.exp()
+    if mode == "reverse_kl":
+        return (student_prob * (student_log - teacher_log)).sum(-1).mean()
+    if mode == "js":
+        mixture_log = ((teacher_prob + student_prob) * 0.5).clamp_min(1e-12).log()
+        return 0.5 * ((teacher_prob * (teacher_log - mixture_log)).sum(-1).mean() + (student_prob * (student_log - mixture_log)).sum(-1).mean())
+    return (teacher_prob * (teacher_log - student_log)).sum(-1).mean()
+
+
+def _diffusion_input(noisy, condition, timestep):
+    height, width = noisy.shape[-2:]
+    conditioning = condition[:, :, None, None].expand(-1, -1, height, width)
+    time_channel = timestep[:, None, None, None].expand(-1, 1, height, width)
+    return torch.cat((noisy, conditioning, time_channel), dim=1)
+
+
+def _sample_diffusion(model, condition, shape, alpha_bar, generator):
+    noisy = torch.randn((len(condition), *shape), generator=generator, device=condition.device)
+    for t in reversed(range(len(alpha_bar))):
+        normalized_time = torch.full((len(condition),), t / max(1, len(alpha_bar)-1), device=condition.device)
+        epsilon = model(_diffusion_input(noisy, condition, normalized_time))
+        current = alpha_bar[t]
+        previous = alpha_bar[t-1] if t else torch.ones((), device=condition.device)
+        clean = ((noisy - (1-current).sqrt() * epsilon) / current.sqrt()).clamp(0, 1)
+        noisy = previous.sqrt() * clean + (1-previous).sqrt() * epsilon
+    return noisy
+
+
+def _evaluate(model, x, y, objective, params, module, teacher, alpha_bar, seed):
+    model.eval()
+    metrics = []
+    with torch.inference_mode():
+        for start in range(0, len(x), 64):
+            xb, yb = x[start:start+64], y[start:start+64]
+            if objective == "diffusion":
+                generator = torch.Generator(device=x.device).manual_seed(seed + start + 70000)
+                generated = _sample_diffusion(model, xb, list(y.shape[1:]), alpha_bar, generator)
+                if not hasattr(module, "verify_conditions"):
+                    raise RuntimeError("diffusion task lacks independent generation verifier")
+                passed = module.verify_conditions(generated.cpu(), xb.cpu(), params)
+                # Lower is better in the existing question contract.
+                metric = 1.0 - float(torch.as_tensor(passed).float().mean())
+            elif objective == "opd":
+                student_logits, teacher_logits = model(xb), teacher(xb)
+                mask = yb != -100
+                metric = float(_distribution_loss(student_logits[mask], teacher_logits[mask], "forward_kl"))
+            elif objective in {"token_ce", "classification"}:
+                logits = model(xb)
+                if objective == "token_ce" and params.get("selection_metric") == "test_error":
+                    start_index = int((yb[0] != -100).nonzero()[0])
+                    prefix = xb[:, :start_index+1]
+                    answer = []
+                    for _ in range(int(params["source_length"])):
+                        token = model(prefix)[:, -1].argmax(-1)
+                        answer.append(token)
+                        prefix = torch.cat((prefix, token[:, None]), 1)
+                    prediction = torch.stack(answer, 1)
+                    metric = float((prediction != yb[:, start_index:start_index+len(answer)]).any(-1).float().mean())
+                elif objective == "classification" and params.get("selection_metric") == "test_error":
+                    metric = float((logits.argmax(-1) != yb).float().mean())
+                else:
+                    metric = float(F.cross_entropy(logits.reshape(-1, logits.shape[-1]), yb.reshape(-1), ignore_index=-100))
+            else:
+                prediction = model(xb)
+                if prediction.shape != yb.shape:
+                    raise ValueError(f"prediction {prediction.shape} differs from target {yb.shape}")
+                if params.get("selection_metric") == "test_relative_l2":
+                    metric = float(((prediction-yb).flatten(1).norm(dim=1) / yb.flatten(1).norm(dim=1).clamp_min(1e-8)).mean())
+                elif params.get("selection_metric") == "test_distance_error":
+                    metric = float((prediction.round() != yb).float().mean())
+                else:
+                    metric = float(F.mse_loss(prediction, yb))
+            weight = int((yb != -100).sum()) if objective in {"token_ce", "opd"} and params.get("selection_metric") != "test_error" else len(xb)
+            metrics.append((weight, metric))
+    return sum(n*m for n,m in metrics) / sum(n for n,_ in metrics)
+
+
+def train_and_eval(train_x, train_y, test_x, test_y, *, steps, batch_size, seed=0,
+                   fail_threshold=float("inf"), device="cpu", progress_callback=None):
+    torch.manual_seed(seed)
+    if device == "cuda":
+        torch.cuda.manual_seed_all(seed)
+    task_dir, spec, synthesis = _dataset()
+    params = spec["params"]
+    objective, selection = params["objective"], spec["selection_metric"]
+    params["selection_metric"] = selection
+    run_device = torch.device(device)
+    candidate_spec = json.loads((Path(__file__).parent / "candidate_spec.json").read_text())
+    protocol = candidate_spec.get("training", {})
+    if protocol.get("precision", "fp32") != "fp32" or protocol.get("gradient_accumulation", 1) != 1:
+        raise ValueError("expansion training currently supports FP32 and one batch per update")
+    if protocol.get("schedule", "constant") != "constant":
+        raise ValueError("expansion training requires a declared constant learning rate")
+    if protocol.get("deterministic_algorithms"):
+        torch.use_deterministic_algorithms(True)
+    if "tf32" in protocol:
+        torch.backends.cuda.matmul.allow_tf32 = bool(protocol["tf32"])
+        torch.backends.cudnn.allow_tf32 = bool(protocol["tf32"])
+    result_dir = Path(__file__).parent / "results"
+    result_dir.mkdir(exist_ok=True)
+    model = Model()
+    initial_path = result_dir / f"initial_seed{seed}.pt"
+    if protocol.get("persist_initial_state"):
+        if initial_path.exists():
+            model.load_state_dict(torch.load(initial_path, map_location="cpu", weights_only=True))
+        else:
+            torch.save(model.state_dict(), initial_path)
+    initial_hash = hashlib.sha256()
+    for name, tensor in model.state_dict().items():
+        initial_hash.update(name.encode())
+        initial_hash.update(tensor.detach().contiguous().numpy().tobytes())
+    model = model.to(run_device)
+    optimizer = build_optimizer(model)
+    train_x, train_y = train_x.to(run_device), train_y.to(run_device)
+    test_x, test_y = test_x.to(run_device), test_y.to(run_device)
+    teacher = None
+    if objective == "opd":
+        with torch.random.fork_rng():
+            teacher = synthesis.build_teacher(params).to(run_device).eval()
+        for parameter in teacher.parameters():
+            parameter.requires_grad_(False)
+    mode = candidate_spec["loss"].get("loss_id", "forward_kl")
+    noise_steps = int(params.get("noise_steps", 32))
+    alpha_bar = synthesis.diffusion_schedule(noise_steps, run_device)[1] if objective == "diffusion" else None
+    validation = torch.load(task_dir / spec["files"]["validation"], weights_only=True)
+    validation_x, validation_y = validation["x"].to(run_device), validation["y"].to(run_device)
+    eval_samples, step_metrics, training_losses = [], [], []
+    teacher_queries = 0
+    failed = False
+    interval = max(1, steps // 10)
+    clip_norm = float(protocol.get("clip_norm", 10.0))
+    if not math.isfinite(clip_norm) or clip_norm <= 0:
+        raise ValueError("clip_norm must be finite and positive")
+    sync = torch.cuda.synchronize if run_device.type == "cuda" else lambda: None
+    warmup_seconds = 0.0
+    warmup_updates = int(protocol.get("warmup_updates", 0))
+    if warmup_updates:
+        if objective != "token_ce" or not initial_path.exists():
+            raise ValueError("warmup with reset requires token CE and saved initial weights")
+        sync()
+        start = time.perf_counter()
+        for _ in range(warmup_updates):
+            model.train()
+            optimizer.zero_grad(set_to_none=True)
+            loss_fn(model, model(train_x[:batch_size]), train_y[:batch_size]).backward()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), clip_norm)
+            optimizer.step()
+        model.load_state_dict(torch.load(initial_path, map_location=run_device, weights_only=True))
+        optimizer = build_optimizer(model)
+        model.zero_grad(set_to_none=True)
+        torch.manual_seed(seed)
+        if run_device.type == "cuda":
+            torch.cuda.manual_seed_all(seed)
+        sync()
+        warmup_seconds = time.perf_counter() - start
+    sampler = torch.Generator().manual_seed(seed + int(protocol.get("batch_seed_offset", 500000)))
+    batch_stream = hashlib.sha256()
+    training_seconds = 0.0
+    input_tokens = supervised_tokens = 0
+    eval_steps = protocol.get("eval_steps")
+    initial_metric = _evaluate(model, validation_x, validation_y, objective, params, synthesis, teacher, alpha_bar, seed)
+    for step in range(1, steps+1):
+        sync()
+        train_start = time.perf_counter()
+        model.train()
+        if protocol.get("paired_cpu_batch_stream"):
+            cpu_indices = torch.randint(len(train_x), (batch_size,), generator=sampler)
+            batch_stream.update(cpu_indices.numpy().tobytes())
+            indices = cpu_indices.to(run_device)
+        else:
+            indices = torch.randint(len(train_x), (batch_size,), device=run_device)
+            batch_stream.update(indices.cpu().numpy().tobytes())
+        xb, yb = train_x[indices], train_y[indices]
+        if objective == "opd":
+            # Every generated token is sampled from the student, never copied from the teacher data.
+            prefix_length = int(params.get("prefix_length", 4))
+            prefix = xb[:, :prefix_length]
+            losses = []
+            for _ in range(int(params.get("opd_rollout_length", 4))):
+                logits = model(prefix)[:, -1]
+                with torch.no_grad():
+                    teacher_logits = teacher(prefix)[:, -1]
+                    token = torch.multinomial(logits.detach().softmax(-1), 1)
+                losses.append(loss_fn(model, logits, teacher_logits))
+                prefix = torch.cat((prefix, token), dim=1)
+                teacher_queries += batch_size
+            loss = torch.stack(losses).mean()
+        elif objective == "diffusion":
+            time_index = torch.randint(noise_steps, (batch_size,), device=run_device)
+            epsilon = torch.randn_like(yb)
+            scale = alpha_bar[time_index, None, None, None]
+            noisy = scale.sqrt()*yb + (1-scale).sqrt()*epsilon
+            prediction = model(_diffusion_input(noisy, xb, time_index.float() / max(1, noise_steps-1)))
+            loss = loss_fn(model, prediction, epsilon)
+        elif objective in {"token_ce", "classification"}:
+            logits = model(xb)
+            loss = loss_fn(model, logits, yb)
+        else:
+            prediction = model(xb)
+            if prediction.shape != yb.shape:
+                raise ValueError("model does not satisfy dataset output contract")
+            loss = loss_fn(model, prediction, yb)
+        if not torch.isfinite(loss):
+            failed = True
+            break
+        optimizer.zero_grad(set_to_none=True)
+        loss.backward()
+        norm = torch.nn.utils.clip_grad_norm_(model.parameters(), clip_norm)
+        if not torch.isfinite(norm):
+            failed = True
+            break
+        optimizer.step()
+        sync()
+        training_seconds += time.perf_counter() - train_start
+        input_tokens += xb.numel()
+        supervised_tokens += int((yb != -100).sum()) if objective == "token_ce" else yb.numel()
+        training_losses.append(float(loss.detach()))
+        if step == steps or (step in eval_steps if eval_steps is not None else step % interval == 0):
+            metric = _evaluate(model, validation_x, validation_y, objective, params, synthesis, teacher, alpha_bar, seed)
+            eval_samples.append(step * batch_size)
+            step_metrics.append(metric)
+            if not math.isfinite(metric):
+                failed = True
+                break
+            if progress_callback:
+                progress_callback({"step": step, "training_steps": steps, "samples_seen": step*batch_size,
+                                   "total_samples_seen": steps*batch_size, "metric": metric})
+    final = float("inf") if failed else _evaluate(model, test_x, test_y, objective, params, synthesis, teacher, alpha_bar, seed)
+    ood_metric = None
+    if not failed:
+        ood = torch.load(task_dir / spec["files"]["ood"], weights_only=True)
+        ood_params = dict(params, **params.get("ood_shift", {}))
+        ood_metric = _evaluate(model, ood["x"].to(run_device), ood["y"].to(run_device), objective,
+                               ood_params, synthesis, teacher, alpha_bar, seed + 90000)
+    failed = failed or not math.isfinite(final) or final > fail_threshold
+    evidence = {"seed": seed, "initial_validation_metric": initial_metric, "final_test_metric": final,
+                "final_validation_metric": step_metrics[-1] if step_metrics else initial_metric,
+                "ood_metric": ood_metric, "ood_shift": params.get("ood_shift", {}),
+                "curve_split": "validation", "training_losses": training_losses, "teacher_queries": teacher_queries,
+                "samples_seen": len(training_losses)*batch_size, "failed": failed,
+                "budget_route": "steps", "actual_updates": len(training_losses),
+                "training_seconds": training_seconds, "warmup_seconds": warmup_seconds,
+                "input_tokens": input_tokens, "supervised_tokens": supervised_tokens,
+                "initial_state_sha256": initial_hash.hexdigest(), "batch_stream_sha256": batch_stream.hexdigest(),
+                "training_protocol": protocol,
+                "test_evaluations": 0 if failed else 1, "optimizer": candidate_spec["optimizer"]}
+    (result_dir / f"diagnostics_seed{seed}.json").write_text(json.dumps(evidence, indent=2))
+    torch.save({"state_dict": model.cpu().state_dict(), "candidate_spec": candidate_spec}, result_dir / f"checkpoint_seed{seed}.pt")
+    return {"failed": failed, "final_"+selection: final, "eval_samples": eval_samples, "step_metrics": step_metrics}
+```
+
+## Choices
+
+### Choice A
+
+Identical to the shared base.
+
+
+### Choice B
+
+**settings.json — independent diff from base**
+```diff
+--- a/settings.json
++++ b/settings.json
+@@ -15,7 +15,7 @@
+     "activation": "gelu",
+     "attention_window": null,
+     "context_length": 128,
+-    "d_ff": 96,
++    "d_ff": 384,
+     "d_model": 96,
+     "family": "transformer",
+     "max_parameters": 2000000,
+```
+
+**model.py — independent diff from base**
+```diff
+--- a/model.py
++++ b/model.py
+@@ -189,7 +189,7 @@
+         return self.head(self.final_norm(h))
+ 
+ 
+-SPEC = {'type': 'ntp_anchor_lm', 'family': 'transformer', 'vocab_size': 64, 'context_length': 128, 'd_model': 96, 'num_layers': 2, 'num_heads': 4, 'd_ff': 96, 'activation': 'gelu', 'norm_first': True, 'residual': True, 'attention_window': None, 'position_mode': 'none', 'max_parameters': 2000000}
++SPEC = {'type': 'ntp_anchor_lm', 'family': 'transformer', 'vocab_size': 64, 'context_length': 128, 'd_model': 96, 'num_layers': 2, 'num_heads': 4, 'd_ff': 384, 'activation': 'gelu', 'norm_first': True, 'residual': True, 'attention_window': None, 'position_mode': 'none', 'max_parameters': 2000000}
+ 
+ class Model(NtpAnchorLM):
+     def __init__(self):
+```
+
+
+### Choice C
+
+**settings.json — independent diff from base**
+```diff
+--- a/settings.json
++++ b/settings.json
+@@ -12,10 +12,10 @@
+     "loss_id": "cross_entropy"
+   },
+   "model": {
+-    "activation": "gelu",
++    "activation": "tanh",
+     "attention_window": null,
+     "context_length": 128,
+-    "d_ff": 96,
++    "d_ff": 384,
+     "d_model": 96,
+     "family": "transformer",
+     "max_parameters": 2000000,
+```
+
+**model.py — independent diff from base**
+```diff
+--- a/model.py
++++ b/model.py
+@@ -189,7 +189,7 @@
+         return self.head(self.final_norm(h))
+ 
+ 
+-SPEC = {'type': 'ntp_anchor_lm', 'family': 'transformer', 'vocab_size': 64, 'context_length': 128, 'd_model': 96, 'num_layers': 2, 'num_heads': 4, 'd_ff': 96, 'activation': 'gelu', 'norm_first': True, 'residual': True, 'attention_window': None, 'position_mode': 'none', 'max_parameters': 2000000}
++SPEC = {'type': 'ntp_anchor_lm', 'family': 'transformer', 'vocab_size': 64, 'context_length': 128, 'd_model': 96, 'num_layers': 2, 'num_heads': 4, 'd_ff': 384, 'activation': 'tanh', 'norm_first': True, 'residual': True, 'attention_window': None, 'position_mode': 'none', 'max_parameters': 2000000}
+ 
+ class Model(NtpAnchorLM):
+     def __init__(self):
+```
+
+
+Before the final answer, provide a concise public explanation inside `<explanation>...</explanation>`. Identify the main factors affecting the predicted results, justify each adjacent pair in your ranking, and state material uncertainty. Ground your explanation in the provided code, data, and training settings.
+
+## Your answer
+Rank all three choices from lowest to highest held-out loss, using each letter exactly once. Write the complete order inside a single `<answer>` tag as one JSON object, and put nothing after the tag. Format: `<answer>{"best_to_worst": ["first_letter", "second_letter", "...", "last_letter"]}</answer>`. "best_to_worst" means best = lowest held-out loss first. Replace the placeholders with the option letters in your predicted order. The grader reads only the **final** `<answer>` tag in your reply.
