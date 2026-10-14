@@ -1,0 +1,935 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>文风没像参考解题器，但参考做对的题它越来越会做</title>
+<style>
+  :root {
+    --dark: #141413;
+    --light: #faf9f5;
+    --mid: #b0aea5;
+    --soft: #e8e6dc;
+    --muted: #5e5d59;
+    --orange: #d97757;
+    --blue: #6a9bcc;
+    --green: #788c5d;
+    --head: "Poppins", "PingFang SC", "Noto Sans CJK SC", "Hiragino Sans GB", Arial, sans-serif;
+    --body: "Lora", "Noto Serif CJK SC", "Songti SC", Georgia, serif;
+    --mono: "SF Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--light); color: var(--dark); font: 17px/1.8 var(--body); }
+  main { max-width: 760px; margin: 0 auto; padding: 72px 24px 96px; }
+  h1, h2, h3 { font-family: var(--head); font-weight: 600; line-height: 1.35; letter-spacing: -0.01em; }
+  h1 { font-size: 32px; margin: 0 0 16px; }
+  h2 { font-size: 22px; margin: 64px 0 12px; }
+  p { margin: 0 0 16px; }
+  .lede { font-size: 19px; }
+  a { color: inherit; text-decoration: underline; text-decoration-color: var(--orange); text-underline-offset: 3px; }
+  code, .id { font-family: var(--mono); font-size: 0.86em; background: var(--soft); padding: 1px 5px; border-radius: 4px; }
+
+  .settings { display: flex; flex-wrap: wrap; gap: 8px 20px; list-style: none; padding: 0; margin: 24px 0 0;
+              font: 14px/1.6 var(--head); color: var(--muted); }
+  .settings li { display: inline-flex; align-items: center; gap: 6px; }
+  .settings svg { width: 15px; height: 15px; stroke: var(--dark); fill: none; stroke-width: 1.6;
+                  stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  .settings b { color: var(--dark); font-weight: 500; }
+
+  figure { margin: 28px 0; padding: 20px; background: #fff; border: 1px solid var(--soft); border-radius: 10px; }
+  figure img, figure svg.chart { display: block; width: 100%; height: auto; }
+  figcaption { margin-top: 12px; font: 14px/1.6 var(--head); color: var(--muted); }
+
+  .warn { border-left: 3px solid var(--orange); padding: 4px 0 4px 16px; margin: 24px 0; }
+  .warn strong { font-family: var(--head); }
+
+  blockquote { margin: 14px 0 4px; padding: 8px 16px; border-left: 3px solid var(--mid);
+               color: var(--muted); font: 14px/1.7 var(--body); background: #fff; }
+  .quote-src { font: 13px var(--head); color: var(--mid); margin: 0 0 16px; }
+
+  details { margin: 16px 0; }
+  summary { cursor: pointer; font: 15px var(--head); color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font: 14px/1.6 var(--head); margin: 16px 0; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--soft); }
+  th { font-weight: 500; color: var(--muted); }
+  footer { margin-top: 80px; font: 13px var(--head); color: var(--mid); }
+  .small { font: 13px/1.6 var(--head); color: var(--muted); }
+
+  .controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 14px 0 4px; }
+  .controls input[type="search"] { font: 14px var(--head); padding: 6px 10px;
+                 border: 1px solid var(--mid); border-radius: 6px; background: #fff; color: var(--dark);
+                 flex: 1 1 220px; }
+  .qrow { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; width: 100%; text-align: left;
+          background: #fff; border: 1px solid var(--soft); border-radius: 8px; padding: 9px 12px; margin: 6px 0 0;
+          cursor: pointer; font: 14px/1.5 var(--head); color: var(--dark); }
+  .qrow:hover { border-color: var(--mid); }
+  .qrow.open { border-color: var(--orange); }
+  .qid { font-family: var(--mono); font-size: 12.5px; background: var(--soft); padding: 1px 6px; border-radius: 4px; }
+  .meta { color: var(--muted); font-size: 12.5px; }
+  .chip { display: inline-block; min-width: 20px; text-align: center; padding: 0 8px; border-radius: 10px;
+          font: 12px/1.7 var(--head); }
+  .chip.ok { background: rgba(120, 140, 93, 0.16); color: #4c5a39; }
+  .chip.bad { background: var(--soft); color: var(--muted); }
+  .chip.fmt { background: #fff; border: 1px dashed var(--mid); color: var(--muted); }
+  .chip.gold { background: #fff; border: 1px solid var(--mid); color: var(--dark); }
+  .chip.j-none { background: rgba(120, 140, 93, 0.16); color: #4c5a39; }
+  .chip.j-minor { background: var(--soft); color: var(--muted); }
+  .chip.j-severe { background: rgba(217, 119, 87, 0.16); color: #a04a2c; }
+  .qpanel { background: #fff; border: 1px solid var(--soft); border-radius: 8px; padding: 12px 14px 14px;
+            margin: 6px 0 0; }
+  .stage-head { font: 600 15px var(--head); margin: 20px 0 4px; padding-left: 10px;
+                border-left: 3px solid var(--orange); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .stage-head.ref { border-left-color: var(--blue); }
+  .sample-head { font: 13px var(--head); color: var(--muted); margin: 12px 0 4px;
+                 display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  pre.cot, pre.prompt { white-space: pre-wrap; word-break: break-word; font: 12.5px/1.65 var(--mono);
+            background: var(--light); border: 1px solid var(--soft); border-radius: 8px; padding: 12px 14px;
+            margin: 0; }
+  .promptbox summary { font-size: 14px; }
+</style>
+</head>
+<body>
+<main>
+
+<h1>文风没像参考解题器，但参考做对的题它越来越会做</h1>
+<p class="lede">同一批 40 道题上，0.8B 模型七个检查点的思维链与 gpt-6.1-sol（推理强度 high、温度 1 采样的参考解题器）的表面相似度几乎不变（判据构成余弦 0.87 到 0.86，措辞余弦 0.02 到 0.02）；但在参考答对的题上，它与参考的答案一致率从 29% 升到 54%，在参考答错的题上从 33% 降到 25%。靠拢的是正确结论，不是文风。</p>
+<ul class="settings">
+  <li><svg viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="2"/><path d="M9 1v4M15 1v4M9 19v4M15 19v4M1 9h4M1 15h4M19 9h4M19 15h4"/></svg>对照 <b>Qwen3.5-0.8B 七检查点 × gpt-6.1-sol</b></li>
+  <li><svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/></svg>题目 <b>40 道（分层抽样＋盲审案例）</b></li>
+  <li><svg viewBox="0 0 24 24"><path d="M4 19l5-7 4 4 7-10"/></svg>采样 <b>温度 1，上限 16k token</b></li>
+  <li><svg viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/></svg>裁判 <b>gpt-5.6-luna（贴题裁判，温度 0）</b></li>
+  <li><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><b>2026-10-14</b></li>
+</ul>
+
+<h2>推理文字全部贴题，但干净的事实依据没有涌现——参考解题器也不干净</h2>
+<p>裁判只把两类问题记为严重：没读题的模板推理，或凭空捏造／违背题面事实且该事实是结论的主要依据。40 道题上，从 SFT（监督微调：强化学习的起点）到 g175（训练第 175 步）、g350（第 350 步）等各检查点，0.8B 每个阶段的推理都引用了本题的具体配置（引用率 100%），但"完全贴题、无可注意瑕疵"的比例只有 6% 到 0%，严重比例 22% 到 31%，没有随训练下降。</p>
+<figure>
+  <svg class="chart" style="width:100%;height:auto" xmlns:xlink="http://www.w3.org/1999/xlink" width="254.912372pt" height="189.438719pt" viewBox="0 0 254.912372 189.438719" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-10-14T13:18:22.459947</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.10.9, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 189.438719 
+L 254.912372 189.438719 
+L 254.912372 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="axes_1">
+   <g id="patch_2">
+    <path d="M 43.435 166.013719 
+L 244.315 166.013719 
+L 244.315 10.781719 
+L 43.435 10.781719 
+z
+" style="fill: #ffffff"/>
+   </g>
+   <g id="matplotlib.axis_1">
+    <g id="xtick_1">
+     <g id="line2d_1">
+      <path d="M 52.565909 166.013719 
+L 52.565909 10.781719 
+" clip-path="url(#pb3ff8bea60)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_2">
+      <defs>
+       <path id="m46d9aa300b" d="M 0 0 
+L 0 3.5 
+" style="stroke: #5e5d59; stroke-width: 0.8"/>
+      </defs>
+      <g>
+       <use xlink:href="#m46d9aa300b" x="52.565909" y="166.013719" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_1">
+      <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" x="52.565909" y="180.177156" transform="rotate(-0 52.565909 180.177156)">SFT</text>
+     </g>
+    </g>
+    <g id="xtick_2">
+     <g id="line2d_3">
+      <path d="M 113.438636 166.013719 
+L 113.438636 10.781719 
+" clip-path="url(#pb3ff8bea60)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_4">
+      <g>
+       <use xlink:href="#m46d9aa300b" x="113.438636" y="166.013719" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_2">
+      <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" x="113.438636" y="179.988719" transform="rotate(-0 113.438636 179.988719)">g775</text>
+     </g>
+    </g>
+    <g id="xtick_3">
+     <g id="line2d_5">
+      <path d="M 174.311364 166.013719 
+L 174.311364 10.781719 
+" clip-path="url(#pb3ff8bea60)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_6">
+      <g>
+       <use xlink:href="#m46d9aa300b" x="174.311364" y="166.013719" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_3">
+      <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" x="174.311364" y="179.988719" transform="rotate(-0 174.311364 179.988719)">g1300</text>
+     </g>
+    </g>
+    <g id="xtick_4">
+     <g id="line2d_7">
+      <path d="M 235.184091 166.013719 
+L 235.184091 10.781719 
+" clip-path="url(#pb3ff8bea60)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_8">
+      <g>
+       <use xlink:href="#m46d9aa300b" x="235.184091" y="166.013719" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_4">
+      <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" x="235.184091" y="179.988719" transform="rotate(-0 235.184091 179.988719)">g1400</text>
+     </g>
+    </g>
+   </g>
+   <g id="matplotlib.axis_2">
+    <g id="ytick_1">
+     <g id="line2d_9">
+      <path d="M 43.435 166.013719 
+L 244.315 166.013719 
+" clip-path="url(#pb3ff8bea60)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_10">
+      <defs>
+       <path id="m0cfd6a07ad" d="M 0 0 
+L -3.5 0 
+" style="stroke: #5e5d59; stroke-width: 0.8"/>
+      </defs>
+      <g>
+       <use xlink:href="#m0cfd6a07ad" x="43.435" y="166.013719" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_5">
+      <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="36.435" y="169.595438" transform="rotate(-0 36.435 169.595438)">0</text>
+     </g>
+    </g>
+    <g id="ytick_2">
+     <g id="line2d_11">
+      <path d="M 43.435 134.967319 
+L 244.315 134.967319 
+" clip-path="url(#pb3ff8bea60)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_12">
+      <g>
+       <use xlink:href="#m0cfd6a07ad" x="43.435" y="134.967319" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_6">
+      <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="36.435" y="138.549037" transform="rotate(-0 36.435 138.549037)">20</text>
+     </g>
+    </g>
+    <g id="ytick_3">
+     <g id="line2d_13">
+      <path d="M 43.435 103.920919 
+L 244.315 103.920919 
+" clip-path="url(#pb3ff8bea60)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_14">
+      <g>
+       <use xlink:href="#m0cfd6a07ad" x="43.435" y="103.920919" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_7">
+      <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="36.435" y="107.502637" transform="rotate(-0 36.435 107.502637)">40</text>
+     </g>
+    </g>
+    <g id="ytick_4">
+     <g id="line2d_15">
+      <path d="M 43.435 72.874519 
+L 244.315 72.874519 
+" clip-path="url(#pb3ff8bea60)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_16">
+      <g>
+       <use xlink:href="#m0cfd6a07ad" x="43.435" y="72.874519" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_8">
+      <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="36.435" y="76.456238" transform="rotate(-0 36.435 76.456238)">60</text>
+     </g>
+    </g>
+    <g id="ytick_5">
+     <g id="line2d_17">
+      <path d="M 43.435 41.828119 
+L 244.315 41.828119 
+" clip-path="url(#pb3ff8bea60)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_18">
+      <g>
+       <use xlink:href="#m0cfd6a07ad" x="43.435" y="41.828119" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_9">
+      <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="36.435" y="45.409838" transform="rotate(-0 36.435 45.409838)">80</text>
+     </g>
+    </g>
+    <g id="ytick_6">
+     <g id="line2d_19">
+      <path d="M 43.435 10.781719 
+L 244.315 10.781719 
+" clip-path="url(#pb3ff8bea60)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_20">
+      <g>
+       <use xlink:href="#m0cfd6a07ad" x="43.435" y="10.781719" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_10">
+      <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="36.435" y="14.363438" transform="rotate(-0 36.435 14.363438)">100</text>
+     </g>
+    </g>
+    <g id="text_11">
+     <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #141413" x="15.159375" y="88.397719" transform="rotate(-90 15.159375 88.397719)">推理贴题率（%）</text>
+    </g>
+   </g>
+   <g id="line2d_21">
+    <path d="M 52.565909 157.389719 
+L 113.438636 161.701719 
+L 174.311364 166.013719 
+L 235.184091 166.013719 
+" clip-path="url(#pb3ff8bea60)" style="fill: none; stroke: #d97757; stroke-width: 1.8; stroke-linecap: square"/>
+    <defs>
+     <path id="m56e137de26" d="M 0 2 
+C 0.530406 2 1.03916 1.789267 1.414214 1.414214 
+C 1.789267 1.03916 2 0.530406 2 0 
+C 2 -0.530406 1.789267 -1.03916 1.414214 -1.414214 
+C 1.03916 -1.789267 0.530406 -2 0 -2 
+C -0.530406 -2 -1.03916 -1.789267 -1.414214 -1.414214 
+C -1.789267 -1.03916 -2 -0.530406 -2 0 
+C -2 0.530406 -1.789267 1.03916 -1.414214 1.414214 
+C -1.03916 1.789267 -0.530406 2 0 2 
+z
+" style="stroke: #d97757"/>
+    </defs>
+    <g clip-path="url(#pb3ff8bea60)">
+     <use xlink:href="#m56e137de26" x="52.565909" y="157.389719" style="fill: #d97757; stroke: #d97757"/>
+     <use xlink:href="#m56e137de26" x="113.438636" y="161.701719" style="fill: #d97757; stroke: #d97757"/>
+     <use xlink:href="#m56e137de26" x="174.311364" y="166.013719" style="fill: #d97757; stroke: #d97757"/>
+     <use xlink:href="#m56e137de26" x="235.184091" y="166.013719" style="fill: #d97757; stroke: #d97757"/>
+    </g>
+   </g>
+   <g id="line2d_22">
+    <path d="M 43.435 138.848119 
+L 244.315 138.848119 
+" clip-path="url(#pb3ff8bea60)" style="fill: none; stroke-dasharray: 6.66,2.88; stroke-dashoffset: 0; stroke: #b0aea5; stroke-width: 1.8"/>
+   </g>
+   <g id="patch_3">
+    <path d="M 43.435 166.013719 
+L 43.435 10.781719 
+" style="fill: none; stroke: #b0aea5; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="patch_4">
+    <path d="M 43.435 166.013719 
+L 244.315 166.013719 
+" style="fill: none; stroke: #b0aea5; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="legend_1">
+    <g id="line2d_23">
+     <path d="M 107.693594 138.347156 
+L 116.693594 138.347156 
+L 125.693594 138.347156 
+" style="fill: none; stroke: #d97757; stroke-width: 1.8; stroke-linecap: square"/>
+     <g>
+      <use xlink:href="#m56e137de26" x="116.693594" y="138.347156" style="fill: #d97757; stroke: #d97757"/>
+     </g>
+    </g>
+    <g id="text_12">
+     <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" x="132.893594" y="141.497156" transform="rotate(-0 132.893594 141.497156)">0.8B 各阶段</text>
+    </g>
+    <g id="line2d_24">
+     <path d="M 107.693594 152.513719 
+L 116.693594 152.513719 
+L 125.693594 152.513719 
+" style="fill: none; stroke-dasharray: 6.66,2.88; stroke-dashoffset: 0; stroke: #b0aea5; stroke-width: 1.8"/>
+    </g>
+    <g id="text_13">
+     <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" x="132.893594" y="155.663719" transform="rotate(-0 132.893594 155.663719)">gpt-6.1-sol 参考水平 18%</text>
+    </g>
+   </g>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="pb3ff8bea60">
+   <rect x="43.435" y="10.781719" width="200.88" height="155.232"/>
+  </clipPath>
+ </defs>
+</svg>
+
+  <figcaption>裁判为 gpt-5.6-luna，温度 0；每阶段 36 到 40 条回答，各取第一次采样。</figcaption>
+</figure>
+<p>gpt-6.1-sol 在同一批题上完全贴题 18%、严重 38%。在这类"预测哪种训练配置会赢"的题上，推理的事实稳定性对前沿模型同样是难题。所以"合理的思考过程"要拆开看：贴题 engagement、格式合规、预算算术这些可验证的行为涌现了；事实干净性没有，而且不是 0.8B 独有的短板。</p>
+
+<h2>文风没有越来越像：0.8B 逐条列举判据，参考解题器只挑决定性的</h2>
+<p>把 22 类判据（深度、宽度、归一化、残差、激活、预算、优化器机制、过拟合、优化难度等）在每条回答里的出现记成向量，与参考的余弦相似度在七个检查点上徘徊于 0.87 到 0.86，没有上升趋势。措辞层面的词组（bigram）加权余弦只有 0.02 到 0.02。</p>
+<p>差距在选择性。0.8B 平均每条回答提及 14 类判据：深度 96%、宽度 90%、优化难度 93% 几乎条条都谈。gpt-6.1-sol 平均只提 4 类（宽度 8%）。前者是穷举式分析，后者是判别式分析。这个差距不随训练缩小，因此"越来越像参考的分析"在文风与判据构成上不成立。以一道异或（XOR：两特征符号相反才为正类）交互分类题为例：</p>
+<blockquote>"Choice C is the best bet. With only 512 updates at a very small SGD learning rate, optimization speed matters more than raw expressivity. Its residual connections and layer normalization support stronger gradient propagation, while its nonlinear depth can capture the XOR interaction."</blockquote>
+<p class="quote-src">gpt-6.1-sol 在 XOR 题 q_79d14d（题号）上的全部可见分析：四句话，只引用三个决定性判据，答对。0.8B 在同题 g1300 的两次回答也选对，但各用约 1,500 token 逐候选穷举。下方对照浏览器可逐字比较。</p>
+<details>
+  <summary>判据提及率与策略标记逐阶段表</summary>
+  <table>
+    <tr><th>判据（40 题提及率）</th><th>SFT</th><th>g1300</th><th>g1400</th><th>gpt-6.1-sol</th></tr>
+    <tr><td>深度/层数</td><td>0.92</td><td>0.96</td><td>0.90</td><td>0.42</td></tr><tr><td>宽度</td><td>0.89</td><td>0.90</td><td>0.90</td><td>0.07</td></tr><tr><td>层归一化</td><td>0.88</td><td>0.85</td><td>0.79</td><td>0.30</td></tr><tr><td>残差</td><td>0.78</td><td>0.76</td><td>0.71</td><td>0.42</td></tr><tr><td>激活函数</td><td>0.78</td><td>0.82</td><td>0.81</td><td>0.40</td></tr><tr><td>预算/epoch</td><td>0.94</td><td>0.96</td><td>0.99</td><td>0.17</td></tr><tr><td>优化器机制</td><td>0.89</td><td>0.86</td><td>0.88</td><td>0.45</td></tr><tr><td>过拟合/泛化</td><td>0.49</td><td>0.53</td><td>0.53</td><td>0.20</td></tr><tr><td>交互/非线性</td><td>0.67</td><td>0.67</td><td>0.60</td><td>0.42</td></tr><tr><td>优化难度</td><td>0.93</td><td>0.93</td><td>0.95</td><td>0.15</td></tr>
+  </table>
+  <table>
+    <tr><th>策略标记（每条回答提及次数，290 题全语料）</th><th>SFT</th><th>g775</th><th>g1300</th><th>g1400</th><th>gpt-6.1-sol</th></tr>
+    <tr><td>预算/epoch 计算</td><td>5.85</td><td>5.22</td><td>6.02</td><td>5.60</td><td>0.17</td></tr><tr><td>参数量/容量计算</td><td>7.71</td><td>8.93</td><td>8.70</td><td>8.36</td><td>0.38</td></tr><tr><td>过拟合/泛化论证</td><td>1.37</td><td>1.42</td><td>1.23</td><td>1.24</td><td>0.65</td></tr><tr><td>优化难度论证</td><td>6.68</td><td>6.60</td><td>8.32</td><td>8.40</td><td>0.25</td></tr><tr><td>排除法</td><td>0.01</td><td>0.01</td><td>0.01</td><td>0.01</td><td>0.00</td></tr><tr><td>自我复查</td><td>4.38</td><td>6.00</td><td>5.38</td><td>5.25</td><td>0.00</td></tr><tr><td>两两比较</td><td>3.20</td><td>3.23</td><td>3.20</td><td>3.43</td><td>0.38</td></tr><tr><td>缩放律</td><td>0.00</td><td>0.00</td><td>0.00</td><td>0.00</td><td>0.00</td></tr><tr><td>贝叶斯/可辨识性</td><td>0.01</td><td>0.00</td><td>0.00</td><td>0.01</td><td>0.00</td></tr><tr><td>提前停止论证</td><td>0.05</td><td>0.07</td><td>0.13</td><td>0.08</td><td>0.00</td></tr><tr><td>损失签名</td><td>0.01</td><td>0.00</td><td>0.00</td><td>0.00</td><td>0.00</td></tr><tr><td>梯度流论证</td><td>2.64</td><td>2.31</td><td>2.71</td><td>2.70</td><td>0.17</td></tr>
+  </table>
+</details>
+
+<h2>但在参考答对的题上，0.8B 越来越与它一致</h2>
+<p>与参考的答案一致率总体持平（32% 到 35%），拆开看方向相反：参考答对的题上一致率从 29% 升到 54%，参考答错的题上从 33% 降到 25%。一致在向正确的一侧移动。若是在模仿参考，错侧一致率应同步上升；实际在下降。</p>
+<figure>
+  <svg class="chart" style="width:100%;height:auto" xmlns:xlink="http://www.w3.org/1999/xlink" width="450.601719pt" height="211.614719pt" viewBox="0 0 450.601719 211.614719" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-10-14T13:18:22.412905</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.10.9, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 211.614719 
+L 450.601719 211.614719 
+L 450.601719 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="axes_1">
+   <g id="patch_2">
+    <path d="M 41.641719 188.189719 
+L 443.401719 188.189719 
+L 443.401719 10.781719 
+L 41.641719 10.781719 
+z
+" style="fill: #ffffff"/>
+   </g>
+   <g id="matplotlib.axis_1">
+    <g id="xtick_1">
+     <g id="line2d_1">
+      <path d="M 59.903537 188.189719 
+L 59.903537 10.781719 
+" clip-path="url(#pfff030512c)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_2">
+      <defs>
+       <path id="m3c23525628" d="M 0 0 
+L 0 3.5 
+" style="stroke: #5e5d59; stroke-width: 0.8"/>
+      </defs>
+      <g>
+       <use xlink:href="#m3c23525628" x="59.903537" y="188.189719" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_1">
+      <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" x="59.903537" y="202.353156" transform="rotate(-0 59.903537 202.353156)">SFT</text>
+     </g>
+    </g>
+    <g id="xtick_2">
+     <g id="line2d_3">
+      <path d="M 120.776264 188.189719 
+L 120.776264 10.781719 
+" clip-path="url(#pfff030512c)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_4">
+      <g>
+       <use xlink:href="#m3c23525628" x="120.776264" y="188.189719" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_2">
+      <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" x="120.776264" y="202.164719" transform="rotate(-0 120.776264 202.164719)">g175</text>
+     </g>
+    </g>
+    <g id="xtick_3">
+     <g id="line2d_5">
+      <path d="M 181.648991 188.189719 
+L 181.648991 10.781719 
+" clip-path="url(#pfff030512c)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_6">
+      <g>
+       <use xlink:href="#m3c23525628" x="181.648991" y="188.189719" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_3">
+      <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" x="181.648991" y="202.164719" transform="rotate(-0 181.648991 202.164719)">g350</text>
+     </g>
+    </g>
+    <g id="xtick_4">
+     <g id="line2d_7">
+      <path d="M 242.521719 188.189719 
+L 242.521719 10.781719 
+" clip-path="url(#pfff030512c)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_8">
+      <g>
+       <use xlink:href="#m3c23525628" x="242.521719" y="188.189719" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_4">
+      <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" x="242.521719" y="202.164719" transform="rotate(-0 242.521719 202.164719)">g775</text>
+     </g>
+    </g>
+    <g id="xtick_5">
+     <g id="line2d_9">
+      <path d="M 303.394446 188.189719 
+L 303.394446 10.781719 
+" clip-path="url(#pfff030512c)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_10">
+      <g>
+       <use xlink:href="#m3c23525628" x="303.394446" y="188.189719" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_5">
+      <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" x="303.394446" y="202.164719" transform="rotate(-0 303.394446 202.164719)">g1225</text>
+     </g>
+    </g>
+    <g id="xtick_6">
+     <g id="line2d_11">
+      <path d="M 364.267173 188.189719 
+L 364.267173 10.781719 
+" clip-path="url(#pfff030512c)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_12">
+      <g>
+       <use xlink:href="#m3c23525628" x="364.267173" y="188.189719" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_6">
+      <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" x="364.267173" y="202.164719" transform="rotate(-0 364.267173 202.164719)">g1300</text>
+     </g>
+    </g>
+    <g id="xtick_7">
+     <g id="line2d_13">
+      <path d="M 425.139901 188.189719 
+L 425.139901 10.781719 
+" clip-path="url(#pfff030512c)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_14">
+      <g>
+       <use xlink:href="#m3c23525628" x="425.139901" y="188.189719" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_7">
+      <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #5e5d59" x="425.139901" y="202.164719" transform="rotate(-0 425.139901 202.164719)">g1400</text>
+     </g>
+    </g>
+   </g>
+   <g id="matplotlib.axis_2">
+    <g id="ytick_1">
+     <g id="line2d_15">
+      <path d="M 41.641719 188.189719 
+L 443.401719 188.189719 
+" clip-path="url(#pfff030512c)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_16">
+      <defs>
+       <path id="m9da8b85178" d="M 0 0 
+L -3.5 0 
+" style="stroke: #5e5d59; stroke-width: 0.8"/>
+      </defs>
+      <g>
+       <use xlink:href="#m9da8b85178" x="41.641719" y="188.189719" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_8">
+      <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="34.641719" y="191.771438" transform="rotate(-0 34.641719 191.771438)">0.0</text>
+     </g>
+    </g>
+    <g id="ytick_2">
+     <g id="line2d_17">
+      <path d="M 41.641719 152.708119 
+L 443.401719 152.708119 
+" clip-path="url(#pfff030512c)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_18">
+      <g>
+       <use xlink:href="#m9da8b85178" x="41.641719" y="152.708119" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_9">
+      <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="34.641719" y="156.289838" transform="rotate(-0 34.641719 156.289838)">0.2</text>
+     </g>
+    </g>
+    <g id="ytick_3">
+     <g id="line2d_19">
+      <path d="M 41.641719 117.226519 
+L 443.401719 117.226519 
+" clip-path="url(#pfff030512c)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_20">
+      <g>
+       <use xlink:href="#m9da8b85178" x="41.641719" y="117.226519" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_10">
+      <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="34.641719" y="120.808238" transform="rotate(-0 34.641719 120.808238)">0.4</text>
+     </g>
+    </g>
+    <g id="ytick_4">
+     <g id="line2d_21">
+      <path d="M 41.641719 81.744919 
+L 443.401719 81.744919 
+" clip-path="url(#pfff030512c)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_22">
+      <g>
+       <use xlink:href="#m9da8b85178" x="41.641719" y="81.744919" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_11">
+      <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="34.641719" y="85.326637" transform="rotate(-0 34.641719 85.326637)">0.6</text>
+     </g>
+    </g>
+    <g id="ytick_5">
+     <g id="line2d_23">
+      <path d="M 41.641719 46.263319 
+L 443.401719 46.263319 
+" clip-path="url(#pfff030512c)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_24">
+      <g>
+       <use xlink:href="#m9da8b85178" x="41.641719" y="46.263319" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_12">
+      <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="34.641719" y="49.845037" transform="rotate(-0 34.641719 49.845037)">0.8</text>
+     </g>
+    </g>
+    <g id="ytick_6">
+     <g id="line2d_25">
+      <path d="M 41.641719 10.781719 
+L 443.401719 10.781719 
+" clip-path="url(#pfff030512c)" style="fill: none; stroke: #e8e6dc; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_26">
+      <g>
+       <use xlink:href="#m9da8b85178" x="41.641719" y="10.781719" style="fill: #5e5d59; stroke: #5e5d59; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_13">
+      <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: end; fill: #5e5d59" x="34.641719" y="14.363438" transform="rotate(-0 34.641719 14.363438)">1.0</text>
+     </g>
+    </g>
+    <g id="text_14">
+     <text style="font-size: 10px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #141413" x="15.65" y="99.485719" transform="rotate(-90 15.65 99.485719)">与 gpt-6.1-sol 的相似度</text>
+    </g>
+   </g>
+   <g id="line2d_27">
+    <path d="M 59.903537 34.554391 
+L 120.776264 37.215511 
+L 181.648991 35.441431 
+L 242.521719 34.731799 
+L 303.394446 36.860695 
+L 364.267173 35.618839 
+L 425.139901 36.683287 
+" clip-path="url(#pfff030512c)" style="fill: none; stroke: #d97757; stroke-width: 1.8; stroke-linecap: square"/>
+    <defs>
+     <path id="m56178ff039" d="M 0 2 
+C 0.530406 2 1.03916 1.789267 1.414214 1.414214 
+C 1.789267 1.03916 2 0.530406 2 0 
+C 2 -0.530406 1.789267 -1.03916 1.414214 -1.414214 
+C 1.03916 -1.789267 0.530406 -2 0 -2 
+C -0.530406 -2 -1.03916 -1.789267 -1.414214 -1.414214 
+C -1.789267 -1.03916 -2 -0.530406 -2 0 
+C -2 0.530406 -1.789267 1.03916 -1.414214 1.414214 
+C -1.03916 1.789267 -0.530406 2 0 2 
+z
+" style="stroke: #d97757"/>
+    </defs>
+    <g clip-path="url(#pfff030512c)">
+     <use xlink:href="#m56178ff039" x="59.903537" y="34.554391" style="fill: #d97757; stroke: #d97757"/>
+     <use xlink:href="#m56178ff039" x="120.776264" y="37.215511" style="fill: #d97757; stroke: #d97757"/>
+     <use xlink:href="#m56178ff039" x="181.648991" y="35.441431" style="fill: #d97757; stroke: #d97757"/>
+     <use xlink:href="#m56178ff039" x="242.521719" y="34.731799" style="fill: #d97757; stroke: #d97757"/>
+     <use xlink:href="#m56178ff039" x="303.394446" y="36.860695" style="fill: #d97757; stroke: #d97757"/>
+     <use xlink:href="#m56178ff039" x="364.267173" y="35.618839" style="fill: #d97757; stroke: #d97757"/>
+     <use xlink:href="#m56178ff039" x="425.139901" y="36.683287" style="fill: #d97757; stroke: #d97757"/>
+    </g>
+   </g>
+   <g id="line2d_28">
+    <path d="M 59.903537 184.818967 
+L 120.776264 184.641559 
+L 181.648991 184.464151 
+L 242.521719 184.464151 
+L 303.394446 184.641559 
+L 364.267173 184.464151 
+L 425.139901 183.931927 
+" clip-path="url(#pfff030512c)" style="fill: none; stroke: #6a9bcc; stroke-width: 1.8; stroke-linecap: square"/>
+    <defs>
+     <path id="m4e52c815d8" d="M -2 2 
+L 2 2 
+L 2 -2 
+L -2 -2 
+z
+" style="stroke: #6a9bcc; stroke-linejoin: miter"/>
+    </defs>
+    <g clip-path="url(#pfff030512c)">
+     <use xlink:href="#m4e52c815d8" x="59.903537" y="184.818967" style="fill: #6a9bcc; stroke: #6a9bcc; stroke-linejoin: miter"/>
+     <use xlink:href="#m4e52c815d8" x="120.776264" y="184.641559" style="fill: #6a9bcc; stroke: #6a9bcc; stroke-linejoin: miter"/>
+     <use xlink:href="#m4e52c815d8" x="181.648991" y="184.464151" style="fill: #6a9bcc; stroke: #6a9bcc; stroke-linejoin: miter"/>
+     <use xlink:href="#m4e52c815d8" x="242.521719" y="184.464151" style="fill: #6a9bcc; stroke: #6a9bcc; stroke-linejoin: miter"/>
+     <use xlink:href="#m4e52c815d8" x="303.394446" y="184.641559" style="fill: #6a9bcc; stroke: #6a9bcc; stroke-linejoin: miter"/>
+     <use xlink:href="#m4e52c815d8" x="364.267173" y="184.464151" style="fill: #6a9bcc; stroke: #6a9bcc; stroke-linejoin: miter"/>
+     <use xlink:href="#m4e52c815d8" x="425.139901" y="183.931927" style="fill: #6a9bcc; stroke: #6a9bcc; stroke-linejoin: miter"/>
+    </g>
+   </g>
+   <g id="line2d_29">
+    <path d="M 59.903537 131.517719 
+L 120.776264 121.661719 
+L 181.648991 121.661719 
+L 242.521719 131.517719 
+L 303.394446 121.661719 
+L 364.267173 126.589719 
+L 425.139901 126.096919 
+" clip-path="url(#pfff030512c)" style="fill: none; stroke: #788c5d; stroke-width: 1.8; stroke-linecap: square"/>
+    <defs>
+     <path id="m6a4e831e68" d="M 0 -2 
+L -2 2 
+L 2 2 
+z
+" style="stroke: #788c5d; stroke-linejoin: miter"/>
+    </defs>
+    <g clip-path="url(#pfff030512c)">
+     <use xlink:href="#m6a4e831e68" x="59.903537" y="131.517719" style="fill: #788c5d; stroke: #788c5d; stroke-linejoin: miter"/>
+     <use xlink:href="#m6a4e831e68" x="120.776264" y="121.661719" style="fill: #788c5d; stroke: #788c5d; stroke-linejoin: miter"/>
+     <use xlink:href="#m6a4e831e68" x="181.648991" y="121.661719" style="fill: #788c5d; stroke: #788c5d; stroke-linejoin: miter"/>
+     <use xlink:href="#m6a4e831e68" x="242.521719" y="131.517719" style="fill: #788c5d; stroke: #788c5d; stroke-linejoin: miter"/>
+     <use xlink:href="#m6a4e831e68" x="303.394446" y="121.661719" style="fill: #788c5d; stroke: #788c5d; stroke-linejoin: miter"/>
+     <use xlink:href="#m6a4e831e68" x="364.267173" y="126.589719" style="fill: #788c5d; stroke: #788c5d; stroke-linejoin: miter"/>
+     <use xlink:href="#m6a4e831e68" x="425.139901" y="126.096919" style="fill: #788c5d; stroke: #788c5d; stroke-linejoin: miter"/>
+    </g>
+   </g>
+   <g id="patch_3">
+    <path d="M 41.641719 188.189719 
+L 41.641719 10.781719 
+" style="fill: none; stroke: #b0aea5; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="patch_4">
+    <path d="M 41.641719 188.189719 
+L 443.401719 188.189719 
+" style="fill: none; stroke: #b0aea5; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="legend_1">
+    <g id="line2d_30">
+     <path d="M 293.101719 147.428156 
+L 302.101719 147.428156 
+L 311.101719 147.428156 
+" style="fill: none; stroke: #d97757; stroke-width: 1.8; stroke-linecap: square"/>
+     <g>
+      <use xlink:href="#m56178ff039" x="302.101719" y="147.428156" style="fill: #d97757; stroke: #d97757"/>
+     </g>
+    </g>
+    <g id="text_15">
+     <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" x="318.301719" y="150.578156" transform="rotate(-0 318.301719 150.578156)">判据向量与参考的余弦相似度</text>
+    </g>
+    <g id="line2d_31">
+     <path d="M 293.101719 161.153156 
+L 302.101719 161.153156 
+L 311.101719 161.153156 
+" style="fill: none; stroke: #6a9bcc; stroke-width: 1.8; stroke-linecap: square"/>
+     <g>
+      <use xlink:href="#m4e52c815d8" x="302.101719" y="161.153156" style="fill: #6a9bcc; stroke: #6a9bcc; stroke-linejoin: miter"/>
+     </g>
+    </g>
+    <g id="text_16">
+     <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" x="318.301719" y="164.303156" transform="rotate(-0 318.301719 164.303156)">词组加权余弦与参考的相似度</text>
+    </g>
+    <g id="line2d_32">
+     <path d="M 293.101719 174.878156 
+L 302.101719 174.878156 
+L 311.101719 174.878156 
+" style="fill: none; stroke: #788c5d; stroke-width: 1.8; stroke-linecap: square"/>
+     <g>
+      <use xlink:href="#m6a4e831e68" x="302.101719" y="174.878156" style="fill: #788c5d; stroke: #788c5d; stroke-linejoin: miter"/>
+     </g>
+    </g>
+    <g id="text_17">
+     <text style="font-size: 9px; font-family: 'Noto Sans CJK SC', 'Poppins', 'Arial', 'Hiragino Sans GB', 'Arial Unicode MS', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #141413" x="318.301719" y="178.028156" transform="rotate(-0 318.301719 178.028156)">与参考的答案一致率</text>
+    </g>
+   </g>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="pfff030512c">
+   <rect x="41.641719" y="10.781719" width="401.76" height="177.408"/>
+  </clipPath>
+ </defs>
+</svg>
+
+  <figcaption>判据向量余弦与措辞余弦在 40 题上计算；答案一致率按每次采样对参考的单次答案计。</figcaption>
+</figure>
+<p>注意参照系：gpt-6.1-sol 自己在这 40 题上只答对 32%，它不是标准答案生成器，只是一个强参考。"向参考答对的一侧靠拢"因此更接近"向正确靠拢"，但样本只有约 24 次参考答对的采样，属描述性信号。</p>
+
+<h2>涌现的不寻常做法是"预算条件化"论证，不是新科学</h2>
+<p>3,480 条全文里频率明显上升的做法是：优化难度论证（每条 6.7 次升到 8.3 次）与"预算不足、大家都欠训、比谁学得快"的提前停止式论证（0.05 升到 0.13）。缩放律、贝叶斯可辨识性、排除法、损失签名这类异质方法频率约等于零，参考解题器也不用它们。</p>
+<blockquote>"With our limited budget of 4096 samples (256 steps × 16 batch), all models will be undertrained. However, the one that learns fastest and best overall will win."</blockquote>
+<p class="quote-src">g1225 在 q_dc1771（题号）的第二次采样，答对。算术与题面一致（256 × 16 = 4096，题面同值）。SFT 阶段几乎没有这种"先算预算、再在欠训条件下比较"的论证。</p>
+<p>这是一条可复用的机制假说：固定预算下优化速度可以压倒表达容量。它是否条件成立（预算、复杂度变化时方向是否稳定），需要固定随机种子的干预实验，本轮没有做。</p>
+
+<h2>按"科学"的三道门槛，它还没有涌现</h2>
+<p>第一道是条件迁移：40 对条件反转题两侧同时正确率仍是 8.125%，螺旋题对在 g1400 整体调头，判据随条件反转的能力没有钉在正确一侧。第二道是事实干净性：严重比例不降。第三道是池外预测：g1400 在 120 道新排序题上全对 20.0%，题池不同，不作迁移证据。目前站得住的是判据重排、向正确一侧靠拢、预算算术三件事，它们更像被强化出的正确直觉，还不是可检验的训练理论。</p>
+<div class="warn"><strong>注意：</strong>40 题是分层小样本，全部比例都是描述性的。裁判标签依赖单一裁判模型与固定温度。gpt-6.1-sol 的隐藏推理以推理字段返回，本页将其与可见分析合并后与 0.8B 的思维链同结构比较。两个模型的采样批次不同，一致率不是配对实验。</div>
+
+<h2 id="compare">40 题 × 八个主体全文对照</h2>
+<p>每题列出 gpt-6.1-sol 的完整分析（含隐藏推理）与 0.8B 七个检查点各两次采样的全文。标题行的小标签：绿为答对，灰为答错；裁判标签只对 SFT、g775、g1300、g1400 与参考给出。</p>
+<div id="loaderr" class="warn" hidden><strong>注意：</strong>原文数据需通过 HTTP 加载。请打开线上地址，或在本目录启动本地静态服务器后重试。</div>
+<div class="controls">
+  <input id="qfilter" type="search" placeholder="搜索题号 / 家族">
+</div>
+<p id="count" class="small"></p>
+<div id="qlist"></div>
+
+<footer>来源：0.8B 冻结采样（七检查点）· gpt-6.1-sol 经 cctq 中继采样（reasoning high，温度 1）· 裁判 gpt-5.6-luna · 2026-10-14 · 全量思维链见 <a href="../cot-archive-20261013/">思维链全文存档</a></footer>
+</main>
+
+<script>
+const STAGES = ["SFT", "g175", "g350", "g775", "g1225", "g1300", "g1400"];
+const SUBJECTS = ["gpt-6.1-sol"].concat(STAGES);
+const LABEL = { "gpt-6.1-sol": "gpt-6.1-sol（参考）", SFT: "SFT（强化学习起点）", g175: "g175",
+  g350: "g350", g775: "g775", g1225: "g1225", g1300: "g1300", g1400: "g1400（续训新采样）" };
+const JUDGED = { SFT: 1, g775: 1, g1300: 1, g1400: 1, "gpt-6.1-sol": 1 };
+let META = null, ANS = null, TEXTS = null, JUDGE = null;
+const state = { q: "" };
+const expanded = new Set();
+const $ = (id) => document.getElementById(id);
+function el(tag, text, cls) { const e = document.createElement(tag); if (text !== undefined) e.textContent = text; if (cls) e.className = cls; return e; }
+async function jf(p) { const r = await fetch(p); if (!r.ok) throw new Error(p + " HTTP " + r.status); return r.json(); }
+function chipEl(pred, status) {
+  let cls = "chip bad", label = pred || "—";
+  if (status === "exact") cls = "chip ok";
+  else if (status === "unparsed" || status === "trunc") { cls = "chip fmt"; label = status === "trunc" ? "截断" : "未解析"; }
+  return el("span", label, cls);
+}
+function judgeChip(subj, qid) {
+  const j = JUDGE[subj] && JUDGE[subj][qid];
+  if (!j) return null;
+  return el("span", "裁判 " + j, "chip j-" + j);
+}
+function match(qid) {
+  if (!state.q) return true;
+  const s = state.q.toLowerCase();
+  return qid.toLowerCase().includes(s) || META.by_qid[qid].family.toLowerCase().includes(s);
+}
+function renderList() {
+  const list = $("qlist"); list.replaceChildren(); expanded.clear();
+  const qids = META.qids.filter(match);
+  $("count").textContent = "当前列出 " + qids.length + " / " + META.qids.length + " 题";
+  const frag = document.createDocumentFragment();
+  for (const qid of qids) {
+    const m = META.by_qid[qid];
+    const row = el("button", undefined, "qrow"); row.type = "button"; row.dataset.qid = qid;
+    row.append(el("span", qid, "qid"));
+    row.append(el("span", m.family, "meta"));
+    const gold = el("span", undefined); gold.style.display = "inline-flex"; gold.style.gap = "4px";
+    gold.append(el("span", "金标 ", "meta"), el("span", m.gold, "chip gold"));
+    row.append(gold);
+    row.append(el("span", "参考", "meta"));
+    row.append(chipEl(ANS["gpt-6.1-sol"][qid][0][0], ANS["gpt-6.1-sol"][qid][0][1]));
+    row.append(el("span", "g1300", "meta"));
+    const g13 = ANS["g1300"][qid];
+    if (g13) { for (const x of g13) row.append(chipEl(x[0], x[1])); }
+    else { row.append(el("span", "未采样", "meta")); }
+    const panel = el("div", undefined, "qpanel"); panel.hidden = true;
+    row.onclick = () => toggle(qid);
+    frag.append(row, panel);
+  }
+  list.append(frag);
+}
+async function fillPanel(qid, panel) {
+  panel.replaceChildren(el("p", "正在加载原文…", "small"));
+  try {
+    if (!TEXTS) TEXTS = await jf("data/sci_texts.json");
+    const nodes = [];
+    const pd = el("details", undefined, "promptbox");
+    pd.append(el("summary", "题面（模型看到的完整题目）"));
+    const prompts = await jf("data/sci_prompts.json");
+    pd.append(el("pre", prompts[qid], "prompt"));
+    nodes.push(pd);
+    for (const subj of SUBJECTS) {
+      if (!TEXTS[qid] || !TEXTS[qid][subj]) continue;
+      const h = el("div", undefined, "stage-head" + (subj === "gpt-6.1-sol" ? " ref" : ""));
+      h.append(el("span", LABEL[subj]));
+      const jc = judgeChip(subj, qid);
+      if (jc) h.append(jc);
+      for (const x of ANS[subj][qid]) h.append(chipEl(x[0], x[1]));
+      nodes.push(h);
+      const draws = subj === "gpt-6.1-sol" ? [0] : [0, 1];
+      for (const i of draws) {
+        const head = el("div", undefined, "sample-head");
+        head.append(el("span", subj === "gpt-6.1-sol" ? "参考分析（隐藏推理＋可见分析）" : "采样 " + (i + 1), "meta"));
+        nodes.push(head);
+        nodes.push(el("pre", TEXTS[qid][subj][i], "cot"));
+      }
+    }
+    panel.replaceChildren(...nodes);
+    panel.dataset.filled = "1";
+  } catch (e) {
+    panel.replaceChildren(el("p", "加载失败：" + e.message, "small"));
+  }
+}
+async function toggle(qid) {
+  const rows = $("qlist").querySelectorAll(".qrow");
+  let row = null;
+  for (const r of rows) if (r.dataset.qid === qid) { row = r; break; }
+  if (!row) return;
+  const panel = row.nextElementSibling;
+  if (expanded.has(qid)) { expanded.delete(qid); panel.hidden = true; row.classList.remove("open"); return; }
+  expanded.add(qid); panel.hidden = false; row.classList.add("open");
+  if (!panel.dataset.filled) await fillPanel(qid, panel);
+}
+async function init() {
+  try {
+    [META, ANS, JUDGE] = await Promise.all([jf("data/sci_meta.json"), jf("data/sci_answers.json"), jf("data/sci_judge.json")]);
+  } catch (e) { $("loaderr").hidden = false; return; }
+  renderList();
+  $("qfilter").oninput = (e) => { state.q = e.target.value.trim(); renderList(); };
+  const u = new URLSearchParams(location.search);
+  const qid = u.get("qid");
+  if (qid && META.by_qid[qid]) {
+    await toggle(qid);
+    const rows = $("qlist").querySelectorAll(".qrow");
+    for (const r of rows) if (r.dataset.qid === qid) { r.scrollIntoView({ block: "start" }); break; }
+  }
+}
+init();
+</script>
+</body>
+</html>
