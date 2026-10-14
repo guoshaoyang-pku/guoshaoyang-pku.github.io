@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>29 道三选排序题通过确认：更大批次、跨条件桥接与重排探针</title>
+<title>三选排序题第二批（v2）的确认与评测</title>
 <!--
   report-to-human panel template v2
   Palette and type: Anthropic brand-guidelines (github.com/anthropics/skills, skills/brand-guidelines).
@@ -68,7 +68,7 @@
   footer { margin-top: 80px; font: 13px var(--head); color: var(--mid); }
 select{max-width:100%;padding:8px;margin:6px 8px 12px 0;font:14px var(--head)}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:14px/1.7 var(--mono)}.review{border-left:3px solid var(--orange);padding-left:16px}.choices p{font:14px/1.6 var(--head)}.qbox{border:1px solid rgba(0,0,0,.12);border-radius:10px;padding:4px 16px 12px;margin:14px 0}.qbox .hint{margin:8px 0}.selftest-row{display:flex;flex-wrap:wrap;align-items:center;gap:4px}.selftest-fb.ok{color:#0d9488;font-weight:600}.selftest-fb.bad{color:#c2410c;font-weight:600}button.cta-mini{padding:8px 14px;border:none;border-radius:8px;background:var(--orange);color:#fff;font:600 13px var(--head);cursor:pointer}details.fullq{margin:14px 0}details.fullq summary{cursor:pointer;font:600 14px var(--head)}details.fullq pre{max-height:460px;overflow:auto;font:12px/1.55 var(--mono);background:rgba(0,0,0,.04);padding:12px;border-radius:8px}#curves svg{width:100%;max-width:720px;height:auto}.probe-flag{display:inline-block;background:rgba(124,58,237,.12);color:#7c3aed;border-radius:6px;padding:1px 8px;font:600 12px var(--head);margin-left:8px} </style>
 </head>
-<body><main><h1>29 道三选排序题通过确认：更大批次、跨条件桥接与重排探针</h1><p class='lede'>第二批把每簇数据实例扩到三个，重发第一批 20 题并新增 9 题，三个模型在同一协议下作答：Opus 5.5 23/29，6.1-Sol 18/29，6-luna 11/29。每题附一个字母重排探针单独计分；4 个 train4096 桥接条件均未通过确认门，按协议不成题。</p>
+<body><main><h1>三选排序题第二批（v2）的确认与评测</h1><p class='lede'>第二批把每簇数据实例扩到三个，重发第一批 20 题并新增 9 题，三个模型在同一协议下作答：Opus 5.5 23/29，6.1-Sol 18/29，6-luna 11/29。每题附一个字母重排探针单独计分；4 个 train4096 桥接条件均未通过确认门，按协议不成题。</p>
 <ul class='settings'><li><svg viewBox='0 0 24 24' aria-hidden='true'><rect x='4' y='4' width='16' height='16' rx='2'/><path d='M8 9h8M8 13h8M8 17h4'/></svg><b>18 个出题簇 × 3 个数据实例</b></li><li><svg viewBox='0 0 24 24' aria-hidden='true'><rect x='4' y='4' width='16' height='16' rx='2'/><path d='M8 9h8M8 13h8M8 17h4'/></svg><b>29 道主题 + 29 个重排探针</b></li><li><svg viewBox='0 0 24 24' aria-hidden='true'><rect x='4' y='4' width='16' height='16' rx='2'/><path d='M8 9h8M8 13h8M8 17h4'/></svg><b>16 个新训练 seed</b></li><li><svg viewBox='0 0 24 24' aria-hidden='true'><rect x='4' y='4' width='16' height='16' rx='2'/><path d='M8 9h8M8 13h8M8 17h4'/></svg><b>随机完整排序 16.7%</b></li></ul>
 <h2>与第一批的关系</h2>
 <p>第一批（2026-10-13）的 36 个训练结果经逐字节哈希校验导入本批，不重复训练；20 道成题按原字母分配重发，成绩可直接对比。每簇新增第三个数据实例（种子 731903），发现阶段用 6 个 seed、确认仍用 16 个 seed。本批协议、模板与题面相对第一批有三处机器可读的升级：预算字段由编译器按 budget_semantics 重算；每个选项导出实际改动字段并标注单因素/析因/捆绑配方；答案统一为 <code>{&quot;best_to_worst&quot;:[&quot;C&quot;,&quot;B&quot;,&quot;A&quot;]}</code>（best 指 held-out loss 最低），解析器后向兼容第一批字母连写。</p>
