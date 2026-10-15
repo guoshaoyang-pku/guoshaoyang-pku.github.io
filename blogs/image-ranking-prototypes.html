@@ -1,0 +1,57 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>图像三选排序原型</title><style>
+  :root {
+    --dark: #141413;   /* primary text */
+    --light: #faf9f5;  /* page background */
+    --mid: #b0aea5;    /* borders, axes */
+    --soft: #e8e6dc;   /* subtle fills */
+    --muted: #5e5d59;  /* secondary text (darker than --mid for contrast) */
+    --orange: #d97757; /* primary accent: the main result */
+    --blue: #6a9bcc;   /* secondary accent */
+    --green: #788c5d;  /* tertiary accent */
+    --head: "Poppins", "PingFang SC", "Noto Sans CJK SC", "Hiragino Sans GB", Arial, sans-serif;
+    --body: "Lora", "Noto Serif CJK SC", "Songti SC", Georgia, serif;
+    --mono: "SF Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--light); color: var(--dark); font: 17px/1.8 var(--body); }
+  main { max-width: 760px; margin: 0 auto; padding: 72px 24px 96px; }
+  h1, h2, h3 { font-family: var(--head); font-weight: 600; line-height: 1.35; letter-spacing: -0.01em; }
+  h1 { font-size: 32px; margin: 0 0 16px; }
+  h2 { font-size: 22px; margin: 64px 0 12px; }
+  p { margin: 0 0 16px; }
+  .lede { font-size: 19px; }
+  a { color: inherit; text-decoration: underline; text-decoration-color: var(--orange); text-underline-offset: 3px; }
+  code, .id { font-family: var(--mono); font-size: 0.86em; background: var(--soft); padding: 1px 5px; border-radius: 4px; }
+
+  /* L2 settings row: monochrome line icons + label, never color emoji */
+  .settings { display: flex; flex-wrap: wrap; gap: 8px 20px; list-style: none; padding: 0; margin: 24px 0 0;
+              font: 14px/1.6 var(--head); color: var(--muted); }
+  .settings li { display: inline-flex; align-items: center; gap: 6px; }
+  .settings svg { width: 15px; height: 15px; stroke: var(--dark); fill: none; stroke-width: 1.6;
+                  stroke-linecap: round; stroke-linejoin: round; }
+  .settings b { color: var(--dark); font-weight: 500; }
+
+  figure { margin: 28px 0; padding: 20px; background: #fff; border: 1px solid var(--soft); border-radius: 10px; }
+  figure img, figure svg.chart { display: block; width: 100%; height: auto; }
+  figcaption { margin-top: 12px; font: 14px/1.6 var(--head); color: var(--muted); }
+  .legend { display: flex; gap: 18px; font: 13px var(--head); color: var(--muted); margin-bottom: 8px; }
+  .legend i { display: inline-block; width: 14px; height: 2px; vertical-align: middle; margin-right: 6px; }
+
+  .warn { border-left: 3px solid var(--orange); padding: 4px 0 4px 16px; margin: 24px 0; }
+  .warn strong { font-family: var(--head); }
+
+  /* sample browser: compare outputs side by side */
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--soft); margin-bottom: 12px; }
+  .tabs button { font: 14px var(--head); background: none; border: 0; padding: 8px 12px; cursor: pointer;
+                 color: var(--muted); border-bottom: 2px solid transparent; }
+  .tabs button[aria-selected="true"] { color: var(--dark); border-bottom-color: var(--orange); }
+  .sample { display: none; white-space: pre-wrap; font: 14px/1.7 var(--mono); }
+  .sample.on { display: block; }
+
+  details { margin: 16px 0; }
+  summary { cursor: pointer; font: 15px var(--head); color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font: 14px/1.6 var(--head); margin: 16px 0; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--soft); }
+  th { font-weight: 500; color: var(--muted); }
+  footer { margin-top: 80px; font: 13px var(--head); color: var(--mid); }
+</style></head><body><main><h1>图像分类与图像生成：三选排序原型</h1><p class="lede">每道题比较三份可运行配置。先用独立训练确认排序，再让四个模型作答，并用完整局部对照审核公开解释。</p><p>题面共用一份完整 base；各选项的 diff 独立相对它。训练、优化器、采样配置全部可还原。训练 seed 只作为重复，不计为新架构。</p><p>已测试 41 个题簇、123 个数据实例；20 道主问题通过独立确认，每题另配一道字母置换题。未通过的实例及其对照也完整保留。</p><h2 id="image_classification">图像分类</h2><h3><a href="image-classification-v1.html">图像分类 · 首批</a></h3><p>18 个题簇，54 个数据实例，207 个候选配置实例。6 道主问题通过确认，另有 6 道字母置换题。四模型收到并核验的回答：45/48。</p><p>完整复评中，Opus 为 0/6，6.1-Sol 和 Haiku 均为 3/6，6-luna 为 2/5，另缺 1 道主问题的接口回答。池化与坐标比较需要分清可表达什么、在 300 步内实际学到什么；学习率比较也不能直接套用默认值更稳的经验。只有三个题簇，且同簇数据实例相关，这些结果不足以确定通用模型能力排名。</p><p>审核分别检查代码事实、关键因素、因果表述、相邻比较覆盖和答案一致性。可用坐标不保证已学出精确质心；正确排序也可能伴随感受野、参数量或初始权重的事实错误。解释中的机制主张必须与完整局部对照相符。</p><h3><a href="image-classification-supplement.html">图像分类 · 补充批</a></h3><p>4 个题簇，12 个数据实例，84 个候选配置实例。9 道主问题通过确认，另有 9 道字母置换题。四模型收到并核验的回答：64/72。</p><p>主问题正确数为 Opus 8/9、Haiku 3/9、6.1-Sol 5/7、6-luna 2/6；后两者分别缺2、3个主回答，接口缺失不计错。形状题对 Opus 和 Haiku 均为3/3，但短训关系题与无位置编码分块题能使“CNN更适合图像”“分块越细越好”的直觉失效。已完成主题及重排的候选顺序一致数分别为 Opus 8/9、Haiku 7/9、Sol 3/6、Luna 1/5，说明重排后的复答并不稳定；当前设计不能将变化唯一归因于字母位置。只有3类通过的题簇，不能据此建立总体模型排名。</p><p>较可靠的解释需要同时识别直接像素加权的学习路径、小数据下的训练—测试差距，以及patch内部像素顺序与跨patch顺序的区别。75步关系题的MLP训练和测试均优于CNN、ViT；形状题中MLP训练交叉熵约0.24，却在测试达到约4，支持泛化困难。无位置编码时大patch更好，加入位置编码后的诊断均值顺序反转，但该诊断未额外作显著性确认。排序答对也可能伴随错误论证：32→32的patch投影不必丢细节；加性四类logits能够判定主导位移方向；AdamW也没有“学习率×步数”的位移硬上界。完整审核保留每条公开原文和对应证据，不将这些总效应说成唯一机制。</p><h2 id="conditional_image_generation">图像生成</h2><h3><a href="image-generation-v1.html">图像生成 · 首批</a></h3><p>18 个题簇，54 个数据实例，162 个候选配置实例。2 道主问题通过确认，另有 2 道字母置换题。四模型收到并核验的回答：14/16。</p><p>原批次只有2道主问题：四个模型均完成2题，各答对1题。训练预算题符合“更多步数”的表面规则；残差题实际是深层无残差→深层残差→浅层残差，四模型都把深层残差排在深层无残差之前。三选随机完整排序基线是1/6，但2题不足以建立模型能力排名。6条完成的字母置换回答中，Haiku改变了残差题两个配置的先后；Sol与Luna各缺同一道残差置换题，无输出失败保留为缺失。</p><p>14条公开解释均逐条核验。四模型都认出深度和残差的差异，但把残差通常有利于优化的先验套用于当前配置。同深度、同初始权重与输入随机流的无残差模型在15/16个种子上评分更低，且末段训练损失更低；这仍不能证明梯度是唯一原因。部分解释还漏算输入卷积，或把卷积路径感受野误当网络的信息边界：分组归一化跨空间统计，每个像素也已获得坐标与条件。预算题虽然全对，更多训练实际带来轮廓更准、背景泄漏更少，同时条件内方差下降；正确排序不能验证全部多样性或记忆机制叙述。</p><h3><a href="image-generation-supplement.html">图像生成 · 补充批</a></h3><p>1 个题簇，3 个数据实例，12 个候选配置实例。3 道主问题通过确认，另有 3 道字母置换题。四模型收到并核验的回答：23/24。</p><p>四模型均完成3道主问题。Opus答对3/3；6.1-Sol、Haiku、6-luna均答对0/3。后三者识别了全连接网络的空间共享劣势，却普遍依赖“更大上下文加跳连更好”的先验，把U-Net排在卷积前。11条已完成的字母置换回答均保持原来的物理配置排序；Luna一条置换回答无输出，单列缺失。随机完整排序基线为1/6；三个实例仍来自同一簇，不当作三种独立机制。</p><p>23条公开解释已逐条审核。Opus抓住了实际代码差异：U-Net全部非线性卷积块在8×8上运算，恢复到16×16后只有线性卷积，输入跳连也只经过线性卷积；这个判断比按架构名称预测更具体。它仍有事实误读，包括若干次将全连接输入写为11或14通道，实际为17；首题还漏掉纹理潜变量。线性读出能组合非线性特征，不能据此断言精确边界无法表达；没有空间共享也不等于必须逐位置记忆。其余模型多次承认上下采样可能损失细节，但没有把这条实现特征放在主要位置。正确排序与可靠机制需要分别核验。</p><h2>如何接着出题</h2><p>从下方 DSL 复制一个题簇，定义共同数据、三个选项和完整局部对照。编译器会检查配置、参数量、训练预算和代码还原；模型训练与题目评测分开执行。</p><ol><li>固定数据 seed、发现与确认训练 seed、排序指标、最小差值和全部比较假设。</li><li>运行发现阶段，只用验证集固定顺序；冻结质量展示样本与解释审核标准。</li><li>用独立确认 seed 训练全部候选，再对整个预先固定的检验族做 Holm 校正。拒绝的实例保留。</li><li>所有通过的主问题及字母置换题进入四模型评测。只重试可证明未产生输出的接口失败。</li><li>依据单变量对照和实际诊断审核公开解释；多变量配方只能支持配方层面的结论。</li></ol><p>首批与补充批分别控制各自的统计检验族，没有声称跨批联合错误率仍为 5%。数据实例、训练重复和字母置换也不是相互独立的新题。这是受控合成图像原型，不能外推为自然图像分类或通用文生图能力排名。</p><footer><a href="/blogs/image-prototype-evidence/profiles/image-classification-ranking-clusters-v1.yaml">图像分类 · 首批 DSL</a> · <a href="/blogs/image-prototype-evidence/profiles/image-classification-ranking-supplement-v1.yaml">图像分类 · 补充批 DSL</a> · <a href="/blogs/image-prototype-evidence/profiles/image-generation-ranking-clusters-v1.yaml">图像生成 · 首批 DSL</a> · <a href="/blogs/image-prototype-evidence/profiles/image-generation-ranking-supplement-v1.yaml">图像生成 · 补充批 DSL</a> · <a href="/blogs/image-prototype-evidence/tools/compile_vision_templates.py">DSL 编译器</a> · <a href="/blogs/image-prototype-evidence/tools/ntp_template_batch.py">发现、确认与组题</a> · <a href="/blogs/image-prototype-evidence/tools/analyze_vision_controls.py">局部对照核验</a> · <a href="/blogs/image-prototype-evidence/tools/eval/evaluate_frozen_rankings.py">冻结题表评测</a></footer></main></body></html>

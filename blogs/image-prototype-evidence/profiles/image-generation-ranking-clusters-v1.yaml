@@ -1,0 +1,854 @@
+schema_version: vision_question_clusters_v1
+description: Conditional synthetic image generation ranking with true diffusion training and sampling. Analyst hypotheses
+  are excluded from prompts. Energy score is comparable across parameterizations; denoising losses are not ranked.
+dataset_family: conditional_image_generation
+selection_metric: test_energy_score
+base_profile: image-generation-ranking-base-v1.yaml
+default_num_choices: 3
+allowed_num_choices:
+- 3
+- 4
+- 5
+instance_seeds:
+- 851901
+- 851902
+- 851903
+discovery_training_seeds:
+- 20
+- 21
+- 22
+- 23
+confirmation_training_seeds:
+- 200
+- 201
+- 202
+- 203
+- 204
+- 205
+- 206
+- 207
+- 208
+- 209
+- 210
+- 211
+- 212
+- 213
+- 214
+- 215
+statistics:
+  discovery:
+    n_seeds: 4
+    split: validation
+    method: direction_estimation
+    ordering: mean_validation_energy_score
+    admission_gate: false
+    purpose: Freeze adjacent ranking directions before independent confirmation; no significance claim from four
+      discovery seeds.
+  confirmation:
+    n_seeds: 16
+    split: test
+    test: one_sided_paired_sign_test
+    alpha: 0.05
+    correction: holm
+    minimum_mean_gap: 0.003
+  estimand: Training-seed paired direction stability conditional on one fixed dataset and fixed evaluation-noise/reference
+    stream, with observed mean energy-score gap; not a test of expected-score mean difference or a natural-image
+    population claim.
+selection_contract:
+  discovery_split: validation
+  confirmation_split: test
+  minimum_mean_gap: 0.003
+  require_nonoverlap: false
+  multiplicity: Holm across every frozen adjacent hypothesis including rejected templates
+  claim_scope: Fixed synthetic image distribution and fixed independent evaluation sample streams; training-seed
+    robustness only.
+  difficulty_policy: Evaluate every admitted triple and report rejected templates without replacement.
+defaults:
+  dataset:
+    size: 16
+    noise_steps: 32
+    condition_dim: 6
+    brightness_min: 0.65
+    brightness_max: 1.0
+    texture_strength: 0.12
+    radius_min: 0.25
+    radius_max: 0.42
+    position_extent: 0.45
+    reference_samples: 4
+    train_size: 1024
+    validation_size: 64
+    test_size: 64
+    ood_size: 32
+    evaluation_shift: {}
+    ood_shift:
+      position_extent: 0.55
+  optimizer:
+    type: AdamW
+    lr: 0.001
+    weight_decay: 0.01
+    betas:
+    - 0.9
+    - 0.999
+    eps: 1.0e-08
+    foreach: false
+  loss:
+    loss_id: diffusion_mse
+  training:
+    batch_size: 16
+    training_steps: 3000
+    total_samples_seen: 48000
+    gradient_accumulation: 1
+    clip_norm: 1.0
+    schedule: constant
+    precision: fp32
+    tf32: false
+    deterministic_algorithms: true
+    warmup_updates: 0
+    batch_rng_device: cpu
+    paired_cpu_batch_stream: true
+    persist_initial_state: true
+    batch_seed_offset: 500000
+    noise_seed_offset: 600000
+    evaluation_split: validation
+    eval_steps:
+    - 750
+    - 1500
+    - 3000
+    prediction_type: x0
+    noise_steps: 32
+    noise_schedule: cosine
+    loss_weighting: uniform
+    min_snr_gamma: 5.0
+    sampling_steps: 16
+    sampling_eta: 0.0
+    evaluation_samples_per_condition: 4
+    evaluation_seed: 314159
+    evaluation_batch_conditions: 16
+models:
+  conv:
+    type: image_generation_denoiser
+    mode: conv
+    width: 24
+    depth: 3
+    kernel: 3
+    norm: group
+    activation: silu
+    residual: true
+    block: dense
+    conditioning: concat
+    coordinates: absolute
+    time_embedding: sinusoidal
+    max_parameters: 2000000
+  unet:
+    type: image_generation_denoiser
+    mode: unet
+    width: 24
+    depth: 3
+    kernel: 3
+    norm: group
+    activation: silu
+    residual: true
+    block: dense
+    skip: true
+    conditioning: concat
+    coordinates: absolute
+    time_embedding: sinusoidal
+    max_parameters: 2000000
+  mlp:
+    type: image_generation_denoiser
+    mode: mlp
+    width: 24
+    depth: 3
+    activation: silu
+    conditioning: concat
+    coordinates: absolute
+    time_embedding: sinusoidal
+    max_parameters: 2000000
+  transformer:
+    type: image_generation_denoiser
+    mode: patch_transformer
+    width: 24
+    depth: 3
+    activation: gelu
+    conditioning: concat
+    coordinates: absolute
+    time_embedding: sinusoidal
+    patch_size: 2
+    max_parameters: 2000000
+    num_heads: 4
+    ff_multiplier: 2
+contexts:
+  textured: {}
+  clean:
+    texture_strength: 0.0
+  small_data:
+    train_size: 96
+  shifted:
+    evaluation_shift:
+      position_extent: 0.55
+surface_heuristics:
+- id: more_parameters
+  field: parameter_count
+  higher_is_better: true
+- id: more_training_steps
+  field: training.training_steps
+  higher_is_better: true
+- id: more_sampling_steps
+  field: training.sampling_steps
+  higher_is_better: true
+templates:
+- id: operator_local_global
+  category: operator
+  context_ref: textured
+  budget_semantics: matched_steps
+  hypothesis: Local convolution, down/up processing and global patch attention differ in spatial bias and finite-budget
+    optimization.
+  varying_axes:
+  - model.mode
+  choices:
+  - id: conv
+    model_ref: conv
+  - id: unet
+    model_ref: unet
+  - id: transformer
+    model_ref: transformer
+  diagnostics: []
+  controls:
+  - Identical materialized train/validation/test distribution within a question.
+  - All unlisted settings inherit explicit defaults; measured parameter counts are shown.
+  - Sample quality uses the same fixed conditional reference draws and initial-noise streams.
+  shortcut_checks:
+  - larger network
+  - more sampling steps
+  - matching generator geometry
+  explanation_target: Use the isolated local controls and actual sampling/condition/diversity diagnostics; distinguish
+    optimization from distribution quality.
+  admission: Freeze discovery order before independent confirmation; retain rejected triples without replacement.
+- id: operator_coordinates
+  category: operator
+  context_ref: textured
+  budget_semantics: matched_steps
+  hypothesis: Coordinate priors and spatial weight sharing interact; operator labels alone do not isolate the change.
+  varying_axes:
+  - model.mode
+  - model.coordinates
+  choices:
+  - id: conv_absolute
+    model_ref: conv
+  - id: conv_relative
+    model_ref: conv
+    model_updates:
+      coordinates: relative
+  - id: flat_mlp
+    model_ref: mlp
+  diagnostics:
+  - id: mlp_relative
+    model_ref: mlp
+    model_updates:
+      coordinates: relative
+  controls:
+  - Identical materialized train/validation/test distribution within a question.
+  - All unlisted settings inherit explicit defaults; measured parameter counts are shown.
+  - Sample quality uses the same fixed conditional reference draws and initial-noise streams.
+  shortcut_checks:
+  - larger network
+  - more sampling steps
+  - matching generator geometry
+  explanation_target: Use the isolated local controls and actual sampling/condition/diversity diagnostics; distinguish
+    optimization from distribution quality.
+  admission: Freeze discovery order before independent confirmation; retain rejected triples without replacement.
+- id: kernel_depth
+  category: block
+  context_ref: textured
+  budget_semantics: matched_steps
+  hypothesis: Larger spatial support competes with depth, since coordinates already reveal location.
+  varying_axes:
+  - model.kernel
+  - model.depth
+  choices:
+  - id: k1_d5
+    model_ref: conv
+    model_updates:
+      kernel: 1
+      depth: 5
+  - id: k3_d3
+    model_ref: conv
+  - id: k5_d1
+    model_ref: conv
+    model_updates:
+      kernel: 5
+      depth: 1
+  diagnostics:
+  - id: k1_d3
+    model_ref: conv
+    model_updates:
+      kernel: 1
+  - id: k5_d3
+    model_ref: conv
+    model_updates:
+      kernel: 5
+  controls:
+  - Identical materialized train/validation/test distribution within a question.
+  - All unlisted settings inherit explicit defaults; measured parameter counts are shown.
+  - Sample quality uses the same fixed conditional reference draws and initial-noise streams.
+  shortcut_checks:
+  - larger network
+  - more sampling steps
+  - matching generator geometry
+  explanation_target: Use the isolated local controls and actual sampling/condition/diversity diagnostics; distinguish
+    optimization from distribution quality.
+  admission: Freeze discovery order before independent confirmation; retain rejected triples without replacement.
+- id: depthwise_width
+  category: block
+  context_ref: textured
+  budget_semantics: matched_steps
+  hypothesis: Channel mixing, spatial mixing and width need not trade off monotonically.
+  varying_axes:
+  - model.block
+  - model.width
+  choices:
+  - id: dense24
+    model_ref: conv
+  - id: dw24
+    model_ref: conv
+    model_updates:
+      block: depthwise
+  - id: dw48
+    model_ref: conv
+    model_updates:
+      block: depthwise
+      width: 48
+  diagnostics:
+  - id: dense48
+    model_ref: conv
+    model_updates:
+      width: 48
+  controls:
+  - Identical materialized train/validation/test distribution within a question.
+  - All unlisted settings inherit explicit defaults; measured parameter counts are shown.
+  - Sample quality uses the same fixed conditional reference draws and initial-noise streams.
+  shortcut_checks:
+  - larger network
+  - more sampling steps
+  - matching generator geometry
+  explanation_target: Use the isolated local controls and actual sampling/condition/diversity diagnostics; distinguish
+    optimization from distribution quality.
+  admission: Freeze discovery order before independent confirmation; retain rejected triples without replacement.
+- id: residual_depth
+  category: residual
+  context_ref: textured
+  budget_semantics: matched_steps
+  hypothesis: Depth and residuals interact under a fixed training budget.
+  varying_axes:
+  - model.depth
+  - model.residual
+  choices:
+  - id: res_d2
+    model_ref: conv
+    model_updates:
+      depth: 2
+  - id: res_d5
+    model_ref: conv
+    model_updates:
+      depth: 5
+  - id: plain_d5
+    model_ref: conv
+    model_updates:
+      depth: 5
+      residual: false
+  diagnostics:
+  - id: plain_d2
+    model_ref: conv
+    model_updates:
+      depth: 2
+      residual: false
+  controls:
+  - Identical materialized train/validation/test distribution within a question.
+  - All unlisted settings inherit explicit defaults; measured parameter counts are shown.
+  - Sample quality uses the same fixed conditional reference draws and initial-noise streams.
+  shortcut_checks:
+  - larger network
+  - more sampling steps
+  - matching generator geometry
+  explanation_target: Use the isolated local controls and actual sampling/condition/diversity diagnostics; distinguish
+    optimization from distribution quality.
+  admission: Freeze discovery order before independent confirmation; retain rejected triples without replacement.
+- id: unet_skip_width
+  category: residual
+  context_ref: textured
+  budget_semantics: matched_steps
+  hypothesis: Skip paths preserve resolution while extra width changes optimization and capacity.
+  varying_axes:
+  - model.skip
+  - model.width
+  choices:
+  - id: skip24
+    model_ref: unet
+  - id: noskip24
+    model_ref: unet
+    model_updates:
+      skip: false
+  - id: noskip48
+    model_ref: unet
+    model_updates:
+      skip: false
+      width: 48
+  diagnostics:
+  - id: skip48
+    model_ref: unet
+    model_updates:
+      width: 48
+  controls:
+  - Identical materialized train/validation/test distribution within a question.
+  - All unlisted settings inherit explicit defaults; measured parameter counts are shown.
+  - Sample quality uses the same fixed conditional reference draws and initial-noise streams.
+  shortcut_checks:
+  - larger network
+  - more sampling steps
+  - matching generator geometry
+  explanation_target: Use the isolated local controls and actual sampling/condition/diversity diagnostics; distinguish
+    optimization from distribution quality.
+  admission: Freeze discovery order before independent confirmation; retain rejected triples without replacement.
+- id: conditioning_injection
+  category: conditioning
+  context_ref: textured
+  budget_semantics: matched_steps
+  hypothesis: Repeated modulation, input bias and explicit condition channels have different trainability.
+  varying_axes:
+  - model.conditioning
+  choices:
+  - id: concat
+    model_ref: conv
+  - id: film
+    model_ref: conv
+    model_updates:
+      conditioning: film
+  - id: input
+    model_ref: conv
+    model_updates:
+      conditioning: input
+  diagnostics: []
+  controls:
+  - Identical materialized train/validation/test distribution within a question.
+  - All unlisted settings inherit explicit defaults; measured parameter counts are shown.
+  - Sample quality uses the same fixed conditional reference draws and initial-noise streams.
+  shortcut_checks:
+  - larger network
+  - more sampling steps
+  - matching generator geometry
+  explanation_target: Use the isolated local controls and actual sampling/condition/diversity diagnostics; distinguish
+    optimization from distribution quality.
+  admission: Freeze discovery order before independent confirmation; retain rejected triples without replacement.
+- id: time_parameterization
+  category: time
+  context_ref: textured
+  budget_semantics: matched_steps
+  hypothesis: Time information can matter differently for clean-image and noise prediction.
+  varying_axes:
+  - model.time_embedding
+  - training.prediction_type
+  choices:
+  - id: x0_sinusoidal
+    model_ref: conv
+  - id: x0_none
+    model_ref: conv
+    model_updates:
+      time_embedding: none
+  - id: epsilon_sinusoidal
+    model_ref: conv
+    training_updates:
+      prediction_type: epsilon
+  diagnostics:
+  - id: epsilon_none
+    model_ref: conv
+    model_updates:
+      time_embedding: none
+    training_updates:
+      prediction_type: epsilon
+  controls:
+  - Identical materialized train/validation/test distribution within a question.
+  - All unlisted settings inherit explicit defaults; measured parameter counts are shown.
+  - Sample quality uses the same fixed conditional reference draws and initial-noise streams.
+  shortcut_checks:
+  - larger network
+  - more sampling steps
+  - matching generator geometry
+  explanation_target: Use the isolated local controls and actual sampling/condition/diversity diagnostics; distinguish
+    optimization from distribution quality.
+  admission: Freeze discovery order before independent confirmation; retain rejected triples without replacement.
+- id: prediction_parameterization
+  category: objective
+  context_ref: textured
+  budget_semantics: matched_steps
+  hypothesis: Equivalent representational parameterizations use different finite-budget losses; only sampled image
+    energy is comparable.
+  varying_axes:
+  - training.prediction_type
+  choices:
+  - id: x0
+    model_ref: conv
+  - id: epsilon
+    model_ref: conv
+    training_updates:
+      prediction_type: epsilon
+  - id: v
+    model_ref: conv
+    training_updates:
+      prediction_type: v
+  diagnostics: []
+  controls:
+  - Identical materialized train/validation/test distribution within a question.
+  - All unlisted settings inherit explicit defaults; measured parameter counts are shown.
+  - Sample quality uses the same fixed conditional reference draws and initial-noise streams.
+  shortcut_checks:
+  - larger network
+  - more sampling steps
+  - matching generator geometry
+  explanation_target: Use the isolated local controls and actual sampling/condition/diversity diagnostics; distinguish
+    optimization from distribution quality.
+  admission: Freeze discovery order before independent confirmation; retain rejected triples without replacement.
+- id: noise_loss_weighting
+  category: noise
+  context_ref: textured
+  budget_semantics: matched_steps
+  hypothesis: Noise allocation and SNR weighting jointly change optimization emphasis.
+  varying_axes:
+  - training.noise_schedule
+  - training.loss_weighting
+  choices:
+  - id: cosine_uniform
+    model_ref: conv
+  - id: linear_uniform
+    model_ref: conv
+    training_updates:
+      noise_schedule: linear_beta
+  - id: cosine_minsnr
+    model_ref: conv
+    training_updates:
+      loss_weighting: min_snr
+  diagnostics:
+  - id: linear_minsnr
+    model_ref: conv
+    training_updates:
+      noise_schedule: linear_beta
+      loss_weighting: min_snr
+  controls:
+  - Identical materialized train/validation/test distribution within a question.
+  - All unlisted settings inherit explicit defaults; measured parameter counts are shown.
+  - Sample quality uses the same fixed conditional reference draws and initial-noise streams.
+  shortcut_checks:
+  - larger network
+  - more sampling steps
+  - matching generator geometry
+  explanation_target: Use the isolated local controls and actual sampling/condition/diversity diagnostics; distinguish
+    optimization from distribution quality.
+  admission: Freeze discovery order before independent confirmation; retain rejected triples without replacement.
+- id: norm_lr
+  category: optimization
+  context_ref: textured
+  budget_semantics: matched_steps
+  hypothesis: Normalization and learning rate should be separated by completed controls.
+  varying_axes:
+  - model.norm
+  - optimizer.lr
+  choices:
+  - id: group_lr1
+    model_ref: conv
+  - id: none_lr1
+    model_ref: conv
+    model_updates:
+      norm: none
+  - id: none_lr3
+    model_ref: conv
+    model_updates:
+      norm: none
+    optimizer_updates:
+      lr: 0.003
+  diagnostics:
+  - id: group_lr3
+    model_ref: conv
+    optimizer_updates:
+      lr: 0.003
+  controls:
+  - Identical materialized train/validation/test distribution within a question.
+  - All unlisted settings inherit explicit defaults; measured parameter counts are shown.
+  - Sample quality uses the same fixed conditional reference draws and initial-noise streams.
+  shortcut_checks:
+  - larger network
+  - more sampling steps
+  - matching generator geometry
+  explanation_target: Use the isolated local controls and actual sampling/condition/diversity diagnostics; distinguish
+    optimization from distribution quality.
+  admission: Freeze discovery order before independent confirmation; retain rejected triples without replacement.
+- id: batch_fixed_samples
+  category: optimization
+  context_ref: textured
+  budget_semantics: matched_samples
+  hypothesis: At equal samples seen, batch size changes update count and noise.
+  varying_axes:
+  - training.batch_size
+  - training.training_steps
+  choices:
+  - id: batch8
+    model_ref: conv
+    training_updates:
+      batch_size: 8
+      training_steps: 6000
+  - id: batch16
+    model_ref: conv
+  - id: batch32
+    model_ref: conv
+    training_updates:
+      batch_size: 32
+      training_steps: 1500
+  diagnostics: []
+  controls:
+  - Identical materialized train/validation/test distribution within a question.
+  - All unlisted settings inherit explicit defaults; measured parameter counts are shown.
+  - Sample quality uses the same fixed conditional reference draws and initial-noise streams.
+  shortcut_checks:
+  - larger network
+  - more sampling steps
+  - matching generator geometry
+  explanation_target: Use the isolated local controls and actual sampling/condition/diversity diagnostics; distinguish
+    optimization from distribution quality.
+  admission: Freeze discovery order before independent confirmation; retain rejected triples without replacement.
+- id: training_budget_small_data
+  category: budget
+  context_ref: small_data
+  budget_semantics: per_choice_steps
+  hypothesis: Longer training may fit finite appearance draws without improving conditional sample distribution.
+  varying_axes:
+  - training.training_steps
+  choices:
+  - id: steps700
+    model_ref: conv
+    training_updates:
+      training_steps: 700
+  - id: steps3000
+    model_ref: conv
+    training_updates:
+      training_steps: 3000
+  - id: steps6000
+    model_ref: conv
+    training_updates:
+      training_steps: 6000
+  diagnostics: []
+  controls:
+  - Identical materialized train/validation/test distribution within a question.
+  - All unlisted settings inherit explicit defaults; measured parameter counts are shown.
+  - Sample quality uses the same fixed conditional reference draws and initial-noise streams.
+  shortcut_checks:
+  - larger network
+  - more sampling steps
+  - matching generator geometry
+  explanation_target: Use the isolated local controls and actual sampling/condition/diversity diagnostics; distinguish
+    optimization from distribution quality.
+  admission: Freeze discovery order before independent confirmation; retain rejected triples without replacement.
+- id: sampler_steps_parameterization
+  category: sampling
+  context_ref: textured
+  budget_semantics: matched_steps
+  hypothesis: Inference discretization and prediction parameterization interact; extra network evaluations do not
+    guarantee sample quality.
+  varying_axes:
+  - training.sampling_steps
+  - training.prediction_type
+  choices:
+  - id: x0_steps4
+    model_ref: conv
+    training_updates:
+      sampling_steps: 4
+  - id: x0_steps32
+    model_ref: conv
+    training_updates:
+      sampling_steps: 32
+  - id: v_steps32
+    model_ref: conv
+    training_updates:
+      prediction_type: v
+      sampling_steps: 32
+  diagnostics:
+  - id: v_steps4
+    model_ref: conv
+    training_updates:
+      prediction_type: v
+      sampling_steps: 4
+  controls:
+  - Identical materialized train/validation/test distribution within a question.
+  - All unlisted settings inherit explicit defaults; measured parameter counts are shown.
+  - Sample quality uses the same fixed conditional reference draws and initial-noise streams.
+  shortcut_checks:
+  - larger network
+  - more sampling steps
+  - matching generator geometry
+  explanation_target: Use the isolated local controls and actual sampling/condition/diversity diagnostics; distinguish
+    optimization from distribution quality.
+  admission: Freeze discovery order before independent confirmation; retain rejected triples without replacement.
+- id: sampling_stochasticity
+  category: sampling
+  context_ref: textured
+  budget_semantics: matched_steps
+  hypothesis: Stochastic reverse steps can alter diversity and condition accuracy together.
+  varying_axes:
+  - training.sampling_steps
+  - training.sampling_eta
+  choices:
+  - id: det4
+    model_ref: conv
+    training_updates:
+      sampling_steps: 4
+  - id: det16
+    model_ref: conv
+  - id: stoch16
+    model_ref: conv
+    training_updates:
+      sampling_eta: 1.0
+  diagnostics:
+  - id: stoch4
+    model_ref: conv
+    training_updates:
+      sampling_steps: 4
+      sampling_eta: 1.0
+  controls:
+  - Identical materialized train/validation/test distribution within a question.
+  - All unlisted settings inherit explicit defaults; measured parameter counts are shown.
+  - Sample quality uses the same fixed conditional reference draws and initial-noise streams.
+  shortcut_checks:
+  - larger network
+  - more sampling steps
+  - matching generator geometry
+  explanation_target: Use the isolated local controls and actual sampling/condition/diversity diagnostics; distinguish
+    optimization from distribution quality.
+  admission: Freeze discovery order before independent confirmation; retain rejected triples without replacement.
+- id: texture_condition_bridge
+  category: context
+  context_ref: clean
+  budget_semantics: matched_steps
+  hypothesis: The same coordinate/operator contrast is repeated under a no-texture conditional appearance distribution.
+  varying_axes:
+  - model.mode
+  - model.coordinates
+  choices:
+  - id: conv_absolute
+    model_ref: conv
+  - id: conv_relative
+    model_ref: conv
+    model_updates:
+      coordinates: relative
+  - id: unet
+    model_ref: unet
+  diagnostics:
+  - id: unet_relative
+    model_ref: unet
+    model_updates:
+      coordinates: relative
+  controls:
+  - Identical materialized train/validation/test distribution within a question.
+  - All unlisted settings inherit explicit defaults; measured parameter counts are shown.
+  - Sample quality uses the same fixed conditional reference draws and initial-noise streams.
+  shortcut_checks:
+  - larger network
+  - more sampling steps
+  - matching generator geometry
+  explanation_target: Use the isolated local controls and actual sampling/condition/diversity diagnostics; distinguish
+    optimization from distribution quality.
+  admission: Freeze discovery order before independent confirmation; retain rejected triples without replacement.
+- id: position_condition_bridge
+  category: context
+  context_ref: shifted
+  budget_semantics: matched_steps
+  hypothesis: The same coordinate/operator cells bridge a broader held-out position distribution.
+  varying_axes:
+  - model.mode
+  - model.coordinates
+  choices:
+  - id: conv_absolute
+    model_ref: conv
+  - id: conv_relative
+    model_ref: conv
+    model_updates:
+      coordinates: relative
+  - id: unet
+    model_ref: unet
+  diagnostics:
+  - id: unet_relative
+    model_ref: unet
+    model_updates:
+      coordinates: relative
+  controls:
+  - Identical materialized train/validation/test distribution within a question.
+  - All unlisted settings inherit explicit defaults; measured parameter counts are shown.
+  - Sample quality uses the same fixed conditional reference draws and initial-noise streams.
+  shortcut_checks:
+  - larger network
+  - more sampling steps
+  - matching generator geometry
+  explanation_target: Use the isolated local controls and actual sampling/condition/diversity diagnostics; distinguish
+    optimization from distribution quality.
+  admission: Freeze discovery order before independent confirmation; retain rejected triples without replacement.
+- id: budget_parameterization
+  category: budget_objective
+  context_ref: textured
+  budget_semantics: per_choice_steps
+  hypothesis: A noise-robust conditional mean can learn quickly while a stochastic conditional distribution requires
+    more updates; parameterization rankings can change with budget.
+  varying_axes:
+  - training.prediction_type
+  - training.training_steps
+  choices:
+  - id: relative_x0_3000
+    model_ref: conv
+    model_updates:
+      coordinates: relative
+    training_updates:
+      prediction_type: x0
+      training_steps: 3000
+  - id: relative_v3000
+    model_ref: conv
+    model_updates:
+      coordinates: relative
+    training_updates:
+      prediction_type: v
+      training_steps: 3000
+  - id: relative_v6000
+    model_ref: conv
+    model_updates:
+      coordinates: relative
+    training_updates:
+      prediction_type: v
+      training_steps: 6000
+  diagnostics:
+  - id: relative_x0_6000
+    model_ref: conv
+    model_updates:
+      coordinates: relative
+    training_updates:
+      prediction_type: x0
+      training_steps: 6000
+  controls:
+  - Complete 2x2 clean/velocity target by 3000/6000 update grid.
+  - Same data, model architecture, optimizer, mini-batch and diffusion-noise streams.
+  - Prediction-target losses are not comparable; rank only actual sample energy score.
+  shortcut_checks:
+  - always prefer clean-image prediction
+  - always prefer velocity prediction
+  - more training steps
+  explanation_target: Separate matched-budget target effects and same-target budget effects. Conditional silhouettes
+    can improve while appearance diversity shrinks; inspect sample energy, geometry and variance together.
+  admission: Freeze discovery order before independent confirmation; do not replace rejected cells.
+calibration_decision:
+  dataset_seed: 851900
+  training_seed: 20
+  formal_seeds_never_used: true
+  decision_before_formal_runs: true
+  calibration_runs:
+  - generation/calibration
+  - generation/calibration_long
+  - generation/calibration_v6000
+  decision: Use 3000-step x0 default after independent calibration showed useful geometry. Retain 700-step short
+    budget and add full x0/v by 3000/6000 controls to include a stochastic generation anchor. No requirement that
+    every candidate fit the distribution well; weak controlled variants are retained.
+  limits: The v6000 relative-coordinate pilot is useful but remains above oracle energy score; image variance is
+    not proof of correctly learned texture modes. The calibration test split is exploratory only and never used
+    as formal evidence.

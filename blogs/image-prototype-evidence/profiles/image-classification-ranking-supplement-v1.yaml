@@ -1,0 +1,452 @@
+schema_version: vision_question_clusters_v1
+base_profile: task-expansion-image-classification.yaml
+dataset_family: image_classification
+selection_metric: test_cross_entropy
+default_num_choices: 3
+statistics:
+  discovery:
+    n_seeds: 4
+    split: validation
+    purpose: direction_estimation_only
+    ranking_rule: ascending_mean_validation_cross_entropy
+    significance_gate: false
+  confirmation:
+    n_seeds: 16
+    split: test
+    test: one_sided_paired_sign_test
+    alpha: 0.05
+    correction: holm
+    min_mean_paired_gap: 0.005
+  estimand: Paired per-seed win/loss stability plus observed mean CE gap for a fixed materialized dataset.
+    Not a test of expected CE differences or natural-image generalization.
+selection_contract:
+  discovery_split: validation
+  confirmation_split: test
+  freeze_before_confirmation:
+  - candidate IDs
+  - adjacent ranking directions
+  - comparison family
+  - gap threshold
+  - seed list
+  multiplicity: Holm across exactly 24 frozen adjacent hypotheses from all 12 primary triples in this
+    independent supplement, including rejected instances.
+  minimum_mean_gap: 0.005
+  require_nonoverlap: false
+  claim_scope: Synthetic task and fixed image-instance conditional training seed robustness. No natural-image
+    claim.
+  difficulty_policy: Evaluate every admitted triple; retain every rejected triple without replacing choices,
+    expanding templates or tuning against model answers.
+defaults:
+  dataset:
+    size: 24
+    num_classes: 4
+    task: relative_position
+    radius_range:
+    - 2.5
+    - 4.5
+    frequency_range:
+    - 1.5
+    - 3.0
+    intensity_range:
+    - 0.8
+    - 1.2
+    normalize_mass: true
+    train_size: 1024
+    validation_size: 512
+    test_size: 512
+    ood_size: 128
+    edge_softness: 0.5
+  optimizer:
+    type: AdamW
+    lr: 0.001
+    weight_decay: 0.01
+    betas:
+    - 0.9
+    - 0.999
+    eps: 1.0e-08
+    foreach: false
+  loss:
+    loss_id: cross_entropy
+  training:
+    batch_size: 32
+    training_steps: 300
+    total_samples_seen: 9600
+    gradient_accumulation: 1
+    clip_norm: 1.0
+    schedule: constant
+    precision: fp32
+    tf32: false
+    deterministic_algorithms: true
+    warmup_updates: 0
+    batch_rng_device: cpu
+    paired_cpu_batch_stream: true
+    persist_initial_state: true
+    batch_seed_offset: 500000
+    evaluation_split: validation
+    eval_steps:
+    - 0
+    - 100
+    - 300
+    record_training_diagnostics: true
+models:
+  cnn:
+    type: image_classifier
+    mode: cnn
+    width: 24
+    depth: 2
+    activation: gelu
+    residual: true
+    norm: layer
+    norm_first: true
+    ff_ratio: 2
+    kernel_size: 3
+    convolution: dense
+    pooling: spatial
+    pool_grid: 3
+    coordinates: false
+    stem_stride: 1
+    max_parameters: 2000000
+  vit:
+    type: image_classifier
+    mode: patch_transformer
+    width: 32
+    depth: 2
+    activation: gelu
+    residual: true
+    norm: layer
+    norm_first: true
+    ff_ratio: 2
+    heads: 4
+    patch_size: 4
+    position: learned
+    max_parameters: 2000000
+  mlp:
+    type: image_classifier
+    mode: mlp
+    width: 96
+    depth: 2
+    activation: gelu
+    residual: true
+    max_parameters: 2000000
+description: 'Independent bounded supplement: four predeclared image classification clusters selected
+  from v1 validation evidence, without reading model answers. All new data and training seeds; no reuse
+  of v1 significance. Analyst-only hypotheses never enter prompts.'
+allowed_num_choices:
+- 3
+instance_seeds:
+- 842901
+- 842902
+- 842903
+discovery_training_seeds:
+- 300
+- 301
+- 302
+- 303
+confirmation_training_seeds:
+- 400
+- 401
+- 402
+- 403
+- 404
+- 405
+- 406
+- 407
+- 408
+- 409
+- 410
+- 411
+- 412
+- 413
+- 414
+- 415
+contexts:
+  relations: {}
+  shapes:
+    task: local_shape
+provenance:
+  source_of_design: v1 validation trajectories and complete local training controls only; no model-answer-conditioned
+    selection
+  no_llm_responses_read: true
+  source_dsl_sha256: a9f978cb00d7650c29c7389e5fce4b6945945e727c66ce2ca22de6e2b9a2c627
+  validation_evidence_path: data/task_expansion/vision_validation/classification_bounded_supplement_validation_evidence.json
+  validation_evidence_sha256: c1d3f6848ec3c6865754466c8b2469e6ae04863da0ecbfe477dab48b57a6801c
+  independent_batch: true
+  reuse_v1_significance: false
+  frozen_template_limit: 4
+  frozen_instance_count: 12
+  frozen_adjacent_hypothesis_count: 24
+  stop_rule: Evaluate all admitted triples after one fixed 4+16-seed run; retain rejections without replacements
+    or tuning.
+templates:
+- id: operator_learning_speed
+  category: operator_budget
+  context_ref: relations
+  budget_semantics: matched_steps
+  varying_axes:
+  - model.mode
+  choices:
+  - id: mlp_75
+    model_ref: mlp
+    training_updates:
+      training_steps: 75
+  - id: cnn_75
+    model_ref: cnn
+    training_updates:
+      training_steps: 75
+  - id: vit_75
+    model_ref: vit
+    training_updates:
+      training_steps: 75
+  diagnostics:
+  - id: mlp_300
+    model_ref: mlp
+    training_updates:
+      training_steps: 300
+  - id: cnn_300
+    model_ref: cnn
+    training_updates:
+      training_steps: 300
+  - id: vit_300
+    model_ref: vit
+    training_updates:
+      training_steps: 300
+  hypothesis: Architecture recipes can learn at different speeds; rankings may depend on the finite optimization
+    horizon.
+  explanation_target: Compare all three recipes at both 75 and 300 updates. A 75-step ranking does not
+    establish asymptotic architecture quality. Width, parameterization, pooling, patching and positional
+    representation all differ in the operator recipe; recorded actual fields make the bundle explicit.
+  controls:
+  - Same fixed materialized train/validation/test/OOD splits within each context and data seed.
+  - Each primary triple has equal updates and batch size; diagnostic horizons are explicitly separate.
+  - All unlisted fields inherit explicit defaults; measured parameter counts and all actual changed fields
+    are exposed.
+  - No matched-parameter or matched-FLOP claim; mode comparisons are bundled recipes.
+  - Final checkpoints only; fixed horizon, no early stopping or validation-selected checkpoint.
+  shortcut_checks:
+  - globally stronger operator always wins
+  - larger parameter count always wins
+  - short-horizon order persists at 300 updates
+  admission: Freeze ascending-mean validation directions after four discovery seeds; admit only when both
+    adjacent paired sign tests pass the independent 24-hypothesis Holm family and each observed mean test-CE
+    gap exceeds 0.005. No replacement after failure.
+- id: operator_shape_generalization
+  category: operator_generalization
+  context_ref: shapes
+  budget_semantics: matched_steps
+  varying_axes:
+  - model.mode
+  - optimizer.lr
+  choices:
+  - id: cnn_spatial_lr003
+    model_ref: cnn
+    training_updates:
+      training_steps: 1200
+    optimizer_updates:
+      lr: 0.003
+  - id: vit_lr001
+    model_ref: vit
+    training_updates:
+      training_steps: 1200
+  - id: mlp_lr001
+    model_ref: mlp
+    training_updates:
+      training_steps: 1200
+  diagnostics:
+  - id: cnn_spatial_lr001
+    model_ref: cnn
+    training_updates:
+      training_steps: 1200
+  - id: cnn_mean_lr001
+    model_ref: cnn
+    training_updates:
+      training_steps: 1200
+    model_updates:
+      pooling: mean
+  - id: cnn_mean_lr003
+    model_ref: cnn
+    training_updates:
+      training_steps: 1200
+    model_updates:
+      pooling: mean
+    optimizer_updates:
+      lr: 0.003
+  - id: vit_lr003
+    model_ref: vit
+    training_updates:
+      training_steps: 1200
+    optimizer_updates:
+      lr: 0.003
+  - id: mlp_lr003
+    model_ref: mlp
+    training_updates:
+      training_steps: 1200
+    optimizer_updates:
+      lr: 0.003
+  hypothesis: Operator-specific finite-data learning and generalization may differ, while learning rate
+    and CNN readout can alter the observed recipe gap.
+  explanation_target: Use the complete CNN pooling x learning-rate control and both learning rates for
+    ViT and MLP. Compare final complete training CE, validation trajectories and held-out CE before distinguishing
+    optimization failure from overfitting. Do not attribute the bundled primary comparison solely to architecture
+    or extrapolate to natural images.
+  controls:
+  - Same fixed materialized train/validation/test/OOD splits within each context and data seed.
+  - Each primary triple has equal updates and batch size; diagnostic horizons are explicitly separate.
+  - All unlisted fields inherit explicit defaults; measured parameter counts and all actual changed fields
+    are exposed.
+  - No matched-parameter or matched-FLOP claim; mode comparisons are bundled recipes.
+  - Final checkpoints only; fixed horizon, no early stopping or validation-selected checkpoint.
+  shortcut_checks:
+  - Transformer always wins image tasks
+  - lowest learning rate always generalizes best
+  - training fit alone predicts held-out cross-entropy
+  admission: Freeze ascending-mean validation directions after four discovery seeds; admit only when both
+    adjacent paired sign tests pass the independent 24-hypothesis Holm family and each observed mean test-CE
+    gap exceeds 0.005. No replacement after failure.
+- id: patch_coordinate_retention
+  category: patch_position
+  context_ref: relations
+  budget_semantics: matched_steps
+  varying_axes:
+  - model.patch_size
+  choices:
+  - id: p3_none
+    model_ref: vit
+    training_updates:
+      training_steps: 300
+    model_updates:
+      patch_size: 3
+      position: none
+  - id: p6_none
+    model_ref: vit
+    training_updates:
+      training_steps: 300
+    model_updates:
+      patch_size: 6
+      position: none
+  - id: p12_none
+    model_ref: vit
+    training_updates:
+      training_steps: 300
+    model_updates:
+      patch_size: 12
+      position: none
+  diagnostics:
+  - id: p3_learned
+    model_ref: vit
+    training_updates:
+      training_steps: 300
+    model_updates:
+      patch_size: 3
+  - id: p6_learned
+    model_ref: vit
+    training_updates:
+      training_steps: 300
+    model_updates:
+      patch_size: 6
+  - id: p12_learned
+    model_ref: vit
+    training_updates:
+      training_steps: 300
+    model_updates:
+      patch_size: 12
+  hypothesis: Patch size changes both tokenization and retained within-patch positional structure; explicit
+    positional embeddings may interact with this trade-off.
+  explanation_target: Use the complete patch-size x position-embedding control. Removing learned position
+    embeddings leaves ordered within-patch pixels inside the linear projection. Larger patches change
+    token count, projection parameters and optimization as well as spatial aggregation; patch projection
+    is not a guaranteed antialiasing filter. New p12 cells are untested design hypotheses and may fail
+    admission.
+  controls:
+  - Same fixed materialized train/validation/test/OOD splits within each context and data seed.
+  - Each primary triple has equal updates and batch size; diagnostic horizons are explicitly separate.
+  - All unlisted fields inherit explicit defaults; measured parameter counts and all actual changed fields
+    are exposed.
+  - No matched-parameter or matched-FLOP claim; mode comparisons are bundled recipes.
+  - Final checkpoints only; fixed horizon, no early stopping or validation-selected checkpoint.
+  shortcut_checks:
+  - no positional embeddings makes all position learning impossible
+  - smaller patches always preserve more useful information
+  - patch projection guarantees antialiasing
+  admission: Freeze ascending-mean validation directions after four discovery seeds; admit only when both
+    adjacent paired sign tests pass the independent 24-hypothesis Holm family and each observed mean test-CE
+    gap exceeds 0.005. No replacement after failure.
+- id: residual_norm_placement
+  category: residual_normalization
+  context_ref: relations
+  budget_semantics: matched_steps
+  varying_axes:
+  - model.residual
+  - model.norm_first
+  choices:
+  - id: d6_residual_pre
+    model_ref: cnn
+    training_updates:
+      training_steps: 150
+    model_updates:
+      depth: 6
+  - id: d6_residual_post
+    model_ref: cnn
+    training_updates:
+      training_steps: 150
+    model_updates:
+      depth: 6
+      norm_first: false
+  - id: d6_plain_pre
+    model_ref: cnn
+    training_updates:
+      training_steps: 150
+    model_updates:
+      depth: 6
+      residual: false
+  diagnostics:
+  - id: d6_plain_post
+    model_ref: cnn
+    training_updates:
+      training_steps: 150
+    model_updates:
+      depth: 6
+      residual: false
+      norm_first: false
+  - id: d2_residual_pre
+    model_ref: cnn
+    training_updates:
+      training_steps: 150
+  - id: d2_residual_post
+    model_ref: cnn
+    training_updates:
+      training_steps: 150
+    model_updates:
+      norm_first: false
+  - id: d2_plain_pre
+    model_ref: cnn
+    training_updates:
+      training_steps: 150
+    model_updates:
+      residual: false
+  - id: d2_plain_post
+    model_ref: cnn
+    training_updates:
+      training_steps: 150
+    model_updates:
+      residual: false
+      norm_first: false
+  hypothesis: Residual paths and normalization placement can interact with depth under the same finite
+    update budget.
+  explanation_target: Use all eight depth x residual x normalization-placement cells. CNN LayerNorm is
+    per spatial location across channels. Pre/post placement changes the forward function as implemented,
+    not just a label. Global gradient norms and clipping are nonexclusive diagnostics and do not establish
+    layerwise vanishing or exploding gradients. Post-norm cells are untested and may fail admission.
+  controls:
+  - Same fixed materialized train/validation/test/OOD splits within each context and data seed.
+  - Each primary triple has equal updates and batch size; diagnostic horizons are explicitly separate.
+  - All unlisted fields inherit explicit defaults; measured parameter counts and all actual changed fields
+    are exposed.
+  - No matched-parameter or matched-FLOP claim; mode comparisons are bundled recipes.
+  - Final checkpoints only; fixed horizon, no early stopping or validation-selected checkpoint.
+  shortcut_checks:
+  - residual paths guarantee success
+  - pre-norm always wins
+  - nonzero global gradient rules out layerwise vanishing
+  admission: Freeze ascending-mean validation directions after four discovery seeds; admit only when both
+    adjacent paired sign tests pass the independent 24-hypothesis Holm family and each observed mean test-CE
+    gap exceeds 0.005. No replacement after failure.

@@ -1,0 +1,1045 @@
+schema_version: vision_question_clusters_v1
+description: Synthetic image classification prototype with explicit primary triples, local intervention
+  controls, three data seeds, and fixed statistical admission. Analyst-only hypothesis text must never
+  enter prompts.
+base_profile: task-expansion-image-classification.yaml
+dataset_family: image_classification
+selection_metric: test_cross_entropy
+default_num_choices: 3
+allowed_num_choices:
+- 3
+- 4
+- 5
+instance_seeds:
+- 841901
+- 841902
+- 841903
+discovery_training_seeds:
+- 20
+- 21
+- 22
+- 23
+confirmation_training_seeds:
+- 200
+- 201
+- 202
+- 203
+- 204
+- 205
+- 206
+- 207
+- 208
+- 209
+- 210
+- 211
+- 212
+- 213
+- 214
+- 215
+statistics:
+  discovery:
+    n_seeds: 4
+    split: validation
+    purpose: direction_estimation_only
+    ranking_rule: ascending_mean_validation_cross_entropy
+    significance_gate: false
+  confirmation:
+    n_seeds: 16
+    split: test
+    test: one_sided_paired_sign_test
+    alpha: 0.05
+    correction: holm
+    min_mean_paired_gap: 0.005
+  estimand: Paired per-seed win/loss stability plus observed mean CE gap for a fixed materialized dataset.
+    Not a test of expected CE differences or natural-image generalization.
+selection_contract:
+  discovery_split: validation
+  confirmation_split: test
+  freeze_before_confirmation:
+  - candidate IDs
+  - adjacent ranking directions
+  - comparison family
+  - gap threshold
+  - seed list
+  multiplicity: Holm across every frozen adjacent hypothesis, including rejected templates
+  minimum_mean_gap: 0.005
+  require_nonoverlap: false
+  claim_scope: Synthetic task and fixed image-instance conditional training seed robustness. No natural-image
+    claim.
+  difficulty_policy: Evaluate every admitted triple; retain rejected triples without replacement.
+defaults:
+  dataset:
+    size: 24
+    num_classes: 4
+    task: relative_position
+    radius_range:
+    - 2.5
+    - 4.5
+    frequency_range:
+    - 1.5
+    - 3.0
+    intensity_range:
+    - 0.8
+    - 1.2
+    normalize_mass: true
+    train_size: 1024
+    validation_size: 512
+    test_size: 512
+    ood_size: 128
+    edge_softness: 0.5
+  optimizer:
+    type: AdamW
+    lr: 0.001
+    weight_decay: 0.01
+    betas:
+    - 0.9
+    - 0.999
+    eps: 1.0e-08
+    foreach: false
+  loss:
+    loss_id: cross_entropy
+  training:
+    batch_size: 32
+    training_steps: 300
+    total_samples_seen: 9600
+    gradient_accumulation: 1
+    clip_norm: 1.0
+    schedule: constant
+    precision: fp32
+    tf32: false
+    deterministic_algorithms: true
+    warmup_updates: 0
+    batch_rng_device: cpu
+    paired_cpu_batch_stream: true
+    persist_initial_state: true
+    batch_seed_offset: 500000
+    evaluation_split: validation
+    eval_steps:
+    - 0
+    - 100
+    - 300
+    record_training_diagnostics: true
+models:
+  cnn:
+    type: image_classifier
+    mode: cnn
+    width: 24
+    depth: 2
+    activation: gelu
+    residual: true
+    norm: layer
+    norm_first: true
+    ff_ratio: 2
+    kernel_size: 3
+    convolution: dense
+    pooling: spatial
+    pool_grid: 3
+    coordinates: false
+    stem_stride: 1
+    max_parameters: 2000000
+  vit:
+    type: image_classifier
+    mode: patch_transformer
+    width: 32
+    depth: 2
+    activation: gelu
+    residual: true
+    norm: layer
+    norm_first: true
+    ff_ratio: 2
+    heads: 4
+    patch_size: 4
+    position: learned
+    max_parameters: 2000000
+  mlp:
+    type: image_classifier
+    mode: mlp
+    width: 96
+    depth: 2
+    activation: gelu
+    residual: true
+    max_parameters: 2000000
+contexts:
+  relations: {}
+  shapes:
+    task: local_shape
+  textures:
+    task: texture_orientation
+  fine_textures:
+    task: texture_orientation
+    frequency_range:
+    - 4.0
+    - 6.0
+  small_shapes:
+    task: local_shape
+    train_size: 64
+templates:
+- id: receptive_field_depth
+  category: spatial_support
+  context_ref: relations
+  budget_semantics: matched_steps
+  varying_axes:
+  - model.kernel_size
+  - model.depth
+  choices:
+  - id: k3_d1
+    model_ref: cnn
+    model_updates:
+      depth: 1
+  - id: k3_d4
+    model_ref: cnn
+    model_updates:
+      depth: 4
+  - id: k7_d1
+    model_ref: cnn
+    model_updates:
+      kernel_size: 7
+      depth: 1
+  diagnostics:
+  - id: k7_d4
+    model_ref: cnn
+    model_updates:
+      kernel_size: 7
+      depth: 4
+  hypothesis: Kernel support and depth interact under finite optimization.
+  explanation_target: Use the full 2x2 kernel/depth control; spatial pooling itself preserves coarse positions,
+    so kernel support is not the sole available route.
+  controls:
+  - Same fixed materialized image splits within each question.
+  - All unlisted fields inherit the explicit defaults.
+  - Measured parameter counts are displayed; matching width does not match parameters or computation.
+  shortcut_checks:
+  - larger model always wins
+  - more steps always wins
+  - matching task name to architecture
+  admission: Freeze discovery-ranked primary triple before independent confirmation. Never replace choices
+    after rejection.
+- id: pooling_coordinate
+  category: spatial_readout
+  context_ref: relations
+  budget_semantics: matched_steps
+  varying_axes:
+  - model.pooling
+  - model.coordinates
+  choices:
+  - id: mean
+    model_ref: cnn
+    model_updates:
+      pooling: mean
+  - id: coordinate_mean
+    model_ref: cnn
+    model_updates:
+      pooling: mean
+      coordinates: true
+  - id: spatial
+    model_ref: cnn
+  diagnostics:
+  - id: coordinate_spatial
+    model_ref: cnn
+    model_updates:
+      coordinates: true
+  hypothesis: Coordinate input and spatial readout provide different location information.
+  explanation_target: Use the completed 2x2 control and distinguish representation availability from optimization;
+    convolution boundary effects mean finite images are not exactly translation invariant.
+  controls:
+  - Same fixed materialized image splits within each question.
+  - All unlisted fields inherit the explicit defaults.
+  - Measured parameter counts are displayed; matching width does not match parameters or computation.
+  shortcut_checks:
+  - larger model always wins
+  - more steps always wins
+  - matching task name to architecture
+  admission: Freeze discovery-ranked primary triple before independent confirmation. Never replace choices
+    after rejection.
+- id: patch_position
+  category: patch
+  context_ref: relations
+  budget_semantics: matched_steps
+  varying_axes:
+  - model.patch_size
+  - model.position
+  choices:
+  - id: p3_none
+    model_ref: vit
+    model_updates:
+      patch_size: 3
+      position: none
+  - id: p4_learned
+    model_ref: vit
+  - id: p6_learned
+    model_ref: vit
+    model_updates:
+      patch_size: 6
+  diagnostics:
+  - id: p3_learned
+    model_ref: vit
+    model_updates:
+      patch_size: 3
+  - id: p4_none
+    model_ref: vit
+    model_updates:
+      position: none
+  - id: p6_none
+    model_ref: vit
+    model_updates:
+      patch_size: 6
+      position: none
+  hypothesis: Token scale and learned position information can trade off at fixed steps.
+  explanation_target: All 3x2 patch/position cells are available. Patchification preserves within-patch
+    arrangement even without positional embeddings.
+  controls:
+  - Same fixed materialized image splits within each question.
+  - All unlisted fields inherit the explicit defaults.
+  - Measured parameter counts are displayed; matching width does not match parameters or computation.
+  shortcut_checks:
+  - larger model always wins
+  - more steps always wins
+  - matching task name to architecture
+  admission: Freeze discovery-ranked primary triple before independent confirmation. Never replace choices
+    after rejection.
+- id: operator_relation
+  category: operator
+  context_ref: relations
+  budget_semantics: matched_steps
+  varying_axes:
+  - model.mode
+  choices:
+  - id: cnn
+    model_ref: cnn
+  - id: flat
+    model_ref: mlp
+  - id: attention
+    model_ref: vit
+  diagnostics: []
+  hypothesis: Three different inductive biases solve the same relational image task.
+  explanation_target: This is a bundled architecture recipe comparison with actual changed fields and
+    parameter counts; do not attribute the entire gap to one named operator.
+  controls:
+  - Same fixed materialized image splits within each question.
+  - All unlisted fields inherit the explicit defaults.
+  - Measured parameter counts are displayed; matching width does not match parameters or computation.
+  shortcut_checks:
+  - larger model always wins
+  - more steps always wins
+  - matching task name to architecture
+  admission: Freeze discovery-ranked primary triple before independent confirmation. Never replace choices
+    after rejection.
+- id: operator_local_shape
+  category: operator
+  context_ref: shapes
+  budget_semantics: matched_steps
+  varying_axes:
+  - model.mode
+  choices:
+  - id: cnn_mean
+    model_ref: cnn
+    model_updates:
+      pooling: mean
+    training_updates:
+      training_steps: 1200
+    optimizer_updates:
+      lr: 0.003
+  - id: flat
+    model_ref: mlp
+    training_updates:
+      training_steps: 1200
+  - id: attention
+    model_ref: vit
+    training_updates:
+      training_steps: 1200
+  diagnostics:
+  - id: cnn_spatial
+    model_ref: cnn
+    training_updates:
+      training_steps: 1200
+    model_updates:
+      pooling: spatial
+    optimizer_updates:
+      lr: 0.003
+  hypothesis: Local shape recognition need not favor the same recipe as relative positions.
+  explanation_target: Compare operator recipes within this fixed task; the CNN readout control distinguishes
+    mean pooling from changing the operator.
+  controls:
+  - Same fixed materialized image splits within each question.
+  - All unlisted fields inherit the explicit defaults.
+  - Measured parameter counts are displayed; matching width does not match parameters or computation.
+  shortcut_checks:
+  - larger model always wins
+  - more steps always wins
+  - matching task name to architecture
+  admission: Freeze discovery-ranked primary triple before independent confirmation. Never replace choices
+    after rejection.
+- id: kernel_stride_texture
+  category: spatial_sampling
+  context_ref: textures
+  budget_semantics: matched_steps
+  varying_axes:
+  - model.kernel_size
+  - model.stem_stride
+  choices:
+  - id: k3_s1
+    model_ref: cnn
+    training_updates:
+      training_steps: 1200
+    model_updates:
+      pooling: mean
+    optimizer_updates:
+      lr: 0.003
+  - id: k5_s2
+    model_ref: cnn
+    model_updates:
+      kernel_size: 5
+      stem_stride: 2
+      pooling: mean
+    training_updates:
+      training_steps: 1200
+    optimizer_updates:
+      lr: 0.003
+  - id: k3_s4
+    model_ref: cnn
+    model_updates:
+      stem_stride: 4
+      pooling: mean
+    training_updates:
+      training_steps: 1200
+    optimizer_updates:
+      lr: 0.003
+  diagnostics:
+  - id: k5_s1
+    model_ref: cnn
+    model_updates:
+      kernel_size: 5
+      pooling: mean
+    training_updates:
+      training_steps: 1200
+    optimizer_updates:
+      lr: 0.003
+  - id: k3_s2
+    model_ref: cnn
+    model_updates:
+      stem_stride: 2
+      pooling: mean
+    training_updates:
+      training_steps: 1200
+    optimizer_updates:
+      lr: 0.003
+  - id: k5_s4
+    model_ref: cnn
+    model_updates:
+      kernel_size: 5
+      stem_stride: 4
+      pooling: mean
+    training_updates:
+      training_steps: 1200
+    optimizer_updates:
+      lr: 0.003
+  - id: patch4_learnability_anchor
+    model_ref: vit
+    training_updates:
+      training_steps: 1200
+  hypothesis: Spatial reduction changes texture representation and optimization.
+  explanation_target: Use all 2x3 kernel/stride cells. The strided stem is learned patch projection, not
+    a guaranteed anti-aliasing filter.
+  controls:
+  - Same fixed materialized image splits within each question.
+  - All unlisted fields inherit the explicit defaults.
+  - Measured parameter counts are displayed; matching width does not match parameters or computation.
+  - Additional patch-transformer diagnostic is a preselected learnability anchor, not part of the convolution
+    kernel/stride factorial.
+  shortcut_checks:
+  - larger model always wins
+  - more steps always wins
+  - matching task name to architecture
+  admission: Freeze discovery-ranked primary triple before independent confirmation. Never replace choices
+    after rejection.
+- id: patch_high_frequency
+  category: patch
+  context_ref: fine_textures
+  budget_semantics: matched_steps
+  varying_axes:
+  - model.patch_size
+  choices:
+  - id: p3
+    model_ref: vit
+    model_updates:
+      patch_size: 3
+    training_updates:
+      training_steps: 1200
+  - id: p4
+    model_ref: vit
+    training_updates:
+      training_steps: 1200
+  - id: p6
+    model_ref: vit
+    model_updates:
+      patch_size: 6
+    training_updates:
+      training_steps: 1200
+  diagnostics: []
+  hypothesis: Coarser patches reduce token count but do not inherently erase all within-patch frequency
+    information.
+  explanation_target: Patch projection is learned and its output dimension changes compression. Avoid
+    claiming sampling-theorem loss solely from token count.
+  controls:
+  - Same fixed materialized image splits within each question.
+  - All unlisted fields inherit the explicit defaults.
+  - Measured parameter counts are displayed; matching width does not match parameters or computation.
+  shortcut_checks:
+  - larger model always wins
+  - more steps always wins
+  - matching task name to architecture
+  admission: Freeze discovery-ranked primary triple before independent confirmation. Never replace choices
+    after rejection.
+- id: depthwise_width
+  category: block
+  context_ref: shapes
+  budget_semantics: matched_steps
+  varying_axes:
+  - model.convolution
+  - model.width
+  choices:
+  - id: dense24
+    model_ref: cnn
+    training_updates:
+      training_steps: 1200
+    model_updates:
+      pooling: mean
+    optimizer_updates:
+      lr: 0.003
+  - id: depthwise24
+    model_ref: cnn
+    model_updates:
+      convolution: depthwise
+      pooling: mean
+    training_updates:
+      training_steps: 1200
+    optimizer_updates:
+      lr: 0.003
+  - id: depthwise48
+    model_ref: cnn
+    model_updates:
+      convolution: depthwise
+      width: 48
+      pooling: mean
+    training_updates:
+      training_steps: 1200
+    optimizer_updates:
+      lr: 0.003
+  diagnostics:
+  - id: dense48
+    model_ref: cnn
+    model_updates:
+      width: 48
+      pooling: mean
+    training_updates:
+      training_steps: 1200
+    optimizer_updates:
+      lr: 0.003
+  hypothesis: Cheap spatial mixing can trade capacity for channel width.
+  explanation_target: Complete 2x2 convolution/width controls distinguish spatial mixing from width; parameter
+    and FLOP matching are not implied.
+  controls:
+  - Same fixed materialized image splits within each question.
+  - All unlisted fields inherit the explicit defaults.
+  - Measured parameter counts are displayed; matching width does not match parameters or computation.
+  shortcut_checks:
+  - larger model always wins
+  - more steps always wins
+  - matching task name to architecture
+  admission: Freeze discovery-ranked primary triple before independent confirmation. Never replace choices
+    after rejection.
+- id: residual_depth
+  category: residual
+  context_ref: relations
+  budget_semantics: matched_steps
+  varying_axes:
+  - model.residual
+  - model.depth
+  choices:
+  - id: plain2
+    model_ref: cnn
+    model_updates:
+      residual: false
+  - id: residual6
+    model_ref: cnn
+    model_updates:
+      depth: 6
+  - id: plain6
+    model_ref: cnn
+    model_updates:
+      residual: false
+      depth: 6
+  diagnostics:
+  - id: residual2
+    model_ref: cnn
+  hypothesis: Residual paths can change finite-step learnability as depth increases.
+  explanation_target: Use all depth/residual cells; improved gradient flow is a hypothesis unless gradient
+    diagnostics establish it.
+  controls:
+  - Same fixed materialized image splits within each question.
+  - All unlisted fields inherit the explicit defaults.
+  - Measured parameter counts are displayed; matching width does not match parameters or computation.
+  shortcut_checks:
+  - larger model always wins
+  - more steps always wins
+  - matching task name to architecture
+  admission: Freeze discovery-ranked primary triple before independent confirmation. Never replace choices
+    after rejection.
+- id: norm_residual
+  category: block
+  context_ref: shapes
+  budget_semantics: matched_steps
+  varying_axes:
+  - model.norm
+  - model.residual
+  choices:
+  - id: no_norm
+    model_ref: cnn
+    model_updates:
+      norm: none
+      pooling: mean
+    training_updates:
+      training_steps: 1200
+    optimizer_updates:
+      lr: 0.003
+  - id: plain_norm
+    model_ref: cnn
+    model_updates:
+      residual: false
+      pooling: mean
+    training_updates:
+      training_steps: 1200
+    optimizer_updates:
+      lr: 0.003
+  - id: residual_norm
+    model_ref: cnn
+    training_updates:
+      training_steps: 1200
+    model_updates:
+      pooling: mean
+    optimizer_updates:
+      lr: 0.003
+  diagnostics:
+  - id: plain_no_norm
+    model_ref: cnn
+    model_updates:
+      norm: none
+      residual: false
+      pooling: mean
+    training_updates:
+      training_steps: 1200
+    optimizer_updates:
+      lr: 0.003
+  hypothesis: Per-pixel channel normalization and residual paths may interact.
+  explanation_target: Complete 2x2 controls; LayerNorm is across channels at each pixel, not BatchNorm
+    or spatial normalization.
+  controls:
+  - Same fixed materialized image splits within each question.
+  - All unlisted fields inherit the explicit defaults.
+  - Measured parameter counts are displayed; matching width does not match parameters or computation.
+  shortcut_checks:
+  - larger model always wins
+  - more steps always wins
+  - matching task name to architecture
+  admission: Freeze discovery-ranked primary triple before independent confirmation. Never replace choices
+    after rejection.
+- id: ff_activation
+  category: block
+  context_ref: shapes
+  budget_semantics: matched_steps
+  varying_axes:
+  - model.ff_ratio
+  - model.activation
+  choices:
+  - id: ff1_relu
+    model_ref: cnn
+    model_updates:
+      ff_ratio: 1
+      activation: relu
+      pooling: mean
+    training_updates:
+      training_steps: 1200
+    optimizer_updates:
+      lr: 0.003
+  - id: ff2_gelu
+    model_ref: cnn
+    training_updates:
+      training_steps: 1200
+    model_updates:
+      pooling: mean
+    optimizer_updates:
+      lr: 0.003
+  - id: ff4_relu
+    model_ref: cnn
+    model_updates:
+      ff_ratio: 4
+      activation: relu
+      pooling: mean
+    training_updates:
+      training_steps: 1200
+    optimizer_updates:
+      lr: 0.003
+  diagnostics:
+  - id: ff1_gelu
+    model_ref: cnn
+    model_updates:
+      ff_ratio: 1
+      pooling: mean
+    training_updates:
+      training_steps: 1200
+    optimizer_updates:
+      lr: 0.003
+  - id: ff2_relu
+    model_ref: cnn
+    model_updates:
+      activation: relu
+      pooling: mean
+    training_updates:
+      training_steps: 1200
+    optimizer_updates:
+      lr: 0.003
+  - id: ff4_gelu
+    model_ref: cnn
+    model_updates:
+      ff_ratio: 4
+      pooling: mean
+    training_updates:
+      training_steps: 1200
+    optimizer_updates:
+      lr: 0.003
+  hypothesis: Feedforward width and activation can trade off in local image blocks.
+  explanation_target: Use the full 3x2 width/activation control; width also changes parameter count.
+  controls:
+  - Same fixed materialized image splits within each question.
+  - All unlisted fields inherit the explicit defaults.
+  - Measured parameter counts are displayed; matching width does not match parameters or computation.
+  shortcut_checks:
+  - larger model always wins
+  - more steps always wins
+  - matching task name to architecture
+  admission: Freeze discovery-ranked primary triple before independent confirmation. Never replace choices
+    after rejection.
+- id: attention_heads_ff
+  category: block
+  context_ref: relations
+  budget_semantics: matched_steps
+  varying_axes:
+  - model.heads
+  - model.ff_ratio
+  choices:
+  - id: h1_ff4
+    model_ref: vit
+    model_updates:
+      heads: 1
+      ff_ratio: 4
+  - id: h4_ff2
+    model_ref: vit
+  - id: h8_ff1
+    model_ref: vit
+    model_updates:
+      heads: 8
+      ff_ratio: 1
+  diagnostics:
+  - id: h1_ff2
+    model_ref: vit
+    model_updates:
+      heads: 1
+  - id: h8_ff2
+    model_ref: vit
+    model_updates:
+      heads: 8
+  - id: h4_ff1
+    model_ref: vit
+    model_updates:
+      ff_ratio: 1
+  - id: h4_ff4
+    model_ref: vit
+    model_updates:
+      ff_ratio: 4
+  hypothesis: Head count and feedforward allocation can affect finite-budget optimization differently.
+  explanation_target: Heads alone keep attention parameter count fixed at fixed width. Controls isolate
+    head and FF effects around the common anchor; not a complete 3x3 grid.
+  controls:
+  - Same fixed materialized image splits within each question.
+  - All unlisted fields inherit the explicit defaults.
+  - Measured parameter counts are displayed; matching width does not match parameters or computation.
+  shortcut_checks:
+  - larger model always wins
+  - more steps always wins
+  - matching task name to architecture
+  admission: Freeze discovery-ranked primary triple before independent confirmation. Never replace choices
+    after rejection.
+- id: learning_rate
+  category: training
+  context_ref: shapes
+  budget_semantics: matched_steps
+  varying_axes:
+  - optimizer.lr
+  choices:
+  - id: lr1e4
+    model_ref: cnn
+    optimizer_updates:
+      lr: 0.0001
+    training_updates:
+      training_steps: 1200
+    model_updates:
+      pooling: mean
+  - id: lr1e3
+    model_ref: cnn
+    training_updates:
+      training_steps: 1200
+    model_updates:
+      pooling: mean
+    optimizer_updates:
+      lr: 0.001
+  - id: lr1e2
+    model_ref: cnn
+    optimizer_updates:
+      lr: 0.01
+    training_updates:
+      training_steps: 1200
+    model_updates:
+      pooling: mean
+  diagnostics: []
+  hypothesis: A fixed training budget can expose both undertraining and unstable optimization.
+  explanation_target: Use actual train/held-out trajectories; a high learning rate is not itself proof
+    of divergence.
+  controls:
+  - Same fixed materialized image splits within each question.
+  - All unlisted fields inherit the explicit defaults.
+  - Measured parameter counts are displayed; matching width does not match parameters or computation.
+  shortcut_checks:
+  - larger model always wins
+  - more steps always wins
+  - matching task name to architecture
+  admission: Freeze discovery-ranked primary triple before independent confirmation. Never replace choices
+    after rejection.
+- id: decay_small_data
+  category: training
+  context_ref: small_shapes
+  budget_semantics: matched_steps
+  varying_axes:
+  - optimizer.weight_decay
+  choices:
+  - id: wd0
+    model_ref: cnn
+    optimizer_updates:
+      weight_decay: 0.0
+      lr: 0.003
+    training_updates:
+      training_steps: 1200
+    model_updates:
+      pooling: mean
+  - id: wd03
+    model_ref: cnn
+    optimizer_updates:
+      weight_decay: 0.03
+      lr: 0.003
+    training_updates:
+      training_steps: 1200
+    model_updates:
+      pooling: mean
+  - id: wd3
+    model_ref: cnn
+    optimizer_updates:
+      weight_decay: 0.3
+      lr: 0.003
+    training_updates:
+      training_steps: 1200
+    model_updates:
+      pooling: mean
+  diagnostics: []
+  hypothesis: Weight decay interacts with a small clean training set and finite steps.
+  explanation_target: Distinguish underfitting from generalization with training and held-out losses;
+    no label-noise explanation is admissible because labels are exact.
+  controls:
+  - Same fixed materialized image splits within each question.
+  - All unlisted fields inherit the explicit defaults.
+  - Measured parameter counts are displayed; matching width does not match parameters or computation.
+  shortcut_checks:
+  - larger model always wins
+  - more steps always wins
+  - matching task name to architecture
+  admission: Freeze discovery-ranked primary triple before independent confirmation. Never replace choices
+    after rejection.
+- id: batch_fixed_samples
+  category: training
+  context_ref: relations
+  budget_semantics: matched_samples
+  varying_axes:
+  - training.batch_size
+  - training.training_steps
+  choices:
+  - id: batch16
+    model_ref: cnn
+    training_updates:
+      batch_size: 16
+      training_steps: 600
+  - id: batch32
+    model_ref: cnn
+    training_updates:
+      batch_size: 32
+      training_steps: 300
+  - id: batch64
+    model_ref: cnn
+    training_updates:
+      batch_size: 64
+      training_steps: 150
+  diagnostics: []
+  hypothesis: Equal examples processed do not imply equal update counts or gradient noise.
+  explanation_target: Steps are 600/300/150 and each choice processes 9600 examples. This is a coupled
+    batch/update intervention; paired streams do not make different batch sizes identical trajectories.
+  controls:
+  - Same fixed materialized image splits within each question.
+  - All unlisted fields inherit the explicit defaults.
+  - Measured parameter counts are displayed; matching width does not match parameters or computation.
+  shortcut_checks:
+  - larger model always wins
+  - more steps always wins
+  - matching task name to architecture
+  admission: Freeze discovery-ranked primary triple before independent confirmation. Never replace choices
+    after rejection.
+- id: budget_small_data
+  category: training_budget
+  context_ref: small_shapes
+  budget_semantics: per_choice_steps
+  varying_axes:
+  - training.training_steps
+  choices:
+  - id: steps100
+    model_ref: cnn
+    training_updates:
+      training_steps: 100
+    model_updates:
+      pooling: mean
+    optimizer_updates:
+      lr: 0.003
+  - id: steps400
+    model_ref: cnn
+    training_updates:
+      training_steps: 400
+    model_updates:
+      pooling: mean
+    optimizer_updates:
+      lr: 0.003
+  - id: steps1200
+    model_ref: cnn
+    training_updates:
+      training_steps: 1200
+    model_updates:
+      pooling: mean
+    optimizer_updates:
+      lr: 0.003
+  diagnostics: []
+  hypothesis: More updates can improve fitting while worsening held-out calibration on small clean datasets.
+  explanation_target: Use exact shared initial states and training prefixes. Report classification error
+    as well as CE; overconfidence can change CE without changing accuracy.
+  controls:
+  - Same fixed materialized image splits within each question.
+  - All unlisted fields inherit the explicit defaults.
+  - Measured parameter counts are displayed; matching width does not match parameters or computation.
+  shortcut_checks:
+  - larger model always wins
+  - more steps always wins
+  - matching task name to architecture
+  admission: Freeze discovery-ranked primary triple before independent confirmation. Never replace choices
+    after rejection.
+- id: kernel_budget
+  category: spatial_budget
+  context_ref: relations
+  budget_semantics: per_choice_steps
+  varying_axes:
+  - model.kernel_size
+  - training.training_steps
+  choices:
+  - id: k3_short
+    model_ref: cnn
+    training_updates:
+      training_steps: 100
+  - id: k7_medium
+    model_ref: cnn
+    model_updates:
+      kernel_size: 7
+    training_updates:
+      training_steps: 400
+  - id: k3_long
+    model_ref: cnn
+    training_updates:
+      training_steps: 800
+  diagnostics:
+  - id: k7_short
+    model_ref: cnn
+    model_updates:
+      kernel_size: 7
+    training_updates:
+      training_steps: 100
+  - id: k3_medium
+    model_ref: cnn
+    training_updates:
+      training_steps: 400
+  - id: k7_long
+    model_ref: cnn
+    model_updates:
+      kernel_size: 7
+    training_updates:
+      training_steps: 800
+  hypothesis: Spatial support and update budget can produce misleading architecture-only narratives.
+  explanation_target: Use full 2x3 kernel/budget controls; compare at matched steps before attributing
+    a joint recipe win to receptive field.
+  controls:
+  - Same fixed materialized image splits within each question.
+  - All unlisted fields inherit the explicit defaults.
+  - Measured parameter counts are displayed; matching width does not match parameters or computation.
+  shortcut_checks:
+  - larger model always wins
+  - more steps always wins
+  - matching task name to architecture
+  admission: Freeze discovery-ranked primary triple before independent confirmation. Never replace choices
+    after rejection.
+- id: activation_texture
+  category: activation
+  context_ref: fine_textures
+  budget_semantics: matched_steps
+  varying_axes:
+  - model.activation
+  choices:
+  - id: relu
+    model_ref: cnn
+    model_updates:
+      activation: relu
+      pooling: mean
+    training_updates:
+      training_steps: 1200
+    optimizer_updates:
+      lr: 0.003
+  - id: gelu
+    model_ref: cnn
+    training_updates:
+      training_steps: 1200
+    model_updates:
+      pooling: mean
+    optimizer_updates:
+      lr: 0.003
+  - id: tanh
+    model_ref: cnn
+    model_updates:
+      activation: tanh
+      pooling: mean
+    training_updates:
+      training_steps: 1200
+    optimizer_updates:
+      lr: 0.003
+  diagnostics: []
+  hypothesis: Activation affects optimization of a high-frequency visual signal.
+  explanation_target: All labels are exact orientation classes. Saturation is a mechanism hypothesis;
+    use activation/gradient measurements before making a unique causal claim.
+  controls:
+  - Same fixed materialized image splits within each question.
+  - All unlisted fields inherit the explicit defaults.
+  - Measured parameter counts are displayed; matching width does not match parameters or computation.
+  shortcut_checks:
+  - larger model always wins
+  - more steps always wins
+  - matching task name to architecture
+  admission: Freeze discovery-ranked primary triple before independent confirmation. Never replace choices
+    after rejection.

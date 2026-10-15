@@ -1,0 +1,1494 @@
+{
+  "schema_version": "vision_public_explanation_audit_v1",
+  "status": "complete",
+  "protocol_sha256": "d3585b45f463de2608a2b1161841665e505922d1aba09c331678d509ad993f47",
+  "evaluation_results_sha256": "72d5a50158cfdc9e06a84d6c14bc990fd6f9230258ab13f484c88ff324dd625a",
+  "control_audit_sha256": "c9714e034bf291e041c25cb2193ce1c9ef4e68dfb6e0b4da058029e5f98d8c14",
+  "quality_analysis_sha256": "d15f57a24e8a794bb01ab8f216c35f9083da4b0183efa186b322fa1f7a446730",
+  "manual_review_source_sha256": "91785b29b34054b939e58d3cad00ac685769a33bfb56b821246c14547f95e0f6",
+  "records": [
+    {
+      "question_id": "q_7cdd570b1c6b5455c098a9f709f630d7",
+      "model": "gpt-6-luna",
+      "ranking_correct": false,
+      "summary_zh": "准确识别深度和残差干预，也注意到坐标与条件能逐像素提供几何信息；但把深层 plain 的优化劣势当作排序依据，未抓住本实验中 plain 优于 residual 的反例。错误排序不等于梯度假说被唯一证伪。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "C has the depth of A, but removing residual connections makes the deeper stack harder to optimize, so I predict it performs worst.",
+          "dimension": "mechanism_alignment",
+          "judgment": "plausible_unmeasured_not_supported_here",
+          "assessment": "同深度、同初始化、同 batch/noise 流的 plain_d5 在 15/16 seed 的 energy 更低，均值比 res_d5 低 0.004536；末 20 个 minibatch loss 也更低（0.001583 vs 0.001958）。这不支持用“plain 更难优化”解释当前排序。",
+          "scope_limit": "全局梯度范数和末段损失未隔离逐层梯度、表征或优化路径；不能反向宣称残差必然伤害训练。",
+          "evidence_level": "E2",
+          "claim": "C has the depth of A, but removing residual connections makes the deeper stack harder to optimize, so I predict it performs worst.",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/control_audit.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/control_audit.json",
+            "sha256": "c9714e034bf291e041c25cb2193ce1c9ef4e68dfb6e0b4da058029e5f98d8c14"
+          },
+          "alternative_explanation": "Capacity, local feature aggregation, optimization and distributional calibration are not uniquely isolated by endpoint scores.",
+          "model_exact_id": "gpt-6-luna",
+          "question_id": "q_7cdd570b1c6b5455c098a9f709f630d7",
+          "public_response_sha256": "ff90caef294c8f2acc7c70f8edfd5742873073acffc6b7eff742e69a95aa647d",
+          "explanation_sha256": "ef27a871f40d33f10aec1b0f5dd2d152b7d23e84d738213cc68ac09116f1c4b6",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "the task is only 16×16 and conditions plus absolute coordinates provide useful spatial information, which may reduce the cost of B’s shallower receptive field",
+          "dimension": "code_fidelity",
+          "judgment": "supported",
+          "assessment": "每像素都获得绝对坐标和同一条件向量，浅层无需从远处传播位置标签。深度 2/5 的纯卷积路径支持分别为 7/13 像素；GroupNorm 又通过全空间均值/方差引入全局耦合。",
+          "scope_limit": "局部卷积感受野不是整个网络的信息隔离边界，也不能由此量化容量损失。",
+          "evidence_level": "E0",
+          "claim": "the task is only 16×16 and conditions plus absolute coordinates provide useful spatial information, which may reduce the cost of B’s shallower receptive field",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/questions/q_7cdd570b1c6b5455c098a9f709f630d7/prompt.txt",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/questions/q_7cdd570b1c6b5455c098a9f709f630d7/prompt.txt",
+            "sha256": "55eab15ea227f456241054336cdbbe22f9519a7e2533391c35e143d6639ab080"
+          },
+          "alternative_explanation": "Capacity, local feature aggregation, optimization and distributional calibration are not uniquely isolated by endpoint scores.",
+          "model_exact_id": "gpt-6-luna",
+          "question_id": "q_7cdd570b1c6b5455c098a9f709f630d7",
+          "public_response_sha256": "ff90caef294c8f2acc7c70f8edfd5742873073acffc6b7eff742e69a95aa647d",
+          "explanation_sha256": "ef27a871f40d33f10aec1b0f5dd2d152b7d23e84d738213cc68ac09116f1c4b6",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "A is predicted best:",
+          "dimension": "answer_consistency",
+          "judgment": "supported",
+          "assessment": "解释对应 A=res_d5、B=res_d2、C=plain_d5，与答案 A→B→C 一致，两个相邻比较均有理由。实测是 C→A→B。",
+          "scope_limit": "一致性只衡量答案是否反映解释，独立于排序是否正确。",
+          "evidence_level": "E2",
+          "claim": "A is predicted best:",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/control_audit.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/control_audit.json",
+            "sha256": "c9714e034bf291e041c25cb2193ce1c9ef4e68dfb6e0b4da058029e5f98d8c14"
+          },
+          "alternative_explanation": "Capacity, local feature aggregation, optimization and distributional calibration are not uniquely isolated by endpoint scores.",
+          "model_exact_id": "gpt-6-luna",
+          "question_id": "q_7cdd570b1c6b5455c098a9f709f630d7",
+          "public_response_sha256": "ff90caef294c8f2acc7c70f8edfd5742873073acffc6b7eff742e69a95aa647d",
+          "explanation_sha256": "ef27a871f40d33f10aec1b0f5dd2d152b7d23e84d738213cc68ac09116f1c4b6",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        }
+      ],
+      "response_sha256": "ff90caef294c8f2acc7c70f8edfd5742873073acffc6b7eff742e69a95aa647d",
+      "public_explanation_sha256": "ef27a871f40d33f10aec1b0f5dd2d152b7d23e84d738213cc68ac09116f1c4b6",
+      "audit_scope": "full public explanation, including both adjacent comparisons",
+      "probe": null
+    },
+    {
+      "question_id": "q_2169895363e36f64cc4952db478bf6a1",
+      "model": "gpt-6-luna",
+      "ranking_correct": true,
+      "summary_zh": "完整识别唯一训练预算干预，覆盖两个相邻比较，并区分采样 energy 与训练损失。更多训练改善几何和 energy 的预期与实测吻合，且明确保留有限数据、过拟合与多样性风险。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "supported",
+        "causal_calibration": "supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "B trains for 6000 rather than 3000 updates",
+          "dimension": "mechanism_alignment",
+          "judgment": "supported",
+          "assessment": "相同初始化、共享训练损失前缀逐值一致。6000 相对 3000 energy 平均降低 0.007329（15/16 seed）；3000 相对 700 降低 0.030150（16/16 seed），支持当前预算区间的优化进展总效应。",
+          "scope_limit": "只在固定训练数据、条件分布与采样流上；更多训练不具有普遍单调保证。",
+          "evidence_level": "E1",
+          "claim": "B trains for 6000 rather than 3000 updates",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/control_audit.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/control_audit.json",
+            "sha256": "c9714e034bf291e041c25cb2193ce1c9ef4e68dfb6e0b4da058029e5f98d8c14"
+          },
+          "alternative_explanation": "Capacity, local feature aggregation, optimization and distributional calibration are not uniquely isolated by endpoint scores.",
+          "model_exact_id": "gpt-6-luna",
+          "question_id": "q_2169895363e36f64cc4952db478bf6a1",
+          "public_response_sha256": "4c115b854bfc30b0d4df31e67ae5859787da00cc11c7fe158157db604e19246b",
+          "explanation_sha256": "16f192d44507c5b15d07b8d7579d0edf18f9423a20a5a5350973f14b525bc7a4",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "The score rewards matching stochastic appearance as well as geometry, so training loss or silhouette fit alone cannot guarantee this ranking.",
+          "dimension": "causal_calibration",
+          "judgment": "supported",
+          "assessment": "实测预算增加时 IoU 提升、背景泄漏降低，但方差比从 1.693 降至 0.199 再到 0.124；energy 仍改善。因此把多样性列作风险且不由训练 loss 推定排序是适当边界。",
+          "scope_limit": "这些诊断与优化进展相容，但不分离轮廓、亮度和纹理对 energy 改善的独立贡献。",
+          "evidence_level": "E2",
+          "claim": "The score rewards matching stochastic appearance as well as geometry, so training loss or silhouette fit alone cannot guarantee this ranking.",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/quality_analysis/generation_quality.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/quality_analysis/generation_quality.json",
+            "sha256": "d15f57a24e8a794bb01ab8f216c35f9083da4b0183efa186b322fa1f7a446730"
+          },
+          "alternative_explanation": "Capacity, local feature aggregation, optimization and distributional calibration are not uniquely isolated by endpoint scores.",
+          "model_exact_id": "gpt-6-luna",
+          "question_id": "q_2169895363e36f64cc4952db478bf6a1",
+          "public_response_sha256": "4c115b854bfc30b0d4df31e67ae5859787da00cc11c7fe158157db604e19246b",
+          "explanation_sha256": "16f192d44507c5b15d07b8d7579d0edf18f9423a20a5a5350973f14b525bc7a4",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        }
+      ],
+      "response_sha256": "4c115b854bfc30b0d4df31e67ae5859787da00cc11c7fe158157db604e19246b",
+      "public_explanation_sha256": "16f192d44507c5b15d07b8d7579d0edf18f9423a20a5a5350973f14b525bc7a4",
+      "audit_scope": "full public explanation, including both adjacent comparisons",
+      "probe": null
+    },
+    {
+      "question_id": "q_a6239c03d1629cd236bc6dee8524db8f",
+      "model": "gpt-6-luna",
+      "ranking_correct": true,
+      "summary_zh": "置换后仍正确得到 6000→3000→700；注意到固定 96 张图的重复曝光及条件内多样性风险，推断限于当前预算，没有声称代码可确定过拟合转折点。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "supported",
+        "causal_calibration": "supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "training is stochastic over noise levels and noise realizations",
+          "dimension": "code_fidelity",
+          "judgment": "supported",
+          "assessment": "每次采样训练索引及新的时间/高斯噪声；固定材料化图片和条件不会被重画。两相邻预算对照有同初始权重和精确相同训练 loss 前缀。",
+          "scope_limit": "噪声重采样增加 denoising 训练暴露，不增加独立真实亮度/纹理样本。",
+          "evidence_level": "E0",
+          "claim": "training is stochastic over noise levels and noise realizations",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/questions/q_a6239c03d1629cd236bc6dee8524db8f/prompt.txt",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/questions/q_a6239c03d1629cd236bc6dee8524db8f/prompt.txt",
+            "sha256": "230136040338a8b3b5fae4026611590c3fc087958bbfb9021b031210edb81b3f"
+          },
+          "alternative_explanation": "Capacity, local feature aggregation, optimization and distributional calibration are not uniquely isolated by endpoint scores.",
+          "model_exact_id": "gpt-6-luna",
+          "question_id": "q_a6239c03d1629cd236bc6dee8524db8f",
+          "public_response_sha256": "c90e4576bc93958ae20a95bad92a1e6407354f885c06f9eafb4681dac4a88de3",
+          "explanation_sha256": "cd2b2c3ed5a4472853e973af4873fd719b19ba278e15e26886f1a9edb61646d3",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "the code and settings alone cannot establish the exact point at which that tradeoff turns negative.",
+          "dimension": "causal_calibration",
+          "judgment": "supported",
+          "assessment": "16 seed 确认当前步数范围继续改善 energy，同时条件内方差降到参考的约 12.4%。保留过拟合与分布均值化风险，与诊断一致。",
+          "scope_limit": "仅支持当前三个终点，不能推断更长预算的转折。",
+          "evidence_level": "E2",
+          "claim": "the code and settings alone cannot establish the exact point at which that tradeoff turns negative.",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/quality_analysis/generation_quality.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/quality_analysis/generation_quality.json",
+            "sha256": "d15f57a24e8a794bb01ab8f216c35f9083da4b0183efa186b322fa1f7a446730"
+          },
+          "alternative_explanation": "Capacity, local feature aggregation, optimization and distributional calibration are not uniquely isolated by endpoint scores.",
+          "model_exact_id": "gpt-6-luna",
+          "question_id": "q_a6239c03d1629cd236bc6dee8524db8f",
+          "public_response_sha256": "c90e4576bc93958ae20a95bad92a1e6407354f885c06f9eafb4681dac4a88de3",
+          "explanation_sha256": "cd2b2c3ed5a4472853e973af4873fd719b19ba278e15e26886f1a9edb61646d3",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        }
+      ],
+      "response_sha256": "c90e4576bc93958ae20a95bad92a1e6407354f885c06f9eafb4681dac4a88de3",
+      "public_explanation_sha256": "cd2b2c3ed5a4472853e973af4873fd719b19ba278e15e26886f1a9edb61646d3",
+      "audit_scope": "full public explanation, including both adjacent comparisons",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_2169895363e36f64cc4952db478bf6a1"
+      }
+    },
+    {
+      "question_id": "q_7cdd570b1c6b5455c098a9f709f630d7",
+      "model": "gpt-6.1-sol",
+      "ranking_correct": false,
+      "summary_zh": "识别坐标和广播条件降低几何任务对大卷积感受野的依赖，比较覆盖完整；却预设无残差深层网络会在 3000 步欠训练，实测同深度对照与末段损失不支持这一排序依据。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "absolute coordinates and globally broadcast conditions make a very large receptive field unnecessary",
+          "dimension": "code_fidelity",
+          "judgment": "supported",
+          "assessment": "位置、形状、半径和像素坐标已在每像素输入提供，确实可用点式非线性拟合几何；GroupNorm 的全空间统计也使“没有全局信息”不成立。",
+          "scope_limit": "亮度/纹理分布的恢复仍可能受空间聚合和非线性容量影响。",
+          "evidence_level": "E0",
+          "claim": "absolute coordinates and globally broadcast conditions make a very large receptive field unnecessary",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/questions/q_7cdd570b1c6b5455c098a9f709f630d7/prompt.txt",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/questions/q_7cdd570b1c6b5455c098a9f709f630d7/prompt.txt",
+            "sha256": "55eab15ea227f456241054336cdbbe22f9519a7e2533391c35e143d6639ab080"
+          },
+          "alternative_explanation": "Capacity, local feature aggregation, optimization and distributional calibration are not uniquely isolated by endpoint scores.",
+          "model_exact_id": "gpt-6.1-sol",
+          "question_id": "q_7cdd570b1c6b5455c098a9f709f630d7",
+          "public_response_sha256": "c825958f15cb28539f2ea49b026e661158c1215ed9ed559420b39338f6352d05",
+          "explanation_sha256": "4e86006e6a0f0831d2a51f27b420d26e744ed480c9f6366f1c4fcdd22aa8fc93",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "C has the same depth as A but removes residual paths, making optimization and signal propagation less reliable under the fixed 3000-update budget",
+          "dimension": "mechanism_alignment",
+          "judgment": "plausible_unmeasured_not_supported_here",
+          "assessment": "移除残差是同参数量、同初始权重的唯一干预；plain_d5 的 energy 在 15/16 seed 更好，末段 loss 更低。响应预测的更差 shape/background 也未得到支持：plain 平均 IoU 略高、背景泄漏略低。",
+          "scope_limit": "预测中的优化路径仍是未隔离机制；不能凭统计终点推断梯度传播唯一原因。",
+          "evidence_level": "E2",
+          "claim": "C has the same depth as A but removes residual paths, making optimization and signal propagation less reliable under the fixed 3000-update budget",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/control_audit.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/control_audit.json",
+            "sha256": "c9714e034bf291e041c25cb2193ce1c9ef4e68dfb6e0b4da058029e5f98d8c14"
+          },
+          "alternative_explanation": "Capacity, local feature aggregation, optimization and distributional calibration are not uniquely isolated by endpoint scores.",
+          "model_exact_id": "gpt-6.1-sol",
+          "question_id": "q_7cdd570b1c6b5455c098a9f709f630d7",
+          "public_response_sha256": "c825958f15cb28539f2ea49b026e661158c1215ed9ed559420b39338f6352d05",
+          "explanation_sha256": "4e86006e6a0f0831d2a51f27b420d26e744ed480c9f6366f1c4fcdd22aa8fc93",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "The B-versus-C comparison is materially uncertain:",
+          "dimension": "causal_calibration",
+          "judgment": "partly_supported",
+          "assessment": "承认浅层 residual 与深层 plain 存在容量/优化权衡，但对最直接的同深度残差对照仍把稳定性优势视为既定。两个相邻理由与 A→B→C 一致。",
+          "scope_limit": "不确定性声明不使错误排序变为正确，也不自动使假说成为事实。",
+          "evidence_level": "E2",
+          "claim": "The B-versus-C comparison is materially uncertain:",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/control_audit.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/control_audit.json",
+            "sha256": "c9714e034bf291e041c25cb2193ce1c9ef4e68dfb6e0b4da058029e5f98d8c14"
+          },
+          "alternative_explanation": "Capacity, local feature aggregation, optimization and distributional calibration are not uniquely isolated by endpoint scores.",
+          "model_exact_id": "gpt-6.1-sol",
+          "question_id": "q_7cdd570b1c6b5455c098a9f709f630d7",
+          "public_response_sha256": "c825958f15cb28539f2ea49b026e661158c1215ed9ed559420b39338f6352d05",
+          "explanation_sha256": "4e86006e6a0f0831d2a51f27b420d26e744ed480c9f6366f1c4fcdd22aa8fc93",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        }
+      ],
+      "response_sha256": "c825958f15cb28539f2ea49b026e661158c1215ed9ed559420b39338f6352d05",
+      "public_explanation_sha256": "4e86006e6a0f0831d2a51f27b420d26e744ed480c9f6366f1c4fcdd22aa8fc93",
+      "audit_scope": "full public explanation, including both adjacent comparisons",
+      "probe": null
+    },
+    {
+      "question_id": "q_2169895363e36f64cc4952db478bf6a1",
+      "model": "gpt-6.1-sol",
+      "ranking_correct": true,
+      "summary_zh": "两个预算比较及逐像素几何学习判断准确；预期轮廓/背景改善与实测一致，并主动指出一个条件只有一个固定外观、较长训练可能牺牲多样性。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "supported",
+        "causal_calibration": "supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "there are only 96 training conditions, each with one fixed appearance",
+          "dimension": "code_fidelity",
+          "judgment": "supported",
+          "assessment": "材料化训练集固定 96 个条件各一幅 y，独立参考图只用于评价；每次训练只重采样噪声和时间。",
+          "scope_limit": "不能把噪声增强误认为每步重新生成真实 appearance。",
+          "evidence_level": "E0",
+          "claim": "there are only 96 training conditions, each with one fixed appearance",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/questions/q_2169895363e36f64cc4952db478bf6a1/prompt.txt",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/questions/q_2169895363e36f64cc4952db478bf6a1/prompt.txt",
+            "sha256": "e5f9de504810847dc5423aefb9f300d01296314dbaeba04dabd54b69ebed6fd5"
+          },
+          "alternative_explanation": "Capacity, local feature aggregation, optimization and distributional calibration are not uniquely isolated by endpoint scores.",
+          "model_exact_id": "gpt-6.1-sol",
+          "question_id": "q_2169895363e36f64cc4952db478bf6a1",
+          "public_response_sha256": "071447fe8534cbf60296a077f9dc3cb86c1c1ec3103bca1205602dd60e6ab481",
+          "explanation_sha256": "134ba703557339fd1a30f82ec7579cf12b30b9ddf8734953d72a994f0123a0da",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "additional updates should improve condition-to-geometry mapping and denoising across noise levels.",
+          "dimension": "mechanism_alignment",
+          "judgment": "supported_with_scope",
+          "assessment": "IoU 随 700/3000/6000 步为 0.7084/0.8476/0.8946，背景泄漏为 0.02936/0.01678/0.01191；energy 两相邻差满足已冻结确认规则。",
+          "scope_limit": "诊断支持几何改进，但没有把全部 energy 改善因果分解到几何。",
+          "evidence_level": "E2",
+          "claim": "additional updates should improve condition-to-geometry mapping and denoising across noise levels.",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/quality_analysis/generation_quality.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/quality_analysis/generation_quality.json",
+            "sha256": "d15f57a24e8a794bb01ab8f216c35f9083da4b0183efa186b322fa1f7a446730"
+          },
+          "alternative_explanation": "Capacity, local feature aggregation, optimization and distributional calibration are not uniquely isolated by endpoint scores.",
+          "model_exact_id": "gpt-6.1-sol",
+          "question_id": "q_2169895363e36f64cc4952db478bf6a1",
+          "public_response_sha256": "071447fe8534cbf60296a077f9dc3cb86c1c1ec3103bca1205602dd60e6ab481",
+          "explanation_sha256": "134ba703557339fd1a30f82ec7579cf12b30b9ddf8734953d72a994f0123a0da",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "lower denoising MSE alone does not establish better sampling.",
+          "dimension": "causal_calibration",
+          "judgment": "supported",
+          "assessment": "正确区分预测训练目标和采样分布得分；实际多样性方差比随训练下降，未据正确排序声称全部质量轴同时改善。",
+          "scope_limit": "当前正确排名不使未来更长训练成为保证。",
+          "evidence_level": "E2",
+          "claim": "lower denoising MSE alone does not establish better sampling.",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/quality_analysis/generation_quality.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/quality_analysis/generation_quality.json",
+            "sha256": "d15f57a24e8a794bb01ab8f216c35f9083da4b0183efa186b322fa1f7a446730"
+          },
+          "alternative_explanation": "Capacity, local feature aggregation, optimization and distributional calibration are not uniquely isolated by endpoint scores.",
+          "model_exact_id": "gpt-6.1-sol",
+          "question_id": "q_2169895363e36f64cc4952db478bf6a1",
+          "public_response_sha256": "071447fe8534cbf60296a077f9dc3cb86c1c1ec3103bca1205602dd60e6ab481",
+          "explanation_sha256": "134ba703557339fd1a30f82ec7579cf12b30b9ddf8734953d72a994f0123a0da",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        }
+      ],
+      "response_sha256": "071447fe8534cbf60296a077f9dc3cb86c1c1ec3103bca1205602dd60e6ab481",
+      "public_explanation_sha256": "134ba703557339fd1a30f82ec7579cf12b30b9ddf8734953d72a994f0123a0da",
+      "audit_scope": "full public explanation, including both adjacent comparisons",
+      "probe": null
+    },
+    {
+      "question_id": "q_a6239c03d1629cd236bc6dee8524db8f",
+      "model": "gpt-6.1-sol",
+      "ranking_correct": true,
+      "summary_zh": "置换后的训练预算排序正确，知道真实数据只有 96 张且有过拟合风险；但“强低噪声加权”与本题的 uniform x0 loss 不相符，不能把这条额外机制当作代码事实。",
+      "scores": {
+        "code_fidelity": "partly_supported",
+        "mechanism_alignment": "supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "700 updates (11,200 samples)",
+          "dimension": "code_fidelity",
+          "judgment": "supported",
+          "assessment": "700×16=11200 次训练样本曝光；3000/6000 对应48000/96000，只有步数变化。",
+          "scope_limit": "这里的 samples 是曝光次数，不是独立新图像数。",
+          "evidence_level": "E0",
+          "claim": "700 updates (11,200 samples)",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/questions/q_a6239c03d1629cd236bc6dee8524db8f/prompt.txt",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/questions/q_a6239c03d1629cd236bc6dee8524db8f/prompt.txt",
+            "sha256": "230136040338a8b3b5fae4026611590c3fc087958bbfb9021b031210edb81b3f"
+          },
+          "alternative_explanation": "Capacity, local feature aggregation, optimization and distributional calibration are not uniquely isolated by endpoint scores.",
+          "model_exact_id": "gpt-6.1-sol",
+          "question_id": "q_a6239c03d1629cd236bc6dee8524db8f",
+          "public_response_sha256": "68e3ce5ac6660ca42305b03d0a0f52811a5ce32c5e000b970fa5675b64494d4c",
+          "explanation_sha256": "6b86e5ff285d3fe63f34713a170e7987e13717ba7d590819509c86c72e15e8ac",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "x0 prediction and strong low-noise weighting may also cause late-training calibration issues.",
+          "dimension": "code_fidelity",
+          "judgment": "unsupported_weighting_description",
+          "assessment": "训练时间均匀抽样，loss_weighting=uniform；没有显式“强低噪声加权”。若将同一 x0 误差等价写为 epsilon 误差，系数为 (1-alpha_bar)/alpha_bar=1/SNR，方向反而偏高噪声。",
+          "scope_limit": "实际各时间点梯度大小可能不同，但未测量；不能据此推出晚期校准问题。",
+          "evidence_level": "E0",
+          "claim": "x0 prediction and strong low-noise weighting may also cause late-training calibration issues.",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/questions/q_a6239c03d1629cd236bc6dee8524db8f/prompt.txt",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/questions/q_a6239c03d1629cd236bc6dee8524db8f/prompt.txt",
+            "sha256": "230136040338a8b3b5fae4026611590c3fc087958bbfb9021b031210edb81b3f"
+          },
+          "alternative_explanation": "Capacity, local feature aggregation, optimization and distributional calibration are not uniquely isolated by endpoint scores.",
+          "model_exact_id": "gpt-6.1-sol",
+          "question_id": "q_a6239c03d1629cd236bc6dee8524db8f",
+          "public_response_sha256": "68e3ce5ac6660ca42305b03d0a0f52811a5ce32c5e000b970fa5675b64494d4c",
+          "explanation_sha256": "6b86e5ff285d3fe63f34713a170e7987e13717ba7d590819509c86c72e15e8ac",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "additional training more likely beneficial than harmful.",
+          "dimension": "mechanism_alignment",
+          "judgment": "supported_with_scope",
+          "assessment": "作为有保留的有限预算预测，与同初始化/精确前缀控制、两相邻 energy 改善和几何诊断相符，解释与 C→B→A 一致。",
+          "scope_limit": "这不验证上面新增的低噪声机制，也不保证多样性改善。",
+          "evidence_level": "E1",
+          "claim": "additional training more likely beneficial than harmful.",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/control_audit.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/control_audit.json",
+            "sha256": "c9714e034bf291e041c25cb2193ce1c9ef4e68dfb6e0b4da058029e5f98d8c14"
+          },
+          "alternative_explanation": "Capacity, local feature aggregation, optimization and distributional calibration are not uniquely isolated by endpoint scores.",
+          "model_exact_id": "gpt-6.1-sol",
+          "question_id": "q_a6239c03d1629cd236bc6dee8524db8f",
+          "public_response_sha256": "68e3ce5ac6660ca42305b03d0a0f52811a5ce32c5e000b970fa5675b64494d4c",
+          "explanation_sha256": "6b86e5ff285d3fe63f34713a170e7987e13717ba7d590819509c86c72e15e8ac",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        }
+      ],
+      "response_sha256": "68e3ce5ac6660ca42305b03d0a0f52811a5ce32c5e000b970fa5675b64494d4c",
+      "public_explanation_sha256": "6b86e5ff285d3fe63f34713a170e7987e13717ba7d590819509c86c72e15e8ac",
+      "audit_scope": "full public explanation, including both adjacent comparisons",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_2169895363e36f64cc4952db478bf6a1"
+      }
+    },
+    {
+      "question_id": "q_7cdd570b1c6b5455c098a9f709f630d7",
+      "model": "claude-opus-5-5",
+      "ranking_correct": false,
+      "summary_zh": "抓到深度提供更多非线性计算、条件内亮度/纹理一致性和正确的卷积路径 13/7 支持；但残差的优化优势是未经验证的先验，且将浅层几何困难主要归因于感受野过强。实际 plain_d5 最好。",
+      "scores": {
+        "code_fidelity": "partly_supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "13 at depth 5 and 7 at depth 2.",
+          "dimension": "code_fidelity",
+          "judgment": "supported_with_scope",
+          "assessment": "stem 3×3、depth 个 3×3 block、head 1×1 的纯卷积路径确为 3+2×depth。每个 block 的 GroupNorm(4,width) 跨空间统计，因此这不是网络严格局部的支持边界。",
+          "scope_limit": "不能从 7×7 推导浅层无法知道全图几何；coords/condition 已广播。",
+          "evidence_level": "E0",
+          "claim": "13 at depth 5 and 7 at depth 2.",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/questions/q_7cdd570b1c6b5455c098a9f709f630d7/prompt.txt",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/questions/q_7cdd570b1c6b5455c098a9f709f630d7/prompt.txt",
+            "sha256": "55eab15ea227f456241054336cdbbe22f9519a7e2533391c35e143d6639ab080"
+          },
+          "alternative_explanation": "Capacity, local feature aggregation, optimization and distributional calibration are not uniquely isolated by endpoint scores.",
+          "model_exact_id": "claude-opus-5-5",
+          "question_id": "q_7cdd570b1c6b5455c098a9f709f630d7",
+          "public_response_sha256": "6c6b558385f1c1dcf2690475134daa5ad57b5d0d081dbfa8e661fca149234068",
+          "explanation_sha256": "5a4eb75287a66aeb326b4eec2614393bc3bf095b2fdf9766115fd0eee71ac2a4",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "Losing the identity path makes optimization somewhat harder and slower.",
+          "dimension": "mechanism_alignment",
+          "judgment": "plausible_unmeasured_not_supported_here",
+          "assessment": "残差路径确实被移除，但当前 3000 步对照 plain 的平均 energy、末段 loss、IoU 和背景泄漏均不比 residual 更差；“更难更慢”未由逐层梯度/时间控制验证。",
+          "scope_limit": "plain 与 residual 初始权重相同但函数不同；不能用末段 loss 唯一归因优化速度。",
+          "evidence_level": "E2",
+          "claim": "Losing the identity path makes optimization somewhat harder and slower.",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/control_audit.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/control_audit.json",
+            "sha256": "c9714e034bf291e041c25cb2193ce1c9ef4e68dfb6e0b4da058029e5f98d8c14"
+          },
+          "alternative_explanation": "Capacity, local feature aggregation, optimization and distributional calibration are not uniquely isolated by endpoint scores.",
+          "model_exact_id": "claude-opus-5-5",
+          "question_id": "q_7cdd570b1c6b5455c098a9f709f630d7",
+          "public_response_sha256": "6c6b558385f1c1dcf2690475134daa5ad57b5d0d081dbfa8e661fca149234068",
+          "explanation_sha256": "5a4eb75287a66aeb326b4eec2614393bc3bf095b2fdf9766115fd0eee71ac2a4",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "That limits how precisely it can render the shapes, especially the ring's inner boundary and the square/circle distinction.",
+          "dimension": "causal_calibration",
+          "judgment": "partly_supported",
+          "assessment": "深度增加在 residual/plain 两个水平都改善 energy（均 15/16 seed），支持有限预算下的总深度效应；增加深度同时增加参数量、非线性阶段与局部聚合，未分离具体边界或纹理机制。",
+          "scope_limit": "本次审核不把 ring 特别难的叙述当作已验证的分形状结果。",
+          "evidence_level": "E2",
+          "claim": "That limits how precisely it can render the shapes, especially the ring's inner boundary and the square/circle distinction.",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/control_audit.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/control_audit.json",
+            "sha256": "c9714e034bf291e041c25cb2193ce1c9ef4e68dfb6e0b4da058029e5f98d8c14"
+          },
+          "alternative_explanation": "Capacity, local feature aggregation, optimization and distributional calibration are not uniquely isolated by endpoint scores.",
+          "model_exact_id": "claude-opus-5-5",
+          "question_id": "q_7cdd570b1c6b5455c098a9f709f630d7",
+          "public_response_sha256": "6c6b558385f1c1dcf2690475134daa5ad57b5d0d081dbfa8e661fca149234068",
+          "explanation_sha256": "5a4eb75287a66aeb326b4eec2614393bc3bf095b2fdf9766115fd0eee71ac2a4",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "A being best is fairly confident.",
+          "dimension": "answer_consistency",
+          "judgment": "supported_but_wrong_prediction",
+          "assessment": "两相邻比较清楚，A→C→B 与回答一致；同深度 A/C 的方向恰与确认实测相反。",
+          "scope_limit": "较长的解释和正确的部分代码事实不保证最终排序正确。",
+          "evidence_level": "E2",
+          "claim": "A being best is fairly confident.",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/control_audit.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/control_audit.json",
+            "sha256": "c9714e034bf291e041c25cb2193ce1c9ef4e68dfb6e0b4da058029e5f98d8c14"
+          },
+          "alternative_explanation": "Capacity, local feature aggregation, optimization and distributional calibration are not uniquely isolated by endpoint scores.",
+          "model_exact_id": "claude-opus-5-5",
+          "question_id": "q_7cdd570b1c6b5455c098a9f709f630d7",
+          "public_response_sha256": "6c6b558385f1c1dcf2690475134daa5ad57b5d0d081dbfa8e661fca149234068",
+          "explanation_sha256": "5a4eb75287a66aeb326b4eec2614393bc3bf095b2fdf9766115fd0eee71ac2a4",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        }
+      ],
+      "response_sha256": "6c6b558385f1c1dcf2690475134daa5ad57b5d0d081dbfa8e661fca149234068",
+      "public_explanation_sha256": "5a4eb75287a66aeb326b4eec2614393bc3bf095b2fdf9766115fd0eee71ac2a4",
+      "audit_scope": "full public explanation, including both adjacent comparisons",
+      "probe": null
+    },
+    {
+      "question_id": "q_c20c51a29370da1983badd993123468f",
+      "model": "claude-opus-5-5",
+      "ranking_correct": false,
+      "summary_zh": "置换后仍给出深 residual→深 plain→浅 residual，物理配置排序与主问题一致。正确识别点式几何，但把深模型卷积路径 RF 少算为 11，并把 residual 的信息保留和优化优势说得比证据更强。",
+      "scores": {
+        "code_fidelity": "partly_supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "an 11×11 receptive field",
+          "dimension": "code_fidelity",
+          "judgment": "incorrect_local_count",
+          "assessment": "漏计 stem 的 3×3 卷积；depth5 的纯卷积路径为 13×13。GroupNorm 的跨空间统计使其仍不等于网络整体信息范围。",
+          "scope_limit": "这是局部代码计算错误；不单凭这个数字错误判定所有机制都错误。",
+          "evidence_level": "E0",
+          "claim": "an 11×11 receptive field",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/questions/q_c20c51a29370da1983badd993123468f/prompt.txt",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/questions/q_c20c51a29370da1983badd993123468f/prompt.txt",
+            "sha256": "42bcb392eb911201e6025edaaf7d24e9b88b7df80e6ad4510f68b28c406651a3"
+          },
+          "alternative_explanation": "Capacity, local feature aggregation, optimization and distributional calibration are not uniquely isolated by endpoint scores.",
+          "model_exact_id": "claude-opus-5-5",
+          "question_id": "q_c20c51a29370da1983badd993123468f",
+          "public_response_sha256": "5013cad68f55093ed6a97dcce59f451b74aa8f22fbfe70ac6b76810d2048371b",
+          "explanation_sha256": "ee5be992f9392c52ff208de3a67163f8bf4a0d6869cb5ae7743931c2681a764c",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "The residual stream also keeps linear coordinate and condition features available at every layer.",
+          "dimension": "code_fidelity",
+          "judgment": "partly_supported",
+          "assessment": "coords/condition 在 stem 前拼接，residual 保留的是 learned hidden stream，不是每层显式再次注入原始线性坐标或保证保留这些特征。",
+          "scope_limit": "身份路径可能帮助保留信息，但实际哪些特征被保留需要表征诊断。",
+          "evidence_level": "E0",
+          "claim": "The residual stream also keeps linear coordinate and condition features available at every layer.",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/questions/q_c20c51a29370da1983badd993123468f/prompt.txt",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/questions/q_c20c51a29370da1983badd993123468f/prompt.txt",
+            "sha256": "42bcb392eb911201e6025edaaf7d24e9b88b7df80e6ad4510f68b28c406651a3"
+          },
+          "alternative_explanation": "Capacity, local feature aggregation, optimization and distributional calibration are not uniquely isolated by endpoint scores.",
+          "model_exact_id": "claude-opus-5-5",
+          "question_id": "q_c20c51a29370da1983badd993123468f",
+          "public_response_sha256": "5013cad68f55093ed6a97dcce59f451b74aa8f22fbfe70ac6b76810d2048371b",
+          "explanation_sha256": "ee5be992f9392c52ff208de3a67163f8bf4a0d6869cb5ae7743931c2681a764c",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "It is also more prone to slightly blurry or averaged outputs within a fixed budget, which hurts the energy score.",
+          "dimension": "mechanism_alignment",
+          "judgment": "partly_supported",
+          "assessment": "深 plain 的条件内方差确比深 residual 更低（参考方差比 0.0913 vs 0.1164），但二者都强烈均值化；plain 的 IoU 略好、背景泄漏略低且 energy 更好。不能把更低多样性直接推出更差 energy。",
+          "scope_limit": "方差只是一个汇总量；energy 结合条件交叉距离和样本间距离，不能由方差单独确定。",
+          "evidence_level": "E2",
+          "claim": "It is also more prone to slightly blurry or averaged outputs within a fixed budget, which hurts the energy score.",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/quality_analysis/generation_quality.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/quality_analysis/generation_quality.json",
+            "sha256": "d15f57a24e8a794bb01ab8f216c35f9083da4b0183efa186b322fa1f7a446730"
+          },
+          "alternative_explanation": "Capacity, local feature aggregation, optimization and distributional calibration are not uniquely isolated by endpoint scores.",
+          "model_exact_id": "claude-opus-5-5",
+          "question_id": "q_c20c51a29370da1983badd993123468f",
+          "public_response_sha256": "5013cad68f55093ed6a97dcce59f451b74aa8f22fbfe70ac6b76810d2048371b",
+          "explanation_sha256": "ee5be992f9392c52ff208de3a67163f8bf4a0d6869cb5ae7743931c2681a764c",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "I place it below B but above the shallow model.",
+          "dimension": "answer_consistency",
+          "judgment": "supported",
+          "assessment": "A=深 plain、B=深 residual、C=浅 residual；解释与 B→A→C 一致，映射回主问题为同一错误配置顺序。",
+          "scope_limit": "置换一致不是正确性证据。",
+          "evidence_level": "E2",
+          "claim": "I place it below B but above the shallow model.",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/control_audit.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/control_audit.json",
+            "sha256": "c9714e034bf291e041c25cb2193ce1c9ef4e68dfb6e0b4da058029e5f98d8c14"
+          },
+          "alternative_explanation": "Capacity, local feature aggregation, optimization and distributional calibration are not uniquely isolated by endpoint scores.",
+          "model_exact_id": "claude-opus-5-5",
+          "question_id": "q_c20c51a29370da1983badd993123468f",
+          "public_response_sha256": "5013cad68f55093ed6a97dcce59f451b74aa8f22fbfe70ac6b76810d2048371b",
+          "explanation_sha256": "ee5be992f9392c52ff208de3a67163f8bf4a0d6869cb5ae7743931c2681a764c",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        }
+      ],
+      "response_sha256": "5013cad68f55093ed6a97dcce59f451b74aa8f22fbfe70ac6b76810d2048371b",
+      "public_explanation_sha256": "ee5be992f9392c52ff208de3a67163f8bf4a0d6869cb5ae7743931c2681a764c",
+      "audit_scope": "full public explanation, including both adjacent comparisons",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_7cdd570b1c6b5455c098a9f709f630d7"
+      }
+    },
+    {
+      "question_id": "q_2169895363e36f64cc4952db478bf6a1",
+      "model": "claude-opus-5-5",
+      "ranking_correct": true,
+      "summary_zh": "排序正确且识别几何/背景与多样性的区别，但约16k参数应为19489；“容量小、不会明显记忆、更多训练不致多样性塌缩”的叙述强于证据，实测条件内方差已经显著不足。",
+      "scores": {
+        "code_fidelity": "partly_supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "roughly 16k parameters",
+          "dimension": "code_fidelity",
+          "judgment": "inexact_parameter_count",
+          "assessment": "冻结模型参数量为 19489；9×9 是 depth3 的纯卷积路径 RF，但 GroupNorm 引入全空间统计。",
+          "scope_limit": "参数量近似偏小，不足以单独推翻正确排序；也不能由小模型推导无法记忆 96 张图。",
+          "evidence_level": "E0",
+          "claim": "roughly 16k parameters",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/questions/q_2169895363e36f64cc4952db478bf6a1/prompt.txt",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/questions/q_2169895363e36f64cc4952db478bf6a1/prompt.txt",
+            "sha256": "e5f9de504810847dc5423aefb9f300d01296314dbaeba04dabd54b69ebed6fd5"
+          },
+          "alternative_explanation": "Capacity, local feature aggregation, optimization and distributional calibration are not uniquely isolated by endpoint scores.",
+          "model_exact_id": "claude-opus-5-5",
+          "question_id": "q_2169895363e36f64cc4952db478bf6a1",
+          "public_response_sha256": "1d1c0e210b5a9573b39259248ff42518c8cf333c6dbc772fdf30d5dacdc561a6",
+          "explanation_sha256": "5d1987332587b01f94cf9a832ec32ab551be1fe8aa5b373558a61b827ee69231",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "The model has little capacity to memorize per-image brightness or stripe phase.",
+          "dimension": "causal_calibration",
+          "judgment": "plausible_unmeasured",
+          "assessment": "未做记忆能力、训练条件重建或参数量隔离实验，不能仅凭模型小和几何平滑判断记忆风险很小。固定 appearance 与多次曝光提供了记忆机会。",
+          "scope_limit": "不反向断言已发生记忆；现有方差不足也可来自 x0 参数化与有限训练的分布均值化。",
+          "evidence_level": "E0",
+          "claim": "The model has little capacity to memorize per-image brightness or stripe phase.",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/questions/q_2169895363e36f64cc4952db478bf6a1/prompt.txt",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/questions/q_2169895363e36f64cc4952db478bf6a1/prompt.txt",
+            "sha256": "e5f9de504810847dc5423aefb9f300d01296314dbaeba04dabd54b69ebed6fd5"
+          },
+          "alternative_explanation": "Capacity, local feature aggregation, optimization and distributional calibration are not uniquely isolated by endpoint scores.",
+          "model_exact_id": "claude-opus-5-5",
+          "question_id": "q_2169895363e36f64cc4952db478bf6a1",
+          "public_response_sha256": "1d1c0e210b5a9573b39259248ff42518c8cf333c6dbc772fdf30d5dacdc561a6",
+          "explanation_sha256": "5d1987332587b01f94cf9a832ec32ab551be1fe8aa5b373558a61b827ee69231",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "rather than collapse diversity.",
+          "dimension": "mechanism_alignment",
+          "judgment": "partly_supported",
+          "assessment": "更多训练确实改善 IoU、背景泄漏和 energy，但条件内方差比 700→3000→6000 为 1.693→0.199→0.124，不能把“保留随机变化”作为已验证收益。",
+          "scope_limit": "极小方差阈值的 collapse flag 为0只排除近乎完全常量；低方差不直接证明模式记忆或所有生成完全相同。",
+          "evidence_level": "E2",
+          "claim": "rather than collapse diversity.",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/quality_analysis/generation_quality.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/quality_analysis/generation_quality.json",
+            "sha256": "d15f57a24e8a794bb01ab8f216c35f9083da4b0183efa186b322fa1f7a446730"
+          },
+          "alternative_explanation": "Capacity, local feature aggregation, optimization and distributional calibration are not uniquely isolated by endpoint scores.",
+          "model_exact_id": "claude-opus-5-5",
+          "question_id": "q_2169895363e36f64cc4952db478bf6a1",
+          "public_response_sha256": "1d1c0e210b5a9573b39259248ff42518c8cf333c6dbc772fdf30d5dacdc561a6",
+          "explanation_sha256": "5d1987332587b01f94cf9a832ec32ab551be1fe8aa5b373558a61b827ee69231",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "Overfitting is the main risk that could invert this pair",
+          "dimension": "answer_consistency",
+          "judgment": "supported",
+          "assessment": "B(6000)→A(3000)→C(700) 与两个相邻叙述一致，承认后期差距更不确定。",
+          "scope_limit": "该风险声明不能验证“ring 特别慢学”或低记忆容量的额外机制。",
+          "evidence_level": "E2",
+          "claim": "Overfitting is the main risk that could invert this pair",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/control_audit.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/control_audit.json",
+            "sha256": "c9714e034bf291e041c25cb2193ce1c9ef4e68dfb6e0b4da058029e5f98d8c14"
+          },
+          "alternative_explanation": "Capacity, local feature aggregation, optimization and distributional calibration are not uniquely isolated by endpoint scores.",
+          "model_exact_id": "claude-opus-5-5",
+          "question_id": "q_2169895363e36f64cc4952db478bf6a1",
+          "public_response_sha256": "1d1c0e210b5a9573b39259248ff42518c8cf333c6dbc772fdf30d5dacdc561a6",
+          "explanation_sha256": "5d1987332587b01f94cf9a832ec32ab551be1fe8aa5b373558a61b827ee69231",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        }
+      ],
+      "response_sha256": "1d1c0e210b5a9573b39259248ff42518c8cf333c6dbc772fdf30d5dacdc561a6",
+      "public_explanation_sha256": "5d1987332587b01f94cf9a832ec32ab551be1fe8aa5b373558a61b827ee69231",
+      "audit_scope": "full public explanation, including both adjacent comparisons",
+      "probe": null
+    },
+    {
+      "question_id": "q_a6239c03d1629cd236bc6dee8524db8f",
+      "model": "claude-opus-5-5",
+      "ranking_correct": true,
+      "summary_zh": "能正确解释坐标/条件让几何成为逐像素非线性拟合，预算排序稳定；但把更好训练预测为更真实的条件内多样性，实测 3000→6000 的方差比进一步远离1，应保留为未支持的机制部分。",
+      "scores": {
+        "code_fidelity": "partly_supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "Each pixel receives absolute coordinates plus the concatenated condition",
+          "dimension": "code_fidelity",
+          "judgment": "supported",
+          "assessment": "代码确实把两维坐标和六维条件送给每个像素，此处没有错误地要求先全图传播形状位置。参数量仍应为19489而非约16k。",
+          "scope_limit": "点式可计算不等于无需学习或不受容量影响。",
+          "evidence_level": "E0",
+          "claim": "Each pixel receives absolute coordinates plus the concatenated condition",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/questions/q_a6239c03d1629cd236bc6dee8524db8f/prompt.txt",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/questions/q_a6239c03d1629cd236bc6dee8524db8f/prompt.txt",
+            "sha256": "230136040338a8b3b5fae4026611590c3fc087958bbfb9021b031210edb81b3f"
+          },
+          "alternative_explanation": "Capacity, local feature aggregation, optimization and distributional calibration are not uniquely isolated by endpoint scores.",
+          "model_exact_id": "claude-opus-5-5",
+          "question_id": "q_a6239c03d1629cd236bc6dee8524db8f",
+          "public_response_sha256": "e76687a3dafe5a878b6ee90584d667400784b697d7d5bd0bcb31610df3e1868e",
+          "explanation_sha256": "9f63d1c2f05bf92614d8305001ef6f349c86e6a6eaa046527e194fbb89dd6a8e",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "should also give more realistic within-condition diversity",
+          "dimension": "mechanism_alignment",
+          "judgment": "not_supported_by_variance_diagnostic",
+          "assessment": "energy 和几何改善，但条件方差比 3000→6000 为0.199→0.124，已低于真实参考且更低。未见该“多样性更真实”的支持；单一方差不能完全衡量随机分布质量。",
+          "scope_limit": "不把方差更低直接当成更差总 energy；评分还取决于跨参考距离。",
+          "evidence_level": "E2",
+          "claim": "should also give more realistic within-condition diversity",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/quality_analysis/generation_quality.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/quality_analysis/generation_quality.json",
+            "sha256": "d15f57a24e8a794bb01ab8f216c35f9083da4b0183efa186b322fa1f7a446730"
+          },
+          "alternative_explanation": "Capacity, local feature aggregation, optimization and distributional calibration are not uniquely isolated by endpoint scores.",
+          "model_exact_id": "claude-opus-5-5",
+          "question_id": "q_a6239c03d1629cd236bc6dee8524db8f",
+          "public_response_sha256": "e76687a3dafe5a878b6ee90584d667400784b697d7d5bd0bcb31610df3e1868e",
+          "explanation_sha256": "9f63d1c2f05bf92614d8305001ef6f349c86e6a6eaa046527e194fbb89dd6a8e",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "fresh noise and timestep each step act as heavy augmentation.",
+          "dimension": "causal_calibration",
+          "judgment": "partly_supported",
+          "assessment": "新的噪声/时间确实扩展 noisy input，但没有生成新的真实亮度/纹理标签；它不能本身排除记忆96张固定appearance。",
+          "scope_limit": "数据增强是合理优化因素，防止过拟合的效果需要独立测量。",
+          "evidence_level": "E0",
+          "claim": "fresh noise and timestep each step act as heavy augmentation.",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/questions/q_a6239c03d1629cd236bc6dee8524db8f/prompt.txt",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/questions/q_a6239c03d1629cd236bc6dee8524db8f/prompt.txt",
+            "sha256": "230136040338a8b3b5fae4026611590c3fc087958bbfb9021b031210edb81b3f"
+          },
+          "alternative_explanation": "Capacity, local feature aggregation, optimization and distributional calibration are not uniquely isolated by endpoint scores.",
+          "model_exact_id": "claude-opus-5-5",
+          "question_id": "q_a6239c03d1629cd236bc6dee8524db8f",
+          "public_response_sha256": "e76687a3dafe5a878b6ee90584d667400784b697d7d5bd0bcb31610df3e1868e",
+          "explanation_sha256": "9f63d1c2f05bf92614d8305001ef6f349c86e6a6eaa046527e194fbb89dd6a8e",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "This is the most confident gap.",
+          "dimension": "answer_consistency",
+          "judgment": "supported",
+          "assessment": "分别讨论6000对3000、3000对700；C→B→A与解释一致，物理配置顺序与主问题一致。",
+          "scope_limit": "排序正确与附加多样性机制是否成立分开评价。",
+          "evidence_level": "E2",
+          "claim": "This is the most confident gap.",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/control_audit.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/control_audit.json",
+            "sha256": "c9714e034bf291e041c25cb2193ce1c9ef4e68dfb6e0b4da058029e5f98d8c14"
+          },
+          "alternative_explanation": "Capacity, local feature aggregation, optimization and distributional calibration are not uniquely isolated by endpoint scores.",
+          "model_exact_id": "claude-opus-5-5",
+          "question_id": "q_a6239c03d1629cd236bc6dee8524db8f",
+          "public_response_sha256": "e76687a3dafe5a878b6ee90584d667400784b697d7d5bd0bcb31610df3e1868e",
+          "explanation_sha256": "9f63d1c2f05bf92614d8305001ef6f349c86e6a6eaa046527e194fbb89dd6a8e",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        }
+      ],
+      "response_sha256": "e76687a3dafe5a878b6ee90584d667400784b697d7d5bd0bcb31610df3e1868e",
+      "public_explanation_sha256": "9f63d1c2f05bf92614d8305001ef6f349c86e6a6eaa046527e194fbb89dd6a8e",
+      "audit_scope": "full public explanation, including both adjacent comparisons",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_2169895363e36f64cc4952db478bf6a1"
+      }
+    },
+    {
+      "question_id": "q_7cdd570b1c6b5455c098a9f709f630d7",
+      "model": "claude-haiku-5-5",
+      "ranking_correct": false,
+      "summary_zh": "排序依赖“深 residual 最易训练、深 plain 次之”的常见先验。解释还包含实质几何错误：卷积路径 13×13 不能说覆盖 16×16，半径换算被夸大；局部 RF 也不是位置条件传播的必要范围。",
+      "scores": {
+        "code_fidelity": "incorrect",
+        "mechanism_alignment": "incorrect",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "give a receptive field that comfortably covers a 16×16 image",
+          "dimension": "code_fidelity",
+          "judgment": "incorrect",
+          "assessment": "stem+5 个 3×3 blocks 的纯卷积路径是 13×13，不覆盖整个 16×16；若考虑 GroupNorm 则浅深模型都已有全空间统计耦合，不能只给深模型称“全局”。",
+          "scope_limit": "全空间统计并不等价于任意全局特征访问；此处只否定严格 RF 隔离推断。",
+          "evidence_level": "E0",
+          "claim": "give a receptive field that comfortably covers a 16×16 image",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/questions/q_7cdd570b1c6b5455c098a9f709f630d7/prompt.txt",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/questions/q_7cdd570b1c6b5455c098a9f709f630d7/prompt.txt",
+            "sha256": "55eab15ea227f456241054336cdbbe22f9519a7e2533391c35e143d6639ab080"
+          },
+          "alternative_explanation": "Capacity, local feature aggregation, optimization and distributional calibration are not uniquely isolated by endpoint scores.",
+          "model_exact_id": "claude-haiku-5-5",
+          "question_id": "q_7cdd570b1c6b5455c098a9f709f630d7",
+          "public_response_sha256": "6848fd32bd890a42e3bd0178b4a13b8ff818e23788c285b2222309a849361210",
+          "explanation_sha256": "c14251358bdbbc0e62da4e88fac653b67a6dfb0fe0e9c4b7280ed4fab00db943",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "roughly 3–7 pixels in radius",
+          "dimension": "code_fidelity",
+          "judgment": "incorrect",
+          "assessment": "坐标范围 [-1,1]、16 像素间距 2/15；radius 0.25–0.42 对应约 1.875–3.15 像素半径，约 3.75–6.3 像素直径。",
+          "scope_limit": "软边界有额外过渡，但不支持把直径量级写成半径。",
+          "evidence_level": "E0",
+          "claim": "roughly 3–7 pixels in radius",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/questions/q_7cdd570b1c6b5455c098a9f709f630d7/prompt.txt",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/questions/q_7cdd570b1c6b5455c098a9f709f630d7/prompt.txt",
+            "sha256": "55eab15ea227f456241054336cdbbe22f9519a7e2533391c35e143d6639ab080"
+          },
+          "alternative_explanation": "Capacity, local feature aggregation, optimization and distributional calibration are not uniquely isolated by endpoint scores.",
+          "model_exact_id": "claude-haiku-5-5",
+          "question_id": "q_7cdd570b1c6b5455c098a9f709f630d7",
+          "public_response_sha256": "6848fd32bd890a42e3bd0178b4a13b8ff818e23788c285b2222309a849361210",
+          "explanation_sha256": "c14251358bdbbc0e62da4e88fac653b67a6dfb0fe0e9c4b7280ed4fab00db943",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "too small to propagate the global shape",
+          "dimension": "mechanism_alignment",
+          "judgment": "incorrect_necessity_claim",
+          "assessment": "形状 one-hot、中心、半径和绝对坐标在每个像素均可见；几何 mask 可逐像素计算，不需要靠局部卷积把位置或完整形状从远处搬运过来。GroupNorm 进一步破坏严格局部信息界。",
+          "scope_limit": "较深网络在此预算确实更好，但其原因不能由该信息传播必要性论证得到。",
+          "evidence_level": "E0",
+          "claim": "too small to propagate the global shape",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/questions/q_7cdd570b1c6b5455c098a9f709f630d7/prompt.txt",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/questions/q_7cdd570b1c6b5455c098a9f709f630d7/prompt.txt",
+            "sha256": "55eab15ea227f456241054336cdbbe22f9519a7e2533391c35e143d6639ab080"
+          },
+          "alternative_explanation": "Capacity, local feature aggregation, optimization and distributional calibration are not uniquely isolated by endpoint scores.",
+          "model_exact_id": "claude-haiku-5-5",
+          "question_id": "q_7cdd570b1c6b5455c098a9f709f630d7",
+          "public_response_sha256": "6848fd32bd890a42e3bd0178b4a13b8ff818e23788c285b2222309a849361210",
+          "explanation_sha256": "c14251358bdbbc0e62da4e88fac653b67a6dfb0fe0e9c4b7280ed4fab00db943",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "A > C because residual wiring at equal depth trains more reliably in this short budget.",
+          "dimension": "mechanism_alignment",
+          "judgment": "not_supported_by_matched_control",
+          "assessment": "同深度、同权重初始化及输入随机流，plain 在 15/16 seed 的 energy 更低，末段 loss 更低；控制不支持所称 residual 优势。",
+          "scope_limit": "不据此断言所有残差网络无益，也不反推唯一梯度机制。",
+          "evidence_level": "E2",
+          "claim": "A > C because residual wiring at equal depth trains more reliably in this short budget.",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/control_audit.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/control_audit.json",
+            "sha256": "c9714e034bf291e041c25cb2193ce1c9ef4e68dfb6e0b4da058029e5f98d8c14"
+          },
+          "alternative_explanation": "Capacity, local feature aggregation, optimization and distributional calibration are not uniquely isolated by endpoint scores.",
+          "model_exact_id": "claude-haiku-5-5",
+          "question_id": "q_7cdd570b1c6b5455c098a9f709f630d7",
+          "public_response_sha256": "6848fd32bd890a42e3bd0178b4a13b8ff818e23788c285b2222309a849361210",
+          "explanation_sha256": "c14251358bdbbc0e62da4e88fac653b67a6dfb0fe0e9c4b7280ed4fab00db943",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        }
+      ],
+      "response_sha256": "6848fd32bd890a42e3bd0178b4a13b8ff818e23788c285b2222309a849361210",
+      "public_explanation_sha256": "c14251358bdbbc0e62da4e88fac653b67a6dfb0fe0e9c4b7280ed4fab00db943",
+      "audit_scope": "full public explanation, including both adjacent comparisons",
+      "probe": null
+    },
+    {
+      "question_id": "q_c20c51a29370da1983badd993123468f",
+      "model": "claude-haiku-5-5",
+      "ranking_correct": false,
+      "summary_zh": "置换后把浅 residual 与深 plain 的先后倒转，物理配置排序不稳定；本条内部解释和答案一致。它比主题更准确地看到逐像素条件，却仍漏算 stem RF，并把移除 residual 必然拖慢优化当作主要理由。",
+      "scores": {
+        "code_fidelity": "partly_supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "a receptive field of about 11 pixels",
+          "dimension": "code_fidelity",
+          "judgment": "incorrect_local_count",
+          "assessment": "深度5实际纯卷积路径为13；同一回答的浅层约5也应为7，均漏算stem。GroupNorm仍有全空间统计。",
+          "scope_limit": "不是整个网络的严格信息范围。",
+          "evidence_level": "E0",
+          "claim": "a receptive field of about 11 pixels",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/questions/q_c20c51a29370da1983badd993123468f/prompt.txt",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/questions/q_c20c51a29370da1983badd993123468f/prompt.txt",
+            "sha256": "42bcb392eb911201e6025edaaf7d24e9b88b7df80e6ad4510f68b28c406651a3"
+          },
+          "alternative_explanation": "Capacity, local feature aggregation, optimization and distributional calibration are not uniquely isolated by endpoint scores.",
+          "model_exact_id": "claude-haiku-5-5",
+          "question_id": "q_c20c51a29370da1983badd993123468f",
+          "public_response_sha256": "bc393b7a2ebc831145be1fbb4ae2a0b157dd182067aabecbdaa5b82668d48cdd",
+          "explanation_sha256": "7f66f4f4ad78c2e9b70861f577b508b145d02946716be11c033bf901892255f4",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "the network can still localize the shape without much depth.",
+          "dimension": "code_fidelity",
+          "judgment": "supported",
+          "assessment": "坐标和广播条件允许逐像素定位几何，此处比主题的全图传播必要性叙述更准确。",
+          "scope_limit": "可获得信息不保证有限深度/训练预算下的拟合精度。",
+          "evidence_level": "E0",
+          "claim": "the network can still localize the shape without much depth.",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/questions/q_c20c51a29370da1983badd993123468f/prompt.txt",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/questions/q_c20c51a29370da1983badd993123468f/prompt.txt",
+            "sha256": "42bcb392eb911201e6025edaaf7d24e9b88b7df80e6ad4510f68b28c406651a3"
+          },
+          "alternative_explanation": "Capacity, local feature aggregation, optimization and distributional calibration are not uniquely isolated by endpoint scores.",
+          "model_exact_id": "claude-haiku-5-5",
+          "question_id": "q_c20c51a29370da1983badd993123468f",
+          "public_response_sha256": "bc393b7a2ebc831145be1fbb4ae2a0b157dd182067aabecbdaa5b82668d48cdd",
+          "explanation_sha256": "7f66f4f4ad78c2e9b70861f577b508b145d02946716be11c033bf901892255f4",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "A is last, since removing residuals hurts optimization at a fixed budget.",
+          "dimension": "mechanism_alignment",
+          "judgment": "plausible_unmeasured_not_supported_here",
+          "assessment": "移除 residual 后深模型实际最好，15/16 seed 优于同深 residual；优化受损未获诊断支持。B→C→A 与本条解释一致，但对应物理模型为深 residual→浅 residual→深 plain，与主题后两项相反。",
+          "scope_limit": "单次置换翻转说明这对比较不稳定；不估计总体字母偏差或把随机生成解释当成确定策略。",
+          "evidence_level": "E2",
+          "claim": "A is last, since removing residuals hurts optimization at a fixed budget.",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/control_audit.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/control_audit.json",
+            "sha256": "c9714e034bf291e041c25cb2193ce1c9ef4e68dfb6e0b4da058029e5f98d8c14"
+          },
+          "alternative_explanation": "Capacity, local feature aggregation, optimization and distributional calibration are not uniquely isolated by endpoint scores.",
+          "model_exact_id": "claude-haiku-5-5",
+          "question_id": "q_c20c51a29370da1983badd993123468f",
+          "public_response_sha256": "bc393b7a2ebc831145be1fbb4ae2a0b157dd182067aabecbdaa5b82668d48cdd",
+          "explanation_sha256": "7f66f4f4ad78c2e9b70861f577b508b145d02946716be11c033bf901892255f4",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        }
+      ],
+      "response_sha256": "bc393b7a2ebc831145be1fbb4ae2a0b157dd182067aabecbdaa5b82668d48cdd",
+      "public_explanation_sha256": "7f66f4f4ad78c2e9b70861f577b508b145d02946716be11c033bf901892255f4",
+      "audit_scope": "full public explanation, including both adjacent comparisons",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_7cdd570b1c6b5455c098a9f709f630d7"
+      }
+    },
+    {
+      "question_id": "q_2169895363e36f64cc4952db478bf6a1",
+      "model": "claude-haiku-5-5",
+      "ranking_correct": true,
+      "summary_zh": "准确识别唯一步数干预、训练曝光数与收益递减，两个相邻排序正确；但“同分布且用新参考评价”只能帮助测量泛化，不能用来降低训练过拟合的因果风险。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "700 updates (about 11k samples seen, roughly 117 passes over 96 training images)",
+          "dimension": "code_fidelity",
+          "judgment": "supported",
+          "assessment": "11200/96≈116.7次平均曝光，均为重采样固定训练图；与实际步数和batch16一致。",
+          "scope_limit": "随机有放回抽样不保证每幅图恰好被看117遍。",
+          "evidence_level": "E0",
+          "claim": "700 updates (about 11k samples seen, roughly 117 passes over 96 training images)",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/questions/q_2169895363e36f64cc4952db478bf6a1/prompt.txt",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/questions/q_2169895363e36f64cc4952db478bf6a1/prompt.txt",
+            "sha256": "e5f9de504810847dc5423aefb9f300d01296314dbaeba04dabd54b69ebed6fd5"
+          },
+          "alternative_explanation": "Capacity, local feature aggregation, optimization and distributional calibration are not uniquely isolated by endpoint scores.",
+          "model_exact_id": "claude-haiku-5-5",
+          "question_id": "q_2169895363e36f64cc4952db478bf6a1",
+          "public_response_sha256": "7c26c6b9e8adc763162290e468fbd0f316a52c6f46bd26c4a0dc8ae92b49daeb",
+          "explanation_sha256": "92a710b60959b2fd6d5f97e8e221c89be6e9461ab12d4ef54574dafaf279858f",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "the training images are drawn from the same procedural distribution and the energy score is measured against fresh references",
+          "dimension": "causal_calibration",
+          "judgment": "partly_supported",
+          "assessment": "同生成分布和独立参考保证评价协议的含义，但不会阻止固定96图的过拟合。当前实测收益来自继续训练的配对对照，不能从独立测试参考本身推导收益。",
+          "scope_limit": "响应也承认过拟合风险，故不把整体预测标为机制错误。",
+          "evidence_level": "E0",
+          "claim": "the training images are drawn from the same procedural distribution and the energy score is measured against fresh references",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/questions/q_2169895363e36f64cc4952db478bf6a1/prompt.txt",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/questions/q_2169895363e36f64cc4952db478bf6a1/prompt.txt",
+            "sha256": "e5f9de504810847dc5423aefb9f300d01296314dbaeba04dabd54b69ebed6fd5"
+          },
+          "alternative_explanation": "Capacity, local feature aggregation, optimization and distributional calibration are not uniquely isolated by endpoint scores.",
+          "model_exact_id": "claude-haiku-5-5",
+          "question_id": "q_2169895363e36f64cc4952db478bf6a1",
+          "public_response_sha256": "7c26c6b9e8adc763162290e468fbd0f316a52c6f46bd26c4a0dc8ae92b49daeb",
+          "explanation_sha256": "92a710b60959b2fd6d5f97e8e221c89be6e9461ab12d4ef54574dafaf279858f",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "Going from 3000 to 6000 steps should still help, but with diminishing returns.",
+          "dimension": "mechanism_alignment",
+          "judgment": "supported_with_scope",
+          "assessment": "两相邻 energy 均值改善0.030150和0.007329，后者较小；IoU/泄漏改善与其方向一致。答案 B→A→C 和解释一致。",
+          "scope_limit": "只是三个预算终点的描述；没有证明普遍学习曲线形状或渐近收益。",
+          "evidence_level": "E1",
+          "claim": "Going from 3000 to 6000 steps should still help, but with diminishing returns.",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/control_audit.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/control_audit.json",
+            "sha256": "c9714e034bf291e041c25cb2193ce1c9ef4e68dfb6e0b4da058029e5f98d8c14"
+          },
+          "alternative_explanation": "Capacity, local feature aggregation, optimization and distributional calibration are not uniquely isolated by endpoint scores.",
+          "model_exact_id": "claude-haiku-5-5",
+          "question_id": "q_2169895363e36f64cc4952db478bf6a1",
+          "public_response_sha256": "7c26c6b9e8adc763162290e468fbd0f316a52c6f46bd26c4a0dc8ae92b49daeb",
+          "explanation_sha256": "92a710b60959b2fd6d5f97e8e221c89be6e9461ab12d4ef54574dafaf279858f",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        }
+      ],
+      "response_sha256": "7c26c6b9e8adc763162290e468fbd0f316a52c6f46bd26c4a0dc8ae92b49daeb",
+      "public_explanation_sha256": "92a710b60959b2fd6d5f97e8e221c89be6e9461ab12d4ef54574dafaf279858f",
+      "audit_scope": "full public explanation, including both adjacent comparisons",
+      "probe": null
+    },
+    {
+      "question_id": "q_a6239c03d1629cd236bc6dee8524db8f",
+      "model": "claude-haiku-5-5",
+      "ranking_correct": true,
+      "summary_zh": "识别精确训练曝光数、同一优化前缀和共享采样流，比较覆盖两个相邻预算；正确得到6000→3000→700，且把后期过拟合/波动保留为可能性。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "supported",
+        "causal_calibration": "supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "how far each model gets along the same optimization trajectory.",
+          "dimension": "mechanism_alignment",
+          "judgment": "supported",
+          "assessment": "16/16 seed 初始权重相同，较短训练 loss 与较长前缀逐float一致；此处确是同训练过程的不同停止点。",
+          "scope_limit": "不同长度最终流hash自然不同，不影响已直接检查的共享前缀。",
+          "evidence_level": "E1",
+          "claim": "how far each model gets along the same optimization trajectory.",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/control_audit.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/control_audit.json",
+            "sha256": "c9714e034bf291e041c25cb2193ce1c9ef4e68dfb6e0b4da058029e5f98d8c14"
+          },
+          "alternative_explanation": "Capacity, local feature aggregation, optimization and distributional calibration are not uniquely isolated by endpoint scores.",
+          "model_exact_id": "claude-haiku-5-5",
+          "question_id": "q_a6239c03d1629cd236bc6dee8524db8f",
+          "public_response_sha256": "b24bb19721b1d8bbd99bc700d7766774db19f67cf34e97a15d4990b08e3e2e1f",
+          "explanation_sha256": "060459a8af3ef323afd0e11faded84a9ff31a16c5fc31dde323400978810eb76",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "The evaluation streams are fixed across candidates",
+          "dimension": "code_fidelity",
+          "judgment": "supported",
+          "assessment": "所有模型/训练seed使用共同evaluation_seed314159及固定split/chunk规则，配对减少额外抽样差异。",
+          "scope_limit": "共享有限测试流不消除 Monte Carlo 误差，也不代表测试分布总体。",
+          "evidence_level": "E0",
+          "claim": "The evaluation streams are fixed across candidates",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/questions/q_a6239c03d1629cd236bc6dee8524db8f/prompt.txt",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/questions/q_a6239c03d1629cd236bc6dee8524db8f/prompt.txt",
+            "sha256": "230136040338a8b3b5fae4026611590c3fc087958bbfb9021b031210edb81b3f"
+          },
+          "alternative_explanation": "Capacity, local feature aggregation, optimization and distributional calibration are not uniquely isolated by endpoint scores.",
+          "model_exact_id": "claude-haiku-5-5",
+          "question_id": "q_a6239c03d1629cd236bc6dee8524db8f",
+          "public_response_sha256": "b24bb19721b1d8bbd99bc700d7766774db19f67cf34e97a15d4990b08e3e2e1f",
+          "explanation_sha256": "060459a8af3ef323afd0e11faded84a9ff31a16c5fc31dde323400978810eb76",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "the 6,000-step model could overfit the 96 training conditions or have noisier late-stage updates",
+          "dimension": "causal_calibration",
+          "judgment": "supported",
+          "assessment": "适当保留后期风险而非保证单调；当前两相邻确认差异支持预算排序，但方差比继续下降，不能声称全部质量轴改善。",
+          "scope_limit": "本条没有独立隔离优化噪声或过拟合机制；只是合理风险说明。",
+          "evidence_level": "E2",
+          "claim": "the 6,000-step model could overfit the 96 training conditions or have noisier late-stage updates",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/quality_analysis/generation_quality.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/quality_analysis/generation_quality.json",
+            "sha256": "d15f57a24e8a794bb01ab8f216c35f9083da4b0183efa186b322fa1f7a446730"
+          },
+          "alternative_explanation": "Capacity, local feature aggregation, optimization and distributional calibration are not uniquely isolated by endpoint scores.",
+          "model_exact_id": "claude-haiku-5-5",
+          "question_id": "q_a6239c03d1629cd236bc6dee8524db8f",
+          "public_response_sha256": "b24bb19721b1d8bbd99bc700d7766774db19f67cf34e97a15d4990b08e3e2e1f",
+          "explanation_sha256": "060459a8af3ef323afd0e11faded84a9ff31a16c5fc31dde323400978810eb76",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        }
+      ],
+      "response_sha256": "b24bb19721b1d8bbd99bc700d7766774db19f67cf34e97a15d4990b08e3e2e1f",
+      "public_explanation_sha256": "060459a8af3ef323afd0e11faded84a9ff31a16c5fc31dde323400978810eb76",
+      "audit_scope": "full public explanation, including both adjacent comparisons",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_2169895363e36f64cc4952db478bf6a1"
+      }
+    }
+  ],
+  "coverage": {
+    "completed_public_answers": 14,
+    "expected_calls": 16,
+    "missing_provider_outputs": 2,
+    "main_answers_reviewed": 8,
+    "probe_answers_reviewed": 6
+  },
+  "review_policy": "Manual reading of every public explanation. No private reasoning inspected. Wrong ranking is distinct from factual error; likely/may mechanisms can remain plausible but unmeasured.",
+  "permutation_checks": [
+    {
+      "model": "gpt-6-luna",
+      "main_question_id": "q_7cdd570b1c6b5455c098a9f709f630d7",
+      "probe_question_id": "q_c20c51a29370da1983badd993123468f",
+      "status": "missing_probe",
+      "same_physical_order": null,
+      "scope": "One predeclared label permutation; descriptive stability, not an independent benchmark item."
+    },
+    {
+      "model": "gpt-6-luna",
+      "main_question_id": "q_2169895363e36f64cc4952db478bf6a1",
+      "probe_question_id": "q_a6239c03d1629cd236bc6dee8524db8f",
+      "status": "complete",
+      "same_physical_order": true,
+      "scope": "One predeclared label permutation; descriptive stability, not an independent benchmark item."
+    },
+    {
+      "model": "gpt-6.1-sol",
+      "main_question_id": "q_7cdd570b1c6b5455c098a9f709f630d7",
+      "probe_question_id": "q_c20c51a29370da1983badd993123468f",
+      "status": "missing_probe",
+      "same_physical_order": null,
+      "scope": "One predeclared label permutation; descriptive stability, not an independent benchmark item."
+    },
+    {
+      "model": "gpt-6.1-sol",
+      "main_question_id": "q_2169895363e36f64cc4952db478bf6a1",
+      "probe_question_id": "q_a6239c03d1629cd236bc6dee8524db8f",
+      "status": "complete",
+      "same_physical_order": true,
+      "scope": "One predeclared label permutation; descriptive stability, not an independent benchmark item."
+    },
+    {
+      "model": "claude-opus-5-5",
+      "main_question_id": "q_7cdd570b1c6b5455c098a9f709f630d7",
+      "probe_question_id": "q_c20c51a29370da1983badd993123468f",
+      "status": "complete",
+      "same_physical_order": true,
+      "scope": "One predeclared label permutation; descriptive stability, not an independent benchmark item."
+    },
+    {
+      "model": "claude-opus-5-5",
+      "main_question_id": "q_2169895363e36f64cc4952db478bf6a1",
+      "probe_question_id": "q_a6239c03d1629cd236bc6dee8524db8f",
+      "status": "complete",
+      "same_physical_order": true,
+      "scope": "One predeclared label permutation; descriptive stability, not an independent benchmark item."
+    },
+    {
+      "model": "claude-haiku-5-5",
+      "main_question_id": "q_7cdd570b1c6b5455c098a9f709f630d7",
+      "probe_question_id": "q_c20c51a29370da1983badd993123468f",
+      "status": "complete",
+      "same_physical_order": false,
+      "scope": "One predeclared label permutation; descriptive stability, not an independent benchmark item."
+    },
+    {
+      "model": "claude-haiku-5-5",
+      "main_question_id": "q_2169895363e36f64cc4952db478bf6a1",
+      "probe_question_id": "q_a6239c03d1629cd236bc6dee8524db8f",
+      "status": "complete",
+      "same_physical_order": true,
+      "scope": "One predeclared label permutation; descriptive stability, not an independent benchmark item."
+    }
+  ],
+  "focused_evidence": [
+    {
+      "instance_id": "residual_depth_s851903",
+      "cells": [
+        {
+          "choice_id": "res_d2",
+          "candidate_node": "candidate_609df24944125bad172e",
+          "role": "primary",
+          "parameter_count": 14233,
+          "depth": 2,
+          "residual": true,
+          "training_steps": 3000,
+          "metrics": {
+            "energy_score": 0.07436043070629239,
+            "condition_iou": 0.751411035656929,
+            "condition_satisfaction": 0.74267578125,
+            "background_leak": 0.02175969840027392,
+            "blank_rate": 0.0,
+            "sample_diversity": 0.0012061743582307827,
+            "reference_diversity": 0.0009956653229892254,
+            "diversity_ratio": 1.2114254906773567,
+            "collapsed_condition_fraction": 0.0
+          },
+          "mean_last20_minibatch_loss": 0.005186954811506439,
+          "mean_preclip_gradient_norm": 0.09911648925712022,
+          "mean_clipped_step_fraction": 0.0011041666666666667
+        },
+        {
+          "choice_id": "res_d5",
+          "candidate_node": "candidate_77dbde93f80977cbead1",
+          "role": "primary",
+          "parameter_count": 30001,
+          "depth": 5,
+          "residual": true,
+          "training_steps": 3000,
+          "metrics": {
+            "energy_score": 0.061872910941019654,
+            "condition_iou": 0.8491743132472038,
+            "condition_satisfaction": 0.953369140625,
+            "background_leak": 0.014789325010497123,
+            "blank_rate": 0.0,
+            "sample_diversity": 0.00011590209669520846,
+            "reference_diversity": 0.0009956653229892254,
+            "diversity_ratio": 0.11640668124891818,
+            "collapsed_condition_fraction": 0.0
+          },
+          "mean_last20_minibatch_loss": 0.001958284090869711,
+          "mean_preclip_gradient_norm": 0.15398936856530296,
+          "mean_clipped_step_fraction": 0.00425
+        },
+        {
+          "choice_id": "plain_d5",
+          "candidate_node": "candidate_a3b690a12a9e61bf1957",
+          "role": "primary",
+          "parameter_count": 30001,
+          "depth": 5,
+          "residual": false,
+          "training_steps": 3000,
+          "metrics": {
+            "energy_score": 0.05733676836825907,
+            "condition_iou": 0.8556476905941963,
+            "condition_satisfaction": 0.949462890625,
+            "background_leak": 0.01344913023058325,
+            "blank_rate": 0.0,
+            "sample_diversity": 9.091126776183955e-05,
+            "reference_diversity": 0.0009956653229892254,
+            "diversity_ratio": 0.09130705357529223,
+            "collapsed_condition_fraction": 0.0
+          },
+          "mean_last20_minibatch_loss": 0.0015833236699108965,
+          "mean_preclip_gradient_norm": 0.09157495788201535,
+          "mean_clipped_step_fraction": 0.0005833333333333333
+        },
+        {
+          "choice_id": "plain_d2",
+          "candidate_node": "candidate_c6774d5cadf472081693",
+          "role": "diagnostic",
+          "parameter_count": 14233,
+          "depth": 2,
+          "residual": false,
+          "training_steps": 3000,
+          "metrics": {
+            "energy_score": 0.07024176162667572,
+            "condition_iou": 0.7812960334122181,
+            "condition_satisfaction": 0.824462890625,
+            "background_leak": 0.02200322155840695,
+            "blank_rate": 0.0,
+            "sample_diversity": 0.0007692552862863522,
+            "reference_diversity": 0.0009956653229892254,
+            "diversity_ratio": 0.7726042866706848,
+            "collapsed_condition_fraction": 0.0
+          },
+          "mean_last20_minibatch_loss": 0.004248067573644221,
+          "mean_preclip_gradient_norm": 0.07533842691034079,
+          "mean_clipped_step_fraction": 0.0004375
+        }
+      ]
+    },
+    {
+      "instance_id": "training_budget_small_data_s851901",
+      "cells": [
+        {
+          "choice_id": "steps700",
+          "candidate_node": "candidate_09e187f0ff5dd7b962c3",
+          "role": "primary",
+          "parameter_count": 19489,
+          "depth": 3,
+          "residual": true,
+          "training_steps": 700,
+          "metrics": {
+            "energy_score": 0.09954467881470919,
+            "condition_iou": 0.7084328532218933,
+            "condition_satisfaction": 0.656982421875,
+            "background_leak": 0.029355906299315393,
+            "blank_rate": 0.0,
+            "sample_diversity": 0.0016465486987726763,
+            "reference_diversity": 0.0009726622374728322,
+            "diversity_ratio": 1.6928267776966095,
+            "collapsed_condition_fraction": 0.0
+          },
+          "mean_last20_minibatch_loss": 0.0072497434230172075,
+          "mean_preclip_gradient_norm": 0.18130149001255633,
+          "mean_clipped_step_fraction": 0.007232142857142857
+        },
+        {
+          "choice_id": "steps3000",
+          "candidate_node": "candidate_bfa9b70cec1b7a9c9e67",
+          "role": "primary",
+          "parameter_count": 19489,
+          "depth": 3,
+          "residual": true,
+          "training_steps": 3000,
+          "metrics": {
+            "energy_score": 0.0693950445856899,
+            "condition_iou": 0.8475697450339794,
+            "condition_satisfaction": 0.9814453125,
+            "background_leak": 0.01677524228580296,
+            "blank_rate": 0.0,
+            "sample_diversity": 0.00019397561663936358,
+            "reference_diversity": 0.0009726622374728322,
+            "diversity_ratio": 0.19942751852795482,
+            "collapsed_condition_fraction": 0.0
+          },
+          "mean_last20_minibatch_loss": 0.0026611890443746233,
+          "mean_preclip_gradient_norm": 0.12515628910107382,
+          "mean_clipped_step_fraction": 0.0016875
+        },
+        {
+          "choice_id": "steps6000",
+          "candidate_node": "candidate_41d936fc7e861b0b5a78",
+          "role": "primary",
+          "parameter_count": 19489,
+          "depth": 3,
+          "residual": true,
+          "training_steps": 6000,
+          "metrics": {
+            "energy_score": 0.06206640903837979,
+            "condition_iou": 0.8946472965180874,
+            "condition_satisfaction": 0.99609375,
+            "background_leak": 0.01191029290203005,
+            "blank_rate": 0.0,
+            "sample_diversity": 0.00012102668347324652,
+            "reference_diversity": 0.0009726622374728322,
+            "diversity_ratio": 0.12442827294580638,
+            "collapsed_condition_fraction": 0.0
+          },
+          "mean_last20_minibatch_loss": 0.0018227229244075715,
+          "mean_preclip_gradient_norm": 0.10106675339732707,
+          "mean_clipped_step_fraction": 0.00084375
+        }
+      ]
+    }
+  ],
+  "evidence_ceiling": [
+    "Training-seed replication conditions on fixed data and evaluation noise.",
+    "GroupNorm statistics couple spatial positions; convolution-path RF is not a strict network information boundary.",
+    "Matched depth/residual controls measure local intervention effects, not a unique gradient mechanism.",
+    "Condition variance is a diagnostic, not a complete distributional score or direct memorization test.",
+    "Only two original main questions were admitted; model-level accuracy is descriptive, not a robust capability ranking."
+  ]
+}

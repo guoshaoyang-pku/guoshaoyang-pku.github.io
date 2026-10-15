@@ -1,0 +1,3103 @@
+{
+  "schema_version": "image_classification_explanation_audit_v1",
+  "created_utc": "2026-10-15T09:44:24.187737+00:00",
+  "protocol_sha256": "736096da318220195b03c1c62d21a07e89fef5c86b06e5079d40bc32ffe79a2c",
+  "evaluation_results_sha256": "0d2147581189c3aedd6bd3f2b4eaa2bc89ed333121df4eaa73e9bc90e51d60f0",
+  "control_audit_sha256": "d1fd5a0bb450c5fe0a4274a96109b423e3c425b277520b9c1777de2ac1be05ba",
+  "reviewed_public_response_count": 45,
+  "review_policy": "Every listed second-round main and permutation public answer was independently read in full. Only public content/explanation were displayed; hidden reasoning was not inspected. First-round audit remains unchanged.",
+  "scoring_note": "A supported mechanism is consistent with the code and measured controls at its stated certainty; it is not necessarily exclusive. Ranking correctness is scored separately from mechanism validity, pair coverage and internal answer consistency.",
+  "pending_public_responses": 0,
+  "records": [
+    {
+      "question_id": "q_ec5ca80d9651d097f461319ad3cd14b3",
+      "model": "gpt-6-luna",
+      "ranking_correct": true,
+      "summary_zh": "识别网格直接读出与坐标交互的学习成本，明确把排序限制在300步预算，和两条确认差异一致。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "supported",
+        "causal_calibration": "supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "A's preserved spatial structure and easier optimization are expected to win under only 300 updates",
+          "judgment": "supported",
+          "assessment": "空间版完整train/test CE低于坐标mean，符合有限预算易学读出解释，但没有单独测量中心矩形成。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        },
+        {
+          "verbatim_public_quote": "its coordinate channels allow the network to encode position-dependent moments",
+          "judgment": "supported",
+          "assessment": "正确的潜在计算路径；实际神经表示没有被直接辨识，不能从总效果认定已学出精确中心矩。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        }
+      ],
+      "response_sha256": "8506cc0e1499e263390681099ee3eeb8a2448b174fc6fd0977139bcb8b989ec2",
+      "probe": null,
+      "instance_id": "pooling_coordinate_s841901",
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "actual_comparison_evidence": {
+        "mean": {
+          "node_id": "candidate_3cbaed19cf1f1bd78892",
+          "mean_train_ce": 1.387246625032276,
+          "mean_test_ce": 1.3874168954789639
+        },
+        "coordinate_mean": {
+          "node_id": "candidate_fe248f3711cecdf66c13",
+          "mean_train_ce": 0.32638712151674554,
+          "mean_test_ce": 0.33372093125944957
+        },
+        "spatial": {
+          "node_id": "candidate_675b0f0945a65c7728d6",
+          "mean_train_ce": 0.03477928249594697,
+          "mean_test_ce": 0.025694066469441168
+        },
+        "coordinate_spatial": {
+          "node_id": "candidate_4e616725a8ecc13c433b",
+          "mean_train_ce": 0.11016854794434039,
+          "mean_test_ce": 0.11184107999724802
+        }
+      }
+    },
+    {
+      "question_id": "q_8a36fc443f07ff9476da1cb066a63d67",
+      "model": "gpt-6-luna",
+      "ranking_correct": true,
+      "summary_zh": "两条比较均围绕实际位置输入/读出干预，且承认短预算与数据实例的不确定性；正文与答案一致。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "supported",
+        "causal_calibration": "supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "giving the classifier coarse location-specific features from both channels",
+          "judgment": "supported",
+          "assessment": "3×3网格确实保留向线性头提供的位置索引。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        },
+        {
+          "verbatim_public_quote": "its global average pooling encourages translation invariance and can discard the location information",
+          "judgment": "supported",
+          "assessment": "使用encourages/can而非严格不变定理；padding和局部关系线索仍存在，实际mean完整train/test近chance。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        }
+      ],
+      "response_sha256": "5d07324c3bfc2134b0520725ae0a76e6d1e5453798de7d84e7391d72b5f61c62",
+      "probe": null,
+      "instance_id": "pooling_coordinate_s841902",
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "actual_comparison_evidence": {
+        "mean": {
+          "node_id": "candidate_c93709ee26aacbc9f437",
+          "mean_train_ce": 1.3854690231382847,
+          "mean_test_ce": 1.385668184608221
+        },
+        "coordinate_mean": {
+          "node_id": "candidate_d91d654be99bc328c040",
+          "mean_train_ce": 0.331308702530805,
+          "mean_test_ce": 0.34536808996926993
+        },
+        "spatial": {
+          "node_id": "candidate_f9bdfa11ef52bc5e3528",
+          "mean_train_ce": 0.025847295970606865,
+          "mean_test_ce": 0.037714587822847534
+        },
+        "coordinate_spatial": {
+          "node_id": "candidate_a644642ee0d58a7cbf09",
+          "mean_train_ce": 0.10882683973613894,
+          "mean_test_ce": 0.13160173430514988
+        }
+      }
+    },
+    {
+      "question_id": "q_a1af9439f07fdde610fbdc50eea762d9",
+      "model": "gpt-6-luna",
+      "ranking_correct": true,
+      "summary_zh": "重排字母映射正确，解释覆盖空间读出与坐标输入两种路径；没有把坐标表达潜力直接当成训练优势。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "supported",
+        "causal_calibration": "supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "giving the classifier direct access to where each channel’s object lies",
+          "judgment": "supported",
+          "assessment": "网格读出提供粗位置索引，当前预算下train/test均好于坐标mean。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        },
+        {
+          "verbatim_public_quote": "coordinate-conditioned features may learn useful location cues",
+          "judgment": "supported",
+          "assessment": "保留了实际学得坐标特征的条件，不声称所有mean结构都不可表示关系。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        }
+      ],
+      "response_sha256": "592308099e4183b6f378d4cd52001e81bd14e927975abd309b49cf7aab204289",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_8a36fc443f07ff9476da1cb066a63d67"
+      },
+      "instance_id": "pooling_coordinate_s841902",
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "actual_comparison_evidence": {
+        "mean": {
+          "node_id": "candidate_c93709ee26aacbc9f437",
+          "mean_train_ce": 1.3854690231382847,
+          "mean_test_ce": 1.385668184608221
+        },
+        "coordinate_mean": {
+          "node_id": "candidate_d91d654be99bc328c040",
+          "mean_train_ce": 0.331308702530805,
+          "mean_test_ce": 0.34536808996926993
+        },
+        "spatial": {
+          "node_id": "candidate_f9bdfa11ef52bc5e3528",
+          "mean_train_ce": 0.025847295970606865,
+          "mean_test_ce": 0.037714587822847534
+        },
+        "coordinate_spatial": {
+          "node_id": "candidate_a644642ee0d58a7cbf09",
+          "mean_train_ce": 0.10882683973613894,
+          "mean_test_ce": 0.13160173430514988
+        }
+      }
+    },
+    {
+      "question_id": "q_89167763187b9bba108b563ae46fedb6",
+      "model": "gpt-6-luna",
+      "ranking_correct": false,
+      "summary_zh": "承认局部交互和边界线索，但以连续坐标的潜在精度推断其训练优势；这与固定预算结果相反。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "leaving only weak signals from local object interactions and boundary effects",
+          "judgment": "supported",
+          "assessment": "准确保留mean CNN的弱关系路径，避免把全局平均误作严格无信息。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        },
+        {
+          "verbatim_public_quote": "this is likely more effective for the continuously varying object positions",
+          "judgment": "plausible_unmeasured",
+          "assessment": "表示细致度不推出300步更低CE；空间版实际完整train/test更低。正文有条件化，但未量化坐标交互的学习成本。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        }
+      ],
+      "response_sha256": "8bdb30b748154fa41a524eaf251bae4c57b1eae69a4535f8f4020441bc7cebde",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_ededc5c5112d4fee539b6d60dbb9549c"
+      },
+      "instance_id": "pooling_coordinate_s841903",
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "actual_comparison_evidence": {
+        "mean": {
+          "node_id": "candidate_07cf9b9e2ef0417e1afc",
+          "mean_train_ce": 1.3868277808651328,
+          "mean_test_ce": 1.3867692332714796
+        },
+        "coordinate_mean": {
+          "node_id": "candidate_c65bf21470c8b1e81842",
+          "mean_train_ce": 0.29576607677154243,
+          "mean_test_ce": 0.3118247539969161
+        },
+        "spatial": {
+          "node_id": "candidate_d6f536a09652df88c280",
+          "mean_train_ce": 0.0428850017970035,
+          "mean_test_ce": 0.05138279516904731
+        },
+        "coordinate_spatial": {
+          "node_id": "candidate_4b043b424317b46e875a",
+          "mean_train_ce": 0.09338780207690434,
+          "mean_test_ce": 0.11225657083559781
+        }
+      }
+    },
+    {
+      "question_id": "q_fcf232651387ce984a8140da96c318d3",
+      "model": "gpt-6-luna",
+      "ranking_correct": false,
+      "summary_zh": "主要按保留分辨率排序，遗漏stride2候选的5×5 block变化；对patch丢方向的风险没有独立实测支持。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "partly_supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "the main difference is how much spatial detail their convolutional stem preserves",
+          "judgment": "incomplete",
+          "assessment": "主比较还改变block kernel3/5，因此不是纯stem分辨率比较；解释没有说明较大kernel的具体作用。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        },
+        {
+          "verbatim_public_quote": "making the higher-frequency textures more vulnerable to aliasing or loss of orientation cues",
+          "judgment": "plausible_unmeasured",
+          "assessment": "学习式多通道4×4投影不等于标量抽点；stride4实际train/test近零，不能把潜在混叠风险当成本批主因。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        }
+      ],
+      "response_sha256": "70ada79413ba2f9c3c65c033fdf2223fc33c252db4d2ee526b951d43a2815c25",
+      "probe": null,
+      "instance_id": "kernel_stride_texture_s841901",
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "actual_comparison_evidence": {
+        "k3_s1": {
+          "node_id": "candidate_ab616a897d11be58391b",
+          "mean_train_ce": 1.3871534438803792,
+          "mean_test_ce": 1.387192951515317
+        },
+        "k5_s2": {
+          "node_id": "candidate_149005313738d78a4ed7",
+          "mean_train_ce": 1.235317818241409,
+          "mean_test_ce": 1.2353980402476452
+        },
+        "k3_s4": {
+          "node_id": "candidate_aafda8e15a0bbf01406c",
+          "mean_train_ce": 5.727325014248663e-06,
+          "mean_test_ce": 4.758739003207779e-05
+        },
+        "k5_s1": {
+          "node_id": "candidate_6e5f0ab5730336704ac8",
+          "mean_train_ce": 1.387207434978336,
+          "mean_test_ce": 1.387269290164113
+        },
+        "k3_s2": {
+          "node_id": "candidate_a434611033b8affdc6bd",
+          "mean_train_ce": 0.4361275098086157,
+          "mean_test_ce": 0.43677199679660994
+        },
+        "k5_s4": {
+          "node_id": "candidate_4199c0cb23d1c4c4703a",
+          "mean_train_ce": 7.223267036296499e-06,
+          "mean_test_ce": 0.00011057178539647383
+        },
+        "patch4_learnability_anchor": {
+          "node_id": "candidate_fad13efd0f5a1af0c4eb",
+          "mean_train_ce": 2.318241267929011e-05,
+          "mean_test_ce": 0.0238547362399828
+        }
+      }
+    },
+    {
+      "question_id": "q_a5f2d1e9542f2df31803626953d1af76",
+      "model": "gpt-6-luna",
+      "ranking_correct": false,
+      "summary_zh": "识别低LR欠学习与高LR风险，但默认0.001优先的预测不符合实际训练/测试；结尾诚实标为估计。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "0.0001 may make progress too slowly within the fixed budget",
+          "judgment": "supported",
+          "assessment": "低LR完整训练与测试CE均接近1.385，支持预算内欠学习。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        },
+        {
+          "verbatim_public_quote": "0.01 is a large constant rate for this setup and may cause overshooting",
+          "judgment": "plausible_unmeasured",
+          "assessment": "风险可能存在，但0.01实际完整train/test更低；没有独立轨迹/校准测量证明该风险主导。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        }
+      ],
+      "response_sha256": "8b2a3631abc98e63370e3f291ba2ecf7e2c43ca693d07c9cd99e0987ae594f01",
+      "probe": null,
+      "instance_id": "learning_rate_s841901",
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "actual_comparison_evidence": {
+        "lr1e4": {
+          "node_id": "candidate_31abb7f5ae858e9f35e8",
+          "mean_train_ce": 1.3848290643654764,
+          "mean_test_ce": 1.3849183171987534
+        },
+        "lr1e3": {
+          "node_id": "candidate_6ec59d4186f9b42d6754",
+          "mean_train_ce": 0.5936531231127447,
+          "mean_test_ce": 0.6058920508075971
+        },
+        "lr1e2": {
+          "node_id": "candidate_b07779969f06e2a919a4",
+          "mean_train_ce": 0.2570996006147652,
+          "mean_test_ce": 0.2773895292477846
+        }
+      }
+    },
+    {
+      "question_id": "q_ba675b4af4aaa388d5e0ecb29edac798",
+      "model": "gpt-6-luna",
+      "ranking_correct": false,
+      "summary_zh": "低LR欠学习判断有观测支持；高LR最差仍主要依赖默认值与过冲叙事，未抓住实际有限预算收益。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "its larger rate should make more progress in the fixed training budget",
+          "judgment": "supported",
+          "assessment": "0.001相对0.0001完整train/test确实更低；同模型初始状态与batch stream匹配。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        },
+        {
+          "verbatim_public_quote": "0.01 is much larger than the baseline and may cause overshooting or unstable late training",
+          "judgment": "plausible_unmeasured",
+          "assessment": "确认数据中0.01反而取得最低train/test CE；没有参数轨迹、校准或局部曲率数据支持其作为本次主导因素。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        }
+      ],
+      "response_sha256": "e66b14c82c3256ec892acfd0b2fbf91ee6ea5e4fa26d5e931bbafcf6eec8ebff",
+      "probe": null,
+      "instance_id": "learning_rate_s841902",
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "actual_comparison_evidence": {
+        "lr1e4": {
+          "node_id": "candidate_68c3418242c7dd2f2c5e",
+          "mean_train_ce": 1.3849177029915154,
+          "mean_test_ce": 1.3846740862354636
+        },
+        "lr1e3": {
+          "node_id": "candidate_3e9dff76e192bdb82479",
+          "mean_train_ce": 0.43976016309534316,
+          "mean_test_ce": 0.4430525932548335
+        },
+        "lr1e2": {
+          "node_id": "candidate_878848a639e130ad11ad",
+          "mean_train_ce": 0.11298999113532382,
+          "mean_test_ce": 0.11492065699945897
+        }
+      }
+    },
+    {
+      "question_id": "q_4b2c10d4bbd4687899ae46353ddde63e",
+      "model": "gpt-6-luna",
+      "ranking_correct": false,
+      "summary_zh": "识别低LR欠学习和高LR风险，但解释末句C→B→A与正文及提交B→A→C直接矛盾。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "incorrect"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "clipping limits extreme gradients but does not eliminate Adam's large per-parameter steps",
+          "judgment": "supported",
+          "assessment": "全局梯度裁剪不直接限定AdamW参数更新幅度。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        },
+        {
+          "verbatim_public_quote": "the predicted ordering remains C, B, A",
+          "judgment": "inconsistent",
+          "assessment": "解释前文称C最高loss且B优于A，answer也提交B,A,C；此末句在同一最佳到最差约定下与两者不一致。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        }
+      ],
+      "response_sha256": "82c2b90fa16971d22501c2cd3f1fc73f18fc431514e301a32afa3acd801ecd97",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_ba675b4af4aaa388d5e0ecb29edac798"
+      },
+      "instance_id": "learning_rate_s841902",
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "actual_comparison_evidence": {
+        "lr1e4": {
+          "node_id": "candidate_68c3418242c7dd2f2c5e",
+          "mean_train_ce": 1.3849177029915154,
+          "mean_test_ce": 1.3846740862354636
+        },
+        "lr1e3": {
+          "node_id": "candidate_3e9dff76e192bdb82479",
+          "mean_train_ce": 0.43976016309534316,
+          "mean_test_ce": 0.4430525932548335
+        },
+        "lr1e2": {
+          "node_id": "candidate_878848a639e130ad11ad",
+          "mean_train_ce": 0.11298999113532382,
+          "mean_test_ce": 0.11492065699945897
+        }
+      }
+    },
+    {
+      "question_id": "q_ec5ca80d9651d097f461319ad3cd14b3",
+      "model": "gpt-6.1-sol",
+      "ranking_correct": true,
+      "summary_zh": "正确计算感受野并承认局部重叠和边界；将空间优势限制在短预算易学性，机制与控制一致。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "supported",
+        "causal_calibration": "supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "overlap interactions and boundary effects offer only partial substitutes",
+          "judgment": "supported",
+          "assessment": "有限图像和局部交互的替代信息路径被保留，没有声称严格无关系信息。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        },
+        {
+          "verbatim_public_quote": "With only 300 updates, I expect A’s more direct spatial representation to yield lower cross-entropy",
+          "judgment": "supported",
+          "assessment": "完整train/test同时低于坐标mean，支持此有限优化解释但不是唯一机制证明。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        }
+      ],
+      "response_sha256": "19a8c4b1c276d95939fd6c0fe6035ed2ecad522a7234592b74fc2e4e43428f40",
+      "probe": null,
+      "instance_id": "pooling_coordinate_s841901",
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "actual_comparison_evidence": {
+        "mean": {
+          "node_id": "candidate_3cbaed19cf1f1bd78892",
+          "mean_train_ce": 1.387246625032276,
+          "mean_test_ce": 1.3874168954789639
+        },
+        "coordinate_mean": {
+          "node_id": "candidate_fe248f3711cecdf66c13",
+          "mean_train_ce": 0.32638712151674554,
+          "mean_test_ce": 0.33372093125944957
+        },
+        "spatial": {
+          "node_id": "candidate_675b0f0945a65c7728d6",
+          "mean_train_ce": 0.03477928249594697,
+          "mean_test_ce": 0.025694066469441168
+        },
+        "coordinate_spatial": {
+          "node_id": "candidate_4e616725a8ecc13c433b",
+          "mean_train_ce": 0.11016854794434039,
+          "mean_test_ce": 0.11184107999724802
+        }
+      }
+    },
+    {
+      "question_id": "q_d26f5adafb3e08bb7f45a0b9d0d21acd",
+      "model": "gpt-6.1-sol",
+      "ranking_correct": true,
+      "summary_zh": "重排后的解释与排序一致；区分坐标可表达更精细规则和本预算较慢学成的风险。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "supported",
+        "causal_calibration": "supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "I expect this to converge less efficiently",
+          "judgment": "supported",
+          "assessment": "坐标mean完整train CE较高，与300步内学习效率的解释相容；未直接测得具体乘积中心矩。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        },
+        {
+          "verbatim_public_quote": "overlapping objects can provide useful local directional cues",
+          "judgment": "supported",
+          "assessment": "正确指出局部感受野仍可能获得关系信号，避免全局平均必然chance的推断。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        }
+      ],
+      "response_sha256": "b4a817508c4c0827f65218fdc9fed6535f0f7027ae6b3fe36c4c729ed90d7002",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_ec5ca80d9651d097f461319ad3cd14b3"
+      },
+      "instance_id": "pooling_coordinate_s841901",
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "actual_comparison_evidence": {
+        "mean": {
+          "node_id": "candidate_3cbaed19cf1f1bd78892",
+          "mean_train_ce": 1.387246625032276,
+          "mean_test_ce": 1.3874168954789639
+        },
+        "coordinate_mean": {
+          "node_id": "candidate_fe248f3711cecdf66c13",
+          "mean_train_ce": 0.32638712151674554,
+          "mean_test_ce": 0.33372093125944957
+        },
+        "spatial": {
+          "node_id": "candidate_675b0f0945a65c7728d6",
+          "mean_train_ce": 0.03477928249594697,
+          "mean_test_ce": 0.025694066469441168
+        },
+        "coordinate_spatial": {
+          "node_id": "candidate_4e616725a8ecc13c433b",
+          "mean_train_ce": 0.11016854794434039,
+          "mean_test_ce": 0.11184107999724802
+        }
+      }
+    },
+    {
+      "question_id": "q_8a36fc443f07ff9476da1cb066a63d67",
+      "model": "gpt-6.1-sol",
+      "ranking_correct": true,
+      "summary_zh": "准确识别位置读出、坐标路径和短网络学习成本；两条比较与确认结果一致，并保留量化位置的替代因素。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "supported",
+        "causal_calibration": "supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "its local convolutions can only infer the relation indirectly through local interactions",
+          "judgment": "supported",
+          "assessment": "有限局部交互确实是无坐标mean的一条路径；当前train/test近chance只说明预算内未学好。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        },
+        {
+          "verbatim_public_quote": "B avoids requiring the shallow network and linear head to reconstruct relative comparisons from globally pooled coordinate features",
+          "judgment": "supported",
+          "assessment": "网格直接读出与坐标交互成本的解释符合完整train/test差异；不能据此唯一确认学得表示。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        }
+      ],
+      "response_sha256": "916b8a980ec21ca03c519b109271efe88d2352bcb4ef4bd34bd88408a102f890",
+      "probe": null,
+      "instance_id": "pooling_coordinate_s841902",
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "actual_comparison_evidence": {
+        "mean": {
+          "node_id": "candidate_c93709ee26aacbc9f437",
+          "mean_train_ce": 1.3854690231382847,
+          "mean_test_ce": 1.385668184608221
+        },
+        "coordinate_mean": {
+          "node_id": "candidate_d91d654be99bc328c040",
+          "mean_train_ce": 0.331308702530805,
+          "mean_test_ce": 0.34536808996926993
+        },
+        "spatial": {
+          "node_id": "candidate_f9bdfa11ef52bc5e3528",
+          "mean_train_ce": 0.025847295970606865,
+          "mean_test_ce": 0.037714587822847534
+        },
+        "coordinate_spatial": {
+          "node_id": "candidate_a644642ee0d58a7cbf09",
+          "mean_train_ce": 0.10882683973613894,
+          "mean_test_ce": 0.13160173430514988
+        }
+      }
+    },
+    {
+      "question_id": "q_a1af9439f07fdde610fbdc50eea762d9",
+      "model": "gpt-6.1-sol",
+      "ranking_correct": true,
+      "summary_zh": "正确读取5×5支持范围、坐标与网格差别；把最终泛化潜力和短预算排序区分开。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "supported",
+        "causal_calibration": "supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "local overlap and boundary effects offer only incomplete relational cues",
+          "judgment": "supported",
+          "assessment": "保留了实际弱关系路径，未把mean CNN视为严格不可表示。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        },
+        {
+          "verbatim_public_quote": "I favor C under the short, fixed training budget",
+          "judgment": "supported",
+          "assessment": "空间版完整train/test更低，与有限预算解释一致；此判断没有被扩张到无限训练或自然图像。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        }
+      ],
+      "response_sha256": "20f8ceca2d223137dc8dcf61408d605e73a55b59b4a1f17a10bf06459bdd3a64",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_8a36fc443f07ff9476da1cb066a63d67"
+      },
+      "instance_id": "pooling_coordinate_s841902",
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "actual_comparison_evidence": {
+        "mean": {
+          "node_id": "candidate_c93709ee26aacbc9f437",
+          "mean_train_ce": 1.3854690231382847,
+          "mean_test_ce": 1.385668184608221
+        },
+        "coordinate_mean": {
+          "node_id": "candidate_d91d654be99bc328c040",
+          "mean_train_ce": 0.331308702530805,
+          "mean_test_ce": 0.34536808996926993
+        },
+        "spatial": {
+          "node_id": "candidate_f9bdfa11ef52bc5e3528",
+          "mean_train_ce": 0.025847295970606865,
+          "mean_test_ce": 0.037714587822847534
+        },
+        "coordinate_spatial": {
+          "node_id": "candidate_a644642ee0d58a7cbf09",
+          "mean_train_ce": 0.10882683973613894,
+          "mean_test_ce": 0.13160173430514988
+        }
+      }
+    },
+    {
+      "question_id": "q_ededc5c5112d4fee539b6d60dbb9549c",
+      "model": "gpt-6.1-sol",
+      "ranking_correct": true,
+      "summary_zh": "主回答正确，强调网格直接读出和坐标交互；说明局部/边界残余信息，未提出结构性chance下界。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "supported",
+        "causal_calibration": "supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "requires the shallow network and linear head to reconstruct relative displacement from coordinate-conditioned averages",
+          "judgment": "supported",
+          "assessment": "正确区分两条信息路径；现有观测支持读出易学性但未唯一辨识网络实际计算。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        },
+        {
+          "verbatim_public_quote": "leaving only weak local-interaction or boundary cues",
+          "judgment": "supported",
+          "assessment": "指出弱信号而不是完全无信息，符合当前有限图像与感受野设置。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        }
+      ],
+      "response_sha256": "c59112482a6892e0015dc096b2390a3991279b60911647c24fc6082f7a256824",
+      "probe": null,
+      "instance_id": "pooling_coordinate_s841903",
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "actual_comparison_evidence": {
+        "mean": {
+          "node_id": "candidate_07cf9b9e2ef0417e1afc",
+          "mean_train_ce": 1.3868277808651328,
+          "mean_test_ce": 1.3867692332714796
+        },
+        "coordinate_mean": {
+          "node_id": "candidate_c65bf21470c8b1e81842",
+          "mean_train_ce": 0.29576607677154243,
+          "mean_test_ce": 0.3118247539969161
+        },
+        "spatial": {
+          "node_id": "candidate_d6f536a09652df88c280",
+          "mean_train_ce": 0.0428850017970035,
+          "mean_test_ce": 0.05138279516904731
+        },
+        "coordinate_spatial": {
+          "node_id": "candidate_4b043b424317b46e875a",
+          "mean_train_ce": 0.09338780207690434,
+          "mean_test_ce": 0.11225657083559781
+        }
+      }
+    },
+    {
+      "question_id": "q_89167763187b9bba108b563ae46fedb6",
+      "model": "gpt-6.1-sol",
+      "ranking_correct": false,
+      "summary_zh": "与同题主回答不同，此次优先连续坐标潜力；承认归一化和短网络可能阻碍学习，但没有预测实际网格优势。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "estimate their relative displacement more directly",
+          "judgment": "plausible_unmeasured",
+          "assessment": "坐标mean仍需学习非线性交互，潜在连续位置不保证更直接的优化；实际完整train/test高于网格。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        },
+        {
+          "verbatim_public_quote": "B could rival or exceed C because its spatial grid is a more direct positional representation",
+          "judgment": "supported",
+          "assessment": "其列出的替代解释与确认结果一致；跨回答变化另列为permutation不稳定，不把本条正文视为自相矛盾。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        }
+      ],
+      "response_sha256": "115ca4a97b625dd6253785f55ab85cf4d501ba6807e90303f37d45fab66c4795",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_ededc5c5112d4fee539b6d60dbb9549c"
+      },
+      "instance_id": "pooling_coordinate_s841903",
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "actual_comparison_evidence": {
+        "mean": {
+          "node_id": "candidate_07cf9b9e2ef0417e1afc",
+          "mean_train_ce": 1.3868277808651328,
+          "mean_test_ce": 1.3867692332714796
+        },
+        "coordinate_mean": {
+          "node_id": "candidate_c65bf21470c8b1e81842",
+          "mean_train_ce": 0.29576607677154243,
+          "mean_test_ce": 0.3118247539969161
+        },
+        "spatial": {
+          "node_id": "candidate_d6f536a09652df88c280",
+          "mean_train_ce": 0.0428850017970035,
+          "mean_test_ce": 0.05138279516904731
+        },
+        "coordinate_spatial": {
+          "node_id": "candidate_4b043b424317b46e875a",
+          "mean_train_ce": 0.09338780207690434,
+          "mean_test_ce": 0.11225657083559781
+        }
+      }
+    },
+    {
+      "question_id": "q_fcf232651387ce984a8140da96c318d3",
+      "model": "gpt-6.1-sol",
+      "ranking_correct": false,
+      "summary_zh": "正确辨识20/5像素支持和学习式patch，但把较细网格等同于更低CE，错过stride4的实际训练优势。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "B’s learned 4×4 stem and subsequent convolutions provide an effective receptive field of 20×20 pixels",
+          "judgment": "supported",
+          "assessment": "20是理论卷积支持范围，非测得的effective receptive field；结构计算正确。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        },
+        {
+          "verbatim_public_quote": "retaining more spatial samples for phase-robust orientation detection",
+          "judgment": "plausible_unmeasured",
+          "assessment": "更密采样的稳定性优势未独立测量；同stride4的k3/k5均学好，而stride1两kernel均弱，不能单靠分辨率推收益。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        }
+      ],
+      "response_sha256": "fd0284a30cbc29c60fd3b5eca486f46e1c20eab8508f33042e8583b012064074",
+      "probe": null,
+      "instance_id": "kernel_stride_texture_s841901",
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "actual_comparison_evidence": {
+        "k3_s1": {
+          "node_id": "candidate_ab616a897d11be58391b",
+          "mean_train_ce": 1.3871534438803792,
+          "mean_test_ce": 1.387192951515317
+        },
+        "k5_s2": {
+          "node_id": "candidate_149005313738d78a4ed7",
+          "mean_train_ce": 1.235317818241409,
+          "mean_test_ce": 1.2353980402476452
+        },
+        "k3_s4": {
+          "node_id": "candidate_aafda8e15a0bbf01406c",
+          "mean_train_ce": 5.727325014248663e-06,
+          "mean_test_ce": 4.758739003207779e-05
+        },
+        "k5_s1": {
+          "node_id": "candidate_6e5f0ab5730336704ac8",
+          "mean_train_ce": 1.387207434978336,
+          "mean_test_ce": 1.387269290164113
+        },
+        "k3_s2": {
+          "node_id": "candidate_a434611033b8affdc6bd",
+          "mean_train_ce": 0.4361275098086157,
+          "mean_test_ce": 0.43677199679660994
+        },
+        "k5_s4": {
+          "node_id": "candidate_4199c0cb23d1c4c4703a",
+          "mean_train_ce": 7.223267036296499e-06,
+          "mean_test_ce": 0.00011057178539647383
+        },
+        "patch4_learnability_anchor": {
+          "node_id": "candidate_fad13efd0f5a1af0c4eb",
+          "mean_train_ce": 2.318241267929011e-05,
+          "mean_test_ce": 0.0238547362399828
+        }
+      }
+    },
+    {
+      "question_id": "q_9d3f74e3a6db4ef85ae57f643c6a4f29",
+      "model": "gpt-6.1-sol",
+      "ranking_correct": false,
+      "summary_zh": "重排后仍以较细采样为优势；支持范围计算正确，但patch相位敏感性与IID排序的联系缺少证据。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "approximately 18×18-pixel receptive field",
+          "judgment": "supported",
+          "assessment": "核2/stride2 stem加两层k5给18像素理论支持；与另一候选20像素可比较。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        },
+        {
+          "verbatim_public_quote": "making learned features more sensitive to patch alignment and phase",
+          "judgment": "plausible_unmeasured",
+          "assessment": "没有相位干预测量；stride4实际IID训练/测试近零，OOD差不能唯一证明此IID机制。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        }
+      ],
+      "response_sha256": "922a68b76bc357330e2ff3c8f599995a3b53556ab6533251d57fed367f215d0c",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_fcf232651387ce984a8140da96c318d3"
+      },
+      "instance_id": "kernel_stride_texture_s841901",
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "actual_comparison_evidence": {
+        "k3_s1": {
+          "node_id": "candidate_ab616a897d11be58391b",
+          "mean_train_ce": 1.3871534438803792,
+          "mean_test_ce": 1.387192951515317
+        },
+        "k5_s2": {
+          "node_id": "candidate_149005313738d78a4ed7",
+          "mean_train_ce": 1.235317818241409,
+          "mean_test_ce": 1.2353980402476452
+        },
+        "k3_s4": {
+          "node_id": "candidate_aafda8e15a0bbf01406c",
+          "mean_train_ce": 5.727325014248663e-06,
+          "mean_test_ce": 4.758739003207779e-05
+        },
+        "k5_s1": {
+          "node_id": "candidate_6e5f0ab5730336704ac8",
+          "mean_train_ce": 1.387207434978336,
+          "mean_test_ce": 1.387269290164113
+        },
+        "k3_s2": {
+          "node_id": "candidate_a434611033b8affdc6bd",
+          "mean_train_ce": 0.4361275098086157,
+          "mean_test_ce": 0.43677199679660994
+        },
+        "k5_s4": {
+          "node_id": "candidate_4199c0cb23d1c4c4703a",
+          "mean_train_ce": 7.223267036296499e-06,
+          "mean_test_ce": 0.00011057178539647383
+        },
+        "patch4_learnability_anchor": {
+          "node_id": "candidate_fad13efd0f5a1af0c4eb",
+          "mean_train_ce": 2.318241267929011e-05,
+          "mean_test_ce": 0.0238547362399828
+        }
+      }
+    },
+    {
+      "question_id": "q_a5f2d1e9542f2df31803626953d1af76",
+      "model": "gpt-6.1-sol",
+      "ranking_correct": false,
+      "summary_zh": "正确区分梯度裁剪与Adam更新并抓住小LR欠学习；默认0.001稳定精调优于0.01仍是未证实假设。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "Gradient clipping limits gradient magnitude, not AdamW’s parameter-update magnitude",
+          "judgment": "supported",
+          "assessment": "符合实际训练/优化器实现，clip_norm不是参数步长上界。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        },
+        {
+          "verbatim_public_quote": "risk oscillating around a good solution",
+          "judgment": "plausible_unmeasured",
+          "assessment": "没有参数轨迹或独立校准证据；0.01实测完整train/test均更低，风险不能替代实际收益判断。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        }
+      ],
+      "response_sha256": "98719d370971597beb2a7796e3e74df87e36f300c329931097b2732470865f28",
+      "probe": null,
+      "instance_id": "learning_rate_s841901",
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "actual_comparison_evidence": {
+        "lr1e4": {
+          "node_id": "candidate_31abb7f5ae858e9f35e8",
+          "mean_train_ce": 1.3848290643654764,
+          "mean_test_ce": 1.3849183171987534
+        },
+        "lr1e3": {
+          "node_id": "candidate_6ec59d4186f9b42d6754",
+          "mean_train_ce": 0.5936531231127447,
+          "mean_test_ce": 0.6058920508075971
+        },
+        "lr1e2": {
+          "node_id": "candidate_b07779969f06e2a919a4",
+          "mean_train_ce": 0.2570996006147652,
+          "mean_test_ce": 0.2773895292477846
+        }
+      }
+    },
+    {
+      "question_id": "q_ba675b4af4aaa388d5e0ecb29edac798",
+      "model": "gpt-6.1-sol",
+      "ranking_correct": false,
+      "summary_zh": "小LR欠学习与数据一致；把默认值说成收敛/校准最佳而错序，虽然明确承认高LR可能反超。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "Choice B's 0.0001 learning rate is likely too small",
+          "judgment": "supported",
+          "assessment": "低LR完整train/test约1.385，支持有限预算欠学习。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        },
+        {
+          "verbatim_public_quote": "should reach the best combination of convergence and calibration",
+          "judgment": "unsupported_calibration",
+          "assessment": "没有独立校准评价且0.01 train/test最低；常用默认值不等于该数据/预算下已验证最佳。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        }
+      ],
+      "response_sha256": "4d648362b4a4b69d2f7517547c9146a6272b364de2a1d460d51a81dc23161743",
+      "probe": null,
+      "instance_id": "learning_rate_s841902",
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "actual_comparison_evidence": {
+        "lr1e4": {
+          "node_id": "candidate_68c3418242c7dd2f2c5e",
+          "mean_train_ce": 1.3849177029915154,
+          "mean_test_ce": 1.3846740862354636
+        },
+        "lr1e3": {
+          "node_id": "candidate_3e9dff76e192bdb82479",
+          "mean_train_ce": 0.43976016309534316,
+          "mean_test_ce": 0.4430525932548335
+        },
+        "lr1e2": {
+          "node_id": "candidate_878848a639e130ad11ad",
+          "mean_train_ce": 0.11298999113532382,
+          "mean_test_ce": 0.11492065699945897
+        }
+      }
+    },
+    {
+      "question_id": "q_4b2c10d4bbd4687899ae46353ddde63e",
+      "model": "gpt-6.1-sol",
+      "ranking_correct": false,
+      "summary_zh": "解释两条相邻关系且答案一致；低LR欠拟合有证据，但高LR校准劣势没有独立验证。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "38,400 samples may not produce sufficient parameter movement",
+          "judgment": "plausible_unmeasured",
+          "assessment": "样本暴露数正确，欠学习有train CE支持，但未测参数位移；这里没有写成lr×steps硬界。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/explanation_supporting_checks.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        },
+        {
+          "verbatim_public_quote": "more prone to overshooting and late-training instability or poor cross-entropy calibration",
+          "judgment": "plausible_unmeasured",
+          "assessment": "高LR风险是候选机制而非观察事实；本批0.01 train/test比0.001更低，不能以常用LR推出最终最优。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        }
+      ],
+      "response_sha256": "9064be5ebc5eb9e5acd4c7bfac908ccef389d835d3e8266deacb4ff92ad46f93",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_ba675b4af4aaa388d5e0ecb29edac798"
+      },
+      "instance_id": "learning_rate_s841902",
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "actual_comparison_evidence": {
+        "lr1e4": {
+          "node_id": "candidate_68c3418242c7dd2f2c5e",
+          "mean_train_ce": 1.3849177029915154,
+          "mean_test_ce": 1.3846740862354636
+        },
+        "lr1e3": {
+          "node_id": "candidate_3e9dff76e192bdb82479",
+          "mean_train_ce": 0.43976016309534316,
+          "mean_test_ce": 0.4430525932548335
+        },
+        "lr1e2": {
+          "node_id": "candidate_878848a639e130ad11ad",
+          "mean_train_ce": 0.11298999113532382,
+          "mean_test_ce": 0.11492065699945897
+        }
+      }
+    },
+    {
+      "question_id": "q_ec5ca80d9651d097f461319ad3cd14b3",
+      "model": "claude-opus-5-5",
+      "ranking_correct": false,
+      "summary_zh": "详述坐标中心矩，但仍以表示精度优先于300步学习；将网格输入当作原始质量分格和仅padding线索，范围过强。",
+      "scores": {
+        "code_fidelity": "partly_supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "It knows only which coarse cell each object's mass falls in",
+          "judgment": "overstated",
+          "assessment": "网格平均的是卷积非线性特征，跨cell卷积和边界响应可保留亚cell信息；不是直接离散化原始中心。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        },
+        {
+          "verbatim_public_quote": "A could plausibly match or beat C if that optimization proves slow",
+          "judgment": "supported",
+          "assessment": "这个替代机制与实际网格完整train/test更低一致；坐标spatial控制也未改善，不能将“多位置输入”当成必然收益。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        }
+      ],
+      "response_sha256": "8769304dc711cdfe5f56f6d317919d44eb690a9f7d9ece26908eab7a8949406f",
+      "probe": null,
+      "instance_id": "pooling_coordinate_s841901",
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "actual_comparison_evidence": {
+        "mean": {
+          "node_id": "candidate_3cbaed19cf1f1bd78892",
+          "mean_train_ce": 1.387246625032276,
+          "mean_test_ce": 1.3874168954789639
+        },
+        "coordinate_mean": {
+          "node_id": "candidate_fe248f3711cecdf66c13",
+          "mean_train_ce": 0.32638712151674554,
+          "mean_test_ce": 0.33372093125944957
+        },
+        "spatial": {
+          "node_id": "candidate_675b0f0945a65c7728d6",
+          "mean_train_ce": 0.03477928249594697,
+          "mean_test_ce": 0.025694066469441168
+        },
+        "coordinate_spatial": {
+          "node_id": "candidate_4e616725a8ecc13c433b",
+          "mean_train_ce": 0.11016854794434039,
+          "mean_test_ce": 0.11184107999724802
+        }
+      }
+    },
+    {
+      "question_id": "q_d26f5adafb3e08bb7f45a0b9d0d21acd",
+      "model": "claude-opus-5-5",
+      "ranking_correct": false,
+      "summary_zh": "正确计算感受野，但将带零padding的CNN说成完全平移不变，并把亚cell线索限定为图像边界；坐标潜力不保证本预算优势。",
+      "scores": {
+        "code_fidelity": "incorrect",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "The model is fully translation-invariant with a 5×5 receptive field",
+          "judgment": "incorrect",
+          "assessment": "有限图像零padding打破严格平移不变；5×5支持也允许局部交互，不能由此推出关系无信息。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        },
+        {
+          "verbatim_public_quote": "The only sub-cell position cues are zero-padding effects near the borders",
+          "judgment": "overstated",
+          "assessment": "卷积跨pool cell边界及对象响应也可携带亚cell信息，不必接近图像外边界；未构造表示碰撞证明不可辨识。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        }
+      ],
+      "response_sha256": "0ee02d836b45dee0048c84b7eab5728ef96d219470b69beabd4510a1db574db3",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_ec5ca80d9651d097f461319ad3cd14b3"
+      },
+      "instance_id": "pooling_coordinate_s841901",
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "actual_comparison_evidence": {
+        "mean": {
+          "node_id": "candidate_3cbaed19cf1f1bd78892",
+          "mean_train_ce": 1.387246625032276,
+          "mean_test_ce": 1.3874168954789639
+        },
+        "coordinate_mean": {
+          "node_id": "candidate_fe248f3711cecdf66c13",
+          "mean_train_ce": 0.32638712151674554,
+          "mean_test_ce": 0.33372093125944957
+        },
+        "spatial": {
+          "node_id": "candidate_675b0f0945a65c7728d6",
+          "mean_train_ce": 0.03477928249594697,
+          "mean_test_ce": 0.025694066469441168
+        },
+        "coordinate_spatial": {
+          "node_id": "candidate_4e616725a8ecc13c433b",
+          "mean_train_ce": 0.11016854794434039,
+          "mean_test_ce": 0.11184107999724802
+        }
+      }
+    },
+    {
+      "question_id": "q_8a36fc443f07ff9476da1cb066a63d67",
+      "model": "claude-opus-5-5",
+      "ranking_correct": false,
+      "summary_zh": "位置和局部支持读取大体正确，但把grid量化当作确定置信度上限，忽略卷积特征与短预算优化的区别。",
+      "scores": {
+        "code_fidelity": "partly_supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "This coarse quantization caps how confident the model can be",
+          "judgment": "unsupported_guarantee",
+          "assessment": "没有表示碰撞或CE下界证明，网络也可任意放大logit；粗网格并不数学限制置信度。实际spatial CE远低于坐标mean。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        },
+        {
+          "verbatim_public_quote": "C has to learn multiplicative channel×coordinate interactions through GELU within 300 steps",
+          "judgment": "supported",
+          "assessment": "承认关键优化条件；该替代因素与实际train/test差异一致，但没有测到中心矩形成。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        }
+      ],
+      "response_sha256": "59e59c9c78987dd21f64e2c710f09def266f1dd003321b0c797fd398a2173214",
+      "probe": null,
+      "instance_id": "pooling_coordinate_s841902",
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "actual_comparison_evidence": {
+        "mean": {
+          "node_id": "candidate_c93709ee26aacbc9f437",
+          "mean_train_ce": 1.3854690231382847,
+          "mean_test_ce": 1.385668184608221
+        },
+        "coordinate_mean": {
+          "node_id": "candidate_d91d654be99bc328c040",
+          "mean_train_ce": 0.331308702530805,
+          "mean_test_ce": 0.34536808996926993
+        },
+        "spatial": {
+          "node_id": "candidate_f9bdfa11ef52bc5e3528",
+          "mean_train_ce": 0.025847295970606865,
+          "mean_test_ce": 0.037714587822847534
+        },
+        "coordinate_spatial": {
+          "node_id": "candidate_a644642ee0d58a7cbf09",
+          "mean_train_ce": 0.10882683973613894,
+          "mean_test_ce": 0.13160173430514988
+        }
+      }
+    },
+    {
+      "question_id": "q_a1af9439f07fdde610fbdc50eea762d9",
+      "model": "claude-opus-5-5",
+      "ranking_correct": false,
+      "summary_zh": "较完整地保留局部关系线索，但仍预期连续中心矩更好；粗网格歧义和校准结论未获独立机制证据。",
+      "scores": {
+        "code_fidelity": "partly_supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "That should support confident, well-calibrated predictions and low cross entropy within 300 AdamW steps",
+          "judgment": "plausible_unmeasured",
+          "assessment": "坐标表示可能性不推出300步已学成或校准良好，实际坐标mean的完整train/test更高；没有独立校准测量。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        },
+        {
+          "verbatim_public_quote": "With only 300 steps, C could converge faster and win",
+          "judgment": "supported",
+          "assessment": "这一备选解释与确认数据一致；网格读出易学性属于相容机制，非唯一已证原因。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        }
+      ],
+      "response_sha256": "d30380bffef7caafd417fb94a5875b517e529e890205b7a29ea4a2cb93677144",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_8a36fc443f07ff9476da1cb066a63d67"
+      },
+      "instance_id": "pooling_coordinate_s841902",
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "actual_comparison_evidence": {
+        "mean": {
+          "node_id": "candidate_c93709ee26aacbc9f437",
+          "mean_train_ce": 1.3854690231382847,
+          "mean_test_ce": 1.385668184608221
+        },
+        "coordinate_mean": {
+          "node_id": "candidate_d91d654be99bc328c040",
+          "mean_train_ce": 0.331308702530805,
+          "mean_test_ce": 0.34536808996926993
+        },
+        "spatial": {
+          "node_id": "candidate_f9bdfa11ef52bc5e3528",
+          "mean_train_ce": 0.025847295970606865,
+          "mean_test_ce": 0.037714587822847534
+        },
+        "coordinate_spatial": {
+          "node_id": "candidate_a644642ee0d58a7cbf09",
+          "mean_train_ce": 0.10882683973613894,
+          "mean_test_ce": 0.13160173430514988
+        }
+      }
+    },
+    {
+      "question_id": "q_ededc5c5112d4fee539b6d60dbb9549c",
+      "model": "claude-opus-5-5",
+      "ranking_correct": false,
+      "summary_zh": "坐标Bayes规则的潜在表示推导被过度用于优化预测；“所有单元看不到两对象”过强，且仅靠pool cell不涵盖卷积后的亚cell信息。",
+      "scores": {
+        "code_fidelity": "partly_supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "No spatial unit can see both objects at once",
+          "judgment": "overstated",
+          "assessment": "对象可能局部重叠或接近；5×5不是所有样本均无联合信息的证明，正文后面也承认近距离例外。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        },
+        {
+          "verbatim_public_quote": "should reach low cross-entropy within 300 steps",
+          "judgment": "plausible_unmeasured",
+          "assessment": "表示可行性不推出本预算的学习速度；实际空间版完整train/test均更低，坐标乘积特征未直接测量。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        }
+      ],
+      "response_sha256": "b78b16411888f241651d419a56b0caab1cdfac841ba679fd8616a74a96222c13",
+      "probe": null,
+      "instance_id": "pooling_coordinate_s841903",
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "actual_comparison_evidence": {
+        "mean": {
+          "node_id": "candidate_07cf9b9e2ef0417e1afc",
+          "mean_train_ce": 1.3868277808651328,
+          "mean_test_ce": 1.3867692332714796
+        },
+        "coordinate_mean": {
+          "node_id": "candidate_c65bf21470c8b1e81842",
+          "mean_train_ce": 0.29576607677154243,
+          "mean_test_ce": 0.3118247539969161
+        },
+        "spatial": {
+          "node_id": "candidate_d6f536a09652df88c280",
+          "mean_train_ce": 0.0428850017970035,
+          "mean_test_ce": 0.05138279516904731
+        },
+        "coordinate_spatial": {
+          "node_id": "candidate_4b043b424317b46e875a",
+          "mean_train_ce": 0.09338780207690434,
+          "mean_test_ce": 0.11225657083559781
+        }
+      }
+    },
+    {
+      "question_id": "q_89167763187b9bba108b563ae46fedb6",
+      "model": "claude-opus-5-5",
+      "ranking_correct": false,
+      "summary_zh": "把相对位置错误称为依赖整体平移，并过度推出无坐标不可表示；正确排序之外的机制边界明显不足。",
+      "scores": {
+        "code_fidelity": "incorrect",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "a global, translation-dependent relation",
+          "judgment": "incorrect",
+          "assessment": "两个对象共同平移时相对位移与dominant-axis标签不变；采样支持范围有限不改变标签函数的这一性质。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/explanation_supporting_checks.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        },
+        {
+          "verbatim_public_quote": "Within a cell, position is lost apart from zero-padding edge effects",
+          "judgment": "overstated",
+          "assessment": "输入pool的是卷积特征，跨cell响应可保留亚cell信息；不能用8像素网格直接证明歧义或固定CE损失。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        }
+      ],
+      "response_sha256": "edb328f129a16fc8ebf21bb78067f2fb1c71fe4943eed0e97144def80350a3e2",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_ededc5c5112d4fee539b6d60dbb9549c"
+      },
+      "instance_id": "pooling_coordinate_s841903",
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "actual_comparison_evidence": {
+        "mean": {
+          "node_id": "candidate_07cf9b9e2ef0417e1afc",
+          "mean_train_ce": 1.3868277808651328,
+          "mean_test_ce": 1.3867692332714796
+        },
+        "coordinate_mean": {
+          "node_id": "candidate_c65bf21470c8b1e81842",
+          "mean_train_ce": 0.29576607677154243,
+          "mean_test_ce": 0.3118247539969161
+        },
+        "spatial": {
+          "node_id": "candidate_d6f536a09652df88c280",
+          "mean_train_ce": 0.0428850017970035,
+          "mean_test_ce": 0.05138279516904731
+        },
+        "coordinate_spatial": {
+          "node_id": "candidate_4b043b424317b46e875a",
+          "mean_train_ce": 0.09338780207690434,
+          "mean_test_ce": 0.11225657083559781
+        }
+      }
+    },
+    {
+      "question_id": "q_fcf232651387ce984a8140da96c318d3",
+      "model": "claude-opus-5-5",
+      "ranking_correct": false,
+      "summary_zh": "本次加入LayerNorm幅值假说并正确计算stem输入维度，但未独立证实该机制；仍错估stride2优于stride4。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "The 4×4 patch embedding is a learned linear map from 32 values to 24 channels",
+          "judgment": "supported",
+          "assessment": "两输入通道×16像素确为32维；说明patch不是标量抽点，输出24维未必丢失四类方向。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        },
+        {
+          "verbatim_public_quote": "The pre-norm LayerNorm then removes most of that pixel's magnitude information",
+          "judgment": "plausible_unmeasured",
+          "assessment": "LayerNorm作用于仿射stem之后的通道，偏置和混合可能保留幅值线索；尚未测表示或完成独立幅值/LN鉴别，不能把弱CNN结果唯一归于此。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        }
+      ],
+      "response_sha256": "dc93b5e6f804cf34064bcb171afeff637aeb906efe6d01f5ba3511f9a6191339",
+      "probe": null,
+      "instance_id": "kernel_stride_texture_s841901",
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "actual_comparison_evidence": {
+        "k3_s1": {
+          "node_id": "candidate_ab616a897d11be58391b",
+          "mean_train_ce": 1.3871534438803792,
+          "mean_test_ce": 1.387192951515317
+        },
+        "k5_s2": {
+          "node_id": "candidate_149005313738d78a4ed7",
+          "mean_train_ce": 1.235317818241409,
+          "mean_test_ce": 1.2353980402476452
+        },
+        "k3_s4": {
+          "node_id": "candidate_aafda8e15a0bbf01406c",
+          "mean_train_ce": 5.727325014248663e-06,
+          "mean_test_ce": 4.758739003207779e-05
+        },
+        "k5_s1": {
+          "node_id": "candidate_6e5f0ab5730336704ac8",
+          "mean_train_ce": 1.387207434978336,
+          "mean_test_ce": 1.387269290164113
+        },
+        "k3_s2": {
+          "node_id": "candidate_a434611033b8affdc6bd",
+          "mean_train_ce": 0.4361275098086157,
+          "mean_test_ce": 0.43677199679660994
+        },
+        "k5_s4": {
+          "node_id": "candidate_4199c0cb23d1c4c4703a",
+          "mean_train_ce": 7.223267036296499e-06,
+          "mean_test_ce": 0.00011057178539647383
+        },
+        "patch4_learnability_anchor": {
+          "node_id": "candidate_fad13efd0f5a1af0c4eb",
+          "mean_train_ce": 2.318241267929011e-05,
+          "mean_test_ce": 0.0238547362399828
+        }
+      }
+    },
+    {
+      "question_id": "q_9d3f74e3a6db4ef85ae57f643c6a4f29",
+      "model": "claude-opus-5-5",
+      "ranking_correct": false,
+      "summary_zh": "结构支持范围和共同预算描述正确；以更密采样带来低噪声平均的解释没有独立测量，且错过stride4学习收益。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "Receptive field ≈ 2 + 4·2 + 4·2 = 18 px",
+          "judgment": "supported",
+          "assessment": "这是正确的理论支持范围，非实测有效感受野。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        },
+        {
+          "verbatim_public_quote": "Fewer pooled positions also means a noisier global average",
+          "judgment": "overstated",
+          "assessment": "空间位置非独立样本，特征信号和相关性随stem改变；没有方差或相位干预测量支持此必然噪声结论。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        }
+      ],
+      "response_sha256": "f3cbb71c5ba68bf99b6f33a355cf554f7429e0dcf82c961eea0382a7a29b91fd",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_fcf232651387ce984a8140da96c318d3"
+      },
+      "instance_id": "kernel_stride_texture_s841901",
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "actual_comparison_evidence": {
+        "k3_s1": {
+          "node_id": "candidate_ab616a897d11be58391b",
+          "mean_train_ce": 1.3871534438803792,
+          "mean_test_ce": 1.387192951515317
+        },
+        "k5_s2": {
+          "node_id": "candidate_149005313738d78a4ed7",
+          "mean_train_ce": 1.235317818241409,
+          "mean_test_ce": 1.2353980402476452
+        },
+        "k3_s4": {
+          "node_id": "candidate_aafda8e15a0bbf01406c",
+          "mean_train_ce": 5.727325014248663e-06,
+          "mean_test_ce": 4.758739003207779e-05
+        },
+        "k5_s1": {
+          "node_id": "candidate_6e5f0ab5730336704ac8",
+          "mean_train_ce": 1.387207434978336,
+          "mean_test_ce": 1.387269290164113
+        },
+        "k3_s2": {
+          "node_id": "candidate_a434611033b8affdc6bd",
+          "mean_train_ce": 0.4361275098086157,
+          "mean_test_ce": 0.43677199679660994
+        },
+        "k5_s4": {
+          "node_id": "candidate_4199c0cb23d1c4c4703a",
+          "mean_train_ce": 7.223267036296499e-06,
+          "mean_test_ce": 0.00011057178539647383
+        },
+        "patch4_learnability_anchor": {
+          "node_id": "candidate_fad13efd0f5a1af0c4eb",
+          "mean_train_ce": 2.318241267929011e-05,
+          "mean_test_ce": 0.0238547362399828
+        }
+      }
+    },
+    {
+      "question_id": "q_a5f2d1e9542f2df31803626953d1af76",
+      "model": "claude-opus-5-5",
+      "ranking_correct": false,
+      "summary_zh": "能正确指出面积相关亮度线索和欠学习，但将默认LR称已调好，并给未测参数位移近似赋予过强解释力。",
+      "scores": {
+        "code_fidelity": "partly_supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "per-pixel brightness still varies with shape area",
+          "judgment": "supported",
+          "assessment": "peak/area/energy基线确有约40–45%准确率，质量归一化未消除这些信息。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        },
+        {
+          "verbatim_public_quote": "C's weights move only about 0.1 in total",
+          "judgment": "unsupported_quantification",
+          "assessment": "AdamW位移由偏差校正矩比和decoupled decay决定，lr×steps不是可靠测量或硬界；独立同超参反例位移0.311685>0.12。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/explanation_supporting_checks.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        }
+      ],
+      "response_sha256": "ce92108111249f00e314a36222da43bcb06ea0b1ce8396647b72732ca00440a4",
+      "probe": null,
+      "instance_id": "learning_rate_s841901",
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "actual_comparison_evidence": {
+        "lr1e4": {
+          "node_id": "candidate_31abb7f5ae858e9f35e8",
+          "mean_train_ce": 1.3848290643654764,
+          "mean_test_ce": 1.3849183171987534
+        },
+        "lr1e3": {
+          "node_id": "candidate_6ec59d4186f9b42d6754",
+          "mean_train_ce": 0.5936531231127447,
+          "mean_test_ce": 0.6058920508075971
+        },
+        "lr1e2": {
+          "node_id": "candidate_b07779969f06e2a919a4",
+          "mean_train_ce": 0.2570996006147652,
+          "mean_test_ce": 0.2773895292477846
+        }
+      }
+    },
+    {
+      "question_id": "q_ccb7af737a4a7277553ef9ecb8d05e6b",
+      "model": "claude-opus-5-5",
+      "ranking_correct": false,
+      "summary_zh": "误称质量归一化和随机强度消除了面积/亮度线索；又以默认LR和未测位移解释排序，低LR欠学习仍有观测支持。",
+      "scores": {
+        "code_fidelity": "incorrect",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "Mass normalization plus a random intensity multiplier removes simple area and brightness cues",
+          "judgment": "incorrect",
+          "assessment": "乘性随机强度不保证移除类条件peak/area/energy信息；独立train拟合基线在真实test明显高于chance。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        },
+        {
+          "verbatim_public_quote": "Adam at 1e-4 moves parameters only about 0.1 in total per coordinate",
+          "judgment": "unsupported_quantification",
+          "assessment": "该量未从候选状态测量，自适应矩比和衰减使lr×steps不能充当一般位移估计；小LR欠学习应依据完整train CE。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/explanation_supporting_checks.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        }
+      ],
+      "response_sha256": "918a5e53faabb7652c77638a511722a12e8a47a252a813a7e3c2dbdc2d26f5c2",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_a5f2d1e9542f2df31803626953d1af76"
+      },
+      "instance_id": "learning_rate_s841901",
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "actual_comparison_evidence": {
+        "lr1e4": {
+          "node_id": "candidate_31abb7f5ae858e9f35e8",
+          "mean_train_ce": 1.3848290643654764,
+          "mean_test_ce": 1.3849183171987534
+        },
+        "lr1e3": {
+          "node_id": "candidate_6ec59d4186f9b42d6754",
+          "mean_train_ce": 0.5936531231127447,
+          "mean_test_ce": 0.6058920508075971
+        },
+        "lr1e2": {
+          "node_id": "candidate_b07779969f06e2a919a4",
+          "mean_train_ce": 0.2570996006147652,
+          "mean_test_ce": 0.2773895292477846
+        }
+      }
+    },
+    {
+      "question_id": "q_ba675b4af4aaa388d5e0ecb29edac798",
+      "model": "claude-opus-5-5",
+      "ranking_correct": false,
+      "summary_zh": "同时低报参数量并重复Adam位移硬上界错误；默认学习率最优与高LR噪声叙事缺少实际支持。",
+      "scores": {
+        "code_fidelity": "incorrect",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "incorrect",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "roughly 5k parameters",
+          "judgment": "incorrect",
+          "assessment": "此mean CNN实际15436参数，约三倍于该描述。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        },
+        {
+          "verbatim_public_quote": "total parameter movement is about 0.12 per coordinate at most",
+          "judgment": "incorrect",
+          "assessment": "AdamW没有此lr×steps硬界；同lr/steps/betas/eps/wd且所有梯度<1的单参数反例位移0.311685，直接超过0.12。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/explanation_supporting_checks.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        }
+      ],
+      "response_sha256": "c310d44daad712d2946522c0b418ae86ef168086dd187897480ffc4bdafcd4fc",
+      "probe": null,
+      "instance_id": "learning_rate_s841902",
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "actual_comparison_evidence": {
+        "lr1e4": {
+          "node_id": "candidate_68c3418242c7dd2f2c5e",
+          "mean_train_ce": 1.3849177029915154,
+          "mean_test_ce": 1.3846740862354636
+        },
+        "lr1e3": {
+          "node_id": "candidate_3e9dff76e192bdb82479",
+          "mean_train_ce": 0.43976016309534316,
+          "mean_test_ce": 0.4430525932548335
+        },
+        "lr1e2": {
+          "node_id": "candidate_878848a639e130ad11ad",
+          "mean_train_ce": 0.11298999113532382,
+          "mean_test_ce": 0.11492065699945897
+        }
+      }
+    },
+    {
+      "question_id": "q_4b2c10d4bbd4687899ae46353ddde63e",
+      "model": "claude-opus-5-5",
+      "ranking_correct": false,
+      "summary_zh": "模型预算读取正确，但错误声称消除面积/亮度捷径，并用未测Adam位移近似证明欠学习。",
+      "scores": {
+        "code_fidelity": "incorrect",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "Mass normalization removes area and brightness shortcuts",
+          "judgment": "incorrect",
+          "assessment": "数据审计显示peak/area/energy基线仍高于chance，不能把总质量约束等同于移除所有低阶线索。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        },
+        {
+          "verbatim_public_quote": "a total parameter movement of only about 0.1 per weight",
+          "judgment": "unsupported_quantification",
+          "assessment": "没有实际候选位移测量；Adam矩比与衰减使此近似不能作为普遍结论。真实低LRtrain CE支持欠学习，无须虚构位移。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/explanation_supporting_checks.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        }
+      ],
+      "response_sha256": "c2117a5d92ab4342c656aa8fdacd5de64a60cfccddc4e2a68f41f5835303f0c8",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_ba675b4af4aaa388d5e0ecb29edac798"
+      },
+      "instance_id": "learning_rate_s841902",
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "actual_comparison_evidence": {
+        "lr1e4": {
+          "node_id": "candidate_68c3418242c7dd2f2c5e",
+          "mean_train_ce": 1.3849177029915154,
+          "mean_test_ce": 1.3846740862354636
+        },
+        "lr1e3": {
+          "node_id": "candidate_3e9dff76e192bdb82479",
+          "mean_train_ce": 0.43976016309534316,
+          "mean_test_ce": 0.4430525932548335
+        },
+        "lr1e2": {
+          "node_id": "candidate_878848a639e130ad11ad",
+          "mean_train_ce": 0.11298999113532382,
+          "mean_test_ce": 0.11492065699945897
+        }
+      }
+    },
+    {
+      "question_id": "q_ec5ca80d9651d097f461319ad3cd14b3",
+      "model": "claude-haiku-5-5",
+      "ranking_correct": true,
+      "summary_zh": "排序正确且识别网格易学，但把mean表示说成不能编码关系、坐标信息完全缺失，强于现有证据。",
+      "scores": {
+        "code_fidelity": "partly_supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "The 24-dim feature cannot encode which object is left or above the other",
+          "judgment": "overstated",
+          "assessment": "维度24并不构成关系不可表示证明；局部对象交互、padding和边界响应仍可提供信号。实际near-chance仅属当前训练。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        },
+        {
+          "verbatim_public_quote": "Coordinate-augmented mean pooling only encodes position indirectly",
+          "judgment": "supported",
+          "assessment": "坐标依赖特征需在平均前形成；当前train/test差异支持这条有限预算解释，但不能唯一辨认中心矩。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        }
+      ],
+      "response_sha256": "8e3f1dbe2e3b95419e29c5038da2c92a1eaebf7bd1e85854ad754fd0991667ff",
+      "probe": null,
+      "instance_id": "pooling_coordinate_s841901",
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "actual_comparison_evidence": {
+        "mean": {
+          "node_id": "candidate_3cbaed19cf1f1bd78892",
+          "mean_train_ce": 1.387246625032276,
+          "mean_test_ce": 1.3874168954789639
+        },
+        "coordinate_mean": {
+          "node_id": "candidate_fe248f3711cecdf66c13",
+          "mean_train_ce": 0.32638712151674554,
+          "mean_test_ce": 0.33372093125944957
+        },
+        "spatial": {
+          "node_id": "candidate_675b0f0945a65c7728d6",
+          "mean_train_ce": 0.03477928249594697,
+          "mean_test_ce": 0.025694066469441168
+        },
+        "coordinate_spatial": {
+          "node_id": "candidate_4e616725a8ecc13c433b",
+          "mean_train_ce": 0.11016854794434039,
+          "mean_test_ce": 0.11184107999724802
+        }
+      }
+    },
+    {
+      "question_id": "q_d26f5adafb3e08bb7f45a0b9d0d21acd",
+      "model": "claude-haiku-5-5",
+      "ranking_correct": true,
+      "summary_zh": "正确排序与两条比较完整，但把无显式位置读出夸成无法恢复任何相对位移；潜在信息和实际学习混在一起。",
+      "scores": {
+        "code_fidelity": "partly_supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "global averaging cannot recover the relative offset of the two objects",
+          "judgment": "overstated",
+          "assessment": "平均前的局部联合特征可编码部分相对关系；带padding有限CNN也非严格无位置，不能作所有样本的不可能性断言。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        },
+        {
+          "verbatim_public_quote": "A must infer location from coordinate channels through the nonlinear blocks",
+          "judgment": "supported",
+          "assessment": "正确识别坐标交互的学习路径；spatial完整train/test更低与短预算易学解释一致。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        }
+      ],
+      "response_sha256": "1da4537f24c159628c9341f9fa141c411191b677700cfc011715d03d910124ef",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_ec5ca80d9651d097f461319ad3cd14b3"
+      },
+      "instance_id": "pooling_coordinate_s841901",
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "actual_comparison_evidence": {
+        "mean": {
+          "node_id": "candidate_3cbaed19cf1f1bd78892",
+          "mean_train_ce": 1.387246625032276,
+          "mean_test_ce": 1.3874168954789639
+        },
+        "coordinate_mean": {
+          "node_id": "candidate_fe248f3711cecdf66c13",
+          "mean_train_ce": 0.32638712151674554,
+          "mean_test_ce": 0.33372093125944957
+        },
+        "spatial": {
+          "node_id": "candidate_675b0f0945a65c7728d6",
+          "mean_train_ce": 0.03477928249594697,
+          "mean_test_ce": 0.025694066469441168
+        },
+        "coordinate_spatial": {
+          "node_id": "candidate_4e616725a8ecc13c433b",
+          "mean_train_ce": 0.11016854794434039,
+          "mean_test_ce": 0.11184107999724802
+        }
+      }
+    },
+    {
+      "question_id": "q_8a36fc443f07ff9476da1cb066a63d67",
+      "model": "claude-haiku-5-5",
+      "ranking_correct": true,
+      "summary_zh": "正确识别两个位置干预并预测网格胜出；但把固定坐标称输入噪声、把readout称唯一瓶颈的机制证据不足。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "coordinate channels add a small amount of input noise",
+          "judgment": "plausible_unmeasured",
+          "assessment": "坐标图是固定确定值，不是新注入随机噪声；可作为额外特征干扰优化的假说，但未有证据证明该机制。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        },
+        {
+          "verbatim_public_quote": "the readout is still the bottleneck",
+          "judgment": "overstated",
+          "assessment": "现有终点和控制支持readout干预总效果，但未唯一分离读出表达限制、中心矩学习成本与其他优化因素。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        }
+      ],
+      "response_sha256": "858f49532c1245623897d9c6edd7379d1828bcac13b05de3bdd48cc06516bbbf",
+      "probe": null,
+      "instance_id": "pooling_coordinate_s841902",
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "actual_comparison_evidence": {
+        "mean": {
+          "node_id": "candidate_c93709ee26aacbc9f437",
+          "mean_train_ce": 1.3854690231382847,
+          "mean_test_ce": 1.385668184608221
+        },
+        "coordinate_mean": {
+          "node_id": "candidate_d91d654be99bc328c040",
+          "mean_train_ce": 0.331308702530805,
+          "mean_test_ce": 0.34536808996926993
+        },
+        "spatial": {
+          "node_id": "candidate_f9bdfa11ef52bc5e3528",
+          "mean_train_ce": 0.025847295970606865,
+          "mean_test_ce": 0.037714587822847534
+        },
+        "coordinate_spatial": {
+          "node_id": "candidate_a644642ee0d58a7cbf09",
+          "mean_train_ce": 0.10882683973613894,
+          "mean_test_ce": 0.13160173430514988
+        }
+      }
+    },
+    {
+      "question_id": "q_a1af9439f07fdde610fbdc50eea762d9",
+      "model": "claude-haiku-5-5",
+      "ranking_correct": true,
+      "summary_zh": "预测正确，但绝对位置“必需”和无位置信息说得过满；全体near-chance只是未实现的预测而非实测事实。",
+      "scores": {
+        "code_fidelity": "partly_supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "requires comparing the two objects' absolute locations",
+          "judgment": "overstated",
+          "assessment": "标签只需相对位移；绝对位置是可行计算路径，不是普遍必要条件，局部联合关系也可提供信号。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/explanation_supporting_checks.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        },
+        {
+          "verbatim_public_quote": "nothing gives the network absolute position",
+          "judgment": "overstated",
+          "assessment": "有限padding可提供边界线索，局部关系不必先恢复绝对坐标；实际弱训练不证明无信息。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        }
+      ],
+      "response_sha256": "dc46233376baa5c66bf676efa93209e2508f4ba8eee329babcce1db05e470146",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_8a36fc443f07ff9476da1cb066a63d67"
+      },
+      "instance_id": "pooling_coordinate_s841902",
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "actual_comparison_evidence": {
+        "mean": {
+          "node_id": "candidate_c93709ee26aacbc9f437",
+          "mean_train_ce": 1.3854690231382847,
+          "mean_test_ce": 1.385668184608221
+        },
+        "coordinate_mean": {
+          "node_id": "candidate_d91d654be99bc328c040",
+          "mean_train_ce": 0.331308702530805,
+          "mean_test_ce": 0.34536808996926993
+        },
+        "spatial": {
+          "node_id": "candidate_f9bdfa11ef52bc5e3528",
+          "mean_train_ce": 0.025847295970606865,
+          "mean_test_ce": 0.037714587822847534
+        },
+        "coordinate_spatial": {
+          "node_id": "candidate_a644642ee0d58a7cbf09",
+          "mean_train_ce": 0.10882683973613894,
+          "mean_test_ce": 0.13160173430514988
+        }
+      }
+    },
+    {
+      "question_id": "q_ededc5c5112d4fee539b6d60dbb9549c",
+      "model": "claude-haiku-5-5",
+      "ranking_correct": true,
+      "summary_zh": "排序正确，但跨架构相同初始权重的断言与hash冲突，位置范围也用了错误窄区间。",
+      "scores": {
+        "code_fidelity": "incorrect",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "identical initial weights per seed",
+          "judgment": "incorrect",
+          "assessment": "pool/coordinates候选的state形状/初始化不同；initial_state hash匹配0/16，而batch stream匹配16/16。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        },
+        {
+          "verbatim_public_quote": "Object centers lie in roughly the 28–72% band of the image",
+          "judgment": "incorrect",
+          "assessment": "当前relative_position代码按radius_max+.5=5至size-1-margin=18采样，约20.8–75% image-size坐标范围；不是28–72%。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        }
+      ],
+      "response_sha256": "1d7bb9d22b3b3cd26da3107dbdeb67004d346b63b0de8384e033baa1a5608e8a",
+      "probe": null,
+      "instance_id": "pooling_coordinate_s841903",
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "actual_comparison_evidence": {
+        "mean": {
+          "node_id": "candidate_07cf9b9e2ef0417e1afc",
+          "mean_train_ce": 1.3868277808651328,
+          "mean_test_ce": 1.3867692332714796
+        },
+        "coordinate_mean": {
+          "node_id": "candidate_c65bf21470c8b1e81842",
+          "mean_train_ce": 0.29576607677154243,
+          "mean_test_ce": 0.3118247539969161
+        },
+        "spatial": {
+          "node_id": "candidate_d6f536a09652df88c280",
+          "mean_train_ce": 0.0428850017970035,
+          "mean_test_ce": 0.05138279516904731
+        },
+        "coordinate_spatial": {
+          "node_id": "candidate_4b043b424317b46e875a",
+          "mean_train_ce": 0.09338780207690434,
+          "mean_test_ce": 0.11225657083559781
+        }
+      }
+    },
+    {
+      "question_id": "q_89167763187b9bba108b563ae46fedb6",
+      "model": "claude-haiku-5-5",
+      "ranking_correct": true,
+      "summary_zh": "重排后正确对应两个干预，明确说明mean仍可通过感受野内容编码关系；短预算和表示潜力区分较好。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "supported",
+        "causal_calibration": "supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "must encode relative position entirely through receptive-field content",
+          "judgment": "supported",
+          "assessment": "指出平均前局部联合内容的可行路线，不声称严格不可能；边界也是该内容的一部分。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        },
+        {
+          "verbatim_public_quote": "the model can in principle recover the displacement sign despite global pooling",
+          "judgment": "supported",
+          "assessment": "把坐标路径表述为潜在可行而非保证学成，和本批完整train/test差异的范围一致。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        }
+      ],
+      "response_sha256": "71e769f2869cc4ec49c6e18c61173819d06c0fa21a96e0e75dd529331733eada",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_ededc5c5112d4fee539b6d60dbb9549c"
+      },
+      "instance_id": "pooling_coordinate_s841903",
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "actual_comparison_evidence": {
+        "mean": {
+          "node_id": "candidate_07cf9b9e2ef0417e1afc",
+          "mean_train_ce": 1.3868277808651328,
+          "mean_test_ce": 1.3867692332714796
+        },
+        "coordinate_mean": {
+          "node_id": "candidate_c65bf21470c8b1e81842",
+          "mean_train_ce": 0.29576607677154243,
+          "mean_test_ce": 0.3118247539969161
+        },
+        "spatial": {
+          "node_id": "candidate_d6f536a09652df88c280",
+          "mean_train_ce": 0.0428850017970035,
+          "mean_test_ce": 0.05138279516904731
+        },
+        "coordinate_spatial": {
+          "node_id": "candidate_4b043b424317b46e875a",
+          "mean_train_ce": 0.09338780207690434,
+          "mean_test_ce": 0.11225657083559781
+        }
+      }
+    },
+    {
+      "question_id": "q_fcf232651387ce984a8140da96c318d3",
+      "model": "claude-haiku-5-5",
+      "ranking_correct": false,
+      "summary_zh": "同时将stride当纯抽点、误称其不改变参数数，并用更多计算推出更易优化；分辨率捷径给出完全反向排序。",
+      "scores": {
+        "code_fidelity": "incorrect",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "Stride-1 (C) has more spatial compute, which does not change parameter count",
+          "judgment": "incorrect",
+          "assessment": "本实现stem kernel=stride，因此改变stride也改变stem权重；对k3的stride4与stride1不能说参数数不变。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        },
+        {
+          "verbatim_public_quote": "the more compute-heavy model is likely to fit better in the same number of updates",
+          "judgment": "plausible_unmeasured",
+          "assessment": "算量更大不必然带来更多有效优化信号；实际stride1 train/test≈1.387，而stride4近零。多通道patch投影也不等同于单通道Nyquist抽点。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        }
+      ],
+      "response_sha256": "6f4bef5347e2b1fc493c0d9edbb973f840e689cfc1d48c53086e56e71300514b",
+      "probe": null,
+      "instance_id": "kernel_stride_texture_s841901",
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "actual_comparison_evidence": {
+        "k3_s1": {
+          "node_id": "candidate_ab616a897d11be58391b",
+          "mean_train_ce": 1.3871534438803792,
+          "mean_test_ce": 1.387192951515317
+        },
+        "k5_s2": {
+          "node_id": "candidate_149005313738d78a4ed7",
+          "mean_train_ce": 1.235317818241409,
+          "mean_test_ce": 1.2353980402476452
+        },
+        "k3_s4": {
+          "node_id": "candidate_aafda8e15a0bbf01406c",
+          "mean_train_ce": 5.727325014248663e-06,
+          "mean_test_ce": 4.758739003207779e-05
+        },
+        "k5_s1": {
+          "node_id": "candidate_6e5f0ab5730336704ac8",
+          "mean_train_ce": 1.387207434978336,
+          "mean_test_ce": 1.387269290164113
+        },
+        "k3_s2": {
+          "node_id": "candidate_a434611033b8affdc6bd",
+          "mean_train_ce": 0.4361275098086157,
+          "mean_test_ce": 0.43677199679660994
+        },
+        "k5_s4": {
+          "node_id": "candidate_4199c0cb23d1c4c4703a",
+          "mean_train_ce": 7.223267036296499e-06,
+          "mean_test_ce": 0.00011057178539647383
+        },
+        "patch4_learnability_anchor": {
+          "node_id": "candidate_fad13efd0f5a1af0c4eb",
+          "mean_train_ce": 2.318241267929011e-05,
+          "mean_test_ce": 0.0238547362399828
+        }
+      }
+    },
+    {
+      "question_id": "q_9d3f74e3a6db4ef85ae57f643c6a4f29",
+      "model": "claude-haiku-5-5",
+      "ranking_correct": false,
+      "summary_zh": "支持范围基本正确，但声称相同初始权重与stride2最细分辨率，均与冻结模型/控制冲突。",
+      "scores": {
+        "code_fidelity": "incorrect",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "the same initial weights per seed",
+          "judgment": "incorrect",
+          "assessment": "不同stem/kernel改变state形状与初始化；实际跨候选initial_state hash不匹配，只有batch stream配对。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        },
+        {
+          "verbatim_public_quote": "the finest resolution among the three",
+          "judgment": "incorrect",
+          "assessment": "stride1候选A为24×24，stride2 base B为12×12；B不是最细网格。正文末尾又写3×3RF，实际为5×5。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        }
+      ],
+      "response_sha256": "acd31a3c93e791941214c300492ffc7f99c89ba59180303b7141fe69e7744beb",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_fcf232651387ce984a8140da96c318d3"
+      },
+      "instance_id": "kernel_stride_texture_s841901",
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "actual_comparison_evidence": {
+        "k3_s1": {
+          "node_id": "candidate_ab616a897d11be58391b",
+          "mean_train_ce": 1.3871534438803792,
+          "mean_test_ce": 1.387192951515317
+        },
+        "k5_s2": {
+          "node_id": "candidate_149005313738d78a4ed7",
+          "mean_train_ce": 1.235317818241409,
+          "mean_test_ce": 1.2353980402476452
+        },
+        "k3_s4": {
+          "node_id": "candidate_aafda8e15a0bbf01406c",
+          "mean_train_ce": 5.727325014248663e-06,
+          "mean_test_ce": 4.758739003207779e-05
+        },
+        "k5_s1": {
+          "node_id": "candidate_6e5f0ab5730336704ac8",
+          "mean_train_ce": 1.387207434978336,
+          "mean_test_ce": 1.387269290164113
+        },
+        "k3_s2": {
+          "node_id": "candidate_a434611033b8affdc6bd",
+          "mean_train_ce": 0.4361275098086157,
+          "mean_test_ce": 0.43677199679660994
+        },
+        "k5_s4": {
+          "node_id": "candidate_4199c0cb23d1c4c4703a",
+          "mean_train_ce": 7.223267036296499e-06,
+          "mean_test_ce": 0.00011057178539647383
+        },
+        "patch4_learnability_anchor": {
+          "node_id": "candidate_fad13efd0f5a1af0c4eb",
+          "mean_train_ce": 2.318241267929011e-05,
+          "mean_test_ce": 0.0238547362399828
+        }
+      }
+    },
+    {
+      "question_id": "q_a5f2d1e9542f2df31803626953d1af76",
+      "model": "claude-haiku-5-5",
+      "ranking_correct": false,
+      "summary_zh": "识别低LR欠学习和高LR风险，但参数量低报，噪声随步数必增的说法不可靠，且未直接解释B为何好于C。",
+      "scores": {
+        "code_fidelity": "partly_supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "partly_supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "about 10k parameters",
+          "judgment": "incorrect",
+          "assessment": "实际15436参数；大体是小CNN，但数值低报约三分之一。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        },
+        {
+          "verbatim_public_quote": "The noise also grows with the number of updates",
+          "judgment": "overstated",
+          "assessment": "随机梯度噪声并无随更新数必增规律；需轨迹/方差测量。相邻B–C比较缺乏直接权衡说明，正文主要比较A–C与A–B。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        }
+      ],
+      "response_sha256": "deb4d649a15d6ebfe5de124be369037bed8df30242f9a1fbcc665055632a5c01",
+      "probe": null,
+      "instance_id": "learning_rate_s841901",
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "actual_comparison_evidence": {
+        "lr1e4": {
+          "node_id": "candidate_31abb7f5ae858e9f35e8",
+          "mean_train_ce": 1.3848290643654764,
+          "mean_test_ce": 1.3849183171987534
+        },
+        "lr1e3": {
+          "node_id": "candidate_6ec59d4186f9b42d6754",
+          "mean_train_ce": 0.5936531231127447,
+          "mean_test_ce": 0.6058920508075971
+        },
+        "lr1e2": {
+          "node_id": "candidate_b07779969f06e2a919a4",
+          "mean_train_ce": 0.2570996006147652,
+          "mean_test_ce": 0.2773895292477846
+        }
+      }
+    },
+    {
+      "question_id": "q_ccb7af737a4a7277553ef9ecb8d05e6b",
+      "model": "claude-haiku-5-5",
+      "ranking_correct": false,
+      "summary_zh": "低LR欠学习判断有支持；“容量受限”和高LR必到更差极小值超出现有证据，未识别实际更强的高LR学习。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "The model is therefore capacity-limited for this task",
+          "judgment": "overstated",
+          "assessment": "小网络与局部支持不证明容量瓶颈；相同模型仅换LR即可大幅降低完整train/test CE，需分离表达与优化。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        },
+        {
+          "verbatim_public_quote": "it should produce noisier updates and a worse final minimum",
+          "judgment": "plausible_unmeasured",
+          "assessment": "未测参数轨迹、曲率或极小值性质；0.01实际train/test优于0.001。风险不是当前批次已证实原因。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        }
+      ],
+      "response_sha256": "a97c458745a7c347f04822c249c00ce6af86f57bd46c75c3a20f7223b19825e4",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_a5f2d1e9542f2df31803626953d1af76"
+      },
+      "instance_id": "learning_rate_s841901",
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "actual_comparison_evidence": {
+        "lr1e4": {
+          "node_id": "candidate_31abb7f5ae858e9f35e8",
+          "mean_train_ce": 1.3848290643654764,
+          "mean_test_ce": 1.3849183171987534
+        },
+        "lr1e3": {
+          "node_id": "candidate_6ec59d4186f9b42d6754",
+          "mean_train_ce": 0.5936531231127447,
+          "mean_test_ce": 0.6058920508075971
+        },
+        "lr1e2": {
+          "node_id": "candidate_b07779969f06e2a919a4",
+          "mean_train_ce": 0.2570996006147652,
+          "mean_test_ce": 0.2773895292477846
+        }
+      }
+    },
+    {
+      "question_id": "q_ba675b4af4aaa388d5e0ecb29edac798",
+      "model": "claude-haiku-5-5",
+      "ranking_correct": false,
+      "summary_zh": "低报参数量且正文与答案相互冲突：先称0.0001比另外两项都差，随后又把它排在中间。",
+      "scores": {
+        "code_fidelity": "partly_supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "incorrect"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "roughly a few thousand parameters",
+          "judgment": "incorrect",
+          "assessment": "冻结mean CNN实际15436参数，不是几千。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        },
+        {
+          "verbatim_public_quote": "leaving a higher test cross entropy than the other two",
+          "judgment": "inconsistent",
+          "assessment": "此句将低LR B置于最差，而最后提交A,B,C把B放中间；虽后文调整理由，但未明确撤回，存在同条比较矛盾。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        }
+      ],
+      "response_sha256": "717b591009192a96d484273324b80c69b318e6a438649984c5be0d3202d30d59",
+      "probe": null,
+      "instance_id": "learning_rate_s841902",
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "actual_comparison_evidence": {
+        "lr1e4": {
+          "node_id": "candidate_68c3418242c7dd2f2c5e",
+          "mean_train_ce": 1.3849177029915154,
+          "mean_test_ce": 1.3846740862354636
+        },
+        "lr1e3": {
+          "node_id": "candidate_3e9dff76e192bdb82479",
+          "mean_train_ce": 0.43976016309534316,
+          "mean_test_ce": 0.4430525932548335
+        },
+        "lr1e2": {
+          "node_id": "candidate_878848a639e130ad11ad",
+          "mean_train_ce": 0.11298999113532382,
+          "mean_test_ce": 0.11492065699945897
+        }
+      }
+    },
+    {
+      "question_id": "q_4b2c10d4bbd4687899ae46353ddde63e",
+      "model": "claude-haiku-5-5",
+      "ranking_correct": false,
+      "summary_zh": "单LR、预算与比较覆盖正确；仍用默认值与大LR过拟合经验预测排序，完整train/test不支持此主导解释。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "The model is likely underfit, leaving cross entropy relatively high",
+          "judgment": "supported",
+          "assessment": "0.0001完整train/test均近1.385，说明有限预算欠学习。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        },
+        {
+          "verbatim_public_quote": "its high step size adds noise and overconfidence that hurt held-out cross entropy",
+          "judgment": "plausible_unmeasured",
+          "assessment": "高LR实际完整train/test最低；没有独立校准或噪声证据证明这些因素主导，不能把风险当作实测机制。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算。局部控制为描述性非排他机制证据；排序正确不证明解释正确，错误排序也不自动反证有保留的机制假说。"
+        }
+      ],
+      "response_sha256": "8fbc8b9be99fa82f8128def87e74acb581ac4868230ccb8ec6ce07abc28e4400",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_ba675b4af4aaa388d5e0ecb29edac798"
+      },
+      "instance_id": "learning_rate_s841902",
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "actual_comparison_evidence": {
+        "lr1e4": {
+          "node_id": "candidate_68c3418242c7dd2f2c5e",
+          "mean_train_ce": 1.3849177029915154,
+          "mean_test_ce": 1.3846740862354636
+        },
+        "lr1e3": {
+          "node_id": "candidate_3e9dff76e192bdb82479",
+          "mean_train_ce": 0.43976016309534316,
+          "mean_test_ce": 0.4430525932548335
+        },
+        "lr1e2": {
+          "node_id": "candidate_878848a639e130ad11ad",
+          "mean_train_ce": 0.11298999113532382,
+          "mean_test_ce": 0.11492065699945897
+        }
+      }
+    },
+    {
+      "question_id": "q_9d3f74e3a6db4ef85ae57f643c6a4f29",
+      "model": "gpt-6-luna",
+      "ranking_correct": false,
+      "summary_zh": "误把stride2的stem说成5×5；继续以保留分辨率和混叠风险排序，未抓住本批stride4学习优势。",
+      "scores": {
+        "code_fidelity": "incorrect",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "its larger 5×5 stem and blocks",
+          "judgment": "incorrect",
+          "assessment": "该候选stem kernel=stride=2，只有block kernel为5；5×5 stem属于代码事实错误。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "固定合成数据、当前候选与训练预算；只有公开回答，未读隐藏推理。解释合理性与排序对错分开评分。"
+        },
+        {
+          "verbatim_public_quote": "risking loss or aliasing of orientation information before the network can form robust filters",
+          "judgment": "plausible_unmeasured",
+          "assessment": "stem本身即学习式多通道投影，未测混叠；stride4实际train/test近零，分辨率损失不是本次已证主因。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "固定合成数据、当前候选与训练预算；只有公开回答，未读隐藏推理。解释合理性与排序对错分开评分。"
+        }
+      ],
+      "response_sha256": "4a4c7c8f88ca7411e726317c7ac6299a36f0410513e2697c80aa9d91452bd7d4",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_fcf232651387ce984a8140da96c318d3"
+      },
+      "instance_id": "kernel_stride_texture_s841901",
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "actual_comparison_evidence": {
+        "k3_s1": {
+          "node_id": "candidate_ab616a897d11be58391b",
+          "mean_train_ce": 1.3871534438803792,
+          "mean_test_ce": 1.387192951515317
+        },
+        "k5_s2": {
+          "node_id": "candidate_149005313738d78a4ed7",
+          "mean_train_ce": 1.235317818241409,
+          "mean_test_ce": 1.2353980402476452
+        },
+        "k3_s4": {
+          "node_id": "candidate_aafda8e15a0bbf01406c",
+          "mean_train_ce": 5.727325014248663e-06,
+          "mean_test_ce": 4.758739003207779e-05
+        },
+        "k5_s1": {
+          "node_id": "candidate_6e5f0ab5730336704ac8",
+          "mean_train_ce": 1.387207434978336,
+          "mean_test_ce": 1.387269290164113
+        },
+        "k3_s2": {
+          "node_id": "candidate_a434611033b8affdc6bd",
+          "mean_train_ce": 0.4361275098086157,
+          "mean_test_ce": 0.43677199679660994
+        },
+        "k5_s4": {
+          "node_id": "candidate_4199c0cb23d1c4c4703a",
+          "mean_train_ce": 7.223267036296499e-06,
+          "mean_test_ce": 0.00011057178539647383
+        },
+        "patch4_learnability_anchor": {
+          "node_id": "candidate_fad13efd0f5a1af0c4eb",
+          "mean_train_ce": 2.318241267929011e-05,
+          "mean_test_ce": 0.0238547362399828
+        }
+      }
+    },
+    {
+      "question_id": "q_ccb7af737a4a7277553ef9ecb8d05e6b",
+      "model": "gpt-6-luna",
+      "ranking_correct": false,
+      "summary_zh": "识别低LR欠学习并覆盖两对；默认0.001最佳及高LR振荡仍是经验假说，实际0.01完整train/test更低。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "likely to remain underfit",
+          "judgment": "supported",
+          "assessment": "0.0001完整训练与测试CE均约1.385，支持固定预算欠学习。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "固定合成数据、当前候选与训练预算；只有公开回答，未读隐藏推理。解释合理性与排序对错分开评分。"
+        },
+        {
+          "verbatim_public_quote": "make overshooting and late-training oscillation more likely",
+          "judgment": "plausible_unmeasured",
+          "assessment": "未测逐步参数轨迹、校准或局部曲率，且0.01确认train/test优于0.001；风险不能当成本次主导机制事实。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "固定合成数据、当前候选与训练预算；只有公开回答，未读隐藏推理。解释合理性与排序对错分开评分。"
+        }
+      ],
+      "response_sha256": "6b2097239cd47d5aa2f6d979d708bdae5be88ad6b143bcc5df91fd1bfe0d4a12",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_a5f2d1e9542f2df31803626953d1af76"
+      },
+      "instance_id": "learning_rate_s841901",
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "actual_comparison_evidence": {
+        "lr1e4": {
+          "node_id": "candidate_31abb7f5ae858e9f35e8",
+          "mean_train_ce": 1.3848290643654764,
+          "mean_test_ce": 1.3849183171987534
+        },
+        "lr1e3": {
+          "node_id": "candidate_6ec59d4186f9b42d6754",
+          "mean_train_ce": 0.5936531231127447,
+          "mean_test_ce": 0.6058920508075971
+        },
+        "lr1e2": {
+          "node_id": "candidate_b07779969f06e2a919a4",
+          "mean_train_ce": 0.2570996006147652,
+          "mean_test_ce": 0.2773895292477846
+        }
+      }
+    }
+  ],
+  "completed_utc": "2026-10-15T09:45:22.110401+00:00",
+  "unavailable_response_count": 3
+}

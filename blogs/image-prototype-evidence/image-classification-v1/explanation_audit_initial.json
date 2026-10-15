@@ -1,0 +1,2626 @@
+{
+  "schema_version": "image_classification_explanation_audit_v1",
+  "created_utc": "2026-10-15T09:26:10.840384+00:00",
+  "protocol_sha256": "736096da318220195b03c1c62d21a07e89fef5c86b06e5079d40bc32ffe79a2c",
+  "evaluation_results_sha256": "4f0caab9e641715dbea89aa535113c051284ad8cb2ebd1fffc265904d7c1d46f",
+  "control_audit_sha256": "d1fd5a0bb450c5fe0a4274a96109b423e3c425b277520b9c1777de2ac1be05ba",
+  "reviewed_public_response_count": 37,
+  "review_policy": "Every completed first-attempt main and permutation public answer was read in full. Only public content/explanation were displayed; private reasoning was not inspected. Missing answers are not scored.",
+  "scoring_note": "supported mechanism_alignment means the material mechanism is consistent with relevant code and measured controls at its stated certainty, not uniquely proven. Wrong ranking does not automatically make a hedged mechanism incorrect. comparison_coverage and answer_consistency concern coverage/coherence separately from truth.",
+  "records": [
+    {
+      "question_id": "q_8a36fc443f07ff9476da1cb066a63d67",
+      "model": "gpt-6-luna",
+      "ranking_correct": true,
+      "summary_zh": "正确识别空间网格的直接位置读出、坐标交互的学习成本和有限训练预算；预测与两条确认差异一致，机制仍是非唯一解释。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "supported",
+        "causal_calibration": "supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "C adds coordinate channels, which can let local features encode absolute location before global averaging",
+          "judgment": "supported",
+          "assessment": "坐标确实在 stem 前进入；mean 加坐标的完整 train/test CE 均远低于无坐标 mean。其中心矩计算方式尚未直接测量。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        },
+        {
+          "verbatim_public_quote": "B instead uses a 3×3 spatial pooling grid, retaining coarse location information for the classifier",
+          "judgment": "supported",
+          "assessment": "空间读出机制与代码一致，且在300步下比坐标 mean 的 train/test CE 更低；回答没有把这种有限预算优势写成表达能力定理。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        }
+      ],
+      "response_sha256": "ce2488504401f8708d4ce7e59ae07f4a24450b957d9f86c98d3624c539ba8e14",
+      "probe": null,
+      "instance_id": "pooling_coordinate_s841902",
+      "actual_comparison_evidence": {
+        "mean": {
+          "node_id": "candidate_c93709ee26aacbc9f437",
+          "mean_train_ce": 1.3854690231382847,
+          "mean_test_ce": 1.385668184608221
+        },
+        "coordinate_mean": {
+          "node_id": "candidate_d91d654be99bc328c040",
+          "mean_train_ce": 0.331308702530805,
+          "mean_test_ce": 0.34536808996926993
+        },
+        "spatial": {
+          "node_id": "candidate_f9bdfa11ef52bc5e3528",
+          "mean_train_ce": 0.025847295970606865,
+          "mean_test_ce": 0.037714587822847534
+        },
+        "coordinate_spatial": {
+          "node_id": "candidate_a644642ee0d58a7cbf09",
+          "mean_train_ce": 0.10882683973613894,
+          "mean_test_ce": 0.13160173430514988
+        }
+      },
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "comparison_coverage_note": "已核对两条相邻关系及实际字母映射；此字段评价覆盖范围，不等同于关系预测正确。",
+      "answer_consistency_note": "正文的最终比较主张与本条提交顺序一致；跨主问题/字母重排变化由单独permutation统计处理。"
+    },
+    {
+      "question_id": "q_a1af9439f07fdde610fbdc50eea762d9",
+      "model": "gpt-6-luna",
+      "ranking_correct": true,
+      "summary_zh": "重排后的字母与代码对应正确；明确区分坐标表示潜力和300步内学会该表示的难度。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "supported",
+        "causal_calibration": "supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "Coordinates can make features position-sensitive and may help recover location information",
+          "judgment": "supported",
+          "assessment": "对应坐标输入的实际干预，配对测量支持其相对无坐标 mean 的总效果；尚不证明实际计算中心矩。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        },
+        {
+          "verbatim_public_quote": "C exposes coarse spatial layout directly",
+          "judgment": "supported",
+          "assessment": "正确识别3×3网格向线性头提供位置索引；空间版的完整 train/test CE 同时更低，优化解释一致但非唯一。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        }
+      ],
+      "response_sha256": "5bedec3f1f5867458cb0102af3c13d40b1446ca0184c4a3402e049207acd841c",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_8a36fc443f07ff9476da1cb066a63d67"
+      },
+      "instance_id": "pooling_coordinate_s841902",
+      "actual_comparison_evidence": {
+        "mean": {
+          "node_id": "candidate_c93709ee26aacbc9f437",
+          "mean_train_ce": 1.3854690231382847,
+          "mean_test_ce": 1.385668184608221
+        },
+        "coordinate_mean": {
+          "node_id": "candidate_d91d654be99bc328c040",
+          "mean_train_ce": 0.331308702530805,
+          "mean_test_ce": 0.34536808996926993
+        },
+        "spatial": {
+          "node_id": "candidate_f9bdfa11ef52bc5e3528",
+          "mean_train_ce": 0.025847295970606865,
+          "mean_test_ce": 0.037714587822847534
+        },
+        "coordinate_spatial": {
+          "node_id": "candidate_a644642ee0d58a7cbf09",
+          "mean_train_ce": 0.10882683973613894,
+          "mean_test_ce": 0.13160173430514988
+        }
+      },
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "comparison_coverage_note": "已核对两条相邻关系及实际字母映射；此字段评价覆盖范围，不等同于关系预测正确。",
+      "answer_consistency_note": "正文的最终比较主张与本条提交顺序一致；跨主问题/字母重排变化由单独permutation统计处理。"
+    },
+    {
+      "question_id": "q_fcf232651387ce984a8140da96c318d3",
+      "model": "gpt-6-luna",
+      "ranking_correct": false,
+      "summary_zh": "识别频率、采样和感受野，但把细网格保真优先级用于排序，未抓住stride4在固定预算中的实际学习优势。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "A downsamples by 2 and uses 5×5 block convolutions",
+          "judgment": "supported",
+          "assessment": "模型字段识别正确；主比较同时改变stem采样与block kernel，需结合完整2×3对照。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        },
+        {
+          "verbatim_public_quote": "B downsamples by 4 before its blocks, risking loss or aliasing of the finer grating patterns",
+          "judgment": "plausible_unmeasured",
+          "assessment": "风险表述有保留，但本次stride4的训练/测试CE都接近零，实际方向不支持把混叠损失作为主导因素；多通道学习式patch投影也不等于标量抽点。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        }
+      ],
+      "response_sha256": "04d2c6622bfb7af8818fb69cd5db4b8e56f5ec1f72cddff677185258f87bf436",
+      "probe": null,
+      "instance_id": "kernel_stride_texture_s841901",
+      "actual_comparison_evidence": {
+        "k3_s1": {
+          "node_id": "candidate_ab616a897d11be58391b",
+          "mean_train_ce": 1.3871534438803792,
+          "mean_test_ce": 1.387192951515317
+        },
+        "k5_s2": {
+          "node_id": "candidate_149005313738d78a4ed7",
+          "mean_train_ce": 1.235317818241409,
+          "mean_test_ce": 1.2353980402476452
+        },
+        "k3_s4": {
+          "node_id": "candidate_aafda8e15a0bbf01406c",
+          "mean_train_ce": 5.727325014248663e-06,
+          "mean_test_ce": 4.758739003207779e-05
+        },
+        "k5_s1": {
+          "node_id": "candidate_6e5f0ab5730336704ac8",
+          "mean_train_ce": 1.387207434978336,
+          "mean_test_ce": 1.387269290164113
+        },
+        "k3_s2": {
+          "node_id": "candidate_a434611033b8affdc6bd",
+          "mean_train_ce": 0.4361275098086157,
+          "mean_test_ce": 0.43677199679660994
+        },
+        "k5_s4": {
+          "node_id": "candidate_4199c0cb23d1c4c4703a",
+          "mean_train_ce": 7.223267036296499e-06,
+          "mean_test_ce": 0.00011057178539647383
+        },
+        "patch4_learnability_anchor": {
+          "node_id": "candidate_fad13efd0f5a1af0c4eb",
+          "mean_train_ce": 2.318241267929011e-05,
+          "mean_test_ce": 0.0238547362399828
+        }
+      },
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "comparison_coverage_note": "已核对两条相邻关系及实际字母映射；此字段评价覆盖范围，不等同于关系预测正确。",
+      "answer_consistency_note": "正文的最终比较主张与本条提交顺序一致；跨主问题/字母重排变化由单独permutation统计处理。"
+    },
+    {
+      "question_id": "q_a5f2d1e9542f2df31803626953d1af76",
+      "model": "gpt-6-luna",
+      "ranking_correct": false,
+      "summary_zh": "正确定位单一学习率干预和小步长欠拟合；对0.01过冲的假设与本批有限预算结果不符，仍保留了不确定性。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "C’s 0.0001 rate risks underfitting",
+          "judgment": "supported",
+          "assessment": "完整训练CE与测试CE都约1.385，支持固定预算内欠学习，而非仅测试泛化差。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        },
+        {
+          "verbatim_public_quote": "B’s 0.01 rate is unusually aggressive for this setup and may cause overshooting or unstable final predictions",
+          "judgment": "plausible_unmeasured",
+          "assessment": "0.01实际同时降低完整训练与测试CE。过冲/校准解释未由逐步更新或概率校准实验确认；措辞may不应仅因错序判为机制定理错误。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        }
+      ],
+      "response_sha256": "3118f6dacdfebddfca4d5582ef8f5fac391a50ba2bc45c9f4e1b76ac24cfeacf",
+      "probe": null,
+      "instance_id": "learning_rate_s841901",
+      "actual_comparison_evidence": {
+        "lr1e4": {
+          "node_id": "candidate_31abb7f5ae858e9f35e8",
+          "mean_train_ce": 1.3848290643654764,
+          "mean_test_ce": 1.3849183171987534
+        },
+        "lr1e3": {
+          "node_id": "candidate_6ec59d4186f9b42d6754",
+          "mean_train_ce": 0.5936531231127447,
+          "mean_test_ce": 0.6058920508075971
+        },
+        "lr1e2": {
+          "node_id": "candidate_b07779969f06e2a919a4",
+          "mean_train_ce": 0.2570996006147652,
+          "mean_test_ce": 0.2773895292477846
+        }
+      },
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "comparison_coverage_note": "已核对两条相邻关系及实际字母映射；此字段评价覆盖范围，不等同于关系预测正确。",
+      "answer_consistency_note": "正文的最终比较主张与本条提交顺序一致；跨主问题/字母重排变化由单独permutation统计处理。"
+    },
+    {
+      "question_id": "q_ba675b4af4aaa388d5e0ecb29edac798",
+      "model": "gpt-6-luna",
+      "ranking_correct": false,
+      "summary_zh": "用常见学习率与高步长风险排序；抓住低学习率学习不足，但未预测较大步长在此预算的有效学习。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "B’s 0.0001 rate is likely too conservative to fit as well within the fixed update budget",
+          "judgment": "supported",
+          "assessment": "该候选完整训练CE约1.385，与测试CE接近；这一欠学习判断有实际支持。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        },
+        {
+          "verbatim_public_quote": "C’s 0.01 rate may make faster early progress, but its large, constant AdamW updates risk overshooting",
+          "judgment": "plausible_unmeasured",
+          "assessment": "风险并非本次主导结果：0.01完整训练/测试CE均低于0.001和0.0001。未测独立校准或局部曲率，不能把错序唯一归因为过冲。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        }
+      ],
+      "response_sha256": "1ecdaae4e67c223e7f8f408d4e319a51384c7d9e93f0c34dfbd8f5fb36b1d304",
+      "probe": null,
+      "instance_id": "learning_rate_s841902",
+      "actual_comparison_evidence": {
+        "lr1e4": {
+          "node_id": "candidate_68c3418242c7dd2f2c5e",
+          "mean_train_ce": 1.3849177029915154,
+          "mean_test_ce": 1.3846740862354636
+        },
+        "lr1e3": {
+          "node_id": "candidate_3e9dff76e192bdb82479",
+          "mean_train_ce": 0.43976016309534316,
+          "mean_test_ce": 0.4430525932548335
+        },
+        "lr1e2": {
+          "node_id": "candidate_878848a639e130ad11ad",
+          "mean_train_ce": 0.11298999113532382,
+          "mean_test_ce": 0.11492065699945897
+        }
+      },
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "comparison_coverage_note": "已核对两条相邻关系及实际字母映射；此字段评价覆盖范围，不等同于关系预测正确。",
+      "answer_consistency_note": "正文的最终比较主张与本条提交顺序一致；跨主问题/字母重排变化由单独permutation统计处理。"
+    },
+    {
+      "question_id": "q_ec5ca80d9651d097f461319ad3cd14b3",
+      "model": "gpt-6.1-sol",
+      "ranking_correct": true,
+      "summary_zh": "代码与5×5感受野计算正确；解释覆盖两对，承认边界信息，并把网格优点限于短预算的易学读出。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "supported",
+        "causal_calibration": "supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "Boundary effects provide some position information, but are a weaker route to the target",
+          "judgment": "supported",
+          "assessment": "没有把mean CNN误称为严格无位置能力；固定300步的mean train/test均接近chance，与较弱实际学习一致。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        },
+        {
+          "verbatim_public_quote": "I expect that additional learning burden and spatial dilution to outweigh its potential precision advantage at this budget",
+          "judgment": "supported",
+          "assessment": "空间与坐标mean的train/test差异支持这一有限预算解释，但spatial dilution与交互学习成本未被独立分离。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        }
+      ],
+      "response_sha256": "c20bed671656c15a704f3aff052fab9739ce0b90e0b5dd35dbc0d49ae6086fc7",
+      "probe": null,
+      "instance_id": "pooling_coordinate_s841901",
+      "actual_comparison_evidence": {
+        "mean": {
+          "node_id": "candidate_3cbaed19cf1f1bd78892",
+          "mean_train_ce": 1.387246625032276,
+          "mean_test_ce": 1.3874168954789639
+        },
+        "coordinate_mean": {
+          "node_id": "candidate_fe248f3711cecdf66c13",
+          "mean_train_ce": 0.32638712151674554,
+          "mean_test_ce": 0.33372093125944957
+        },
+        "spatial": {
+          "node_id": "candidate_675b0f0945a65c7728d6",
+          "mean_train_ce": 0.03477928249594697,
+          "mean_test_ce": 0.025694066469441168
+        },
+        "coordinate_spatial": {
+          "node_id": "candidate_4e616725a8ecc13c433b",
+          "mean_train_ce": 0.11016854794434039,
+          "mean_test_ce": 0.11184107999724802
+        }
+      },
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "comparison_coverage_note": "已核对两条相邻关系及实际字母映射；此字段评价覆盖范围，不等同于关系预测正确。",
+      "answer_consistency_note": "正文的最终比较主张与本条提交顺序一致；跨主问题/字母重排变化由单独permutation统计处理。"
+    },
+    {
+      "question_id": "q_d26f5adafb3e08bb7f45a0b9d0d21acd",
+      "model": "gpt-6.1-sol",
+      "ranking_correct": true,
+      "summary_zh": "重排后对应和排序一致；说明坐标中心矩的表示可能性，同时承认局部重叠与有限优化，未作不可能性论断。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "supported",
+        "causal_calibration": "supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "Overlap and local interaction patterns can still provide some signal, so C is not necessarily limited to chance",
+          "judgment": "supported",
+          "assessment": "有限padding、软边界和局部交互意味着不能仅从全局平均推导严格chance下限。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        },
+        {
+          "verbatim_public_quote": "That is a less direct optimization route under this short training budget",
+          "judgment": "supported",
+          "assessment": "坐标mean完整训练CE仍高于空间版，符合300步下读出易学程度的解释；不是唯一机制证明。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        }
+      ],
+      "response_sha256": "a89b7424e0a2f643f2c69865b17e752c40b4afb41979c74497f8ccb8e5bf85d3",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_ec5ca80d9651d097f461319ad3cd14b3"
+      },
+      "instance_id": "pooling_coordinate_s841901",
+      "actual_comparison_evidence": {
+        "mean": {
+          "node_id": "candidate_3cbaed19cf1f1bd78892",
+          "mean_train_ce": 1.387246625032276,
+          "mean_test_ce": 1.3874168954789639
+        },
+        "coordinate_mean": {
+          "node_id": "candidate_fe248f3711cecdf66c13",
+          "mean_train_ce": 0.32638712151674554,
+          "mean_test_ce": 0.33372093125944957
+        },
+        "spatial": {
+          "node_id": "candidate_675b0f0945a65c7728d6",
+          "mean_train_ce": 0.03477928249594697,
+          "mean_test_ce": 0.025694066469441168
+        },
+        "coordinate_spatial": {
+          "node_id": "candidate_4e616725a8ecc13c433b",
+          "mean_train_ce": 0.11016854794434039,
+          "mean_test_ce": 0.11184107999724802
+        }
+      },
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "comparison_coverage_note": "已核对两条相邻关系及实际字母映射；此字段评价覆盖范围，不等同于关系预测正确。",
+      "answer_consistency_note": "正文的最终比较主张与本条提交顺序一致；跨主问题/字母重排变化由单独permutation统计处理。"
+    },
+    {
+      "question_id": "q_8a36fc443f07ff9476da1cb066a63d67",
+      "model": "gpt-6.1-sol",
+      "ranking_correct": false,
+      "summary_zh": "正确识别坐标与网格路径，但优先连续位置的表达精度而错序；“感受野无法共同观察对象”说得过于绝对。",
+      "scores": {
+        "code_fidelity": "partly_supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "Its receptive field is too small to jointly observe the two objects",
+          "judgment": "overstated",
+          "assessment": "5×5是正确的局部感受野，但对象可能局部重叠，且边界提供信息；不能把所有样本的关系信息判为不可观察。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        },
+        {
+          "verbatim_public_quote": "the continuous positional information should win on average",
+          "judgment": "plausible_unmeasured",
+          "assessment": "表示更精细不推出300步后的平均CE更低。回答承认坐标交互更难学，而确认结果支持其自己列出的网格易优化替代解释。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        }
+      ],
+      "response_sha256": "9b4900aacd2a0582a5769d6c4163bfba86e2ae36a78ab59182a633716ab9f973",
+      "probe": null,
+      "instance_id": "pooling_coordinate_s841902",
+      "actual_comparison_evidence": {
+        "mean": {
+          "node_id": "candidate_c93709ee26aacbc9f437",
+          "mean_train_ce": 1.3854690231382847,
+          "mean_test_ce": 1.385668184608221
+        },
+        "coordinate_mean": {
+          "node_id": "candidate_d91d654be99bc328c040",
+          "mean_train_ce": 0.331308702530805,
+          "mean_test_ce": 0.34536808996926993
+        },
+        "spatial": {
+          "node_id": "candidate_f9bdfa11ef52bc5e3528",
+          "mean_train_ce": 0.025847295970606865,
+          "mean_test_ce": 0.037714587822847534
+        },
+        "coordinate_spatial": {
+          "node_id": "candidate_a644642ee0d58a7cbf09",
+          "mean_train_ce": 0.10882683973613894,
+          "mean_test_ce": 0.13160173430514988
+        }
+      },
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "comparison_coverage_note": "已核对两条相邻关系及实际字母映射；此字段评价覆盖范围，不等同于关系预测正确。",
+      "answer_consistency_note": "正文的最终比较主张与本条提交顺序一致；跨主问题/字母重排变化由单独permutation统计处理。"
+    },
+    {
+      "question_id": "q_a1af9439f07fdde610fbdc50eea762d9",
+      "model": "gpt-6.1-sol",
+      "ranking_correct": true,
+      "summary_zh": "重排回答改为网格优先，代码和比较一致；其与同题主回答的变化属于跨回答不稳定，单条正文没有自相矛盾。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "supported",
+        "causal_calibration": "supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "must learn nonlinear interactions between coordinates and object features before global averaging",
+          "judgment": "supported",
+          "assessment": "坐标通过stem和非线性block进入平均读出；实际网络是否学出中心矩仍未直接识别。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        },
+        {
+          "verbatim_public_quote": "C’s more direct positional readout should have the optimization advantage at this training budget",
+          "judgment": "supported",
+          "assessment": "完整train/test差异与此预算解释一致；只支持当前设置下总效果和相容机制，不是架构普遍优势。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        }
+      ],
+      "response_sha256": "2f6e97495d3c7b5d3e6bd23f2c8119d655e91d731ddcf67fec45df9b359e0f80",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_8a36fc443f07ff9476da1cb066a63d67"
+      },
+      "instance_id": "pooling_coordinate_s841902",
+      "actual_comparison_evidence": {
+        "mean": {
+          "node_id": "candidate_c93709ee26aacbc9f437",
+          "mean_train_ce": 1.3854690231382847,
+          "mean_test_ce": 1.385668184608221
+        },
+        "coordinate_mean": {
+          "node_id": "candidate_d91d654be99bc328c040",
+          "mean_train_ce": 0.331308702530805,
+          "mean_test_ce": 0.34536808996926993
+        },
+        "spatial": {
+          "node_id": "candidate_f9bdfa11ef52bc5e3528",
+          "mean_train_ce": 0.025847295970606865,
+          "mean_test_ce": 0.037714587822847534
+        },
+        "coordinate_spatial": {
+          "node_id": "candidate_a644642ee0d58a7cbf09",
+          "mean_train_ce": 0.10882683973613894,
+          "mean_test_ce": 0.13160173430514988
+        }
+      },
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "comparison_coverage_note": "已核对两条相邻关系及实际字母映射；此字段评价覆盖范围，不等同于关系预测正确。",
+      "answer_consistency_note": "正文的最终比较主张与本条提交顺序一致；跨主问题/字母重排变化由单独permutation统计处理。"
+    },
+    {
+      "question_id": "q_fcf232651387ce984a8140da96c318d3",
+      "model": "gpt-6.1-sol",
+      "ranking_correct": false,
+      "summary_zh": "感受野和patch内部信息读取准确；低估stride4的实际学习效果，较细采样与更稳定CE的联系缺少独立证据。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "B’s learned 4×4 patch projection preserves some within-patch information",
+          "judgment": "supported",
+          "assessment": "正确区别学习式多通道patch投影与纯抽点；感受野20/5像素计算也正确。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        },
+        {
+          "verbatim_public_quote": "its coarser sampling is a less favorable tradeoff for consistently low cross-entropy",
+          "judgment": "plausible_unmeasured",
+          "assessment": "本次相反：stride4/k3 train/test近零，而stride2/k5大多仍弱；更细采样没有显示预期的收益。现有对照不能唯一指定空间尺度或优化原因。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        }
+      ],
+      "response_sha256": "b4758803f19d088075fb0a57f93cc5ee36d62e14fd20a8d41b73dd9a265c733b",
+      "probe": null,
+      "instance_id": "kernel_stride_texture_s841901",
+      "actual_comparison_evidence": {
+        "k3_s1": {
+          "node_id": "candidate_ab616a897d11be58391b",
+          "mean_train_ce": 1.3871534438803792,
+          "mean_test_ce": 1.387192951515317
+        },
+        "k5_s2": {
+          "node_id": "candidate_149005313738d78a4ed7",
+          "mean_train_ce": 1.235317818241409,
+          "mean_test_ce": 1.2353980402476452
+        },
+        "k3_s4": {
+          "node_id": "candidate_aafda8e15a0bbf01406c",
+          "mean_train_ce": 5.727325014248663e-06,
+          "mean_test_ce": 4.758739003207779e-05
+        },
+        "k5_s1": {
+          "node_id": "candidate_6e5f0ab5730336704ac8",
+          "mean_train_ce": 1.387207434978336,
+          "mean_test_ce": 1.387269290164113
+        },
+        "k3_s2": {
+          "node_id": "candidate_a434611033b8affdc6bd",
+          "mean_train_ce": 0.4361275098086157,
+          "mean_test_ce": 0.43677199679660994
+        },
+        "k5_s4": {
+          "node_id": "candidate_4199c0cb23d1c4c4703a",
+          "mean_train_ce": 7.223267036296499e-06,
+          "mean_test_ce": 0.00011057178539647383
+        },
+        "patch4_learnability_anchor": {
+          "node_id": "candidate_fad13efd0f5a1af0c4eb",
+          "mean_train_ce": 2.318241267929011e-05,
+          "mean_test_ce": 0.0238547362399828
+        }
+      },
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "comparison_coverage_note": "已核对两条相邻关系及实际字母映射；此字段评价覆盖范围，不等同于关系预测正确。",
+      "answer_consistency_note": "正文的最终比较主张与本条提交顺序一致；跨主问题/字母重排变化由单独permutation统计处理。"
+    },
+    {
+      "question_id": "q_9d3f74e3a6db4ef85ae57f643c6a4f29",
+      "model": "gpt-6.1-sol",
+      "ranking_correct": false,
+      "summary_zh": "重排后仍以较细采样优先；正确计算18/20/5像素支持范围，但没有抓住本批stride4更容易学好的事实。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "its two 5×5 convolutional blocks provide an approximately 18×18-pixel receptive field",
+          "judgment": "supported",
+          "assessment": "stem kernel2/stride2加两层k5支持范围为18；字母映射正确。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        },
+        {
+          "verbatim_public_quote": "This combines substantial grating context with less sensitivity to coarse sampling",
+          "judgment": "plausible_unmeasured",
+          "assessment": "这是未经独立采样/混叠测量的优势假设；完整局部对照中同为stride4的k3/k5均学好，stride1的k3/k5均接近chance。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        }
+      ],
+      "response_sha256": "471040e114b075f74599b1ac4cc6074bba8f998e390d1666d4c1dc32937bb491",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_fcf232651387ce984a8140da96c318d3"
+      },
+      "instance_id": "kernel_stride_texture_s841901",
+      "actual_comparison_evidence": {
+        "k3_s1": {
+          "node_id": "candidate_ab616a897d11be58391b",
+          "mean_train_ce": 1.3871534438803792,
+          "mean_test_ce": 1.387192951515317
+        },
+        "k5_s2": {
+          "node_id": "candidate_149005313738d78a4ed7",
+          "mean_train_ce": 1.235317818241409,
+          "mean_test_ce": 1.2353980402476452
+        },
+        "k3_s4": {
+          "node_id": "candidate_aafda8e15a0bbf01406c",
+          "mean_train_ce": 5.727325014248663e-06,
+          "mean_test_ce": 4.758739003207779e-05
+        },
+        "k5_s1": {
+          "node_id": "candidate_6e5f0ab5730336704ac8",
+          "mean_train_ce": 1.387207434978336,
+          "mean_test_ce": 1.387269290164113
+        },
+        "k3_s2": {
+          "node_id": "candidate_a434611033b8affdc6bd",
+          "mean_train_ce": 0.4361275098086157,
+          "mean_test_ce": 0.43677199679660994
+        },
+        "k5_s4": {
+          "node_id": "candidate_4199c0cb23d1c4c4703a",
+          "mean_train_ce": 7.223267036296499e-06,
+          "mean_test_ce": 0.00011057178539647383
+        },
+        "patch4_learnability_anchor": {
+          "node_id": "candidate_fad13efd0f5a1af0c4eb",
+          "mean_train_ce": 2.318241267929011e-05,
+          "mean_test_ce": 0.0238547362399828
+        }
+      },
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "comparison_coverage_note": "已核对两条相邻关系及实际字母映射；此字段评价覆盖范围，不等同于关系预测正确。",
+      "answer_consistency_note": "正文的最终比较主张与本条提交顺序一致；跨主问题/字母重排变化由单独permutation统计处理。"
+    },
+    {
+      "question_id": "q_a5f2d1e9542f2df31803626953d1af76",
+      "model": "gpt-6.1-sol",
+      "ranking_correct": false,
+      "summary_zh": "正确指出裁剪不直接约束Adam参数更新并预测小学习率欠学习；对0.001稳定性最优的猜测未得到本批结果支持。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "Gradient clipping limits gradient norms, not AdamW’s parameter-update magnitude",
+          "judgment": "supported",
+          "assessment": "符合优化器与全局梯度裁剪代码；不能将clip_norm1视为Adam每步位移上界。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        },
+        {
+          "verbatim_public_quote": "its tenfold larger constant step size increases the risk of oscillation and seed-dependent late-training instability",
+          "judgment": "plausible_unmeasured",
+          "assessment": "较大名义LR可构成风险，但实际0.01完整train/test均更低；局部曲率、校准和逐步参数位移没有独立测量。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        }
+      ],
+      "response_sha256": "4c4af0845b50fb762d2593a12509a5b1fc862fc5b357c0592d4500f72d582a51",
+      "probe": null,
+      "instance_id": "learning_rate_s841901",
+      "actual_comparison_evidence": {
+        "lr1e4": {
+          "node_id": "candidate_31abb7f5ae858e9f35e8",
+          "mean_train_ce": 1.3848290643654764,
+          "mean_test_ce": 1.3849183171987534
+        },
+        "lr1e3": {
+          "node_id": "candidate_6ec59d4186f9b42d6754",
+          "mean_train_ce": 0.5936531231127447,
+          "mean_test_ce": 0.6058920508075971
+        },
+        "lr1e2": {
+          "node_id": "candidate_b07779969f06e2a919a4",
+          "mean_train_ce": 0.2570996006147652,
+          "mean_test_ce": 0.2773895292477846
+        }
+      },
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "comparison_coverage_note": "已核对两条相邻关系及实际字母映射；此字段评价覆盖范围，不等同于关系预测正确。",
+      "answer_consistency_note": "正文的最终比较主张与本条提交顺序一致；跨主问题/字母重排变化由单独permutation统计处理。"
+    },
+    {
+      "question_id": "q_4b2c10d4bbd4687899ae46353ddde63e",
+      "model": "gpt-6.1-sol",
+      "ranking_correct": false,
+      "summary_zh": "识别常量学习率与预算，但用常见默认值预测最佳；高学习率噪声解释未区分可能性和本批实际主因。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "Choice C's 0.0001 rate is likely too conservative for this fixed budget",
+          "judgment": "supported",
+          "assessment": "低LR完整训练CE与测试CE均接近1.385，支持预算内欠学习。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        },
+        {
+          "verbatim_public_quote": "the constant high rate, minibatch noise, and AdamW decay make late optimization more oscillatory",
+          "judgment": "overstated",
+          "assessment": "未记录参数轨迹或独立衰减对照；实际0.01表现最佳。AdamW衰减存在并不单独推出更振荡，且lr改变也改变有效衰减量。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        }
+      ],
+      "response_sha256": "5bc835a74a60dc5603b0690339589ca7d44c1fbf51dd824ed55d0ee5a30ed764",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_ba675b4af4aaa388d5e0ecb29edac798"
+      },
+      "instance_id": "learning_rate_s841902",
+      "actual_comparison_evidence": {
+        "lr1e4": {
+          "node_id": "candidate_68c3418242c7dd2f2c5e",
+          "mean_train_ce": 1.3849177029915154,
+          "mean_test_ce": 1.3846740862354636
+        },
+        "lr1e3": {
+          "node_id": "candidate_3e9dff76e192bdb82479",
+          "mean_train_ce": 0.43976016309534316,
+          "mean_test_ce": 0.4430525932548335
+        },
+        "lr1e2": {
+          "node_id": "candidate_878848a639e130ad11ad",
+          "mean_train_ce": 0.11298999113532382,
+          "mean_test_ce": 0.11492065699945897
+        }
+      },
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "comparison_coverage_note": "已核对两条相邻关系及实际字母映射；此字段评价覆盖范围，不等同于关系预测正确。",
+      "answer_consistency_note": "正文的最终比较主张与本条提交顺序一致；跨主问题/字母重排变化由单独permutation统计处理。"
+    },
+    {
+      "question_id": "q_ec5ca80d9651d097f461319ad3cd14b3",
+      "model": "claude-opus-5-5",
+      "ranking_correct": false,
+      "summary_zh": "详细计算坐标表示，但把表达潜力优先于300步优化；对无坐标mean只能靠边界、局部特征不能编码关系的表述过强。",
+      "scores": {
+        "code_fidelity": "partly_supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "only zero-padding edge effects carry any position signal",
+          "judgment": "overstated",
+          "assessment": "局部交互、重叠与对象边界响应也可携带关系信息；近chance实际训练并不证明结构性无信息。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        },
+        {
+          "verbatim_public_quote": "On balance, the exact linear separability given by coordinates favours C",
+          "judgment": "overstated",
+          "assessment": "坐标本身不保证已学出归一化中心矩。独立强度缩放仍存在；此预算下spatial train/test CE反而更低，且给spatial加坐标也未改善。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        }
+      ],
+      "response_sha256": "a6e96fd11ea1ffb9d14df87854622714d072eebf8db6c7323efabc5ebbcc678b",
+      "probe": null,
+      "instance_id": "pooling_coordinate_s841901",
+      "actual_comparison_evidence": {
+        "mean": {
+          "node_id": "candidate_3cbaed19cf1f1bd78892",
+          "mean_train_ce": 1.387246625032276,
+          "mean_test_ce": 1.3874168954789639
+        },
+        "coordinate_mean": {
+          "node_id": "candidate_fe248f3711cecdf66c13",
+          "mean_train_ce": 0.32638712151674554,
+          "mean_test_ce": 0.33372093125944957
+        },
+        "spatial": {
+          "node_id": "candidate_675b0f0945a65c7728d6",
+          "mean_train_ce": 0.03477928249594697,
+          "mean_test_ce": 0.025694066469441168
+        },
+        "coordinate_spatial": {
+          "node_id": "candidate_4e616725a8ecc13c433b",
+          "mean_train_ce": 0.11016854794434039,
+          "mean_test_ce": 0.11184107999724802
+        }
+      },
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "comparison_coverage_note": "已核对两条相邻关系及实际字母映射；此字段评价覆盖范围，不等同于关系预测正确。",
+      "answer_consistency_note": "正文的最终比较主张与本条提交顺序一致；跨主问题/字母重排变化由单独permutation统计处理。"
+    },
+    {
+      "question_id": "q_d26f5adafb3e08bb7f45a0b9d0d21acd",
+      "model": "claude-opus-5-5",
+      "ranking_correct": false,
+      "summary_zh": "重排后仍把连续坐标精度当作收益主因；能够承认重叠信息与优化不确定性，但粗网格内位置完全不可见的说法超出代码。",
+      "scores": {
+        "code_fidelity": "partly_supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "where sub-cell position is invisible",
+          "judgment": "overstated",
+          "assessment": "池化的是卷积特征而非原始点质量；跨cell卷积支持、对象边界与padding可留下亚cell信息，不能据8像素网格推导不可辨识。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        },
+        {
+          "verbatim_public_quote": "B could therefore beat A if optimization is slow",
+          "judgment": "supported",
+          "assessment": "这是与实际完整train/test差异一致的替代解释；记录支持有限预算效应，但没有直接测到中心矩形成过程。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        }
+      ],
+      "response_sha256": "9380e9a81175b82d64fe58c20dbfb9ac4677f867fd2509bcc6f5b7288751ccaf",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_ec5ca80d9651d097f461319ad3cd14b3"
+      },
+      "instance_id": "pooling_coordinate_s841901",
+      "actual_comparison_evidence": {
+        "mean": {
+          "node_id": "candidate_3cbaed19cf1f1bd78892",
+          "mean_train_ce": 1.387246625032276,
+          "mean_test_ce": 1.3874168954789639
+        },
+        "coordinate_mean": {
+          "node_id": "candidate_fe248f3711cecdf66c13",
+          "mean_train_ce": 0.32638712151674554,
+          "mean_test_ce": 0.33372093125944957
+        },
+        "spatial": {
+          "node_id": "candidate_675b0f0945a65c7728d6",
+          "mean_train_ce": 0.03477928249594697,
+          "mean_test_ce": 0.025694066469441168
+        },
+        "coordinate_spatial": {
+          "node_id": "candidate_4e616725a8ecc13c433b",
+          "mean_train_ce": 0.11016854794434039,
+          "mean_test_ce": 0.11184107999724802
+        }
+      },
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "comparison_coverage_note": "已核对两条相邻关系及实际字母映射；此字段评价覆盖范围，不等同于关系预测正确。",
+      "answer_consistency_note": "正文的最终比较主张与本条提交顺序一致；跨主问题/字母重排变化由单独permutation统计处理。"
+    },
+    {
+      "question_id": "q_8a36fc443f07ff9476da1cb066a63d67",
+      "model": "claude-opus-5-5",
+      "ranking_correct": false,
+      "summary_zh": "正确读出模型与质量归一化，但把连续中心矩潜力过度推成更低测试CE；忽略mean的局部关系线索。",
+      "scores": {
+        "code_fidelity": "partly_supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "The only positional cues left are border effects from zero padding near image edges",
+          "judgment": "overstated",
+          "assessment": "局部对象交互与重叠不被这句话覆盖；实际mean训练弱并不排除这些表达路径。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        },
+        {
+          "verbatim_public_quote": "That is a much finer positional signal than B's 3×3 grid",
+          "judgment": "plausible_unmeasured",
+          "assessment": "作为潜在表示比较有道理，但没有测出网络实际中心矩；确认数据中网格完整train/test显著更低，且坐标spatial控制也未改善。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        }
+      ],
+      "response_sha256": "da7180fbe4e0d4eb85d231979e292f30f6c3c93eb107e82287d7a20d9a3ab1aa",
+      "probe": null,
+      "instance_id": "pooling_coordinate_s841902",
+      "actual_comparison_evidence": {
+        "mean": {
+          "node_id": "candidate_c93709ee26aacbc9f437",
+          "mean_train_ce": 1.3854690231382847,
+          "mean_test_ce": 1.385668184608221
+        },
+        "coordinate_mean": {
+          "node_id": "candidate_d91d654be99bc328c040",
+          "mean_train_ce": 0.331308702530805,
+          "mean_test_ce": 0.34536808996926993
+        },
+        "spatial": {
+          "node_id": "candidate_f9bdfa11ef52bc5e3528",
+          "mean_train_ce": 0.025847295970606865,
+          "mean_test_ce": 0.037714587822847534
+        },
+        "coordinate_spatial": {
+          "node_id": "candidate_a644642ee0d58a7cbf09",
+          "mean_train_ce": 0.10882683973613894,
+          "mean_test_ce": 0.13160173430514988
+        }
+      },
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "comparison_coverage_note": "已核对两条相邻关系及实际字母映射；此字段评价覆盖范围，不等同于关系预测正确。",
+      "answer_consistency_note": "正文的最终比较主张与本条提交顺序一致；跨主问题/字母重排变化由单独permutation统计处理。"
+    },
+    {
+      "question_id": "q_a1af9439f07fdde610fbdc50eea762d9",
+      "model": "claude-opus-5-5",
+      "ranking_correct": false,
+      "summary_zh": "错把粗网格平均解释为不可消除误差，再据此预测坐标优先；不可辨识和不可约误差没有被证明。",
+      "scores": {
+        "code_fidelity": "partly_supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "incorrect",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "it leaves an irreducible coarse-grid error and calibration penalty",
+          "judgment": "unsupported_guarantee",
+          "assessment": "网格池化输入为经卷积非线性变换的特征，跨cell响应可携带亚cell信息；未构造相同表示异标签的碰撞，也未测校准。实际spatial CE约0.038，远低于坐标mean约0.345。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        },
+        {
+          "verbatim_public_quote": "A depends on learning the multiplicative interactions within 300 steps",
+          "judgment": "supported",
+          "assessment": "指出了真实的有限优化条件；其自己提出的网格易学替代解释与训练/测试结果一致。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        }
+      ],
+      "response_sha256": "eca0cd05043b81e5d4e7b7bd2faee34d968fa02762006631f2323cd099425263",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_8a36fc443f07ff9476da1cb066a63d67"
+      },
+      "instance_id": "pooling_coordinate_s841902",
+      "actual_comparison_evidence": {
+        "mean": {
+          "node_id": "candidate_c93709ee26aacbc9f437",
+          "mean_train_ce": 1.3854690231382847,
+          "mean_test_ce": 1.385668184608221
+        },
+        "coordinate_mean": {
+          "node_id": "candidate_d91d654be99bc328c040",
+          "mean_train_ce": 0.331308702530805,
+          "mean_test_ce": 0.34536808996926993
+        },
+        "spatial": {
+          "node_id": "candidate_f9bdfa11ef52bc5e3528",
+          "mean_train_ce": 0.025847295970606865,
+          "mean_test_ce": 0.037714587822847534
+        },
+        "coordinate_spatial": {
+          "node_id": "candidate_a644642ee0d58a7cbf09",
+          "mean_train_ce": 0.10882683973613894,
+          "mean_test_ce": 0.13160173430514988
+        }
+      },
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "comparison_coverage_note": "已核对两条相邻关系及实际字母映射；此字段评价覆盖范围，不等同于关系预测正确。",
+      "answer_consistency_note": "正文的最终比较主张与本条提交顺序一致；跨主问题/字母重排变化由单独permutation统计处理。"
+    },
+    {
+      "question_id": "q_ededc5c5112d4fee539b6d60dbb9549c",
+      "model": "claude-opus-5-5",
+      "ranking_correct": false,
+      "summary_zh": "认识到残差CNN与5×5局部支持，但对坐标精度、粗网格歧义和仅padding线索的论断过强。",
+      "scores": {
+        "code_fidelity": "partly_supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "only zero-padding border effects carry any position",
+          "judgment": "overstated",
+          "assessment": "局部重叠/交互可贡献关系信息，且相对方向本身对整体平移不变；不能以近似平移不变直接判不可学。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        },
+        {
+          "verbatim_public_quote": "A's ready-made spatial grid could edge it out",
+          "judgment": "supported",
+          "assessment": "实际spatial完整train/test更低，幅度并不只是略胜；300步下直接位置读出是相容解释，尚非唯一因果证明。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        }
+      ],
+      "response_sha256": "f43dbea93a5e6b0017d21f4860e6995a9eedd11a7e1a65712e618c469c88af61",
+      "probe": null,
+      "instance_id": "pooling_coordinate_s841903",
+      "actual_comparison_evidence": {
+        "mean": {
+          "node_id": "candidate_07cf9b9e2ef0417e1afc",
+          "mean_train_ce": 1.3868277808651328,
+          "mean_test_ce": 1.3867692332714796
+        },
+        "coordinate_mean": {
+          "node_id": "candidate_c65bf21470c8b1e81842",
+          "mean_train_ce": 0.29576607677154243,
+          "mean_test_ce": 0.3118247539969161
+        },
+        "spatial": {
+          "node_id": "candidate_d6f536a09652df88c280",
+          "mean_train_ce": 0.0428850017970035,
+          "mean_test_ce": 0.05138279516904731
+        },
+        "coordinate_spatial": {
+          "node_id": "candidate_4b043b424317b46e875a",
+          "mean_train_ce": 0.09338780207690434,
+          "mean_test_ce": 0.11225657083559781
+        }
+      },
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "comparison_coverage_note": "已核对两条相邻关系及实际字母映射；此字段评价覆盖范围，不等同于关系预测正确。",
+      "answer_consistency_note": "正文的最终比较主张与本条提交顺序一致；跨主问题/字母重排变化由单独permutation统计处理。"
+    },
+    {
+      "question_id": "q_89167763187b9bba108b563ae46fedb6",
+      "model": "claude-opus-5-5",
+      "ranking_correct": false,
+      "summary_zh": "正确描述位置输入但把局部关系排除得太绝对；潜在连续位置优势未转化成本次训练优势。",
+      "scores": {
+        "code_fidelity": "partly_supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "Any comparison must come from position-aware pooling or coordinates",
+          "judgment": "overstated",
+          "assessment": "对较大分离的样本这是重要路径，但局部重叠和有限padding没有被穷尽；不是所有样本上的必要条件。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        },
+        {
+          "verbatim_public_quote": "B's explicit grid features are easy to optimize, and C needs to learn nonlinear coordinate products in a short budget",
+          "judgment": "supported",
+          "assessment": "此替代机制与实际spatial更低的完整train/test CE一致；无法据现有观测唯一证明网络确实计算乘积中心矩。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        }
+      ],
+      "response_sha256": "387b53082a253794af71fdc31e7246f7312022ac38653f4bf5b605032a24d5a7",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_ededc5c5112d4fee539b6d60dbb9549c"
+      },
+      "instance_id": "pooling_coordinate_s841903",
+      "actual_comparison_evidence": {
+        "mean": {
+          "node_id": "candidate_07cf9b9e2ef0417e1afc",
+          "mean_train_ce": 1.3868277808651328,
+          "mean_test_ce": 1.3867692332714796
+        },
+        "coordinate_mean": {
+          "node_id": "candidate_c65bf21470c8b1e81842",
+          "mean_train_ce": 0.29576607677154243,
+          "mean_test_ce": 0.3118247539969161
+        },
+        "spatial": {
+          "node_id": "candidate_d6f536a09652df88c280",
+          "mean_train_ce": 0.0428850017970035,
+          "mean_test_ce": 0.05138279516904731
+        },
+        "coordinate_spatial": {
+          "node_id": "candidate_4b043b424317b46e875a",
+          "mean_train_ce": 0.09338780207690434,
+          "mean_test_ce": 0.11225657083559781
+        }
+      },
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "comparison_coverage_note": "已核对两条相邻关系及实际字母映射；此字段评价覆盖范围，不等同于关系预测正确。",
+      "answer_consistency_note": "正文的最终比较主张与本条提交顺序一致；跨主问题/字母重排变化由单独permutation统计处理。"
+    },
+    {
+      "question_id": "q_fcf232651387ce984a8140da96c318d3",
+      "model": "claude-opus-5-5",
+      "ranking_correct": false,
+      "summary_zh": "感受野推导正确，意识到学习式patch内部结构；把Nyquist附近的潜在风险当作较细采样优势，未抓住实际优化结果。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "A has a comparable receptive field with finer sampling",
+          "judgment": "supported",
+          "assessment": "18与20像素支持范围以及12×12/6×6网格均正确；主比较不是纯感受野干预。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        },
+        {
+          "verbatim_public_quote": "avoiding near-Nyquist aliasing of period-8 gratings",
+          "judgment": "overstated",
+          "assessment": "stride4为学习式多通道投影，不是单通道纯抽点，未有显式混叠测量；其实际IID测试近零但OOD很差，不能把IID差异唯一归因混叠。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        }
+      ],
+      "response_sha256": "014b4fa457e1548d848ff4e9c613ef7a3bcd93d03fcaadd0fdc406bce3733004",
+      "probe": null,
+      "instance_id": "kernel_stride_texture_s841901",
+      "actual_comparison_evidence": {
+        "k3_s1": {
+          "node_id": "candidate_ab616a897d11be58391b",
+          "mean_train_ce": 1.3871534438803792,
+          "mean_test_ce": 1.387192951515317
+        },
+        "k5_s2": {
+          "node_id": "candidate_149005313738d78a4ed7",
+          "mean_train_ce": 1.235317818241409,
+          "mean_test_ce": 1.2353980402476452
+        },
+        "k3_s4": {
+          "node_id": "candidate_aafda8e15a0bbf01406c",
+          "mean_train_ce": 5.727325014248663e-06,
+          "mean_test_ce": 4.758739003207779e-05
+        },
+        "k5_s1": {
+          "node_id": "candidate_6e5f0ab5730336704ac8",
+          "mean_train_ce": 1.387207434978336,
+          "mean_test_ce": 1.387269290164113
+        },
+        "k3_s2": {
+          "node_id": "candidate_a434611033b8affdc6bd",
+          "mean_train_ce": 0.4361275098086157,
+          "mean_test_ce": 0.43677199679660994
+        },
+        "k5_s4": {
+          "node_id": "candidate_4199c0cb23d1c4c4703a",
+          "mean_train_ce": 7.223267036296499e-06,
+          "mean_test_ce": 0.00011057178539647383
+        },
+        "patch4_learnability_anchor": {
+          "node_id": "candidate_fad13efd0f5a1af0c4eb",
+          "mean_train_ce": 2.318241267929011e-05,
+          "mean_test_ce": 0.0238547362399828
+        }
+      },
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "comparison_coverage_note": "已核对两条相邻关系及实际字母映射；此字段评价覆盖范围，不等同于关系预测正确。",
+      "answer_consistency_note": "正文的最终比较主张与本条提交顺序一致；跨主问题/字母重排变化由单独permutation统计处理。"
+    },
+    {
+      "question_id": "q_9d3f74e3a6db4ef85ae57f643c6a4f29",
+      "model": "claude-opus-5-5",
+      "ranking_correct": false,
+      "summary_zh": "重排后保持相同结构排序，正确识别支持范围；对stride2更平滑可靠、差距小和容量泛化的判断缺乏观测支撑。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "The effective receptive field is about 2 + 2·4·2 ≈ 18 px",
+          "judgment": "supported",
+          "assessment": "该式是理论支持范围，不是测量出的effective receptive field；数值对应实际卷积链。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        },
+        {
+          "verbatim_public_quote": "The gap is likely small",
+          "judgment": "plausible_unmeasured",
+          "assessment": "实际stride2/k5测试CE约1.235，而stride4/k3约0.000048；本批差距与预测不同。不能仅以预测误差反证所有采样假说。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        }
+      ],
+      "response_sha256": "fd973e3291d2bda5c35d037eee665064e5361313420bd35c332b212045ddd652",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_fcf232651387ce984a8140da96c318d3"
+      },
+      "instance_id": "kernel_stride_texture_s841901",
+      "actual_comparison_evidence": {
+        "k3_s1": {
+          "node_id": "candidate_ab616a897d11be58391b",
+          "mean_train_ce": 1.3871534438803792,
+          "mean_test_ce": 1.387192951515317
+        },
+        "k5_s2": {
+          "node_id": "candidate_149005313738d78a4ed7",
+          "mean_train_ce": 1.235317818241409,
+          "mean_test_ce": 1.2353980402476452
+        },
+        "k3_s4": {
+          "node_id": "candidate_aafda8e15a0bbf01406c",
+          "mean_train_ce": 5.727325014248663e-06,
+          "mean_test_ce": 4.758739003207779e-05
+        },
+        "k5_s1": {
+          "node_id": "candidate_6e5f0ab5730336704ac8",
+          "mean_train_ce": 1.387207434978336,
+          "mean_test_ce": 1.387269290164113
+        },
+        "k3_s2": {
+          "node_id": "candidate_a434611033b8affdc6bd",
+          "mean_train_ce": 0.4361275098086157,
+          "mean_test_ce": 0.43677199679660994
+        },
+        "k5_s4": {
+          "node_id": "candidate_4199c0cb23d1c4c4703a",
+          "mean_train_ce": 7.223267036296499e-06,
+          "mean_test_ce": 0.00011057178539647383
+        },
+        "patch4_learnability_anchor": {
+          "node_id": "candidate_fad13efd0f5a1af0c4eb",
+          "mean_train_ce": 2.318241267929011e-05,
+          "mean_test_ce": 0.0238547362399828
+        }
+      },
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "comparison_coverage_note": "已核对两条相邻关系及实际字母映射；此字段评价覆盖范围，不等同于关系预测正确。",
+      "answer_consistency_note": "正文的最终比较主张与本条提交顺序一致；跨主问题/字母重排变化由单独permutation统计处理。"
+    },
+    {
+      "question_id": "q_a5f2d1e9542f2df31803626953d1af76",
+      "model": "claude-opus-5-5",
+      "ranking_correct": false,
+      "summary_zh": "正确识别形状学习和小LR欠训练，但把默认Adam学习率说成已调好，并用lr×步数近似参数总位移作过强依据。",
+      "scores": {
+        "code_fidelity": "partly_supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "1e-3 is the standard well-tuned Adam rate for a LayerNorm CNN this size",
+          "judgment": "unsupported_calibration",
+          "assessment": "没有对该数据/预算调优的证据；固定0.01候选完整训练和测试CE均更低，常见默认值不能当作已验证最优。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        },
+        {
+          "verbatim_public_quote": "At 1e-4, 1200 Adam steps move each weight only about 0.1 in total",
+          "judgment": "unsupported_quantification",
+          "assessment": "AdamW位移取决于一二阶矩、梯度历史和decoupled decay，未测参数路径；lr×步数不是可靠的每权重位移估算或上界。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        }
+      ],
+      "response_sha256": "d1f68424bc7ac60b28fa154b2a44cad7fea8d88cd717c56f84c1f1f9cf142c4d",
+      "probe": null,
+      "instance_id": "learning_rate_s841901",
+      "actual_comparison_evidence": {
+        "lr1e4": {
+          "node_id": "candidate_31abb7f5ae858e9f35e8",
+          "mean_train_ce": 1.3848290643654764,
+          "mean_test_ce": 1.3849183171987534
+        },
+        "lr1e3": {
+          "node_id": "candidate_6ec59d4186f9b42d6754",
+          "mean_train_ce": 0.5936531231127447,
+          "mean_test_ce": 0.6058920508075971
+        },
+        "lr1e2": {
+          "node_id": "candidate_b07779969f06e2a919a4",
+          "mean_train_ce": 0.2570996006147652,
+          "mean_test_ce": 0.2773895292477846
+        }
+      },
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "comparison_coverage_note": "已核对两条相邻关系及实际字母映射；此字段评价覆盖范围，不等同于关系预测正确。",
+      "answer_consistency_note": "正文的最终比较主张与本条提交顺序一致；跨主问题/字母重排变化由单独permutation统计处理。"
+    },
+    {
+      "question_id": "q_ccb7af737a4a7277553ef9ecb8d05e6b",
+      "model": "claude-opus-5-5",
+      "ranking_correct": false,
+      "summary_zh": "能够指出质量归一化后的面积/强度线索；低LR欠学习判断有证据，但高LR最终噪声及默认值最优仍是未经检验的解释。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "Mass normalization adds a per‑pixel intensity cue that partly overlaps with area",
+          "judgment": "supported",
+          "assessment": "数据审计的peak/area/energy基线确有高于chance信号；质量相同不代表这些低阶线索被消除。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        },
+        {
+          "verbatim_public_quote": "AdamW at 1e‑3 is the well‑tuned regime for a LayerNorm residual CNN this size",
+          "judgment": "unsupported_calibration",
+          "assessment": "没有此设置已调好证据；确认中0.01完整train/test更低。过拟合有限的猜测与当前较小train/test差一致，但不推出默认LR最优。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        }
+      ],
+      "response_sha256": "ceb5ca2b09b4b2d57cc28eb3667ecbfbd1bd620ac8aa54a4ec7b90aabf40a144",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_a5f2d1e9542f2df31803626953d1af76"
+      },
+      "instance_id": "learning_rate_s841901",
+      "actual_comparison_evidence": {
+        "lr1e4": {
+          "node_id": "candidate_31abb7f5ae858e9f35e8",
+          "mean_train_ce": 1.3848290643654764,
+          "mean_test_ce": 1.3849183171987534
+        },
+        "lr1e3": {
+          "node_id": "candidate_6ec59d4186f9b42d6754",
+          "mean_train_ce": 0.5936531231127447,
+          "mean_test_ce": 0.6058920508075971
+        },
+        "lr1e2": {
+          "node_id": "candidate_b07779969f06e2a919a4",
+          "mean_train_ce": 0.2570996006147652,
+          "mean_test_ce": 0.2773895292477846
+        }
+      },
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "comparison_coverage_note": "已核对两条相邻关系及实际字母映射；此字段评价覆盖范围，不等同于关系预测正确。",
+      "answer_consistency_note": "正文的最终比较主张与本条提交顺序一致；跨主问题/字母重排变化由单独permutation统计处理。"
+    },
+    {
+      "question_id": "q_ba675b4af4aaa388d5e0ecb29edac798",
+      "model": "claude-opus-5-5",
+      "ranking_correct": false,
+      "summary_zh": "把Adam总位移写成0.12硬上界，属于算法事实错误；同时以默认学习率和未测的校准/噪声推断排序。",
+      "scores": {
+        "code_fidelity": "incorrect",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "incorrect",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "At 1e-4, each parameter can move at most about 0.12 in total over 1200 steps",
+          "judgment": "incorrect",
+          "assessment": "AdamW每步包含偏差校正的一二阶矩比及衰减；该比不恒≤1，lr×步数不是单参数路径或净位移的一般上界。 独立单参数反例在同lr/步数/AdamW超参且梯度均<1时位移0.311685，超过0.12；该反例仅否定普遍上界，不代表这些候选的实际位移。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/explanation_supporting_checks.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        },
+        {
+          "verbatim_public_quote": "That makes the final weights noisy, with likely loss spikes, miscalibrated or overconfident logits",
+          "judgment": "plausible_unmeasured",
+          "assessment": "名义LR较大不直接证明这些现象。0.01实测完整train/test更好；没有独立校准、曲率或参数轨迹对照。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        }
+      ],
+      "response_sha256": "f21842fd3812828d11cd8acb0ce46e11d81f18ee5fc449f5516cdfb905632faa",
+      "probe": null,
+      "instance_id": "learning_rate_s841902",
+      "actual_comparison_evidence": {
+        "lr1e4": {
+          "node_id": "candidate_68c3418242c7dd2f2c5e",
+          "mean_train_ce": 1.3849177029915154,
+          "mean_test_ce": 1.3846740862354636
+        },
+        "lr1e3": {
+          "node_id": "candidate_3e9dff76e192bdb82479",
+          "mean_train_ce": 0.43976016309534316,
+          "mean_test_ce": 0.4430525932548335
+        },
+        "lr1e2": {
+          "node_id": "candidate_878848a639e130ad11ad",
+          "mean_train_ce": 0.11298999113532382,
+          "mean_test_ce": 0.11492065699945897
+        }
+      },
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "comparison_coverage_note": "已核对两条相邻关系及实际字母映射；此字段评价覆盖范围，不等同于关系预测正确。",
+      "answer_consistency_note": "正文的最终比较主张与本条提交顺序一致；跨主问题/字母重排变化由单独permutation统计处理。"
+    },
+    {
+      "question_id": "q_4b2c10d4bbd4687899ae46353ddde63e",
+      "model": "claude-opus-5-5",
+      "ranking_correct": false,
+      "summary_zh": "除硬性Adam位移上界错误，还误称质量归一化消除了面积/强度线索；排序解释依赖未证实的默认学习率最优。",
+      "scores": {
+        "code_fidelity": "incorrect",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "incorrect",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "Mass normalization removes the easy area and intensity cues",
+          "judgment": "incorrect",
+          "assessment": "每通道总质量约束不消除peak、能量和面积线索；真实train拟合基线在shape上约40–45%，高于25%chance。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        },
+        {
+          "verbatim_public_quote": "Adam moves each weight by at most about 0.12 in total over 1200 steps",
+          "judgment": "incorrect",
+          "assessment": "AdamW的自适应矩比与decoupled decay使lr×steps不构成此硬上界；不能用它证明学习特征不可能。 独立单参数反例在同lr/步数/AdamW超参且梯度均<1时位移0.311685，超过0.12；该反例仅否定普遍上界，不代表这些候选的实际位移。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/explanation_supporting_checks.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        }
+      ],
+      "response_sha256": "928643b932a4d15cb6f338d6bcc6c720a79be35753006ee26e3b683343eb1771",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_ba675b4af4aaa388d5e0ecb29edac798"
+      },
+      "instance_id": "learning_rate_s841902",
+      "actual_comparison_evidence": {
+        "lr1e4": {
+          "node_id": "candidate_68c3418242c7dd2f2c5e",
+          "mean_train_ce": 1.3849177029915154,
+          "mean_test_ce": 1.3846740862354636
+        },
+        "lr1e3": {
+          "node_id": "candidate_3e9dff76e192bdb82479",
+          "mean_train_ce": 0.43976016309534316,
+          "mean_test_ce": 0.4430525932548335
+        },
+        "lr1e2": {
+          "node_id": "candidate_878848a639e130ad11ad",
+          "mean_train_ce": 0.11298999113532382,
+          "mean_test_ce": 0.11492065699945897
+        }
+      },
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "comparison_coverage_note": "已核对两条相邻关系及实际字母映射；此字段评价覆盖范围，不等同于关系预测正确。",
+      "answer_consistency_note": "正文的最终比较主张与本条提交顺序一致；跨主问题/字母重排变化由单独permutation统计处理。"
+    },
+    {
+      "question_id": "q_ec5ca80d9651d097f461319ad3cd14b3",
+      "model": "claude-haiku-5-5",
+      "ranking_correct": true,
+      "summary_zh": "排序正确，读出路径和有限预算学习成本解释与控制一致；坐标中心矩仍是潜在实现而非已测神经计算。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "supported",
+        "causal_calibration": "supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "the coordinate-based route is harder to learn in 300 steps",
+          "judgment": "supported",
+          "assessment": "空间版完整train/test均更低，符合有限预算解释；仍不能区分中心矩学习与其他表示路径。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        },
+        {
+          "verbatim_public_quote": "adds fixed x and y coordinate maps to the input",
+          "judgment": "supported",
+          "assessment": "输入和实际干预相符；回答对差异与seed风险保留不确定性，没有作全局不可能性论断。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        }
+      ],
+      "response_sha256": "0e6019642dbb42dddfecf194ea924d7032b0a0df841c52631dcc986defc31bff",
+      "probe": null,
+      "instance_id": "pooling_coordinate_s841901",
+      "actual_comparison_evidence": {
+        "mean": {
+          "node_id": "candidate_3cbaed19cf1f1bd78892",
+          "mean_train_ce": 1.387246625032276,
+          "mean_test_ce": 1.3874168954789639
+        },
+        "coordinate_mean": {
+          "node_id": "candidate_fe248f3711cecdf66c13",
+          "mean_train_ce": 0.32638712151674554,
+          "mean_test_ce": 0.33372093125944957
+        },
+        "spatial": {
+          "node_id": "candidate_675b0f0945a65c7728d6",
+          "mean_train_ce": 0.03477928249594697,
+          "mean_test_ce": 0.025694066469441168
+        },
+        "coordinate_spatial": {
+          "node_id": "candidate_4e616725a8ecc13c433b",
+          "mean_train_ce": 0.11016854794434039,
+          "mean_test_ce": 0.11184107999724802
+        }
+      },
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "comparison_coverage_note": "已核对两条相邻关系及实际字母映射；此字段评价覆盖范围，不等同于关系预测正确。",
+      "answer_consistency_note": "正文的最终比较主张与本条提交顺序一致；跨主问题/字母重排变化由单独permutation统计处理。"
+    },
+    {
+      "question_id": "q_d26f5adafb3e08bb7f45a0b9d0d21acd",
+      "model": "claude-haiku-5-5",
+      "ranking_correct": true,
+      "summary_zh": "排序正确但多项代码/控制事实错误：跨架构初始权重并不相同、感受野是5不是7、坐标也改变stem参数。",
+      "scores": {
+        "code_fidelity": "incorrect",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "roughly 7×7 pixels",
+          "judgment": "incorrect",
+          "assessment": "stem为1×1，两层3×3给5×5理论支持范围，不是7×7。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        },
+        {
+          "verbatim_public_quote": "the same initial weights per seed",
+          "judgment": "incorrect",
+          "assessment": "跨pool/coordinates候选state形状或初始化不同；实际control初始state hash匹配0/16，batch stream为16/16。只相同seed不等于相同权重。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        }
+      ],
+      "response_sha256": "ce19cb9e07ab1c76ea153c14b18c507bf9053eac505588dd8383b08bd26abc8c",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_ec5ca80d9651d097f461319ad3cd14b3"
+      },
+      "instance_id": "pooling_coordinate_s841901",
+      "actual_comparison_evidence": {
+        "mean": {
+          "node_id": "candidate_3cbaed19cf1f1bd78892",
+          "mean_train_ce": 1.387246625032276,
+          "mean_test_ce": 1.3874168954789639
+        },
+        "coordinate_mean": {
+          "node_id": "candidate_fe248f3711cecdf66c13",
+          "mean_train_ce": 0.32638712151674554,
+          "mean_test_ce": 0.33372093125944957
+        },
+        "spatial": {
+          "node_id": "candidate_675b0f0945a65c7728d6",
+          "mean_train_ce": 0.03477928249594697,
+          "mean_test_ce": 0.025694066469441168
+        },
+        "coordinate_spatial": {
+          "node_id": "candidate_4e616725a8ecc13c433b",
+          "mean_train_ce": 0.11016854794434039,
+          "mean_test_ce": 0.11184107999724802
+        }
+      },
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "comparison_coverage_note": "已核对两条相邻关系及实际字母映射；此字段评价覆盖范围，不等同于关系预测正确。",
+      "answer_consistency_note": "正文的最终比较主张与本条提交顺序一致；跨主问题/字母重排变化由单独permutation统计处理。"
+    },
+    {
+      "question_id": "q_8a36fc443f07ff9476da1cb066a63d67",
+      "model": "claude-haiku-5-5",
+      "ranking_correct": true,
+      "summary_zh": "整体机制与正确排序相容，但参数倍率算错并把mean无直接位置索引夸成完全没有位置信息。",
+      "scores": {
+        "code_fidelity": "incorrect",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "The cost is about 4x more head parameters",
+          "judgment": "incorrect",
+          "assessment": "head输入24变216是9倍权重；含bias100变868约8.68倍。总参数15436变16204约1.05倍，都不是4倍。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        },
+        {
+          "verbatim_public_quote": "A has no positional information at all",
+          "judgment": "overstated",
+          "assessment": "没有显式坐标与网格不等于无信息：padding和局部交互仍可贡献；实际chance附近是有限训练结果而非信息论证明。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        }
+      ],
+      "response_sha256": "e0c92780b3bc3b8d45e2bcf1e68605f75c95f0a9aa1d97ad23df65c7a4b142ac",
+      "probe": null,
+      "instance_id": "pooling_coordinate_s841902",
+      "actual_comparison_evidence": {
+        "mean": {
+          "node_id": "candidate_c93709ee26aacbc9f437",
+          "mean_train_ce": 1.3854690231382847,
+          "mean_test_ce": 1.385668184608221
+        },
+        "coordinate_mean": {
+          "node_id": "candidate_d91d654be99bc328c040",
+          "mean_train_ce": 0.331308702530805,
+          "mean_test_ce": 0.34536808996926993
+        },
+        "spatial": {
+          "node_id": "candidate_f9bdfa11ef52bc5e3528",
+          "mean_train_ce": 0.025847295970606865,
+          "mean_test_ce": 0.037714587822847534
+        },
+        "coordinate_spatial": {
+          "node_id": "candidate_a644642ee0d58a7cbf09",
+          "mean_train_ce": 0.10882683973613894,
+          "mean_test_ce": 0.13160173430514988
+        }
+      },
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "comparison_coverage_note": "已核对两条相邻关系及实际字母映射；此字段评价覆盖范围，不等同于关系预测正确。",
+      "answer_consistency_note": "正文的最终比较主张与本条提交顺序一致；跨主问题/字母重排变化由单独permutation统计处理。"
+    },
+    {
+      "question_id": "q_a1af9439f07fdde610fbdc50eea762d9",
+      "model": "claude-haiku-5-5",
+      "ranking_correct": true,
+      "summary_zh": "正确解释网格直接读出与300步优化，并识别新增stem输入；关于裁剪不重要及差距很小的猜测不受实测支持。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "Gradient clipping at 1.0 is unlikely to be the binding constraint for any choice",
+          "judgment": "plausible_unmeasured",
+          "assessment": "对应spatial与coordinate-mean训练中约76%/62%步骤实际裁剪；说明裁剪活跃，但没有无裁剪控制，仍不能断言其是性能瓶颈。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        },
+        {
+          "verbatim_public_quote": "the ranking is governed by how easily each architecture reaches a low-loss solution",
+          "judgment": "supported",
+          "assessment": "完整train/test CE同向更低支持有限训练优化解释；不能仅以结构名或参数数确定实际神经表示。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        }
+      ],
+      "response_sha256": "275b68a6b818848cde7a064cc5125cf5488b60e1d739b0e0781bfd49631b7744",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_8a36fc443f07ff9476da1cb066a63d67"
+      },
+      "instance_id": "pooling_coordinate_s841902",
+      "actual_comparison_evidence": {
+        "mean": {
+          "node_id": "candidate_c93709ee26aacbc9f437",
+          "mean_train_ce": 1.3854690231382847,
+          "mean_test_ce": 1.385668184608221
+        },
+        "coordinate_mean": {
+          "node_id": "candidate_d91d654be99bc328c040",
+          "mean_train_ce": 0.331308702530805,
+          "mean_test_ce": 0.34536808996926993
+        },
+        "spatial": {
+          "node_id": "candidate_f9bdfa11ef52bc5e3528",
+          "mean_train_ce": 0.025847295970606865,
+          "mean_test_ce": 0.037714587822847534
+        },
+        "coordinate_spatial": {
+          "node_id": "candidate_a644642ee0d58a7cbf09",
+          "mean_train_ce": 0.10882683973613894,
+          "mean_test_ce": 0.13160173430514988
+        }
+      },
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "comparison_coverage_note": "已核对两条相邻关系及实际字母映射；此字段评价覆盖范围，不等同于关系预测正确。",
+      "answer_consistency_note": "正文的最终比较主张与本条提交顺序一致；跨主问题/字母重排变化由单独permutation统计处理。"
+    },
+    {
+      "question_id": "q_ededc5c5112d4fee539b6d60dbb9549c",
+      "model": "claude-haiku-5-5",
+      "ranking_correct": true,
+      "summary_zh": "字母映射、预算与机制解释正确；把坐标路径的潜力与短预算内的可学性区分开，未将正确排序当作因果证明。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "supported",
+        "causal_calibration": "supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "the coordinate-plus-mean model could match or beat the spatial-grid model if the coordinate channels are used efficiently",
+          "judgment": "supported",
+          "assessment": "合理保留优化条件；本批spatial train/test优于coordinate-mean，且坐标spatial控制未改善，排除“加信息必然改善”捷径。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        },
+        {
+          "verbatim_public_quote": "the flattened feature (24×9 = 216 values) keeps coarse position information",
+          "judgment": "supported",
+          "assessment": "正确的维度与读出位置索引；关于24维压缩的叙述不能单独证明信息不足，但正文未提出不可表示保证。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        }
+      ],
+      "response_sha256": "fdd925ece730444a4225de8fed7901ddc1864ea91ae54e9f8a54fd0c6213714c",
+      "probe": null,
+      "instance_id": "pooling_coordinate_s841903",
+      "actual_comparison_evidence": {
+        "mean": {
+          "node_id": "candidate_07cf9b9e2ef0417e1afc",
+          "mean_train_ce": 1.3868277808651328,
+          "mean_test_ce": 1.3867692332714796
+        },
+        "coordinate_mean": {
+          "node_id": "candidate_c65bf21470c8b1e81842",
+          "mean_train_ce": 0.29576607677154243,
+          "mean_test_ce": 0.3118247539969161
+        },
+        "spatial": {
+          "node_id": "candidate_d6f536a09652df88c280",
+          "mean_train_ce": 0.0428850017970035,
+          "mean_test_ce": 0.05138279516904731
+        },
+        "coordinate_spatial": {
+          "node_id": "candidate_4b043b424317b46e875a",
+          "mean_train_ce": 0.09338780207690434,
+          "mean_test_ce": 0.11225657083559781
+        }
+      },
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "comparison_coverage_note": "已核对两条相邻关系及实际字母映射；此字段评价覆盖范围，不等同于关系预测正确。",
+      "answer_consistency_note": "正文的最终比较主张与本条提交顺序一致；跨主问题/字母重排变化由单独permutation统计处理。"
+    },
+    {
+      "question_id": "q_89167763187b9bba108b563ae46fedb6",
+      "model": "claude-haiku-5-5",
+      "ranking_correct": true,
+      "summary_zh": "重排后的正确排序与正文一致，抓住网格读出和坐标交互学习的差别，并保留中心矩实现的不确定性。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "supported",
+        "causal_calibration": "supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "it is indirect and harder to learn in 300 steps",
+          "judgment": "supported",
+          "assessment": "符合spatial与坐标mean完整train/test差异；只是与证据相容，不证明唯一优化机制。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        },
+        {
+          "verbatim_public_quote": "Padding gives only weak boundary cues",
+          "judgment": "supported",
+          "assessment": "承认finite-image边界，避免严格平移不变推断；未提局部重叠是遗漏，但不改变其有限预算预测的证据边界。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        }
+      ],
+      "response_sha256": "25152a1b3f68b7ffa43d8df180a08c8e1a34ac77d68ef8964b35ca9cc68719a7",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_ededc5c5112d4fee539b6d60dbb9549c"
+      },
+      "instance_id": "pooling_coordinate_s841903",
+      "actual_comparison_evidence": {
+        "mean": {
+          "node_id": "candidate_07cf9b9e2ef0417e1afc",
+          "mean_train_ce": 1.3868277808651328,
+          "mean_test_ce": 1.3867692332714796
+        },
+        "coordinate_mean": {
+          "node_id": "candidate_c65bf21470c8b1e81842",
+          "mean_train_ce": 0.29576607677154243,
+          "mean_test_ce": 0.3118247539969161
+        },
+        "spatial": {
+          "node_id": "candidate_d6f536a09652df88c280",
+          "mean_train_ce": 0.0428850017970035,
+          "mean_test_ce": 0.05138279516904731
+        },
+        "coordinate_spatial": {
+          "node_id": "candidate_4b043b424317b46e875a",
+          "mean_train_ce": 0.09338780207690434,
+          "mean_test_ce": 0.11225657083559781
+        }
+      },
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "comparison_coverage_note": "已核对两条相邻关系及实际字母映射；此字段评价覆盖范围，不等同于关系预测正确。",
+      "answer_consistency_note": "正文的最终比较主张与本条提交顺序一致；跨主问题/字母重排变化由单独permutation统计处理。"
+    },
+    {
+      "question_id": "q_fcf232651387ce984a8140da96c318d3",
+      "model": "claude-haiku-5-5",
+      "ranking_correct": false,
+      "summary_zh": "正确算出支持范围，但把跨多个周期的整合作为定向识别要求，并以更小模型/采样损失解释错误的相邻顺序。",
+      "scores": {
+        "code_fidelity": "partly_supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "Identifying orientation requires integrating local oriented stripe evidence over a region of several periods",
+          "judgment": "overstated",
+          "assessment": "局部梯度/二阶结构也可携带方向，不存在至少数个周期的普遍必要条件；有限CNN学不动不证明表示上做不到。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        },
+        {
+          "verbatim_public_quote": "The coarse 6×6 map and 4-px patches discard more fine oscillation detail",
+          "judgment": "plausible_unmeasured",
+          "assessment": "投影是学习式多通道，输出保留哪些特征未直接测量；stride4实际train/test近零，完整控制支持尺度/优化关联而不是必然丢方向信息。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        }
+      ],
+      "response_sha256": "b595508aa397c7ed1c428c04978c954d5bdb7de8035016c25dea3cb5a4ee0228",
+      "probe": null,
+      "instance_id": "kernel_stride_texture_s841901",
+      "actual_comparison_evidence": {
+        "k3_s1": {
+          "node_id": "candidate_ab616a897d11be58391b",
+          "mean_train_ce": 1.3871534438803792,
+          "mean_test_ce": 1.387192951515317
+        },
+        "k5_s2": {
+          "node_id": "candidate_149005313738d78a4ed7",
+          "mean_train_ce": 1.235317818241409,
+          "mean_test_ce": 1.2353980402476452
+        },
+        "k3_s4": {
+          "node_id": "candidate_aafda8e15a0bbf01406c",
+          "mean_train_ce": 5.727325014248663e-06,
+          "mean_test_ce": 4.758739003207779e-05
+        },
+        "k5_s1": {
+          "node_id": "candidate_6e5f0ab5730336704ac8",
+          "mean_train_ce": 1.387207434978336,
+          "mean_test_ce": 1.387269290164113
+        },
+        "k3_s2": {
+          "node_id": "candidate_a434611033b8affdc6bd",
+          "mean_train_ce": 0.4361275098086157,
+          "mean_test_ce": 0.43677199679660994
+        },
+        "k5_s4": {
+          "node_id": "candidate_4199c0cb23d1c4c4703a",
+          "mean_train_ce": 7.223267036296499e-06,
+          "mean_test_ce": 0.00011057178539647383
+        },
+        "patch4_learnability_anchor": {
+          "node_id": "candidate_fad13efd0f5a1af0c4eb",
+          "mean_train_ce": 2.318241267929011e-05,
+          "mean_test_ce": 0.0238547362399828
+        }
+      },
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "comparison_coverage_note": "已核对两条相邻关系及实际字母映射；此字段评价覆盖范围，不等同于关系预测正确。",
+      "answer_consistency_note": "正文的最终比较主张与本条提交顺序一致；跨主问题/字母重排变化由单独permutation统计处理。"
+    },
+    {
+      "question_id": "q_9d3f74e3a6db4ef85ae57f643c6a4f29",
+      "model": "claude-haiku-5-5",
+      "ranking_correct": false,
+      "summary_zh": "重排后结构排序完全反转；感受野算错且断言stride4丢失角度信息，与其近零训练/测试CE直接冲突。",
+      "scores": {
+        "code_fidelity": "incorrect",
+        "mechanism_alignment": "incorrect",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "a receptive field of roughly 10 to 12 px in input pixels",
+          "judgment": "incorrect",
+          "assessment": "stride2 stem核2加两层k5，支持范围是2+2×4×2=18，不是10–12。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        },
+        {
+          "verbatim_public_quote": "so fine angular discrimination is lost",
+          "judgment": "incorrect",
+          "assessment": "4×4投影到多通道不保证丢失四类方向；实际stride4候选在IID训练与测试CE均接近零。OOD变差也不能倒推IID方向不可表示。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        }
+      ],
+      "response_sha256": "b06a7e2062de3fd57ee24417de9005783ec7ad778d9c5447cb7444be19f94c25",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_fcf232651387ce984a8140da96c318d3"
+      },
+      "instance_id": "kernel_stride_texture_s841901",
+      "actual_comparison_evidence": {
+        "k3_s1": {
+          "node_id": "candidate_ab616a897d11be58391b",
+          "mean_train_ce": 1.3871534438803792,
+          "mean_test_ce": 1.387192951515317
+        },
+        "k5_s2": {
+          "node_id": "candidate_149005313738d78a4ed7",
+          "mean_train_ce": 1.235317818241409,
+          "mean_test_ce": 1.2353980402476452
+        },
+        "k3_s4": {
+          "node_id": "candidate_aafda8e15a0bbf01406c",
+          "mean_train_ce": 5.727325014248663e-06,
+          "mean_test_ce": 4.758739003207779e-05
+        },
+        "k5_s1": {
+          "node_id": "candidate_6e5f0ab5730336704ac8",
+          "mean_train_ce": 1.387207434978336,
+          "mean_test_ce": 1.387269290164113
+        },
+        "k3_s2": {
+          "node_id": "candidate_a434611033b8affdc6bd",
+          "mean_train_ce": 0.4361275098086157,
+          "mean_test_ce": 0.43677199679660994
+        },
+        "k5_s4": {
+          "node_id": "candidate_4199c0cb23d1c4c4703a",
+          "mean_train_ce": 7.223267036296499e-06,
+          "mean_test_ce": 0.00011057178539647383
+        },
+        "patch4_learnability_anchor": {
+          "node_id": "candidate_fad13efd0f5a1af0c4eb",
+          "mean_train_ce": 2.318241267929011e-05,
+          "mean_test_ce": 0.0238547362399828
+        }
+      },
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "comparison_coverage_note": "已核对两条相邻关系及实际字母映射；此字段评价覆盖范围，不等同于关系预测正确。",
+      "answer_consistency_note": "正文的最终比较主张与本条提交顺序一致；跨主问题/字母重排变化由单独permutation统计处理。"
+    },
+    {
+      "question_id": "q_a5f2d1e9542f2df31803626953d1af76",
+      "model": "claude-haiku-5-5",
+      "ranking_correct": false,
+      "summary_zh": "正确辨识单LR和低LR欠拟合，但将0.01最差过度归因于过拟合/不稳定；实际train/test均更好。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "At 1e-4, Adam moves weights slowly",
+          "judgment": "supported",
+          "assessment": "作为定性预算判断与低LR完整训练CE约1.385一致，不等于数学位移上界。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        },
+        {
+          "verbatim_public_quote": "The model is also more likely to overfit the 1024 training images",
+          "judgment": "plausible_unmeasured",
+          "assessment": "本批0.01 train/test CE约0.257/0.277，0.001约0.594/0.606；没有显示足以解释高LR最差的泛化差，且高LR实际最好。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        }
+      ],
+      "response_sha256": "6e77b5743535712c7642833bd3a0ff953bd395ac777b791a215d62cedbd76db7",
+      "probe": null,
+      "instance_id": "learning_rate_s841901",
+      "actual_comparison_evidence": {
+        "lr1e4": {
+          "node_id": "candidate_31abb7f5ae858e9f35e8",
+          "mean_train_ce": 1.3848290643654764,
+          "mean_test_ce": 1.3849183171987534
+        },
+        "lr1e3": {
+          "node_id": "candidate_6ec59d4186f9b42d6754",
+          "mean_train_ce": 0.5936531231127447,
+          "mean_test_ce": 0.6058920508075971
+        },
+        "lr1e2": {
+          "node_id": "candidate_b07779969f06e2a919a4",
+          "mean_train_ce": 0.2570996006147652,
+          "mean_test_ce": 0.2773895292477846
+        }
+      },
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "comparison_coverage_note": "已核对两条相邻关系及实际字母映射；此字段评价覆盖范围，不等同于关系预测正确。",
+      "answer_consistency_note": "正文的最终比较主张与本条提交顺序一致；跨主问题/字母重排变化由单独permutation统计处理。"
+    },
+    {
+      "question_id": "q_ccb7af737a4a7277553ef9ecb8d05e6b",
+      "model": "claude-haiku-5-5",
+      "ranking_correct": false,
+      "summary_zh": "认识到欠学习与高LR风险但把常用默认值当最优，参数量也低报；完整train/test不支持过拟合主导排序。",
+      "scores": {
+        "code_fidelity": "partly_supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "about a few thousand parameters",
+          "judgment": "incorrect",
+          "assessment": "该mean CNN实际15436参数；这一规模描述不准确。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        },
+        {
+          "verbatim_public_quote": "C (1e-2) is probably worst: the high learning rate risks overfitting",
+          "judgment": "plausible_unmeasured",
+          "assessment": "实际0.01完整train/test均更低，且差值较小；不能用风险替代真实泛化证据。回答使用probably/risk，故不把风险本身判作逻辑不可能。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        }
+      ],
+      "response_sha256": "605f8e049d43fa2da327b86f6d54bd902d3370b6caaca5cde5b152963d0c43e3",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_a5f2d1e9542f2df31803626953d1af76"
+      },
+      "instance_id": "learning_rate_s841901",
+      "actual_comparison_evidence": {
+        "lr1e4": {
+          "node_id": "candidate_31abb7f5ae858e9f35e8",
+          "mean_train_ce": 1.3848290643654764,
+          "mean_test_ce": 1.3849183171987534
+        },
+        "lr1e3": {
+          "node_id": "candidate_6ec59d4186f9b42d6754",
+          "mean_train_ce": 0.5936531231127447,
+          "mean_test_ce": 0.6058920508075971
+        },
+        "lr1e2": {
+          "node_id": "candidate_b07779969f06e2a919a4",
+          "mean_train_ce": 0.2570996006147652,
+          "mean_test_ce": 0.2773895292477846
+        }
+      },
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "comparison_coverage_note": "已核对两条相邻关系及实际字母映射；此字段评价覆盖范围，不等同于关系预测正确。",
+      "answer_consistency_note": "正文的最终比较主张与本条提交顺序一致；跨主问题/字母重排变化由单独permutation统计处理。"
+    },
+    {
+      "question_id": "q_ba675b4af4aaa388d5e0ecb29edac798",
+      "model": "claude-haiku-5-5",
+      "ranking_correct": false,
+      "summary_zh": "正确区分裁剪和Adam步长，且低LR欠学习有证据；高LR最终噪声主导结论与本批结果相反。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "it does not fully protect against an lr of 1e-2 with Adam",
+          "judgment": "supported",
+          "assessment": "全局梯度裁剪不直接固定AdamW参数位移；近似sign-like描述有适用范围而非严格恒定步长。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        },
+        {
+          "verbatim_public_quote": "1e-2 (C) is likely the most unstable",
+          "judgment": "plausible_unmeasured",
+          "assessment": "没有直接测量稳定性或校准；0.01完整train/test约0.113/0.115，低于0.001约0.440/0.443。名义LR风险不构成本次错误排序的证据。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        }
+      ],
+      "response_sha256": "069a03cbd66bd25bd571132959992196db0e92dd1c6f94df1a1df4850c461364",
+      "probe": null,
+      "instance_id": "learning_rate_s841902",
+      "actual_comparison_evidence": {
+        "lr1e4": {
+          "node_id": "candidate_68c3418242c7dd2f2c5e",
+          "mean_train_ce": 1.3849177029915154,
+          "mean_test_ce": 1.3846740862354636
+        },
+        "lr1e3": {
+          "node_id": "candidate_3e9dff76e192bdb82479",
+          "mean_train_ce": 0.43976016309534316,
+          "mean_test_ce": 0.4430525932548335
+        },
+        "lr1e2": {
+          "node_id": "candidate_878848a639e130ad11ad",
+          "mean_train_ce": 0.11298999113532382,
+          "mean_test_ce": 0.11492065699945897
+        }
+      },
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "comparison_coverage_note": "已核对两条相邻关系及实际字母映射；此字段评价覆盖范围，不等同于关系预测正确。",
+      "answer_consistency_note": "正文的最终比较主张与本条提交顺序一致；跨主问题/字母重排变化由单独permutation统计处理。"
+    },
+    {
+      "question_id": "q_4b2c10d4bbd4687899ae46353ddde63e",
+      "model": "claude-haiku-5-5",
+      "ranking_correct": false,
+      "summary_zh": "正确定位预算和单LR，但依赖默认LR与大步长坏极小值的经验叙事；没有抓住这批任务的实际欠学习瓶颈。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "1200 updates at this rate may leave it under-converged",
+          "judgment": "supported",
+          "assessment": "低LR完整train/test均约1.385，符合固定预算欠学习。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        },
+        {
+          "verbatim_public_quote": "the noisier trajectory tends to end at a worse minimum",
+          "judgment": "plausible_unmeasured",
+          "assessment": "未测局部极小值、参数轨迹或校准；高LR在本批反而使完整训练与测试CE最低。风险表述不能升级为本批已验证机制。",
+          "evidence_path": "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/control_audit.json",
+          "additional_evidence_paths": [
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/resolved_plan.json",
+            "data/task_expansion/vision_batch/image_ranking_v1_20261015/classification/quality_analysis/classification_quality.json"
+          ],
+          "scope_limit": "当前固定合成数据、候选与有限训练预算；局部对照为描述性机制证据。正确或错误排序本身不证明/反证唯一机制；没有读取隐藏推理。"
+        }
+      ],
+      "response_sha256": "d37ffd04291b291e3a4f147894dc995371417e2d3bdd5b5af00b7926b5ccd0d9",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_ba675b4af4aaa388d5e0ecb29edac798"
+      },
+      "instance_id": "learning_rate_s841902",
+      "actual_comparison_evidence": {
+        "lr1e4": {
+          "node_id": "candidate_68c3418242c7dd2f2c5e",
+          "mean_train_ce": 1.3849177029915154,
+          "mean_test_ce": 1.3846740862354636
+        },
+        "lr1e3": {
+          "node_id": "candidate_3e9dff76e192bdb82479",
+          "mean_train_ce": 0.43976016309534316,
+          "mean_test_ce": 0.4430525932548335
+        },
+        "lr1e2": {
+          "node_id": "candidate_878848a639e130ad11ad",
+          "mean_train_ce": 0.11298999113532382,
+          "mean_test_ce": 0.11492065699945897
+        }
+      },
+      "public_fields_reviewed": [
+        "content",
+        "explanation"
+      ],
+      "comparison_coverage_note": "已核对两条相邻关系及实际字母映射；此字段评价覆盖范围，不等同于关系预测正确。",
+      "answer_consistency_note": "正文的最终比较主张与本条提交顺序一致；跨主问题/字母重排变化由单独permutation统计处理。"
+    }
+  ]
+}

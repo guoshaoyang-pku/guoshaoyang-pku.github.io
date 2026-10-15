@@ -1,0 +1,78 @@
+{
+  "schema": "architectureiq-public-quality-summary-v1",
+  "domain": "generation",
+  "source_sha256": "8f0f9c236e74e6685918496d0ec78ef209bafdd72fb13ba6aaaa1b50ae3f9e39",
+  "plan_sha256": "7b480b16becfa17a529174169e0a5e6fb709799a9ce31de9e414057da1a55cf4",
+  "status": "complete_with_cross_device_limitation",
+  "coverage": {
+    "completed_seed_runs": 192,
+    "expected_seed_runs": 192,
+    "verified_selected_checkpoints": 3,
+    "expected_selected_checkpoints": 4
+  },
+  "metric_scope": "Conditional synthetic image energy score. Lower is better; this is not natural-image FID.",
+  "caveat": "A plausible silhouette may still have collapsed appearance variability. Compare energy, conditional geometry and diversity jointly. MC mean baseline is estimated from 16 independent oracle draws, not fitted to evaluation references.",
+  "checkpoint_recomputations": [
+    {
+      "node_id": "candidate_ae7b6a4c1c102ac65308",
+      "status": "verified",
+      "seed": 240,
+      "device": "cpu",
+      "checkpoint_sha256": "e3c95e572e2a183cc2862fceae19025e7048db2d4f488766e5cf581ffae1a1b5",
+      "diagnostics_sha256": "2ddcf9d59df1a0a56f4595f6b2535e6b7c16fdb11b37798f846703862cb3ef4c",
+      "saved_samples_sha256": "98c5519123842634a86e20938250dc71db9be373cdde0041da181f7ce4caa1cb",
+      "metric_absolute_error": 7.450580596923828e-09,
+      "sample_max_absolute_error": 2.7418136596679688e-06
+    },
+    {
+      "node_id": "candidate_e9681c5d795db8946e1c",
+      "status": "verified",
+      "seed": 240,
+      "device": "cpu",
+      "checkpoint_sha256": "54a6f4d908715b8bc0c2e56a94045ef59b43ef83e3cdec756df320a0577f4ed0",
+      "diagnostics_sha256": "6fcf9e853dd0ab073fe3dc1480405abba5afd86512f182a6102df836c71a0459",
+      "saved_samples_sha256": "8b1f9e05545b5bef793a946526a6bf5440a1967260e845ec4412c92c209efa17",
+      "metric_absolute_error": 0.0,
+      "sample_max_absolute_error": 4.6193599700927734e-06
+    },
+    {
+      "node_id": "candidate_b83c1445855d4b8e3b87",
+      "status": "verified",
+      "seed": 240,
+      "device": "cpu",
+      "checkpoint_sha256": "3e222439047519d3868bd1f56563adf1fb6042a223331b0df28088b1d8127854",
+      "diagnostics_sha256": "d2e030828ef7b4d63ce131d73090a1cf9f1ffe534183eb1393fca0c062e70649",
+      "saved_samples_sha256": "00974d3e9b84b22fbbf84907ee948e2a11818d540019b6f1a460a66a14d15b23",
+      "metric_absolute_error": 7.450580596923828e-09,
+      "sample_max_absolute_error": 2.086162567138672e-06
+    },
+    {
+      "node_id": "candidate_c154ceb7fdd2523d4ae3",
+      "status": "recompute_mismatch",
+      "seed": 240,
+      "device": "cpu",
+      "checkpoint_sha256": "0fccab4a09745cee0fa8e1404d281182cc4bb3d025be3d1c525733bbd7d3afc7",
+      "diagnostics_sha256": "f7a117538ea92af9bc71d744ec5e285dc89cf297d76f69625c77a650e6233585",
+      "saved_samples_sha256": "72a31fd8dfb51554f04d001c9aedfc554788b5139c3385eac4a056b517837ce2",
+      "metric_absolute_error": 6.2212347984313965e-06,
+      "sample_max_absolute_error": 0.001063227653503418
+    }
+  ],
+  "cross_device_protocol": {
+    "type": "post_hoc_cross_device_verification",
+    "predeclared": false,
+    "reason": "The preselected Transformer CPU replay exceeded the existing 0.001 pixel tolerance (0.00106323) while its energy error stayed within 0.0001. A same-checkpoint replay on the original GPU stack was then added as diagnostic evidence.",
+    "original_cpu_thresholds": {
+      "energy_absolute_error_max": 0.0001,
+      "pixel_absolute_error_max": 0.001
+    },
+    "unchanged": [
+      "dataset/condition/draw/seed selection",
+      "training/model source",
+      "all confirmation metrics and original samples",
+      "CPU mismatch label",
+      "CPU tolerance"
+    ],
+    "interpretation": "Three selected checkpoints passed independent CPU replay. Transformer failed the CPU pixel tolerance and exactly reproduced its saved results on the original GPU backend. This is not a CPU pass; the hardware/PyTorch/kernel cause is not uniquely isolated."
+  }
+}

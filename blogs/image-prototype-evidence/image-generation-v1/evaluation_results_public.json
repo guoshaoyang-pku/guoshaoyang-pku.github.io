@@ -1,0 +1,414 @@
+{
+  "schema": "architectureiq-public-evaluation-v1",
+  "source_sha256": "72d5a50158cfdc9e06a84d6c14bc990fd6f9230258ab13f484c88ff324dd625a",
+  "models": [
+    "gpt-6-luna",
+    "gpt-6.1-sol",
+    "claude-opus-5-5",
+    "claude-haiku-5-5"
+  ],
+  "scoring": "Exact full ranking; API failures remain missing and are not counted as wrong.",
+  "records": [
+    {
+      "model": "gpt-6-luna",
+      "question_id": "q_7cdd570b1c6b5455c098a9f709f630d7",
+      "family": "conditional_image_generation",
+      "task": "ranking3",
+      "probe": null,
+      "template_id": "residual_depth",
+      "instance_id": "residual_depth_s851903",
+      "status": "complete",
+      "gold_order": [
+        "C",
+        "A",
+        "B"
+      ],
+      "predicted_order": [
+        "A",
+        "B",
+        "C"
+      ],
+      "exact_order_correct": false,
+      "public_content": "<explanation>All choices share the same small conditional diffusion task, data, training budget, and sampling protocol, so the ranking mainly reflects denoiser architecture. A is predicted best: its five residual convolutional blocks provide the broadest spatial receptive field while residual paths support optimization over the 3,000 updates. B keeps residual connections but has only two blocks, limiting spatial context and capacity for denoising structured shapes and texture. C has the depth of A, but removing residual connections makes the deeper stack harder to optimize, so I predict it performs worst. The adjacent comparisons are uncertain: the task is only 16×16 and conditions plus absolute coordinates provide useful spatial information, which may reduce the cost of B’s shallower receptive field; conversely, C could benefit from depth despite its optimization disadvantage.</explanation>\n<answer>{\"best_to_worst\":[\"A\",\"B\",\"C\"]}</answer>",
+      "public_explanation": "All choices share the same small conditional diffusion task, data, training budget, and sampling protocol, so the ranking mainly reflects denoiser architecture. A is predicted best: its five residual convolutional blocks provide the broadest spatial receptive field while residual paths support optimization over the 3,000 updates. B keeps residual connections but has only two blocks, limiting spatial context and capacity for denoising structured shapes and texture. C has the depth of A, but removing residual connections makes the deeper stack harder to optimize, so I predict it performs worst. The adjacent comparisons are uncertain: the task is only 16×16 and conditions plus absolute coordinates provide useful spatial information, which may reduce the cost of B’s shallower receptive field; conversely, C could benefit from depth despite its optimization disadvantage.",
+      "model_identity_matches": true,
+      "question_sha256": "0d6ff5329216952830a78fb54d20fda2e5550d6f6d93268deaf99c9477d9c790",
+      "prompt_sha256": "55eab15ea227f456241054336cdbbe22f9519a7e2533391c35e143d6639ab080"
+    },
+    {
+      "model": "gpt-6-luna",
+      "question_id": "q_2169895363e36f64cc4952db478bf6a1",
+      "family": "conditional_image_generation",
+      "task": "ranking3",
+      "probe": null,
+      "template_id": "training_budget_small_data",
+      "instance_id": "training_budget_small_data_s851901",
+      "status": "complete",
+      "gold_order": [
+        "B",
+        "A",
+        "C"
+      ],
+      "predicted_order": [
+        "B",
+        "A",
+        "C"
+      ],
+      "exact_order_correct": true,
+      "public_content": "<explanation>\nAll three choices use the same small convolutional denoiser, optimizer, diffusion objective, and sampling protocol; training duration is the only stated difference. The procedural dataset has just 96 training images, but each update resamples examples and noise, so additional updates provide more chances to learn the geometry and appearance distribution. More training is therefore expected to improve the generated conditional samples, though gains may diminish or fluctuate.\n\nB versus A: B trains for 6000 rather than 3000 updates, giving it the stronger expected fit to the conditional image law, so B is predicted better. A versus C: A trains for 3000 rather than 700 updates, giving it substantially more optimization and data/noise exposures, so A is predicted better. Thus the predicted order is B, A, C from lowest to highest energy score.\n\nThere is material uncertainty: the dataset is small, and longer training could overfit or yield seed-dependent changes in sample diversity and energy score. The score rewards matching stochastic appearance as well as geometry, so training loss or silhouette fit alone cannot guarantee this ranking.\n</explanation>\n<answer>{\"best_to_worst\":[\"B\",\"A\",\"C\"]}</answer>",
+      "public_explanation": "All three choices use the same small convolutional denoiser, optimizer, diffusion objective, and sampling protocol; training duration is the only stated difference. The procedural dataset has just 96 training images, but each update resamples examples and noise, so additional updates provide more chances to learn the geometry and appearance distribution. More training is therefore expected to improve the generated conditional samples, though gains may diminish or fluctuate.\n\nB versus A: B trains for 6000 rather than 3000 updates, giving it the stronger expected fit to the conditional image law, so B is predicted better. A versus C: A trains for 3000 rather than 700 updates, giving it substantially more optimization and data/noise exposures, so A is predicted better. Thus the predicted order is B, A, C from lowest to highest energy score.\n\nThere is material uncertainty: the dataset is small, and longer training could overfit or yield seed-dependent changes in sample diversity and energy score. The score rewards matching stochastic appearance as well as geometry, so training loss or silhouette fit alone cannot guarantee this ranking.",
+      "model_identity_matches": true,
+      "question_sha256": "829187adbf0e7a54bcfe49fd5f70324e5c6fc9d571dbd51c657386f446741106",
+      "prompt_sha256": "e5f9de504810847dc5423aefb9f300d01296314dbaeba04dabd54b69ebed6fd5"
+    },
+    {
+      "model": "gpt-6-luna",
+      "question_id": "q_a6239c03d1629cd236bc6dee8524db8f",
+      "family": "conditional_image_generation",
+      "task": "ranking3",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_2169895363e36f64cc4952db478bf6a1"
+      },
+      "template_id": "training_budget_small_data",
+      "instance_id": "training_budget_small_data_s851901",
+      "status": "complete",
+      "gold_order": [
+        "C",
+        "B",
+        "A"
+      ],
+      "predicted_order": [
+        "C",
+        "B",
+        "A"
+      ],
+      "exact_order_correct": true,
+      "public_content": "<explanation>All three choices use the same convolutional denoiser, data, diffusion objective, and sampling procedure; the main difference is the number of updates. The dataset has only 96 training examples, so longer training could eventually overfit their particular appearances. However, training is stochastic over noise levels and noise realizations, and the conditions are continuous, so additional updates also give the model more opportunities to learn the shared geometry-to-image structure that matters on held-out conditions. The energy score rewards both matching references and retaining appropriate sample diversity.\n\nC vs. B: C trains for 6,000 rather than 3,000 updates. I predict the extra optimization improves held-out conditional generation more than it harms it through overfitting, so C should have the lower score.\n\nB vs. A: B trains for 3,000 rather than 700 updates. A is more likely to be undertrained, so I predict B has the lower score.\n\nThus the predicted order is C, B, A. The material uncertainty is that repeated exposure to the small fixed set of training images could reduce generalization or generated diversity, especially for C; the code and settings alone cannot establish the exact point at which that tradeoff turns negative.</explanation>\n<answer>{\"best_to_worst\": [\"C\", \"B\", \"A\"]}</answer>",
+      "public_explanation": "All three choices use the same convolutional denoiser, data, diffusion objective, and sampling procedure; the main difference is the number of updates. The dataset has only 96 training examples, so longer training could eventually overfit their particular appearances. However, training is stochastic over noise levels and noise realizations, and the conditions are continuous, so additional updates also give the model more opportunities to learn the shared geometry-to-image structure that matters on held-out conditions. The energy score rewards both matching references and retaining appropriate sample diversity.\n\nC vs. B: C trains for 6,000 rather than 3,000 updates. I predict the extra optimization improves held-out conditional generation more than it harms it through overfitting, so C should have the lower score.\n\nB vs. A: B trains for 3,000 rather than 700 updates. A is more likely to be undertrained, so I predict B has the lower score.\n\nThus the predicted order is C, B, A. The material uncertainty is that repeated exposure to the small fixed set of training images could reduce generalization or generated diversity, especially for C; the code and settings alone cannot establish the exact point at which that tradeoff turns negative.",
+      "model_identity_matches": true,
+      "question_sha256": "30ab2d10a4ee9cba8e14f4a072ce037d09706c93f0d4ac5d81fb699b7e7acea9",
+      "prompt_sha256": "230136040338a8b3b5fae4026611590c3fc087958bbfb9021b031210edb81b3f"
+    },
+    {
+      "model": "gpt-6.1-sol",
+      "question_id": "q_7cdd570b1c6b5455c098a9f709f630d7",
+      "family": "conditional_image_generation",
+      "task": "ranking3",
+      "probe": null,
+      "template_id": "residual_depth",
+      "instance_id": "residual_depth_s851903",
+      "status": "complete",
+      "gold_order": [
+        "C",
+        "A",
+        "B"
+      ],
+      "predicted_order": [
+        "A",
+        "B",
+        "C"
+      ],
+      "exact_order_correct": false,
+      "public_content": "<explanation>The main advantage is a stable, sufficiently expressive convolutional denoiser for the small but spatially structured conditional task. Choice A combines five layers with residual connections, preserving optimization stability while providing the largest receptive field and capacity; it should therefore have the lowest energy score. Between B and C, B’s two residual blocks are easier to optimize and should reliably model the geometry because absolute coordinates and globally broadcast conditions make a very large receptive field unnecessary. C has the same depth as A but removes residual paths, making optimization and signal propagation less reliable under the fixed 3000-update budget; its extra depth may help denoising, but the non-residual stack is more likely to undertrain or produce poorer shape/background behavior than B. Thus the predicted adjacent ordering is A over B, then B over C. The B-versus-C comparison is materially uncertain: if the additional receptive field and capacity outweigh the optimization disadvantage, C could surpass B.</explanation>\n<answer>{\"best_to_worst\":[\"A\",\"B\",\"C\"]}</answer>",
+      "public_explanation": "The main advantage is a stable, sufficiently expressive convolutional denoiser for the small but spatially structured conditional task. Choice A combines five layers with residual connections, preserving optimization stability while providing the largest receptive field and capacity; it should therefore have the lowest energy score. Between B and C, B’s two residual blocks are easier to optimize and should reliably model the geometry because absolute coordinates and globally broadcast conditions make a very large receptive field unnecessary. C has the same depth as A but removes residual paths, making optimization and signal propagation less reliable under the fixed 3000-update budget; its extra depth may help denoising, but the non-residual stack is more likely to undertrain or produce poorer shape/background behavior than B. Thus the predicted adjacent ordering is A over B, then B over C. The B-versus-C comparison is materially uncertain: if the additional receptive field and capacity outweigh the optimization disadvantage, C could surpass B.",
+      "model_identity_matches": true,
+      "question_sha256": "0d6ff5329216952830a78fb54d20fda2e5550d6f6d93268deaf99c9477d9c790",
+      "prompt_sha256": "55eab15ea227f456241054336cdbbe22f9519a7e2533391c35e143d6639ab080"
+    },
+    {
+      "model": "gpt-6.1-sol",
+      "question_id": "q_2169895363e36f64cc4952db478bf6a1",
+      "family": "conditional_image_generation",
+      "task": "ranking3",
+      "probe": null,
+      "template_id": "training_budget_small_data",
+      "instance_id": "training_budget_small_data_s851901",
+      "status": "complete",
+      "gold_order": [
+        "B",
+        "A",
+        "C"
+      ],
+      "predicted_order": [
+        "B",
+        "A",
+        "C"
+      ],
+      "exact_order_correct": true,
+      "public_content": "<explanation>\nThe candidates differ only in training duration: B uses 6,000 updates, A 3,000, and C 700. Their architecture, optimizer, x0-prediction objective, cosine schedule, and deterministic 16-step sampler are identical.\n\nI predict **B ahead of A** because the additional updates should improve condition-to-geometry mapping and denoising across noise levels. Absolute coordinates and concatenated geometry conditions let the convolutional network learn the silhouettes, but this relationship must be learned rather than being built into the model.\n\nI predict **A ahead of C** because 700 updates are more likely to leave imperfect boundaries, background leakage, and weaker conditioning. The longer budget should improve generated-image distances enough to outweigh potential differences in diversity.\n\nThe main uncertainty is B versus A: there are only 96 training conditions, each with one fixed appearance, so longer training can memorize brightness and texture or reduce conditional diversity. Those effects matter to the energy score, and lower denoising MSE alone does not establish better sampling. Nevertheless, I expect continued geometry learning to dominate over this budget range.\n</explanation>\n<answer>{\"best_to_worst\": [\"B\", \"A\", \"C\"]}</answer>",
+      "public_explanation": "The candidates differ only in training duration: B uses 6,000 updates, A 3,000, and C 700. Their architecture, optimizer, x0-prediction objective, cosine schedule, and deterministic 16-step sampler are identical.\n\nI predict **B ahead of A** because the additional updates should improve condition-to-geometry mapping and denoising across noise levels. Absolute coordinates and concatenated geometry conditions let the convolutional network learn the silhouettes, but this relationship must be learned rather than being built into the model.\n\nI predict **A ahead of C** because 700 updates are more likely to leave imperfect boundaries, background leakage, and weaker conditioning. The longer budget should improve generated-image distances enough to outweigh potential differences in diversity.\n\nThe main uncertainty is B versus A: there are only 96 training conditions, each with one fixed appearance, so longer training can memorize brightness and texture or reduce conditional diversity. Those effects matter to the energy score, and lower denoising MSE alone does not establish better sampling. Nevertheless, I expect continued geometry learning to dominate over this budget range.",
+      "model_identity_matches": true,
+      "question_sha256": "829187adbf0e7a54bcfe49fd5f70324e5c6fc9d571dbd51c657386f446741106",
+      "prompt_sha256": "e5f9de504810847dc5423aefb9f300d01296314dbaeba04dabd54b69ebed6fd5"
+    },
+    {
+      "model": "gpt-6.1-sol",
+      "question_id": "q_a6239c03d1629cd236bc6dee8524db8f",
+      "family": "conditional_image_generation",
+      "task": "ranking3",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_2169895363e36f64cc4952db478bf6a1"
+      },
+      "template_id": "training_budget_small_data",
+      "instance_id": "training_budget_small_data_s851901",
+      "status": "complete",
+      "gold_order": [
+        "C",
+        "B",
+        "A"
+      ],
+      "predicted_order": [
+        "C",
+        "B",
+        "A"
+      ],
+      "exact_order_correct": true,
+      "public_content": "<explanation>The dominant factor is optimization duration: all architectural, optimizer, diffusion, and sampling settings are otherwise identical. Choice A receives only 700 updates (11,200 samples), so it is most likely underfit and least able to learn the geometry-conditioned denoising map; therefore A should be worse than B. Choice B has 3,000 updates and should substantially improve condition satisfaction and conditional appearance modeling. Choice C doubles B's updates to 6,000, allowing further optimization on this simple synthetic task and is therefore predicted to have the lowest test energy score. The B-versus-C comparison is less certain than A-versus-B: with only 96 training images, prolonged constant-rate training could overfit the observed appearance draws, while x0 prediction and strong low-noise weighting may also cause late-training calibration issues. Nonetheless, the smooth procedural structure, weight decay, and replacement sampling make additional training more likely beneficial than harmful.</explanation>\n<answer>{\"best_to_worst\":[\"C\",\"B\",\"A\"]}</answer>",
+      "public_explanation": "The dominant factor is optimization duration: all architectural, optimizer, diffusion, and sampling settings are otherwise identical. Choice A receives only 700 updates (11,200 samples), so it is most likely underfit and least able to learn the geometry-conditioned denoising map; therefore A should be worse than B. Choice B has 3,000 updates and should substantially improve condition satisfaction and conditional appearance modeling. Choice C doubles B's updates to 6,000, allowing further optimization on this simple synthetic task and is therefore predicted to have the lowest test energy score. The B-versus-C comparison is less certain than A-versus-B: with only 96 training images, prolonged constant-rate training could overfit the observed appearance draws, while x0 prediction and strong low-noise weighting may also cause late-training calibration issues. Nonetheless, the smooth procedural structure, weight decay, and replacement sampling make additional training more likely beneficial than harmful.",
+      "model_identity_matches": true,
+      "question_sha256": "30ab2d10a4ee9cba8e14f4a072ce037d09706c93f0d4ac5d81fb699b7e7acea9",
+      "prompt_sha256": "230136040338a8b3b5fae4026611590c3fc087958bbfb9021b031210edb81b3f"
+    },
+    {
+      "model": "claude-opus-5-5",
+      "question_id": "q_7cdd570b1c6b5455c098a9f709f630d7",
+      "family": "conditional_image_generation",
+      "task": "ranking3",
+      "probe": null,
+      "template_id": "residual_depth",
+      "instance_id": "residual_depth_s851903",
+      "status": "complete",
+      "gold_order": [
+        "C",
+        "A",
+        "B"
+      ],
+      "predicted_order": [
+        "A",
+        "C",
+        "B"
+      ],
+      "exact_order_correct": false,
+      "public_content": "<explanation>\n**What varies.** Only the conv denoiser body changes: A has 5 residual blocks, B has 2 residual blocks, and C has 5 non-residual blocks. Everything else is shared: x0 prediction, cosine schedule, 16-step deterministic DDIM, and the same budget, optimizer and conditioning.\n\n**What the task demands.** The model never downsamples, so it must do two things.\n1. **Per-pixel geometry.** It has to compute whether each pixel lies inside the shape, from the absolute coordinates and the concatenated condition. That means a nonlinear function involving squared distances, max(|dx|,|dy|) and the ring's inner radius, which needs several nonlinear layers.\n2. **Image-wide consistency.** Brightness and stripe phase/orientation are sampled once per image. The denoiser must keep them consistent across the shape, which spans up to about 6–7 pixels.\n\n**Receptive field.** With 3×3 convs, the receptive field is roughly 3 + 2·depth pixels: 13 at depth 5 and 7 at depth 2.\n\n**A first (5 residual blocks).** It has the most nonlinear capacity and the largest receptive field. The residual pre-norm path keeps optimization easy over 3000 Adam steps. It should give the sharpest silhouettes and the least background leakage, both of which matter heavily under the 1+3·mask pixel weighting.\n\n**C second (5 non-residual blocks).** It has the same depth and receptive field as A. Losing the identity path makes optimization somewhat harder and slower. Still, a 5-layer GroupNorm CNN of width 24 trains reasonably well with Adam and gradient clipping. I expect it to trail A modestly.\n\n**B last (2 residual blocks).** It optimizes easily but has only about three nonlinear stages and a receptive field of 7 pixels. That limits how precisely it can render the shapes, especially the ring's inner boundary and the square/circle distinction. It also limits coherence of brightness and texture across larger shapes. I expect more blurry or leaky samples and a worse energy score.\n\n**Uncertainty.** The B vs C order is the least certain. If the non-residual stack trains poorly within 3000 steps, C could fall below B. A being best is fairly confident.\n</explanation>\n\n<answer>{\"best_to_worst\": [\"A\", \"C\", \"B\"]}</answer>",
+      "public_explanation": "**What varies.** Only the conv denoiser body changes: A has 5 residual blocks, B has 2 residual blocks, and C has 5 non-residual blocks. Everything else is shared: x0 prediction, cosine schedule, 16-step deterministic DDIM, and the same budget, optimizer and conditioning.\n\n**What the task demands.** The model never downsamples, so it must do two things.\n1. **Per-pixel geometry.** It has to compute whether each pixel lies inside the shape, from the absolute coordinates and the concatenated condition. That means a nonlinear function involving squared distances, max(|dx|,|dy|) and the ring's inner radius, which needs several nonlinear layers.\n2. **Image-wide consistency.** Brightness and stripe phase/orientation are sampled once per image. The denoiser must keep them consistent across the shape, which spans up to about 6–7 pixels.\n\n**Receptive field.** With 3×3 convs, the receptive field is roughly 3 + 2·depth pixels: 13 at depth 5 and 7 at depth 2.\n\n**A first (5 residual blocks).** It has the most nonlinear capacity and the largest receptive field. The residual pre-norm path keeps optimization easy over 3000 Adam steps. It should give the sharpest silhouettes and the least background leakage, both of which matter heavily under the 1+3·mask pixel weighting.\n\n**C second (5 non-residual blocks).** It has the same depth and receptive field as A. Losing the identity path makes optimization somewhat harder and slower. Still, a 5-layer GroupNorm CNN of width 24 trains reasonably well with Adam and gradient clipping. I expect it to trail A modestly.\n\n**B last (2 residual blocks).** It optimizes easily but has only about three nonlinear stages and a receptive field of 7 pixels. That limits how precisely it can render the shapes, especially the ring's inner boundary and the square/circle distinction. It also limits coherence of brightness and texture across larger shapes. I expect more blurry or leaky samples and a worse energy score.\n\n**Uncertainty.** The B vs C order is the least certain. If the non-residual stack trains poorly within 3000 steps, C could fall below B. A being best is fairly confident.",
+      "model_identity_matches": true,
+      "question_sha256": "0d6ff5329216952830a78fb54d20fda2e5550d6f6d93268deaf99c9477d9c790",
+      "prompt_sha256": "55eab15ea227f456241054336cdbbe22f9519a7e2533391c35e143d6639ab080"
+    },
+    {
+      "model": "claude-opus-5-5",
+      "question_id": "q_c20c51a29370da1983badd993123468f",
+      "family": "conditional_image_generation",
+      "task": "ranking3",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_7cdd570b1c6b5455c098a9f709f630d7"
+      },
+      "template_id": "residual_depth",
+      "instance_id": "residual_depth_s851903",
+      "status": "complete",
+      "gold_order": [
+        "A",
+        "B",
+        "C"
+      ],
+      "predicted_order": [
+        "B",
+        "A",
+        "C"
+      ],
+      "exact_order_correct": false,
+      "public_content": "<explanation>\n**Main factors**\n- All three are pixel-wise conv denoisers with x0 prediction, a cosine schedule, 16-step DDIM sampling (eta = 0) and absolute coordinates.\n- Conditions and time are concatenated at every pixel, so each pixel can in principle compute its own geometric mask. That requires a nonlinear function of the coordinates minus the center: squared distances, max-abs for squares, and an annulus test for rings.\n- Two things therefore matter:\n  - **Nonlinear depth:** enough of it to carve circle, square and ring boundaries sharply.\n  - **Spatial context:** enough receptive field to pool information from the noisy image, so brightness and stripe phase stay coherent across the shape and the latent appearance is drawn with correct diversity.\n\n**B (depth 5, residual) is best.**\n- It has five pre-norm SiLU blocks, an 11×11 receptive field and clean gradient flow via identity skips.\n- The residual stream also keeps linear coordinate and condition features available at every layer.\n- Within 3000 AdamW steps, it should give the sharpest silhouettes and the least background leakage.\n\n**A (depth 5, non-residual) is second.**\n- It has the same depth and receptive field, so expressivity and context match B.\n- Without skips, each block must re-transmit the noisy-image and coordinate information through GroupNorm, SiLU and conv.\n- A plain six-conv stack with GroupNorm still trains reliably at width 24, but it optimizes more slowly. It is also more prone to slightly blurry or averaged outputs within a fixed budget, which hurts the energy score.\n- I place it below B but above the shallow model.\n\n**C (depth 2, residual) is worst.**\n- With only two nonlinear blocks and a 7×7 receptive field, it has limited capacity to represent the ring's inner hole and the square-vs-circle distinction sharply.\n- It also has less spatial context to infer a consistent brightness and stripe phase from the noise. Expect lower IoU and more mean-like samples.\n\n**Uncertainty**\n- The A-vs-C order is the least certain. Optimization difficulty without residuals could, in principle, drop A below C. For a network this shallow with GroupNorm, I judge capacity to dominate.\n</explanation>\n\n<answer>{\"best_to_worst\": [\"B\", \"A\", \"C\"]}</answer>",
+      "public_explanation": "**Main factors**\n- All three are pixel-wise conv denoisers with x0 prediction, a cosine schedule, 16-step DDIM sampling (eta = 0) and absolute coordinates.\n- Conditions and time are concatenated at every pixel, so each pixel can in principle compute its own geometric mask. That requires a nonlinear function of the coordinates minus the center: squared distances, max-abs for squares, and an annulus test for rings.\n- Two things therefore matter:\n  - **Nonlinear depth:** enough of it to carve circle, square and ring boundaries sharply.\n  - **Spatial context:** enough receptive field to pool information from the noisy image, so brightness and stripe phase stay coherent across the shape and the latent appearance is drawn with correct diversity.\n\n**B (depth 5, residual) is best.**\n- It has five pre-norm SiLU blocks, an 11×11 receptive field and clean gradient flow via identity skips.\n- The residual stream also keeps linear coordinate and condition features available at every layer.\n- Within 3000 AdamW steps, it should give the sharpest silhouettes and the least background leakage.\n\n**A (depth 5, non-residual) is second.**\n- It has the same depth and receptive field, so expressivity and context match B.\n- Without skips, each block must re-transmit the noisy-image and coordinate information through GroupNorm, SiLU and conv.\n- A plain six-conv stack with GroupNorm still trains reliably at width 24, but it optimizes more slowly. It is also more prone to slightly blurry or averaged outputs within a fixed budget, which hurts the energy score.\n- I place it below B but above the shallow model.\n\n**C (depth 2, residual) is worst.**\n- With only two nonlinear blocks and a 7×7 receptive field, it has limited capacity to represent the ring's inner hole and the square-vs-circle distinction sharply.\n- It also has less spatial context to infer a consistent brightness and stripe phase from the noise. Expect lower IoU and more mean-like samples.\n\n**Uncertainty**\n- The A-vs-C order is the least certain. Optimization difficulty without residuals could, in principle, drop A below C. For a network this shallow with GroupNorm, I judge capacity to dominate.",
+      "model_identity_matches": true,
+      "question_sha256": "b99f483aac5d63575b2357b816076cf5f86100644384191c7766a1973d5f34d4",
+      "prompt_sha256": "42bcb392eb911201e6025edaaf7d24e9b88b7df80e6ad4510f68b28c406651a3"
+    },
+    {
+      "model": "claude-opus-5-5",
+      "question_id": "q_2169895363e36f64cc4952db478bf6a1",
+      "family": "conditional_image_generation",
+      "task": "ranking3",
+      "probe": null,
+      "template_id": "training_budget_small_data",
+      "instance_id": "training_budget_small_data_s851901",
+      "status": "complete",
+      "gold_order": [
+        "B",
+        "A",
+        "C"
+      ],
+      "predicted_order": [
+        "B",
+        "A",
+        "C"
+      ],
+      "exact_order_correct": true,
+      "public_content": "<explanation>\n**Main factor: optimization progress versus overfitting.** The only axis that varies is the number of training steps: C = 700, A = 3000, B = 6000. Everything else is shared:\n- **Model:** a small residual conv denoiser, width 24, depth 3, roughly 16k parameters. Its receptive field is about 9×9, and conditioning is concatenated with absolute coordinates.\n- **Training:** x0 prediction, cosine schedule, AdamW at a constant 1e-3, gradient clipping at 1.0.\n- **Sampling:** deterministic DDIM (eta = 0) with 16 steps.\n\nWith eta = 0, within-condition diversity comes only from the initial noise. The energy score therefore depends mainly on two things:\n- whether the model places the right shape in the right place with no background leakage (the heavily weighted foreground mask term);\n- whether it keeps some spread in brightness and texture.\n\n**Overfitting is a minor risk.** There are only 96 training images, but the network is small and has to infer geometry from concatenated condition channels and coordinates. That map from conditions and coordinates to a mask is smooth and data-efficient. The model has little capacity to memorize per-image brightness or stripe phase. More training should therefore mostly sharpen shape boundaries and reduce leakage, rather than collapse diversity.\n\n**B vs A (B better):** 6000 steps give twice the updates of A at a constant learning rate. Ring and square silhouettes, especially the ring's inner hole, are the slow-to-learn parts for a shallow conv net with a limited receptive field. Extra steps should keep improving IoU and leakage. Overfitting is the main risk that could invert this pair, so this gap is the least certain.\n\n**A vs C (A better):** 700 steps (11k samples) is likely clearly undertrained for learning the condition-to-geometry map through concatenated scalar channels. This would show up as blurry or misplaced shapes and background leak, which raise the cross term of the score.\n\n**Uncertainty:** A and B may be close, since both could be near a plateau. C is very likely the worst.\n</explanation>\n\n<answer>{\"best_to_worst\": [\"B\", \"A\", \"C\"]}</answer>",
+      "public_explanation": "**Main factor: optimization progress versus overfitting.** The only axis that varies is the number of training steps: C = 700, A = 3000, B = 6000. Everything else is shared:\n- **Model:** a small residual conv denoiser, width 24, depth 3, roughly 16k parameters. Its receptive field is about 9×9, and conditioning is concatenated with absolute coordinates.\n- **Training:** x0 prediction, cosine schedule, AdamW at a constant 1e-3, gradient clipping at 1.0.\n- **Sampling:** deterministic DDIM (eta = 0) with 16 steps.\n\nWith eta = 0, within-condition diversity comes only from the initial noise. The energy score therefore depends mainly on two things:\n- whether the model places the right shape in the right place with no background leakage (the heavily weighted foreground mask term);\n- whether it keeps some spread in brightness and texture.\n\n**Overfitting is a minor risk.** There are only 96 training images, but the network is small and has to infer geometry from concatenated condition channels and coordinates. That map from conditions and coordinates to a mask is smooth and data-efficient. The model has little capacity to memorize per-image brightness or stripe phase. More training should therefore mostly sharpen shape boundaries and reduce leakage, rather than collapse diversity.\n\n**B vs A (B better):** 6000 steps give twice the updates of A at a constant learning rate. Ring and square silhouettes, especially the ring's inner hole, are the slow-to-learn parts for a shallow conv net with a limited receptive field. Extra steps should keep improving IoU and leakage. Overfitting is the main risk that could invert this pair, so this gap is the least certain.\n\n**A vs C (A better):** 700 steps (11k samples) is likely clearly undertrained for learning the condition-to-geometry map through concatenated scalar channels. This would show up as blurry or misplaced shapes and background leak, which raise the cross term of the score.\n\n**Uncertainty:** A and B may be close, since both could be near a plateau. C is very likely the worst.",
+      "model_identity_matches": true,
+      "question_sha256": "829187adbf0e7a54bcfe49fd5f70324e5c6fc9d571dbd51c657386f446741106",
+      "prompt_sha256": "e5f9de504810847dc5423aefb9f300d01296314dbaeba04dabd54b69ebed6fd5"
+    },
+    {
+      "model": "claude-opus-5-5",
+      "question_id": "q_a6239c03d1629cd236bc6dee8524db8f",
+      "family": "conditional_image_generation",
+      "task": "ranking3",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_2169895363e36f64cc4952db478bf6a1"
+      },
+      "template_id": "training_budget_small_data",
+      "instance_id": "training_budget_small_data_s851901",
+      "status": "complete",
+      "gold_order": [
+        "C",
+        "B",
+        "A"
+      ],
+      "predicted_order": [
+        "C",
+        "B",
+        "A"
+      ],
+      "exact_order_correct": true,
+      "public_content": "<explanation>\n**What varies.** Only the training length changes: A runs 700 steps, B runs 3000, and C runs 6000. Everything else is shared: the small residual conv denoiser (width 24, depth 3, about 16k parameters), x0 prediction, cosine schedule, AdamW at lr 1e-3 with constant LR, and deterministic DDIM sampling with 16 steps.\n\n**Why more training should help.** The geometry can be computed one pixel at a time. Each pixel receives absolute coordinates plus the concatenated condition (shape one-hot, center, radius). So the network can learn the mask as a pointwise function of (coords, condition). The job is mainly fitting a sharp nonlinear boundary function, not memorizing images. That kind of fit keeps improving with more optimizer steps:\n- Mask edges get sharper, which improves IoU.\n- Background leakage drops. Leakage is weighted 1× and foreground 4×, so both matter in the score.\n- Ring holes and square corners become correct, where an undertrained model gives blurrier shapes.\n\nThe deterministic DDIM sampler maps initial noise to brightness and stripe variation. A better-trained denoiser at intermediate noise levels should also give more realistic within-condition diversity, which lowers the energy score.\n\n**C (6000) vs B (3000).** C sees roughly 1000 epochs over 96 training images, so overfitting is possible. Two things make it limited:\n- The model has low capacity.\n- The fresh noise and timestep each step act as heavy augmentation.\n\nAny memorized brightness or texture tied to a training condition would mostly affect latent appearance, not geometry. I expect C to edge out B, but the gap is likely small, and this pair is the main uncertainty.\n\n**B (3000) vs A (700).** At 700 steps a small conv net with batch size 16 is likely still learning sharp shape boundaries and the ring and square distinctions. That should produce blurrier shapes, more background leakage and worse energy scores. This is the most confident gap.\n</explanation>\n\n<answer>{\"best_to_worst\": [\"C\", \"B\", \"A\"]}</answer>",
+      "public_explanation": "**What varies.** Only the training length changes: A runs 700 steps, B runs 3000, and C runs 6000. Everything else is shared: the small residual conv denoiser (width 24, depth 3, about 16k parameters), x0 prediction, cosine schedule, AdamW at lr 1e-3 with constant LR, and deterministic DDIM sampling with 16 steps.\n\n**Why more training should help.** The geometry can be computed one pixel at a time. Each pixel receives absolute coordinates plus the concatenated condition (shape one-hot, center, radius). So the network can learn the mask as a pointwise function of (coords, condition). The job is mainly fitting a sharp nonlinear boundary function, not memorizing images. That kind of fit keeps improving with more optimizer steps:\n- Mask edges get sharper, which improves IoU.\n- Background leakage drops. Leakage is weighted 1× and foreground 4×, so both matter in the score.\n- Ring holes and square corners become correct, where an undertrained model gives blurrier shapes.\n\nThe deterministic DDIM sampler maps initial noise to brightness and stripe variation. A better-trained denoiser at intermediate noise levels should also give more realistic within-condition diversity, which lowers the energy score.\n\n**C (6000) vs B (3000).** C sees roughly 1000 epochs over 96 training images, so overfitting is possible. Two things make it limited:\n- The model has low capacity.\n- The fresh noise and timestep each step act as heavy augmentation.\n\nAny memorized brightness or texture tied to a training condition would mostly affect latent appearance, not geometry. I expect C to edge out B, but the gap is likely small, and this pair is the main uncertainty.\n\n**B (3000) vs A (700).** At 700 steps a small conv net with batch size 16 is likely still learning sharp shape boundaries and the ring and square distinctions. That should produce blurrier shapes, more background leakage and worse energy scores. This is the most confident gap.",
+      "model_identity_matches": true,
+      "question_sha256": "30ab2d10a4ee9cba8e14f4a072ce037d09706c93f0d4ac5d81fb699b7e7acea9",
+      "prompt_sha256": "230136040338a8b3b5fae4026611590c3fc087958bbfb9021b031210edb81b3f"
+    },
+    {
+      "model": "claude-haiku-5-5",
+      "question_id": "q_7cdd570b1c6b5455c098a9f709f630d7",
+      "family": "conditional_image_generation",
+      "task": "ranking3",
+      "probe": null,
+      "template_id": "residual_depth",
+      "instance_id": "residual_depth_s851903",
+      "status": "complete",
+      "gold_order": [
+        "C",
+        "A",
+        "B"
+      ],
+      "predicted_order": [
+        "A",
+        "C",
+        "B"
+      ],
+      "exact_order_correct": false,
+      "public_content": "<explanation>\n**Setup.** All three choices share the same conv denoiser family (width 24, dense blocks with GroupNorm(4), residual connections, concat conditioning, sinusoidal time embedding), the same AdamW optimizer (lr 1e-3), the same x0-prediction MSE objective with cosine schedule, 3000 steps at batch 16, and the same 16 seeds. Only depth and residual wiring differ.\n\n**Choice A (base):** depth 5, residual on. Five residual blocks at width 24 with 3×3 convs give a receptive field that comfortably covers a 16×16 image, so the network can represent the shape geometry and brightness. Residual connections keep gradients well-conditioned over the depth, and the x0 target gives a direct signal about the shape mask. With only 3000 updates, the deeper residual net should fit the conditional structure well.\n\n**Choice C:** depth 5, residual off. Same capacity and receptive field as A, but without skip connections the five-layer plain stack is harder to optimize in 3000 steps at lr 1e-3. Gradient flow is worse, and the final sample mask/brightness precision tends to suffer. I expect C to be modestly worse than A, with uncertainty because the net is shallow enough that the penalty may be small.\n\n**Choice B:** depth 2, residual on. Two blocks plus the stem and head give a receptive field of roughly 7×7 pixels. That is too small to propagate the global shape (a disk/square of radius up to 0.42 in normalized coordinates, roughly 3–7 pixels in radius) and the position signal through purely local convolutions, though the absolute-coordinate channels and the concatenated condition partly compensate. Its lower capacity makes it the most likely to produce blurred or misplaced shapes, which increases the energy score through worse shape overlap and background leakage. I expect B to be the worst.\n\n**Ranking rationale.** A > C because residual wiring at equal depth trains more reliably in this short budget. C > B because depth 5 gives a global receptive field and far more capacity than depth 2, which is the dominant factor for matching the conditional geometry. The A-vs-C gap is the less certain pair. The C-vs-B gap is more likely to be large in the direction predicted.\n\n**Uncertainty.** Each choice is averaged over 16 seeds, so seed variance is reduced but not eliminated. Because the sampler uses 16 reverse steps with deterministic DDIM (eta 0), sample quality is largely governed by how well the denoiser learned the x0 mapping, which favors the deeper, residual model.\n</explanation>\n\n<answer>{\"best_to_worst\": [\"A\", \"C\", \"B\"]}</answer>",
+      "public_explanation": "**Setup.** All three choices share the same conv denoiser family (width 24, dense blocks with GroupNorm(4), residual connections, concat conditioning, sinusoidal time embedding), the same AdamW optimizer (lr 1e-3), the same x0-prediction MSE objective with cosine schedule, 3000 steps at batch 16, and the same 16 seeds. Only depth and residual wiring differ.\n\n**Choice A (base):** depth 5, residual on. Five residual blocks at width 24 with 3×3 convs give a receptive field that comfortably covers a 16×16 image, so the network can represent the shape geometry and brightness. Residual connections keep gradients well-conditioned over the depth, and the x0 target gives a direct signal about the shape mask. With only 3000 updates, the deeper residual net should fit the conditional structure well.\n\n**Choice C:** depth 5, residual off. Same capacity and receptive field as A, but without skip connections the five-layer plain stack is harder to optimize in 3000 steps at lr 1e-3. Gradient flow is worse, and the final sample mask/brightness precision tends to suffer. I expect C to be modestly worse than A, with uncertainty because the net is shallow enough that the penalty may be small.\n\n**Choice B:** depth 2, residual on. Two blocks plus the stem and head give a receptive field of roughly 7×7 pixels. That is too small to propagate the global shape (a disk/square of radius up to 0.42 in normalized coordinates, roughly 3–7 pixels in radius) and the position signal through purely local convolutions, though the absolute-coordinate channels and the concatenated condition partly compensate. Its lower capacity makes it the most likely to produce blurred or misplaced shapes, which increases the energy score through worse shape overlap and background leakage. I expect B to be the worst.\n\n**Ranking rationale.** A > C because residual wiring at equal depth trains more reliably in this short budget. C > B because depth 5 gives a global receptive field and far more capacity than depth 2, which is the dominant factor for matching the conditional geometry. The A-vs-C gap is the less certain pair. The C-vs-B gap is more likely to be large in the direction predicted.\n\n**Uncertainty.** Each choice is averaged over 16 seeds, so seed variance is reduced but not eliminated. Because the sampler uses 16 reverse steps with deterministic DDIM (eta 0), sample quality is largely governed by how well the denoiser learned the x0 mapping, which favors the deeper, residual model.",
+      "model_identity_matches": true,
+      "question_sha256": "0d6ff5329216952830a78fb54d20fda2e5550d6f6d93268deaf99c9477d9c790",
+      "prompt_sha256": "55eab15ea227f456241054336cdbbe22f9519a7e2533391c35e143d6639ab080"
+    },
+    {
+      "model": "claude-haiku-5-5",
+      "question_id": "q_c20c51a29370da1983badd993123468f",
+      "family": "conditional_image_generation",
+      "task": "ranking3",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_7cdd570b1c6b5455c098a9f709f630d7"
+      },
+      "template_id": "residual_depth",
+      "instance_id": "residual_depth_s851903",
+      "status": "complete",
+      "gold_order": [
+        "A",
+        "B",
+        "C"
+      ],
+      "predicted_order": [
+        "B",
+        "C",
+        "A"
+      ],
+      "exact_order_correct": false,
+      "public_content": "<explanation>\n**Shared setup.** All three choices use the same conv denoiser (width 24, dense 3×3 blocks, GroupNorm(4), SiLU, sinusoidal time embedding, concat conditioning), the same AdamW optimizer (lr 1e-3), the same cosine noise schedule, the same x0 prediction target with uniform MSE weighting, and the same 3000 steps at batch size 16. Only the architecture axis differs, so the ranking depends on how depth and residual connections change optimization and capacity under this fixed budget.\n\n**Choice B (base).** Depth 5 with residual connections. Each block adds `x + y`, so gradients flow directly through the stack. Five residual blocks at width 24 give a reasonably expressive receptive field. The 16×16 target is small, and the 3×3 kernels across five blocks give a receptive field of about 11 pixels, which is enough to place a shape from the absolute coordinates and conditioning concatenated at every pixel.\n\n**Choice C (depth 2).** Fewer blocks with the same residual structure. Optimization is easier and it trains as stably as B, but the receptive field is smaller (about 5 pixels) and capacity is lower. The conditioning is concatenated as constant channels and the absolute coordinates are supplied, so the network can still localize the shape without much depth. The main cost is reduced ability to model sharp boundaries and the stripe texture, which should show up as worse shape overlap and a somewhat worse energy score.\n\n**Choice A (residual off, depth 5).** The residual skip is removed from all five blocks, so the network is a plain 5-layer deep stack with no identity path. At 3000 steps with AdamW and gradient clipping at 1.0, a plain 5-layer conv stack with GroupNorm is still trainable, but the signal and gradient paths are less direct. Its expected effect is slower convergence and a less accurate x0 prediction at this budget. Because the energy score is computed on samples from a 16-step sampler, a noisier denoiser usually produces blurrier or leaky masks, which raises the score.\n\n**Ranking.** I expect B to be best: it keeps the full depth and receptive field and retains the residual gradient path. C is second, since it keeps the residual path but has less capacity and a smaller receptive field. A is last, since removing residuals hurts optimization at a fixed budget.\n\n**Uncertainty.** The gap between B and C could be small. Depth 2 may suffice for this easy geometric task, and with 16 seeds the differences in mean energy score may be within noise. The A-vs-B ordering is more confident, but a plain 5-layer network can sometimes match a residual one on small images, so the margin is not guaranteed.\n</explanation>\n\n<answer>{\"best_to_worst\": [\"B\", \"C\", \"A\"]}</answer>",
+      "public_explanation": "**Shared setup.** All three choices use the same conv denoiser (width 24, dense 3×3 blocks, GroupNorm(4), SiLU, sinusoidal time embedding, concat conditioning), the same AdamW optimizer (lr 1e-3), the same cosine noise schedule, the same x0 prediction target with uniform MSE weighting, and the same 3000 steps at batch size 16. Only the architecture axis differs, so the ranking depends on how depth and residual connections change optimization and capacity under this fixed budget.\n\n**Choice B (base).** Depth 5 with residual connections. Each block adds `x + y`, so gradients flow directly through the stack. Five residual blocks at width 24 give a reasonably expressive receptive field. The 16×16 target is small, and the 3×3 kernels across five blocks give a receptive field of about 11 pixels, which is enough to place a shape from the absolute coordinates and conditioning concatenated at every pixel.\n\n**Choice C (depth 2).** Fewer blocks with the same residual structure. Optimization is easier and it trains as stably as B, but the receptive field is smaller (about 5 pixels) and capacity is lower. The conditioning is concatenated as constant channels and the absolute coordinates are supplied, so the network can still localize the shape without much depth. The main cost is reduced ability to model sharp boundaries and the stripe texture, which should show up as worse shape overlap and a somewhat worse energy score.\n\n**Choice A (residual off, depth 5).** The residual skip is removed from all five blocks, so the network is a plain 5-layer deep stack with no identity path. At 3000 steps with AdamW and gradient clipping at 1.0, a plain 5-layer conv stack with GroupNorm is still trainable, but the signal and gradient paths are less direct. Its expected effect is slower convergence and a less accurate x0 prediction at this budget. Because the energy score is computed on samples from a 16-step sampler, a noisier denoiser usually produces blurrier or leaky masks, which raises the score.\n\n**Ranking.** I expect B to be best: it keeps the full depth and receptive field and retains the residual gradient path. C is second, since it keeps the residual path but has less capacity and a smaller receptive field. A is last, since removing residuals hurts optimization at a fixed budget.\n\n**Uncertainty.** The gap between B and C could be small. Depth 2 may suffice for this easy geometric task, and with 16 seeds the differences in mean energy score may be within noise. The A-vs-B ordering is more confident, but a plain 5-layer network can sometimes match a residual one on small images, so the margin is not guaranteed.",
+      "model_identity_matches": true,
+      "question_sha256": "b99f483aac5d63575b2357b816076cf5f86100644384191c7766a1973d5f34d4",
+      "prompt_sha256": "42bcb392eb911201e6025edaaf7d24e9b88b7df80e6ad4510f68b28c406651a3"
+    },
+    {
+      "model": "claude-haiku-5-5",
+      "question_id": "q_2169895363e36f64cc4952db478bf6a1",
+      "family": "conditional_image_generation",
+      "task": "ranking3",
+      "probe": null,
+      "template_id": "training_budget_small_data",
+      "instance_id": "training_budget_small_data_s851901",
+      "status": "complete",
+      "gold_order": [
+        "B",
+        "A",
+        "C"
+      ],
+      "predicted_order": [
+        "B",
+        "A",
+        "C"
+      ],
+      "exact_order_correct": true,
+      "public_content": "<explanation>\nAll three choices share the same model (conv, width 24, depth 3, about tens of thousands of parameters), the same AdamW optimizer (lr 1e-3, weight decay 0.01), the same uniform x0-prediction MSE loss with cosine noise schedule, batch size 16, and the same 16-step deterministic sampler. They differ only in training length: Choice C runs 700 steps, Choice A runs 3000 steps, and Choice B runs 6000 steps.\n\nThe main factor is how far optimization has progressed. At batch size 16 with a small conv denoiser, 700 updates (about 11k samples seen, roughly 117 passes over 96 training images) is short for a diffusion model to learn sharp shapes, correct brightness, and accurate background suppression. Its samples are likely to be blurrier, with more leakage and weaker shape fidelity, which raises the energy score. Going from 700 to 3000 steps should substantially improve the conditional fit. Going from 3000 to 6000 steps should still help, but with diminishing returns. With only 96 training images, the model risks overfitting, but the training images are drawn from the same procedural distribution and the energy score is measured against fresh references, so the gain from more steps is likely to outweigh the overfitting risk at this scale. Overfitting to a 96-image set could still cap the gain, so the margin between A and B is the least certain pair.\n\nOther settings are identical, so the ranking depends mainly on training length. The gradient-clip threshold of 1.0 and the constant learning rate are unlikely to change the ordering.\n\nPredicted order from best (lowest energy score) to worst: B, A, C. The B-versus-A pair is the most uncertain, because 6000 steps on 96 images could start to overfit. The A-versus-C gap is more confidently ordered, since 700 steps is clearly undertrained relative to 3000.\n</explanation>\n\n<answer>{\"best_to_worst\": [\"B\", \"A\", \"C\"]}</answer>",
+      "public_explanation": "All three choices share the same model (conv, width 24, depth 3, about tens of thousands of parameters), the same AdamW optimizer (lr 1e-3, weight decay 0.01), the same uniform x0-prediction MSE loss with cosine noise schedule, batch size 16, and the same 16-step deterministic sampler. They differ only in training length: Choice C runs 700 steps, Choice A runs 3000 steps, and Choice B runs 6000 steps.\n\nThe main factor is how far optimization has progressed. At batch size 16 with a small conv denoiser, 700 updates (about 11k samples seen, roughly 117 passes over 96 training images) is short for a diffusion model to learn sharp shapes, correct brightness, and accurate background suppression. Its samples are likely to be blurrier, with more leakage and weaker shape fidelity, which raises the energy score. Going from 700 to 3000 steps should substantially improve the conditional fit. Going from 3000 to 6000 steps should still help, but with diminishing returns. With only 96 training images, the model risks overfitting, but the training images are drawn from the same procedural distribution and the energy score is measured against fresh references, so the gain from more steps is likely to outweigh the overfitting risk at this scale. Overfitting to a 96-image set could still cap the gain, so the margin between A and B is the least certain pair.\n\nOther settings are identical, so the ranking depends mainly on training length. The gradient-clip threshold of 1.0 and the constant learning rate are unlikely to change the ordering.\n\nPredicted order from best (lowest energy score) to worst: B, A, C. The B-versus-A pair is the most uncertain, because 6000 steps on 96 images could start to overfit. The A-versus-C gap is more confidently ordered, since 700 steps is clearly undertrained relative to 3000.",
+      "model_identity_matches": true,
+      "question_sha256": "829187adbf0e7a54bcfe49fd5f70324e5c6fc9d571dbd51c657386f446741106",
+      "prompt_sha256": "e5f9de504810847dc5423aefb9f300d01296314dbaeba04dabd54b69ebed6fd5"
+    },
+    {
+      "model": "claude-haiku-5-5",
+      "question_id": "q_a6239c03d1629cd236bc6dee8524db8f",
+      "family": "conditional_image_generation",
+      "task": "ranking3",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_2169895363e36f64cc4952db478bf6a1"
+      },
+      "template_id": "training_budget_small_data",
+      "instance_id": "training_budget_small_data_s851901",
+      "status": "complete",
+      "gold_order": [
+        "C",
+        "B",
+        "A"
+      ],
+      "predicted_order": [
+        "C",
+        "B",
+        "A"
+      ],
+      "exact_order_correct": true,
+      "public_content": "<explanation>\nAll three candidates share the same dense conv denoiser (width 24, depth 3, GroupNorm, residual), AdamW at lr 1e-3, batch size 16, x0 prediction with uniform MSE weighting, and a cosine schedule. The only axis that differs is the training budget: Choice A trains 700 steps (11,200 samples), Choice B trains 3,000 steps (48,000 samples), and Choice C trains 6,000 steps (96,000 samples). Everything else is identical, so the ranking is driven by how far each model gets along the same optimization trajectory.\n\nKey factors:\n- **Under-training dominates at these budgets.** The denoiser is small (under ~100k parameters) and the synthetic distribution is simple (three shapes, a few geometric parameters, latent brightness and texture). Diffusion models of this kind usually improve substantially in the first few thousand updates, since the network must learn both the geometry-conditioned silhouette and the time-dependent denoising. At 700 steps the model is likely still far from converged, so its samples should have blurrier or less accurate shapes and more background leakage, which increases the energy-score cross term.\n- **Diminishing returns past 3,000 steps.** Going from 3,000 to 6,000 steps doubles the compute, but with a constant learning rate and no decay there is no annealing to sharpen the final model. Some gain is still expected, since the energy score rewards both sharp geometry and correct within-condition diversity, but the improvement should be smaller than the gap between 700 and 3,000 steps.\n- **Sampling noise is shared.** The evaluation streams are fixed across candidates, so the comparison mostly reflects model quality rather than Monte Carlo variation.\n- **The 16-step sampler with eta 0** is identical for all candidates, so sampler differences are not a factor here.\n\nPredicted order, best to worst: C (6,000 steps), then B (3,000 steps), then A (700 steps). The adjacent pair B vs. C is the most uncertain: with a constant learning rate, the 6,000-step model could overfit the 96 training conditions or have noisier late-stage updates, which could reverse the order. The gap between A and B is much more likely to hold in the stated direction.\n</explanation>\n\n<answer>{\"best_to_worst\": [\"C\", \"B\", \"A\"]}</answer>",
+      "public_explanation": "All three candidates share the same dense conv denoiser (width 24, depth 3, GroupNorm, residual), AdamW at lr 1e-3, batch size 16, x0 prediction with uniform MSE weighting, and a cosine schedule. The only axis that differs is the training budget: Choice A trains 700 steps (11,200 samples), Choice B trains 3,000 steps (48,000 samples), and Choice C trains 6,000 steps (96,000 samples). Everything else is identical, so the ranking is driven by how far each model gets along the same optimization trajectory.\n\nKey factors:\n- **Under-training dominates at these budgets.** The denoiser is small (under ~100k parameters) and the synthetic distribution is simple (three shapes, a few geometric parameters, latent brightness and texture). Diffusion models of this kind usually improve substantially in the first few thousand updates, since the network must learn both the geometry-conditioned silhouette and the time-dependent denoising. At 700 steps the model is likely still far from converged, so its samples should have blurrier or less accurate shapes and more background leakage, which increases the energy-score cross term.\n- **Diminishing returns past 3,000 steps.** Going from 3,000 to 6,000 steps doubles the compute, but with a constant learning rate and no decay there is no annealing to sharpen the final model. Some gain is still expected, since the energy score rewards both sharp geometry and correct within-condition diversity, but the improvement should be smaller than the gap between 700 and 3,000 steps.\n- **Sampling noise is shared.** The evaluation streams are fixed across candidates, so the comparison mostly reflects model quality rather than Monte Carlo variation.\n- **The 16-step sampler with eta 0** is identical for all candidates, so sampler differences are not a factor here.\n\nPredicted order, best to worst: C (6,000 steps), then B (3,000 steps), then A (700 steps). The adjacent pair B vs. C is the most uncertain: with a constant learning rate, the 6,000-step model could overfit the 96 training conditions or have noisier late-stage updates, which could reverse the order. The gap between A and B is much more likely to hold in the stated direction.",
+      "model_identity_matches": true,
+      "question_sha256": "30ab2d10a4ee9cba8e14f4a072ce037d09706c93f0d4ac5d81fb699b7e7acea9",
+      "prompt_sha256": "230136040338a8b3b5fae4026611590c3fc087958bbfb9021b031210edb81b3f"
+    }
+  ],
+  "missing": [
+    {
+      "requested_model": "gpt-6-luna",
+      "question_id": "q_c20c51a29370da1983badd993123468f",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_7cdd570b1c6b5455c098a9f709f630d7"
+      }
+    },
+    {
+      "requested_model": "gpt-6.1-sol",
+      "question_id": "q_c20c51a29370da1983badd993123468f",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_7cdd570b1c6b5455c098a9f709f630d7"
+      }
+    }
+  ],
+  "contains_raw_transport_attempts": false
+}

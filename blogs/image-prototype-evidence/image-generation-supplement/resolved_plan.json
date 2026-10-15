@@ -1,0 +1,2589 @@
+{
+  "schema_version": "vision_question_clusters_resolved_v1",
+  "dataset_family": "conditional_image_generation",
+  "selection_metric": "test_energy_score",
+  "profile_prefix": "conditional_image_generation_template_",
+  "source_path": "profiles/image-generation-ranking-supplement-v1.yaml",
+  "source_sha256": "b8eb9c87ec5dfa954a2c36762e28befd8cc02634df24c490ebd520e11af24000",
+  "base_profile": "profiles/image-generation-ranking-base-v1.yaml",
+  "default_num_choices": 3,
+  "discovery_training_seeds": [
+    40,
+    41,
+    42,
+    43
+  ],
+  "confirmation_training_seeds": [
+    240,
+    241,
+    242,
+    243,
+    244,
+    245,
+    246,
+    247,
+    248,
+    249,
+    250,
+    251,
+    252,
+    253,
+    254,
+    255
+  ],
+  "selection_contract": {
+    "discovery_split": "validation",
+    "confirmation_split": "test",
+    "minimum_mean_gap": 0.003,
+    "require_nonoverlap": false,
+    "multiplicity": "Independent supplement family: Holm across all six frozen adjacent hypotheses, including rejected instances.",
+    "claim_scope": "Fixed synthetic image distribution and fixed independent evaluation sample streams; training-seed robustness only.",
+    "difficulty_policy": "Evaluate every admitted supplemental triple and report all rejects separately from the original fixed batch; no answer-based selection or replacement."
+  },
+  "statistics": {
+    "discovery": {
+      "n_seeds": 4,
+      "split": "validation",
+      "method": "direction_estimation",
+      "ordering": "mean_validation_energy_score",
+      "admission_gate": false,
+      "purpose": "Freeze adjacent ranking directions before independent confirmation; no significance claim from four discovery seeds."
+    },
+    "confirmation": {
+      "n_seeds": 16,
+      "split": "test",
+      "test": "one_sided_paired_sign_test",
+      "alpha": 0.05,
+      "correction": "holm",
+      "minimum_mean_gap": 0.003
+    },
+    "estimand": "Training-seed paired direction stability conditional on one fixed dataset and fixed evaluation-noise/reference stream, with observed mean energy-score gap; not a test of expected-score mean difference or a natural-image population claim."
+  },
+  "protocol_config": {
+    "schema_version": "vision_ranking_protocol_v1",
+    "discovery": {
+      "seeds": [
+        40,
+        41,
+        42,
+        43
+      ],
+      "metric": "final_validation_metric",
+      "order": "ascending mean; ties use candidate_id",
+      "purpose": "Freeze a direction for every template instance before independent confirmation. Weak discovery separation is retained and reported, not an automatic rejection."
+    },
+    "confirmation": {
+      "seeds": [
+        240,
+        241,
+        242,
+        243,
+        244,
+        245,
+        246,
+        247,
+        248,
+        249,
+        250,
+        251,
+        252,
+        253,
+        254,
+        255
+      ],
+      "metric": "final_test_energy_score",
+      "higher_is_better": false,
+      "test": "one-sided exact paired binomial sign test; ties count as nonpositive",
+      "null": "P(oriented paired improvement > 0) <= 0.5 over training seed pairs, conditional on fixed materialized data and training protocol",
+      "multiplicity": "Holm across every frozen adjacent comparison, including failed or missing comparisons with p=1",
+      "alpha": 0.05,
+      "minimum_adjacent_mean_gap": 0.003,
+      "require_nonoverlapping_seed_ranges": false,
+      "bootstrap": {
+        "samples": 10000,
+        "confidence": 0.95,
+        "seed": 73013,
+        "purpose": "Descriptive paired mean-gap interval only; no admission decision uses this interval"
+      },
+      "failure_policy": "Any absent, duplicate, nonfinite or failed seed rejects that instance. No seed deletion, replacement, added seeds, reordered choices, or extra metric selection after confirmation."
+    },
+    "admission": "Every adjacent comparison in the discovery-frozen order must pass Holm and the minimum mean-gap gate; both gates use oriented improvement in the frozen direction.",
+    "independence": "Confirmation seeds must be disjoint from discovery seeds. Freeze full membership, candidate order, artifact hashes, metrics, gates, and hypothesis family before starting confirmation. Never select questions using tested models responses.",
+    "comparison_contract": {
+      "same_data": "Every choice shares one dataset instance and identical split file hashes.",
+      "budgets": "Equal total_samples_seen unless the cluster explicitly intervenes on budget; always expose steps, batch size and total_samples_seen per choice. Equal samples with different batches does not imply equal optimizer updates.",
+      "parameters": "Record measured parameter count. Parameter matching is a separate intervention, never inferred from width matching.",
+      "streams": "Use paired training seeds and shared batch index stream when batch sizes agree; seed number alone does not establish matched initialization across architectures.",
+      "interventions": "Record every changed spec field and final full-code hashes. Single-axis interpretation requires other fields fixed; multi-axis choices establish joint effects only.",
+      "devices": [
+        "360-1",
+        "ophis"
+      ]
+    },
+    "evaluation": {
+      "models": [
+        "claude-opus-5-5",
+        "gpt-6.1-sol",
+        "claude-haiku-5-5",
+        "gpt-6-luna"
+      ],
+      "reasoning_effort": "medium",
+      "max_tokens": 8192,
+      "tools": false,
+      "calls_per_question": 1,
+      "system": "Answer the supplied question. Tools are unavailable.",
+      "response": "Public explanation followed by exact full ordering. Audit explanation independently of correctness.",
+      "metrics": [
+        "exact full order",
+        "pairwise concordance",
+        "valid response rate",
+        "answer-explanation consistency"
+      ],
+      "failure_policy": "Only transport failures without completed answer may retry. Preserve all attempts, identity, prompt hashes and public text. Never replace a completed wrong answer.",
+      "baseline": "For k choices, uniform complete-ranking probability is 1/k!; pairwise chance is 1/2.",
+      "prompt": "Use canonical renderer with complete shared base and independent diffs; byte-exact reconstruction checked. Fallback to full code when diff readability degrades."
+    },
+    "difficulty": {
+      "surface_heuristics": "Freeze interpretable surface-only rules before LLM responses; report abstentions and tie coverage. Do not use confirmation CE or model errors to tune rules.",
+      "coverage": "Report every frozen template instance as accepted/rejected/failed and why. Do not only publish difficult successes.",
+      "dependence": "Report results by template and teacher draw. Repeated teacher or dataset conditions are correlated; no independent-question binomial intervals or general model ranking claims.",
+      "selection": "Do not use model mistakes to admit or drop items. Any later difficult subset is explicitly exploratory and kept separate from full predeclared batch."
+    },
+    "causal_scope": "Confirmed performance differences identify the total effect of the exposed intervention at fixed data and training horizon. A mechanism is supported only to the extent that separately logged diagnostic/control evidence rules out alternatives. Image results concern the stated synthetic image distribution only.",
+    "statistics": {
+      "discovery": {
+        "n_seeds": 4,
+        "split": "validation",
+        "method": "direction_estimation",
+        "ordering": "mean_validation_energy_score",
+        "admission_gate": false,
+        "purpose": "Freeze adjacent ranking directions before independent confirmation; no significance claim from four discovery seeds."
+      },
+      "confirmation": {
+        "n_seeds": 16,
+        "split": "test",
+        "test": "one_sided_paired_sign_test",
+        "alpha": 0.05,
+        "correction": "holm",
+        "minimum_mean_gap": 0.003
+      },
+      "estimand": "Training-seed paired direction stability conditional on one fixed dataset and fixed evaluation-noise/reference stream, with observed mean energy-score gap; not a test of expected-score mean difference or a natural-image population claim."
+    },
+    "answer_format": "best_to_worst_v1"
+  },
+  "surface_heuristics": [
+    {
+      "id": "more_parameters",
+      "field": "parameter_count",
+      "higher_is_better": true
+    },
+    {
+      "id": "more_training_steps",
+      "field": "training.training_steps",
+      "higher_is_better": true
+    },
+    {
+      "id": "more_sampling_steps",
+      "field": "training.sampling_steps",
+      "higher_is_better": true
+    }
+  ],
+  "prompt_contract": {
+    "representation": "shared_complete_base_plus_independent_diff",
+    "answer_format": "best_to_worst_v1",
+    "analyst_only_fields": [
+      "hypothesis",
+      "shortcut_checks",
+      "explanation_target",
+      "admission"
+    ]
+  },
+  "worker_sources": [
+    "tools/ntp_h200_worker.py",
+    "tools/ntp_anchor_worker.py",
+    "tools/vision_h200_worker.py"
+  ],
+  "counts": {
+    "templates": 1,
+    "instances": 3,
+    "dataset_nodes": 3,
+    "candidate_nodes": 12,
+    "distinct_models": 4
+  },
+  "dataset_nodes": [
+    {
+      "node_id": "dataset_f44ec2307822c0cf",
+      "dataset_config": {
+        "size": 16,
+        "noise_steps": 32,
+        "condition_dim": 6,
+        "brightness_min": 0.65,
+        "brightness_max": 1.0,
+        "texture_strength": 0.12,
+        "radius_min": 0.25,
+        "radius_max": 0.42,
+        "position_extent": 0.45,
+        "reference_samples": 4,
+        "train_size": 1024,
+        "validation_size": 64,
+        "test_size": 64,
+        "ood_size": 32,
+        "evaluation_shift": {},
+        "ood_shift": {
+          "position_extent": 0.55
+        }
+      },
+      "instance_seed": 852001,
+      "context_ref": "textured"
+    },
+    {
+      "node_id": "dataset_fd33629bb65f3809",
+      "dataset_config": {
+        "size": 16,
+        "noise_steps": 32,
+        "condition_dim": 6,
+        "brightness_min": 0.65,
+        "brightness_max": 1.0,
+        "texture_strength": 0.12,
+        "radius_min": 0.25,
+        "radius_max": 0.42,
+        "position_extent": 0.45,
+        "reference_samples": 4,
+        "train_size": 1024,
+        "validation_size": 64,
+        "test_size": 64,
+        "ood_size": 32,
+        "evaluation_shift": {},
+        "ood_shift": {
+          "position_extent": 0.55
+        }
+      },
+      "instance_seed": 852002,
+      "context_ref": "textured"
+    },
+    {
+      "node_id": "dataset_d8ad2ee2cf7b306a",
+      "dataset_config": {
+        "size": 16,
+        "noise_steps": 32,
+        "condition_dim": 6,
+        "brightness_min": 0.65,
+        "brightness_max": 1.0,
+        "texture_strength": 0.12,
+        "radius_min": 0.25,
+        "radius_max": 0.42,
+        "position_extent": 0.45,
+        "reference_samples": 4,
+        "train_size": 1024,
+        "validation_size": 64,
+        "test_size": 64,
+        "ood_size": 32,
+        "evaluation_shift": {},
+        "ood_shift": {
+          "position_extent": 0.55
+        }
+      },
+      "instance_seed": 852003,
+      "context_ref": "textured"
+    }
+  ],
+  "candidate_nodes": [
+    {
+      "node_id": "candidate_ae7b6a4c1c102ac65308",
+      "dataset_node_id": "dataset_f44ec2307822c0cf",
+      "model": {
+        "type": "image_generation_denoiser",
+        "mode": "conv",
+        "width": 24,
+        "depth": 3,
+        "kernel": 3,
+        "norm": "group",
+        "activation": "silu",
+        "residual": true,
+        "block": "dense",
+        "conditioning": "concat",
+        "coordinates": "absolute",
+        "time_embedding": "sinusoidal",
+        "max_parameters": 2000000,
+        "input_shape": [
+          8,
+          16,
+          16
+        ],
+        "output_shape": [
+          1,
+          16,
+          16
+        ],
+        "output_kind": "diffusion",
+        "condition_dim": 6,
+        "noise_steps": 32
+      },
+      "optimizer": {
+        "type": "AdamW",
+        "lr": 0.001,
+        "weight_decay": 0.01,
+        "betas": [
+          0.9,
+          0.999
+        ],
+        "eps": 1e-08,
+        "foreach": false
+      },
+      "loss": {
+        "loss_id": "diffusion_mse"
+      },
+      "training": {
+        "batch_size": 16,
+        "training_steps": 3000,
+        "total_samples_seen": 48000,
+        "gradient_accumulation": 1,
+        "clip_norm": 1.0,
+        "schedule": "constant",
+        "precision": "fp32",
+        "tf32": false,
+        "deterministic_algorithms": true,
+        "warmup_updates": 0,
+        "batch_rng_device": "cpu",
+        "paired_cpu_batch_stream": true,
+        "persist_initial_state": true,
+        "batch_seed_offset": 500000,
+        "noise_seed_offset": 600000,
+        "evaluation_split": "validation",
+        "eval_steps": [
+          750,
+          1500,
+          3000
+        ],
+        "prediction_type": "x0",
+        "noise_steps": 32,
+        "noise_schedule": "cosine",
+        "loss_weighting": "uniform",
+        "min_snr_gamma": 5.0,
+        "sampling_steps": 16,
+        "sampling_eta": 0.0,
+        "evaluation_samples_per_condition": 4,
+        "evaluation_seed": 314159,
+        "evaluation_batch_conditions": 16
+      },
+      "parameter_count": 19489,
+      "model_code_sha256": "548e5eb2edfaab77381773b5c3a085cafe768785e53bd9377556e95e2cf4161d"
+    },
+    {
+      "node_id": "candidate_e9681c5d795db8946e1c",
+      "dataset_node_id": "dataset_f44ec2307822c0cf",
+      "model": {
+        "type": "image_generation_denoiser",
+        "mode": "unet",
+        "width": 24,
+        "depth": 3,
+        "kernel": 3,
+        "norm": "group",
+        "activation": "silu",
+        "residual": true,
+        "block": "dense",
+        "skip": true,
+        "conditioning": "concat",
+        "coordinates": "absolute",
+        "time_embedding": "sinusoidal",
+        "max_parameters": 2000000,
+        "input_shape": [
+          8,
+          16,
+          16
+        ],
+        "output_shape": [
+          1,
+          16,
+          16
+        ],
+        "output_kind": "diffusion",
+        "condition_dim": 6,
+        "noise_steps": 32
+      },
+      "optimizer": {
+        "type": "AdamW",
+        "lr": 0.001,
+        "weight_decay": 0.01,
+        "betas": [
+          0.9,
+          0.999
+        ],
+        "eps": 1e-08,
+        "foreach": false
+      },
+      "loss": {
+        "loss_id": "diffusion_mse"
+      },
+      "training": {
+        "batch_size": 16,
+        "training_steps": 3000,
+        "total_samples_seen": 48000,
+        "gradient_accumulation": 1,
+        "clip_norm": 1.0,
+        "schedule": "constant",
+        "precision": "fp32",
+        "tf32": false,
+        "deterministic_algorithms": true,
+        "warmup_updates": 0,
+        "batch_rng_device": "cpu",
+        "paired_cpu_batch_stream": true,
+        "persist_initial_state": true,
+        "batch_seed_offset": 500000,
+        "noise_seed_offset": 600000,
+        "evaluation_split": "validation",
+        "eval_steps": [
+          750,
+          1500,
+          3000
+        ],
+        "prediction_type": "x0",
+        "noise_steps": 32,
+        "noise_schedule": "cosine",
+        "loss_weighting": "uniform",
+        "min_snr_gamma": 5.0,
+        "sampling_steps": 16,
+        "sampling_eta": 0.0,
+        "evaluation_samples_per_condition": 4,
+        "evaluation_seed": 314159,
+        "evaluation_batch_conditions": 16
+      },
+      "parameter_count": 35089,
+      "model_code_sha256": "5eb9b3c4a5893cf189f5b3571dd497ba383e394e0d9c190e56276b84a9d36229"
+    },
+    {
+      "node_id": "candidate_b83c1445855d4b8e3b87",
+      "dataset_node_id": "dataset_f44ec2307822c0cf",
+      "model": {
+        "type": "image_generation_denoiser",
+        "mode": "mlp",
+        "width": 24,
+        "depth": 3,
+        "activation": "silu",
+        "conditioning": "concat",
+        "coordinates": "absolute",
+        "time_embedding": "sinusoidal",
+        "max_parameters": 2000000,
+        "input_shape": [
+          8,
+          16,
+          16
+        ],
+        "output_shape": [
+          1,
+          16,
+          16
+        ],
+        "output_kind": "diffusion",
+        "condition_dim": 6,
+        "noise_steps": 32
+      },
+      "optimizer": {
+        "type": "AdamW",
+        "lr": 0.001,
+        "weight_decay": 0.01,
+        "betas": [
+          0.9,
+          0.999
+        ],
+        "eps": 1e-08,
+        "foreach": false
+      },
+      "loss": {
+        "loss_id": "diffusion_mse"
+      },
+      "training": {
+        "batch_size": 16,
+        "training_steps": 3000,
+        "total_samples_seen": 48000,
+        "gradient_accumulation": 1,
+        "clip_norm": 1.0,
+        "schedule": "constant",
+        "precision": "fp32",
+        "tf32": false,
+        "deterministic_algorithms": true,
+        "warmup_updates": 0,
+        "batch_rng_device": "cpu",
+        "paired_cpu_batch_stream": true,
+        "persist_initial_state": true,
+        "batch_seed_offset": 500000,
+        "noise_seed_offset": 600000,
+        "evaluation_split": "validation",
+        "eval_steps": [
+          750,
+          1500,
+          3000
+        ],
+        "prediction_type": "x0",
+        "noise_steps": 32,
+        "noise_schedule": "cosine",
+        "loss_weighting": "uniform",
+        "min_snr_gamma": 5.0,
+        "sampling_steps": 16,
+        "sampling_eta": 0.0,
+        "evaluation_samples_per_condition": 4,
+        "evaluation_seed": 314159,
+        "evaluation_batch_conditions": 16
+      },
+      "parameter_count": 461344,
+      "model_code_sha256": "31d958601950f09831a638b54b51b3db7d388a4599ccfe063782adc4637d4b2c"
+    },
+    {
+      "node_id": "candidate_c154ceb7fdd2523d4ae3",
+      "dataset_node_id": "dataset_f44ec2307822c0cf",
+      "model": {
+        "type": "image_generation_denoiser",
+        "mode": "patch_transformer",
+        "width": 24,
+        "depth": 3,
+        "activation": "gelu",
+        "conditioning": "concat",
+        "coordinates": "absolute",
+        "time_embedding": "sinusoidal",
+        "patch_size": 2,
+        "max_parameters": 2000000,
+        "num_heads": 4,
+        "ff_multiplier": 2,
+        "input_shape": [
+          8,
+          16,
+          16
+        ],
+        "output_shape": [
+          1,
+          16,
+          16
+        ],
+        "output_kind": "diffusion",
+        "condition_dim": 6,
+        "noise_steps": 32
+      },
+      "optimizer": {
+        "type": "AdamW",
+        "lr": 0.001,
+        "weight_decay": 0.01,
+        "betas": [
+          0.9,
+          0.999
+        ],
+        "eps": 1e-08,
+        "foreach": false
+      },
+      "loss": {
+        "loss_id": "diffusion_mse"
+      },
+      "training": {
+        "batch_size": 16,
+        "training_steps": 3000,
+        "total_samples_seen": 48000,
+        "gradient_accumulation": 1,
+        "clip_norm": 1.0,
+        "schedule": "constant",
+        "precision": "fp32",
+        "tf32": false,
+        "deterministic_algorithms": true,
+        "warmup_updates": 0,
+        "batch_rng_device": "cpu",
+        "paired_cpu_batch_stream": true,
+        "persist_initial_state": true,
+        "batch_seed_offset": 500000,
+        "noise_seed_offset": 600000,
+        "evaluation_split": "validation",
+        "eval_steps": [
+          750,
+          1500,
+          3000
+        ],
+        "prediction_type": "x0",
+        "noise_steps": 32,
+        "noise_schedule": "cosine",
+        "loss_weighting": "uniform",
+        "min_snr_gamma": 5.0,
+        "sampling_steps": 16,
+        "sampling_eta": 0.0,
+        "evaluation_samples_per_condition": 4,
+        "evaluation_seed": 314159,
+        "evaluation_batch_conditions": 16
+      },
+      "parameter_count": 17908,
+      "model_code_sha256": "6a1a3aae0326db52c89fa6c204e71cb771024431856ade894f8a7732e5886275"
+    },
+    {
+      "node_id": "candidate_8bceb0229ca0a46d125e",
+      "dataset_node_id": "dataset_fd33629bb65f3809",
+      "model": {
+        "type": "image_generation_denoiser",
+        "mode": "conv",
+        "width": 24,
+        "depth": 3,
+        "kernel": 3,
+        "norm": "group",
+        "activation": "silu",
+        "residual": true,
+        "block": "dense",
+        "conditioning": "concat",
+        "coordinates": "absolute",
+        "time_embedding": "sinusoidal",
+        "max_parameters": 2000000,
+        "input_shape": [
+          8,
+          16,
+          16
+        ],
+        "output_shape": [
+          1,
+          16,
+          16
+        ],
+        "output_kind": "diffusion",
+        "condition_dim": 6,
+        "noise_steps": 32
+      },
+      "optimizer": {
+        "type": "AdamW",
+        "lr": 0.001,
+        "weight_decay": 0.01,
+        "betas": [
+          0.9,
+          0.999
+        ],
+        "eps": 1e-08,
+        "foreach": false
+      },
+      "loss": {
+        "loss_id": "diffusion_mse"
+      },
+      "training": {
+        "batch_size": 16,
+        "training_steps": 3000,
+        "total_samples_seen": 48000,
+        "gradient_accumulation": 1,
+        "clip_norm": 1.0,
+        "schedule": "constant",
+        "precision": "fp32",
+        "tf32": false,
+        "deterministic_algorithms": true,
+        "warmup_updates": 0,
+        "batch_rng_device": "cpu",
+        "paired_cpu_batch_stream": true,
+        "persist_initial_state": true,
+        "batch_seed_offset": 500000,
+        "noise_seed_offset": 600000,
+        "evaluation_split": "validation",
+        "eval_steps": [
+          750,
+          1500,
+          3000
+        ],
+        "prediction_type": "x0",
+        "noise_steps": 32,
+        "noise_schedule": "cosine",
+        "loss_weighting": "uniform",
+        "min_snr_gamma": 5.0,
+        "sampling_steps": 16,
+        "sampling_eta": 0.0,
+        "evaluation_samples_per_condition": 4,
+        "evaluation_seed": 314159,
+        "evaluation_batch_conditions": 16
+      },
+      "parameter_count": 19489,
+      "model_code_sha256": "548e5eb2edfaab77381773b5c3a085cafe768785e53bd9377556e95e2cf4161d"
+    },
+    {
+      "node_id": "candidate_a2520835f9adbb7c0b84",
+      "dataset_node_id": "dataset_fd33629bb65f3809",
+      "model": {
+        "type": "image_generation_denoiser",
+        "mode": "unet",
+        "width": 24,
+        "depth": 3,
+        "kernel": 3,
+        "norm": "group",
+        "activation": "silu",
+        "residual": true,
+        "block": "dense",
+        "skip": true,
+        "conditioning": "concat",
+        "coordinates": "absolute",
+        "time_embedding": "sinusoidal",
+        "max_parameters": 2000000,
+        "input_shape": [
+          8,
+          16,
+          16
+        ],
+        "output_shape": [
+          1,
+          16,
+          16
+        ],
+        "output_kind": "diffusion",
+        "condition_dim": 6,
+        "noise_steps": 32
+      },
+      "optimizer": {
+        "type": "AdamW",
+        "lr": 0.001,
+        "weight_decay": 0.01,
+        "betas": [
+          0.9,
+          0.999
+        ],
+        "eps": 1e-08,
+        "foreach": false
+      },
+      "loss": {
+        "loss_id": "diffusion_mse"
+      },
+      "training": {
+        "batch_size": 16,
+        "training_steps": 3000,
+        "total_samples_seen": 48000,
+        "gradient_accumulation": 1,
+        "clip_norm": 1.0,
+        "schedule": "constant",
+        "precision": "fp32",
+        "tf32": false,
+        "deterministic_algorithms": true,
+        "warmup_updates": 0,
+        "batch_rng_device": "cpu",
+        "paired_cpu_batch_stream": true,
+        "persist_initial_state": true,
+        "batch_seed_offset": 500000,
+        "noise_seed_offset": 600000,
+        "evaluation_split": "validation",
+        "eval_steps": [
+          750,
+          1500,
+          3000
+        ],
+        "prediction_type": "x0",
+        "noise_steps": 32,
+        "noise_schedule": "cosine",
+        "loss_weighting": "uniform",
+        "min_snr_gamma": 5.0,
+        "sampling_steps": 16,
+        "sampling_eta": 0.0,
+        "evaluation_samples_per_condition": 4,
+        "evaluation_seed": 314159,
+        "evaluation_batch_conditions": 16
+      },
+      "parameter_count": 35089,
+      "model_code_sha256": "5eb9b3c4a5893cf189f5b3571dd497ba383e394e0d9c190e56276b84a9d36229"
+    },
+    {
+      "node_id": "candidate_fa4a1e6560135ec374bf",
+      "dataset_node_id": "dataset_fd33629bb65f3809",
+      "model": {
+        "type": "image_generation_denoiser",
+        "mode": "mlp",
+        "width": 24,
+        "depth": 3,
+        "activation": "silu",
+        "conditioning": "concat",
+        "coordinates": "absolute",
+        "time_embedding": "sinusoidal",
+        "max_parameters": 2000000,
+        "input_shape": [
+          8,
+          16,
+          16
+        ],
+        "output_shape": [
+          1,
+          16,
+          16
+        ],
+        "output_kind": "diffusion",
+        "condition_dim": 6,
+        "noise_steps": 32
+      },
+      "optimizer": {
+        "type": "AdamW",
+        "lr": 0.001,
+        "weight_decay": 0.01,
+        "betas": [
+          0.9,
+          0.999
+        ],
+        "eps": 1e-08,
+        "foreach": false
+      },
+      "loss": {
+        "loss_id": "diffusion_mse"
+      },
+      "training": {
+        "batch_size": 16,
+        "training_steps": 3000,
+        "total_samples_seen": 48000,
+        "gradient_accumulation": 1,
+        "clip_norm": 1.0,
+        "schedule": "constant",
+        "precision": "fp32",
+        "tf32": false,
+        "deterministic_algorithms": true,
+        "warmup_updates": 0,
+        "batch_rng_device": "cpu",
+        "paired_cpu_batch_stream": true,
+        "persist_initial_state": true,
+        "batch_seed_offset": 500000,
+        "noise_seed_offset": 600000,
+        "evaluation_split": "validation",
+        "eval_steps": [
+          750,
+          1500,
+          3000
+        ],
+        "prediction_type": "x0",
+        "noise_steps": 32,
+        "noise_schedule": "cosine",
+        "loss_weighting": "uniform",
+        "min_snr_gamma": 5.0,
+        "sampling_steps": 16,
+        "sampling_eta": 0.0,
+        "evaluation_samples_per_condition": 4,
+        "evaluation_seed": 314159,
+        "evaluation_batch_conditions": 16
+      },
+      "parameter_count": 461344,
+      "model_code_sha256": "31d958601950f09831a638b54b51b3db7d388a4599ccfe063782adc4637d4b2c"
+    },
+    {
+      "node_id": "candidate_1f64af8282f367bccdb9",
+      "dataset_node_id": "dataset_fd33629bb65f3809",
+      "model": {
+        "type": "image_generation_denoiser",
+        "mode": "patch_transformer",
+        "width": 24,
+        "depth": 3,
+        "activation": "gelu",
+        "conditioning": "concat",
+        "coordinates": "absolute",
+        "time_embedding": "sinusoidal",
+        "patch_size": 2,
+        "max_parameters": 2000000,
+        "num_heads": 4,
+        "ff_multiplier": 2,
+        "input_shape": [
+          8,
+          16,
+          16
+        ],
+        "output_shape": [
+          1,
+          16,
+          16
+        ],
+        "output_kind": "diffusion",
+        "condition_dim": 6,
+        "noise_steps": 32
+      },
+      "optimizer": {
+        "type": "AdamW",
+        "lr": 0.001,
+        "weight_decay": 0.01,
+        "betas": [
+          0.9,
+          0.999
+        ],
+        "eps": 1e-08,
+        "foreach": false
+      },
+      "loss": {
+        "loss_id": "diffusion_mse"
+      },
+      "training": {
+        "batch_size": 16,
+        "training_steps": 3000,
+        "total_samples_seen": 48000,
+        "gradient_accumulation": 1,
+        "clip_norm": 1.0,
+        "schedule": "constant",
+        "precision": "fp32",
+        "tf32": false,
+        "deterministic_algorithms": true,
+        "warmup_updates": 0,
+        "batch_rng_device": "cpu",
+        "paired_cpu_batch_stream": true,
+        "persist_initial_state": true,
+        "batch_seed_offset": 500000,
+        "noise_seed_offset": 600000,
+        "evaluation_split": "validation",
+        "eval_steps": [
+          750,
+          1500,
+          3000
+        ],
+        "prediction_type": "x0",
+        "noise_steps": 32,
+        "noise_schedule": "cosine",
+        "loss_weighting": "uniform",
+        "min_snr_gamma": 5.0,
+        "sampling_steps": 16,
+        "sampling_eta": 0.0,
+        "evaluation_samples_per_condition": 4,
+        "evaluation_seed": 314159,
+        "evaluation_batch_conditions": 16
+      },
+      "parameter_count": 17908,
+      "model_code_sha256": "6a1a3aae0326db52c89fa6c204e71cb771024431856ade894f8a7732e5886275"
+    },
+    {
+      "node_id": "candidate_804cc8045512fe7cbec6",
+      "dataset_node_id": "dataset_d8ad2ee2cf7b306a",
+      "model": {
+        "type": "image_generation_denoiser",
+        "mode": "conv",
+        "width": 24,
+        "depth": 3,
+        "kernel": 3,
+        "norm": "group",
+        "activation": "silu",
+        "residual": true,
+        "block": "dense",
+        "conditioning": "concat",
+        "coordinates": "absolute",
+        "time_embedding": "sinusoidal",
+        "max_parameters": 2000000,
+        "input_shape": [
+          8,
+          16,
+          16
+        ],
+        "output_shape": [
+          1,
+          16,
+          16
+        ],
+        "output_kind": "diffusion",
+        "condition_dim": 6,
+        "noise_steps": 32
+      },
+      "optimizer": {
+        "type": "AdamW",
+        "lr": 0.001,
+        "weight_decay": 0.01,
+        "betas": [
+          0.9,
+          0.999
+        ],
+        "eps": 1e-08,
+        "foreach": false
+      },
+      "loss": {
+        "loss_id": "diffusion_mse"
+      },
+      "training": {
+        "batch_size": 16,
+        "training_steps": 3000,
+        "total_samples_seen": 48000,
+        "gradient_accumulation": 1,
+        "clip_norm": 1.0,
+        "schedule": "constant",
+        "precision": "fp32",
+        "tf32": false,
+        "deterministic_algorithms": true,
+        "warmup_updates": 0,
+        "batch_rng_device": "cpu",
+        "paired_cpu_batch_stream": true,
+        "persist_initial_state": true,
+        "batch_seed_offset": 500000,
+        "noise_seed_offset": 600000,
+        "evaluation_split": "validation",
+        "eval_steps": [
+          750,
+          1500,
+          3000
+        ],
+        "prediction_type": "x0",
+        "noise_steps": 32,
+        "noise_schedule": "cosine",
+        "loss_weighting": "uniform",
+        "min_snr_gamma": 5.0,
+        "sampling_steps": 16,
+        "sampling_eta": 0.0,
+        "evaluation_samples_per_condition": 4,
+        "evaluation_seed": 314159,
+        "evaluation_batch_conditions": 16
+      },
+      "parameter_count": 19489,
+      "model_code_sha256": "548e5eb2edfaab77381773b5c3a085cafe768785e53bd9377556e95e2cf4161d"
+    },
+    {
+      "node_id": "candidate_d4f3e193671168b46ced",
+      "dataset_node_id": "dataset_d8ad2ee2cf7b306a",
+      "model": {
+        "type": "image_generation_denoiser",
+        "mode": "unet",
+        "width": 24,
+        "depth": 3,
+        "kernel": 3,
+        "norm": "group",
+        "activation": "silu",
+        "residual": true,
+        "block": "dense",
+        "skip": true,
+        "conditioning": "concat",
+        "coordinates": "absolute",
+        "time_embedding": "sinusoidal",
+        "max_parameters": 2000000,
+        "input_shape": [
+          8,
+          16,
+          16
+        ],
+        "output_shape": [
+          1,
+          16,
+          16
+        ],
+        "output_kind": "diffusion",
+        "condition_dim": 6,
+        "noise_steps": 32
+      },
+      "optimizer": {
+        "type": "AdamW",
+        "lr": 0.001,
+        "weight_decay": 0.01,
+        "betas": [
+          0.9,
+          0.999
+        ],
+        "eps": 1e-08,
+        "foreach": false
+      },
+      "loss": {
+        "loss_id": "diffusion_mse"
+      },
+      "training": {
+        "batch_size": 16,
+        "training_steps": 3000,
+        "total_samples_seen": 48000,
+        "gradient_accumulation": 1,
+        "clip_norm": 1.0,
+        "schedule": "constant",
+        "precision": "fp32",
+        "tf32": false,
+        "deterministic_algorithms": true,
+        "warmup_updates": 0,
+        "batch_rng_device": "cpu",
+        "paired_cpu_batch_stream": true,
+        "persist_initial_state": true,
+        "batch_seed_offset": 500000,
+        "noise_seed_offset": 600000,
+        "evaluation_split": "validation",
+        "eval_steps": [
+          750,
+          1500,
+          3000
+        ],
+        "prediction_type": "x0",
+        "noise_steps": 32,
+        "noise_schedule": "cosine",
+        "loss_weighting": "uniform",
+        "min_snr_gamma": 5.0,
+        "sampling_steps": 16,
+        "sampling_eta": 0.0,
+        "evaluation_samples_per_condition": 4,
+        "evaluation_seed": 314159,
+        "evaluation_batch_conditions": 16
+      },
+      "parameter_count": 35089,
+      "model_code_sha256": "5eb9b3c4a5893cf189f5b3571dd497ba383e394e0d9c190e56276b84a9d36229"
+    },
+    {
+      "node_id": "candidate_eaae951afaff90809747",
+      "dataset_node_id": "dataset_d8ad2ee2cf7b306a",
+      "model": {
+        "type": "image_generation_denoiser",
+        "mode": "mlp",
+        "width": 24,
+        "depth": 3,
+        "activation": "silu",
+        "conditioning": "concat",
+        "coordinates": "absolute",
+        "time_embedding": "sinusoidal",
+        "max_parameters": 2000000,
+        "input_shape": [
+          8,
+          16,
+          16
+        ],
+        "output_shape": [
+          1,
+          16,
+          16
+        ],
+        "output_kind": "diffusion",
+        "condition_dim": 6,
+        "noise_steps": 32
+      },
+      "optimizer": {
+        "type": "AdamW",
+        "lr": 0.001,
+        "weight_decay": 0.01,
+        "betas": [
+          0.9,
+          0.999
+        ],
+        "eps": 1e-08,
+        "foreach": false
+      },
+      "loss": {
+        "loss_id": "diffusion_mse"
+      },
+      "training": {
+        "batch_size": 16,
+        "training_steps": 3000,
+        "total_samples_seen": 48000,
+        "gradient_accumulation": 1,
+        "clip_norm": 1.0,
+        "schedule": "constant",
+        "precision": "fp32",
+        "tf32": false,
+        "deterministic_algorithms": true,
+        "warmup_updates": 0,
+        "batch_rng_device": "cpu",
+        "paired_cpu_batch_stream": true,
+        "persist_initial_state": true,
+        "batch_seed_offset": 500000,
+        "noise_seed_offset": 600000,
+        "evaluation_split": "validation",
+        "eval_steps": [
+          750,
+          1500,
+          3000
+        ],
+        "prediction_type": "x0",
+        "noise_steps": 32,
+        "noise_schedule": "cosine",
+        "loss_weighting": "uniform",
+        "min_snr_gamma": 5.0,
+        "sampling_steps": 16,
+        "sampling_eta": 0.0,
+        "evaluation_samples_per_condition": 4,
+        "evaluation_seed": 314159,
+        "evaluation_batch_conditions": 16
+      },
+      "parameter_count": 461344,
+      "model_code_sha256": "31d958601950f09831a638b54b51b3db7d388a4599ccfe063782adc4637d4b2c"
+    },
+    {
+      "node_id": "candidate_72f3500e4f5cd3e445c8",
+      "dataset_node_id": "dataset_d8ad2ee2cf7b306a",
+      "model": {
+        "type": "image_generation_denoiser",
+        "mode": "patch_transformer",
+        "width": 24,
+        "depth": 3,
+        "activation": "gelu",
+        "conditioning": "concat",
+        "coordinates": "absolute",
+        "time_embedding": "sinusoidal",
+        "patch_size": 2,
+        "max_parameters": 2000000,
+        "num_heads": 4,
+        "ff_multiplier": 2,
+        "input_shape": [
+          8,
+          16,
+          16
+        ],
+        "output_shape": [
+          1,
+          16,
+          16
+        ],
+        "output_kind": "diffusion",
+        "condition_dim": 6,
+        "noise_steps": 32
+      },
+      "optimizer": {
+        "type": "AdamW",
+        "lr": 0.001,
+        "weight_decay": 0.01,
+        "betas": [
+          0.9,
+          0.999
+        ],
+        "eps": 1e-08,
+        "foreach": false
+      },
+      "loss": {
+        "loss_id": "diffusion_mse"
+      },
+      "training": {
+        "batch_size": 16,
+        "training_steps": 3000,
+        "total_samples_seen": 48000,
+        "gradient_accumulation": 1,
+        "clip_norm": 1.0,
+        "schedule": "constant",
+        "precision": "fp32",
+        "tf32": false,
+        "deterministic_algorithms": true,
+        "warmup_updates": 0,
+        "batch_rng_device": "cpu",
+        "paired_cpu_batch_stream": true,
+        "persist_initial_state": true,
+        "batch_seed_offset": 500000,
+        "noise_seed_offset": 600000,
+        "evaluation_split": "validation",
+        "eval_steps": [
+          750,
+          1500,
+          3000
+        ],
+        "prediction_type": "x0",
+        "noise_steps": 32,
+        "noise_schedule": "cosine",
+        "loss_weighting": "uniform",
+        "min_snr_gamma": 5.0,
+        "sampling_steps": 16,
+        "sampling_eta": 0.0,
+        "evaluation_samples_per_condition": 4,
+        "evaluation_seed": 314159,
+        "evaluation_batch_conditions": 16
+      },
+      "parameter_count": 17908,
+      "model_code_sha256": "6a1a3aae0326db52c89fa6c204e71cb771024431856ade894f8a7732e5886275"
+    }
+  ],
+  "model_validation_receipts": [
+    {
+      "model_sha256": "dd4129b6d4781c142acdff5c7ff0a35b45aa0ca3d8581b9403809cf9f77f8ba3",
+      "parameters": 19489,
+      "code_sha256": "548e5eb2edfaab77381773b5c3a085cafe768785e53bd9377556e95e2cf4161d",
+      "smoke": "standalone_render_forward_backward_and_canonical_parity",
+      "output_shape": [
+        2,
+        1,
+        16,
+        16
+      ],
+      "canonical_max_abs_error": 0.0
+    },
+    {
+      "model_sha256": "11bed1538d190d71ba4e61826c8b3adccb108da86c4c576eca4c5625546ca065",
+      "parameters": 35089,
+      "code_sha256": "5eb9b3c4a5893cf189f5b3571dd497ba383e394e0d9c190e56276b84a9d36229",
+      "smoke": "standalone_render_forward_backward_and_canonical_parity",
+      "output_shape": [
+        2,
+        1,
+        16,
+        16
+      ],
+      "canonical_max_abs_error": 0.0
+    },
+    {
+      "model_sha256": "515429b2d9dde44af216dac7468298e06460cff8218f6cc1fad00160dd5c3d9b",
+      "parameters": 461344,
+      "code_sha256": "31d958601950f09831a638b54b51b3db7d388a4599ccfe063782adc4637d4b2c",
+      "smoke": "standalone_render_forward_backward_and_canonical_parity",
+      "output_shape": [
+        2,
+        1,
+        16,
+        16
+      ],
+      "canonical_max_abs_error": 0.0
+    },
+    {
+      "model_sha256": "43fbaf15c628dfc6fd6110e83e18afe0ccb64077a14bd8feaf15649034279aa0",
+      "parameters": 17908,
+      "code_sha256": "6a1a3aae0326db52c89fa6c204e71cb771024431856ade894f8a7732e5886275",
+      "smoke": "standalone_render_forward_backward_and_canonical_parity",
+      "output_shape": [
+        2,
+        1,
+        16,
+        16
+      ],
+      "canonical_max_abs_error": 0.0
+    }
+  ],
+  "templates": [
+    {
+      "id": "operator_native_matched_s852001",
+      "category": "operator",
+      "context_ref": "textured",
+      "budget_semantics": "matched_steps",
+      "hypothesis": "Four native denoisers share absolute coordinate input, data, optimizer, target and update budget. Their operator, parameter count, normalization and connectivity differ as shown; finite-budget ordering requires actual sampled image quality.",
+      "varying_axes": [
+        "model.mode"
+      ],
+      "controls": [
+        "All four available native operator cells are retained: convolution, one-level U-Net, flat MLP and patch Transformer.",
+        "Every cell uses absolute coordinates, concat conditions, sinusoidal time, x0 target, 3000 updates, batch16, AdamW1e-3, the same materialized data and fixed evaluation noise/reference draws.",
+        "This is a bundled native-recipe contrast: parameter count, activation, normalization and connectivity are explicitly shown; do not attribute the total difference exclusively to operator name.",
+        "Primary choices were selected from original discovery validation only; the diagnostic Transformer is not promoted or substituted after new confirmation."
+      ],
+      "shortcut_checks": [
+        "always prefer U-Net for diffusion",
+        "always prefer more parameters",
+        "always prefer globally mixing operator"
+      ],
+      "explanation_target": "Explain both adjacent comparisons using exact native code and the fixed finite-budget task; use all four local cells and image/geometry/diversity diagnostics, while acknowledging unresolved parameter-count and optimization attribution.",
+      "admission": "Freeze the new four-seed validation order, then independently test all six adjacent hypotheses from three new dataset instances using the unchanged16-seed sign-Holm rule and gap0.003. Keep rejected instances; no replacement.",
+      "template_id": "operator_native_matched",
+      "instance_seed": 852001,
+      "dataset_node_id": "dataset_f44ec2307822c0cf",
+      "dataset_config": {
+        "size": 16,
+        "noise_steps": 32,
+        "condition_dim": 6,
+        "brightness_min": 0.65,
+        "brightness_max": 1.0,
+        "texture_strength": 0.12,
+        "radius_min": 0.25,
+        "radius_max": 0.42,
+        "position_extent": 0.45,
+        "reference_samples": 4,
+        "train_size": 1024,
+        "validation_size": 64,
+        "test_size": 64,
+        "ood_size": 32,
+        "evaluation_shift": {},
+        "ood_shift": {
+          "position_extent": 0.55
+        }
+      },
+      "comparison": {
+        "budget_semantics": "matched_steps",
+        "changed_fields": [
+          "model.block",
+          "model.kernel",
+          "model.mode",
+          "model.norm",
+          "model.residual",
+          "model.skip"
+        ],
+        "undeclared_fields": [
+          "model.block",
+          "model.kernel",
+          "model.norm",
+          "model.residual",
+          "model.skip"
+        ],
+        "comparison_class": "bundled_recipe",
+        "field_values": {
+          "conv": {
+            "model.block": "dense",
+            "model.kernel": 3,
+            "model.mode": "conv",
+            "model.norm": "group",
+            "model.residual": true,
+            "model.skip": "<absent>"
+          },
+          "unet": {
+            "model.block": "dense",
+            "model.kernel": 3,
+            "model.mode": "unet",
+            "model.norm": "group",
+            "model.residual": true,
+            "model.skip": true
+          },
+          "mlp": {
+            "model.block": "<absent>",
+            "model.kernel": "<absent>",
+            "model.mode": "mlp",
+            "model.norm": "<absent>",
+            "model.residual": "<absent>",
+            "model.skip": "<absent>"
+          }
+        },
+        "actual_changed_fields": [
+          "model.block",
+          "model.kernel",
+          "model.mode",
+          "model.norm",
+          "model.residual",
+          "model.skip"
+        ]
+      },
+      "choices": [
+        {
+          "id": "conv",
+          "role": "primary",
+          "model": {
+            "type": "image_generation_denoiser",
+            "mode": "conv",
+            "width": 24,
+            "depth": 3,
+            "kernel": 3,
+            "norm": "group",
+            "activation": "silu",
+            "residual": true,
+            "block": "dense",
+            "conditioning": "concat",
+            "coordinates": "absolute",
+            "time_embedding": "sinusoidal",
+            "max_parameters": 2000000,
+            "input_shape": [
+              8,
+              16,
+              16
+            ],
+            "output_shape": [
+              1,
+              16,
+              16
+            ],
+            "output_kind": "diffusion",
+            "condition_dim": 6,
+            "noise_steps": 32
+          },
+          "optimizer": {
+            "type": "AdamW",
+            "lr": 0.001,
+            "weight_decay": 0.01,
+            "betas": [
+              0.9,
+              0.999
+            ],
+            "eps": 1e-08,
+            "foreach": false
+          },
+          "loss": {
+            "loss_id": "diffusion_mse"
+          },
+          "training": {
+            "batch_size": 16,
+            "training_steps": 3000,
+            "total_samples_seen": 48000,
+            "gradient_accumulation": 1,
+            "clip_norm": 1.0,
+            "schedule": "constant",
+            "precision": "fp32",
+            "tf32": false,
+            "deterministic_algorithms": true,
+            "warmup_updates": 0,
+            "batch_rng_device": "cpu",
+            "paired_cpu_batch_stream": true,
+            "persist_initial_state": true,
+            "batch_seed_offset": 500000,
+            "noise_seed_offset": 600000,
+            "evaluation_split": "validation",
+            "eval_steps": [
+              750,
+              1500,
+              3000
+            ],
+            "prediction_type": "x0",
+            "noise_steps": 32,
+            "noise_schedule": "cosine",
+            "loss_weighting": "uniform",
+            "min_snr_gamma": 5.0,
+            "sampling_steps": 16,
+            "sampling_eta": 0.0,
+            "evaluation_samples_per_condition": 4,
+            "evaluation_seed": 314159,
+            "evaluation_batch_conditions": 16
+          },
+          "parameter_count": 19489,
+          "model_code_sha256": "548e5eb2edfaab77381773b5c3a085cafe768785e53bd9377556e95e2cf4161d",
+          "node_id": "candidate_ae7b6a4c1c102ac65308"
+        },
+        {
+          "id": "unet",
+          "role": "primary",
+          "model": {
+            "type": "image_generation_denoiser",
+            "mode": "unet",
+            "width": 24,
+            "depth": 3,
+            "kernel": 3,
+            "norm": "group",
+            "activation": "silu",
+            "residual": true,
+            "block": "dense",
+            "skip": true,
+            "conditioning": "concat",
+            "coordinates": "absolute",
+            "time_embedding": "sinusoidal",
+            "max_parameters": 2000000,
+            "input_shape": [
+              8,
+              16,
+              16
+            ],
+            "output_shape": [
+              1,
+              16,
+              16
+            ],
+            "output_kind": "diffusion",
+            "condition_dim": 6,
+            "noise_steps": 32
+          },
+          "optimizer": {
+            "type": "AdamW",
+            "lr": 0.001,
+            "weight_decay": 0.01,
+            "betas": [
+              0.9,
+              0.999
+            ],
+            "eps": 1e-08,
+            "foreach": false
+          },
+          "loss": {
+            "loss_id": "diffusion_mse"
+          },
+          "training": {
+            "batch_size": 16,
+            "training_steps": 3000,
+            "total_samples_seen": 48000,
+            "gradient_accumulation": 1,
+            "clip_norm": 1.0,
+            "schedule": "constant",
+            "precision": "fp32",
+            "tf32": false,
+            "deterministic_algorithms": true,
+            "warmup_updates": 0,
+            "batch_rng_device": "cpu",
+            "paired_cpu_batch_stream": true,
+            "persist_initial_state": true,
+            "batch_seed_offset": 500000,
+            "noise_seed_offset": 600000,
+            "evaluation_split": "validation",
+            "eval_steps": [
+              750,
+              1500,
+              3000
+            ],
+            "prediction_type": "x0",
+            "noise_steps": 32,
+            "noise_schedule": "cosine",
+            "loss_weighting": "uniform",
+            "min_snr_gamma": 5.0,
+            "sampling_steps": 16,
+            "sampling_eta": 0.0,
+            "evaluation_samples_per_condition": 4,
+            "evaluation_seed": 314159,
+            "evaluation_batch_conditions": 16
+          },
+          "parameter_count": 35089,
+          "model_code_sha256": "5eb9b3c4a5893cf189f5b3571dd497ba383e394e0d9c190e56276b84a9d36229",
+          "node_id": "candidate_e9681c5d795db8946e1c"
+        },
+        {
+          "id": "mlp",
+          "role": "primary",
+          "model": {
+            "type": "image_generation_denoiser",
+            "mode": "mlp",
+            "width": 24,
+            "depth": 3,
+            "activation": "silu",
+            "conditioning": "concat",
+            "coordinates": "absolute",
+            "time_embedding": "sinusoidal",
+            "max_parameters": 2000000,
+            "input_shape": [
+              8,
+              16,
+              16
+            ],
+            "output_shape": [
+              1,
+              16,
+              16
+            ],
+            "output_kind": "diffusion",
+            "condition_dim": 6,
+            "noise_steps": 32
+          },
+          "optimizer": {
+            "type": "AdamW",
+            "lr": 0.001,
+            "weight_decay": 0.01,
+            "betas": [
+              0.9,
+              0.999
+            ],
+            "eps": 1e-08,
+            "foreach": false
+          },
+          "loss": {
+            "loss_id": "diffusion_mse"
+          },
+          "training": {
+            "batch_size": 16,
+            "training_steps": 3000,
+            "total_samples_seen": 48000,
+            "gradient_accumulation": 1,
+            "clip_norm": 1.0,
+            "schedule": "constant",
+            "precision": "fp32",
+            "tf32": false,
+            "deterministic_algorithms": true,
+            "warmup_updates": 0,
+            "batch_rng_device": "cpu",
+            "paired_cpu_batch_stream": true,
+            "persist_initial_state": true,
+            "batch_seed_offset": 500000,
+            "noise_seed_offset": 600000,
+            "evaluation_split": "validation",
+            "eval_steps": [
+              750,
+              1500,
+              3000
+            ],
+            "prediction_type": "x0",
+            "noise_steps": 32,
+            "noise_schedule": "cosine",
+            "loss_weighting": "uniform",
+            "min_snr_gamma": 5.0,
+            "sampling_steps": 16,
+            "sampling_eta": 0.0,
+            "evaluation_samples_per_condition": 4,
+            "evaluation_seed": 314159,
+            "evaluation_batch_conditions": 16
+          },
+          "parameter_count": 461344,
+          "model_code_sha256": "31d958601950f09831a638b54b51b3db7d388a4599ccfe063782adc4637d4b2c",
+          "node_id": "candidate_b83c1445855d4b8e3b87"
+        }
+      ],
+      "diagnostics": [
+        {
+          "id": "transformer",
+          "role": "diagnostic",
+          "model": {
+            "type": "image_generation_denoiser",
+            "mode": "patch_transformer",
+            "width": 24,
+            "depth": 3,
+            "activation": "gelu",
+            "conditioning": "concat",
+            "coordinates": "absolute",
+            "time_embedding": "sinusoidal",
+            "patch_size": 2,
+            "max_parameters": 2000000,
+            "num_heads": 4,
+            "ff_multiplier": 2,
+            "input_shape": [
+              8,
+              16,
+              16
+            ],
+            "output_shape": [
+              1,
+              16,
+              16
+            ],
+            "output_kind": "diffusion",
+            "condition_dim": 6,
+            "noise_steps": 32
+          },
+          "optimizer": {
+            "type": "AdamW",
+            "lr": 0.001,
+            "weight_decay": 0.01,
+            "betas": [
+              0.9,
+              0.999
+            ],
+            "eps": 1e-08,
+            "foreach": false
+          },
+          "loss": {
+            "loss_id": "diffusion_mse"
+          },
+          "training": {
+            "batch_size": 16,
+            "training_steps": 3000,
+            "total_samples_seen": 48000,
+            "gradient_accumulation": 1,
+            "clip_norm": 1.0,
+            "schedule": "constant",
+            "precision": "fp32",
+            "tf32": false,
+            "deterministic_algorithms": true,
+            "warmup_updates": 0,
+            "batch_rng_device": "cpu",
+            "paired_cpu_batch_stream": true,
+            "persist_initial_state": true,
+            "batch_seed_offset": 500000,
+            "noise_seed_offset": 600000,
+            "evaluation_split": "validation",
+            "eval_steps": [
+              750,
+              1500,
+              3000
+            ],
+            "prediction_type": "x0",
+            "noise_steps": 32,
+            "noise_schedule": "cosine",
+            "loss_weighting": "uniform",
+            "min_snr_gamma": 5.0,
+            "sampling_steps": 16,
+            "sampling_eta": 0.0,
+            "evaluation_samples_per_condition": 4,
+            "evaluation_seed": 314159,
+            "evaluation_batch_conditions": 16
+          },
+          "parameter_count": 17908,
+          "model_code_sha256": "6a1a3aae0326db52c89fa6c204e71cb771024431856ade894f8a7732e5886275",
+          "node_id": "candidate_c154ceb7fdd2523d4ae3"
+        }
+      ]
+    },
+    {
+      "id": "operator_native_matched_s852002",
+      "category": "operator",
+      "context_ref": "textured",
+      "budget_semantics": "matched_steps",
+      "hypothesis": "Four native denoisers share absolute coordinate input, data, optimizer, target and update budget. Their operator, parameter count, normalization and connectivity differ as shown; finite-budget ordering requires actual sampled image quality.",
+      "varying_axes": [
+        "model.mode"
+      ],
+      "controls": [
+        "All four available native operator cells are retained: convolution, one-level U-Net, flat MLP and patch Transformer.",
+        "Every cell uses absolute coordinates, concat conditions, sinusoidal time, x0 target, 3000 updates, batch16, AdamW1e-3, the same materialized data and fixed evaluation noise/reference draws.",
+        "This is a bundled native-recipe contrast: parameter count, activation, normalization and connectivity are explicitly shown; do not attribute the total difference exclusively to operator name.",
+        "Primary choices were selected from original discovery validation only; the diagnostic Transformer is not promoted or substituted after new confirmation."
+      ],
+      "shortcut_checks": [
+        "always prefer U-Net for diffusion",
+        "always prefer more parameters",
+        "always prefer globally mixing operator"
+      ],
+      "explanation_target": "Explain both adjacent comparisons using exact native code and the fixed finite-budget task; use all four local cells and image/geometry/diversity diagnostics, while acknowledging unresolved parameter-count and optimization attribution.",
+      "admission": "Freeze the new four-seed validation order, then independently test all six adjacent hypotheses from three new dataset instances using the unchanged16-seed sign-Holm rule and gap0.003. Keep rejected instances; no replacement.",
+      "template_id": "operator_native_matched",
+      "instance_seed": 852002,
+      "dataset_node_id": "dataset_fd33629bb65f3809",
+      "dataset_config": {
+        "size": 16,
+        "noise_steps": 32,
+        "condition_dim": 6,
+        "brightness_min": 0.65,
+        "brightness_max": 1.0,
+        "texture_strength": 0.12,
+        "radius_min": 0.25,
+        "radius_max": 0.42,
+        "position_extent": 0.45,
+        "reference_samples": 4,
+        "train_size": 1024,
+        "validation_size": 64,
+        "test_size": 64,
+        "ood_size": 32,
+        "evaluation_shift": {},
+        "ood_shift": {
+          "position_extent": 0.55
+        }
+      },
+      "comparison": {
+        "budget_semantics": "matched_steps",
+        "changed_fields": [
+          "model.block",
+          "model.kernel",
+          "model.mode",
+          "model.norm",
+          "model.residual",
+          "model.skip"
+        ],
+        "undeclared_fields": [
+          "model.block",
+          "model.kernel",
+          "model.norm",
+          "model.residual",
+          "model.skip"
+        ],
+        "comparison_class": "bundled_recipe",
+        "field_values": {
+          "conv": {
+            "model.block": "dense",
+            "model.kernel": 3,
+            "model.mode": "conv",
+            "model.norm": "group",
+            "model.residual": true,
+            "model.skip": "<absent>"
+          },
+          "unet": {
+            "model.block": "dense",
+            "model.kernel": 3,
+            "model.mode": "unet",
+            "model.norm": "group",
+            "model.residual": true,
+            "model.skip": true
+          },
+          "mlp": {
+            "model.block": "<absent>",
+            "model.kernel": "<absent>",
+            "model.mode": "mlp",
+            "model.norm": "<absent>",
+            "model.residual": "<absent>",
+            "model.skip": "<absent>"
+          }
+        },
+        "actual_changed_fields": [
+          "model.block",
+          "model.kernel",
+          "model.mode",
+          "model.norm",
+          "model.residual",
+          "model.skip"
+        ]
+      },
+      "choices": [
+        {
+          "id": "conv",
+          "role": "primary",
+          "model": {
+            "type": "image_generation_denoiser",
+            "mode": "conv",
+            "width": 24,
+            "depth": 3,
+            "kernel": 3,
+            "norm": "group",
+            "activation": "silu",
+            "residual": true,
+            "block": "dense",
+            "conditioning": "concat",
+            "coordinates": "absolute",
+            "time_embedding": "sinusoidal",
+            "max_parameters": 2000000,
+            "input_shape": [
+              8,
+              16,
+              16
+            ],
+            "output_shape": [
+              1,
+              16,
+              16
+            ],
+            "output_kind": "diffusion",
+            "condition_dim": 6,
+            "noise_steps": 32
+          },
+          "optimizer": {
+            "type": "AdamW",
+            "lr": 0.001,
+            "weight_decay": 0.01,
+            "betas": [
+              0.9,
+              0.999
+            ],
+            "eps": 1e-08,
+            "foreach": false
+          },
+          "loss": {
+            "loss_id": "diffusion_mse"
+          },
+          "training": {
+            "batch_size": 16,
+            "training_steps": 3000,
+            "total_samples_seen": 48000,
+            "gradient_accumulation": 1,
+            "clip_norm": 1.0,
+            "schedule": "constant",
+            "precision": "fp32",
+            "tf32": false,
+            "deterministic_algorithms": true,
+            "warmup_updates": 0,
+            "batch_rng_device": "cpu",
+            "paired_cpu_batch_stream": true,
+            "persist_initial_state": true,
+            "batch_seed_offset": 500000,
+            "noise_seed_offset": 600000,
+            "evaluation_split": "validation",
+            "eval_steps": [
+              750,
+              1500,
+              3000
+            ],
+            "prediction_type": "x0",
+            "noise_steps": 32,
+            "noise_schedule": "cosine",
+            "loss_weighting": "uniform",
+            "min_snr_gamma": 5.0,
+            "sampling_steps": 16,
+            "sampling_eta": 0.0,
+            "evaluation_samples_per_condition": 4,
+            "evaluation_seed": 314159,
+            "evaluation_batch_conditions": 16
+          },
+          "parameter_count": 19489,
+          "model_code_sha256": "548e5eb2edfaab77381773b5c3a085cafe768785e53bd9377556e95e2cf4161d",
+          "node_id": "candidate_8bceb0229ca0a46d125e"
+        },
+        {
+          "id": "unet",
+          "role": "primary",
+          "model": {
+            "type": "image_generation_denoiser",
+            "mode": "unet",
+            "width": 24,
+            "depth": 3,
+            "kernel": 3,
+            "norm": "group",
+            "activation": "silu",
+            "residual": true,
+            "block": "dense",
+            "skip": true,
+            "conditioning": "concat",
+            "coordinates": "absolute",
+            "time_embedding": "sinusoidal",
+            "max_parameters": 2000000,
+            "input_shape": [
+              8,
+              16,
+              16
+            ],
+            "output_shape": [
+              1,
+              16,
+              16
+            ],
+            "output_kind": "diffusion",
+            "condition_dim": 6,
+            "noise_steps": 32
+          },
+          "optimizer": {
+            "type": "AdamW",
+            "lr": 0.001,
+            "weight_decay": 0.01,
+            "betas": [
+              0.9,
+              0.999
+            ],
+            "eps": 1e-08,
+            "foreach": false
+          },
+          "loss": {
+            "loss_id": "diffusion_mse"
+          },
+          "training": {
+            "batch_size": 16,
+            "training_steps": 3000,
+            "total_samples_seen": 48000,
+            "gradient_accumulation": 1,
+            "clip_norm": 1.0,
+            "schedule": "constant",
+            "precision": "fp32",
+            "tf32": false,
+            "deterministic_algorithms": true,
+            "warmup_updates": 0,
+            "batch_rng_device": "cpu",
+            "paired_cpu_batch_stream": true,
+            "persist_initial_state": true,
+            "batch_seed_offset": 500000,
+            "noise_seed_offset": 600000,
+            "evaluation_split": "validation",
+            "eval_steps": [
+              750,
+              1500,
+              3000
+            ],
+            "prediction_type": "x0",
+            "noise_steps": 32,
+            "noise_schedule": "cosine",
+            "loss_weighting": "uniform",
+            "min_snr_gamma": 5.0,
+            "sampling_steps": 16,
+            "sampling_eta": 0.0,
+            "evaluation_samples_per_condition": 4,
+            "evaluation_seed": 314159,
+            "evaluation_batch_conditions": 16
+          },
+          "parameter_count": 35089,
+          "model_code_sha256": "5eb9b3c4a5893cf189f5b3571dd497ba383e394e0d9c190e56276b84a9d36229",
+          "node_id": "candidate_a2520835f9adbb7c0b84"
+        },
+        {
+          "id": "mlp",
+          "role": "primary",
+          "model": {
+            "type": "image_generation_denoiser",
+            "mode": "mlp",
+            "width": 24,
+            "depth": 3,
+            "activation": "silu",
+            "conditioning": "concat",
+            "coordinates": "absolute",
+            "time_embedding": "sinusoidal",
+            "max_parameters": 2000000,
+            "input_shape": [
+              8,
+              16,
+              16
+            ],
+            "output_shape": [
+              1,
+              16,
+              16
+            ],
+            "output_kind": "diffusion",
+            "condition_dim": 6,
+            "noise_steps": 32
+          },
+          "optimizer": {
+            "type": "AdamW",
+            "lr": 0.001,
+            "weight_decay": 0.01,
+            "betas": [
+              0.9,
+              0.999
+            ],
+            "eps": 1e-08,
+            "foreach": false
+          },
+          "loss": {
+            "loss_id": "diffusion_mse"
+          },
+          "training": {
+            "batch_size": 16,
+            "training_steps": 3000,
+            "total_samples_seen": 48000,
+            "gradient_accumulation": 1,
+            "clip_norm": 1.0,
+            "schedule": "constant",
+            "precision": "fp32",
+            "tf32": false,
+            "deterministic_algorithms": true,
+            "warmup_updates": 0,
+            "batch_rng_device": "cpu",
+            "paired_cpu_batch_stream": true,
+            "persist_initial_state": true,
+            "batch_seed_offset": 500000,
+            "noise_seed_offset": 600000,
+            "evaluation_split": "validation",
+            "eval_steps": [
+              750,
+              1500,
+              3000
+            ],
+            "prediction_type": "x0",
+            "noise_steps": 32,
+            "noise_schedule": "cosine",
+            "loss_weighting": "uniform",
+            "min_snr_gamma": 5.0,
+            "sampling_steps": 16,
+            "sampling_eta": 0.0,
+            "evaluation_samples_per_condition": 4,
+            "evaluation_seed": 314159,
+            "evaluation_batch_conditions": 16
+          },
+          "parameter_count": 461344,
+          "model_code_sha256": "31d958601950f09831a638b54b51b3db7d388a4599ccfe063782adc4637d4b2c",
+          "node_id": "candidate_fa4a1e6560135ec374bf"
+        }
+      ],
+      "diagnostics": [
+        {
+          "id": "transformer",
+          "role": "diagnostic",
+          "model": {
+            "type": "image_generation_denoiser",
+            "mode": "patch_transformer",
+            "width": 24,
+            "depth": 3,
+            "activation": "gelu",
+            "conditioning": "concat",
+            "coordinates": "absolute",
+            "time_embedding": "sinusoidal",
+            "patch_size": 2,
+            "max_parameters": 2000000,
+            "num_heads": 4,
+            "ff_multiplier": 2,
+            "input_shape": [
+              8,
+              16,
+              16
+            ],
+            "output_shape": [
+              1,
+              16,
+              16
+            ],
+            "output_kind": "diffusion",
+            "condition_dim": 6,
+            "noise_steps": 32
+          },
+          "optimizer": {
+            "type": "AdamW",
+            "lr": 0.001,
+            "weight_decay": 0.01,
+            "betas": [
+              0.9,
+              0.999
+            ],
+            "eps": 1e-08,
+            "foreach": false
+          },
+          "loss": {
+            "loss_id": "diffusion_mse"
+          },
+          "training": {
+            "batch_size": 16,
+            "training_steps": 3000,
+            "total_samples_seen": 48000,
+            "gradient_accumulation": 1,
+            "clip_norm": 1.0,
+            "schedule": "constant",
+            "precision": "fp32",
+            "tf32": false,
+            "deterministic_algorithms": true,
+            "warmup_updates": 0,
+            "batch_rng_device": "cpu",
+            "paired_cpu_batch_stream": true,
+            "persist_initial_state": true,
+            "batch_seed_offset": 500000,
+            "noise_seed_offset": 600000,
+            "evaluation_split": "validation",
+            "eval_steps": [
+              750,
+              1500,
+              3000
+            ],
+            "prediction_type": "x0",
+            "noise_steps": 32,
+            "noise_schedule": "cosine",
+            "loss_weighting": "uniform",
+            "min_snr_gamma": 5.0,
+            "sampling_steps": 16,
+            "sampling_eta": 0.0,
+            "evaluation_samples_per_condition": 4,
+            "evaluation_seed": 314159,
+            "evaluation_batch_conditions": 16
+          },
+          "parameter_count": 17908,
+          "model_code_sha256": "6a1a3aae0326db52c89fa6c204e71cb771024431856ade894f8a7732e5886275",
+          "node_id": "candidate_1f64af8282f367bccdb9"
+        }
+      ]
+    },
+    {
+      "id": "operator_native_matched_s852003",
+      "category": "operator",
+      "context_ref": "textured",
+      "budget_semantics": "matched_steps",
+      "hypothesis": "Four native denoisers share absolute coordinate input, data, optimizer, target and update budget. Their operator, parameter count, normalization and connectivity differ as shown; finite-budget ordering requires actual sampled image quality.",
+      "varying_axes": [
+        "model.mode"
+      ],
+      "controls": [
+        "All four available native operator cells are retained: convolution, one-level U-Net, flat MLP and patch Transformer.",
+        "Every cell uses absolute coordinates, concat conditions, sinusoidal time, x0 target, 3000 updates, batch16, AdamW1e-3, the same materialized data and fixed evaluation noise/reference draws.",
+        "This is a bundled native-recipe contrast: parameter count, activation, normalization and connectivity are explicitly shown; do not attribute the total difference exclusively to operator name.",
+        "Primary choices were selected from original discovery validation only; the diagnostic Transformer is not promoted or substituted after new confirmation."
+      ],
+      "shortcut_checks": [
+        "always prefer U-Net for diffusion",
+        "always prefer more parameters",
+        "always prefer globally mixing operator"
+      ],
+      "explanation_target": "Explain both adjacent comparisons using exact native code and the fixed finite-budget task; use all four local cells and image/geometry/diversity diagnostics, while acknowledging unresolved parameter-count and optimization attribution.",
+      "admission": "Freeze the new four-seed validation order, then independently test all six adjacent hypotheses from three new dataset instances using the unchanged16-seed sign-Holm rule and gap0.003. Keep rejected instances; no replacement.",
+      "template_id": "operator_native_matched",
+      "instance_seed": 852003,
+      "dataset_node_id": "dataset_d8ad2ee2cf7b306a",
+      "dataset_config": {
+        "size": 16,
+        "noise_steps": 32,
+        "condition_dim": 6,
+        "brightness_min": 0.65,
+        "brightness_max": 1.0,
+        "texture_strength": 0.12,
+        "radius_min": 0.25,
+        "radius_max": 0.42,
+        "position_extent": 0.45,
+        "reference_samples": 4,
+        "train_size": 1024,
+        "validation_size": 64,
+        "test_size": 64,
+        "ood_size": 32,
+        "evaluation_shift": {},
+        "ood_shift": {
+          "position_extent": 0.55
+        }
+      },
+      "comparison": {
+        "budget_semantics": "matched_steps",
+        "changed_fields": [
+          "model.block",
+          "model.kernel",
+          "model.mode",
+          "model.norm",
+          "model.residual",
+          "model.skip"
+        ],
+        "undeclared_fields": [
+          "model.block",
+          "model.kernel",
+          "model.norm",
+          "model.residual",
+          "model.skip"
+        ],
+        "comparison_class": "bundled_recipe",
+        "field_values": {
+          "conv": {
+            "model.block": "dense",
+            "model.kernel": 3,
+            "model.mode": "conv",
+            "model.norm": "group",
+            "model.residual": true,
+            "model.skip": "<absent>"
+          },
+          "unet": {
+            "model.block": "dense",
+            "model.kernel": 3,
+            "model.mode": "unet",
+            "model.norm": "group",
+            "model.residual": true,
+            "model.skip": true
+          },
+          "mlp": {
+            "model.block": "<absent>",
+            "model.kernel": "<absent>",
+            "model.mode": "mlp",
+            "model.norm": "<absent>",
+            "model.residual": "<absent>",
+            "model.skip": "<absent>"
+          }
+        },
+        "actual_changed_fields": [
+          "model.block",
+          "model.kernel",
+          "model.mode",
+          "model.norm",
+          "model.residual",
+          "model.skip"
+        ]
+      },
+      "choices": [
+        {
+          "id": "conv",
+          "role": "primary",
+          "model": {
+            "type": "image_generation_denoiser",
+            "mode": "conv",
+            "width": 24,
+            "depth": 3,
+            "kernel": 3,
+            "norm": "group",
+            "activation": "silu",
+            "residual": true,
+            "block": "dense",
+            "conditioning": "concat",
+            "coordinates": "absolute",
+            "time_embedding": "sinusoidal",
+            "max_parameters": 2000000,
+            "input_shape": [
+              8,
+              16,
+              16
+            ],
+            "output_shape": [
+              1,
+              16,
+              16
+            ],
+            "output_kind": "diffusion",
+            "condition_dim": 6,
+            "noise_steps": 32
+          },
+          "optimizer": {
+            "type": "AdamW",
+            "lr": 0.001,
+            "weight_decay": 0.01,
+            "betas": [
+              0.9,
+              0.999
+            ],
+            "eps": 1e-08,
+            "foreach": false
+          },
+          "loss": {
+            "loss_id": "diffusion_mse"
+          },
+          "training": {
+            "batch_size": 16,
+            "training_steps": 3000,
+            "total_samples_seen": 48000,
+            "gradient_accumulation": 1,
+            "clip_norm": 1.0,
+            "schedule": "constant",
+            "precision": "fp32",
+            "tf32": false,
+            "deterministic_algorithms": true,
+            "warmup_updates": 0,
+            "batch_rng_device": "cpu",
+            "paired_cpu_batch_stream": true,
+            "persist_initial_state": true,
+            "batch_seed_offset": 500000,
+            "noise_seed_offset": 600000,
+            "evaluation_split": "validation",
+            "eval_steps": [
+              750,
+              1500,
+              3000
+            ],
+            "prediction_type": "x0",
+            "noise_steps": 32,
+            "noise_schedule": "cosine",
+            "loss_weighting": "uniform",
+            "min_snr_gamma": 5.0,
+            "sampling_steps": 16,
+            "sampling_eta": 0.0,
+            "evaluation_samples_per_condition": 4,
+            "evaluation_seed": 314159,
+            "evaluation_batch_conditions": 16
+          },
+          "parameter_count": 19489,
+          "model_code_sha256": "548e5eb2edfaab77381773b5c3a085cafe768785e53bd9377556e95e2cf4161d",
+          "node_id": "candidate_804cc8045512fe7cbec6"
+        },
+        {
+          "id": "unet",
+          "role": "primary",
+          "model": {
+            "type": "image_generation_denoiser",
+            "mode": "unet",
+            "width": 24,
+            "depth": 3,
+            "kernel": 3,
+            "norm": "group",
+            "activation": "silu",
+            "residual": true,
+            "block": "dense",
+            "skip": true,
+            "conditioning": "concat",
+            "coordinates": "absolute",
+            "time_embedding": "sinusoidal",
+            "max_parameters": 2000000,
+            "input_shape": [
+              8,
+              16,
+              16
+            ],
+            "output_shape": [
+              1,
+              16,
+              16
+            ],
+            "output_kind": "diffusion",
+            "condition_dim": 6,
+            "noise_steps": 32
+          },
+          "optimizer": {
+            "type": "AdamW",
+            "lr": 0.001,
+            "weight_decay": 0.01,
+            "betas": [
+              0.9,
+              0.999
+            ],
+            "eps": 1e-08,
+            "foreach": false
+          },
+          "loss": {
+            "loss_id": "diffusion_mse"
+          },
+          "training": {
+            "batch_size": 16,
+            "training_steps": 3000,
+            "total_samples_seen": 48000,
+            "gradient_accumulation": 1,
+            "clip_norm": 1.0,
+            "schedule": "constant",
+            "precision": "fp32",
+            "tf32": false,
+            "deterministic_algorithms": true,
+            "warmup_updates": 0,
+            "batch_rng_device": "cpu",
+            "paired_cpu_batch_stream": true,
+            "persist_initial_state": true,
+            "batch_seed_offset": 500000,
+            "noise_seed_offset": 600000,
+            "evaluation_split": "validation",
+            "eval_steps": [
+              750,
+              1500,
+              3000
+            ],
+            "prediction_type": "x0",
+            "noise_steps": 32,
+            "noise_schedule": "cosine",
+            "loss_weighting": "uniform",
+            "min_snr_gamma": 5.0,
+            "sampling_steps": 16,
+            "sampling_eta": 0.0,
+            "evaluation_samples_per_condition": 4,
+            "evaluation_seed": 314159,
+            "evaluation_batch_conditions": 16
+          },
+          "parameter_count": 35089,
+          "model_code_sha256": "5eb9b3c4a5893cf189f5b3571dd497ba383e394e0d9c190e56276b84a9d36229",
+          "node_id": "candidate_d4f3e193671168b46ced"
+        },
+        {
+          "id": "mlp",
+          "role": "primary",
+          "model": {
+            "type": "image_generation_denoiser",
+            "mode": "mlp",
+            "width": 24,
+            "depth": 3,
+            "activation": "silu",
+            "conditioning": "concat",
+            "coordinates": "absolute",
+            "time_embedding": "sinusoidal",
+            "max_parameters": 2000000,
+            "input_shape": [
+              8,
+              16,
+              16
+            ],
+            "output_shape": [
+              1,
+              16,
+              16
+            ],
+            "output_kind": "diffusion",
+            "condition_dim": 6,
+            "noise_steps": 32
+          },
+          "optimizer": {
+            "type": "AdamW",
+            "lr": 0.001,
+            "weight_decay": 0.01,
+            "betas": [
+              0.9,
+              0.999
+            ],
+            "eps": 1e-08,
+            "foreach": false
+          },
+          "loss": {
+            "loss_id": "diffusion_mse"
+          },
+          "training": {
+            "batch_size": 16,
+            "training_steps": 3000,
+            "total_samples_seen": 48000,
+            "gradient_accumulation": 1,
+            "clip_norm": 1.0,
+            "schedule": "constant",
+            "precision": "fp32",
+            "tf32": false,
+            "deterministic_algorithms": true,
+            "warmup_updates": 0,
+            "batch_rng_device": "cpu",
+            "paired_cpu_batch_stream": true,
+            "persist_initial_state": true,
+            "batch_seed_offset": 500000,
+            "noise_seed_offset": 600000,
+            "evaluation_split": "validation",
+            "eval_steps": [
+              750,
+              1500,
+              3000
+            ],
+            "prediction_type": "x0",
+            "noise_steps": 32,
+            "noise_schedule": "cosine",
+            "loss_weighting": "uniform",
+            "min_snr_gamma": 5.0,
+            "sampling_steps": 16,
+            "sampling_eta": 0.0,
+            "evaluation_samples_per_condition": 4,
+            "evaluation_seed": 314159,
+            "evaluation_batch_conditions": 16
+          },
+          "parameter_count": 461344,
+          "model_code_sha256": "31d958601950f09831a638b54b51b3db7d388a4599ccfe063782adc4637d4b2c",
+          "node_id": "candidate_eaae951afaff90809747"
+        }
+      ],
+      "diagnostics": [
+        {
+          "id": "transformer",
+          "role": "diagnostic",
+          "model": {
+            "type": "image_generation_denoiser",
+            "mode": "patch_transformer",
+            "width": 24,
+            "depth": 3,
+            "activation": "gelu",
+            "conditioning": "concat",
+            "coordinates": "absolute",
+            "time_embedding": "sinusoidal",
+            "patch_size": 2,
+            "max_parameters": 2000000,
+            "num_heads": 4,
+            "ff_multiplier": 2,
+            "input_shape": [
+              8,
+              16,
+              16
+            ],
+            "output_shape": [
+              1,
+              16,
+              16
+            ],
+            "output_kind": "diffusion",
+            "condition_dim": 6,
+            "noise_steps": 32
+          },
+          "optimizer": {
+            "type": "AdamW",
+            "lr": 0.001,
+            "weight_decay": 0.01,
+            "betas": [
+              0.9,
+              0.999
+            ],
+            "eps": 1e-08,
+            "foreach": false
+          },
+          "loss": {
+            "loss_id": "diffusion_mse"
+          },
+          "training": {
+            "batch_size": 16,
+            "training_steps": 3000,
+            "total_samples_seen": 48000,
+            "gradient_accumulation": 1,
+            "clip_norm": 1.0,
+            "schedule": "constant",
+            "precision": "fp32",
+            "tf32": false,
+            "deterministic_algorithms": true,
+            "warmup_updates": 0,
+            "batch_rng_device": "cpu",
+            "paired_cpu_batch_stream": true,
+            "persist_initial_state": true,
+            "batch_seed_offset": 500000,
+            "noise_seed_offset": 600000,
+            "evaluation_split": "validation",
+            "eval_steps": [
+              750,
+              1500,
+              3000
+            ],
+            "prediction_type": "x0",
+            "noise_steps": 32,
+            "noise_schedule": "cosine",
+            "loss_weighting": "uniform",
+            "min_snr_gamma": 5.0,
+            "sampling_steps": 16,
+            "sampling_eta": 0.0,
+            "evaluation_samples_per_condition": 4,
+            "evaluation_seed": 314159,
+            "evaluation_batch_conditions": 16
+          },
+          "parameter_count": 17908,
+          "model_code_sha256": "6a1a3aae0326db52c89fa6c204e71cb771024431856ade894f8a7732e5886275",
+          "node_id": "candidate_72f3500e4f5cd3e445c8"
+        }
+      ]
+    }
+  ]
+}

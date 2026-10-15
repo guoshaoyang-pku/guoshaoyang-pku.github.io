@@ -1,0 +1,2139 @@
+{
+  "schema_version": "vision_public_explanation_audit_v1",
+  "status": "complete",
+  "protocol_sha256": "6aa81ea05e456a408b614da7e911a59d9960c29eccc15e944af82808691c6c51",
+  "evaluation_results_sha256": "50ea7459f981010fab8865de965f9604ea1ee00cf94d4963e22763d6576fda73",
+  "control_audit_sha256": "35c093f2c04f07f1603df081c4324951efbbc32659ae726db6d701a138665a15",
+  "quality_analysis_sha256": "8f0f9c236e74e6685918496d0ec78ef209bafdd72fb13ba6aaaa1b50ae3f9e39",
+  "manual_review_source_sha256": "c9e6facb44f00cd65084b9eeb62d382dad37299c28c0c58b2f57152fb7bae695",
+  "records": [
+    {
+      "question_id": "q_b5c9bdb581e1017e89dcb6f5f5fe1b33",
+      "model": "gpt-6-luna",
+      "ranking_correct": false,
+      "summary_zh": "识别MLP参数更多却缺少空间共享，不按参数量直接排序；两相邻比较完整，但仍把U-Net的上下文和skip当作主要优势，未抓到其全分辨率路径没有非线性。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "its downsampled path supplies larger receptive fields and its skip connection preserves fine spatial detail",
+          "dimension": "mechanism_alignment",
+          "judgment": "plausible_unmeasured_not_supported_here",
+          "assessment": "U-Net确实有下采样和stem skip，但该skip只经过线性stem，全部三个非线性block在8×8，up/head没有额外激活。conv的卷积路径9×9已覆盖大部分前景；每像素有几何条件/坐标，GroupNorm又有全空间统计。当前三选中conv比U-Net更好，不支持把增加空间上下文当作这组配置的主要优势。",
+          "scope_limit": "配置同时改变参数量、分辨率与连接；实测不能唯一归因于缺少全分辨率激活，也不排除上下文在其他条件下有益。",
+          "evidence_level": "E1",
+          "claim": "its downsampled path supplies larger receptive fields and its skip connection preserves fine spatial detail",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/control_audit.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/control_audit.json",
+            "sha256": "35c093f2c04f07f1603df081c4324951efbbc32659ae726db6d701a138665a15"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "gpt-6-luna",
+          "question_id": "q_b5c9bdb581e1017e89dcb6f5f5fe1b33",
+          "public_response_sha256": "7e78e50bd12a760ee92f912009cdeed568e770c61c4da6a983bc6e57cb3db989",
+          "explanation_sha256": "6b4b84bcbec2ac19942763a5b7b1417c4dd85e1d433cf0f71fec2f5b9e383b2c",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "despite having more parameters, it lacks spatial locality and translation structure",
+          "dimension": "mechanism_alignment",
+          "judgment": "supported_factor_nonexclusive",
+          "assessment": "MLP将4352个展开输入经3个96维隐藏层输出256像素，无卷积权重共享，参数461344。三个数据实例中其energy/IoU/背景均不优于conv/U-Net，条件内方差只有参考约0.032%—0.039%，与解释的泛化/多样性担忧相容。",
+          "scope_limit": "没有独立匹配参数量、归一化、残差或隐藏宽度；96维并非目标低维条件分布必然无法表达的证明。",
+          "evidence_level": "E2",
+          "claim": "despite having more parameters, it lacks spatial locality and translation structure",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/quality_analysis/generation_quality.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/quality_analysis/generation_quality.json",
+            "sha256": "8f0f9c236e74e6685918496d0ec78ef209bafdd72fb13ba6aaaa1b50ae3f9e39"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "gpt-6-luna",
+          "question_id": "q_b5c9bdb581e1017e89dcb6f5f5fe1b33",
+          "public_response_sha256": "7e78e50bd12a760ee92f912009cdeed568e770c61c4da6a983bc6e57cb3db989",
+          "explanation_sha256": "6b4b84bcbec2ac19942763a5b7b1417c4dd85e1d433cf0f71fec2f5b9e383b2c",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "The A-versus-B ordering is materially uncertain",
+          "dimension": "causal_calibration",
+          "judgment": "supported",
+          "assessment": "明确承认浅层UNet可能丢细节且预算有限，解释与B→A→C一致。",
+          "scope_limit": "合理的保留意见与错误的最后排序分开评价。",
+          "evidence_level": "E0",
+          "claim": "The A-versus-B ordering is materially uncertain",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_b5c9bdb581e1017e89dcb6f5f5fe1b33/prompt.txt",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_b5c9bdb581e1017e89dcb6f5f5fe1b33/prompt.txt",
+            "sha256": "3f1dd67d403fb239c0659d381637d4eddfed80d7a956f749b34bee060d60e742"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "gpt-6-luna",
+          "question_id": "q_b5c9bdb581e1017e89dcb6f5f5fe1b33",
+          "public_response_sha256": "7e78e50bd12a760ee92f912009cdeed568e770c61c4da6a983bc6e57cb3db989",
+          "explanation_sha256": "6b4b84bcbec2ac19942763a5b7b1417c4dd85e1d433cf0f71fec2f5b9e383b2c",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        }
+      ],
+      "response_sha256": "7e78e50bd12a760ee92f912009cdeed568e770c61c4da6a983bc6e57cb3db989",
+      "probe": null
+    },
+    {
+      "question_id": "q_147d608aaef7b8eb685635812d3d6f5c",
+      "model": "gpt-6-luna",
+      "ranking_correct": false,
+      "summary_zh": "识别MLP没有空间共享，以及U-Net更大卷积上下文；但将线性stem skip当作足以保留细节的理由，未抓住非线性计算全部移到8×8的具体代价。比较有保留，错误排序与机制未隔离分开评价。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "Choice C adds a downsampling path for broader spatial context while retaining a full-resolution skip connection",
+          "dimension": "mechanism_alignment",
+          "judgment": "plausible_unmeasured_not_supported_here",
+          "assessment": "U-Net确实有下采样和stem skip，但该skip只经过线性stem，全部三个非线性block在8×8，up/head没有额外激活。conv的卷积路径9×9已覆盖大部分前景；每像素有几何条件/坐标，GroupNorm又有全空间统计。当前三选中conv比U-Net更好，不支持把增加空间上下文当作这组配置的主要优势。",
+          "scope_limit": "配置同时改变参数量、分辨率与连接；实测不能唯一归因于缺少全分辨率激活，也不排除上下文在其他条件下有益。",
+          "evidence_level": "E1",
+          "claim": "Choice C adds a downsampling path for broader spatial context while retaining a full-resolution skip connection",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/control_audit.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/control_audit.json",
+            "sha256": "35c093f2c04f07f1603df081c4324951efbbc32659ae726db6d701a138665a15"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "gpt-6-luna",
+          "question_id": "q_147d608aaef7b8eb685635812d3d6f5c",
+          "public_response_sha256": "13e159962c6aa84e4b64ff307ba676faca976d882d3643874177c9559f5fa4f6",
+          "explanation_sha256": "878dc71078f684172f45337948ad78134a34be020d6b23da4583405159c7b5df",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "it must learn spatial relationships from only 1,024 training examples",
+          "dimension": "mechanism_alignment",
+          "judgment": "supported_factor_nonexclusive",
+          "assessment": "MLP将4352个展开输入经3个96维隐藏层输出256像素，无卷积权重共享，参数461344。三个数据实例中其energy/IoU/背景均不优于conv/U-Net，条件内方差只有参考约0.032%—0.039%，与解释的泛化/多样性担忧相容。",
+          "scope_limit": "没有独立匹配参数量、归一化、残差或隐藏宽度；96维并非目标低维条件分布必然无法表达的证明。",
+          "evidence_level": "E2",
+          "claim": "it must learn spatial relationships from only 1,024 training examples",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/quality_analysis/generation_quality.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/quality_analysis/generation_quality.json",
+            "sha256": "8f0f9c236e74e6685918496d0ec78ef209bafdd72fb13ba6aaaa1b50ae3f9e39"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "gpt-6-luna",
+          "question_id": "q_147d608aaef7b8eb685635812d3d6f5c",
+          "public_response_sha256": "13e159962c6aa84e4b64ff307ba676faca976d882d3643874177c9559f5fa4f6",
+          "explanation_sha256": "878dc71078f684172f45337948ad78134a34be020d6b23da4583405159c7b5df",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "the small image size makes the advantage uncertain.",
+          "dimension": "causal_calibration",
+          "judgment": "supported",
+          "assessment": "明确承认conv/U-Net相邻比较不确定，解释与C→B→A一致；MLP全局连接优势也没有被否认。",
+          "scope_limit": "正确的不确定性表述不使错误的配置排序成为正确。",
+          "evidence_level": "E0",
+          "claim": "the small image size makes the advantage uncertain.",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_147d608aaef7b8eb685635812d3d6f5c/prompt.txt",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_147d608aaef7b8eb685635812d3d6f5c/prompt.txt",
+            "sha256": "fd757f18535e88311039360927dbb04f40b180dcf6764b55d32f51e8f182b287"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "gpt-6-luna",
+          "question_id": "q_147d608aaef7b8eb685635812d3d6f5c",
+          "public_response_sha256": "13e159962c6aa84e4b64ff307ba676faca976d882d3643874177c9559f5fa4f6",
+          "explanation_sha256": "878dc71078f684172f45337948ad78134a34be020d6b23da4583405159c7b5df",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        }
+      ],
+      "response_sha256": "13e159962c6aa84e4b64ff307ba676faca976d882d3643874177c9559f5fa4f6",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_b5c9bdb581e1017e89dcb6f5f5fe1b33"
+      }
+    },
+    {
+      "question_id": "q_0b54c62a60d8a3d0c78866c2372316c7",
+      "model": "gpt-6-luna",
+      "ranking_correct": false,
+      "summary_zh": "两个相邻比较完整；准确承认已有几何条件和小图像可能让全分辨率卷积足够，但最终仍依赖一般U-Net先验把它排在前面。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "its U-Net combines full-resolution skip features with a downsampled path",
+          "dimension": "mechanism_alignment",
+          "judgment": "plausible_unmeasured_not_supported_here",
+          "assessment": "U-Net确实有下采样和stem skip，但该skip只经过线性stem，全部三个非线性block在8×8，up/head没有额外激活。conv的卷积路径9×9已覆盖大部分前景；每像素有几何条件/坐标，GroupNorm又有全空间统计。当前三选中conv比U-Net更好，不支持把增加空间上下文当作这组配置的主要优势。",
+          "scope_limit": "配置同时改变参数量、分辨率与连接；实测不能唯一归因于缺少全分辨率激活，也不排除上下文在其他条件下有益。",
+          "evidence_level": "E1",
+          "claim": "its U-Net combines full-resolution skip features with a downsampled path",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/control_audit.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/control_audit.json",
+            "sha256": "35c093f2c04f07f1603df081c4324951efbbc32659ae726db6d701a138665a15"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "gpt-6-luna",
+          "question_id": "q_0b54c62a60d8a3d0c78866c2372316c7",
+          "public_response_sha256": "94e7277d8626af0b9061c0f6f937d60870ff3f3b02cc24396225f1e93a5d4a8d",
+          "explanation_sha256": "b98d6f0ebab7f496de02554bdb030149ef30c476004a46ce6a3b49a804c6cf73",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "making it less suited to learning image-local regularities from only 1,024 training examples and 3,000 updates.",
+          "dimension": "mechanism_alignment",
+          "judgment": "supported_factor_nonexclusive",
+          "assessment": "MLP将4352个展开输入经3个96维隐藏层输出256像素，无卷积权重共享，参数461344。三个数据实例中其energy/IoU/背景均不优于conv/U-Net，条件内方差只有参考约0.032%—0.039%，与解释的泛化/多样性担忧相容。",
+          "scope_limit": "没有独立匹配参数量、归一化、残差或隐藏宽度；96维并非目标低维条件分布必然无法表达的证明。",
+          "evidence_level": "E2",
+          "claim": "making it less suited to learning image-local regularities from only 1,024 training examples and 3,000 updates.",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/quality_analysis/generation_quality.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/quality_analysis/generation_quality.json",
+            "sha256": "8f0f9c236e74e6685918496d0ec78ef209bafdd72fb13ba6aaaa1b50ae3f9e39"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "gpt-6-luna",
+          "question_id": "q_0b54c62a60d8a3d0c78866c2372316c7",
+          "public_response_sha256": "94e7277d8626af0b9061c0f6f937d60870ff3f3b02cc24396225f1e93a5d4a8d",
+          "explanation_sha256": "b98d6f0ebab7f496de02554bdb030149ef30c476004a46ce6a3b49a804c6cf73",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "the U-Net’s downsampling could also lose detail.",
+          "dimension": "causal_calibration",
+          "judgment": "supported",
+          "assessment": "该风险与具体代码中的低分辨率非线性路径有关，回答将其保留为可能性而非保证多尺度有益。",
+          "scope_limit": "未识别风险与收益的实际主导关系；不据错误排名判为事实错误。",
+          "evidence_level": "E0",
+          "claim": "the U-Net’s downsampling could also lose detail.",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_0b54c62a60d8a3d0c78866c2372316c7/prompt.txt",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_0b54c62a60d8a3d0c78866c2372316c7/prompt.txt",
+            "sha256": "db8d505d7905ef8b5e8b58b1d45c1cb9f4d8b94bf7ae223e85ee9517ef691134"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "gpt-6-luna",
+          "question_id": "q_0b54c62a60d8a3d0c78866c2372316c7",
+          "public_response_sha256": "94e7277d8626af0b9061c0f6f937d60870ff3f3b02cc24396225f1e93a5d4a8d",
+          "explanation_sha256": "b98d6f0ebab7f496de02554bdb030149ef30c476004a46ce6a3b49a804c6cf73",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        }
+      ],
+      "response_sha256": "94e7277d8626af0b9061c0f6f937d60870ff3f3b02cc24396225f1e93a5d4a8d",
+      "probe": null
+    },
+    {
+      "question_id": "q_0a9477d1f63da091c35005890dc32118",
+      "model": "gpt-6-luna",
+      "ranking_correct": false,
+      "summary_zh": "代码差异识别正确，也提到U-Net额外路径可能损失细节或增加优化负担；但主要理由仍把更宽上下文用于形状定位，忽略坐标/条件已逐像素可用。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "its downsampled path adds broader spatial context while its skip connection preserves high-resolution detail",
+          "dimension": "mechanism_alignment",
+          "judgment": "plausible_unmeasured_not_supported_here",
+          "assessment": "U-Net确实有下采样和stem skip，但该skip只经过线性stem，全部三个非线性block在8×8，up/head没有额外激活。conv的卷积路径9×9已覆盖大部分前景；每像素有几何条件/坐标，GroupNorm又有全空间统计。当前三选中conv比U-Net更好，不支持把增加空间上下文当作这组配置的主要优势。",
+          "scope_limit": "配置同时改变参数量、分辨率与连接；实测不能唯一归因于缺少全分辨率激活，也不排除上下文在其他条件下有益。",
+          "evidence_level": "E1",
+          "claim": "its downsampled path adds broader spatial context while its skip connection preserves high-resolution detail",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/control_audit.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/control_audit.json",
+            "sha256": "35c093f2c04f07f1603df081c4324951efbbc32659ae726db6d701a138665a15"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "gpt-6-luna",
+          "question_id": "q_0a9477d1f63da091c35005890dc32118",
+          "public_response_sha256": "fea063764309daa0e0d86b1055dd570eb29482ed9b4b94934c101747eac6990a",
+          "explanation_sha256": "7f11736cbd3c30cffc56f736cbdc4ecb85453401cf8b0b7989efa09bf0e4b621",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "its flattened MLP lacks convolution’s spatial inductive bias",
+          "dimension": "mechanism_alignment",
+          "judgment": "supported_factor_nonexclusive",
+          "assessment": "MLP将4352个展开输入经3个96维隐藏层输出256像素，无卷积权重共享，参数461344。三个数据实例中其energy/IoU/背景均不优于conv/U-Net，条件内方差只有参考约0.032%—0.039%，与解释的泛化/多样性担忧相容。",
+          "scope_limit": "没有独立匹配参数量、归一化、残差或隐藏宽度；96维并非目标低维条件分布必然无法表达的证明。",
+          "evidence_level": "E2",
+          "claim": "its flattened MLP lacks convolution’s spatial inductive bias",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/quality_analysis/generation_quality.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/quality_analysis/generation_quality.json",
+            "sha256": "8f0f9c236e74e6685918496d0ec78ef209bafdd72fb13ba6aaaa1b50ae3f9e39"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "gpt-6-luna",
+          "question_id": "q_0a9477d1f63da091c35005890dc32118",
+          "public_response_sha256": "fea063764309daa0e0d86b1055dd570eb29482ed9b4b94934c101747eac6990a",
+          "explanation_sha256": "7f11736cbd3c30cffc56f736cbdc4ecb85453401cf8b0b7989efa09bf0e4b621",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "its downsampling could discard useful detail.",
+          "dimension": "causal_calibration",
+          "judgment": "supported",
+          "assessment": "有明确有限3000步和分辨率风险，没有把预测当作代码确定结论；两个相邻理由与C→A→B一致。",
+          "scope_limit": "跨空间GroupNorm统计与坐标输入让纯卷积RF不能当作严格信息界。",
+          "evidence_level": "E0",
+          "claim": "its downsampling could discard useful detail.",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_0a9477d1f63da091c35005890dc32118/prompt.txt",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_0a9477d1f63da091c35005890dc32118/prompt.txt",
+            "sha256": "178c5b8917170bf16fb583e891b654ffc721fee2b4957ccb9b47810043150b32"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "gpt-6-luna",
+          "question_id": "q_0a9477d1f63da091c35005890dc32118",
+          "public_response_sha256": "fea063764309daa0e0d86b1055dd570eb29482ed9b4b94934c101747eac6990a",
+          "explanation_sha256": "7f11736cbd3c30cffc56f736cbdc4ecb85453401cf8b0b7989efa09bf0e4b621",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        }
+      ],
+      "response_sha256": "fea063764309daa0e0d86b1055dd570eb29482ed9b4b94934c101747eac6990a",
+      "probe": null
+    },
+    {
+      "question_id": "q_d631a9200d5d69a058d326cadefb6e51",
+      "model": "gpt-6-luna",
+      "ranking_correct": false,
+      "summary_zh": "解释较完整地对比几何泛化与全局外观潜变量，也承认MLP全图访问的可能收益；U-Net优势仍未对上真实干预结果。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "broader context for denoising and appearance inference without discarding shape detail",
+          "dimension": "mechanism_alignment",
+          "judgment": "plausible_unmeasured_not_supported_here",
+          "assessment": "U-Net确实有下采样和stem skip，但该skip只经过线性stem，全部三个非线性block在8×8，up/head没有额外激活。conv的卷积路径9×9已覆盖大部分前景；每像素有几何条件/坐标，GroupNorm又有全空间统计。当前三选中conv比U-Net更好，不支持把增加空间上下文当作这组配置的主要优势。",
+          "scope_limit": "配置同时改变参数量、分辨率与连接；实测不能唯一归因于缺少全分辨率激活，也不排除上下文在其他条件下有益。",
+          "evidence_level": "E1",
+          "claim": "broader context for denoising and appearance inference without discarding shape detail",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/control_audit.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/control_audit.json",
+            "sha256": "35c093f2c04f07f1603df081c4324951efbbc32659ae726db6d701a138665a15"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "gpt-6-luna",
+          "question_id": "q_d631a9200d5d69a058d326cadefb6e51",
+          "public_response_sha256": "bd48fc20212d4e69d4643f803c0afadcedfa3f0886104aa25012e541dbf3961c",
+          "explanation_sha256": "09e02717ab6c09970e6557d4519d83e2551833467be6ccc0a6df7fce1aff5ef5",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "its narrow 96-unit hidden bottleneck removes locality and translation structure",
+          "dimension": "mechanism_alignment",
+          "judgment": "supported_factor_nonexclusive",
+          "assessment": "MLP将4352个展开输入经3个96维隐藏层输出256像素，无卷积权重共享，参数461344。三个数据实例中其energy/IoU/背景均不优于conv/U-Net，条件内方差只有参考约0.032%—0.039%，与解释的泛化/多样性担忧相容。",
+          "scope_limit": "没有独立匹配参数量、归一化、残差或隐藏宽度；96维并非目标低维条件分布必然无法表达的证明。",
+          "evidence_level": "E2",
+          "claim": "its narrow 96-unit hidden bottleneck removes locality and translation structure",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/quality_analysis/generation_quality.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/quality_analysis/generation_quality.json",
+            "sha256": "8f0f9c236e74e6685918496d0ec78ef209bafdd72fb13ba6aaaa1b50ae3f9e39"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "gpt-6-luna",
+          "question_id": "q_d631a9200d5d69a058d326cadefb6e51",
+          "public_response_sha256": "bd48fc20212d4e69d4643f803c0afadcedfa3f0886104aa25012e541dbf3961c",
+          "explanation_sha256": "09e02717ab6c09970e6557d4519d83e2551833467be6ccc0a6df7fce1aff5ef5",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "which could help infer global brightness",
+          "dimension": "causal_calibration",
+          "judgment": "supported",
+          "assessment": "没有否认MLP的全局信息，适当地保留反方向可能性；但需注意缺少空间结构来自全连接原生配方，不是96这个数字本身造成。",
+          "scope_limit": "未隔离宽度与共享权重，不能唯一归因于瓶颈。",
+          "evidence_level": "E0",
+          "claim": "which could help infer global brightness",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_d631a9200d5d69a058d326cadefb6e51/prompt.txt",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_d631a9200d5d69a058d326cadefb6e51/prompt.txt",
+            "sha256": "c94c0000ed151d733b617ece1893b5eb0dbfc2f19939ee5c46226a02fa9d091e"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "gpt-6-luna",
+          "question_id": "q_d631a9200d5d69a058d326cadefb6e51",
+          "public_response_sha256": "bd48fc20212d4e69d4643f803c0afadcedfa3f0886104aa25012e541dbf3961c",
+          "explanation_sha256": "09e02717ab6c09970e6557d4519d83e2551833467be6ccc0a6df7fce1aff5ef5",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        }
+      ],
+      "response_sha256": "bd48fc20212d4e69d4643f803c0afadcedfa3f0886104aa25012e541dbf3961c",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_0a9477d1f63da091c35005890dc32118"
+      }
+    },
+    {
+      "question_id": "q_b5c9bdb581e1017e89dcb6f5f5fe1b33",
+      "model": "gpt-6.1-sol",
+      "ranking_correct": false,
+      "summary_zh": "认出96维全连接瓶颈和共享权重，也明确评分不是轮廓越锐越好；但最终使用更大上下文与skip的一般优势，错排conv/U-Net。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "B’s downsampled processing gives its three residual blocks a larger effective receptive field",
+          "dimension": "mechanism_alignment",
+          "judgment": "plausible_unmeasured_not_supported_here",
+          "assessment": "U-Net确实有下采样和stem skip，但该skip只经过线性stem，全部三个非线性block在8×8，up/head没有额外激活。conv的卷积路径9×9已覆盖大部分前景；每像素有几何条件/坐标，GroupNorm又有全空间统计。当前三选中conv比U-Net更好，不支持把增加空间上下文当作这组配置的主要优势。",
+          "scope_limit": "配置同时改变参数量、分辨率与连接；实测不能唯一归因于缺少全分辨率激活，也不排除上下文在其他条件下有益。",
+          "evidence_level": "E1",
+          "claim": "B’s downsampled processing gives its three residual blocks a larger effective receptive field",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/control_audit.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/control_audit.json",
+            "sha256": "35c093f2c04f07f1603df081c4324951efbbc32659ae726db6d701a138665a15"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "gpt-6.1-sol",
+          "question_id": "q_b5c9bdb581e1017e89dcb6f5f5fe1b33",
+          "public_response_sha256": "fdf0f465894cac5a668a22b0b896571e0b9dbffa1a0fb19d53bf55bf4c4f54e1",
+          "explanation_sha256": "a2c1d81aec0c08f96e088ab00c43488e8cbd4d10be848c721d5314ecb05afadf",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "That bottleneck, together with the lack of spatial weight sharing",
+          "dimension": "mechanism_alignment",
+          "judgment": "supported_factor_nonexclusive",
+          "assessment": "MLP将4352个展开输入经3个96维隐藏层输出256像素，无卷积权重共享，参数461344。三个数据实例中其energy/IoU/背景均不优于conv/U-Net，条件内方差只有参考约0.032%—0.039%，与解释的泛化/多样性担忧相容。",
+          "scope_limit": "没有独立匹配参数量、归一化、残差或隐藏宽度；96维并非目标低维条件分布必然无法表达的证明。",
+          "evidence_level": "E2",
+          "claim": "That bottleneck, together with the lack of spatial weight sharing",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/quality_analysis/generation_quality.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/quality_analysis/generation_quality.json",
+            "sha256": "8f0f9c236e74e6685918496d0ec78ef209bafdd72fb13ba6aaaa1b50ae3f9e39"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "gpt-6.1-sol",
+          "question_id": "q_b5c9bdb581e1017e89dcb6f5f5fe1b33",
+          "public_response_sha256": "fdf0f465894cac5a668a22b0b896571e0b9dbffa1a0fb19d53bf55bf4c4f54e1",
+          "explanation_sha256": "a2c1d81aec0c08f96e088ab00c43488e8cbd4d10be848c721d5314ecb05afadf",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "improved silhouette accuracy alone does not guarantee a better score.",
+          "dimension": "causal_calibration",
+          "judgment": "supported",
+          "assessment": "正确区分轮廓诊断和条件分布评分，保留上下采样损害细环边界/纹理的可能性；与B→A→C一致。",
+          "scope_limit": "本题数据下UNet方差不足尤其明显，但回答不能由此预先获知具体幅度。",
+          "evidence_level": "E0",
+          "claim": "improved silhouette accuracy alone does not guarantee a better score.",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_b5c9bdb581e1017e89dcb6f5f5fe1b33/prompt.txt",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_b5c9bdb581e1017e89dcb6f5f5fe1b33/prompt.txt",
+            "sha256": "3f1dd67d403fb239c0659d381637d4eddfed80d7a956f749b34bee060d60e742"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "gpt-6.1-sol",
+          "question_id": "q_b5c9bdb581e1017e89dcb6f5f5fe1b33",
+          "public_response_sha256": "fdf0f465894cac5a668a22b0b896571e0b9dbffa1a0fb19d53bf55bf4c4f54e1",
+          "explanation_sha256": "a2c1d81aec0c08f96e088ab00c43488e8cbd4d10be848c721d5314ecb05afadf",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        }
+      ],
+      "response_sha256": "fdf0f465894cac5a668a22b0b896571e0b9dbffa1a0fb19d53bf55bf4c4f54e1",
+      "probe": null
+    },
+    {
+      "question_id": "q_147d608aaef7b8eb685635812d3d6f5c",
+      "model": "gpt-6.1-sol",
+      "ranking_correct": false,
+      "summary_zh": "置换后保持同一配置顺序；区分合适多样性与低训练损失，不过对U-Net的上下文收益赋权过高，未指出全分辨率路径仅线性。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "helping coordinate shape identity, extent, and foreground brightness across the image.",
+          "dimension": "mechanism_alignment",
+          "judgment": "plausible_unmeasured_not_supported_here",
+          "assessment": "U-Net确实有下采样和stem skip，但该skip只经过线性stem，全部三个非线性block在8×8，up/head没有额外激活。conv的卷积路径9×9已覆盖大部分前景；每像素有几何条件/坐标，GroupNorm又有全空间统计。当前三选中conv比U-Net更好，不支持把增加空间上下文当作这组配置的主要优势。",
+          "scope_limit": "配置同时改变参数量、分辨率与连接；实测不能唯一归因于缺少全分辨率激活，也不排除上下文在其他条件下有益。",
+          "evidence_level": "E1",
+          "claim": "helping coordinate shape identity, extent, and foreground brightness across the image.",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/control_audit.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/control_audit.json",
+            "sha256": "35c093f2c04f07f1603df081c4324951efbbc32659ae726db6d701a138665a15"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "gpt-6.1-sol",
+          "question_id": "q_147d608aaef7b8eb685635812d3d6f5c",
+          "public_response_sha256": "8b4c53075c683c7a02800f1f46b970ae62683c43da21deb38188ff0ff89d02f4",
+          "explanation_sha256": "7d451e21877d2d78223545f738482c05820fefa6fdda37ec9a114f2740679d48",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "that bottleneck is more likely to produce blurred geometry and weak sample-dependent appearance",
+          "dimension": "mechanism_alignment",
+          "judgment": "supported_factor_nonexclusive",
+          "assessment": "MLP将4352个展开输入经3个96维隐藏层输出256像素，无卷积权重共享，参数461344。三个数据实例中其energy/IoU/背景均不优于conv/U-Net，条件内方差只有参考约0.032%—0.039%，与解释的泛化/多样性担忧相容。",
+          "scope_limit": "没有独立匹配参数量、归一化、残差或隐藏宽度；96维并非目标低维条件分布必然无法表达的证明。",
+          "evidence_level": "E2",
+          "claim": "that bottleneck is more likely to produce blurred geometry and weak sample-dependent appearance",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/quality_analysis/generation_quality.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/quality_analysis/generation_quality.json",
+            "sha256": "8f0f9c236e74e6685918496d0ec78ef209bafdd72fb13ba6aaaa1b50ae3f9e39"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "gpt-6.1-sol",
+          "question_id": "q_147d608aaef7b8eb685635812d3d6f5c",
+          "public_response_sha256": "8b4c53075c683c7a02800f1f46b970ae62683c43da21deb38188ff0ff89d02f4",
+          "explanation_sha256": "7d451e21877d2d78223545f738482c05820fefa6fdda37ec9a114f2740679d48",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "not merely low denoising MSE.",
+          "dimension": "causal_calibration",
+          "judgment": "supported",
+          "assessment": "正确说energy不是训练MSE；使用more likely并承认小形状与细节损失可能使顺序反转。",
+          "scope_limit": "预测错序与合理风险说明独立。",
+          "evidence_level": "E0",
+          "claim": "not merely low denoising MSE.",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_147d608aaef7b8eb685635812d3d6f5c/prompt.txt",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_147d608aaef7b8eb685635812d3d6f5c/prompt.txt",
+            "sha256": "fd757f18535e88311039360927dbb04f40b180dcf6764b55d32f51e8f182b287"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "gpt-6.1-sol",
+          "question_id": "q_147d608aaef7b8eb685635812d3d6f5c",
+          "public_response_sha256": "8b4c53075c683c7a02800f1f46b970ae62683c43da21deb38188ff0ff89d02f4",
+          "explanation_sha256": "7d451e21877d2d78223545f738482c05820fefa6fdda37ec9a114f2740679d48",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        }
+      ],
+      "response_sha256": "8b4c53075c683c7a02800f1f46b970ae62683c43da21deb38188ff0ff89d02f4",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_b5c9bdb581e1017e89dcb6f5f5fe1b33"
+      }
+    },
+    {
+      "question_id": "q_0b54c62a60d8a3d0c78866c2372316c7",
+      "model": "gpt-6.1-sol",
+      "ranking_correct": false,
+      "summary_zh": "空间共享与96维全连接瓶颈的判断相关，也承认conv可能更好保留边界；但最终依赖一般多尺度先验，未把只有低分辨率非线性这一实现细节用于比较。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "Choice A's U-Net has a downsampled path for a larger receptive field and a skip path for preserving pixel-level shape boundaries",
+          "dimension": "mechanism_alignment",
+          "judgment": "plausible_unmeasured_not_supported_here",
+          "assessment": "U-Net确实有下采样和stem skip，但该skip只经过线性stem，全部三个非线性block在8×8，up/head没有额外激活。conv的卷积路径9×9已覆盖大部分前景；每像素有几何条件/坐标，GroupNorm又有全空间统计。当前三选中conv比U-Net更好，不支持把增加空间上下文当作这组配置的主要优势。",
+          "scope_limit": "配置同时改变参数量、分辨率与连接；实测不能唯一归因于缺少全分辨率激活，也不排除上下文在其他条件下有益。",
+          "evidence_level": "E1",
+          "claim": "Choice A's U-Net has a downsampled path for a larger receptive field and a skip path for preserving pixel-level shape boundaries",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/control_audit.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/control_audit.json",
+            "sha256": "35c093f2c04f07f1603df081c4324951efbbc32659ae726db6d701a138665a15"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "gpt-6.1-sol",
+          "question_id": "q_0b54c62a60d8a3d0c78866c2372316c7",
+          "public_response_sha256": "6aa0c217fedfd8ba7e66e41f92e92bbe8f219490067984e017f55fda3e5f400a",
+          "explanation_sha256": "edb6504c208dc67f37a6d263f52cc4ae9bdac4f8a0b3e706fd4b8a7686260335",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "Choice C's flattened MLP has no spatial weight sharing or convolutional locality",
+          "dimension": "mechanism_alignment",
+          "judgment": "supported_factor_nonexclusive",
+          "assessment": "MLP将4352个展开输入经3个96维隐藏层输出256像素，无卷积权重共享，参数461344。三个数据实例中其energy/IoU/背景均不优于conv/U-Net，条件内方差只有参考约0.032%—0.039%，与解释的泛化/多样性担忧相容。",
+          "scope_limit": "没有独立匹配参数量、归一化、残差或隐藏宽度；96维并非目标低维条件分布必然无法表达的证明。",
+          "evidence_level": "E2",
+          "claim": "Choice C's flattened MLP has no spatial weight sharing or convolutional locality",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/quality_analysis/generation_quality.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/quality_analysis/generation_quality.json",
+            "sha256": "8f0f9c236e74e6685918496d0ec78ef209bafdd72fb13ba6aaaa1b50ae3f9e39"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "gpt-6.1-sol",
+          "question_id": "q_0b54c62a60d8a3d0c78866c2372316c7",
+          "public_response_sha256": "6aa0c217fedfd8ba7e66e41f92e92bbe8f219490067984e017f55fda3e5f400a",
+          "explanation_sha256": "edb6504c208dc67f37a6d263f52cc4ae9bdac4f8a0b3e706fd4b8a7686260335",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "full-resolution convolutions may preserve boundaries better",
+          "dimension": "causal_calibration",
+          "judgment": "supported",
+          "assessment": "把conv/U-Net相邻次序列为最不确定并允许实际相反方向；48,000样本预算指训练曝光次数，不是48,000张独立图像。",
+          "scope_limit": "机制未单独隔离；不是因为预测错误就否定所有代码理解。",
+          "evidence_level": "E0",
+          "claim": "full-resolution convolutions may preserve boundaries better",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_0b54c62a60d8a3d0c78866c2372316c7/prompt.txt",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_0b54c62a60d8a3d0c78866c2372316c7/prompt.txt",
+            "sha256": "db8d505d7905ef8b5e8b58b1d45c1cb9f4d8b94bf7ae223e85ee9517ef691134"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "gpt-6.1-sol",
+          "question_id": "q_0b54c62a60d8a3d0c78866c2372316c7",
+          "public_response_sha256": "6aa0c217fedfd8ba7e66e41f92e92bbe8f219490067984e017f55fda3e5f400a",
+          "explanation_sha256": "edb6504c208dc67f37a6d263f52cc4ae9bdac4f8a0b3e706fd4b8a7686260335",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        }
+      ],
+      "response_sha256": "6aa0c217fedfd8ba7e66e41f92e92bbe8f219490067984e017f55fda3e5f400a",
+      "probe": null
+    },
+    {
+      "question_id": "q_498d07904332da032172c8d506f40470",
+      "model": "gpt-6.1-sol",
+      "ranking_correct": false,
+      "summary_zh": "明确实际MLP无归一化/残差而非只换名字，也能看到conv已足够覆盖小目标的可能；但仍把U-Net较宽空间聚合放在首位，未命中当前反例。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "B’s downsampled processing gives it a larger effective receptive field",
+          "dimension": "mechanism_alignment",
+          "judgment": "plausible_unmeasured_not_supported_here",
+          "assessment": "U-Net确实有下采样和stem skip，但该skip只经过线性stem，全部三个非线性block在8×8，up/head没有额外激活。conv的卷积路径9×9已覆盖大部分前景；每像素有几何条件/坐标，GroupNorm又有全空间统计。当前三选中conv比U-Net更好，不支持把增加空间上下文当作这组配置的主要优势。",
+          "scope_limit": "配置同时改变参数量、分辨率与连接；实测不能唯一归因于缺少全分辨率激活，也不排除上下文在其他条件下有益。",
+          "evidence_level": "E1",
+          "claim": "B’s downsampled processing gives it a larger effective receptive field",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/control_audit.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/control_audit.json",
+            "sha256": "35c093f2c04f07f1603df081c4324951efbbc32659ae726db6d701a138665a15"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "gpt-6.1-sol",
+          "question_id": "q_498d07904332da032172c8d506f40470",
+          "public_response_sha256": "904fad942f16d342ac5dae859ae81e81613dfb057b481a94040b05e70a9f2937",
+          "explanation_sha256": "61a48fde9dbe399a54875ac200c1366c6142dfd5a8c440a300cb83207b7cdfd0",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "without spatial weight sharing or residual connections",
+          "dimension": "mechanism_alignment",
+          "judgment": "supported_factor_nonexclusive",
+          "assessment": "MLP将4352个展开输入经3个96维隐藏层输出256像素，无卷积权重共享，参数461344。三个数据实例中其energy/IoU/背景均不优于conv/U-Net，条件内方差只有参考约0.032%—0.039%，与解释的泛化/多样性担忧相容。",
+          "scope_limit": "没有独立匹配参数量、归一化、残差或隐藏宽度；96维并非目标低维条件分布必然无法表达的证明。",
+          "evidence_level": "E2",
+          "claim": "without spatial weight sharing or residual connections",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/quality_analysis/generation_quality.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/quality_analysis/generation_quality.json",
+            "sha256": "8f0f9c236e74e6685918496d0ec78ef209bafdd72fb13ba6aaaa1b50ae3f9e39"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "gpt-6.1-sol",
+          "question_id": "q_498d07904332da032172c8d506f40470",
+          "public_response_sha256": "904fad942f16d342ac5dae859ae81e81613dfb057b481a94040b05e70a9f2937",
+          "explanation_sha256": "61a48fde9dbe399a54875ac200c1366c6142dfd5a8c440a300cb83207b7cdfd0",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "architectural advantages in reconstruction need not translate directly into the same sampling advantage.",
+          "dimension": "causal_calibration",
+          "judgment": "supported",
+          "assessment": "正确区分重建与分布目标，承认conv保留分辨率的代价/收益比较不确定，两个相邻比较完整。",
+          "scope_limit": "当前对照同时改变归一化、残差和参数量，不能纯归因于算子类别。",
+          "evidence_level": "E0",
+          "claim": "architectural advantages in reconstruction need not translate directly into the same sampling advantage.",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_498d07904332da032172c8d506f40470/prompt.txt",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_498d07904332da032172c8d506f40470/prompt.txt",
+            "sha256": "75b8e72bbd73380fbd93e832510c890196f48a55f9e6be69a9f4b16a3e841449"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "gpt-6.1-sol",
+          "question_id": "q_498d07904332da032172c8d506f40470",
+          "public_response_sha256": "904fad942f16d342ac5dae859ae81e81613dfb057b481a94040b05e70a9f2937",
+          "explanation_sha256": "61a48fde9dbe399a54875ac200c1366c6142dfd5a8c440a300cb83207b7cdfd0",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        }
+      ],
+      "response_sha256": "904fad942f16d342ac5dae859ae81e81613dfb057b481a94040b05e70a9f2937",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_0b54c62a60d8a3d0c78866c2372316c7"
+      }
+    },
+    {
+      "question_id": "q_0a9477d1f63da091c35005890dc32118",
+      "model": "gpt-6.1-sol",
+      "ranking_correct": false,
+      "summary_zh": "识别MLP参数更多且可看全图、未按参数量排序；U-Net保留细节和全局推理优势仍是未验证的预测，末尾虽承认blur可能性。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "allowing global shape/appearance inference without discarding fine boundary information.",
+          "dimension": "mechanism_alignment",
+          "judgment": "plausible_unmeasured_not_supported_here",
+          "assessment": "U-Net确实有下采样和stem skip，但该skip只经过线性stem，全部三个非线性block在8×8，up/head没有额外激活。conv的卷积路径9×9已覆盖大部分前景；每像素有几何条件/坐标，GroupNorm又有全空间统计。当前三选中conv比U-Net更好，不支持把增加空间上下文当作这组配置的主要优势。",
+          "scope_limit": "配置同时改变参数量、分辨率与连接；实测不能唯一归因于缺少全分辨率激活，也不排除上下文在其他条件下有益。",
+          "evidence_level": "E1",
+          "claim": "allowing global shape/appearance inference without discarding fine boundary information.",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/control_audit.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/control_audit.json",
+            "sha256": "35c093f2c04f07f1603df081c4324951efbbc32659ae726db6d701a138665a15"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "gpt-6.1-sol",
+          "question_id": "q_0a9477d1f63da091c35005890dc32118",
+          "public_response_sha256": "52d95a475b221ead8ab1bcfad22f2a7eea6cb92a264febb4e1c96ff7e4c3b404",
+          "explanation_sha256": "23f4e3a48146bce76d1158b92c455dcd7455775d57cae7e8ab408c9c5ac8264d",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "has global access and more parameters, but loses spatial sharing and convolutional locality",
+          "dimension": "mechanism_alignment",
+          "judgment": "supported_factor_nonexclusive",
+          "assessment": "MLP将4352个展开输入经3个96维隐藏层输出256像素，无卷积权重共享，参数461344。三个数据实例中其energy/IoU/背景均不优于conv/U-Net，条件内方差只有参考约0.032%—0.039%，与解释的泛化/多样性担忧相容。",
+          "scope_limit": "没有独立匹配参数量、归一化、残差或隐藏宽度；96维并非目标低维条件分布必然无法表达的证明。",
+          "evidence_level": "E2",
+          "claim": "has global access and more parameters, but loses spatial sharing and convolutional locality",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/quality_analysis/generation_quality.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/quality_analysis/generation_quality.json",
+            "sha256": "8f0f9c236e74e6685918496d0ec78ef209bafdd72fb13ba6aaaa1b50ae3f9e39"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "gpt-6.1-sol",
+          "question_id": "q_0a9477d1f63da091c35005890dc32118",
+          "public_response_sha256": "52d95a475b221ead8ab1bcfad22f2a7eea6cb92a264febb4e1c96ff7e4c3b404",
+          "explanation_sha256": "23f4e3a48146bce76d1158b92c455dcd7455775d57cae7e8ab408c9c5ac8264d",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "without discarding fine boundary information",
+          "dimension": "causal_calibration",
+          "judgment": "overstated_guarantee",
+          "assessment": "stem skip传输线性全分辨率特征，不保证保留或恢复非线性边界决策；后文承认blur风险缓和了语气，但这句本身过强。",
+          "scope_limit": "UNet不必然丢失全部边界信息，也不保证保留全部；需要针对该路径的对照。",
+          "evidence_level": "E0",
+          "claim": "without discarding fine boundary information",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_0a9477d1f63da091c35005890dc32118/prompt.txt",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_0a9477d1f63da091c35005890dc32118/prompt.txt",
+            "sha256": "178c5b8917170bf16fb583e891b654ffc721fee2b4957ccb9b47810043150b32"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "gpt-6.1-sol",
+          "question_id": "q_0a9477d1f63da091c35005890dc32118",
+          "public_response_sha256": "52d95a475b221ead8ab1bcfad22f2a7eea6cb92a264febb4e1c96ff7e4c3b404",
+          "explanation_sha256": "23f4e3a48146bce76d1158b92c455dcd7455775d57cae7e8ab408c9c5ac8264d",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        }
+      ],
+      "response_sha256": "52d95a475b221ead8ab1bcfad22f2a7eea6cb92a264febb4e1c96ff7e4c3b404",
+      "probe": null
+    },
+    {
+      "question_id": "q_d631a9200d5d69a058d326cadefb6e51",
+      "model": "gpt-6.1-sol",
+      "ranking_correct": false,
+      "summary_zh": "两个相邻对比与答案一致，并强调固定小图像下conv的范围已足够和采样多样性不保证改善；主要U-Net优势依然未被实际配置对照支持。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "A’s downsampling expands the effective receptive field",
+          "dimension": "mechanism_alignment",
+          "judgment": "plausible_unmeasured_not_supported_here",
+          "assessment": "U-Net确实有下采样和stem skip，但该skip只经过线性stem，全部三个非线性block在8×8，up/head没有额外激活。conv的卷积路径9×9已覆盖大部分前景；每像素有几何条件/坐标，GroupNorm又有全空间统计。当前三选中conv比U-Net更好，不支持把增加空间上下文当作这组配置的主要优势。",
+          "scope_limit": "配置同时改变参数量、分辨率与连接；实测不能唯一归因于缺少全分辨率激活，也不排除上下文在其他条件下有益。",
+          "evidence_level": "E1",
+          "claim": "A’s downsampling expands the effective receptive field",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/control_audit.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/control_audit.json",
+            "sha256": "35c093f2c04f07f1603df081c4324951efbbc32659ae726db6d701a138665a15"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "gpt-6.1-sol",
+          "question_id": "q_d631a9200d5d69a058d326cadefb6e51",
+          "public_response_sha256": "4df08598c3f94a4cd5ef4943308a2538785f4677075df51abfcf8907202c4af6",
+          "explanation_sha256": "fb410333a32d105b93af2cc738dd0efe274d36a8b7f0b548e59c3d1fefbe0ac9",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "That bottleneck makes accurate conditional geometry and noise-dependent appearance harder to learn",
+          "dimension": "mechanism_alignment",
+          "judgment": "supported_factor_nonexclusive",
+          "assessment": "MLP将4352个展开输入经3个96维隐藏层输出256像素，无卷积权重共享，参数461344。三个数据实例中其energy/IoU/背景均不优于conv/U-Net，条件内方差只有参考约0.032%—0.039%，与解释的泛化/多样性担忧相容。",
+          "scope_limit": "没有独立匹配参数量、归一化、残差或隐藏宽度；96维并非目标低维条件分布必然无法表达的证明。",
+          "evidence_level": "E2",
+          "claim": "That bottleneck makes accurate conditional geometry and noise-dependent appearance harder to learn",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/quality_analysis/generation_quality.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/quality_analysis/generation_quality.json",
+            "sha256": "8f0f9c236e74e6685918496d0ec78ef209bafdd72fb13ba6aaaa1b50ae3f9e39"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "gpt-6.1-sol",
+          "question_id": "q_d631a9200d5d69a058d326cadefb6e51",
+          "public_response_sha256": "4df08598c3f94a4cd5ef4943308a2538785f4677075df51abfcf8907202c4af6",
+          "explanation_sha256": "fb410333a32d105b93af2cc738dd0efe274d36a8b7f0b548e59c3d1fefbe0ac9",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "neither convolutional architecture is guaranteed to preserve the latent appearance distribution better.",
+          "dimension": "causal_calibration",
+          "judgment": "supported",
+          "assessment": "这是适当分布目标边界，实际两模型均有方差不足，UNet更严重；回答没有把能画好轮廓当成完备分布拟合。",
+          "scope_limit": "当前对照不识别唯一多样性机制。",
+          "evidence_level": "E0",
+          "claim": "neither convolutional architecture is guaranteed to preserve the latent appearance distribution better.",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_d631a9200d5d69a058d326cadefb6e51/prompt.txt",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_d631a9200d5d69a058d326cadefb6e51/prompt.txt",
+            "sha256": "c94c0000ed151d733b617ece1893b5eb0dbfc2f19939ee5c46226a02fa9d091e"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "gpt-6.1-sol",
+          "question_id": "q_d631a9200d5d69a058d326cadefb6e51",
+          "public_response_sha256": "4df08598c3f94a4cd5ef4943308a2538785f4677075df51abfcf8907202c4af6",
+          "explanation_sha256": "fb410333a32d105b93af2cc738dd0efe274d36a8b7f0b548e59c3d1fefbe0ac9",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        }
+      ],
+      "response_sha256": "4df08598c3f94a4cd5ef4943308a2538785f4677075df51abfcf8907202c4af6",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_0a9477d1f63da091c35005890dc32118"
+      }
+    },
+    {
+      "question_id": "q_b5c9bdb581e1017e89dcb6f5f5fe1b33",
+      "model": "claude-opus-5-5",
+      "ranking_correct": true,
+      "summary_zh": "正确抓住UNet在8×8做全部非线性、全分辨率读出无激活的实现差异，排序正确；但漏掉纹理潜变量，并把线性读出限制说成无法画准边界，强于可支持的机制。",
+      "scores": {
+        "code_fidelity": "partly_supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "The result is upsampled with nearest-neighbour and passed through `up` and then `head`, with no activation in between.",
+          "dimension": "mechanism_alignment",
+          "judgment": "supported_code_factor_nonexclusive",
+          "assessment": "准确看到UNet非线性blocks只在8×8，nearest上采样后up/head均为线性卷积，stem skip也没有激活。三数据实例conv都优于UNet，且几何/泄漏/多样性诊断与较好的有限预算拟合相容。",
+          "scope_limit": "上采样特征本身已经是输入的非线性函数；线性读出可以组合多通道非线性基底，不能推出精确边界必然无法恢复。未做仅增加full-resolution激活的隔离对照。",
+          "evidence_level": "E2",
+          "claim": "The result is upsampled with nearest-neighbour and passed through `up` and then `head`, with no activation in between.",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/control_audit.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/control_audit.json",
+            "sha256": "35c093f2c04f07f1603df081c4324951efbbc32659ae726db6d701a138665a15"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "claude-opus-5-5",
+          "question_id": "q_b5c9bdb581e1017e89dcb6f5f5fe1b33",
+          "public_response_sha256": "726101ac243edb094f24558873674463299a89aade3e395db8d30d786c6d4c9f",
+          "explanation_sha256": "08b15c8bcc4b30173ec3e9425d925ce14a3a222ce0ff464ac928b4de067b1aac",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "Brightness is the only hidden variable",
+          "dimension": "code_fidelity",
+          "judgment": "incorrect",
+          "assessment": "生成过程还有随机条纹方向与相位；后文又提texture，所以此处“唯一”与代码及自身解释都不符。",
+          "scope_limit": "不否定亮度是共享外观变量；此错误影响忽略随机纹理的论证。",
+          "evidence_level": "E0",
+          "claim": "Brightness is the only hidden variable",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_b5c9bdb581e1017e89dcb6f5f5fe1b33/prompt.txt",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_b5c9bdb581e1017e89dcb6f5f5fe1b33/prompt.txt",
+            "sha256": "3f1dd67d403fb239c0659d381637d4eddfed80d7a956f749b34bee060d60e742"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "claude-opus-5-5",
+          "question_id": "q_b5c9bdb581e1017e89dcb6f5f5fe1b33",
+          "public_response_sha256": "726101ac243edb094f24558873674463299a89aade3e395db8d30d786c6d4c9f",
+          "explanation_sha256": "08b15c8bcc4b30173ec3e9425d925ce14a3a222ce0ff464ac928b4de067b1aac",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "can't be drawn cleanly at 16×16",
+          "dimension": "causal_calibration",
+          "judgment": "overstated_necessity",
+          "assessment": "低分辨率特征本身是非线性的，24通道与3×3读出仍可组合子像素位置信息；没有证明clean边界无法表达。",
+          "scope_limit": "实际UNet更差与该假说相容，不等于表达不可能。",
+          "evidence_level": "E0",
+          "claim": "can't be drawn cleanly at 16×16",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_b5c9bdb581e1017e89dcb6f5f5fe1b33/prompt.txt",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_b5c9bdb581e1017e89dcb6f5f5fe1b33/prompt.txt",
+            "sha256": "3f1dd67d403fb239c0659d381637d4eddfed80d7a956f749b34bee060d60e742"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "claude-opus-5-5",
+          "question_id": "q_b5c9bdb581e1017e89dcb6f5f5fe1b33",
+          "public_response_sha256": "726101ac243edb094f24558873674463299a89aade3e395db8d30d786c6d4c9f",
+          "explanation_sha256": "08b15c8bcc4b30173ec3e9425d925ce14a3a222ce0ff464ac928b4de067b1aac",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "The 96-wide bottleneck also limits how much of the noisy image it can pass through to the output.",
+          "dimension": "mechanism_alignment",
+          "judgment": "supported_factor_nonexclusive",
+          "assessment": "MLP将4352个展开输入经3个96维隐藏层输出256像素，无卷积权重共享，参数461344。三个数据实例中其energy/IoU/背景均不优于conv/U-Net，条件内方差只有参考约0.032%—0.039%，与解释的泛化/多样性担忧相容。",
+          "scope_limit": "没有独立匹配参数量、归一化、残差或隐藏宽度；96维并非目标低维条件分布必然无法表达的证明。",
+          "evidence_level": "E2",
+          "claim": "The 96-wide bottleneck also limits how much of the noisy image it can pass through to the output.",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/quality_analysis/generation_quality.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/quality_analysis/generation_quality.json",
+            "sha256": "8f0f9c236e74e6685918496d0ec78ef209bafdd72fb13ba6aaaa1b50ae3f9e39"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "claude-opus-5-5",
+          "question_id": "q_b5c9bdb581e1017e89dcb6f5f5fe1b33",
+          "public_response_sha256": "726101ac243edb094f24558873674463299a89aade3e395db8d30d786c6d4c9f",
+          "explanation_sha256": "08b15c8bcc4b30173ec3e9425d925ce14a3a222ce0ff464ac928b4de067b1aac",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        }
+      ],
+      "response_sha256": "726101ac243edb094f24558873674463299a89aade3e395db8d30d786c6d4c9f",
+      "probe": null
+    },
+    {
+      "question_id": "q_147d608aaef7b8eb685635812d3d6f5c",
+      "model": "claude-opus-5-5",
+      "ranking_correct": true,
+      "summary_zh": "物理配置顺序与主题一致，准确发现全分辨率输出路径没有激活；但MLP输入少算为14通道，对低分辨率边界限制的定量强度没有独立验证。",
+      "scores": {
+        "code_fidelity": "partly_supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "None of these steps has a nonlinearity between them.",
+          "dimension": "mechanism_alignment",
+          "judgment": "supported_code_factor_nonexclusive",
+          "assessment": "准确看到UNet非线性blocks只在8×8，nearest上采样后up/head均为线性卷积，stem skip也没有激活。三数据实例conv都优于UNet，且几何/泄漏/多样性诊断与较好的有限预算拟合相容。",
+          "scope_limit": "上采样特征本身已经是输入的非线性函数；线性读出可以组合多通道非线性基底，不能推出精确边界必然无法恢复。未做仅增加full-resolution激活的隔离对照。",
+          "evidence_level": "E2",
+          "claim": "None of these steps has a nonlinearity between them.",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/control_audit.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/control_audit.json",
+            "sha256": "35c093f2c04f07f1603df081c4324951efbbc32659ae726db6d701a138665a15"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "claude-opus-5-5",
+          "question_id": "q_147d608aaef7b8eb685635812d3d6f5c",
+          "public_response_sha256": "ec6d076e7c7a9e664a318d189d233302ac577556b773031278380c3201be9a06",
+          "explanation_sha256": "b3b0cfff91e372bc4a7ab7faa5f16a41ed17c0993441637031679d1279ec4a82",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "It flattens 14×256 inputs",
+          "dimension": "code_fidelity",
+          "judgment": "incorrect_input_dimension",
+          "assessment": "回答写成14通道；8是打包输入通道数，模型拆分后实际拼接 noisy1+coords2+condition6+sinusoidal time8=17通道，MLP展开4352维，首层417888参数，总461344。",
+          "scope_limit": "输入维数错误不自动否定“无共享权重”这个正确事实；错误数字不能作为瓶颈/容量的精确依据。",
+          "evidence_level": "E0",
+          "claim": "It flattens 14×256 inputs",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_147d608aaef7b8eb685635812d3d6f5c/prompt.txt",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_147d608aaef7b8eb685635812d3d6f5c/prompt.txt",
+            "sha256": "fd757f18535e88311039360927dbb04f40b180dcf6764b55d32f51e8f182b287"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "claude-opus-5-5",
+          "question_id": "q_147d608aaef7b8eb685635812d3d6f5c",
+          "public_response_sha256": "ec6d076e7c7a9e664a318d189d233302ac577556b773031278380c3201be9a06",
+          "explanation_sha256": "b3b0cfff91e372bc4a7ab7faa5f16a41ed17c0993441637031679d1279ec4a82",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "sub-2×2 detail at the full-resolution edges can only come from a linear mix",
+          "dimension": "causal_calibration",
+          "judgment": "supported_with_limit",
+          "assessment": "读出确为非线性低分辨率特征的线性组合，加上线性stem支路；它不是整个模型对输入的线性函数。",
+          "scope_limit": "不能据此设定严格2×2边界精度下限；需要隔离上采样后激活。",
+          "evidence_level": "E0",
+          "claim": "sub-2×2 detail at the full-resolution edges can only come from a linear mix",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_147d608aaef7b8eb685635812d3d6f5c/prompt.txt",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_147d608aaef7b8eb685635812d3d6f5c/prompt.txt",
+            "sha256": "fd757f18535e88311039360927dbb04f40b180dcf6764b55d32f51e8f182b287"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "claude-opus-5-5",
+          "question_id": "q_147d608aaef7b8eb685635812d3d6f5c",
+          "public_response_sha256": "ec6d076e7c7a9e664a318d189d233302ac577556b773031278380c3201be9a06",
+          "explanation_sha256": "b3b0cfff91e372bc4a7ab7faa5f16a41ed17c0993441637031679d1279ec4a82",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "and probably low diversity as well.",
+          "dimension": "mechanism_alignment",
+          "judgment": "supported_factor_nonexclusive",
+          "assessment": "MLP将4352个展开输入经3个96维隐藏层输出256像素，无卷积权重共享，参数461344。三个数据实例中其energy/IoU/背景均不优于conv/U-Net，条件内方差只有参考约0.032%—0.039%，与解释的泛化/多样性担忧相容。",
+          "scope_limit": "没有独立匹配参数量、归一化、残差或隐藏宽度；96维并非目标低维条件分布必然无法表达的证明。",
+          "evidence_level": "E2",
+          "claim": "and probably low diversity as well.",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/quality_analysis/generation_quality.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/quality_analysis/generation_quality.json",
+            "sha256": "8f0f9c236e74e6685918496d0ec78ef209bafdd72fb13ba6aaaa1b50ae3f9e39"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "claude-opus-5-5",
+          "question_id": "q_147d608aaef7b8eb685635812d3d6f5c",
+          "public_response_sha256": "ec6d076e7c7a9e664a318d189d233302ac577556b773031278380c3201be9a06",
+          "explanation_sha256": "b3b0cfff91e372bc4a7ab7faa5f16a41ed17c0993441637031679d1279ec4a82",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        }
+      ],
+      "response_sha256": "ec6d076e7c7a9e664a318d189d233302ac577556b773031278380c3201be9a06",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_b5c9bdb581e1017e89dcb6f5f5fe1b33"
+      }
+    },
+    {
+      "question_id": "q_0b54c62a60d8a3d0c78866c2372316c7",
+      "model": "claude-opus-5-5",
+      "ranking_correct": true,
+      "summary_zh": "输入4352维及UNet计算位置读对，两个相邻预测也正确；但“MLP必须分别学每个中心位置”和几何误差主导评分都超出控制所能识别的范围。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "The final 3×3 up-conv and the 1×1 head are both linear.",
+          "dimension": "mechanism_alignment",
+          "judgment": "supported_code_factor_nonexclusive",
+          "assessment": "准确看到UNet非线性blocks只在8×8，nearest上采样后up/head均为线性卷积，stem skip也没有激活。三数据实例conv都优于UNet，且几何/泄漏/多样性诊断与较好的有限预算拟合相容。",
+          "scope_limit": "上采样特征本身已经是输入的非线性函数；线性读出可以组合多通道非线性基底，不能推出精确边界必然无法恢复。未做仅增加full-resolution激活的隔离对照。",
+          "evidence_level": "E2",
+          "claim": "The final 3×3 up-conv and the 1×1 head are both linear.",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/control_audit.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/control_audit.json",
+            "sha256": "35c093f2c04f07f1603df081c4324951efbbc32659ae726db6d701a138665a15"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "claude-opus-5-5",
+          "question_id": "q_0b54c62a60d8a3d0c78866c2372316c7",
+          "public_response_sha256": "de3719ba176032f1f90265fff16c0c34cac65bad6595425bfe77572d899820ea",
+          "explanation_sha256": "c0a9656da6db3eea58051fcd1977273dcf8d13ea8130a1b708aa51562b00f238",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "it must learn every center position separately",
+          "dimension": "causal_calibration",
+          "judgment": "overstated_necessity",
+          "assessment": "MLP没有硬编码空间共享，但全连接网络仍能学习共享或连续位置函数；不必把每个连续中心当成独立案例记忆。目标几何与appearance维度也远小于256，96维隐藏宽度本身不能证明必然丢失相关信息。",
+          "scope_limit": "缺少空间先验是合理样本效率假说，当前较差结果与之相容，但不是表达不可能或唯一机制证明。",
+          "evidence_level": "E0",
+          "claim": "it must learn every center position separately",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_0b54c62a60d8a3d0c78866c2372316c7/prompt.txt",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_0b54c62a60d8a3d0c78866c2372316c7/prompt.txt",
+            "sha256": "db8d505d7905ef8b5e8b58b1d45c1cb9f4d8b94bf7ae223e85ee9517ef691134"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "claude-opus-5-5",
+          "question_id": "q_0b54c62a60d8a3d0c78866c2372316c7",
+          "public_response_sha256": "de3719ba176032f1f90265fff16c0c34cac65bad6595425bfe77572d899820ea",
+          "explanation_sha256": "c0a9656da6db3eea58051fcd1977273dcf8d13ea8130a1b708aa51562b00f238",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "appropriate diversity.",
+          "dimension": "mechanism_alignment",
+          "judgment": "partly_supported",
+          "assessment": "conv确比UNet/MLP保留更多条件变化，但在该数据上的方差比仍仅0.213，不能称已恢复合适多样性；energy也未优于独立条件均值估计。",
+          "scope_limit": "单一方差并非完整分布验证；表达appropriate在此只能是预测而非已确认事实。",
+          "evidence_level": "E2",
+          "claim": "appropriate diversity.",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/quality_analysis/generation_quality.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/quality_analysis/generation_quality.json",
+            "sha256": "8f0f9c236e74e6685918496d0ec78ef209bafdd72fb13ba6aaaa1b50ae3f9e39"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "claude-opus-5-5",
+          "question_id": "q_0b54c62a60d8a3d0c78866c2372316c7",
+          "public_response_sha256": "de3719ba176032f1f90265fff16c0c34cac65bad6595425bfe77572d899820ea",
+          "explanation_sha256": "c0a9656da6db3eea58051fcd1977273dcf8d13ea8130a1b708aa51562b00f238",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        }
+      ],
+      "response_sha256": "de3719ba176032f1f90265fff16c0c34cac65bad6595425bfe77572d899820ea",
+      "probe": null
+    },
+    {
+      "question_id": "q_498d07904332da032172c8d506f40470",
+      "model": "claude-opus-5-5",
+      "ranking_correct": true,
+      "summary_zh": "能按实际UNet非线性分辨率解释反常排序，也保留上采样读出可能恢复边界的备选；但MLP维度错误，且把共享权重缺失说成必须逐位置单独学习。",
+      "scores": {
+        "code_fidelity": "partly_supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "Full-resolution detail has to be recovered by a single 3×3 conv",
+          "dimension": "mechanism_alignment",
+          "judgment": "supported_code_factor_nonexclusive",
+          "assessment": "准确看到UNet非线性blocks只在8×8，nearest上采样后up/head均为线性卷积，stem skip也没有激活。三数据实例conv都优于UNet，且几何/泄漏/多样性诊断与较好的有限预算拟合相容。",
+          "scope_limit": "上采样特征本身已经是输入的非线性函数；线性读出可以组合多通道非线性基底，不能推出精确边界必然无法恢复。未做仅增加full-resolution激活的隔离对照。",
+          "evidence_level": "E2",
+          "claim": "Full-resolution detail has to be recovered by a single 3×3 conv",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/control_audit.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/control_audit.json",
+            "sha256": "35c093f2c04f07f1603df081c4324951efbbc32659ae726db6d701a138665a15"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "claude-opus-5-5",
+          "question_id": "q_498d07904332da032172c8d506f40470",
+          "public_response_sha256": "b0abc07682e5374265480d597073ee9553479e3178751b9d167f328bc944deaf",
+          "explanation_sha256": "8f83806e894201dd7852b34332da41643213818bfe3886759cbf1e85916dee2c",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "14×256 = 3584",
+          "dimension": "code_fidelity",
+          "judgment": "incorrect_input_dimension",
+          "assessment": "回答写成14×256=3584；8是打包输入通道数，模型拆分后实际拼接 noisy1+coords2+condition6+sinusoidal time8=17通道，MLP展开4352维，首层417888参数，总461344。",
+          "scope_limit": "输入维数错误不自动否定“无共享权重”这个正确事实；错误数字不能作为瓶颈/容量的精确依据。",
+          "evidence_level": "E0",
+          "claim": "14×256 = 3584",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_498d07904332da032172c8d506f40470/prompt.txt",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_498d07904332da032172c8d506f40470/prompt.txt",
+            "sha256": "75b8e72bbd73380fbd93e832510c890196f48a55f9e6be69a9f4b16a3e841449"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "claude-opus-5-5",
+          "question_id": "q_498d07904332da032172c8d506f40470",
+          "public_response_sha256": "b0abc07682e5374265480d597073ee9553479e3178751b9d167f328bc944deaf",
+          "explanation_sha256": "8f83806e894201dd7852b34332da41643213818bfe3886759cbf1e85916dee2c",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "it has to learn a separate mapping from continuous centre/radius values to every pixel's mask.",
+          "dimension": "causal_calibration",
+          "judgment": "overstated_necessity",
+          "assessment": "MLP没有硬编码空间共享，但全连接网络仍能学习共享或连续位置函数；不必把每个连续中心当成独立案例记忆。目标几何与appearance维度也远小于256，96维隐藏宽度本身不能证明必然丢失相关信息。",
+          "scope_limit": "缺少空间先验是合理样本效率假说，当前较差结果与之相容，但不是表达不可能或唯一机制证明。",
+          "evidence_level": "E0",
+          "claim": "it has to learn a separate mapping from continuous centre/radius values to every pixel's mask.",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_498d07904332da032172c8d506f40470/prompt.txt",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_498d07904332da032172c8d506f40470/prompt.txt",
+            "sha256": "75b8e72bbd73380fbd93e832510c890196f48a55f9e6be69a9f4b16a3e841449"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "claude-opus-5-5",
+          "question_id": "q_498d07904332da032172c8d506f40470",
+          "public_response_sha256": "b0abc07682e5374265480d597073ee9553479e3178751b9d167f328bc944deaf",
+          "explanation_sha256": "8f83806e894201dd7852b34332da41643213818bfe3886759cbf1e85916dee2c",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "The UNet's skip connection plus up conv may be enough to recover edges",
+          "dimension": "causal_calibration",
+          "judgment": "supported",
+          "assessment": "明确保留低分辨率特征经线性读出也能恢复边界的可能，这比断言边界不可表达更合理。",
+          "scope_limit": "当前胜负仍是原生配方整体干预，不确认唯一机制。",
+          "evidence_level": "E0",
+          "claim": "The UNet's skip connection plus up conv may be enough to recover edges",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_498d07904332da032172c8d506f40470/prompt.txt",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_498d07904332da032172c8d506f40470/prompt.txt",
+            "sha256": "75b8e72bbd73380fbd93e832510c890196f48a55f9e6be69a9f4b16a3e841449"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "claude-opus-5-5",
+          "question_id": "q_498d07904332da032172c8d506f40470",
+          "public_response_sha256": "b0abc07682e5374265480d597073ee9553479e3178751b9d167f328bc944deaf",
+          "explanation_sha256": "8f83806e894201dd7852b34332da41643213818bfe3886759cbf1e85916dee2c",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        }
+      ],
+      "response_sha256": "b0abc07682e5374265480d597073ee9553479e3178751b9d167f328bc944deaf",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_0b54c62a60d8a3d0c78866c2372316c7"
+      }
+    },
+    {
+      "question_id": "q_0a9477d1f63da091c35005890dc32118",
+      "model": "claude-opus-5-5",
+      "ranking_correct": true,
+      "summary_zh": "两个相邻排序正确并识别UNet缺少全分辨率非线性的细节；MLP展开维数写为11通道错误，几何占主导和粗网格限制仍只是相容解释。",
+      "scores": {
+        "code_fidelity": "partly_supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "with no activation after the skip concatenation.",
+          "dimension": "mechanism_alignment",
+          "judgment": "supported_code_factor_nonexclusive",
+          "assessment": "准确看到UNet非线性blocks只在8×8，nearest上采样后up/head均为线性卷积，stem skip也没有激活。三数据实例conv都优于UNet，且几何/泄漏/多样性诊断与较好的有限预算拟合相容。",
+          "scope_limit": "上采样特征本身已经是输入的非线性函数；线性读出可以组合多通道非线性基底，不能推出精确边界必然无法恢复。未做仅增加full-resolution激活的隔离对照。",
+          "evidence_level": "E2",
+          "claim": "with no activation after the skip concatenation.",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/control_audit.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/control_audit.json",
+            "sha256": "35c093f2c04f07f1603df081c4324951efbbc32659ae726db6d701a138665a15"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "claude-opus-5-5",
+          "question_id": "q_0a9477d1f63da091c35005890dc32118",
+          "public_response_sha256": "ccc03754657bd174be8ceabe127a5c34649a3300761538dfe7f7b07d86a8d96b",
+          "explanation_sha256": "cc3ecbc2dc5e37e8ff187bcafd8f8372c992e774d22bda804d53519434fa27a7",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "11×16×16 inputs",
+          "dimension": "code_fidelity",
+          "judgment": "incorrect_input_dimension",
+          "assessment": "回答写成11通道；8是打包输入通道数，模型拆分后实际拼接 noisy1+coords2+condition6+sinusoidal time8=17通道，MLP展开4352维，首层417888参数，总461344。",
+          "scope_limit": "输入维数错误不自动否定“无共享权重”这个正确事实；错误数字不能作为瓶颈/容量的精确依据。",
+          "evidence_level": "E0",
+          "claim": "11×16×16 inputs",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_0a9477d1f63da091c35005890dc32118/prompt.txt",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_0a9477d1f63da091c35005890dc32118/prompt.txt",
+            "sha256": "178c5b8917170bf16fb583e891b654ffc721fee2b4957ccb9b47810043150b32"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "claude-opus-5-5",
+          "question_id": "q_0a9477d1f63da091c35005890dc32118",
+          "public_response_sha256": "ccc03754657bd174be8ceabe127a5c34649a3300761538dfe7f7b07d86a8d96b",
+          "explanation_sha256": "cc3ecbc2dc5e37e8ff187bcafd8f8372c992e774d22bda804d53519434fa27a7",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "Fine boundary decisions at 16×16 must therefore come from 2×2-blocky features plus a linear function of the coordinates.",
+          "dimension": "causal_calibration",
+          "judgment": "partly_supported",
+          "assessment": "计算图确实如此分解，但低分辨率24通道可编码亚格位置，不能据此推出最终边界必定错位。conv实际更好可能同时涉及优化、归一化和随机外观保留。",
+          "scope_limit": "未做只有分辨率/激活一项变化的对照。",
+          "evidence_level": "E0",
+          "claim": "Fine boundary decisions at 16×16 must therefore come from 2×2-blocky features plus a linear function of the coordinates.",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_0a9477d1f63da091c35005890dc32118/prompt.txt",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_0a9477d1f63da091c35005890dc32118/prompt.txt",
+            "sha256": "178c5b8917170bf16fb583e891b654ffc721fee2b4957ccb9b47810043150b32"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "claude-opus-5-5",
+          "question_id": "q_0a9477d1f63da091c35005890dc32118",
+          "public_response_sha256": "ccc03754657bd174be8ceabe127a5c34649a3300761538dfe7f7b07d86a8d96b",
+          "explanation_sha256": "cc3ecbc2dc5e37e8ff187bcafd8f8372c992e774d22bda804d53519434fa27a7",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "its outputs may also depend weakly on noise, reducing diversity.",
+          "dimension": "mechanism_alignment",
+          "judgment": "supported_factor_nonexclusive",
+          "assessment": "MLP将4352个展开输入经3个96维隐藏层输出256像素，无卷积权重共享，参数461344。三个数据实例中其energy/IoU/背景均不优于conv/U-Net，条件内方差只有参考约0.032%—0.039%，与解释的泛化/多样性担忧相容。",
+          "scope_limit": "没有独立匹配参数量、归一化、残差或隐藏宽度；96维并非目标低维条件分布必然无法表达的证明。",
+          "evidence_level": "E2",
+          "claim": "its outputs may also depend weakly on noise, reducing diversity.",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/quality_analysis/generation_quality.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/quality_analysis/generation_quality.json",
+            "sha256": "8f0f9c236e74e6685918496d0ec78ef209bafdd72fb13ba6aaaa1b50ae3f9e39"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "claude-opus-5-5",
+          "question_id": "q_0a9477d1f63da091c35005890dc32118",
+          "public_response_sha256": "ccc03754657bd174be8ceabe127a5c34649a3300761538dfe7f7b07d86a8d96b",
+          "explanation_sha256": "cc3ecbc2dc5e37e8ff187bcafd8f8372c992e774d22bda804d53519434fa27a7",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        }
+      ],
+      "response_sha256": "ccc03754657bd174be8ceabe127a5c34649a3300761538dfe7f7b07d86a8d96b",
+      "probe": null
+    },
+    {
+      "question_id": "q_d631a9200d5d69a058d326cadefb6e51",
+      "model": "claude-opus-5-5",
+      "ranking_correct": true,
+      "summary_zh": "稳定给出正确原生配置顺序，并识别UNet线性stem skip与读出；但MLP维度少算，且“全分辨率细节只线性依赖输入”的说法漏掉上采样特征中的非线性。",
+      "scores": {
+        "code_fidelity": "partly_supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "the skip by `up` and `head`, which are both linear convs with no activation.",
+          "dimension": "mechanism_alignment",
+          "judgment": "supported_code_factor_nonexclusive",
+          "assessment": "准确看到UNet非线性blocks只在8×8，nearest上采样后up/head均为线性卷积，stem skip也没有激活。三数据实例conv都优于UNet，且几何/泄漏/多样性诊断与较好的有限预算拟合相容。",
+          "scope_limit": "上采样特征本身已经是输入的非线性函数；线性读出可以组合多通道非线性基底，不能推出精确边界必然无法恢复。未做仅增加full-resolution激活的隔离对照。",
+          "evidence_level": "E2",
+          "claim": "the skip by `up` and `head`, which are both linear convs with no activation.",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/control_audit.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/control_audit.json",
+            "sha256": "35c093f2c04f07f1603df081c4324951efbbc32659ae726db6d701a138665a15"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "claude-opus-5-5",
+          "question_id": "q_d631a9200d5d69a058d326cadefb6e51",
+          "public_response_sha256": "3e0cc212a2625402271a0e5251fb0c9f2923ca37611ee66662522d5285cc47de",
+          "explanation_sha256": "f665bc8863d8e2dbd3b60cbcfb0845ddc97e53d471e1671b2dce214b4ed1278a",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "It flattens 14×256 inputs",
+          "dimension": "code_fidelity",
+          "judgment": "incorrect_input_dimension",
+          "assessment": "回答写成14通道；8是打包输入通道数，模型拆分后实际拼接 noisy1+coords2+condition6+sinusoidal time8=17通道，MLP展开4352维，首层417888参数，总461344。",
+          "scope_limit": "输入维数错误不自动否定“无共享权重”这个正确事实；错误数字不能作为瓶颈/容量的精确依据。",
+          "evidence_level": "E0",
+          "claim": "It flattens 14×256 inputs",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_d631a9200d5d69a058d326cadefb6e51/prompt.txt",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_d631a9200d5d69a058d326cadefb6e51/prompt.txt",
+            "sha256": "c94c0000ed151d733b617ece1893b5eb0dbfc2f19939ee5c46226a02fa9d091e"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "claude-opus-5-5",
+          "question_id": "q_d631a9200d5d69a058d326cadefb6e51",
+          "public_response_sha256": "3e0cc212a2625402271a0e5251fb0c9f2923ca37611ee66662522d5285cc47de",
+          "explanation_sha256": "f665bc8863d8e2dbd3b60cbcfb0845ddc97e53d471e1671b2dce214b4ed1278a",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "full-resolution detail is only a linear function of the inputs",
+          "dimension": "code_fidelity",
+          "judgment": "incorrect_if_read_as_entire_model",
+          "assessment": "输出包括输入的非线性低分辨率特征，经线性上采样/卷积读出；只对stem skip那一项能称输入的线性函数。",
+          "scope_limit": "该句若指额外高分辨率支路，可作为简写；按全输出解释则错误。",
+          "evidence_level": "E0",
+          "claim": "full-resolution detail is only a linear function of the inputs",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_d631a9200d5d69a058d326cadefb6e51/prompt.txt",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_d631a9200d5d69a058d326cadefb6e51/prompt.txt",
+            "sha256": "c94c0000ed151d733b617ece1893b5eb0dbfc2f19939ee5c46226a02fa9d091e"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "claude-opus-5-5",
+          "question_id": "q_d631a9200d5d69a058d326cadefb6e51",
+          "public_response_sha256": "3e0cc212a2625402271a0e5251fb0c9f2923ca37611ee66662522d5285cc47de",
+          "explanation_sha256": "f665bc8863d8e2dbd3b60cbcfb0845ddc97e53d471e1671b2dce214b4ed1278a",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "it must learn the mapping from continuous center and radius to pixel masks separately for each position",
+          "dimension": "causal_calibration",
+          "judgment": "overstated_necessity",
+          "assessment": "MLP没有硬编码空间共享，但全连接网络仍能学习共享或连续位置函数；不必把每个连续中心当成独立案例记忆。目标几何与appearance维度也远小于256，96维隐藏宽度本身不能证明必然丢失相关信息。",
+          "scope_limit": "缺少空间先验是合理样本效率假说，当前较差结果与之相容，但不是表达不可能或唯一机制证明。",
+          "evidence_level": "E0",
+          "claim": "it must learn the mapping from continuous center and radius to pixel masks separately for each position",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_d631a9200d5d69a058d326cadefb6e51/prompt.txt",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_d631a9200d5d69a058d326cadefb6e51/prompt.txt",
+            "sha256": "c94c0000ed151d733b617ece1893b5eb0dbfc2f19939ee5c46226a02fa9d091e"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "claude-opus-5-5",
+          "question_id": "q_d631a9200d5d69a058d326cadefb6e51",
+          "public_response_sha256": "3e0cc212a2625402271a0e5251fb0c9f2923ca37611ee66662522d5285cc47de",
+          "explanation_sha256": "f665bc8863d8e2dbd3b60cbcfb0845ddc97e53d471e1671b2dce214b4ed1278a",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        }
+      ],
+      "response_sha256": "3e0cc212a2625402271a0e5251fb0c9f2923ca37611ee66662522d5285cc47de",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_0a9477d1f63da091c35005890dc32118"
+      }
+    },
+    {
+      "question_id": "q_b5c9bdb581e1017e89dcb6f5f5fe1b33",
+      "model": "claude-haiku-5-5",
+      "ranking_correct": false,
+      "summary_zh": "正确算出17通道、4352输入和96隐藏层，也明确没有残差/归一化；但将一般UNet上下文/skip优点置于首位，未看到具体全分辨率路径只是线性。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "the UNet's global context and skip path should give better shape fidelity",
+          "dimension": "mechanism_alignment",
+          "judgment": "plausible_unmeasured_not_supported_here",
+          "assessment": "U-Net确实有下采样和stem skip，但该skip只经过线性stem，全部三个非线性block在8×8，up/head没有额外激活。conv的卷积路径9×9已覆盖大部分前景；每像素有几何条件/坐标，GroupNorm又有全空间统计。当前三选中conv比U-Net更好，不支持把增加空间上下文当作这组配置的主要优势。",
+          "scope_limit": "配置同时改变参数量、分辨率与连接；实测不能唯一归因于缺少全分辨率激活，也不排除上下文在其他条件下有益。",
+          "evidence_level": "E1",
+          "claim": "the UNet's global context and skip path should give better shape fidelity",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/control_audit.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/control_audit.json",
+            "sha256": "35c093f2c04f07f1603df081c4324951efbbc32659ae726db6d701a138665a15"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "claude-haiku-5-5",
+          "question_id": "q_b5c9bdb581e1017e89dcb6f5f5fe1b33",
+          "public_response_sha256": "8f07012a314e5c2d76d02e620bac8dd6e816efe04cc5ac20690f40ea620edebb",
+          "explanation_sha256": "3e4eab4c15eecd086100dddd688b0365037a697c7461cfb4a332617b03b4f43d",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "It has no normalization or residual path",
+          "dimension": "mechanism_alignment",
+          "judgment": "supported_factor_nonexclusive",
+          "assessment": "MLP将4352个展开输入经3个96维隐藏层输出256像素，无卷积权重共享，参数461344。三个数据实例中其energy/IoU/背景均不优于conv/U-Net，条件内方差只有参考约0.032%—0.039%，与解释的泛化/多样性担忧相容。",
+          "scope_limit": "没有独立匹配参数量、归一化、残差或隐藏宽度；96维并非目标低维条件分布必然无法表达的证明。",
+          "evidence_level": "E2",
+          "claim": "It has no normalization or residual path",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/quality_analysis/generation_quality.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/quality_analysis/generation_quality.json",
+            "sha256": "8f0f9c236e74e6685918496d0ec78ef209bafdd72fb13ba6aaaa1b50ae3f9e39"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "claude-haiku-5-5",
+          "question_id": "q_b5c9bdb581e1017e89dcb6f5f5fe1b33",
+          "public_response_sha256": "8f07012a314e5c2d76d02e620bac8dd6e816efe04cc5ac20690f40ea620edebb",
+          "explanation_sha256": "3e4eab4c15eecd086100dddd688b0365037a697c7461cfb4a332617b03b4f43d",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "capacity is not the problem.",
+          "dimension": "causal_calibration",
+          "judgment": "overstated_exclusion",
+          "assessment": "参数多不证明容量或表征瓶颈完全不是问题，96维结构、共享性、优化和输出读出均不同；也不能把每位置拟合说成必需独立记忆。",
+          "scope_limit": "当前较差MLP结果不隔离唯一原因。",
+          "evidence_level": "E0",
+          "claim": "capacity is not the problem.",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_b5c9bdb581e1017e89dcb6f5f5fe1b33/prompt.txt",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_b5c9bdb581e1017e89dcb6f5f5fe1b33/prompt.txt",
+            "sha256": "3f1dd67d403fb239c0659d381637d4eddfed80d7a956f749b34bee060d60e742"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "claude-haiku-5-5",
+          "question_id": "q_b5c9bdb581e1017e89dcb6f5f5fe1b33",
+          "public_response_sha256": "8f07012a314e5c2d76d02e620bac8dd6e816efe04cc5ac20690f40ea620edebb",
+          "explanation_sha256": "3e4eab4c15eecd086100dddd688b0365037a697c7461cfb4a332617b03b4f43d",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        }
+      ],
+      "response_sha256": "8f07012a314e5c2d76d02e620bac8dd6e816efe04cc5ac20690f40ea620edebb",
+      "probe": null
+    },
+    {
+      "question_id": "q_147d608aaef7b8eb685635812d3d6f5c",
+      "model": "claude-haiku-5-5",
+      "ranking_correct": false,
+      "summary_zh": "准确写出MLP实际输入及约47次平均曝光，且允许conv/U-Net顺序反转；主要排序仍来自多尺度更佳的先验，关于逐位置独立学习的叙述过强。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "The added capacity and global context should lower the energy score",
+          "dimension": "mechanism_alignment",
+          "judgment": "plausible_unmeasured_not_supported_here",
+          "assessment": "U-Net确实有下采样和stem skip，但该skip只经过线性stem，全部三个非线性block在8×8，up/head没有额外激活。conv的卷积路径9×9已覆盖大部分前景；每像素有几何条件/坐标，GroupNorm又有全空间统计。当前三选中conv比U-Net更好，不支持把增加空间上下文当作这组配置的主要优势。",
+          "scope_limit": "配置同时改变参数量、分辨率与连接；实测不能唯一归因于缺少全分辨率激活，也不排除上下文在其他条件下有益。",
+          "evidence_level": "E1",
+          "claim": "The added capacity and global context should lower the energy score",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/control_audit.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/control_audit.json",
+            "sha256": "35c093f2c04f07f1603df081c4324951efbbc32659ae726db6d701a138665a15"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "claude-haiku-5-5",
+          "question_id": "q_147d608aaef7b8eb685635812d3d6f5c",
+          "public_response_sha256": "e60fd63ae6f2a07dc99ade65aef1a4ebf522029004dc358f9963eb01c2a1920b",
+          "explanation_sha256": "98914ef64d086f99c91471e0017f5494cc81b15ede2572447825bfe838a64e71",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "it must learn the spatial layout of circles, squares, and rings separately at each position",
+          "dimension": "causal_calibration",
+          "judgment": "overstated_necessity",
+          "assessment": "MLP没有硬编码空间共享，但全连接网络仍能学习共享或连续位置函数；不必把每个连续中心当成独立案例记忆。目标几何与appearance维度也远小于256，96维隐藏宽度本身不能证明必然丢失相关信息。",
+          "scope_limit": "缺少空间先验是合理样本效率假说，当前较差结果与之相容，但不是表达不可能或唯一机制证明。",
+          "evidence_level": "E0",
+          "claim": "it must learn the spatial layout of circles, squares, and rings separately at each position",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_147d608aaef7b8eb685635812d3d6f5c/prompt.txt",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_147d608aaef7b8eb685635812d3d6f5c/prompt.txt",
+            "sha256": "fd757f18535e88311039360927dbb04f40b180dcf6764b55d32f51e8f182b287"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "claude-haiku-5-5",
+          "question_id": "q_147d608aaef7b8eb685635812d3d6f5c",
+          "public_response_sha256": "e60fd63ae6f2a07dc99ade65aef1a4ebf522029004dc358f9963eb01c2a1920b",
+          "explanation_sha256": "98914ef64d086f99c91471e0017f5494cc81b15ede2572447825bfe838a64e71",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "about 47 epochs over 1024 examples.",
+          "dimension": "code_fidelity",
+          "judgment": "supported",
+          "assessment": "3000×16/1024=46.875次平均曝光，训练是有放回采样而非保证每图等次数遍历；输入17×256也准确。",
+          "scope_limit": "只记录预算含义，不能由曝光次数保证收敛。",
+          "evidence_level": "E0",
+          "claim": "about 47 epochs over 1024 examples.",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_147d608aaef7b8eb685635812d3d6f5c/prompt.txt",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_147d608aaef7b8eb685635812d3d6f5c/prompt.txt",
+            "sha256": "fd757f18535e88311039360927dbb04f40b180dcf6764b55d32f51e8f182b287"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "claude-haiku-5-5",
+          "question_id": "q_147d608aaef7b8eb685635812d3d6f5c",
+          "public_response_sha256": "e60fd63ae6f2a07dc99ade65aef1a4ebf522029004dc358f9963eb01c2a1920b",
+          "explanation_sha256": "98914ef64d086f99c91471e0017f5494cc81b15ede2572447825bfe838a64e71",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        }
+      ],
+      "response_sha256": "e60fd63ae6f2a07dc99ade65aef1a4ebf522029004dc358f9963eb01c2a1920b",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_b5c9bdb581e1017e89dcb6f5f5fe1b33"
+      }
+    },
+    {
+      "question_id": "q_0b54c62a60d8a3d0c78866c2372316c7",
+      "model": "claude-haiku-5-5",
+      "ranking_correct": false,
+      "summary_zh": "错把打包8通道当MLP展开输入，且把U-Net skip保留锐边和全局几何优势表述过强；比较覆盖完整但未抓住实际conv胜出的配置因素。",
+      "scores": {
+        "code_fidelity": "partly_supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "8×16×16 input into a 2048-dimensional vector",
+          "dimension": "code_fidelity",
+          "judgment": "incorrect_input_dimension",
+          "assessment": "回答写成8通道/2048维；8是打包输入通道数，模型拆分后实际拼接 noisy1+coords2+condition6+sinusoidal time8=17通道，MLP展开4352维，首层417888参数，总461344。",
+          "scope_limit": "输入维数错误不自动否定“无共享权重”这个正确事实；错误数字不能作为瓶颈/容量的精确依据。",
+          "evidence_level": "E0",
+          "claim": "8×16×16 input into a 2048-dimensional vector",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_0b54c62a60d8a3d0c78866c2372316c7/prompt.txt",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_0b54c62a60d8a3d0c78866c2372316c7/prompt.txt",
+            "sha256": "db8d505d7905ef8b5e8b58b1d45c1cb9f4d8b94bf7ae223e85ee9517ef691134"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "claude-haiku-5-5",
+          "question_id": "q_0b54c62a60d8a3d0c78866c2372316c7",
+          "public_response_sha256": "b0f190593dd8e145975ce26e81a92e3540641f34296711cd8a202c5a215d1e1f",
+          "explanation_sha256": "a6c32bd87edc276f8baa166f8fe7dba434c9eb8d9d9f66a04e9b05b04f78454f",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "The skip path preserves fine edge detail",
+          "dimension": "mechanism_alignment",
+          "judgment": "plausible_unmeasured_not_supported_here",
+          "assessment": "U-Net确实有下采样和stem skip，但该skip只经过线性stem，全部三个非线性block在8×8，up/head没有额外激活。conv的卷积路径9×9已覆盖大部分前景；每像素有几何条件/坐标，GroupNorm又有全空间统计。当前三选中conv比U-Net更好，不支持把增加空间上下文当作这组配置的主要优势。",
+          "scope_limit": "配置同时改变参数量、分辨率与连接；实测不能唯一归因于缺少全分辨率激活，也不排除上下文在其他条件下有益。",
+          "evidence_level": "E1",
+          "claim": "The skip path preserves fine edge detail",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/control_audit.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/control_audit.json",
+            "sha256": "35c093f2c04f07f1603df081c4324951efbbc32659ae726db6d701a138665a15"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "claude-haiku-5-5",
+          "question_id": "q_0b54c62a60d8a3d0c78866c2372316c7",
+          "public_response_sha256": "b0f190593dd8e145975ce26e81a92e3540641f34296711cd8a202c5a215d1e1f",
+          "explanation_sha256": "a6c32bd87edc276f8baa166f8fe7dba434c9eb8d9d9f66a04e9b05b04f78454f",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "This is the strongest inductive bias for a 16×16 spatial problem.",
+          "dimension": "causal_calibration",
+          "judgment": "overstated_generalization",
+          "assessment": "具体UNet没有上采样后的非线性，几何条件逐像素可见；不能从U-Net名字推出16×16任务上最强先验。",
+          "scope_limit": "当前结果只支持这几种配方对照，也不能反向概括所有UNet较差。",
+          "evidence_level": "E0",
+          "claim": "This is the strongest inductive bias for a 16×16 spatial problem.",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_0b54c62a60d8a3d0c78866c2372316c7/prompt.txt",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_0b54c62a60d8a3d0c78866c2372316c7/prompt.txt",
+            "sha256": "db8d505d7905ef8b5e8b58b1d45c1cb9f4d8b94bf7ae223e85ee9517ef691134"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "claude-haiku-5-5",
+          "question_id": "q_0b54c62a60d8a3d0c78866c2372316c7",
+          "public_response_sha256": "b0f190593dd8e145975ce26e81a92e3540641f34296711cd8a202c5a215d1e1f",
+          "explanation_sha256": "a6c32bd87edc276f8baa166f8fe7dba434c9eb8d9d9f66a04e9b05b04f78454f",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        }
+      ],
+      "response_sha256": "b0f190593dd8e145975ce26e81a92e3540641f34296711cd8a202c5a215d1e1f",
+      "probe": null
+    },
+    {
+      "question_id": "q_498d07904332da032172c8d506f40470",
+      "model": "claude-haiku-5-5",
+      "ranking_correct": false,
+      "summary_zh": "半径像素换算、9×9卷积路径与17通道MLP输入均准确，还看到conv已覆盖目标；但仍以较大上下文为U-Net的主要优势，未对上实际方向。",
+      "scores": {
+        "code_fidelity": "supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "B's larger context likely giving a small edge.",
+          "dimension": "mechanism_alignment",
+          "judgment": "plausible_unmeasured_not_supported_here",
+          "assessment": "U-Net确实有下采样和stem skip，但该skip只经过线性stem，全部三个非线性block在8×8，up/head没有额外激活。conv的卷积路径9×9已覆盖大部分前景；每像素有几何条件/坐标，GroupNorm又有全空间统计。当前三选中conv比U-Net更好，不支持把增加空间上下文当作这组配置的主要优势。",
+          "scope_limit": "配置同时改变参数量、分辨率与连接；实测不能唯一归因于缺少全分辨率激活，也不排除上下文在其他条件下有益。",
+          "evidence_level": "E1",
+          "claim": "B's larger context likely giving a small edge.",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/control_audit.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/control_audit.json",
+            "sha256": "35c093f2c04f07f1603df081c4324951efbbc32659ae726db6d701a138665a15"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "claude-haiku-5-5",
+          "question_id": "q_498d07904332da032172c8d506f40470",
+          "public_response_sha256": "655777dcac89563ad58c0b6e58ec3c5c5e8ca74c33fa1634c8540755c0dcc671",
+          "explanation_sha256": "7f8421d08a2785ef4ed987615470c4b5529b39fa4d08ae954faae12631cc6167",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "17×16×16 = 4352 values",
+          "dimension": "mechanism_alignment",
+          "judgment": "supported_factor_nonexclusive",
+          "assessment": "MLP将4352个展开输入经3个96维隐藏层输出256像素，无卷积权重共享，参数461344。三个数据实例中其energy/IoU/背景均不优于conv/U-Net，条件内方差只有参考约0.032%—0.039%，与解释的泛化/多样性担忧相容。",
+          "scope_limit": "没有独立匹配参数量、归一化、残差或隐藏宽度；96维并非目标低维条件分布必然无法表达的证明。",
+          "evidence_level": "E2",
+          "claim": "17×16×16 = 4352 values",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/quality_analysis/generation_quality.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/quality_analysis/generation_quality.json",
+            "sha256": "8f0f9c236e74e6685918496d0ec78ef209bafdd72fb13ba6aaaa1b50ae3f9e39"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "claude-haiku-5-5",
+          "question_id": "q_498d07904332da032172c8d506f40470",
+          "public_response_sha256": "655777dcac89563ad58c0b6e58ec3c5c5e8ca74c33fa1634c8540755c0dcc671",
+          "explanation_sha256": "7f8421d08a2785ef4ed987615470c4b5529b39fa4d08ae954faae12631cc6167",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "radius 0.25–0.42 on a [-1,1] grid is roughly 2–3 px",
+          "dimension": "code_fidelity",
+          "judgment": "supported",
+          "assessment": "16网格间距2/15，半径1.875–3.15像素，换算正确；9×9只指卷积路径，GroupNorm还有全空间统计。",
+          "scope_limit": "小目标被局部路径覆盖不证明上下文绝对无用；回答保留比较可翻转的边界。",
+          "evidence_level": "E0",
+          "claim": "radius 0.25–0.42 on a [-1,1] grid is roughly 2–3 px",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_498d07904332da032172c8d506f40470/prompt.txt",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_498d07904332da032172c8d506f40470/prompt.txt",
+            "sha256": "75b8e72bbd73380fbd93e832510c890196f48a55f9e6be69a9f4b16a3e841449"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "claude-haiku-5-5",
+          "question_id": "q_498d07904332da032172c8d506f40470",
+          "public_response_sha256": "655777dcac89563ad58c0b6e58ec3c5c5e8ca74c33fa1634c8540755c0dcc671",
+          "explanation_sha256": "7f8421d08a2785ef4ed987615470c4b5529b39fa4d08ae954faae12631cc6167",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        }
+      ],
+      "response_sha256": "655777dcac89563ad58c0b6e58ec3c5c5e8ca74c33fa1634c8540755c0dcc671",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_0b54c62a60d8a3d0c78866c2372316c7"
+      }
+    },
+    {
+      "question_id": "q_0a9477d1f63da091c35005890dc32118",
+      "model": "claude-haiku-5-5",
+      "ranking_correct": false,
+      "summary_zh": "MLP输入维数和conv感受野都少算，且把训练种子差异称作采样噪声；U-Net收益的主要叙述仍未检查代码里低分辨率非线性的代价。",
+      "scores": {
+        "code_fidelity": "partly_supported",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "8×16×16 input into a 2048-dim vector",
+          "dimension": "code_fidelity",
+          "judgment": "incorrect_input_dimension",
+          "assessment": "回答写成8通道/2048维；8是打包输入通道数，模型拆分后实际拼接 noisy1+coords2+condition6+sinusoidal time8=17通道，MLP展开4352维，首层417888参数，总461344。",
+          "scope_limit": "输入维数错误不自动否定“无共享权重”这个正确事实；错误数字不能作为瓶颈/容量的精确依据。",
+          "evidence_level": "E0",
+          "claim": "8×16×16 input into a 2048-dim vector",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_0a9477d1f63da091c35005890dc32118/prompt.txt",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_0a9477d1f63da091c35005890dc32118/prompt.txt",
+            "sha256": "178c5b8917170bf16fb583e891b654ffc721fee2b4957ccb9b47810043150b32"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "claude-haiku-5-5",
+          "question_id": "q_0a9477d1f63da091c35005890dc32118",
+          "public_response_sha256": "11c20adccf2f4a040c51cde1c08fe7b977aecf6cb066dbd1f5e6e3a596f1c6af",
+          "explanation_sha256": "1445c96b7f72ae78d9b6fde66046e703730ad3095a450a8a214adb29a5eff712",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "about 7×7 after three layers",
+          "dimension": "code_fidelity",
+          "judgment": "incorrect_local_count",
+          "assessment": "漏掉3×3stem，depth3的纯卷积路径为9×9；GroupNorm跨空间统计，不是严格局部信息界。",
+          "scope_limit": "不会因为少算两个像素就自动否定所有空间先验，但此数字不能用于容量论证。",
+          "evidence_level": "E0",
+          "claim": "about 7×7 after three layers",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_0a9477d1f63da091c35005890dc32118/prompt.txt",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_0a9477d1f63da091c35005890dc32118/prompt.txt",
+            "sha256": "178c5b8917170bf16fb583e891b654ffc721fee2b4957ccb9b47810043150b32"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "claude-haiku-5-5",
+          "question_id": "q_0a9477d1f63da091c35005890dc32118",
+          "public_response_sha256": "11c20adccf2f4a040c51cde1c08fe7b977aecf6cb066dbd1f5e6e3a596f1c6af",
+          "explanation_sha256": "1445c96b7f72ae78d9b6fde66046e703730ad3095a450a8a214adb29a5eff712",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "the larger context helps the network model global geometry and reduce background leakage.",
+          "dimension": "mechanism_alignment",
+          "judgment": "plausible_unmeasured_not_supported_here",
+          "assessment": "U-Net确实有下采样和stem skip，但该skip只经过线性stem，全部三个非线性block在8×8，up/head没有额外激活。conv的卷积路径9×9已覆盖大部分前景；每像素有几何条件/坐标，GroupNorm又有全空间统计。当前三选中conv比U-Net更好，不支持把增加空间上下文当作这组配置的主要优势。",
+          "scope_limit": "配置同时改变参数量、分辨率与连接；实测不能唯一归因于缺少全分辨率激活，也不排除上下文在其他条件下有益。",
+          "evidence_level": "E1",
+          "claim": "the larger context helps the network model global geometry and reduce background leakage.",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/control_audit.json",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/control_audit.json",
+            "sha256": "35c093f2c04f07f1603df081c4324951efbbc32659ae726db6d701a138665a15"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "claude-haiku-5-5",
+          "question_id": "q_0a9477d1f63da091c35005890dc32118",
+          "public_response_sha256": "11c20adccf2f4a040c51cde1c08fe7b977aecf6cb066dbd1f5e6e3a596f1c6af",
+          "explanation_sha256": "1445c96b7f72ae78d9b6fde66046e703730ad3095a450a8a214adb29a5eff712",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "The sampling noise across 16 seeds is substantial",
+          "dimension": "causal_calibration",
+          "judgment": "unsupported_variance_attribution",
+          "assessment": "16个seed是训练随机种子，所有候选和训练seed使用固定共同评价噪声流；方差存在，但不能把它归因为各seed重新抽取独立采样噪声。",
+          "scope_limit": "有限4图/条件的抽样误差仍在，只是本次没有独立重采样来估计它。",
+          "evidence_level": "E0",
+          "claim": "The sampling noise across 16 seeds is substantial",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_0a9477d1f63da091c35005890dc32118/prompt.txt",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_0a9477d1f63da091c35005890dc32118/prompt.txt",
+            "sha256": "178c5b8917170bf16fb583e891b654ffc721fee2b4957ccb9b47810043150b32"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "claude-haiku-5-5",
+          "question_id": "q_0a9477d1f63da091c35005890dc32118",
+          "public_response_sha256": "11c20adccf2f4a040c51cde1c08fe7b977aecf6cb066dbd1f5e6e3a596f1c6af",
+          "explanation_sha256": "1445c96b7f72ae78d9b6fde66046e703730ad3095a450a8a214adb29a5eff712",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        }
+      ],
+      "response_sha256": "11c20adccf2f4a040c51cde1c08fe7b977aecf6cb066dbd1f5e6e3a596f1c6af",
+      "probe": null
+    },
+    {
+      "question_id": "q_d631a9200d5d69a058d326cadefb6e51",
+      "model": "claude-haiku-5-5",
+      "ranking_correct": false,
+      "summary_zh": "给出完整相邻比较，但维度与感受野读错，并把19.5k对35.1k视为足够相近而排除容量因素；还误说能量分数含形状重叠项，混淆了独立诊断与排名指标。",
+      "scores": {
+        "code_fidelity": "incorrect",
+        "mechanism_alignment": "partly_supported",
+        "causal_calibration": "partly_supported",
+        "comparison_coverage": "supported",
+        "answer_consistency": "supported"
+      },
+      "annotations": [
+        {
+          "verbatim_public_quote": "A flattened MLP on 8×16×16 inputs",
+          "dimension": "code_fidelity",
+          "judgment": "incorrect_input_dimension",
+          "assessment": "回答写成8通道/2048维；8是打包输入通道数，模型拆分后实际拼接 noisy1+coords2+condition6+sinusoidal time8=17通道，MLP展开4352维，首层417888参数，总461344。",
+          "scope_limit": "输入维数错误不自动否定“无共享权重”这个正确事实；错误数字不能作为瓶颈/容量的精确依据。",
+          "evidence_level": "E0",
+          "claim": "A flattened MLP on 8×16×16 inputs",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_d631a9200d5d69a058d326cadefb6e51/prompt.txt",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_d631a9200d5d69a058d326cadefb6e51/prompt.txt",
+            "sha256": "c94c0000ed151d733b617ece1893b5eb0dbfc2f19939ee5c46226a02fa9d091e"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "claude-haiku-5-5",
+          "question_id": "q_d631a9200d5d69a058d326cadefb6e51",
+          "public_response_sha256": "536ca731729af85676346fc5a2c8f3071e8b5eb3fb0ef5fcc4d23a90b3b03427",
+          "explanation_sha256": "ef56681b85731ad648b8ac0de393a75f2fb9579b7d7db41f73aad14037e426bb",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "The receptive field is only about 7 pixels",
+          "dimension": "code_fidelity",
+          "judgment": "incorrect_local_count",
+          "assessment": "conv的stem加3个block为9×9纯卷积路径，不是7；GroupNorm使严格局部信息论证不成立。",
+          "scope_limit": "只纠正代码事实，不据此唯一解释真实胜负。",
+          "evidence_level": "E0",
+          "claim": "The receptive field is only about 7 pixels",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_d631a9200d5d69a058d326cadefb6e51/prompt.txt",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_d631a9200d5d69a058d326cadefb6e51/prompt.txt",
+            "sha256": "c94c0000ed151d733b617ece1893b5eb0dbfc2f19939ee5c46226a02fa9d091e"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "claude-haiku-5-5",
+          "question_id": "q_d631a9200d5d69a058d326cadefb6e51",
+          "public_response_sha256": "536ca731729af85676346fc5a2c8f3071e8b5eb3fb0ef5fcc4d23a90b3b03427",
+          "explanation_sha256": "ef56681b85731ad648b8ac0de393a75f2fb9579b7d7db41f73aad14037e426bb",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "Parameter count is similar to the conv baseline, so the gain comes from inductive bias rather than capacity.",
+          "dimension": "causal_calibration",
+          "judgment": "unsupported_exclusion",
+          "assessment": "UNet35089参数比conv19489多约80%，也增加下/上卷积并改变非线性分辨率；没有容量匹配控制，且当前UNet没有所称gain。",
+          "scope_limit": "即使参数完全匹配，也不能只凭参数数量排除有效表达能力差异。",
+          "evidence_level": "E0",
+          "claim": "Parameter count is similar to the conv baseline, so the gain comes from inductive bias rather than capacity.",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_d631a9200d5d69a058d326cadefb6e51/prompt.txt",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_d631a9200d5d69a058d326cadefb6e51/prompt.txt",
+            "sha256": "c94c0000ed151d733b617ece1893b5eb0dbfc2f19939ee5c46226a02fa9d091e"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "claude-haiku-5-5",
+          "question_id": "q_d631a9200d5d69a058d326cadefb6e51",
+          "public_response_sha256": "536ca731729af85676346fc5a2c8f3071e8b5eb3fb0ef5fcc4d23a90b3b03427",
+          "explanation_sha256": "ef56681b85731ad648b8ac0de393a75f2fb9579b7d7db41f73aad14037e426bb",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        },
+        {
+          "verbatim_public_quote": "the shape-overlap part of the energy score",
+          "dimension": "code_fidelity",
+          "judgment": "incorrect_metric_formula",
+          "assessment": "energy是加权生成-参考距离减半个不同生成样本之间距离；前景mask影响距离权重，但没有IoU/shape-overlap加项。IoU另作诊断。",
+          "scope_limit": "几何错误当然能影响像素距离，不能因此称存在独立形状重叠评分项。",
+          "evidence_level": "E0",
+          "claim": "the shape-overlap part of the energy score",
+          "evidence_path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_d631a9200d5d69a058d326cadefb6e51/prompt.txt",
+          "artifact_path_or_hash": {
+            "path": "<project>/data/task_expansion/vision_batch/image_ranking_supplement_20261015/generation/questions/q_d631a9200d5d69a058d326cadefb6e51/prompt.txt",
+            "sha256": "c94c0000ed151d733b617ece1893b5eb0dbfc2f19939ee5c46226a02fa9d091e"
+          },
+          "alternative_explanation": "Native configurations jointly change resolution, parameter count, normalization and connectivity; code facts and compatible diagnostics do not isolate a unique mechanism.",
+          "model_exact_id": "claude-haiku-5-5",
+          "question_id": "q_d631a9200d5d69a058d326cadefb6e51",
+          "public_response_sha256": "536ca731729af85676346fc5a2c8f3071e8b5eb3fb0ef5fcc4d23a90b3b03427",
+          "explanation_sha256": "ef56681b85731ad648b8ac0de393a75f2fb9579b7d7db41f73aad14037e426bb",
+          "both_adjacent_comparisons": true,
+          "rank_and_explanation_consistency": true
+        }
+      ],
+      "response_sha256": "536ca731729af85676346fc5a2c8f3071e8b5eb3fb0ef5fcc4d23a90b3b03427",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_0a9477d1f63da091c35005890dc32118"
+      }
+    }
+  ],
+  "unreviewed_completed": [],
+  "review_policy": "Manual reading of each public explanation only. Ranking correctness does not determine mechanism grades; hypothetical explanations remain unmeasured when controls do not identify them.",
+  "scope": "One native-configuration cluster across three fresh datasets; main and permutation answers reviewed individually.",
+  "coverage": {
+    "completed_public_answers": 23,
+    "expected_calls": 24,
+    "missing_provider_outputs": 1,
+    "main_answers_reviewed": 12,
+    "probe_answers_reviewed": 11
+  },
+  "permutation_checks": [
+    {
+      "model": "gpt-6-luna",
+      "main_question_id": "q_b5c9bdb581e1017e89dcb6f5f5fe1b33",
+      "probe_question_id": "q_147d608aaef7b8eb685635812d3d6f5c",
+      "status": "complete",
+      "same_physical_order": true,
+      "scope": "One predeclared letter permutation; not an independent main question."
+    },
+    {
+      "model": "gpt-6-luna",
+      "main_question_id": "q_0b54c62a60d8a3d0c78866c2372316c7",
+      "probe_question_id": "q_498d07904332da032172c8d506f40470",
+      "status": "missing_probe",
+      "same_physical_order": null,
+      "scope": "One predeclared letter permutation; not an independent main question."
+    },
+    {
+      "model": "gpt-6-luna",
+      "main_question_id": "q_0a9477d1f63da091c35005890dc32118",
+      "probe_question_id": "q_d631a9200d5d69a058d326cadefb6e51",
+      "status": "complete",
+      "same_physical_order": true,
+      "scope": "One predeclared letter permutation; not an independent main question."
+    },
+    {
+      "model": "gpt-6.1-sol",
+      "main_question_id": "q_b5c9bdb581e1017e89dcb6f5f5fe1b33",
+      "probe_question_id": "q_147d608aaef7b8eb685635812d3d6f5c",
+      "status": "complete",
+      "same_physical_order": true,
+      "scope": "One predeclared letter permutation; not an independent main question."
+    },
+    {
+      "model": "gpt-6.1-sol",
+      "main_question_id": "q_0b54c62a60d8a3d0c78866c2372316c7",
+      "probe_question_id": "q_498d07904332da032172c8d506f40470",
+      "status": "complete",
+      "same_physical_order": true,
+      "scope": "One predeclared letter permutation; not an independent main question."
+    },
+    {
+      "model": "gpt-6.1-sol",
+      "main_question_id": "q_0a9477d1f63da091c35005890dc32118",
+      "probe_question_id": "q_d631a9200d5d69a058d326cadefb6e51",
+      "status": "complete",
+      "same_physical_order": true,
+      "scope": "One predeclared letter permutation; not an independent main question."
+    },
+    {
+      "model": "claude-opus-5-5",
+      "main_question_id": "q_b5c9bdb581e1017e89dcb6f5f5fe1b33",
+      "probe_question_id": "q_147d608aaef7b8eb685635812d3d6f5c",
+      "status": "complete",
+      "same_physical_order": true,
+      "scope": "One predeclared letter permutation; not an independent main question."
+    },
+    {
+      "model": "claude-opus-5-5",
+      "main_question_id": "q_0b54c62a60d8a3d0c78866c2372316c7",
+      "probe_question_id": "q_498d07904332da032172c8d506f40470",
+      "status": "complete",
+      "same_physical_order": true,
+      "scope": "One predeclared letter permutation; not an independent main question."
+    },
+    {
+      "model": "claude-opus-5-5",
+      "main_question_id": "q_0a9477d1f63da091c35005890dc32118",
+      "probe_question_id": "q_d631a9200d5d69a058d326cadefb6e51",
+      "status": "complete",
+      "same_physical_order": true,
+      "scope": "One predeclared letter permutation; not an independent main question."
+    },
+    {
+      "model": "claude-haiku-5-5",
+      "main_question_id": "q_b5c9bdb581e1017e89dcb6f5f5fe1b33",
+      "probe_question_id": "q_147d608aaef7b8eb685635812d3d6f5c",
+      "status": "complete",
+      "same_physical_order": true,
+      "scope": "One predeclared letter permutation; not an independent main question."
+    },
+    {
+      "model": "claude-haiku-5-5",
+      "main_question_id": "q_0b54c62a60d8a3d0c78866c2372316c7",
+      "probe_question_id": "q_498d07904332da032172c8d506f40470",
+      "status": "complete",
+      "same_physical_order": true,
+      "scope": "One predeclared letter permutation; not an independent main question."
+    },
+    {
+      "model": "claude-haiku-5-5",
+      "main_question_id": "q_0a9477d1f63da091c35005890dc32118",
+      "probe_question_id": "q_d631a9200d5d69a058d326cadefb6e51",
+      "status": "complete",
+      "same_physical_order": true,
+      "scope": "One predeclared letter permutation; not an independent main question."
+    }
+  ]
+}

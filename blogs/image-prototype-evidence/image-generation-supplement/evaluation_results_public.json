@@ -1,0 +1,655 @@
+{
+  "schema": "architectureiq-public-evaluation-v1",
+  "source_sha256": "50ea7459f981010fab8865de965f9604ea1ee00cf94d4963e22763d6576fda73",
+  "models": [
+    "gpt-6-luna",
+    "gpt-6.1-sol",
+    "claude-opus-5-5",
+    "claude-haiku-5-5"
+  ],
+  "scoring": "Exact full ranking; API failures remain missing and are not counted as wrong.",
+  "records": [
+    {
+      "model": "gpt-6-luna",
+      "question_id": "q_b5c9bdb581e1017e89dcb6f5f5fe1b33",
+      "family": "conditional_image_generation",
+      "task": "ranking3",
+      "probe": null,
+      "template_id": "operator_native_matched",
+      "instance_id": "operator_native_matched_s852001",
+      "status": "complete",
+      "gold_order": [
+        "A",
+        "B",
+        "C"
+      ],
+      "predicted_order": [
+        "B",
+        "A",
+        "C"
+      ],
+      "exact_order_correct": false,
+      "public_content": "<explanation>The convolutional architectures should outperform the MLP because the target is a spatially structured image and the denoiser must preserve coherent silhouettes, locations, and textures. Choice C has a fully connected bottleneck of width 96 after flattening 16×16 inputs; despite having more parameters, it lacks spatial locality and translation structure, so it is most likely to produce poorer geometry and conditional consistency.\n\nChoice A should beat C because its dense 3×3 residual convolutional blocks, group normalization, and explicit absolute coordinates are well matched to the small geometric shapes. Choice B should slightly beat A: its downsampled path supplies larger receptive fields and its skip connection preserves fine spatial detail, which should improve shape placement and denoising of the global mask. The shared x0 objective, cosine schedule, uniform weighting, deterministic DDIM sampling, and identical budget make architecture the main differentiator. The A-versus-B ordering is materially uncertain because the shallow U-Net may lose some 16×16 detail through downsampling and has only 3000 updates, but its multiscale context and skip path are expected to provide a modest advantage.</explanation>\n<answer>{\"best_to_worst\":[\"B\",\"A\",\"C\"]}</answer>",
+      "public_explanation": "The convolutional architectures should outperform the MLP because the target is a spatially structured image and the denoiser must preserve coherent silhouettes, locations, and textures. Choice C has a fully connected bottleneck of width 96 after flattening 16×16 inputs; despite having more parameters, it lacks spatial locality and translation structure, so it is most likely to produce poorer geometry and conditional consistency.\n\nChoice A should beat C because its dense 3×3 residual convolutional blocks, group normalization, and explicit absolute coordinates are well matched to the small geometric shapes. Choice B should slightly beat A: its downsampled path supplies larger receptive fields and its skip connection preserves fine spatial detail, which should improve shape placement and denoising of the global mask. The shared x0 objective, cosine schedule, uniform weighting, deterministic DDIM sampling, and identical budget make architecture the main differentiator. The A-versus-B ordering is materially uncertain because the shallow U-Net may lose some 16×16 detail through downsampling and has only 3000 updates, but its multiscale context and skip path are expected to provide a modest advantage.",
+      "model_identity_matches": true,
+      "question_sha256": "95ca88531beffc95b731deff48632763f0ef64a1aa80b85b1369b0aa4c46cb64",
+      "prompt_sha256": "3f1dd67d403fb239c0659d381637d4eddfed80d7a956f749b34bee060d60e742"
+    },
+    {
+      "model": "gpt-6-luna",
+      "question_id": "q_147d608aaef7b8eb685635812d3d6f5c",
+      "family": "conditional_image_generation",
+      "task": "ranking3",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_b5c9bdb581e1017e89dcb6f5f5fe1b33"
+      },
+      "template_id": "operator_native_matched",
+      "instance_id": "operator_native_matched_s852001",
+      "status": "complete",
+      "gold_order": [
+        "B",
+        "C",
+        "A"
+      ],
+      "predicted_order": [
+        "C",
+        "B",
+        "A"
+      ],
+      "exact_order_correct": false,
+      "public_content": "<explanation>\nThe task requires mapping a six-dimensional geometry condition and noisy image to clean images with varied brightness and stripe texture. The convolutional models have a useful spatial inductive bias for silhouettes and local texture. Choice C adds a downsampling path for broader spatial context while retaining a full-resolution skip connection, which should help capture global shape structure without discarding the fine detail needed on a 16×16 grid. Thus I predict C will score better than B, though the small image size makes the advantage uncertain.\n\nChoice B keeps all processing at full resolution, which is a reasonable fit for this small task but has a more limited receptive field than C’s downsampling path. Choice A instead uses a flattened MLP with no convolutional spatial structure; despite its global connections, it must learn spatial relationships from only 1,024 training examples and is more likely to generalize less reliably. I therefore predict B will outperform A. These are architecture-based estimates: all choices share the same diffusion objective, training budget, and sampling protocol, and the actual energy-score differences are uncertain.\n</explanation>\n<answer>{\"best_to_worst\":[\"C\",\"B\",\"A\"]}</answer>",
+      "public_explanation": "The task requires mapping a six-dimensional geometry condition and noisy image to clean images with varied brightness and stripe texture. The convolutional models have a useful spatial inductive bias for silhouettes and local texture. Choice C adds a downsampling path for broader spatial context while retaining a full-resolution skip connection, which should help capture global shape structure without discarding the fine detail needed on a 16×16 grid. Thus I predict C will score better than B, though the small image size makes the advantage uncertain.\n\nChoice B keeps all processing at full resolution, which is a reasonable fit for this small task but has a more limited receptive field than C’s downsampling path. Choice A instead uses a flattened MLP with no convolutional spatial structure; despite its global connections, it must learn spatial relationships from only 1,024 training examples and is more likely to generalize less reliably. I therefore predict B will outperform A. These are architecture-based estimates: all choices share the same diffusion objective, training budget, and sampling protocol, and the actual energy-score differences are uncertain.",
+      "model_identity_matches": true,
+      "question_sha256": "6e3533a540a676373867a8f7f0662e7d40b1f1c29cf002c5698d16401443fe27",
+      "prompt_sha256": "fd757f18535e88311039360927dbb04f40b180dcf6764b55d32f51e8f182b287"
+    },
+    {
+      "model": "gpt-6-luna",
+      "question_id": "q_0b54c62a60d8a3d0c78866c2372316c7",
+      "family": "conditional_image_generation",
+      "task": "ranking3",
+      "probe": null,
+      "template_id": "operator_native_matched",
+      "instance_id": "operator_native_matched_s852002",
+      "status": "complete",
+      "gold_order": [
+        "B",
+        "A",
+        "C"
+      ],
+      "predicted_order": [
+        "A",
+        "B",
+        "C"
+      ],
+      "exact_order_correct": false,
+      "public_content": "<explanation>All three choices use the same data, diffusion objective, training budget, and sampling protocol, so the main difference is architectural inductive bias. A is predicted best: its U-Net combines full-resolution skip features with a downsampled path, which should help use broader spatial context while retaining silhouette detail. B removes that multiscale path; its residual convolutions preserve local structure, but have a more limited receptive field for denoising. C replaces spatially structured processing with a fully connected MLP, making it less suited to learning image-local regularities from only 1,024 training examples and 3,000 updates. Thus A ranks ahead of B, and B ahead of C. There is material uncertainty between A and B: the geometry is supplied in the condition and the images are small, so a full-resolution convolutional model may be sufficient, while the U-Net’s downsampling could also lose detail.</explanation>\n<answer>{\"best_to_worst\":[\"A\",\"B\",\"C\"]}</answer>",
+      "public_explanation": "All three choices use the same data, diffusion objective, training budget, and sampling protocol, so the main difference is architectural inductive bias. A is predicted best: its U-Net combines full-resolution skip features with a downsampled path, which should help use broader spatial context while retaining silhouette detail. B removes that multiscale path; its residual convolutions preserve local structure, but have a more limited receptive field for denoising. C replaces spatially structured processing with a fully connected MLP, making it less suited to learning image-local regularities from only 1,024 training examples and 3,000 updates. Thus A ranks ahead of B, and B ahead of C. There is material uncertainty between A and B: the geometry is supplied in the condition and the images are small, so a full-resolution convolutional model may be sufficient, while the U-Net’s downsampling could also lose detail.",
+      "model_identity_matches": true,
+      "question_sha256": "1f3cd7acc96133e3490e865bad97883eb72d5033cbb74b0141f6777908461291",
+      "prompt_sha256": "db8d505d7905ef8b5e8b58b1d45c1cb9f4d8b94bf7ae223e85ee9517ef691134"
+    },
+    {
+      "model": "gpt-6-luna",
+      "question_id": "q_0a9477d1f63da091c35005890dc32118",
+      "family": "conditional_image_generation",
+      "task": "ranking3",
+      "probe": null,
+      "template_id": "operator_native_matched",
+      "instance_id": "operator_native_matched_s852003",
+      "status": "complete",
+      "gold_order": [
+        "A",
+        "C",
+        "B"
+      ],
+      "predicted_order": [
+        "C",
+        "A",
+        "B"
+      ],
+      "exact_order_correct": false,
+      "public_content": "<explanation>All choices share the same small dataset, training budget, and diffusion setup, so the main distinction is whether the architecture can learn the condition-to-image mapping efficiently. C ranks ahead of A because its downsampled path adds broader spatial context while its skip connection preserves high-resolution detail—useful for placing and forming the small geometric shapes. A’s convolutional residual blocks still provide a strong locality bias for this task, but have less spatial context. B ranks last: its flattened MLP lacks convolution’s spatial inductive bias and must learn pixel relationships from limited training data, making efficient generalization less likely. The C-versus-A comparison is uncertain: the extra U-Net path may be harder to optimize within 3,000 updates, and its downsampling could discard useful detail.</explanation>\n<answer>{\"best_to_worst\":[\"C\",\"A\",\"B\"]}</answer>",
+      "public_explanation": "All choices share the same small dataset, training budget, and diffusion setup, so the main distinction is whether the architecture can learn the condition-to-image mapping efficiently. C ranks ahead of A because its downsampled path adds broader spatial context while its skip connection preserves high-resolution detail—useful for placing and forming the small geometric shapes. A’s convolutional residual blocks still provide a strong locality bias for this task, but have less spatial context. B ranks last: its flattened MLP lacks convolution’s spatial inductive bias and must learn pixel relationships from limited training data, making efficient generalization less likely. The C-versus-A comparison is uncertain: the extra U-Net path may be harder to optimize within 3,000 updates, and its downsampling could discard useful detail.",
+      "model_identity_matches": true,
+      "question_sha256": "26a5fff18b162f10d641cc9e3f11610d840ca1785c0857c7fa6b76ed9f9c3af1",
+      "prompt_sha256": "178c5b8917170bf16fb583e891b654ffc721fee2b4957ccb9b47810043150b32"
+    },
+    {
+      "model": "gpt-6-luna",
+      "question_id": "q_d631a9200d5d69a058d326cadefb6e51",
+      "family": "conditional_image_generation",
+      "task": "ranking3",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_0a9477d1f63da091c35005890dc32118"
+      },
+      "template_id": "operator_native_matched",
+      "instance_id": "operator_native_matched_s852003",
+      "status": "complete",
+      "gold_order": [
+        "B",
+        "A",
+        "C"
+      ],
+      "predicted_order": [
+        "A",
+        "B",
+        "C"
+      ],
+      "exact_order_correct": false,
+      "public_content": "<explanation>The predicted ordering is driven mainly by spatial inductive bias, receptive field, and the ability to infer shared latent appearance variables such as brightness and stripe phase. Choice A adds a downsampled pathway to the convolutional model while retaining a high-resolution skip connection. This should provide broader context for denoising and appearance inference without discarding shape detail, making it the most likely to model both geometry and within-condition variation. Thus A is favored over B, although the small dataset and short 3000-update budget leave some uncertainty because the extra U-Net path may be harder to optimize and can introduce upsampling artifacts.\n\nChoice B has a strong convolutional prior, absolute coordinates, and broadcast condition/time features. The task is spatially regular and low resolution, so this should generalize shape boundaries and continuous center/radius changes better than a fully connected network. Choice C has a larger fully connected representation and global access to all noisy pixels, which could help infer global brightness, but its narrow 96-unit hidden bottleneck removes locality and translation structure, making continuous geometry interpolation and pixelwise silhouette reconstruction less sample-efficient. Therefore B is favored over C. The principal uncertainty is whether C's global latent inference advantage could outweigh its weaker spatial inductive bias; the expected ranking remains A, B, C.</explanation>\n<answer>{\"best_to_worst\":[\"A\",\"B\",\"C\"]}</answer>",
+      "public_explanation": "The predicted ordering is driven mainly by spatial inductive bias, receptive field, and the ability to infer shared latent appearance variables such as brightness and stripe phase. Choice A adds a downsampled pathway to the convolutional model while retaining a high-resolution skip connection. This should provide broader context for denoising and appearance inference without discarding shape detail, making it the most likely to model both geometry and within-condition variation. Thus A is favored over B, although the small dataset and short 3000-update budget leave some uncertainty because the extra U-Net path may be harder to optimize and can introduce upsampling artifacts.\n\nChoice B has a strong convolutional prior, absolute coordinates, and broadcast condition/time features. The task is spatially regular and low resolution, so this should generalize shape boundaries and continuous center/radius changes better than a fully connected network. Choice C has a larger fully connected representation and global access to all noisy pixels, which could help infer global brightness, but its narrow 96-unit hidden bottleneck removes locality and translation structure, making continuous geometry interpolation and pixelwise silhouette reconstruction less sample-efficient. Therefore B is favored over C. The principal uncertainty is whether C's global latent inference advantage could outweigh its weaker spatial inductive bias; the expected ranking remains A, B, C.",
+      "model_identity_matches": true,
+      "question_sha256": "b982fd3699f08610e6abbd4664162482c1db2051de5a8a74afa5680be0cabba3",
+      "prompt_sha256": "c94c0000ed151d733b617ece1893b5eb0dbfc2f19939ee5c46226a02fa9d091e"
+    },
+    {
+      "model": "gpt-6.1-sol",
+      "question_id": "q_b5c9bdb581e1017e89dcb6f5f5fe1b33",
+      "family": "conditional_image_generation",
+      "task": "ranking3",
+      "probe": null,
+      "template_id": "operator_native_matched",
+      "instance_id": "operator_native_matched_s852001",
+      "status": "complete",
+      "gold_order": [
+        "A",
+        "B",
+        "C"
+      ],
+      "predicted_order": [
+        "B",
+        "A",
+        "C"
+      ],
+      "exact_order_correct": false,
+      "public_content": "<explanation>\nMy predicted order is **B, A, C**. All three use identical x0-prediction training, cosine noise schedules, and deterministic 16-step sampling, so the main differences are architectural.\n\n- **B over A:** B’s downsampled processing gives its three residual blocks a larger effective receptive field, helping coordinate the silhouette and foreground brightness across the image. Its full-resolution stem skip preserves local information for reconstruction. This should modestly improve conditional sample accuracy over A’s exclusively full-resolution, more local processing.\n- **A over C:** A’s convolutional weight sharing and residual blocks are well suited to learning moving geometric boundaries from only 1,024 training images. C instead compresses the flattened image, coordinates, and spatially repeated conditioning through 96-unit hidden layers. That bottleneck, together with the lack of spatial weight sharing, makes accurate boundary reconstruction and noise-dependent appearance variation harder within 3,000 updates.\n\nThe main uncertainty is **B versus A**: B’s downsampling can lose fine ring boundaries and stripe detail, while A retains full resolution throughout. Also, the energy score rewards appropriate diversity, not merely sharp or geometrically accurate images; improved silhouette accuracy alone does not guarantee a better score.\n</explanation>\n<answer>{\"best_to_worst\": [\"B\", \"A\", \"C\"]}</answer>",
+      "public_explanation": "My predicted order is **B, A, C**. All three use identical x0-prediction training, cosine noise schedules, and deterministic 16-step sampling, so the main differences are architectural.\n\n- **B over A:** B’s downsampled processing gives its three residual blocks a larger effective receptive field, helping coordinate the silhouette and foreground brightness across the image. Its full-resolution stem skip preserves local information for reconstruction. This should modestly improve conditional sample accuracy over A’s exclusively full-resolution, more local processing.\n- **A over C:** A’s convolutional weight sharing and residual blocks are well suited to learning moving geometric boundaries from only 1,024 training images. C instead compresses the flattened image, coordinates, and spatially repeated conditioning through 96-unit hidden layers. That bottleneck, together with the lack of spatial weight sharing, makes accurate boundary reconstruction and noise-dependent appearance variation harder within 3,000 updates.\n\nThe main uncertainty is **B versus A**: B’s downsampling can lose fine ring boundaries and stripe detail, while A retains full resolution throughout. Also, the energy score rewards appropriate diversity, not merely sharp or geometrically accurate images; improved silhouette accuracy alone does not guarantee a better score.",
+      "model_identity_matches": true,
+      "question_sha256": "95ca88531beffc95b731deff48632763f0ef64a1aa80b85b1369b0aa4c46cb64",
+      "prompt_sha256": "3f1dd67d403fb239c0659d381637d4eddfed80d7a956f749b34bee060d60e742"
+    },
+    {
+      "model": "gpt-6.1-sol",
+      "question_id": "q_147d608aaef7b8eb685635812d3d6f5c",
+      "family": "conditional_image_generation",
+      "task": "ranking3",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_b5c9bdb581e1017e89dcb6f5f5fe1b33"
+      },
+      "template_id": "operator_native_matched",
+      "instance_id": "operator_native_matched_s852001",
+      "status": "complete",
+      "gold_order": [
+        "B",
+        "C",
+        "A"
+      ],
+      "predicted_order": [
+        "C",
+        "B",
+        "A"
+      ],
+      "exact_order_correct": false,
+      "public_content": "<explanation>\nMy predicted order is C, B, A. All three use the same x0-prediction objective, cosine schedule, 16-step deterministic sampling, and training budget, so the main differences are spatial inductive bias and how effectively each model learns geometry and appearance variation.\n\n- **C over B:** C’s downsampled processing gives its residual blocks a larger effective receptive field, helping coordinate shape identity, extent, and foreground brightness across the image. Its full-resolution skip connection preserves local spatial information. B retains finer-resolution processing throughout, but its smaller receptive field makes coherent image-wide appearance modeling harder. This comparison is uncertain: the shapes are small, and C’s downsampling could sacrifice thin-ring or stripe detail.\n- **B over A:** B’s convolutional weight sharing and residual blocks are well suited to repeatedly rendering translated shapes from coordinate and condition channels. A instead compresses the entire flattened input through 96-unit hidden layers, without spatial weight sharing. Under 3,000 updates, that bottleneck is more likely to produce blurred geometry and weak sample-dependent appearance than B.\n\nThe energy score rewards both accurate conditional geometry and appropriately calibrated diversity, not merely low denoising MSE. C versus B is the main material uncertainty; A’s weaker spatial bias makes its last-place prediction more confident.\n</explanation>\n<answer>{\"best_to_worst\": [\"C\", \"B\", \"A\"]}</answer>",
+      "public_explanation": "My predicted order is C, B, A. All three use the same x0-prediction objective, cosine schedule, 16-step deterministic sampling, and training budget, so the main differences are spatial inductive bias and how effectively each model learns geometry and appearance variation.\n\n- **C over B:** C’s downsampled processing gives its residual blocks a larger effective receptive field, helping coordinate shape identity, extent, and foreground brightness across the image. Its full-resolution skip connection preserves local spatial information. B retains finer-resolution processing throughout, but its smaller receptive field makes coherent image-wide appearance modeling harder. This comparison is uncertain: the shapes are small, and C’s downsampling could sacrifice thin-ring or stripe detail.\n- **B over A:** B’s convolutional weight sharing and residual blocks are well suited to repeatedly rendering translated shapes from coordinate and condition channels. A instead compresses the entire flattened input through 96-unit hidden layers, without spatial weight sharing. Under 3,000 updates, that bottleneck is more likely to produce blurred geometry and weak sample-dependent appearance than B.\n\nThe energy score rewards both accurate conditional geometry and appropriately calibrated diversity, not merely low denoising MSE. C versus B is the main material uncertainty; A’s weaker spatial bias makes its last-place prediction more confident.",
+      "model_identity_matches": true,
+      "question_sha256": "6e3533a540a676373867a8f7f0662e7d40b1f1c29cf002c5698d16401443fe27",
+      "prompt_sha256": "fd757f18535e88311039360927dbb04f40b180dcf6764b55d32f51e8f182b287"
+    },
+    {
+      "model": "gpt-6.1-sol",
+      "question_id": "q_0b54c62a60d8a3d0c78866c2372316c7",
+      "family": "conditional_image_generation",
+      "task": "ranking3",
+      "probe": null,
+      "template_id": "operator_native_matched",
+      "instance_id": "operator_native_matched_s852002",
+      "status": "complete",
+      "gold_order": [
+        "B",
+        "A",
+        "C"
+      ],
+      "predicted_order": [
+        "A",
+        "B",
+        "C"
+      ],
+      "exact_order_correct": false,
+      "public_content": "<explanation>The principal distinction is architectural inductive bias under the limited 48,000-sample budget. Choice A's U-Net has a downsampled path for a larger receptive field and a skip path for preserving pixel-level shape boundaries, which is well suited to conditional geometry plus stochastic brightness/texture. Choice B removes the multiscale path and skip connection; its three full-resolution convolutional blocks retain locality and should still model the simple silhouettes well, but have less global context and capacity for denoising. Thus A is expected to have lower energy score than B. Choice C's flattened MLP has no spatial weight sharing or convolutional locality, and its relatively narrow hidden bottleneck must learn the entire coordinate-to-image mapping, making generalization across continuous centers/radii and image denoising less reliable; hence B should outperform C. The A-versus-B ordering is the least certain because the task is simple enough that full-resolution convolutions may preserve boundaries better than the U-Net's down/up path, but the expected ranking remains A, B, C.</explanation>\n<answer>{\"best_to_worst\":[\"A\",\"B\",\"C\"]}</answer>",
+      "public_explanation": "The principal distinction is architectural inductive bias under the limited 48,000-sample budget. Choice A's U-Net has a downsampled path for a larger receptive field and a skip path for preserving pixel-level shape boundaries, which is well suited to conditional geometry plus stochastic brightness/texture. Choice B removes the multiscale path and skip connection; its three full-resolution convolutional blocks retain locality and should still model the simple silhouettes well, but have less global context and capacity for denoising. Thus A is expected to have lower energy score than B. Choice C's flattened MLP has no spatial weight sharing or convolutional locality, and its relatively narrow hidden bottleneck must learn the entire coordinate-to-image mapping, making generalization across continuous centers/radii and image denoising less reliable; hence B should outperform C. The A-versus-B ordering is the least certain because the task is simple enough that full-resolution convolutions may preserve boundaries better than the U-Net's down/up path, but the expected ranking remains A, B, C.",
+      "model_identity_matches": true,
+      "question_sha256": "1f3cd7acc96133e3490e865bad97883eb72d5033cbb74b0141f6777908461291",
+      "prompt_sha256": "db8d505d7905ef8b5e8b58b1d45c1cb9f4d8b94bf7ae223e85ee9517ef691134"
+    },
+    {
+      "model": "gpt-6.1-sol",
+      "question_id": "q_498d07904332da032172c8d506f40470",
+      "family": "conditional_image_generation",
+      "task": "ranking3",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_0b54c62a60d8a3d0c78866c2372316c7"
+      },
+      "template_id": "operator_native_matched",
+      "instance_id": "operator_native_matched_s852002",
+      "status": "complete",
+      "gold_order": [
+        "C",
+        "B",
+        "A"
+      ],
+      "predicted_order": [
+        "B",
+        "C",
+        "A"
+      ],
+      "exact_order_correct": false,
+      "public_content": "<explanation>\nI predict **B, then C, then A**. All three share clean-image (`x0`) prediction, uniform MSE training, the cosine noise schedule, and 16-step deterministic sampling, so the principal differences are architectural.\n\n- **B over C:** B’s downsampled processing gives it a larger effective receptive field, helping coordinate shape boundaries and foreground appearance across each object. Its full-resolution skip connection retains spatial information for reconstruction. C preserves resolution throughout, which may help thin rings and antialiased edges, but its three local convolutional blocks provide less spatial integration.\n- **C over A:** C’s spatial weight sharing, residual blocks, and group normalization are useful biases for learning the same geometric rendering rules across positions from only 1,024 training examples. A instead compresses the flattened image and broadcast conditioning through 96-unit hidden layers, without spatial weight sharing or residual connections. That makes precise, condition-dependent silhouettes and image-wide appearance variation harder to learn within 3,000 updates.\n\nThe B–C ordering is the main uncertainty: these objects are small enough that C’s receptive field may suffice, and avoiding downsampling could improve boundary accuracy. Energy score also rewards correctly distributed samples rather than merely sharp conditional means, so architectural advantages in reconstruction need not translate directly into the same sampling advantage.\n</explanation>\n<answer>{\"best_to_worst\": [\"B\", \"C\", \"A\"]}</answer>",
+      "public_explanation": "I predict **B, then C, then A**. All three share clean-image (`x0`) prediction, uniform MSE training, the cosine noise schedule, and 16-step deterministic sampling, so the principal differences are architectural.\n\n- **B over C:** B’s downsampled processing gives it a larger effective receptive field, helping coordinate shape boundaries and foreground appearance across each object. Its full-resolution skip connection retains spatial information for reconstruction. C preserves resolution throughout, which may help thin rings and antialiased edges, but its three local convolutional blocks provide less spatial integration.\n- **C over A:** C’s spatial weight sharing, residual blocks, and group normalization are useful biases for learning the same geometric rendering rules across positions from only 1,024 training examples. A instead compresses the flattened image and broadcast conditioning through 96-unit hidden layers, without spatial weight sharing or residual connections. That makes precise, condition-dependent silhouettes and image-wide appearance variation harder to learn within 3,000 updates.\n\nThe B–C ordering is the main uncertainty: these objects are small enough that C’s receptive field may suffice, and avoiding downsampling could improve boundary accuracy. Energy score also rewards correctly distributed samples rather than merely sharp conditional means, so architectural advantages in reconstruction need not translate directly into the same sampling advantage.",
+      "model_identity_matches": true,
+      "question_sha256": "155c5a7b53b0fef3cc05b284d2551a055672a4cb2144f7d54a57de0e3a89e83c",
+      "prompt_sha256": "75b8e72bbd73380fbd93e832510c890196f48a55f9e6be69a9f4b16a3e841449"
+    },
+    {
+      "model": "gpt-6.1-sol",
+      "question_id": "q_0a9477d1f63da091c35005890dc32118",
+      "family": "conditional_image_generation",
+      "task": "ranking3",
+      "probe": null,
+      "template_id": "operator_native_matched",
+      "instance_id": "operator_native_matched_s852003",
+      "status": "complete",
+      "gold_order": [
+        "A",
+        "C",
+        "B"
+      ],
+      "predicted_order": [
+        "C",
+        "A",
+        "B"
+      ],
+      "exact_order_correct": false,
+      "public_content": "<explanation>The main difference is spatial inductive bias and receptive field. Choice C retains the convolutional locality and absolute-coordinate conditioning of the base while adding a downsampled path and skip connection, allowing global shape/appearance inference without discarding fine boundary information. This should improve geometry and latent-appearance modeling over A, so C is predicted better than A. Choice A is a compact residual convolutional denoiser with strong locality and parameter sharing, well matched to silhouettes, but its receptive field is limited and it may have difficulty inferring global brightness/stripe variables from noisy inputs. Choice B's flat MLP has global access and more parameters, but loses spatial sharing and convolutional locality; with only 3000 updates it is less parameter-efficient for learning translated circles, squares, and rings, and is more likely to produce poorer boundaries or conditional distribution calibration. Thus A is predicted better than B. The C-versus-A and A-versus-B gaps are uncertain: the task is simple enough that the base convolutional model may already suffice, while the U-Net bottleneck could introduce some blur and the MLP could benefit from its global access. Nonetheless, the expected order is C, A, B.</explanation>\n<answer>{\"best_to_worst\":[\"C\",\"A\",\"B\"]}</answer>",
+      "public_explanation": "The main difference is spatial inductive bias and receptive field. Choice C retains the convolutional locality and absolute-coordinate conditioning of the base while adding a downsampled path and skip connection, allowing global shape/appearance inference without discarding fine boundary information. This should improve geometry and latent-appearance modeling over A, so C is predicted better than A. Choice A is a compact residual convolutional denoiser with strong locality and parameter sharing, well matched to silhouettes, but its receptive field is limited and it may have difficulty inferring global brightness/stripe variables from noisy inputs. Choice B's flat MLP has global access and more parameters, but loses spatial sharing and convolutional locality; with only 3000 updates it is less parameter-efficient for learning translated circles, squares, and rings, and is more likely to produce poorer boundaries or conditional distribution calibration. Thus A is predicted better than B. The C-versus-A and A-versus-B gaps are uncertain: the task is simple enough that the base convolutional model may already suffice, while the U-Net bottleneck could introduce some blur and the MLP could benefit from its global access. Nonetheless, the expected order is C, A, B.",
+      "model_identity_matches": true,
+      "question_sha256": "26a5fff18b162f10d641cc9e3f11610d840ca1785c0857c7fa6b76ed9f9c3af1",
+      "prompt_sha256": "178c5b8917170bf16fb583e891b654ffc721fee2b4957ccb9b47810043150b32"
+    },
+    {
+      "model": "gpt-6.1-sol",
+      "question_id": "q_d631a9200d5d69a058d326cadefb6e51",
+      "family": "conditional_image_generation",
+      "task": "ranking3",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_0a9477d1f63da091c35005890dc32118"
+      },
+      "template_id": "operator_native_matched",
+      "instance_id": "operator_native_matched_s852003",
+      "status": "complete",
+      "gold_order": [
+        "B",
+        "A",
+        "C"
+      ],
+      "predicted_order": [
+        "A",
+        "B",
+        "C"
+      ],
+      "exact_order_correct": false,
+      "public_content": "<explanation>\nPredicted order: **A, B, C**. All three share the same x₀-prediction objective, cosine noise schedule, deterministic 16-step sampler, optimizer, and training budget, so the main differences are spatial inductive bias and information flow.\n\n- **A over B:** A’s downsampling expands the effective receptive field, helping coordinate shape geometry and brightness across the foreground. Its full-resolution skip connection preserves spatial information needed for boundaries and small rings. This combination should slightly outperform B’s exclusively full-resolution, local convolutional processing.\n- **B over C:** B’s convolutional weight sharing and residual blocks are well suited to learning the same geometric boundary rules at different positions from only 1,024 training examples. C instead flattens all inputs into a 96-unit hidden representation, with repeated condition and coordinate channels and no spatial weight sharing. That bottleneck makes accurate conditional geometry and noise-dependent appearance harder to learn within 3,000 updates.\n\nThe **A–B ordering is materially uncertain**: these images are small, B’s receptive field already spans much of a foreground object, and A’s downsampling may sacrifice fine stripe or boundary detail. Also, the energy score rewards appropriate diversity rather than denoising accuracy alone; neither convolutional architecture is guaranteed to preserve the latent appearance distribution better. C is the more confident last-place prediction.\n</explanation>\n<answer>{\"best_to_worst\": [\"A\", \"B\", \"C\"]}</answer>",
+      "public_explanation": "Predicted order: **A, B, C**. All three share the same x₀-prediction objective, cosine noise schedule, deterministic 16-step sampler, optimizer, and training budget, so the main differences are spatial inductive bias and information flow.\n\n- **A over B:** A’s downsampling expands the effective receptive field, helping coordinate shape geometry and brightness across the foreground. Its full-resolution skip connection preserves spatial information needed for boundaries and small rings. This combination should slightly outperform B’s exclusively full-resolution, local convolutional processing.\n- **B over C:** B’s convolutional weight sharing and residual blocks are well suited to learning the same geometric boundary rules at different positions from only 1,024 training examples. C instead flattens all inputs into a 96-unit hidden representation, with repeated condition and coordinate channels and no spatial weight sharing. That bottleneck makes accurate conditional geometry and noise-dependent appearance harder to learn within 3,000 updates.\n\nThe **A–B ordering is materially uncertain**: these images are small, B’s receptive field already spans much of a foreground object, and A’s downsampling may sacrifice fine stripe or boundary detail. Also, the energy score rewards appropriate diversity rather than denoising accuracy alone; neither convolutional architecture is guaranteed to preserve the latent appearance distribution better. C is the more confident last-place prediction.",
+      "model_identity_matches": true,
+      "question_sha256": "b982fd3699f08610e6abbd4664162482c1db2051de5a8a74afa5680be0cabba3",
+      "prompt_sha256": "c94c0000ed151d733b617ece1893b5eb0dbfc2f19939ee5c46226a02fa9d091e"
+    },
+    {
+      "model": "claude-opus-5-5",
+      "question_id": "q_b5c9bdb581e1017e89dcb6f5f5fe1b33",
+      "family": "conditional_image_generation",
+      "task": "ranking3",
+      "probe": null,
+      "template_id": "operator_native_matched",
+      "instance_id": "operator_native_matched_s852001",
+      "status": "complete",
+      "gold_order": [
+        "A",
+        "B",
+        "C"
+      ],
+      "predicted_order": [
+        "A",
+        "B",
+        "C"
+      ],
+      "exact_order_correct": true,
+      "public_content": "The predicted order is A, then B, then C; the gap between A and B is the less certain call.\n\n<explanation>\n**Main factor: whether the model can draw sharp silhouettes at full resolution.** The score weights foreground pixels four times as heavily as background, so shape boundaries matter most. All three models receive the condition and the absolute pixel coordinates at every pixel. That means each pixel's in/out mask can be worked out locally. Brightness is the only hidden variable, and it can be read from the noisy image itself.\n\n**A (conv) beats B (U-Net).**\n- **A:** a 3×3 stem feeds three residual GroupNorm/SiLU blocks, all at 16×16. Every pixel gets three nonlinear stages to turn (x−cx, y−cy, r, shape) into a mask. Its receptive field is about 9 pixels, which is enough to estimate brightness from the surrounding area.\n- **B:** all three nonlinear blocks run on an 8×8 map after a stride-2 downsample. The result is upsampled with nearest-neighbour and passed through `up` and then `head`, with no activation in between. The skip path is just the stem output, which is also linear in the inputs. So B's full-resolution output is a linear function of blocky 8×8 features plus linear input features. Circle and ring edges, and the ring's inner hole at 0.5·r (only a few pixels), can't be drawn cleanly at 16×16. That should cost overlap and add leakage.\n- B's extra receptive field buys little here, because the per-pixel conditioning already makes the task local.\n\n**B beats C (MLP).**\n- **C:** flattens 17×256 input channels into three dense layers of width 96, then outputs 256 pixels.\n- It has no translation equivariance. It has to learn position-dependent shapes from only 1,024 training conditions and 48k samples.\n- The input layer alone has about 418k parameters, mostly fed by condition values copied to every pixel. That redundancy slows learning.\n- The 96-wide bottleneck also limits how much of the noisy image it can pass through to the output. That hurts both detail and the variety of brightness and texture across samples.\n- So C should generalize worst to the held-out centers and radii, with blurrier, less accurate shapes.\n\n**Uncertainty:** A versus B is the closer call. The U-Net's global context could help its brightness estimates, and its skip path partly restores resolution. Still, the purely linear path from 8×8 features to full-resolution output should leave B behind on boundary accuracy. C being last is fairly confident.\n</explanation>\n\n<answer>{\"best_to_worst\": [\"A\", \"B\", \"C\"]}</answer>",
+      "public_explanation": "**Main factor: whether the model can draw sharp silhouettes at full resolution.** The score weights foreground pixels four times as heavily as background, so shape boundaries matter most. All three models receive the condition and the absolute pixel coordinates at every pixel. That means each pixel's in/out mask can be worked out locally. Brightness is the only hidden variable, and it can be read from the noisy image itself.\n\n**A (conv) beats B (U-Net).**\n- **A:** a 3×3 stem feeds three residual GroupNorm/SiLU blocks, all at 16×16. Every pixel gets three nonlinear stages to turn (x−cx, y−cy, r, shape) into a mask. Its receptive field is about 9 pixels, which is enough to estimate brightness from the surrounding area.\n- **B:** all three nonlinear blocks run on an 8×8 map after a stride-2 downsample. The result is upsampled with nearest-neighbour and passed through `up` and then `head`, with no activation in between. The skip path is just the stem output, which is also linear in the inputs. So B's full-resolution output is a linear function of blocky 8×8 features plus linear input features. Circle and ring edges, and the ring's inner hole at 0.5·r (only a few pixels), can't be drawn cleanly at 16×16. That should cost overlap and add leakage.\n- B's extra receptive field buys little here, because the per-pixel conditioning already makes the task local.\n\n**B beats C (MLP).**\n- **C:** flattens 17×256 input channels into three dense layers of width 96, then outputs 256 pixels.\n- It has no translation equivariance. It has to learn position-dependent shapes from only 1,024 training conditions and 48k samples.\n- The input layer alone has about 418k parameters, mostly fed by condition values copied to every pixel. That redundancy slows learning.\n- The 96-wide bottleneck also limits how much of the noisy image it can pass through to the output. That hurts both detail and the variety of brightness and texture across samples.\n- So C should generalize worst to the held-out centers and radii, with blurrier, less accurate shapes.\n\n**Uncertainty:** A versus B is the closer call. The U-Net's global context could help its brightness estimates, and its skip path partly restores resolution. Still, the purely linear path from 8×8 features to full-resolution output should leave B behind on boundary accuracy. C being last is fairly confident.",
+      "model_identity_matches": true,
+      "question_sha256": "95ca88531beffc95b731deff48632763f0ef64a1aa80b85b1369b0aa4c46cb64",
+      "prompt_sha256": "3f1dd67d403fb239c0659d381637d4eddfed80d7a956f749b34bee060d60e742"
+    },
+    {
+      "model": "claude-opus-5-5",
+      "question_id": "q_147d608aaef7b8eb685635812d3d6f5c",
+      "family": "conditional_image_generation",
+      "task": "ranking3",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_b5c9bdb581e1017e89dcb6f5f5fe1b33"
+      },
+      "template_id": "operator_native_matched",
+      "instance_id": "operator_native_matched_s852001",
+      "status": "complete",
+      "gold_order": [
+        "B",
+        "C",
+        "A"
+      ],
+      "predicted_order": [
+        "B",
+        "C",
+        "A"
+      ],
+      "exact_order_correct": true,
+      "public_content": "<explanation>\n**Main factor: pixel-precise geometry from the condition.** The energy score weights foreground pixels 4×. So the decisive skill is drawing the correct circle, square or ring silhouette at the right position and radius, with sharp edges. The latent brightness and stripes matter less. Every model gets absolute coordinate channels plus the condition broadcast as constant channels. A model therefore does well if it can compute a nonlinear per-pixel function of (coordinates, condition) at full 16×16 resolution, plus enough context to keep the texture coherent.\n\n**B (conv) is predicted best.**\n- It has a 3×3 stem and three residual GroupNorm/SiLU 3×3 blocks, all at full resolution.\n- Each pixel gets several nonlinear layers acting on its own coordinates and the condition. That is effectively a per-pixel MLP, which suits signed-distance and mask computation.\n- The receptive field is about 9×9, which is enough to coordinate the stripe phase and brightness from the noisy input across most of the shape.\n\n**C (UNet) is predicted second.**\n- All three nonlinear blocks run at 8×8, after a stride-2 conv, and are then nearest-upsampled.\n- The full-resolution path is stem → concat → up-conv → 1×1 head. None of these steps has a nonlinearity between them.\n- So sub-2×2 detail at the full-resolution edges can only come from a linear mix of blocky upsampled features and linear skip features. That should give slightly coarser or blockier silhouettes and more edge error on weighted foreground pixels.\n- Its larger receptive field helps global texture coherence, but that is a second-order term. I expect C slightly worse than B, though the gap may be small.\n\n**A (MLP) is predicted worst.**\n- It flattens 14×256 inputs into three 96-unit layers, then projects linearly to 256 pixels.\n- It has no translation equivariance, so it must learn to render shapes at arbitrary continuous positions and radii from only 1024 training images in 3000 steps.\n- The 96-unit bottleneck and the huge, mostly redundant first layer (the constant condition channels are repeated 256 times) point to blurry, misplaced shapes and background leakage. That means a worse cross-term, and probably low diversity as well.\n\n**Uncertainty:** The B vs C ordering is the least certain. The UNet's global context and the extra skip information could offset its loss of resolution. A being last is fairly confident.\n</explanation>\n\n<answer>{\"best_to_worst\": [\"B\", \"C\", \"A\"]}</answer>",
+      "public_explanation": "**Main factor: pixel-precise geometry from the condition.** The energy score weights foreground pixels 4×. So the decisive skill is drawing the correct circle, square or ring silhouette at the right position and radius, with sharp edges. The latent brightness and stripes matter less. Every model gets absolute coordinate channels plus the condition broadcast as constant channels. A model therefore does well if it can compute a nonlinear per-pixel function of (coordinates, condition) at full 16×16 resolution, plus enough context to keep the texture coherent.\n\n**B (conv) is predicted best.**\n- It has a 3×3 stem and three residual GroupNorm/SiLU 3×3 blocks, all at full resolution.\n- Each pixel gets several nonlinear layers acting on its own coordinates and the condition. That is effectively a per-pixel MLP, which suits signed-distance and mask computation.\n- The receptive field is about 9×9, which is enough to coordinate the stripe phase and brightness from the noisy input across most of the shape.\n\n**C (UNet) is predicted second.**\n- All three nonlinear blocks run at 8×8, after a stride-2 conv, and are then nearest-upsampled.\n- The full-resolution path is stem → concat → up-conv → 1×1 head. None of these steps has a nonlinearity between them.\n- So sub-2×2 detail at the full-resolution edges can only come from a linear mix of blocky upsampled features and linear skip features. That should give slightly coarser or blockier silhouettes and more edge error on weighted foreground pixels.\n- Its larger receptive field helps global texture coherence, but that is a second-order term. I expect C slightly worse than B, though the gap may be small.\n\n**A (MLP) is predicted worst.**\n- It flattens 14×256 inputs into three 96-unit layers, then projects linearly to 256 pixels.\n- It has no translation equivariance, so it must learn to render shapes at arbitrary continuous positions and radii from only 1024 training images in 3000 steps.\n- The 96-unit bottleneck and the huge, mostly redundant first layer (the constant condition channels are repeated 256 times) point to blurry, misplaced shapes and background leakage. That means a worse cross-term, and probably low diversity as well.\n\n**Uncertainty:** The B vs C ordering is the least certain. The UNet's global context and the extra skip information could offset its loss of resolution. A being last is fairly confident.",
+      "model_identity_matches": true,
+      "question_sha256": "6e3533a540a676373867a8f7f0662e7d40b1f1c29cf002c5698d16401443fe27",
+      "prompt_sha256": "fd757f18535e88311039360927dbb04f40b180dcf6764b55d32f51e8f182b287"
+    },
+    {
+      "model": "claude-opus-5-5",
+      "question_id": "q_0b54c62a60d8a3d0c78866c2372316c7",
+      "family": "conditional_image_generation",
+      "task": "ranking3",
+      "probe": null,
+      "template_id": "operator_native_matched",
+      "instance_id": "operator_native_matched_s852002",
+      "status": "complete",
+      "gold_order": [
+        "B",
+        "A",
+        "C"
+      ],
+      "predicted_order": [
+        "B",
+        "A",
+        "C"
+      ],
+      "exact_order_correct": true,
+      "public_content": "Predicted order, best to worst: B (conv), then A (UNet), then C (MLP). This rests on architecture reasoning only, and the B vs A margin is the least certain call.\n\n<explanation>\n**Main factor.** Given the condition, the target silhouette is a per-pixel function of the absolute pixel coordinates and the condition (center, radius, shape one-hot). All three models get absolute coordinates and the condition as concatenated constant channels. So the deciding questions are:\n- Can the network compute a sharp per-pixel geometric test at full 16×16 resolution?\n- Can it generalize that test to new centers and radii from 1024 training conditions?\n- Can it infer the global brightness and local stripe latents from the noisy image?\n\n**B (conv) best.** The stem and three residual GroupNorm/SiLU blocks all run at full 16×16 resolution. In effect this is a small pointwise network with 3×3 context, applied with shared weights at every pixel. It can learn \"distance from center compared with radius\" once and reuse it everywhere, so it generalizes well to held-out conditions. Its receptive field is about 9×9, which covers most of a shape (the largest diameter is about 7 px). That is enough to infer brightness and stripe phase at low noise, so it should give sharp, correctly placed edges and appropriate diversity.\n\n**A (UNet) second.** All of its nonlinear processing happens at 8×8 after a stride-2 downsample. Those features are upsampled by nearest neighbor and merged with a skip that has only passed through the linear stem. The final 3×3 up-conv and the 1×1 head are both linear. So boundary detail within each 2×2 block comes only from linear mixing. With arbitrary continuous centers and radii, that should blur or misplace antialiased edges. The weighted energy distance emphasizes foreground pixels, which makes edge errors matter. Its larger receptive field helps it infer the global brightness, but probably not enough to offset the coarse output. Weight sharing still lets it generalize, so it should beat the MLP.\n\n**C (MLP) worst.** It flattens a 4352-dimensional input through three 96-unit layers into a 256-pixel linear readout. It has no translation weight-sharing, so it must learn every center position separately from 1024 conditions. It also has to denoise 256 noisy pixels through a 96-dimensional bottleneck. Expect blurry, misplaced, or averaged shapes with more background leakage. Both the cross-distance and the diversity terms of the score would suffer.\n\n**Uncertainty.** B vs A is the closest call. The UNet's wider context for the brightness latent and its 3×3 up-conv mixing might partly close the resolution gap. The MLP being last is fairly confident.\n</explanation>\n\n<answer>{\"best_to_worst\": [\"B\", \"A\", \"C\"]}</answer>",
+      "public_explanation": "**Main factor.** Given the condition, the target silhouette is a per-pixel function of the absolute pixel coordinates and the condition (center, radius, shape one-hot). All three models get absolute coordinates and the condition as concatenated constant channels. So the deciding questions are:\n- Can the network compute a sharp per-pixel geometric test at full 16×16 resolution?\n- Can it generalize that test to new centers and radii from 1024 training conditions?\n- Can it infer the global brightness and local stripe latents from the noisy image?\n\n**B (conv) best.** The stem and three residual GroupNorm/SiLU blocks all run at full 16×16 resolution. In effect this is a small pointwise network with 3×3 context, applied with shared weights at every pixel. It can learn \"distance from center compared with radius\" once and reuse it everywhere, so it generalizes well to held-out conditions. Its receptive field is about 9×9, which covers most of a shape (the largest diameter is about 7 px). That is enough to infer brightness and stripe phase at low noise, so it should give sharp, correctly placed edges and appropriate diversity.\n\n**A (UNet) second.** All of its nonlinear processing happens at 8×8 after a stride-2 downsample. Those features are upsampled by nearest neighbor and merged with a skip that has only passed through the linear stem. The final 3×3 up-conv and the 1×1 head are both linear. So boundary detail within each 2×2 block comes only from linear mixing. With arbitrary continuous centers and radii, that should blur or misplace antialiased edges. The weighted energy distance emphasizes foreground pixels, which makes edge errors matter. Its larger receptive field helps it infer the global brightness, but probably not enough to offset the coarse output. Weight sharing still lets it generalize, so it should beat the MLP.\n\n**C (MLP) worst.** It flattens a 4352-dimensional input through three 96-unit layers into a 256-pixel linear readout. It has no translation weight-sharing, so it must learn every center position separately from 1024 conditions. It also has to denoise 256 noisy pixels through a 96-dimensional bottleneck. Expect blurry, misplaced, or averaged shapes with more background leakage. Both the cross-distance and the diversity terms of the score would suffer.\n\n**Uncertainty.** B vs A is the closest call. The UNet's wider context for the brightness latent and its 3×3 up-conv mixing might partly close the resolution gap. The MLP being last is fairly confident.",
+      "model_identity_matches": true,
+      "question_sha256": "1f3cd7acc96133e3490e865bad97883eb72d5033cbb74b0141f6777908461291",
+      "prompt_sha256": "db8d505d7905ef8b5e8b58b1d45c1cb9f4d8b94bf7ae223e85ee9517ef691134"
+    },
+    {
+      "model": "claude-opus-5-5",
+      "question_id": "q_498d07904332da032172c8d506f40470",
+      "family": "conditional_image_generation",
+      "task": "ranking3",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_0b54c62a60d8a3d0c78866c2372316c7"
+      },
+      "template_id": "operator_native_matched",
+      "instance_id": "operator_native_matched_s852002",
+      "status": "complete",
+      "gold_order": [
+        "C",
+        "B",
+        "A"
+      ],
+      "predicted_order": [
+        "C",
+        "B",
+        "A"
+      ],
+      "exact_order_correct": true,
+      "public_content": "<explanation>\n**Main factors.** The dataset is built so that the target image is mostly a pointwise function. The shape mask at each pixel is determined by the absolute coordinates plus the six broadcast condition values. Brightness and stripe texture are low-dimensional latent factors that the diffusion noise has to encode. All three candidates receive the same inputs: noisy pixel, coordinates, condition and time, all concatenated per pixel. What differs is where and at what resolution the nonlinear computation happens. Sharp silhouettes matter a lot here, because the energy distance weights foreground pixels 4×.\n\n**C (conv) vs B (unet).**\n- The plain conv net keeps everything at 16×16. It has a 3×3 stem, three residual GroupNorm/SiLU 3×3 blocks and a 1×1 head, giving roughly a 9×9 receptive field.\n- That is ample here, because the per-pixel inside/outside decision needs essentially no spatial context, only the coordinate and condition channels. The conv net therefore gets all three nonlinear blocks at full resolution to carve out precise edges.\n- The UNet sends its residual blocks through a stride-2 downsample to 8×8, then a nearest-neighbour upsample.\n- Full-resolution detail has to be recovered by a single 3×3 conv over the concatenation of the upsampled features and a shallow stem skip.\n- This should give slightly blockier boundaries and ring holes, which shows up as higher weighted distance.\n- With only 16 pixels per side, the UNet's larger receptive field buys little.\n- I therefore expect C ≤ B, though the gap is modest and seed variance could narrow it.\n\n**B (unet) vs A (mlp).**\n- The MLP flattens 14×256 = 3584 input values into a 96-wide bottleneck (three hidden layers), then decodes 256 pixels.\n- It has no translation equivariance and no locality, so it has to learn a separate mapping from continuous centre/radius values to every pixel's mask.\n- It gets only 1024 training conditions and 3000 steps to do this, so held-out conditions will produce blurry, misplaced or leaky shapes.\n- The noisy-image path also passes through the narrow bottleneck, so the denoiser cannot cleanly propagate per-pixel noise into sample diversity.\n- Both convolutional models share weights across pixels and generalise geometry far better, so A should be clearly worst.\n\n**Uncertainty.** The C vs B ordering is the main risk. The UNet's skip connection plus up conv may be enough to recover edges, and its 8×8 path could aid the global brightness/texture consistency that drives the diversity term. The MLP being last is high-confidence.\n</explanation>\n\n<answer>{\"best_to_worst\": [\"C\", \"B\", \"A\"]}</answer>",
+      "public_explanation": "**Main factors.** The dataset is built so that the target image is mostly a pointwise function. The shape mask at each pixel is determined by the absolute coordinates plus the six broadcast condition values. Brightness and stripe texture are low-dimensional latent factors that the diffusion noise has to encode. All three candidates receive the same inputs: noisy pixel, coordinates, condition and time, all concatenated per pixel. What differs is where and at what resolution the nonlinear computation happens. Sharp silhouettes matter a lot here, because the energy distance weights foreground pixels 4×.\n\n**C (conv) vs B (unet).**\n- The plain conv net keeps everything at 16×16. It has a 3×3 stem, three residual GroupNorm/SiLU 3×3 blocks and a 1×1 head, giving roughly a 9×9 receptive field.\n- That is ample here, because the per-pixel inside/outside decision needs essentially no spatial context, only the coordinate and condition channels. The conv net therefore gets all three nonlinear blocks at full resolution to carve out precise edges.\n- The UNet sends its residual blocks through a stride-2 downsample to 8×8, then a nearest-neighbour upsample.\n- Full-resolution detail has to be recovered by a single 3×3 conv over the concatenation of the upsampled features and a shallow stem skip.\n- This should give slightly blockier boundaries and ring holes, which shows up as higher weighted distance.\n- With only 16 pixels per side, the UNet's larger receptive field buys little.\n- I therefore expect C ≤ B, though the gap is modest and seed variance could narrow it.\n\n**B (unet) vs A (mlp).**\n- The MLP flattens 14×256 = 3584 input values into a 96-wide bottleneck (three hidden layers), then decodes 256 pixels.\n- It has no translation equivariance and no locality, so it has to learn a separate mapping from continuous centre/radius values to every pixel's mask.\n- It gets only 1024 training conditions and 3000 steps to do this, so held-out conditions will produce blurry, misplaced or leaky shapes.\n- The noisy-image path also passes through the narrow bottleneck, so the denoiser cannot cleanly propagate per-pixel noise into sample diversity.\n- Both convolutional models share weights across pixels and generalise geometry far better, so A should be clearly worst.\n\n**Uncertainty.** The C vs B ordering is the main risk. The UNet's skip connection plus up conv may be enough to recover edges, and its 8×8 path could aid the global brightness/texture consistency that drives the diversity term. The MLP being last is high-confidence.",
+      "model_identity_matches": true,
+      "question_sha256": "155c5a7b53b0fef3cc05b284d2551a055672a4cb2144f7d54a57de0e3a89e83c",
+      "prompt_sha256": "75b8e72bbd73380fbd93e832510c890196f48a55f9e6be69a9f4b16a3e841449"
+    },
+    {
+      "model": "claude-opus-5-5",
+      "question_id": "q_0a9477d1f63da091c35005890dc32118",
+      "family": "conditional_image_generation",
+      "task": "ranking3",
+      "probe": null,
+      "template_id": "operator_native_matched",
+      "instance_id": "operator_native_matched_s852003",
+      "status": "complete",
+      "gold_order": [
+        "A",
+        "C",
+        "B"
+      ],
+      "predicted_order": [
+        "A",
+        "C",
+        "B"
+      ],
+      "exact_order_correct": true,
+      "public_content": "<explanation>\n**Main factors.** The geometry is a deterministic per-pixel function of (pixel coordinate, condition). Brightness and stripe phase are global latents. Sampling is deterministic DDIM (eta=0, 16 steps) with x0 prediction. Sample diversity therefore comes only from the initial noise, and sharp, correct silhouettes dominate the mask-weighted energy distance.\n\n**A (conv) is best.** Every pixel receives the absolute coordinates and the broadcast condition. A full-resolution stack (stem plus 3 residual GroupNorm/SiLU blocks) can apply nonlinear processing to the inside/outside test at every pixel. It also has local residual pathways for the noisy input. The 9×9 receptive field covers the largest shape (diameter about 6–7 px), so the model can also pool noise locally to commit to a brightness. This is the strongest inductive bias for the task.\n\n**A over C (UNet).** All of C's nonlinear blocks run at 8×8 and are nearest-upsampled. The full-resolution path (stem → concat skip → up conv → 1×1 head) is purely linear, with no activation after the skip concatenation. Fine boundary decisions at 16×16 must therefore come from 2×2-blocky features plus a linear function of the coordinates. That should misplace edge pixels, which are heavily weighted (1+3·mask) in the score. The larger receptive field helps global brightness consistency, but that matters less than edge accuracy.\n\n**C over B (MLP).** The MLP flattens 11×16×16 inputs into 96-unit hidden layers and must learn to render circles, squares and rings at arbitrary positions without any spatial weight sharing. It sees only 1024 conditions and 48k samples. It will likely produce blurry or averaged silhouettes and background leakage, and its outputs may also depend weakly on noise, reducing diversity. Both convolutional models share structure across pixels and should beat it clearly.\n\n**Uncertainty.** I am fairly confident B is last. The order of A and C is less certain: the UNet's global context could improve brightness coherence enough to offset its blockier edges.\n</explanation>\n\n<answer>{\"best_to_worst\": [\"A\", \"C\", \"B\"]}</answer>",
+      "public_explanation": "**Main factors.** The geometry is a deterministic per-pixel function of (pixel coordinate, condition). Brightness and stripe phase are global latents. Sampling is deterministic DDIM (eta=0, 16 steps) with x0 prediction. Sample diversity therefore comes only from the initial noise, and sharp, correct silhouettes dominate the mask-weighted energy distance.\n\n**A (conv) is best.** Every pixel receives the absolute coordinates and the broadcast condition. A full-resolution stack (stem plus 3 residual GroupNorm/SiLU blocks) can apply nonlinear processing to the inside/outside test at every pixel. It also has local residual pathways for the noisy input. The 9×9 receptive field covers the largest shape (diameter about 6–7 px), so the model can also pool noise locally to commit to a brightness. This is the strongest inductive bias for the task.\n\n**A over C (UNet).** All of C's nonlinear blocks run at 8×8 and are nearest-upsampled. The full-resolution path (stem → concat skip → up conv → 1×1 head) is purely linear, with no activation after the skip concatenation. Fine boundary decisions at 16×16 must therefore come from 2×2-blocky features plus a linear function of the coordinates. That should misplace edge pixels, which are heavily weighted (1+3·mask) in the score. The larger receptive field helps global brightness consistency, but that matters less than edge accuracy.\n\n**C over B (MLP).** The MLP flattens 11×16×16 inputs into 96-unit hidden layers and must learn to render circles, squares and rings at arbitrary positions without any spatial weight sharing. It sees only 1024 conditions and 48k samples. It will likely produce blurry or averaged silhouettes and background leakage, and its outputs may also depend weakly on noise, reducing diversity. Both convolutional models share structure across pixels and should beat it clearly.\n\n**Uncertainty.** I am fairly confident B is last. The order of A and C is less certain: the UNet's global context could improve brightness coherence enough to offset its blockier edges.",
+      "model_identity_matches": true,
+      "question_sha256": "26a5fff18b162f10d641cc9e3f11610d840ca1785c0857c7fa6b76ed9f9c3af1",
+      "prompt_sha256": "178c5b8917170bf16fb583e891b654ffc721fee2b4957ccb9b47810043150b32"
+    },
+    {
+      "model": "claude-opus-5-5",
+      "question_id": "q_d631a9200d5d69a058d326cadefb6e51",
+      "family": "conditional_image_generation",
+      "task": "ranking3",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_0a9477d1f63da091c35005890dc32118"
+      },
+      "template_id": "operator_native_matched",
+      "instance_id": "operator_native_matched_s852003",
+      "status": "complete",
+      "gold_order": [
+        "B",
+        "A",
+        "C"
+      ],
+      "predicted_order": [
+        "B",
+        "A",
+        "C"
+      ],
+      "exact_order_correct": true,
+      "public_content": "<explanation>\n**Main factors**\n\n1. **Where the shape is computed.** Every choice gets absolute coordinates and the six-value condition as constant input channels. So the silhouette (circle, square or ring at a given center and radius) is a nonlinear function computed pixel by pixel from coordinates and condition. The energy weights foreground pixels four times, so sharp, correctly placed foreground matters most.\n2. **Cross-pixel aggregation.** The model also needs to pool information across pixels to infer shared appearance (brightness, stripe phase and orientation) from the noisy image.\n3. **Generalization from 1024 conditions** in 3000 steps.\n\n**Choice B (conv) is best.** The stem and three residual GroupNorm/SiLU 3×3 blocks all run at full 16×16 resolution. Each pixel can compute its own mask nonlinearly. The receptive field is about 9×9, which covers most of a shape (radius 0.25–0.42, so roughly 4–7 pixels in diameter on each side of the center). That is enough to share brightness and texture information. Weight sharing across positions generalizes well to unseen centers.\n\n**Choice A (UNet) is second, behind B.** Its only nonlinear processing happens after the stride-2 downsample, at 8×8. The result is nearest-upsampled, then combined with the skip by `up` and `head`, which are both linear convs with no activation. The skip comes from the stem, which is also linear. So full-resolution detail is only a linear function of the inputs, and the silhouette's nonlinear boundary is effectively decided on a 2-pixel grid. That gives blockier edges and some foreground/background leakage, which the weighted distance penalizes. The larger receptive field helps a little with global appearance but should not offset the edge degradation.\n\n**Choice C (MLP) is worst, behind A.** It flattens 14×256 inputs, almost all of them redundant constant channels, into a 96-wide, three-layer MLP. It has no translation equivariance, so it must learn the mapping from continuous center and radius to pixel masks separately for each position, from only 1024 conditions. Expect blurry, misplaced shapes and weaker generalization to held-out geometry.\n\n**Uncertainty.** The B vs A gap is moderate. If the 8×8 nonlinear features plus linear skip-coordinate terms reconstruct edges well enough, A could tie with B or even edge it out through better global coherence. C being last is fairly confident.\n</explanation>\n\n<answer>{\"best_to_worst\": [\"B\", \"A\", \"C\"]}</answer>",
+      "public_explanation": "**Main factors**\n\n1. **Where the shape is computed.** Every choice gets absolute coordinates and the six-value condition as constant input channels. So the silhouette (circle, square or ring at a given center and radius) is a nonlinear function computed pixel by pixel from coordinates and condition. The energy weights foreground pixels four times, so sharp, correctly placed foreground matters most.\n2. **Cross-pixel aggregation.** The model also needs to pool information across pixels to infer shared appearance (brightness, stripe phase and orientation) from the noisy image.\n3. **Generalization from 1024 conditions** in 3000 steps.\n\n**Choice B (conv) is best.** The stem and three residual GroupNorm/SiLU 3×3 blocks all run at full 16×16 resolution. Each pixel can compute its own mask nonlinearly. The receptive field is about 9×9, which covers most of a shape (radius 0.25–0.42, so roughly 4–7 pixels in diameter on each side of the center). That is enough to share brightness and texture information. Weight sharing across positions generalizes well to unseen centers.\n\n**Choice A (UNet) is second, behind B.** Its only nonlinear processing happens after the stride-2 downsample, at 8×8. The result is nearest-upsampled, then combined with the skip by `up` and `head`, which are both linear convs with no activation. The skip comes from the stem, which is also linear. So full-resolution detail is only a linear function of the inputs, and the silhouette's nonlinear boundary is effectively decided on a 2-pixel grid. That gives blockier edges and some foreground/background leakage, which the weighted distance penalizes. The larger receptive field helps a little with global appearance but should not offset the edge degradation.\n\n**Choice C (MLP) is worst, behind A.** It flattens 14×256 inputs, almost all of them redundant constant channels, into a 96-wide, three-layer MLP. It has no translation equivariance, so it must learn the mapping from continuous center and radius to pixel masks separately for each position, from only 1024 conditions. Expect blurry, misplaced shapes and weaker generalization to held-out geometry.\n\n**Uncertainty.** The B vs A gap is moderate. If the 8×8 nonlinear features plus linear skip-coordinate terms reconstruct edges well enough, A could tie with B or even edge it out through better global coherence. C being last is fairly confident.",
+      "model_identity_matches": true,
+      "question_sha256": "b982fd3699f08610e6abbd4664162482c1db2051de5a8a74afa5680be0cabba3",
+      "prompt_sha256": "c94c0000ed151d733b617ece1893b5eb0dbfc2f19939ee5c46226a02fa9d091e"
+    },
+    {
+      "model": "claude-haiku-5-5",
+      "question_id": "q_b5c9bdb581e1017e89dcb6f5f5fe1b33",
+      "family": "conditional_image_generation",
+      "task": "ranking3",
+      "probe": null,
+      "template_id": "operator_native_matched",
+      "instance_id": "operator_native_matched_s852001",
+      "status": "complete",
+      "gold_order": [
+        "A",
+        "B",
+        "C"
+      ],
+      "predicted_order": [
+        "B",
+        "A",
+        "C"
+      ],
+      "exact_order_correct": false,
+      "public_content": "<explanation>\n**Main factors.** All three choices share the same data, budget (3000 steps, batch 16), AdamW at lr 1e-3, uniform MSE loss on x0 predictions, and the same 16-step deterministic sampler. The only difference is the network body, so the ranking depends on how each body handles the spatial structure of the target: a filled disk, square, or ring whose edges must be placed precisely relative to a condition-specified center and radius.\n\n**Choice B (UNet with skip).** Its stride-2 down path gives an 8×8 bottleneck with a larger effective receptive field, so it can reason about global shape placement. The skip connection carries full-resolution stem features back to the 16×16 output, which helps keep mask edges sharp. The code path is valid: the up conv takes `width*2` channels, and the concatenated skip matches that. I expect it to have the lowest test energy.\n\n**Choice A (base conv).** It is fully convolutional with absolute coordinates and concatenated condition channels, so it can localize the shape. Its receptive field is small: a 3×3 stem plus three 3×3 residual blocks covers about 9×9 pixels. It must rely on coordinate channels and pointwise nonlinearities to encode the global geometry. I expect it to fall between B and C.\n\n**Choice C (flat MLP).** It flattens the 17-channel input (256 × 17 = 4352 values) and passes it through three width-96 layers. It has no normalization or residual path, and it discards translation structure. The condition is replicated across all 256 pixels, which wastes input dimensions. The first layer has about 418k parameters, so capacity is not the problem. The problem is that a dense network has to learn per-pixel mask edges from 3000 steps of data without any spatial inductive bias. I expect it to be the worst, most likely producing blurrier or less shape-faithful samples.\n\n**Adjacent pairs.**\n- B < A: the UNet's global context and skip path should give better shape fidelity than a small-receptive-field conv stack.\n- A < C: the conv's locality and weight sharing should learn the mask geometry more efficiently than a dense layer on flattened, redundant input.\n\n**Uncertainty.** The MLP's larger parameter count and full-image receptive field could make it competitive, and the energy score trades sample sharpness against diversity, so a blurrier model is not automatically worse. Undertraining at 3000 steps also limits how much the architectural differences show. I rate the B-first ordering as moderately confident, and the A-versus-C ordering as the least certain.\n</explanation>\n\n<answer>{\"best_to_worst\": [\"B\", \"A\", \"C\"]}</answer>",
+      "public_explanation": "**Main factors.** All three choices share the same data, budget (3000 steps, batch 16), AdamW at lr 1e-3, uniform MSE loss on x0 predictions, and the same 16-step deterministic sampler. The only difference is the network body, so the ranking depends on how each body handles the spatial structure of the target: a filled disk, square, or ring whose edges must be placed precisely relative to a condition-specified center and radius.\n\n**Choice B (UNet with skip).** Its stride-2 down path gives an 8×8 bottleneck with a larger effective receptive field, so it can reason about global shape placement. The skip connection carries full-resolution stem features back to the 16×16 output, which helps keep mask edges sharp. The code path is valid: the up conv takes `width*2` channels, and the concatenated skip matches that. I expect it to have the lowest test energy.\n\n**Choice A (base conv).** It is fully convolutional with absolute coordinates and concatenated condition channels, so it can localize the shape. Its receptive field is small: a 3×3 stem plus three 3×3 residual blocks covers about 9×9 pixels. It must rely on coordinate channels and pointwise nonlinearities to encode the global geometry. I expect it to fall between B and C.\n\n**Choice C (flat MLP).** It flattens the 17-channel input (256 × 17 = 4352 values) and passes it through three width-96 layers. It has no normalization or residual path, and it discards translation structure. The condition is replicated across all 256 pixels, which wastes input dimensions. The first layer has about 418k parameters, so capacity is not the problem. The problem is that a dense network has to learn per-pixel mask edges from 3000 steps of data without any spatial inductive bias. I expect it to be the worst, most likely producing blurrier or less shape-faithful samples.\n\n**Adjacent pairs.**\n- B < A: the UNet's global context and skip path should give better shape fidelity than a small-receptive-field conv stack.\n- A < C: the conv's locality and weight sharing should learn the mask geometry more efficiently than a dense layer on flattened, redundant input.\n\n**Uncertainty.** The MLP's larger parameter count and full-image receptive field could make it competitive, and the energy score trades sample sharpness against diversity, so a blurrier model is not automatically worse. Undertraining at 3000 steps also limits how much the architectural differences show. I rate the B-first ordering as moderately confident, and the A-versus-C ordering as the least certain.",
+      "model_identity_matches": true,
+      "question_sha256": "95ca88531beffc95b731deff48632763f0ef64a1aa80b85b1369b0aa4c46cb64",
+      "prompt_sha256": "3f1dd67d403fb239c0659d381637d4eddfed80d7a956f749b34bee060d60e742"
+    },
+    {
+      "model": "claude-haiku-5-5",
+      "question_id": "q_147d608aaef7b8eb685635812d3d6f5c",
+      "family": "conditional_image_generation",
+      "task": "ranking3",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_b5c9bdb581e1017e89dcb6f5f5fe1b33"
+      },
+      "template_id": "operator_native_matched",
+      "instance_id": "operator_native_matched_s852001",
+      "status": "complete",
+      "gold_order": [
+        "B",
+        "C",
+        "A"
+      ],
+      "predicted_order": [
+        "C",
+        "B",
+        "A"
+      ],
+      "exact_order_correct": false,
+      "public_content": "<explanation>\nAll three choices share the same data, x0 prediction, cosine schedule, uniform loss, AdamW settings, 3000 steps, and 16-step deterministic DDIM sampling. Only the denoiser architecture differs, so the ranking depends on how well each architecture represents the conditional geometry and its sharp boundaries under a fixed budget of about 47 epochs over 1024 examples.\n\n- **Choice C (U-Net with skip) ranks first.** It keeps a full-resolution stem and output path, with a skip connection carrying fine detail. Its 8×8 bottleneck gives the blocks a receptive field that spans the whole 16×16 image, which helps place the center and set the radius. The absolute coordinate channels and concatenated condition are already present. The added capacity and global context should lower the energy score, though the nearest-neighbour upsampling could blur edges slightly.\n- **Choice B (base conv) ranks second.** It is the baseline: three residual dense 3×3 blocks at full resolution with GroupNorm and coordinate channels. Its receptive field is small (about 9 pixels), so global shape consistency relies on the coordinate and condition channels rather than spatial context. That is adequate for these simple shapes but should be somewhat worse than C.\n- **Choice A (flat MLP) ranks last.** It flattens 17 input channels × 256 pixels into a 4352-dimensional vector, then uses hidden widths of 96 and a 256-way output. It has no convolutional translation prior, so it must learn the spatial layout of circles, squares, and rings separately at each position from roughly 1000 examples. The 96-unit bottleneck and the lack of local structure should give weaker boundaries and more background leakage.\n\nMaterial uncertainty: the gap between B and C could be small or reversed, since the U-Net's coarse-resolution path may hurt boundary sharpness and the base conv may already capture this simple geometry well. The ordering of A as worst is the most confident part of the ranking. Seed variance over 16 runs could also reshuffle close pairs.\n</explanation>\n\n<answer>{\"best_to_worst\": [\"C\", \"B\", \"A\"]}</answer>",
+      "public_explanation": "All three choices share the same data, x0 prediction, cosine schedule, uniform loss, AdamW settings, 3000 steps, and 16-step deterministic DDIM sampling. Only the denoiser architecture differs, so the ranking depends on how well each architecture represents the conditional geometry and its sharp boundaries under a fixed budget of about 47 epochs over 1024 examples.\n\n- **Choice C (U-Net with skip) ranks first.** It keeps a full-resolution stem and output path, with a skip connection carrying fine detail. Its 8×8 bottleneck gives the blocks a receptive field that spans the whole 16×16 image, which helps place the center and set the radius. The absolute coordinate channels and concatenated condition are already present. The added capacity and global context should lower the energy score, though the nearest-neighbour upsampling could blur edges slightly.\n- **Choice B (base conv) ranks second.** It is the baseline: three residual dense 3×3 blocks at full resolution with GroupNorm and coordinate channels. Its receptive field is small (about 9 pixels), so global shape consistency relies on the coordinate and condition channels rather than spatial context. That is adequate for these simple shapes but should be somewhat worse than C.\n- **Choice A (flat MLP) ranks last.** It flattens 17 input channels × 256 pixels into a 4352-dimensional vector, then uses hidden widths of 96 and a 256-way output. It has no convolutional translation prior, so it must learn the spatial layout of circles, squares, and rings separately at each position from roughly 1000 examples. The 96-unit bottleneck and the lack of local structure should give weaker boundaries and more background leakage.\n\nMaterial uncertainty: the gap between B and C could be small or reversed, since the U-Net's coarse-resolution path may hurt boundary sharpness and the base conv may already capture this simple geometry well. The ordering of A as worst is the most confident part of the ranking. Seed variance over 16 runs could also reshuffle close pairs.",
+      "model_identity_matches": true,
+      "question_sha256": "6e3533a540a676373867a8f7f0662e7d40b1f1c29cf002c5698d16401443fe27",
+      "prompt_sha256": "fd757f18535e88311039360927dbb04f40b180dcf6764b55d32f51e8f182b287"
+    },
+    {
+      "model": "claude-haiku-5-5",
+      "question_id": "q_0b54c62a60d8a3d0c78866c2372316c7",
+      "family": "conditional_image_generation",
+      "task": "ranking3",
+      "probe": null,
+      "template_id": "operator_native_matched",
+      "instance_id": "operator_native_matched_s852002",
+      "status": "complete",
+      "gold_order": [
+        "B",
+        "A",
+        "C"
+      ],
+      "predicted_order": [
+        "A",
+        "B",
+        "C"
+      ],
+      "exact_order_correct": false,
+      "public_content": "<explanation>\nAll three choices share the same data, optimizer, loss, budget, and diffusion protocol. They differ only in the denoiser architecture, so the ranking depends on how well each architecture can learn the conditional image law from 1024 training examples in 3000 steps.\n\n- **Choice A (UNet with skip):** It has the same dense conv blocks, a stride-2 downsampling step, nearest upsampling, and a skip connection. The downsampling gives a larger receptive field, so each pixel can use global context about the shape's centre and radius. The skip path preserves fine edge detail, which matters for the hard silhouette boundary. This is the strongest inductive bias for a 16×16 spatial problem.\n\n- **Choice B (conv, no downsampling, no skip):** It keeps the same residual conv blocks but removes the UNet's downsampling and skip path. Each pixel's receptive field stays small (a few 3×3 layers), so the model relies on the concatenated condition channels and absolute coordinates to localise the shape. That is workable, but it should be less accurate and less globally coherent than A.\n\n- **Choice C (flat MLP):** It flattens the 8×16×16 input into a 2048-dimensional vector and passes it through narrow 96-unit layers to 256 outputs. This ignores spatial structure and translation equivariance. With only about 1k training conditions and a small hidden width, it should produce blurrier or less well-localised samples, which raises the energy score. Its advantage is that it has no spatial-locality bias to fight, but for this geometry-dominated task that is unlikely to compensate.\n\nRanking: A (best), then B, then C. The main uncertainty is between B and C: the conv model is capacity-limited by its small receptive field, and the MLP may learn the simple circle, square and ring geometry fairly well. Single-seed noise at 16 seeds could also reorder close pairs. I am more confident that A is best than about the order of B and C.\n</explanation>\n\n<answer>{\"best_to_worst\": [\"A\", \"B\", \"C\"]}</answer>",
+      "public_explanation": "All three choices share the same data, optimizer, loss, budget, and diffusion protocol. They differ only in the denoiser architecture, so the ranking depends on how well each architecture can learn the conditional image law from 1024 training examples in 3000 steps.\n\n- **Choice A (UNet with skip):** It has the same dense conv blocks, a stride-2 downsampling step, nearest upsampling, and a skip connection. The downsampling gives a larger receptive field, so each pixel can use global context about the shape's centre and radius. The skip path preserves fine edge detail, which matters for the hard silhouette boundary. This is the strongest inductive bias for a 16×16 spatial problem.\n\n- **Choice B (conv, no downsampling, no skip):** It keeps the same residual conv blocks but removes the UNet's downsampling and skip path. Each pixel's receptive field stays small (a few 3×3 layers), so the model relies on the concatenated condition channels and absolute coordinates to localise the shape. That is workable, but it should be less accurate and less globally coherent than A.\n\n- **Choice C (flat MLP):** It flattens the 8×16×16 input into a 2048-dimensional vector and passes it through narrow 96-unit layers to 256 outputs. This ignores spatial structure and translation equivariance. With only about 1k training conditions and a small hidden width, it should produce blurrier or less well-localised samples, which raises the energy score. Its advantage is that it has no spatial-locality bias to fight, but for this geometry-dominated task that is unlikely to compensate.\n\nRanking: A (best), then B, then C. The main uncertainty is between B and C: the conv model is capacity-limited by its small receptive field, and the MLP may learn the simple circle, square and ring geometry fairly well. Single-seed noise at 16 seeds could also reorder close pairs. I am more confident that A is best than about the order of B and C.",
+      "model_identity_matches": true,
+      "question_sha256": "1f3cd7acc96133e3490e865bad97883eb72d5033cbb74b0141f6777908461291",
+      "prompt_sha256": "db8d505d7905ef8b5e8b58b1d45c1cb9f4d8b94bf7ae223e85ee9517ef691134"
+    },
+    {
+      "model": "claude-haiku-5-5",
+      "question_id": "q_498d07904332da032172c8d506f40470",
+      "family": "conditional_image_generation",
+      "task": "ranking3",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_0b54c62a60d8a3d0c78866c2372316c7"
+      },
+      "template_id": "operator_native_matched",
+      "instance_id": "operator_native_matched_s852002",
+      "status": "complete",
+      "gold_order": [
+        "C",
+        "B",
+        "A"
+      ],
+      "predicted_order": [
+        "B",
+        "C",
+        "A"
+      ],
+      "exact_order_correct": false,
+      "public_content": "<explanation>\n**Main factors.** All three candidates share the same data, budget (3000 steps, batch 16), AdamW at lr 1e-3, x0 prediction with uniform MSE, cosine schedule, and 16-step deterministic sampling. The only difference is the backbone, so the ranking depends on how well each architecture denoises these small 16×16 images with a 6-dimensional condition.\n\n**Base (B, UNet).** Width 24, depth 3, dense 3×3 blocks with GroupNorm and residuals, a stride-2 down path, and a skip-connected up path. The down/up structure gives a large receptive field, and the skip keeps full-resolution detail. Absolute coordinates and the broadcast condition are concatenated at the input, so the network knows the geometry at every pixel.\n\n**Choice C (conv).** Removes downsampling and the skip. Every layer runs at 16×16, with a receptive field of about 9×9 pixels. The shapes are small: radius 0.25–0.42 on a [-1,1] grid is roughly 2–3 px, so a shape spans only about 4–6 px. A 9×9 field can therefore see the whole object and estimate the global brightness locally. Because the coordinates and condition are given per pixel, C can still compute the geometry. I expect it to be close to B, with B's larger context likely giving a small edge. The sinusoidal stripe texture is also local, so it should be learnable at full resolution.\n\n**Choice A (flat MLP).** This is the clear outlier. The input is flattened to 17×16×16 = 4352 values and passed through width·4 = 96-unit hidden layers before projecting to 256 outputs. That 96-unit bottleneck must encode a full 256-pixel image, and the model has no spatial weight sharing or translation equivariation. With about 1k training images, it should generalize poorly and produce blurrier, less-shaped samples, which raises the energy score.\n\n**Ranking.** B (UNet) is best, C (conv) is a close second, and A (MLP) is worst.\n\n**Material uncertainty.** The B-versus-C gap is small, and the ordering between them could flip across seeds. The A-last placement is much more confident.\n</explanation>\n\n<answer>{\"best_to_worst\": [\"B\", \"C\", \"A\"]}</answer>",
+      "public_explanation": "**Main factors.** All three candidates share the same data, budget (3000 steps, batch 16), AdamW at lr 1e-3, x0 prediction with uniform MSE, cosine schedule, and 16-step deterministic sampling. The only difference is the backbone, so the ranking depends on how well each architecture denoises these small 16×16 images with a 6-dimensional condition.\n\n**Base (B, UNet).** Width 24, depth 3, dense 3×3 blocks with GroupNorm and residuals, a stride-2 down path, and a skip-connected up path. The down/up structure gives a large receptive field, and the skip keeps full-resolution detail. Absolute coordinates and the broadcast condition are concatenated at the input, so the network knows the geometry at every pixel.\n\n**Choice C (conv).** Removes downsampling and the skip. Every layer runs at 16×16, with a receptive field of about 9×9 pixels. The shapes are small: radius 0.25–0.42 on a [-1,1] grid is roughly 2–3 px, so a shape spans only about 4–6 px. A 9×9 field can therefore see the whole object and estimate the global brightness locally. Because the coordinates and condition are given per pixel, C can still compute the geometry. I expect it to be close to B, with B's larger context likely giving a small edge. The sinusoidal stripe texture is also local, so it should be learnable at full resolution.\n\n**Choice A (flat MLP).** This is the clear outlier. The input is flattened to 17×16×16 = 4352 values and passed through width·4 = 96-unit hidden layers before projecting to 256 outputs. That 96-unit bottleneck must encode a full 256-pixel image, and the model has no spatial weight sharing or translation equivariation. With about 1k training images, it should generalize poorly and produce blurrier, less-shaped samples, which raises the energy score.\n\n**Ranking.** B (UNet) is best, C (conv) is a close second, and A (MLP) is worst.\n\n**Material uncertainty.** The B-versus-C gap is small, and the ordering between them could flip across seeds. The A-last placement is much more confident.",
+      "model_identity_matches": true,
+      "question_sha256": "155c5a7b53b0fef3cc05b284d2551a055672a4cb2144f7d54a57de0e3a89e83c",
+      "prompt_sha256": "75b8e72bbd73380fbd93e832510c890196f48a55f9e6be69a9f4b16a3e841449"
+    },
+    {
+      "model": "claude-haiku-5-5",
+      "question_id": "q_0a9477d1f63da091c35005890dc32118",
+      "family": "conditional_image_generation",
+      "task": "ranking3",
+      "probe": null,
+      "template_id": "operator_native_matched",
+      "instance_id": "operator_native_matched_s852003",
+      "status": "complete",
+      "gold_order": [
+        "A",
+        "C",
+        "B"
+      ],
+      "predicted_order": [
+        "C",
+        "A",
+        "B"
+      ],
+      "exact_order_correct": false,
+      "public_content": "<explanation>\n**Main factors.** All three choices share the same data, the same x0-prediction diffusion objective with uniform weighting, the same cosine schedule, AdamW at lr 1e-3, the same 3000-step budget at batch size 16, and the same sampling protocol. The only varying axis is the backbone (`mode`). Parameter counts and training budget are therefore matched in step count, but not in capacity or inductive bias.\n\n**Choice B (flat MLP).** The MLP flattens the 8×16×16 input into a 2048-dim vector and maps it through three width-96 layers to 256 outputs. It has no spatial weight sharing, so it must learn translation-equivariant structure for every pixel independently. With only 1024 training conditions and 3000 steps, it has little spatial prior to exploit. Its geometry must be learned from scratch per pixel, which tends to produce blurry or shifted silhouettes and background leakage. Expected to be worst.\n\n**Choice A (conv, base).** A residual dense 3×3 conv stack at full 16×16 resolution, width 24, depth 3, with GroupNorm and absolute coordinates plus concatenated condition and time features. Convolution gives translation equivariance and a local receptive field, which suits shape boundaries. The receptive field is limited (about 7×7 after three layers), so global context for shape placement relies on the absolute coordinate channels and the conditioning concatenation. Reasonable baseline.\n\n**Choice C (U-Net with skip).** The U-Net adds a stride-2 downsampling stage, which gives a larger effective receptive field, and a skip connection that preserves full-resolution detail. For a task that is mostly \"place a disk, square, or ring of a given radius and shape at a given center,\" the larger context helps the network model global geometry and reduce background leakage. The implementation is standard, and the spatial bottleneck is small at 8×8. Expected to be best.\n\n**Ranking rationale.** The key adjacent pair is C vs. A: both are convolutional, but the U-Net's multi-scale context should better capture the shape-level structure that drives the energy score. The A vs. B gap is larger, since the flat MLP has no convolutional inductive bias at all. So I rank C best, then A, then B.\n\n**Uncertainty.** The sampling noise across 16 seeds is substantial relative to the differences between conv and U-Net at this small budget, so the C vs. A ordering is the least certain. The A vs. B ordering is more robust. Also, the U-Net's downsampling uses `F.interpolate` with nearest upsampling and a skip concatenation, which could in principle hurt sharp edges, but I expect the global-context benefit to dominate.\n</explanation>\n\n<answer>{\"best_to_worst\": [\"C\", \"A\", \"B\"]}</answer>",
+      "public_explanation": "**Main factors.** All three choices share the same data, the same x0-prediction diffusion objective with uniform weighting, the same cosine schedule, AdamW at lr 1e-3, the same 3000-step budget at batch size 16, and the same sampling protocol. The only varying axis is the backbone (`mode`). Parameter counts and training budget are therefore matched in step count, but not in capacity or inductive bias.\n\n**Choice B (flat MLP).** The MLP flattens the 8×16×16 input into a 2048-dim vector and maps it through three width-96 layers to 256 outputs. It has no spatial weight sharing, so it must learn translation-equivariant structure for every pixel independently. With only 1024 training conditions and 3000 steps, it has little spatial prior to exploit. Its geometry must be learned from scratch per pixel, which tends to produce blurry or shifted silhouettes and background leakage. Expected to be worst.\n\n**Choice A (conv, base).** A residual dense 3×3 conv stack at full 16×16 resolution, width 24, depth 3, with GroupNorm and absolute coordinates plus concatenated condition and time features. Convolution gives translation equivariance and a local receptive field, which suits shape boundaries. The receptive field is limited (about 7×7 after three layers), so global context for shape placement relies on the absolute coordinate channels and the conditioning concatenation. Reasonable baseline.\n\n**Choice C (U-Net with skip).** The U-Net adds a stride-2 downsampling stage, which gives a larger effective receptive field, and a skip connection that preserves full-resolution detail. For a task that is mostly \"place a disk, square, or ring of a given radius and shape at a given center,\" the larger context helps the network model global geometry and reduce background leakage. The implementation is standard, and the spatial bottleneck is small at 8×8. Expected to be best.\n\n**Ranking rationale.** The key adjacent pair is C vs. A: both are convolutional, but the U-Net's multi-scale context should better capture the shape-level structure that drives the energy score. The A vs. B gap is larger, since the flat MLP has no convolutional inductive bias at all. So I rank C best, then A, then B.\n\n**Uncertainty.** The sampling noise across 16 seeds is substantial relative to the differences between conv and U-Net at this small budget, so the C vs. A ordering is the least certain. The A vs. B ordering is more robust. Also, the U-Net's downsampling uses `F.interpolate` with nearest upsampling and a skip concatenation, which could in principle hurt sharp edges, but I expect the global-context benefit to dominate.",
+      "model_identity_matches": true,
+      "question_sha256": "26a5fff18b162f10d641cc9e3f11610d840ca1785c0857c7fa6b76ed9f9c3af1",
+      "prompt_sha256": "178c5b8917170bf16fb583e891b654ffc721fee2b4957ccb9b47810043150b32"
+    },
+    {
+      "model": "claude-haiku-5-5",
+      "question_id": "q_d631a9200d5d69a058d326cadefb6e51",
+      "family": "conditional_image_generation",
+      "task": "ranking3",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_0a9477d1f63da091c35005890dc32118"
+      },
+      "template_id": "operator_native_matched",
+      "instance_id": "operator_native_matched_s852003",
+      "status": "complete",
+      "gold_order": [
+        "B",
+        "A",
+        "C"
+      ],
+      "predicted_order": [
+        "A",
+        "B",
+        "C"
+      ],
+      "exact_order_correct": false,
+      "public_content": "<explanation>\n**Main factors.** All three choices share the same data, budget (3000 steps, batch 16), AdamW at lr 1e-3, uniform MSE on x0 prediction, cosine schedule, 16-step DDIM-style sampling with eta 0, and the same width (24), depth (3), and sinusoidal time/absolute-coordinate concatenated conditioning. The only axis that varies is the backbone `mode`, so the ranking depends on how well each architecture fits a smooth denoiser for 16×16 geometric images within a short training budget.\n\n**Architecture comparison.**\n- **Choice A (unet):** Adds a stride-2 down path, nearest upsampling, and a skip connection concatenated before the up convolution. The downsampling gives a larger receptive field, which helps place and shape the disk/square/ring at the correct global location. The skip keeps fine boundary detail, which matters for the energy score because the geometry mask drives the distances. Parameter count is similar to the conv baseline, so the gain comes from inductive bias rather than capacity.\n- **Choice B (conv, base):** Pure local 3×3 residual convolutions at full resolution with depth 3. The receptive field is only about 7 pixels, so it must infer global center and radius from the concatenated condition vector. It is a solid default, but it has less global context than the U-Net.\n- **Choice C (mlp):** A flattened MLP on 8×16×16 inputs with three 96-wide layers and no spatial weight sharing. It has a huge input fan-in (about 2048 inputs) and must learn translation structure from scratch with only 1024 training conditions and 3000 updates. It is the most likely to produce blurry or underfit samples, which hurts both the cross-term and the shape-overlap part of the energy score.\n\n**Adjacent pairs.**\n- A over B: the U-Net's larger effective receptive field and skip connections should better match the geometry-conditioned structure at this scale.\n- B over C: convolutional weight sharing gives much better sample-efficiency than a fully connected map on this small dataset and budget.\n\n**Uncertainty.** Differences between A and B may be small relative to seed variance across 16 seeds, since both are reasonable denoisers and the sampler is only 16 steps. The C ranking is the most confident. Also, the U-Net's fixed `F.interpolate` and skip path could in principle overfit the texture, but with 3000 steps this seems unlikely to dominate.\n</explanation>\n\n<answer>{\"best_to_worst\": [\"A\", \"B\", \"C\"]}</answer>",
+      "public_explanation": "**Main factors.** All three choices share the same data, budget (3000 steps, batch 16), AdamW at lr 1e-3, uniform MSE on x0 prediction, cosine schedule, 16-step DDIM-style sampling with eta 0, and the same width (24), depth (3), and sinusoidal time/absolute-coordinate concatenated conditioning. The only axis that varies is the backbone `mode`, so the ranking depends on how well each architecture fits a smooth denoiser for 16×16 geometric images within a short training budget.\n\n**Architecture comparison.**\n- **Choice A (unet):** Adds a stride-2 down path, nearest upsampling, and a skip connection concatenated before the up convolution. The downsampling gives a larger receptive field, which helps place and shape the disk/square/ring at the correct global location. The skip keeps fine boundary detail, which matters for the energy score because the geometry mask drives the distances. Parameter count is similar to the conv baseline, so the gain comes from inductive bias rather than capacity.\n- **Choice B (conv, base):** Pure local 3×3 residual convolutions at full resolution with depth 3. The receptive field is only about 7 pixels, so it must infer global center and radius from the concatenated condition vector. It is a solid default, but it has less global context than the U-Net.\n- **Choice C (mlp):** A flattened MLP on 8×16×16 inputs with three 96-wide layers and no spatial weight sharing. It has a huge input fan-in (about 2048 inputs) and must learn translation structure from scratch with only 1024 training conditions and 3000 updates. It is the most likely to produce blurry or underfit samples, which hurts both the cross-term and the shape-overlap part of the energy score.\n\n**Adjacent pairs.**\n- A over B: the U-Net's larger effective receptive field and skip connections should better match the geometry-conditioned structure at this scale.\n- B over C: convolutional weight sharing gives much better sample-efficiency than a fully connected map on this small dataset and budget.\n\n**Uncertainty.** Differences between A and B may be small relative to seed variance across 16 seeds, since both are reasonable denoisers and the sampler is only 16 steps. The C ranking is the most confident. Also, the U-Net's fixed `F.interpolate` and skip path could in principle overfit the texture, but with 3000 steps this seems unlikely to dominate.",
+      "model_identity_matches": true,
+      "question_sha256": "b982fd3699f08610e6abbd4664162482c1db2051de5a8a74afa5680be0cabba3",
+      "prompt_sha256": "c94c0000ed151d733b617ece1893b5eb0dbfc2f19939ee5c46226a02fa9d091e"
+    }
+  ],
+  "missing": [
+    {
+      "requested_model": "gpt-6-luna",
+      "question_id": "q_498d07904332da032172c8d506f40470",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_0b54c62a60d8a3d0c78866c2372316c7"
+      }
+    }
+  ],
+  "contains_raw_transport_attempts": false
+}

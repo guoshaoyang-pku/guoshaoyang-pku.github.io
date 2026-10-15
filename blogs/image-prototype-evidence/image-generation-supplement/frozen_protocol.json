@@ -1,0 +1,308 @@
+{
+  "schema_version": "vision_ranking_protocol_v1",
+  "discovery": {
+    "seeds": [
+      40,
+      41,
+      42,
+      43
+    ],
+    "metric": "final_validation_metric",
+    "order": "ascending mean; ties use candidate_id",
+    "purpose": "Freeze a direction for every template instance before independent confirmation. Weak discovery separation is retained and reported, not an automatic rejection."
+  },
+  "confirmation": {
+    "seeds": [
+      240,
+      241,
+      242,
+      243,
+      244,
+      245,
+      246,
+      247,
+      248,
+      249,
+      250,
+      251,
+      252,
+      253,
+      254,
+      255
+    ],
+    "metric": "final_test_energy_score",
+    "higher_is_better": false,
+    "test": "one-sided exact paired binomial sign test; ties count as nonpositive",
+    "null": "P(oriented paired improvement > 0) <= 0.5 over training seed pairs, conditional on fixed materialized data and training protocol",
+    "multiplicity": "Holm across every frozen adjacent comparison, including failed or missing comparisons with p=1",
+    "alpha": 0.05,
+    "minimum_adjacent_mean_gap": 0.003,
+    "require_nonoverlapping_seed_ranges": false,
+    "bootstrap": {
+      "samples": 10000,
+      "confidence": 0.95,
+      "seed": 73013,
+      "purpose": "Descriptive paired mean-gap interval only; no admission decision uses this interval"
+    },
+    "failure_policy": "Any absent, duplicate, nonfinite or failed seed rejects that instance. No seed deletion, replacement, added seeds, reordered choices, or extra metric selection after confirmation."
+  },
+  "admission": "Every adjacent comparison in the discovery-frozen order must pass Holm and the minimum mean-gap gate; both gates use oriented improvement in the frozen direction.",
+  "independence": "Confirmation seeds must be disjoint from discovery seeds. Freeze full membership, candidate order, artifact hashes, metrics, gates, and hypothesis family before starting confirmation. Never select questions using tested models responses.",
+  "comparison_contract": {
+    "same_data": "Every choice shares one dataset instance and identical split file hashes.",
+    "budgets": "Equal total_samples_seen unless the cluster explicitly intervenes on budget; always expose steps, batch size and total_samples_seen per choice. Equal samples with different batches does not imply equal optimizer updates.",
+    "parameters": "Record measured parameter count. Parameter matching is a separate intervention, never inferred from width matching.",
+    "streams": "Use paired training seeds and shared batch index stream when batch sizes agree; seed number alone does not establish matched initialization across architectures.",
+    "interventions": "Record every changed spec field and final full-code hashes. Single-axis interpretation requires other fields fixed; multi-axis choices establish joint effects only.",
+    "devices": [
+      "360-1",
+      "ophis"
+    ]
+  },
+  "evaluation": {
+    "models": [
+      "claude-opus-5-5",
+      "gpt-6.1-sol",
+      "claude-haiku-5-5",
+      "gpt-6-luna"
+    ],
+    "reasoning_effort": "medium",
+    "max_tokens": 8192,
+    "tools": false,
+    "calls_per_question": 1,
+    "system": "Answer the supplied question. Tools are unavailable.",
+    "response": "Public explanation followed by exact full ordering. Audit explanation independently of correctness.",
+    "metrics": [
+      "exact full order",
+      "pairwise concordance",
+      "valid response rate",
+      "answer-explanation consistency"
+    ],
+    "failure_policy": "Only transport failures without completed answer may retry. Preserve all attempts, identity, prompt hashes and public text. Never replace a completed wrong answer.",
+    "baseline": "For k choices, uniform complete-ranking probability is 1/k!; pairwise chance is 1/2.",
+    "prompt": "Use canonical renderer with complete shared base and independent diffs; byte-exact reconstruction checked. Fallback to full code when diff readability degrades.",
+    "choice_label_seed": 73013
+  },
+  "difficulty": {
+    "surface_heuristics": "Freeze interpretable surface-only rules before LLM responses; report abstentions and tie coverage. Do not use confirmation CE or model errors to tune rules.",
+    "coverage": "Report every frozen template instance as accepted/rejected/failed and why. Do not only publish difficult successes.",
+    "dependence": "Report results by template and teacher draw. Repeated teacher or dataset conditions are correlated; no independent-question binomial intervals or general model ranking claims.",
+    "selection": "Do not use model mistakes to admit or drop items. Any later difficult subset is explicitly exploratory and kept separate from full predeclared batch."
+  },
+  "causal_scope": "Confirmed performance differences identify the total effect of the exposed intervention at fixed data and training horizon. A mechanism is supported only to the extent that separately logged diagnostic/control evidence rules out alternatives. Image results concern the stated synthetic image distribution only.",
+  "statistics": {
+    "discovery": {
+      "n_seeds": 4,
+      "split": "validation",
+      "method": "direction_estimation",
+      "ordering": "mean_validation_energy_score",
+      "admission_gate": false,
+      "purpose": "Freeze adjacent ranking directions before independent confirmation; no significance claim from four discovery seeds."
+    },
+    "confirmation": {
+      "n_seeds": 16,
+      "split": "test",
+      "test": "one_sided_paired_sign_test",
+      "alpha": 0.05,
+      "correction": "holm",
+      "minimum_mean_gap": 0.003
+    },
+    "estimand": "Training-seed paired direction stability conditional on one fixed dataset and fixed evaluation-noise/reference stream, with observed mean energy-score gap; not a test of expected-score mean difference or a natural-image population claim."
+  },
+  "answer_format": "best_to_worst_v1",
+  "template_plan_sha256": "7b480b16becfa17a529174169e0a5e6fb709799a9ce31de9e414057da1a55cf4",
+  "assembler_sha256": "1bdb3c0cf1d40b2654622e76aac38a22d84beff4bf3d7e1b1ff7e1c9ceb22ee6",
+  "entries": [
+    {
+      "instance_id": "operator_native_matched_s852001",
+      "cluster_id": "operator_native_matched",
+      "category": "operator",
+      "dataset_id": "ex_65adeb82d3d595c34ef804a0bb25d38a",
+      "candidate_order": [
+        "c_53b4b3efc11d9288b0b7078495d87882",
+        "c_2012e41d0b1efbdf8d81a25a3d389325",
+        "c_ee4a4dd8f69f8e3c205ff088de06a793"
+      ],
+      "discovery_validation": {
+        "c_53b4b3efc11d9288b0b7078495d87882": [
+          0.06861446052789688,
+          0.061571937054395676,
+          0.06478145718574524,
+          0.06495822966098785
+        ],
+        "c_2012e41d0b1efbdf8d81a25a3d389325": [
+          0.07428199052810669,
+          0.08161220699548721,
+          0.07730263471603394,
+          0.07524042576551437
+        ],
+        "c_ee4a4dd8f69f8e3c205ff088de06a793": [
+          0.09355320036411285,
+          0.09088601171970367,
+          0.08939702063798904,
+          0.0895652174949646
+        ]
+      },
+      "dataset_sources": {
+        "dataset_spec.json": "f7fdae1ae52d1410dba201a9d4e9efd3c743fa8154a70213d0b754a1002da8ae",
+        "ood.pt": "899e5b75bcb3c42b3e4a75c4acb7a616785b288759e145d25799dc412ffa5729",
+        "quality.json": "20d9e3bc8fef955eb4697d33b692d58153db1ab4f970c2db1049b03864995d28",
+        "synthesize.py": "31e4f9366b453861dd5a3df5c25d7c4cf3af5a0e443fa2c677bd225a1a59bfc3",
+        "test.pt": "7aff81567eadb1088c1a94cef0a9737d1349d2cfe719550439af92d046efeeae",
+        "train.pt": "fd07cfe00fdfc29055956dabcfb8b725effe0713d9f824a1a73354bf6fd67ae7",
+        "validation.pt": "81569ae23958a654f02c6b62ced887fad1719f9e302e3c353b960ab3759f1077"
+      },
+      "candidate_sources": {
+        "c_53b4b3efc11d9288b0b7078495d87882": {
+          "candidate_spec.json": "9dcdce9f7f7af496e6070e4fe91b69fa72e4cc2e6e38a8f81814b82efe1efd99",
+          "model.py": "548e5eb2edfaab77381773b5c3a085cafe768785e53bd9377556e95e2cf4161d",
+          "train.py": "c177add689f44b9ada1e4d95dacb2380f6b5ba6f7a3b005d74bddc37bdf17cc3",
+          "loss.py": "97fb3ef5f54da795ae088d739c2ecefaf8b2c60c24a377a6615ae60522eed86d",
+          "optimizer.py": "5bd4c9334d57b17caf01a0f27adf4306e698043a1931d871f82422118b95143f"
+        },
+        "c_2012e41d0b1efbdf8d81a25a3d389325": {
+          "candidate_spec.json": "e5fcd0dcaa44630a216365e79e655edcd83a4cf3b6e2bb8eff369540ed1ff457",
+          "model.py": "5eb9b3c4a5893cf189f5b3571dd497ba383e394e0d9c190e56276b84a9d36229",
+          "train.py": "c177add689f44b9ada1e4d95dacb2380f6b5ba6f7a3b005d74bddc37bdf17cc3",
+          "loss.py": "97fb3ef5f54da795ae088d739c2ecefaf8b2c60c24a377a6615ae60522eed86d",
+          "optimizer.py": "5bd4c9334d57b17caf01a0f27adf4306e698043a1931d871f82422118b95143f"
+        },
+        "c_ee4a4dd8f69f8e3c205ff088de06a793": {
+          "candidate_spec.json": "e59914772023a0c6829cf3b47907251296879b82f9201f5ca3461057f40f92e1",
+          "model.py": "31d958601950f09831a638b54b51b3db7d388a4599ccfe063782adc4637d4b2c",
+          "train.py": "c177add689f44b9ada1e4d95dacb2380f6b5ba6f7a3b005d74bddc37bdf17cc3",
+          "loss.py": "97fb3ef5f54da795ae088d739c2ecefaf8b2c60c24a377a6615ae60522eed86d",
+          "optimizer.py": "5bd4c9334d57b17caf01a0f27adf4306e698043a1931d871f82422118b95143f"
+        }
+      }
+    },
+    {
+      "instance_id": "operator_native_matched_s852002",
+      "cluster_id": "operator_native_matched",
+      "category": "operator",
+      "dataset_id": "ex_eb9df374abbb997dcfb532e9599d9083",
+      "candidate_order": [
+        "c_a3bb78df536a1fb8ee71ad34b5b71476",
+        "c_0fc4f2b0df10c35812252d710b665c70",
+        "c_a7046de9954eba36b3a88cad312c1ad4"
+      ],
+      "discovery_validation": {
+        "c_a3bb78df536a1fb8ee71ad34b5b71476": [
+          0.058798354119062424,
+          0.06561122834682465,
+          0.06328421831130981,
+          0.06672640889883041
+        ],
+        "c_0fc4f2b0df10c35812252d710b665c70": [
+          0.07839898765087128,
+          0.07669951021671295,
+          0.07162784039974213,
+          0.07473955303430557
+        ],
+        "c_a7046de9954eba36b3a88cad312c1ad4": [
+          0.09427488595247269,
+          0.08664653450250626,
+          0.08931278437376022,
+          0.08562995493412018
+        ]
+      },
+      "dataset_sources": {
+        "dataset_spec.json": "95f5936c42a6b84f39b7c6a20d141c334c95262e27fe83aa947365a74adb9831",
+        "ood.pt": "23d3bcfd8b09241ce3af6241e52225232b9e6d4008468fd256d8e26cfda1509a",
+        "quality.json": "0c8e50643d7cf0243efbe6098b144b5f8770209d0735ffa133fdaa381461ff53",
+        "synthesize.py": "720f4de450b0fb4c12703c86f8a1f8b4de420f5216f9861663392c200f191889",
+        "test.pt": "478c23b8b8ee3884dffe3db8f7e0cececf3c63e05d21a48b1788f1374e91054a",
+        "train.pt": "69f95ded09757b4dd4cfc70c6294d59c6703f6c097d04c6f306937ec9a699134",
+        "validation.pt": "4de10201c940d0beaf61d0dd3930112d0d6eca80076e532694548fb39cbea069"
+      },
+      "candidate_sources": {
+        "c_a3bb78df536a1fb8ee71ad34b5b71476": {
+          "candidate_spec.json": "dffc080bd178a58f025300938e93a7bb167bc98815bb540dd2d072374ae024e6",
+          "model.py": "548e5eb2edfaab77381773b5c3a085cafe768785e53bd9377556e95e2cf4161d",
+          "train.py": "c177add689f44b9ada1e4d95dacb2380f6b5ba6f7a3b005d74bddc37bdf17cc3",
+          "loss.py": "97fb3ef5f54da795ae088d739c2ecefaf8b2c60c24a377a6615ae60522eed86d",
+          "optimizer.py": "5bd4c9334d57b17caf01a0f27adf4306e698043a1931d871f82422118b95143f"
+        },
+        "c_0fc4f2b0df10c35812252d710b665c70": {
+          "candidate_spec.json": "11ddc510c4ab2b7bff81335f1cf1c3d9eb0c3845ee9b9f2ae717722ce4dcfdde",
+          "model.py": "5eb9b3c4a5893cf189f5b3571dd497ba383e394e0d9c190e56276b84a9d36229",
+          "train.py": "c177add689f44b9ada1e4d95dacb2380f6b5ba6f7a3b005d74bddc37bdf17cc3",
+          "loss.py": "97fb3ef5f54da795ae088d739c2ecefaf8b2c60c24a377a6615ae60522eed86d",
+          "optimizer.py": "5bd4c9334d57b17caf01a0f27adf4306e698043a1931d871f82422118b95143f"
+        },
+        "c_a7046de9954eba36b3a88cad312c1ad4": {
+          "candidate_spec.json": "63c95f252fb839591c609cbc9738e4121383b973dc779ca32d4449bcbfbf1961",
+          "model.py": "31d958601950f09831a638b54b51b3db7d388a4599ccfe063782adc4637d4b2c",
+          "train.py": "c177add689f44b9ada1e4d95dacb2380f6b5ba6f7a3b005d74bddc37bdf17cc3",
+          "loss.py": "97fb3ef5f54da795ae088d739c2ecefaf8b2c60c24a377a6615ae60522eed86d",
+          "optimizer.py": "5bd4c9334d57b17caf01a0f27adf4306e698043a1931d871f82422118b95143f"
+        }
+      }
+    },
+    {
+      "instance_id": "operator_native_matched_s852003",
+      "cluster_id": "operator_native_matched",
+      "category": "operator",
+      "dataset_id": "ex_0db9ba48cf8be2ec4fb00c24408af79c",
+      "candidate_order": [
+        "c_ca1c6fb7877c08013da0acab916d728a",
+        "c_f9d88d80d758631f7b1749954b1117d5",
+        "c_06f9e363768321f3ca3a9fad58415c78"
+      ],
+      "discovery_validation": {
+        "c_ca1c6fb7877c08013da0acab916d728a": [
+          0.06994365155696869,
+          0.08900367468595505,
+          0.06675965338945389,
+          0.059302687644958496
+        ],
+        "c_f9d88d80d758631f7b1749954b1117d5": [
+          0.07209612429141998,
+          0.0871022418141365,
+          0.07876262813806534,
+          0.0798279345035553
+        ],
+        "c_06f9e363768321f3ca3a9fad58415c78": [
+          0.08959841728210449,
+          0.10137508809566498,
+          0.09067347645759583,
+          0.0883793830871582
+        ]
+      },
+      "dataset_sources": {
+        "dataset_spec.json": "4f73b798826d4748855128bef2ada1316fa579be603fe59f7cc7da818d5355bd",
+        "ood.pt": "e3528ee1c215e1db19f23b79d3efc06fa10491508dd4d5288f649d1fba486cb7",
+        "quality.json": "99e6b57b7bd7984f11ff1d826873a01573734fc71dcba1c638fffe2ff85ab5b1",
+        "synthesize.py": "0630627b195fe63fb38bc88527f735f88dd1369a50ab576c7ff2d70ae6ccc6af",
+        "test.pt": "cca5601d9a4e0b27c03ad009dadd9cb82a5e0391bcdea41559f30d156112d6e3",
+        "train.pt": "604d91c8b6196d72ab228663557e01951e5c794e60e76e017afbc7a101780ee8",
+        "validation.pt": "7b6fafd1c297059160d0adca6286b198b9809b72d9894072ae917c1323174a6b"
+      },
+      "candidate_sources": {
+        "c_ca1c6fb7877c08013da0acab916d728a": {
+          "candidate_spec.json": "ccfbae82307421d3f99e9be0e21650f83f3cd765a3349c73faf4290fbd8c45ed",
+          "model.py": "548e5eb2edfaab77381773b5c3a085cafe768785e53bd9377556e95e2cf4161d",
+          "train.py": "c177add689f44b9ada1e4d95dacb2380f6b5ba6f7a3b005d74bddc37bdf17cc3",
+          "loss.py": "97fb3ef5f54da795ae088d739c2ecefaf8b2c60c24a377a6615ae60522eed86d",
+          "optimizer.py": "5bd4c9334d57b17caf01a0f27adf4306e698043a1931d871f82422118b95143f"
+        },
+        "c_f9d88d80d758631f7b1749954b1117d5": {
+          "candidate_spec.json": "5aa055a444c6501bf79d027b4fb36569e4a39c0da67934b0301e0b0b2b4717e9",
+          "model.py": "5eb9b3c4a5893cf189f5b3571dd497ba383e394e0d9c190e56276b84a9d36229",
+          "train.py": "c177add689f44b9ada1e4d95dacb2380f6b5ba6f7a3b005d74bddc37bdf17cc3",
+          "loss.py": "97fb3ef5f54da795ae088d739c2ecefaf8b2c60c24a377a6615ae60522eed86d",
+          "optimizer.py": "5bd4c9334d57b17caf01a0f27adf4306e698043a1931d871f82422118b95143f"
+        },
+        "c_06f9e363768321f3ca3a9fad58415c78": {
+          "candidate_spec.json": "d4b961ab7463662c0b4d08044e638cf7f952cc51b12e9649ef142c283de32a67",
+          "model.py": "31d958601950f09831a638b54b51b3db7d388a4599ccfe063782adc4637d4b2c",
+          "train.py": "c177add689f44b9ada1e4d95dacb2380f6b5ba6f7a3b005d74bddc37bdf17cc3",
+          "loss.py": "97fb3ef5f54da795ae088d739c2ecefaf8b2c60c24a377a6615ae60522eed86d",
+          "optimizer.py": "5bd4c9334d57b17caf01a0f27adf4306e698043a1931d871f82422118b95143f"
+        }
+      }
+    }
+  ],
+  "hypotheses": 6,
+  "protocol_sha256": "bf56249895ddf4574ba4e81b2f86afca7c396fedadae332d836fe64e2c823494"
+}

@@ -1,0 +1,1105 @@
+{
+  "schema": "architectureiq-public-evaluation-v1",
+  "source_sha256": "4f0caab9e641715dbea89aa535113c051284ad8cb2ebd1fffc265904d7c1d46f",
+  "models": [
+    "gpt-6-luna",
+    "gpt-6.1-sol",
+    "claude-opus-5-5",
+    "claude-haiku-5-5"
+  ],
+  "scoring": "Exact full ranking; API failures remain missing and are not counted as wrong.",
+  "records": [
+    {
+      "model": "gpt-6-luna",
+      "question_id": "q_8a36fc443f07ff9476da1cb066a63d67",
+      "family": "image_classification",
+      "task": "ranking3",
+      "probe": null,
+      "template_id": "pooling_coordinate",
+      "instance_id": "pooling_coordinate_s841902",
+      "status": "complete",
+      "gold_order": [
+        "B",
+        "C",
+        "A"
+      ],
+      "predicted_order": [
+        "B",
+        "C",
+        "A"
+      ],
+      "exact_order_correct": true,
+      "public_content": "<explanation>All choices use the same small CNN and training budget, so the main distinction is whether the architecture preserves information about where the two objects are. The label depends on the dominant direction of the circle–square displacement. With global mean pooling, A discards most spatial layout; its local convolutions have limited receptive fields and cannot reliably compare objects that are far apart. C adds coordinate channels, which can let local features encode absolute location before global averaging, so it may recover some positional information, though the pooled representation still limits explicit comparison. B instead uses a 3×3 spatial pooling grid, retaining coarse location information for the classifier and making the relative-position rule more accessible. Thus I predict B lower-loss than C, and C lower-loss than A. The C-versus-A distinction is uncertain: coordinate features can help, but their usefulness depends on what the shallow CNN learns in only 300 updates.</explanation>\n<answer>{\"best_to_worst\":[\"B\",\"C\",\"A\"]}</answer>",
+      "public_explanation": "All choices use the same small CNN and training budget, so the main distinction is whether the architecture preserves information about where the two objects are. The label depends on the dominant direction of the circle–square displacement. With global mean pooling, A discards most spatial layout; its local convolutions have limited receptive fields and cannot reliably compare objects that are far apart. C adds coordinate channels, which can let local features encode absolute location before global averaging, so it may recover some positional information, though the pooled representation still limits explicit comparison. B instead uses a 3×3 spatial pooling grid, retaining coarse location information for the classifier and making the relative-position rule more accessible. Thus I predict B lower-loss than C, and C lower-loss than A. The C-versus-A distinction is uncertain: coordinate features can help, but their usefulness depends on what the shallow CNN learns in only 300 updates.",
+      "model_identity_matches": true,
+      "question_sha256": "b654d1008856bbc9c8efc3cafe828fe806a3a470a2ca6349899acfa8d15fd97f",
+      "prompt_sha256": "bd9efbd2572219260c6ec3d160a4d2a8897683afe96d530a40444b8ca7c66ac3"
+    },
+    {
+      "model": "gpt-6-luna",
+      "question_id": "q_a1af9439f07fdde610fbdc50eea762d9",
+      "family": "image_classification",
+      "task": "ranking3",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_8a36fc443f07ff9476da1cb066a63d67"
+      },
+      "template_id": "pooling_coordinate",
+      "instance_id": "pooling_coordinate_s841902",
+      "status": "complete",
+      "gold_order": [
+        "C",
+        "A",
+        "B"
+      ],
+      "predicted_order": [
+        "C",
+        "A",
+        "B"
+      ],
+      "exact_order_correct": true,
+      "public_content": "<explanation>All choices use the same short 300-update training budget, so the main distinction is whether the representation retains the spatial information needed to compare the circle and square centers. Choice B globally mean-pools the feature maps, discarding most location information; its shallow local convolutions have limited ability to infer the relation between objects that may be far apart. Choice C instead pools to a 3×3 spatial grid, preserving coarse location cues that can support the relative-position rule, so C should outperform B. Choice A adds coordinate channels but still globally mean-pools. Coordinates can make features position-sensitive and may help recover location information, but this must be learned and compressed into a global average; C exposes coarse spatial layout directly. Thus I predict C ahead of A, and A ahead of B. The A–C comparison is uncertain: coordinate-conditioned features could be effective, while C’s coarse grid loses fine positional detail.</explanation>\n<answer>{\"best_to_worst\":[\"C\",\"A\",\"B\"]}</answer>",
+      "public_explanation": "All choices use the same short 300-update training budget, so the main distinction is whether the representation retains the spatial information needed to compare the circle and square centers. Choice B globally mean-pools the feature maps, discarding most location information; its shallow local convolutions have limited ability to infer the relation between objects that may be far apart. Choice C instead pools to a 3×3 spatial grid, preserving coarse location cues that can support the relative-position rule, so C should outperform B. Choice A adds coordinate channels but still globally mean-pools. Coordinates can make features position-sensitive and may help recover location information, but this must be learned and compressed into a global average; C exposes coarse spatial layout directly. Thus I predict C ahead of A, and A ahead of B. The A–C comparison is uncertain: coordinate-conditioned features could be effective, while C’s coarse grid loses fine positional detail.",
+      "model_identity_matches": true,
+      "question_sha256": "69ce17fda258c80295ce1eddac2cc20df9331b638163c10735358bac94126d2c",
+      "prompt_sha256": "a7cbc05675747c48578f0b6cdadc6bd2c71c8a6452acff8534078b2252305975"
+    },
+    {
+      "model": "gpt-6-luna",
+      "question_id": "q_fcf232651387ce984a8140da96c318d3",
+      "family": "image_classification",
+      "task": "ranking3",
+      "probe": null,
+      "template_id": "kernel_stride_texture",
+      "instance_id": "kernel_stride_texture_s841901",
+      "status": "complete",
+      "gold_order": [
+        "B",
+        "A",
+        "C"
+      ],
+      "predicted_order": [
+        "A",
+        "C",
+        "B"
+      ],
+      "exact_order_correct": false,
+      "public_content": "<explanation>All three models use the same data, optimizer, and 1,200-update budget. The label is the orientation of a grating with 1.5–3 cycles across the image, so preserving enough spatial detail while giving convolutional features a useful receptive field matters. A downsamples by 2 and uses 5×5 block convolutions: that retains substantial detail while letting features integrate over a wider patch, which should help distinguish orientations. C preserves the most detail with stride 1, but its 3×3 blocks have a smaller receptive field; global mean pooling can aggregate local cues, though each cue may be less orientation-specific. Thus I put A ahead of C. B downsamples by 4 before its blocks, risking loss or aliasing of the finer grating patterns, so I put it behind C. The ordering is uncertain: the extra resolution in C may compensate for its smaller receptive field, and exact performance depends on what the learned filters capture.</explanation>\n<answer>{\"best_to_worst\":[\"A\",\"C\",\"B\"]}</answer>",
+      "public_explanation": "All three models use the same data, optimizer, and 1,200-update budget. The label is the orientation of a grating with 1.5–3 cycles across the image, so preserving enough spatial detail while giving convolutional features a useful receptive field matters. A downsamples by 2 and uses 5×5 block convolutions: that retains substantial detail while letting features integrate over a wider patch, which should help distinguish orientations. C preserves the most detail with stride 1, but its 3×3 blocks have a smaller receptive field; global mean pooling can aggregate local cues, though each cue may be less orientation-specific. Thus I put A ahead of C. B downsamples by 4 before its blocks, risking loss or aliasing of the finer grating patterns, so I put it behind C. The ordering is uncertain: the extra resolution in C may compensate for its smaller receptive field, and exact performance depends on what the learned filters capture.",
+      "model_identity_matches": true,
+      "question_sha256": "4431e62e0873c40530257a955543666435e139e1b1b061c71a2417ff7a9b6c4d",
+      "prompt_sha256": "b3e5dee7dad45d67683d82256d6dedda1524634b927722ee0cb2fae8b0fec85c"
+    },
+    {
+      "model": "gpt-6-luna",
+      "question_id": "q_a5f2d1e9542f2df31803626953d1af76",
+      "family": "image_classification",
+      "task": "ranking3",
+      "probe": null,
+      "template_id": "learning_rate",
+      "instance_id": "learning_rate_s841901",
+      "status": "complete",
+      "gold_order": [
+        "B",
+        "A",
+        "C"
+      ],
+      "predicted_order": [
+        "A",
+        "C",
+        "B"
+      ],
+      "exact_order_correct": false,
+      "public_content": "<explanation>All three choices use the same compact CNN, data, initialization protocol, batch stream, and 1,200 updates; the main difference is AdamW’s learning rate. The local-shape classes are visually distinct, so the model should be able to learn them within this budget at the base rate. I predict A has lower loss than C: its 0.001 rate should make useful progress, while C’s 0.0001 rate risks underfitting. I predict C has lower loss than B: B’s 0.01 rate is unusually aggressive for this setup and may cause overshooting or unstable final predictions, despite gradient clipping. The ordering is uncertain because no learning curves are given; in particular, B could benefit from faster early learning if training remains stable.</explanation>\n<answer>{\"best_to_worst\":[\"A\",\"C\",\"B\"]}</answer>",
+      "public_explanation": "All three choices use the same compact CNN, data, initialization protocol, batch stream, and 1,200 updates; the main difference is AdamW’s learning rate. The local-shape classes are visually distinct, so the model should be able to learn them within this budget at the base rate. I predict A has lower loss than C: its 0.001 rate should make useful progress, while C’s 0.0001 rate risks underfitting. I predict C has lower loss than B: B’s 0.01 rate is unusually aggressive for this setup and may cause overshooting or unstable final predictions, despite gradient clipping. The ordering is uncertain because no learning curves are given; in particular, B could benefit from faster early learning if training remains stable.",
+      "model_identity_matches": true,
+      "question_sha256": "25d9c3f94ad5b600270323b7d112c86f38e7651901282008cca2ddc2b73c52e0",
+      "prompt_sha256": "19e459c7fe0bbf7fbf89134a8b1169e6f621274eb8b134ae9313ed9aab7e070e"
+    },
+    {
+      "model": "gpt-6-luna",
+      "question_id": "q_ba675b4af4aaa388d5e0ecb29edac798",
+      "family": "image_classification",
+      "task": "ranking3",
+      "probe": null,
+      "template_id": "learning_rate",
+      "instance_id": "learning_rate_s841902",
+      "status": "complete",
+      "gold_order": [
+        "C",
+        "A",
+        "B"
+      ],
+      "predicted_order": [
+        "A",
+        "B",
+        "C"
+      ],
+      "exact_order_correct": false,
+      "public_content": "<explanation>All three choices use the same CNN, data, batch size, and 1,200 updates; the main difference is AdamW’s constant learning rate. The local-shape task is learnable from these small rendered objects, and 0.001 is a plausible stable step size for this setup. I therefore expect A to have the lowest loss. B’s 0.0001 rate is likely too conservative to fit as well within the fixed update budget, so I place it next. C’s 0.01 rate may make faster early progress, but its large, constant AdamW updates risk overshooting and leaving a worse final cross-entropy, so I place it last. The B-versus-C ordering is uncertain: the task is simple enough that C could learn quickly, while B could still make useful progress over 1,200 updates.</explanation>\n<answer>{\"best_to_worst\":[\"A\",\"B\",\"C\"]}</answer>",
+      "public_explanation": "All three choices use the same CNN, data, batch size, and 1,200 updates; the main difference is AdamW’s constant learning rate. The local-shape task is learnable from these small rendered objects, and 0.001 is a plausible stable step size for this setup. I therefore expect A to have the lowest loss. B’s 0.0001 rate is likely too conservative to fit as well within the fixed update budget, so I place it next. C’s 0.01 rate may make faster early progress, but its large, constant AdamW updates risk overshooting and leaving a worse final cross-entropy, so I place it last. The B-versus-C ordering is uncertain: the task is simple enough that C could learn quickly, while B could still make useful progress over 1,200 updates.",
+      "model_identity_matches": true,
+      "question_sha256": "a6d58e10fb0789578052f2ab6a7a54ffdf1b4a6266febe3beab7faeffa67ab93",
+      "prompt_sha256": "7de2cb56a90c1d4ac62acd9eee3936a51001e894850713bbe796e9d1df9aaa0b"
+    },
+    {
+      "model": "gpt-6.1-sol",
+      "question_id": "q_ec5ca80d9651d097f461319ad3cd14b3",
+      "family": "image_classification",
+      "task": "ranking3",
+      "probe": null,
+      "template_id": "pooling_coordinate",
+      "instance_id": "pooling_coordinate_s841901",
+      "status": "complete",
+      "gold_order": [
+        "A",
+        "C",
+        "B"
+      ],
+      "predicted_order": [
+        "A",
+        "C",
+        "B"
+      ],
+      "exact_order_correct": true,
+      "public_content": "<explanation>\nPredicted order: A, C, B.\n\nA versus C: A’s 3×3 spatial pooling preserves coarse object locations directly, allowing its linear head to compare the two channels’ spatial distributions. This is a strong, readily learned bias for the dominant-displacement labels, particularly with only 300 updates. C can represent more precise position-dependent features using its coordinate channels, but must learn to combine coordinates with object presence before global averaging. I expect that additional learning burden and spatial dilution to outweigh its potential precision advantage at this budget.\n\nC versus B: C’s explicit coordinates retain access to absolute position despite global pooling, enabling learned centroid-like comparisons. B globally averages features without coordinates. Its two 3×3 convolutional blocks have only a 5×5 receptive field, so it mainly captures local overlap and nearby interactions rather than the full displacement between separated objects. Boundary effects provide some position information, but are a weaker route to the target.\n\nThe main uncertainty is A versus C: coordinate-conditioned features could learn efficiently enough for C to surpass A’s coarse spatial representation. B’s disadvantage is more structurally grounded.\n</explanation>\n<answer>{\"best_to_worst\": [\"A\", \"C\", \"B\"]}</answer>",
+      "public_explanation": "Predicted order: A, C, B.\n\nA versus C: A’s 3×3 spatial pooling preserves coarse object locations directly, allowing its linear head to compare the two channels’ spatial distributions. This is a strong, readily learned bias for the dominant-displacement labels, particularly with only 300 updates. C can represent more precise position-dependent features using its coordinate channels, but must learn to combine coordinates with object presence before global averaging. I expect that additional learning burden and spatial dilution to outweigh its potential precision advantage at this budget.\n\nC versus B: C’s explicit coordinates retain access to absolute position despite global pooling, enabling learned centroid-like comparisons. B globally averages features without coordinates. Its two 3×3 convolutional blocks have only a 5×5 receptive field, so it mainly captures local overlap and nearby interactions rather than the full displacement between separated objects. Boundary effects provide some position information, but are a weaker route to the target.\n\nThe main uncertainty is A versus C: coordinate-conditioned features could learn efficiently enough for C to surpass A’s coarse spatial representation. B’s disadvantage is more structurally grounded.",
+      "model_identity_matches": true,
+      "question_sha256": "c49c76198b89f36b58a6aef21918d2eed4e8519e6d5bbe0ee7735814f794b70c",
+      "prompt_sha256": "96b9a7bf88c4db15676f0cee2e94a9aa27a5bd3f64d74e65576e236ca832403b"
+    },
+    {
+      "model": "gpt-6.1-sol",
+      "question_id": "q_d26f5adafb3e08bb7f45a0b9d0d21acd",
+      "family": "image_classification",
+      "task": "ranking3",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_ec5ca80d9651d097f461319ad3cd14b3"
+      },
+      "template_id": "pooling_coordinate",
+      "instance_id": "pooling_coordinate_s841901",
+      "status": "complete",
+      "gold_order": [
+        "B",
+        "A",
+        "C"
+      ],
+      "predicted_order": [
+        "B",
+        "A",
+        "C"
+      ],
+      "exact_order_correct": true,
+      "public_content": "<explanation>\nThe task requires comparing the positions of two channel-specific objects, rather than recognizing their shapes. The main architectural issue is therefore whether pooling preserves enough positional information within the 300-update budget.\n\n- **B before A:** B’s 3×3 spatial pooling directly preserves coarse object locations. Its linear head can quickly learn directional comparisons from channel-specific spatial features. A can instead learn position-weighted object features using its coordinate channels, but must construct those features before global averaging. That is a less direct optimization route under this short training budget.\n- **A before C:** A’s explicit x/y channels allow its convolutional blocks to encode absolute positions and, after averaging, compare the objects’ positions. C has neither coordinates nor spatial pooling. With only two 3×3 convolutional blocks, its local receptive field and global averaging discard much of the information needed for separated-object relations. Overlap and local interaction patterns can still provide some signal, so C is not necessarily limited to chance.\n\nThe material uncertainty is **B versus A**: coordinate-based moments could ultimately represent the geometric decision rule more accurately than coarse spatial bins. I favor B because positional information is immediately accessible and training lasts only 300 updates; C is the clearer last-place prediction.\n</explanation>\n<answer>{\"best_to_worst\": [\"B\", \"A\", \"C\"]}</answer>",
+      "public_explanation": "The task requires comparing the positions of two channel-specific objects, rather than recognizing their shapes. The main architectural issue is therefore whether pooling preserves enough positional information within the 300-update budget.\n\n- **B before A:** B’s 3×3 spatial pooling directly preserves coarse object locations. Its linear head can quickly learn directional comparisons from channel-specific spatial features. A can instead learn position-weighted object features using its coordinate channels, but must construct those features before global averaging. That is a less direct optimization route under this short training budget.\n- **A before C:** A’s explicit x/y channels allow its convolutional blocks to encode absolute positions and, after averaging, compare the objects’ positions. C has neither coordinates nor spatial pooling. With only two 3×3 convolutional blocks, its local receptive field and global averaging discard much of the information needed for separated-object relations. Overlap and local interaction patterns can still provide some signal, so C is not necessarily limited to chance.\n\nThe material uncertainty is **B versus A**: coordinate-based moments could ultimately represent the geometric decision rule more accurately than coarse spatial bins. I favor B because positional information is immediately accessible and training lasts only 300 updates; C is the clearer last-place prediction.",
+      "model_identity_matches": true,
+      "question_sha256": "bcd642823764467e01977a3c0e3dd725658acbd0a5efb38574ea335e3895452f",
+      "prompt_sha256": "cb88b1fdcf74509478ae65ed806dec1790dcf7f8a5b27145004053558b0cf3ea"
+    },
+    {
+      "model": "gpt-6.1-sol",
+      "question_id": "q_8a36fc443f07ff9476da1cb066a63d67",
+      "family": "image_classification",
+      "task": "ranking3",
+      "probe": null,
+      "template_id": "pooling_coordinate",
+      "instance_id": "pooling_coordinate_s841902",
+      "status": "complete",
+      "gold_order": [
+        "B",
+        "C",
+        "A"
+      ],
+      "predicted_order": [
+        "C",
+        "B",
+        "A"
+      ],
+      "exact_order_correct": false,
+      "public_content": "<explanation>The relative-position label depends on comparing the two objects’ centers, not on their individual shapes or absolute appearance. Choice A uses global mean pooling after only shallow local convolutions. Its receptive field is too small to jointly observe the two objects, and global averaging discards their spatial arrangement, so it should retain little reliable relational information. Choice B preserves a 3×3 spatial grid, allowing the classifier to compare coarse locations and therefore should substantially outperform A. Choice C supplies continuous coordinate channels; even with global pooling, the convolutional features can form coordinate-weighted summaries of each channel, providing more precise center estimates than the coarse 3×3 partition, so it is predicted to beat B. The C-versus-B ordering is the main uncertainty: spatial pooling is a simpler and potentially easier-to-optimize route within 300 updates, while coordinate-weighted aggregation may be harder to learn, but the continuous positional information should win on average.</explanation>\n<answer>{\"best_to_worst\":[\"C\",\"B\",\"A\"]}</answer>",
+      "public_explanation": "The relative-position label depends on comparing the two objects’ centers, not on their individual shapes or absolute appearance. Choice A uses global mean pooling after only shallow local convolutions. Its receptive field is too small to jointly observe the two objects, and global averaging discards their spatial arrangement, so it should retain little reliable relational information. Choice B preserves a 3×3 spatial grid, allowing the classifier to compare coarse locations and therefore should substantially outperform A. Choice C supplies continuous coordinate channels; even with global pooling, the convolutional features can form coordinate-weighted summaries of each channel, providing more precise center estimates than the coarse 3×3 partition, so it is predicted to beat B. The C-versus-B ordering is the main uncertainty: spatial pooling is a simpler and potentially easier-to-optimize route within 300 updates, while coordinate-weighted aggregation may be harder to learn, but the continuous positional information should win on average.",
+      "model_identity_matches": true,
+      "question_sha256": "b654d1008856bbc9c8efc3cafe828fe806a3a470a2ca6349899acfa8d15fd97f",
+      "prompt_sha256": "bd9efbd2572219260c6ec3d160a4d2a8897683afe96d530a40444b8ca7c66ac3"
+    },
+    {
+      "model": "gpt-6.1-sol",
+      "question_id": "q_a1af9439f07fdde610fbdc50eea762d9",
+      "family": "image_classification",
+      "task": "ranking3",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_8a36fc443f07ff9476da1cb066a63d67"
+      },
+      "template_id": "pooling_coordinate",
+      "instance_id": "pooling_coordinate_s841902",
+      "status": "complete",
+      "gold_order": [
+        "C",
+        "A",
+        "B"
+      ],
+      "predicted_order": [
+        "C",
+        "A",
+        "B"
+      ],
+      "exact_order_correct": true,
+      "public_content": "<explanation>\nPredicted order: **C, A, B**.\n\n- **C over A:** C’s 3×3 spatial pooling preserves coarse object locations directly, allowing its linear head to compare the two channels’ spatial distributions. This is a strong, readily learned representation for relative position under the short 300-update budget. A also retains positional information through coordinate channels, but must learn nonlinear interactions between coordinates and object features before global averaging can expose useful position statistics.\n- **A over B:** A’s explicit x/y coordinates break translation invariance and allow location-dependent features to survive global pooling. B has neither coordinates nor spatial pooling. Its two 3×3 convolutional blocks have only a 5×5 receptive field, so globally averaged features mostly describe local shapes and overlap rather than the direction between separated objects.\n\nThe main uncertainty is **C versus A**: coordinates could enable more precise position estimates than coarse spatial bins if learned efficiently. Nevertheless, C’s more direct positional readout should have the optimization advantage at this training budget.\n</explanation>\n<answer>{\"best_to_worst\": [\"C\", \"A\", \"B\"]}</answer>",
+      "public_explanation": "Predicted order: **C, A, B**.\n\n- **C over A:** C’s 3×3 spatial pooling preserves coarse object locations directly, allowing its linear head to compare the two channels’ spatial distributions. This is a strong, readily learned representation for relative position under the short 300-update budget. A also retains positional information through coordinate channels, but must learn nonlinear interactions between coordinates and object features before global averaging can expose useful position statistics.\n- **A over B:** A’s explicit x/y coordinates break translation invariance and allow location-dependent features to survive global pooling. B has neither coordinates nor spatial pooling. Its two 3×3 convolutional blocks have only a 5×5 receptive field, so globally averaged features mostly describe local shapes and overlap rather than the direction between separated objects.\n\nThe main uncertainty is **C versus A**: coordinates could enable more precise position estimates than coarse spatial bins if learned efficiently. Nevertheless, C’s more direct positional readout should have the optimization advantage at this training budget.",
+      "model_identity_matches": true,
+      "question_sha256": "69ce17fda258c80295ce1eddac2cc20df9331b638163c10735358bac94126d2c",
+      "prompt_sha256": "a7cbc05675747c48578f0b6cdadc6bd2c71c8a6452acff8534078b2252305975"
+    },
+    {
+      "model": "gpt-6.1-sol",
+      "question_id": "q_fcf232651387ce984a8140da96c318d3",
+      "family": "image_classification",
+      "task": "ranking3",
+      "probe": null,
+      "template_id": "kernel_stride_texture",
+      "instance_id": "kernel_stride_texture_s841901",
+      "status": "complete",
+      "gold_order": [
+        "B",
+        "A",
+        "C"
+      ],
+      "predicted_order": [
+        "A",
+        "B",
+        "C"
+      ],
+      "exact_order_correct": false,
+      "public_content": "<explanation>\nI predict **A, then B, then C**, with material uncertainty because this clean four-orientation task may let all three reach very low loss.\n\n- **A versus B:** A retains a 12×12 feature map through its stride-2 stem, whereas B reduces it to 6×6 immediately. A’s 5×5 convolutions can extract orientation over substantial spatial neighborhoods while retaining more phase and spatial samples for global averaging. B’s learned 4×4 patch projection preserves some within-patch information, but its coarser sampling is a less favorable tradeoff for consistently low cross-entropy across random phases and frequencies.\n- **B versus C:** B’s final receptive field spans approximately 20 input pixels, compared with only 5 for C. The gratings have wavelengths of 8–16 pixels, so B can directly integrate substantial portions of a wave. C preserves full resolution and can infer orientation from local derivatives, but must learn reliable phase-insensitive evidence from much smaller neighborhoods. I expect that to be less efficiently learned within the fixed 1,200-update budget.\n\nAll choices share normalization, residual connections, global mean pooling, and the same AdamW setup. The main uncertainty is C: its translation-friendly, full-resolution local statistics could generalize exceptionally well, potentially reversing its position relative to B.\n</explanation>\n<answer>{\"best_to_worst\": [\"A\", \"B\", \"C\"]}</answer>",
+      "public_explanation": "I predict **A, then B, then C**, with material uncertainty because this clean four-orientation task may let all three reach very low loss.\n\n- **A versus B:** A retains a 12×12 feature map through its stride-2 stem, whereas B reduces it to 6×6 immediately. A’s 5×5 convolutions can extract orientation over substantial spatial neighborhoods while retaining more phase and spatial samples for global averaging. B’s learned 4×4 patch projection preserves some within-patch information, but its coarser sampling is a less favorable tradeoff for consistently low cross-entropy across random phases and frequencies.\n- **B versus C:** B’s final receptive field spans approximately 20 input pixels, compared with only 5 for C. The gratings have wavelengths of 8–16 pixels, so B can directly integrate substantial portions of a wave. C preserves full resolution and can infer orientation from local derivatives, but must learn reliable phase-insensitive evidence from much smaller neighborhoods. I expect that to be less efficiently learned within the fixed 1,200-update budget.\n\nAll choices share normalization, residual connections, global mean pooling, and the same AdamW setup. The main uncertainty is C: its translation-friendly, full-resolution local statistics could generalize exceptionally well, potentially reversing its position relative to B.",
+      "model_identity_matches": true,
+      "question_sha256": "4431e62e0873c40530257a955543666435e139e1b1b061c71a2417ff7a9b6c4d",
+      "prompt_sha256": "b3e5dee7dad45d67683d82256d6dedda1524634b927722ee0cb2fae8b0fec85c"
+    },
+    {
+      "model": "gpt-6.1-sol",
+      "question_id": "q_9d3f74e3a6db4ef85ae57f643c6a4f29",
+      "family": "image_classification",
+      "task": "ranking3",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_fcf232651387ce984a8140da96c318d3"
+      },
+      "template_id": "kernel_stride_texture",
+      "instance_id": "kernel_stride_texture_s841901",
+      "status": "complete",
+      "gold_order": [
+        "C",
+        "B",
+        "A"
+      ],
+      "predicted_order": [
+        "B",
+        "C",
+        "A"
+      ],
+      "exact_order_correct": false,
+      "public_content": "<explanation>\nI predict **B, then C, then A**. This task rewards phase-tolerant orientation detection across gratings with wavelengths of 8–16 pixels. All choices share global mean pooling and the same optimizer and training budget; their main differences are spatial sampling and receptive field.\n\n- **B over C:** B’s stride-2 stem preserves a finer spatial grid, while its two 5×5 convolutional blocks provide an approximately 18×18-pixel receptive field. This combines substantial grating context with less sensitivity to coarse sampling than C’s stride-4 stem.\n- **C over A:** C’s learned 4×4 patch projection retains within-patch information, and its two 3×3 blocks expand the receptive field to approximately 20×20 pixels. A preserves full resolution but has only a 5×5 receptive field before global averaging. C therefore has an easier route to separating orientation from phase, envelope gradients, and the independent distractor.\n\nThe main uncertainty is C versus A: A can learn orientation from local gradients, and its finer sampling may compensate for its limited context. All three could perform very well, making final cross-entropy sensitive to confidence and optimization variation.\n</explanation>\n<answer>{\"best_to_worst\": [\"B\", \"C\", \"A\"]}</answer>",
+      "public_explanation": "I predict **B, then C, then A**. This task rewards phase-tolerant orientation detection across gratings with wavelengths of 8–16 pixels. All choices share global mean pooling and the same optimizer and training budget; their main differences are spatial sampling and receptive field.\n\n- **B over C:** B’s stride-2 stem preserves a finer spatial grid, while its two 5×5 convolutional blocks provide an approximately 18×18-pixel receptive field. This combines substantial grating context with less sensitivity to coarse sampling than C’s stride-4 stem.\n- **C over A:** C’s learned 4×4 patch projection retains within-patch information, and its two 3×3 blocks expand the receptive field to approximately 20×20 pixels. A preserves full resolution but has only a 5×5 receptive field before global averaging. C therefore has an easier route to separating orientation from phase, envelope gradients, and the independent distractor.\n\nThe main uncertainty is C versus A: A can learn orientation from local gradients, and its finer sampling may compensate for its limited context. All three could perform very well, making final cross-entropy sensitive to confidence and optimization variation.",
+      "model_identity_matches": true,
+      "question_sha256": "bf83f5ad28cb340602450b99ae2a826faf255b52db902074be2ee3dd627a6629",
+      "prompt_sha256": "71986c2ff181efef6d0cf1939f367e0eeb4af4813ce7e96f5da633d052e4bc23"
+    },
+    {
+      "model": "gpt-6.1-sol",
+      "question_id": "q_a5f2d1e9542f2df31803626953d1af76",
+      "family": "image_classification",
+      "task": "ranking3",
+      "probe": null,
+      "template_id": "learning_rate",
+      "instance_id": "learning_rate_s841901",
+      "status": "complete",
+      "gold_order": [
+        "B",
+        "A",
+        "C"
+      ],
+      "predicted_order": [
+        "A",
+        "B",
+        "C"
+      ],
+      "exact_order_correct": false,
+      "public_content": "<explanation>\nMy predicted order is A, B, C. The architecture, initialization, minibatch streams, and 1,200-update budget are shared; only AdamW’s learning rate changes.\n\n- **A before B:** A’s learning rate of 0.001 should provide a good balance between learning shape-sensitive local features and stable refinement. B’s 0.01 can learn faster, but its tenfold larger constant step size increases the risk of oscillation and seed-dependent late-training instability. Gradient clipping limits gradient norms, not AdamW’s parameter-update magnitude, so it does not eliminate this risk. Such instability can hurt cross entropy even when classification accuracy remains high.\n- **B before C:** C’s 0.0001 is likely too conservative for this short budget. The model must learn nonlinear local geometry to distinguish mass-normalized circles, squares, diamonds, and crosses; channel mass itself is not a useful class cue. B should make substantially more progress on these features and produce more confident correct predictions, despite its greater instability.\n\nThe main uncertainty is A versus B: this compact, normalized residual CNN could tolerate 0.01 well enough for B’s faster convergence to win. I favor A for its more reliable final-checkpoint behavior across seeds.\n</explanation>\n<answer>{\"best_to_worst\": [\"A\", \"B\", \"C\"]}</answer>",
+      "public_explanation": "My predicted order is A, B, C. The architecture, initialization, minibatch streams, and 1,200-update budget are shared; only AdamW’s learning rate changes.\n\n- **A before B:** A’s learning rate of 0.001 should provide a good balance between learning shape-sensitive local features and stable refinement. B’s 0.01 can learn faster, but its tenfold larger constant step size increases the risk of oscillation and seed-dependent late-training instability. Gradient clipping limits gradient norms, not AdamW’s parameter-update magnitude, so it does not eliminate this risk. Such instability can hurt cross entropy even when classification accuracy remains high.\n- **B before C:** C’s 0.0001 is likely too conservative for this short budget. The model must learn nonlinear local geometry to distinguish mass-normalized circles, squares, diamonds, and crosses; channel mass itself is not a useful class cue. B should make substantially more progress on these features and produce more confident correct predictions, despite its greater instability.\n\nThe main uncertainty is A versus B: this compact, normalized residual CNN could tolerate 0.01 well enough for B’s faster convergence to win. I favor A for its more reliable final-checkpoint behavior across seeds.",
+      "model_identity_matches": true,
+      "question_sha256": "25d9c3f94ad5b600270323b7d112c86f38e7651901282008cca2ddc2b73c52e0",
+      "prompt_sha256": "19e459c7fe0bbf7fbf89134a8b1169e6f621274eb8b134ae9313ed9aab7e070e"
+    },
+    {
+      "model": "gpt-6.1-sol",
+      "question_id": "q_4b2c10d4bbd4687899ae46353ddde63e",
+      "family": "image_classification",
+      "task": "ranking3",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_ba675b4af4aaa388d5e0ecb29edac798"
+      },
+      "template_id": "learning_rate",
+      "instance_id": "learning_rate_s841902",
+      "status": "complete",
+      "gold_order": [
+        "A",
+        "B",
+        "C"
+      ],
+      "predicted_order": [
+        "B",
+        "A",
+        "C"
+      ],
+      "exact_order_correct": false,
+      "public_content": "<explanation>The main factor is the AdamW learning rate under a constant schedule and only 1200 updates. Choice B's 0.001 rate is the most conventional scale for this small residual CNN and should learn the simple local-shape task while retaining stable late training, so it is predicted to have the lowest test cross-entropy. Choice A's 0.01 rate can make rapid initial progress, but the constant high rate, minibatch noise, and AdamW decay make late optimization more oscillatory and increase the risk of poorly calibrated logits; therefore A is predicted worse than B. Choice C's 0.0001 rate is likely too conservative for this fixed budget, leaving the network substantially under-trained despite the task's simplicity, so it is predicted worse than A. The uncertain adjacent comparison is A versus C: if the high-rate run remains stable, A could outperform C substantially, but severe overshooting could reverse that pair.</explanation>\n<answer>{\"best_to_worst\":[\"B\",\"A\",\"C\"]}</answer>",
+      "public_explanation": "The main factor is the AdamW learning rate under a constant schedule and only 1200 updates. Choice B's 0.001 rate is the most conventional scale for this small residual CNN and should learn the simple local-shape task while retaining stable late training, so it is predicted to have the lowest test cross-entropy. Choice A's 0.01 rate can make rapid initial progress, but the constant high rate, minibatch noise, and AdamW decay make late optimization more oscillatory and increase the risk of poorly calibrated logits; therefore A is predicted worse than B. Choice C's 0.0001 rate is likely too conservative for this fixed budget, leaving the network substantially under-trained despite the task's simplicity, so it is predicted worse than A. The uncertain adjacent comparison is A versus C: if the high-rate run remains stable, A could outperform C substantially, but severe overshooting could reverse that pair.",
+      "model_identity_matches": true,
+      "question_sha256": "fe149e9843622bceb67c3b54cd250a4a37deca38ee361727b73d4cba653ef4a6",
+      "prompt_sha256": "4a96589a53222ebb608417c02f48bba546bab5a0c473dc0a2b316e468a30f89f"
+    },
+    {
+      "model": "claude-opus-5-5",
+      "question_id": "q_ec5ca80d9651d097f461319ad3cd14b3",
+      "family": "image_classification",
+      "task": "ranking3",
+      "probe": null,
+      "template_id": "pooling_coordinate",
+      "instance_id": "pooling_coordinate_s841901",
+      "status": "complete",
+      "gold_order": [
+        "A",
+        "C",
+        "B"
+      ],
+      "predicted_order": [
+        "C",
+        "A",
+        "B"
+      ],
+      "exact_order_correct": false,
+      "public_content": "I predict C has the lowest held-out loss, then A, then B. This comes from architectural reasoning only. The main uncertainty is the order of C and A, while B being worst is fairly safe.\n\n<explanation>\n**Task.** In `relative_position`, the label depends on the sign and dominant axis of the displacement between the circle's centroid (channel 0) and the square's centroid (channel 1). Objects are separated by at least about 2.9 px on the dominant axis, and often by much more.\n\n**Receptive field of the shared trunk.** All three choices use the same trunk:\n- `stem_stride=1` makes the stem a 1×1 convolution.\n- It is followed by two residual blocks, each with one 3×3 convolution.\n- So each output feature sees only about a 5×5 patch, which usually cannot contain both objects at once.\n- The relational computation must therefore happen after pooling, in the linear head.\n\n**C (coordinates + global mean pool) — best.** Two extra channels give each pixel its x and y coordinate.\n- The per-pixel GELU MLPs can form coordinate-weighted features for each channel, such as \"channel-0 mass × x\" and \"channel-1 mass × x\".\n- `normalize_mass` fixes each object's total mass, so global averages of these features approximate each object's centroid, up to the 0.8–1.2 intensity factor.\n- A linear head on centroid differences, with logits (dx, −dx, dy, −dy), implements the dominant-axis argmax exactly.\n- So this model can represent the label rule closely and give sharp, well-calibrated probabilities. The intensity scaling adds some noise.\n\n**A (3×3 spatial pooling grid, no coordinates) — middle.**\n- The 9 cells of 8×8 pixels give coarse location through which cells hold each channel's mass.\n- Mass split across cell boundaries gives some interpolation of position.\n- Within a cell, mean pooling discards exact position, so near-boundary cases (small separations, or |dx|≈|dy| down to the 1.5 px margin) stay ambiguous. That should raise cross-entropy relative to C.\n- It is still far above chance.\n\n**B (global mean pool, no coordinates) — worst.**\n- The model is almost translation-invariant; only zero-padding edge effects carry any position signal.\n- The local receptive field cannot relate the two objects, so features cannot encode their relative position.\n- Expected loss is near chance, about ln 4 ≈ 1.386.\n\n**Uncertainty.** A versus C is the less certain pair. C must learn coordinate×intensity products within 300 steps, and the independent per-channel intensity scales bias the pooled \"centroids\". A's coarse grid features are easier to learn. On balance, the exact linear separability given by coordinates favours C. The B-last placement is robust.\n</explanation>\n\n<answer>{\"best_to_worst\": [\"C\", \"A\", \"B\"]}</answer>",
+      "public_explanation": "**Task.** In `relative_position`, the label depends on the sign and dominant axis of the displacement between the circle's centroid (channel 0) and the square's centroid (channel 1). Objects are separated by at least about 2.9 px on the dominant axis, and often by much more.\n\n**Receptive field of the shared trunk.** All three choices use the same trunk:\n- `stem_stride=1` makes the stem a 1×1 convolution.\n- It is followed by two residual blocks, each with one 3×3 convolution.\n- So each output feature sees only about a 5×5 patch, which usually cannot contain both objects at once.\n- The relational computation must therefore happen after pooling, in the linear head.\n\n**C (coordinates + global mean pool) — best.** Two extra channels give each pixel its x and y coordinate.\n- The per-pixel GELU MLPs can form coordinate-weighted features for each channel, such as \"channel-0 mass × x\" and \"channel-1 mass × x\".\n- `normalize_mass` fixes each object's total mass, so global averages of these features approximate each object's centroid, up to the 0.8–1.2 intensity factor.\n- A linear head on centroid differences, with logits (dx, −dx, dy, −dy), implements the dominant-axis argmax exactly.\n- So this model can represent the label rule closely and give sharp, well-calibrated probabilities. The intensity scaling adds some noise.\n\n**A (3×3 spatial pooling grid, no coordinates) — middle.**\n- The 9 cells of 8×8 pixels give coarse location through which cells hold each channel's mass.\n- Mass split across cell boundaries gives some interpolation of position.\n- Within a cell, mean pooling discards exact position, so near-boundary cases (small separations, or |dx|≈|dy| down to the 1.5 px margin) stay ambiguous. That should raise cross-entropy relative to C.\n- It is still far above chance.\n\n**B (global mean pool, no coordinates) — worst.**\n- The model is almost translation-invariant; only zero-padding edge effects carry any position signal.\n- The local receptive field cannot relate the two objects, so features cannot encode their relative position.\n- Expected loss is near chance, about ln 4 ≈ 1.386.\n\n**Uncertainty.** A versus C is the less certain pair. C must learn coordinate×intensity products within 300 steps, and the independent per-channel intensity scales bias the pooled \"centroids\". A's coarse grid features are easier to learn. On balance, the exact linear separability given by coordinates favours C. The B-last placement is robust.",
+      "model_identity_matches": true,
+      "question_sha256": "c49c76198b89f36b58a6aef21918d2eed4e8519e6d5bbe0ee7735814f794b70c",
+      "prompt_sha256": "96b9a7bf88c4db15676f0cee2e94a9aa27a5bd3f64d74e65576e236ca832403b"
+    },
+    {
+      "model": "claude-opus-5-5",
+      "question_id": "q_d26f5adafb3e08bb7f45a0b9d0d21acd",
+      "family": "image_classification",
+      "task": "ranking3",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_ec5ca80d9651d097f461319ad3cd14b3"
+      },
+      "template_id": "pooling_coordinate",
+      "instance_id": "pooling_coordinate_s841901",
+      "status": "complete",
+      "gold_order": [
+        "B",
+        "A",
+        "C"
+      ],
+      "predicted_order": [
+        "A",
+        "B",
+        "C"
+      ],
+      "exact_order_correct": false,
+      "public_content": "<explanation>\n**Task requirement.** In `relative_position`, the label depends on the displacement between the circle (channel 0) and the square (channel 1). The dominant-axis offset is at least about 2.9 px, and objects are often much farther apart. The receptive field is small:\n- The stem kernel equals `stem_stride = 1`, so the stem is a 1×1 conv.\n- Two 3×3 blocks follow, giving a receptive field of only 5×5.\n\nSo no local feature can see both objects in most images. Position information must survive pooling for the linear head to compare the two objects.\n\n**C (mean pooling, no coordinates) — worst.** Global average pooling of a nearly translation-equivariant conv stack throws away absolute position. Two residual sources of signal remain: zero-padding border effects, and cases where the objects overlap within 5 px. Neither is enough to recover left/right/above/below reliably. Accuracy should be near chance, and cross-entropy near ln 4 ≈ 1.39.\n\n**B (3×3 spatial pooling) — middle.** The head sees per-cell channel features. Because of mass normalization, a linear head can form approximate centroid differences in x and y. Logits of the form (−dx, dx, −dy, dy) then implement the dominant-axis argmax. However, the grid is coarse (8-px cells), and object centers lie in roughly [5, 18]. Many objects therefore fall entirely inside the middle cell, where sub-cell position is invisible. Close pairs become ambiguous, and miscalibrated errors on them inflate cross-entropy.\n\n**A (CoordConv + mean pooling) — best.** The x/y coordinate channels enter the 1×1 stem. GELU MLPs with per-pixel LayerNorm can form approximate products such as channel·x. After mean pooling, these become continuous centroid-like features for each channel, which the head compares linearly. This gives finer resolution than B's grid, consistent with the known CoordConv advantage on relational-position tasks.\n\n**Uncertainty.**\n- A must learn multiplicative interactions within only 300 steps, while B's coarse localization is available almost immediately. B could therefore beat A if optimization is slow.\n- C being last is high-confidence.\n</explanation>\n\n<answer>{\"best_to_worst\": [\"A\", \"B\", \"C\"]}</answer>",
+      "public_explanation": "**Task requirement.** In `relative_position`, the label depends on the displacement between the circle (channel 0) and the square (channel 1). The dominant-axis offset is at least about 2.9 px, and objects are often much farther apart. The receptive field is small:\n- The stem kernel equals `stem_stride = 1`, so the stem is a 1×1 conv.\n- Two 3×3 blocks follow, giving a receptive field of only 5×5.\n\nSo no local feature can see both objects in most images. Position information must survive pooling for the linear head to compare the two objects.\n\n**C (mean pooling, no coordinates) — worst.** Global average pooling of a nearly translation-equivariant conv stack throws away absolute position. Two residual sources of signal remain: zero-padding border effects, and cases where the objects overlap within 5 px. Neither is enough to recover left/right/above/below reliably. Accuracy should be near chance, and cross-entropy near ln 4 ≈ 1.39.\n\n**B (3×3 spatial pooling) — middle.** The head sees per-cell channel features. Because of mass normalization, a linear head can form approximate centroid differences in x and y. Logits of the form (−dx, dx, −dy, dy) then implement the dominant-axis argmax. However, the grid is coarse (8-px cells), and object centers lie in roughly [5, 18]. Many objects therefore fall entirely inside the middle cell, where sub-cell position is invisible. Close pairs become ambiguous, and miscalibrated errors on them inflate cross-entropy.\n\n**A (CoordConv + mean pooling) — best.** The x/y coordinate channels enter the 1×1 stem. GELU MLPs with per-pixel LayerNorm can form approximate products such as channel·x. After mean pooling, these become continuous centroid-like features for each channel, which the head compares linearly. This gives finer resolution than B's grid, consistent with the known CoordConv advantage on relational-position tasks.\n\n**Uncertainty.**\n- A must learn multiplicative interactions within only 300 steps, while B's coarse localization is available almost immediately. B could therefore beat A if optimization is slow.\n- C being last is high-confidence.",
+      "model_identity_matches": true,
+      "question_sha256": "bcd642823764467e01977a3c0e3dd725658acbd0a5efb38574ea335e3895452f",
+      "prompt_sha256": "cb88b1fdcf74509478ae65ed806dec1790dcf7f8a5b27145004053558b0cf3ea"
+    },
+    {
+      "model": "claude-opus-5-5",
+      "question_id": "q_8a36fc443f07ff9476da1cb066a63d67",
+      "family": "image_classification",
+      "task": "ranking3",
+      "probe": null,
+      "template_id": "pooling_coordinate",
+      "instance_id": "pooling_coordinate_s841902",
+      "status": "complete",
+      "gold_order": [
+        "B",
+        "C",
+        "A"
+      ],
+      "predicted_order": [
+        "C",
+        "B",
+        "A"
+      ],
+      "exact_order_correct": false,
+      "public_content": "<explanation>\n**Task requirements.** The task is `relative_position`. Channel 0 holds a circle and channel 1 a square. The label is the sign of the dominant-axis displacement between their centers. The two objects are at least about 2.9 px apart and usually much farther, so the model must compare object positions across the whole image.\n\n**Receptive field of the base network.** The stem is a 1×1 convolution, because `kernel_size = stem_stride = 1`. Each block then contributes one 3×3 convolution, so a feature's receptive field is only about 5×5. Objects are typically separated by more than that, so no single local feature sees both of them.\n\n**A (global mean pool, no coordinates) — worst.** Global averaging throws away where features occurred. The only positional cues left are border effects from zero padding near image edges. Those are weak and only loosely tied to the relative displacement. Predictions should therefore stay near chance, with cross-entropy close to ln 4 ≈ 1.39, perhaps a little lower.\n\n**B (3×3 spatial pooling) — middle.** The head receives each channel's features in 9 coarse cells of 8×8 px. A linear readout can estimate a coarse centroid for each object, roughly mass-weighted cell positions. Mass normalization helps this. The readout can then compare the two centroids. This is clearly better than A. However, the 8-px quantization blurs the comparison when the objects fall in the same or neighboring cells, or when the two axes are close. Some examples will stay uncertain, so cross-entropy remains moderate.\n\n**C (coordinate channels + mean pool) — best.** The x/y coordinate channels pass through the linear stem and then the GELU MLP layers. These nonlinearities can approximate products such as coordinate × channel-0 intensity. Mean pooling those features yields continuous first moments, Σx·m₀ and Σx·m₁. Because mass is normalized, these are nearly linear in each object's centroid. The head can then read out x₀ − x₁ and y₀ − y₁ almost linearly. That is a much finer positional signal than B's 3×3 grid. The intensity multiplier (0.8–1.2) adds some noise but rarely flips the sign of a displacement of at least 2.9 px.\n\n**Uncertainty.** The main risk is whether GELU can learn clean enough products within 300 steps. If it cannot, B's grid could match or beat C. I still expect C < B < A in loss.\n</explanation>\n\n<answer>{\"best_to_worst\": [\"C\", \"B\", \"A\"]}</answer>",
+      "public_explanation": "**Task requirements.** The task is `relative_position`. Channel 0 holds a circle and channel 1 a square. The label is the sign of the dominant-axis displacement between their centers. The two objects are at least about 2.9 px apart and usually much farther, so the model must compare object positions across the whole image.\n\n**Receptive field of the base network.** The stem is a 1×1 convolution, because `kernel_size = stem_stride = 1`. Each block then contributes one 3×3 convolution, so a feature's receptive field is only about 5×5. Objects are typically separated by more than that, so no single local feature sees both of them.\n\n**A (global mean pool, no coordinates) — worst.** Global averaging throws away where features occurred. The only positional cues left are border effects from zero padding near image edges. Those are weak and only loosely tied to the relative displacement. Predictions should therefore stay near chance, with cross-entropy close to ln 4 ≈ 1.39, perhaps a little lower.\n\n**B (3×3 spatial pooling) — middle.** The head receives each channel's features in 9 coarse cells of 8×8 px. A linear readout can estimate a coarse centroid for each object, roughly mass-weighted cell positions. Mass normalization helps this. The readout can then compare the two centroids. This is clearly better than A. However, the 8-px quantization blurs the comparison when the objects fall in the same or neighboring cells, or when the two axes are close. Some examples will stay uncertain, so cross-entropy remains moderate.\n\n**C (coordinate channels + mean pool) — best.** The x/y coordinate channels pass through the linear stem and then the GELU MLP layers. These nonlinearities can approximate products such as coordinate × channel-0 intensity. Mean pooling those features yields continuous first moments, Σx·m₀ and Σx·m₁. Because mass is normalized, these are nearly linear in each object's centroid. The head can then read out x₀ − x₁ and y₀ − y₁ almost linearly. That is a much finer positional signal than B's 3×3 grid. The intensity multiplier (0.8–1.2) adds some noise but rarely flips the sign of a displacement of at least 2.9 px.\n\n**Uncertainty.** The main risk is whether GELU can learn clean enough products within 300 steps. If it cannot, B's grid could match or beat C. I still expect C < B < A in loss.",
+      "model_identity_matches": true,
+      "question_sha256": "b654d1008856bbc9c8efc3cafe828fe806a3a470a2ca6349899acfa8d15fd97f",
+      "prompt_sha256": "bd9efbd2572219260c6ec3d160a4d2a8897683afe96d530a40444b8ca7c66ac3"
+    },
+    {
+      "model": "claude-opus-5-5",
+      "question_id": "q_a1af9439f07fdde610fbdc50eea762d9",
+      "family": "image_classification",
+      "task": "ranking3",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_8a36fc443f07ff9476da1cb066a63d67"
+      },
+      "template_id": "pooling_coordinate",
+      "instance_id": "pooling_coordinate_s841902",
+      "status": "complete",
+      "gold_order": [
+        "C",
+        "A",
+        "B"
+      ],
+      "predicted_order": [
+        "A",
+        "C",
+        "B"
+      ],
+      "exact_order_correct": false,
+      "public_content": "<explanation>\n**What the task needs.** The label is the circle's position (channel 0) relative to the square (channel 1), taken along the dominant displacement axis. Solving it requires absolute or relative position information to survive into the classifier head.\n\n**B (base).** The stem is a 1×1 conv and each block has one 3×3 conv, so the receptive field is about 5×5 pixels. The objects are at least about 2.9 px apart and usually much farther, so no single feature location sees both shapes. Global mean pooling then discards position, apart from weak zero-padding edge effects. The model is therefore close to translation-invariant on a translation-defined label. Its loss should stay near chance (ln 4 ≈ 1.39), with at most a small gain from border cues.\n\n**C (3×3 spatial pooling).** The head sees nine 8×8 cell averages per channel. It can compare which coarse cell holds the circle and which holds the square, and that resolves many pairs, especially widely separated ones. Pairs in the same or adjacent cells stay ambiguous, because position inside a cell is averaged away. This should clearly beat B, but it leaves an irreducible coarse-grid error and calibration penalty.\n\n**A (CoordConv + mean pool).** The x/y coordinate channels go in at the stem. The GELU MLP blocks can approximately form coordinate × channel-intensity products. After mean pooling, these become mass-weighted centroids for each channel. Mass is normalized, and the intensity multiplier only varies between 0.8 and 1.2. The head then needs centroid differences, which are nearly linear features. That gives fine-grained position information with a simple decision rule, so A should give the lowest cross-entropy.\n\n**Uncertainty.** A depends on learning the multiplicative interactions within 300 steps at lr 1e-3. If that learning is slow, C's directly usable cell features could compete with A. I am confident B is worst.\n</explanation>\n\n<answer>{\"best_to_worst\": [\"A\", \"C\", \"B\"]}</answer>",
+      "public_explanation": "**What the task needs.** The label is the circle's position (channel 0) relative to the square (channel 1), taken along the dominant displacement axis. Solving it requires absolute or relative position information to survive into the classifier head.\n\n**B (base).** The stem is a 1×1 conv and each block has one 3×3 conv, so the receptive field is about 5×5 pixels. The objects are at least about 2.9 px apart and usually much farther, so no single feature location sees both shapes. Global mean pooling then discards position, apart from weak zero-padding edge effects. The model is therefore close to translation-invariant on a translation-defined label. Its loss should stay near chance (ln 4 ≈ 1.39), with at most a small gain from border cues.\n\n**C (3×3 spatial pooling).** The head sees nine 8×8 cell averages per channel. It can compare which coarse cell holds the circle and which holds the square, and that resolves many pairs, especially widely separated ones. Pairs in the same or adjacent cells stay ambiguous, because position inside a cell is averaged away. This should clearly beat B, but it leaves an irreducible coarse-grid error and calibration penalty.\n\n**A (CoordConv + mean pool).** The x/y coordinate channels go in at the stem. The GELU MLP blocks can approximately form coordinate × channel-intensity products. After mean pooling, these become mass-weighted centroids for each channel. Mass is normalized, and the intensity multiplier only varies between 0.8 and 1.2. The head then needs centroid differences, which are nearly linear features. That gives fine-grained position information with a simple decision rule, so A should give the lowest cross-entropy.\n\n**Uncertainty.** A depends on learning the multiplicative interactions within 300 steps at lr 1e-3. If that learning is slow, C's directly usable cell features could compete with A. I am confident B is worst.",
+      "model_identity_matches": true,
+      "question_sha256": "69ce17fda258c80295ce1eddac2cc20df9331b638163c10735358bac94126d2c",
+      "prompt_sha256": "a7cbc05675747c48578f0b6cdadc6bd2c71c8a6452acff8534078b2252305975"
+    },
+    {
+      "model": "claude-opus-5-5",
+      "question_id": "q_ededc5c5112d4fee539b6d60dbb9549c",
+      "family": "image_classification",
+      "task": "ranking3",
+      "probe": null,
+      "template_id": "pooling_coordinate",
+      "instance_id": "pooling_coordinate_s841903",
+      "status": "complete",
+      "gold_order": [
+        "A",
+        "B",
+        "C"
+      ],
+      "predicted_order": [
+        "B",
+        "A",
+        "C"
+      ],
+      "exact_order_correct": false,
+      "public_content": "Predicted order, best to worst: B, A, C. The deciding factor is how much absolute position information survives the pooling.<explanation>\n**Task.** The task is `relative_position`. The label is the dominant-axis sign of the circle's centre minus the square's centre. Given the two centroid differences (dx, dy), the four logits (−dx, dx, −dy, dy) solve it exactly through argmax. So a model wins if it can compute accurate, roughly linear centroid differences.\n\n**Shared architecture.**\n- The stem is a 1×1 conv, because the kernel size equals `stem_stride` = 1.\n- Two residual blocks with 3×3 convs give only about a 5×5 receptive field.\n- Objects are typically 3–14 px apart, so no single feature location sees both objects. Relational information must come from absolute-position cues that survive pooling.\n\n**B (coordinates + global mean pool) vs A.**\n- B's CoordConv channels, combined with per-pixel LayerNorm and GELU, can form features like c0·x and c1·y.\n- Because each channel's mass is normalised, the global mean of those features is close to the precise centroid of each object.\n- A linear head on these centroids nearly implements the labelling rule, and this is a well-known setting where CoordConv excels.\n- Margins are tight: |dx| and |dy| must differ by at least 1.5 px. Sub-cell precision therefore matters for cross-entropy.\n\n**A (3×3 spatial pool, no coordinates) vs C.**\n- A gets coarse position from its 8×8-pixel pooling cells. Per-cell mass approximates a quantised centroid, so the linear head can approximate dx and dy.\n- Within-cell position is mostly lost, apart from weak padding effects. This leaves many near-diagonal or same-cell configurations ambiguous, giving clearly-above-chance but imperfect accuracy and higher cross-entropy than B.\n\n**C (global mean pool, no coordinates) is worst.**\n- C is nearly translation-invariant; only zero-padding border effects carry any position.\n- With a 5×5 receptive field it cannot relate the two objects, so it stays near chance (cross-entropy about ln 4 ≈ 1.39).\n\n**Uncertainty.** The main risk is B → A. B has to learn multiplicative coordinate features within 300 steps, and if that is slow, A's ready-made spatial grid could edge it out. C being last is high-confidence.\n</explanation>\n\n<answer>{\"best_to_worst\": [\"B\", \"A\", \"C\"]}</answer>",
+      "public_explanation": "**Task.** The task is `relative_position`. The label is the dominant-axis sign of the circle's centre minus the square's centre. Given the two centroid differences (dx, dy), the four logits (−dx, dx, −dy, dy) solve it exactly through argmax. So a model wins if it can compute accurate, roughly linear centroid differences.\n\n**Shared architecture.**\n- The stem is a 1×1 conv, because the kernel size equals `stem_stride` = 1.\n- Two residual blocks with 3×3 convs give only about a 5×5 receptive field.\n- Objects are typically 3–14 px apart, so no single feature location sees both objects. Relational information must come from absolute-position cues that survive pooling.\n\n**B (coordinates + global mean pool) vs A.**\n- B's CoordConv channels, combined with per-pixel LayerNorm and GELU, can form features like c0·x and c1·y.\n- Because each channel's mass is normalised, the global mean of those features is close to the precise centroid of each object.\n- A linear head on these centroids nearly implements the labelling rule, and this is a well-known setting where CoordConv excels.\n- Margins are tight: |dx| and |dy| must differ by at least 1.5 px. Sub-cell precision therefore matters for cross-entropy.\n\n**A (3×3 spatial pool, no coordinates) vs C.**\n- A gets coarse position from its 8×8-pixel pooling cells. Per-cell mass approximates a quantised centroid, so the linear head can approximate dx and dy.\n- Within-cell position is mostly lost, apart from weak padding effects. This leaves many near-diagonal or same-cell configurations ambiguous, giving clearly-above-chance but imperfect accuracy and higher cross-entropy than B.\n\n**C (global mean pool, no coordinates) is worst.**\n- C is nearly translation-invariant; only zero-padding border effects carry any position.\n- With a 5×5 receptive field it cannot relate the two objects, so it stays near chance (cross-entropy about ln 4 ≈ 1.39).\n\n**Uncertainty.** The main risk is B → A. B has to learn multiplicative coordinate features within 300 steps, and if that is slow, A's ready-made spatial grid could edge it out. C being last is high-confidence.",
+      "model_identity_matches": true,
+      "question_sha256": "661745595e37e2eb51a8e4ea9f4541b5ac196612d45a257c6c3c0273fe6336e3",
+      "prompt_sha256": "da0d0d7d07d60af1902e5beb2ba66445e0a15d1a289ccee9caed204f50087383"
+    },
+    {
+      "model": "claude-opus-5-5",
+      "question_id": "q_89167763187b9bba108b563ae46fedb6",
+      "family": "image_classification",
+      "task": "ranking3",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_ededc5c5112d4fee539b6d60dbb9549c"
+      },
+      "template_id": "pooling_coordinate",
+      "instance_id": "pooling_coordinate_s841903",
+      "status": "complete",
+      "gold_order": [
+        "B",
+        "C",
+        "A"
+      ],
+      "predicted_order": [
+        "C",
+        "B",
+        "A"
+      ],
+      "exact_order_correct": false,
+      "public_content": "<explanation>\n**Task.** The task is `relative_position`. The circle is in channel 0 and the square in channel 1. The label depends on the sign and dominant axis of the difference between the two object centers, dx and dy. If a model can extract each object's (x, y) location, four logits roughly equal to ±dx and ±dy give the correct argmax exactly. The models therefore differ mainly in how much absolute position information reaches the linear head.\n\n**Receptive field.** The stem is a 1×1 convolution, followed by two 3×3 conv blocks. Each feature therefore sees only about 5×5 pixels. Object centers can be up to about 15 px apart, so local features cannot compare the two objects. Any comparison must come from position-aware pooling or coordinates.\n\n**C (coordinates + mean pool), predicted best.** CoordConv x/y channels enter through the stem. The GELU blocks can form intensity×coordinate interactions, and global mean pooling then yields centroid-like features per channel. Mass normalization makes these clean. This gives continuous position, which a linear head can turn into ±dx and ±dy logits. The data are noise-free with 1024 training images, so it should reach low cross entropy. The risk is that learning these multiplicative features takes some of the 300 steps.\n\n**B (3×3 spatial pooling, no coordinates).** The convolutions are translation-equivariant, so position comes only from which of nine 8-px cells holds each object's mass.\n- Classes are separated by at least about 2.9 px on the dominant axis, and by at least 1.5 px between the |dx| and |dy| margins.\n- Many pairs fall within the same or adjacent cells, so the coarse grid leaves ambiguous cases. Soft edges, objects straddling cells and padding effects give only partial sub-cell information.\n- Accuracy should be decent but calibrated cross entropy worse than C.\n\n**A (global mean pool, no coordinates), predicted worst.** The model is nearly translation-invariant. Only zero-padding border effects carry any position signal. Since the 5×5 receptive field cannot capture the relation, A should stay near chance, with cross entropy around ln 4 ≈ 1.39. This makes it clearly last.\n\n**Uncertainty.** The B-vs-C order is the main uncertainty. B's explicit grid features are easy to optimize, and C needs to learn nonlinear coordinate products in a short budget. A being worst is high-confidence.\n</explanation>\n\n<answer>{\"best_to_worst\": [\"C\", \"B\", \"A\"]}</answer>",
+      "public_explanation": "**Task.** The task is `relative_position`. The circle is in channel 0 and the square in channel 1. The label depends on the sign and dominant axis of the difference between the two object centers, dx and dy. If a model can extract each object's (x, y) location, four logits roughly equal to ±dx and ±dy give the correct argmax exactly. The models therefore differ mainly in how much absolute position information reaches the linear head.\n\n**Receptive field.** The stem is a 1×1 convolution, followed by two 3×3 conv blocks. Each feature therefore sees only about 5×5 pixels. Object centers can be up to about 15 px apart, so local features cannot compare the two objects. Any comparison must come from position-aware pooling or coordinates.\n\n**C (coordinates + mean pool), predicted best.** CoordConv x/y channels enter through the stem. The GELU blocks can form intensity×coordinate interactions, and global mean pooling then yields centroid-like features per channel. Mass normalization makes these clean. This gives continuous position, which a linear head can turn into ±dx and ±dy logits. The data are noise-free with 1024 training images, so it should reach low cross entropy. The risk is that learning these multiplicative features takes some of the 300 steps.\n\n**B (3×3 spatial pooling, no coordinates).** The convolutions are translation-equivariant, so position comes only from which of nine 8-px cells holds each object's mass.\n- Classes are separated by at least about 2.9 px on the dominant axis, and by at least 1.5 px between the |dx| and |dy| margins.\n- Many pairs fall within the same or adjacent cells, so the coarse grid leaves ambiguous cases. Soft edges, objects straddling cells and padding effects give only partial sub-cell information.\n- Accuracy should be decent but calibrated cross entropy worse than C.\n\n**A (global mean pool, no coordinates), predicted worst.** The model is nearly translation-invariant. Only zero-padding border effects carry any position signal. Since the 5×5 receptive field cannot capture the relation, A should stay near chance, with cross entropy around ln 4 ≈ 1.39. This makes it clearly last.\n\n**Uncertainty.** The B-vs-C order is the main uncertainty. B's explicit grid features are easy to optimize, and C needs to learn nonlinear coordinate products in a short budget. A being worst is high-confidence.",
+      "model_identity_matches": true,
+      "question_sha256": "759fa1e04034653734a16f38b0104330b14502983317cb0bc8f4117f41e6a124",
+      "prompt_sha256": "434ca069d2d5e78f113d3a2b99af570fdd19daaf0239cc568f3f7c481444684d"
+    },
+    {
+      "model": "claude-opus-5-5",
+      "question_id": "q_fcf232651387ce984a8140da96c318d3",
+      "family": "image_classification",
+      "task": "ranking3",
+      "probe": null,
+      "template_id": "kernel_stride_texture",
+      "instance_id": "kernel_stride_texture_s841901",
+      "status": "complete",
+      "gold_order": [
+        "B",
+        "A",
+        "C"
+      ],
+      "predicted_order": [
+        "A",
+        "B",
+        "C"
+      ],
+      "exact_order_correct": false,
+      "public_content": "<explanation>\n**Task.** The label is the orientation of a channel-0 grating: 0°, 45°, 90° or 135°. Its frequency is 1.5–3 cycles per 24 px, so the stripe period is about 8–16 px. The grating sits under a Gaussian envelope (σ ≈ 6.7 px) at a random location. Channel 1 holds an independent distractor grating. Because the label depends on oriented structure at the scale of a period, receptive field coverage of at least one period matters most. All three models are the same CNN except for stem stride and kernel size. All use global mean pooling and the same optimizer and budget.\n\n**Receptive fields (in input pixels).**\n- **A** (stride 2, kernel 5): stem 2 px, then two 5×5 convs at stride 2, giving about 18 px.\n  - This covers one or more full periods for every frequency.\n  - The 12×12 feature map still gives many positions for global averaging.\n  - It is the best balance of scale and resolution.\n- **B** (stride 4, kernel 3): a 4×4 patch embedding, then two 3×3 convs on a 6×6 map, giving about 20 px.\n  - The receptive field is adequate.\n  - However, the highest-frequency gratings (period 8 px) sit near the Nyquist limit of the stride-4 grid.\n  - The linear patch projection must capture orientation within each 4×4 patch.\n  - Only 36 positions are averaged.\n  - Expect slightly worse calibration than A.\n- **C** (stride 1, kernel 3): receptive field of only about 5 px, smaller than half a period for low-frequency gratings.\n  - Orientation must be inferred from local intensity gradients.\n  - Those gradients are confounded by the Gaussian envelope's own radial gradients.\n  - Turning sign-varying gradients into a sign-invariant orientation code requires nonlinear processing, using just two blocks.\n  - Dense mean pooling over 576 positions helps somewhat.\n  - Even so, it is the least well matched to the structure scale, so I expect the highest cross-entropy.\n\n**Adjacent pairs.**\n- **A over B:** A has a comparable receptive field with finer sampling, avoiding near-Nyquist aliasing of period-8 gratings.\n- **B over C:** B's receptive field is adequate, while C's is too small for 8–16 px periods.\n\n**Uncertainty.** B vs C is the least certain call. C's dense stride-1 features and heavy spatial averaging could let gradient-based orientation detectors work well. B's coarse patching could also hurt more than expected at high frequencies.\n</explanation>\n\n<answer>{\"best_to_worst\": [\"A\", \"B\", \"C\"]}</answer>",
+      "public_explanation": "**Task.** The label is the orientation of a channel-0 grating: 0°, 45°, 90° or 135°. Its frequency is 1.5–3 cycles per 24 px, so the stripe period is about 8–16 px. The grating sits under a Gaussian envelope (σ ≈ 6.7 px) at a random location. Channel 1 holds an independent distractor grating. Because the label depends on oriented structure at the scale of a period, receptive field coverage of at least one period matters most. All three models are the same CNN except for stem stride and kernel size. All use global mean pooling and the same optimizer and budget.\n\n**Receptive fields (in input pixels).**\n- **A** (stride 2, kernel 5): stem 2 px, then two 5×5 convs at stride 2, giving about 18 px.\n  - This covers one or more full periods for every frequency.\n  - The 12×12 feature map still gives many positions for global averaging.\n  - It is the best balance of scale and resolution.\n- **B** (stride 4, kernel 3): a 4×4 patch embedding, then two 3×3 convs on a 6×6 map, giving about 20 px.\n  - The receptive field is adequate.\n  - However, the highest-frequency gratings (period 8 px) sit near the Nyquist limit of the stride-4 grid.\n  - The linear patch projection must capture orientation within each 4×4 patch.\n  - Only 36 positions are averaged.\n  - Expect slightly worse calibration than A.\n- **C** (stride 1, kernel 3): receptive field of only about 5 px, smaller than half a period for low-frequency gratings.\n  - Orientation must be inferred from local intensity gradients.\n  - Those gradients are confounded by the Gaussian envelope's own radial gradients.\n  - Turning sign-varying gradients into a sign-invariant orientation code requires nonlinear processing, using just two blocks.\n  - Dense mean pooling over 576 positions helps somewhat.\n  - Even so, it is the least well matched to the structure scale, so I expect the highest cross-entropy.\n\n**Adjacent pairs.**\n- **A over B:** A has a comparable receptive field with finer sampling, avoiding near-Nyquist aliasing of period-8 gratings.\n- **B over C:** B's receptive field is adequate, while C's is too small for 8–16 px periods.\n\n**Uncertainty.** B vs C is the least certain call. C's dense stride-1 features and heavy spatial averaging could let gradient-based orientation detectors work well. B's coarse patching could also hurt more than expected at high frequencies.",
+      "model_identity_matches": true,
+      "question_sha256": "4431e62e0873c40530257a955543666435e139e1b1b061c71a2417ff7a9b6c4d",
+      "prompt_sha256": "b3e5dee7dad45d67683d82256d6dedda1524634b927722ee0cb2fae8b0fec85c"
+    },
+    {
+      "model": "claude-opus-5-5",
+      "question_id": "q_9d3f74e3a6db4ef85ae57f643c6a4f29",
+      "family": "image_classification",
+      "task": "ranking3",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_fcf232651387ce984a8140da96c318d3"
+      },
+      "template_id": "kernel_stride_texture",
+      "instance_id": "kernel_stride_texture_s841901",
+      "status": "complete",
+      "gold_order": [
+        "C",
+        "B",
+        "A"
+      ],
+      "predicted_order": [
+        "B",
+        "C",
+        "A"
+      ],
+      "exact_order_correct": false,
+      "public_content": "<explanation>\n**Task.** The task is texture_orientation. Channel 0 holds a Gaussian-enveloped grating at 1.5–3 cycles per 24 px, so the stripe period is 8–16 px. The class is one of four wave-vector angles. Channel 1 is a distractor. Only the model varies. The stem is a patchify conv (kernel = stride). The two residual blocks use kernel 3 or 5, followed by global mean pooling.\n\n**Main factor: receptive field relative to the grating period.**\n- **B** (stride 2, k=5): 12×12 grid. The effective receptive field is about 2 + 2·4·2 ≈ 18 px, which covers one to two periods. It keeps moderate spatial resolution, so mean pooling averages many orientation-selective responses.\n- **C** (stride 4, k=3): 6×6 grid. The receptive field is about 4 + 2·2·4 ≈ 20 px, also enough for the period. However, the 4×4 patches are as coarse as half of a period-8 grating, and only 36 positions are pooled. The blocks are also smaller.\n- **A** (stride 1, k=3): the stem is a 1×1 conv, so the receptive field is only about 5 px. That is well under half a period for most gratings. Orientation must come from local intensity gradients, which vanish at stripe peaks and troughs and are confounded by the radial gradient of the Gaussian envelope. The pooled features are therefore noisier, which should give higher cross-entropy.\n\n**Adjacent pairs.**\n- **B < C:** Both see enough context. B's finer grid gives smoother, more reliable orientation evidence. C's coarse patchification may lose some phase and orientation fidelity at the higher frequencies. The gap is likely small.\n- **C < A:** A's very small receptive field is the clearest structural handicap for a stripe-period task.\n\n**Uncertainty.** The B vs C order is uncertain. The task may be easy enough that final cross-entropy is dominated by overconfidence on 1024 training images, and C's smaller capacity could then calibrate better.\n</explanation>\n\n<answer>{\"best_to_worst\": [\"B\", \"C\", \"A\"]}</answer>",
+      "public_explanation": "**Task.** The task is texture_orientation. Channel 0 holds a Gaussian-enveloped grating at 1.5–3 cycles per 24 px, so the stripe period is 8–16 px. The class is one of four wave-vector angles. Channel 1 is a distractor. Only the model varies. The stem is a patchify conv (kernel = stride). The two residual blocks use kernel 3 or 5, followed by global mean pooling.\n\n**Main factor: receptive field relative to the grating period.**\n- **B** (stride 2, k=5): 12×12 grid. The effective receptive field is about 2 + 2·4·2 ≈ 18 px, which covers one to two periods. It keeps moderate spatial resolution, so mean pooling averages many orientation-selective responses.\n- **C** (stride 4, k=3): 6×6 grid. The receptive field is about 4 + 2·2·4 ≈ 20 px, also enough for the period. However, the 4×4 patches are as coarse as half of a period-8 grating, and only 36 positions are pooled. The blocks are also smaller.\n- **A** (stride 1, k=3): the stem is a 1×1 conv, so the receptive field is only about 5 px. That is well under half a period for most gratings. Orientation must come from local intensity gradients, which vanish at stripe peaks and troughs and are confounded by the radial gradient of the Gaussian envelope. The pooled features are therefore noisier, which should give higher cross-entropy.\n\n**Adjacent pairs.**\n- **B < C:** Both see enough context. B's finer grid gives smoother, more reliable orientation evidence. C's coarse patchification may lose some phase and orientation fidelity at the higher frequencies. The gap is likely small.\n- **C < A:** A's very small receptive field is the clearest structural handicap for a stripe-period task.\n\n**Uncertainty.** The B vs C order is uncertain. The task may be easy enough that final cross-entropy is dominated by overconfidence on 1024 training images, and C's smaller capacity could then calibrate better.",
+      "model_identity_matches": true,
+      "question_sha256": "bf83f5ad28cb340602450b99ae2a826faf255b52db902074be2ee3dd627a6629",
+      "prompt_sha256": "71986c2ff181efef6d0cf1939f367e0eeb4af4813ce7e96f5da633d052e4bc23"
+    },
+    {
+      "model": "claude-opus-5-5",
+      "question_id": "q_a5f2d1e9542f2df31803626953d1af76",
+      "family": "image_classification",
+      "task": "ranking3",
+      "probe": null,
+      "template_id": "learning_rate",
+      "instance_id": "learning_rate_s841901",
+      "status": "complete",
+      "gold_order": [
+        "B",
+        "A",
+        "C"
+      ],
+      "predicted_order": [
+        "A",
+        "B",
+        "C"
+      ],
+      "exact_order_correct": false,
+      "public_content": "<explanation>\n**Setup.** All three choices are the same small residual CNN (about 15k parameters) with AdamW and global mean pooling. Only the learning rate differs: A uses 1e-3, B uses 1e-2 and C uses 1e-4.\n\n**The task.** In `local_shape`, the model must tell circle, square, diamond and cross apart. The stem is a 1×1 convolution followed by two 3×3 convolutions, so each feature sees only a 5×5 patch. Objects are about 5–9 px across, and mass normalization removes total intensity as a cue. The network therefore has to learn edge and corner statistics and average them globally. This is learnable but not trivial, so optimization speed within 1200 steps (about 37 epochs over 1024 images) matters a lot.\n\n**A (1e-3) before B (1e-2).** 1e-3 is the standard well-tuned Adam rate for a LayerNorm CNN this size. It should fit the shape features well within the budget. 1e-2 with a constant schedule and no decay will probably learn quickly, and LayerNorm plus clipping at norm 1.0 keep it from diverging. However, the final checkpoint is taken without annealing, so it carries large-step noise. The weights will also be sharper and the model more overconfident, which inflates held-out cross entropy even when accuracy is similar.\n\n**B before C (1e-4).** At 1e-4, 1200 Adam steps move each weight only about 0.1 in total. For a task that needs several conv layers to develop shape detectors, this likely leaves the model clearly underfit, with test CE well above the other two. That should cost more than B's noise and overconfidence.\n\n**Uncertainty.** A and B could swap. With a model this small and roughly 37 epochs, the higher rate might simply reach a better fit, and LayerNorm partly cancels the effective step size. C being last is the most confident call.\n</explanation>\n\n<answer>{\"best_to_worst\": [\"A\", \"B\", \"C\"]}</answer>",
+      "public_explanation": "**Setup.** All three choices are the same small residual CNN (about 15k parameters) with AdamW and global mean pooling. Only the learning rate differs: A uses 1e-3, B uses 1e-2 and C uses 1e-4.\n\n**The task.** In `local_shape`, the model must tell circle, square, diamond and cross apart. The stem is a 1×1 convolution followed by two 3×3 convolutions, so each feature sees only a 5×5 patch. Objects are about 5–9 px across, and mass normalization removes total intensity as a cue. The network therefore has to learn edge and corner statistics and average them globally. This is learnable but not trivial, so optimization speed within 1200 steps (about 37 epochs over 1024 images) matters a lot.\n\n**A (1e-3) before B (1e-2).** 1e-3 is the standard well-tuned Adam rate for a LayerNorm CNN this size. It should fit the shape features well within the budget. 1e-2 with a constant schedule and no decay will probably learn quickly, and LayerNorm plus clipping at norm 1.0 keep it from diverging. However, the final checkpoint is taken without annealing, so it carries large-step noise. The weights will also be sharper and the model more overconfident, which inflates held-out cross entropy even when accuracy is similar.\n\n**B before C (1e-4).** At 1e-4, 1200 Adam steps move each weight only about 0.1 in total. For a task that needs several conv layers to develop shape detectors, this likely leaves the model clearly underfit, with test CE well above the other two. That should cost more than B's noise and overconfidence.\n\n**Uncertainty.** A and B could swap. With a model this small and roughly 37 epochs, the higher rate might simply reach a better fit, and LayerNorm partly cancels the effective step size. C being last is the most confident call.",
+      "model_identity_matches": true,
+      "question_sha256": "25d9c3f94ad5b600270323b7d112c86f38e7651901282008cca2ddc2b73c52e0",
+      "prompt_sha256": "19e459c7fe0bbf7fbf89134a8b1169e6f621274eb8b134ae9313ed9aab7e070e"
+    },
+    {
+      "model": "claude-opus-5-5",
+      "question_id": "q_ccb7af737a4a7277553ef9ecb8d05e6b",
+      "family": "image_classification",
+      "task": "ranking3",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_a5f2d1e9542f2df31803626953d1af76"
+      },
+      "template_id": "learning_rate",
+      "instance_id": "learning_rate_s841901",
+      "status": "complete",
+      "gold_order": [
+        "C",
+        "B",
+        "A"
+      ],
+      "predicted_order": [
+        "B",
+        "C",
+        "A"
+      ],
+      "exact_order_correct": false,
+      "public_content": "<explanation>\n**Setup.** The task is `local_shape`: classify the channel‑0 shape (circle, square, diamond, cross) at radius 2.5–4.5 px, while channel 1 holds an independent distractor shape. The model is a small CNN of roughly 15k parameters:\n- a 1×1 stem (`stem_stride=1` gives kernel size 1);\n- two pre‑norm residual blocks, each with a 3×3 conv (5×5 receptive field) and a 1×1 MLP;\n- global mean pooling.\n\nThe fixed budget is 1200 updates of batch 32, about 37 epochs over 1024 training images. Gradients are clipped at norm 1.0 and the learning rate is constant. Only the AdamW learning rate varies: 1e‑4 (A), 1e‑3 (B) and 1e‑2 (C).\n\n**Main factor.** The question is whether each learning rate can reach a low‑loss solution within 1200 steps. Shapes are told apart by local edge‑orientation and corner statistics pooled globally. Mass normalization adds a per‑pixel intensity cue that partly overlaps with area. This is learnable but not trivial. Because the model is small and globally pooled, overfitting is limited, so optimization speed and final‑iterate stability dominate.\n\n**B before C.** AdamW at 1e‑3 is the well‑tuned regime for a LayerNorm residual CNN this size. It has enough steps to converge, and its final iterate is fairly stable. At 1e‑2 with a constant schedule, steps are ten times larger. LayerNorm and clipping make divergence unlikely, but the final checkpoint should sit in a noisier region. Without decay, logits can also become poorly calibrated, which inflates test cross‑entropy compared with B.\n\n**C before A.** At 1e‑4, 1200 Adam steps on a freshly initialized small CNN are likely clearly undertrained. Learning the shape‑discriminating edge features is slow, so test CE probably stays well above the other two. C still optimizes aggressively and should reach decent accuracy despite its noise.\n\n**Uncertainty.** C versus A is the least certain pair. If 1e‑2 makes training unstable through LayerNorm gain growth or oscillation, C could end up worst. A 1e‑4 run might also get further than expected on this small model. B being best is fairly confident.\n</explanation>\n\n<answer>{\"best_to_worst\": [\"B\", \"C\", \"A\"]}</answer>",
+      "public_explanation": "**Setup.** The task is `local_shape`: classify the channel‑0 shape (circle, square, diamond, cross) at radius 2.5–4.5 px, while channel 1 holds an independent distractor shape. The model is a small CNN of roughly 15k parameters:\n- a 1×1 stem (`stem_stride=1` gives kernel size 1);\n- two pre‑norm residual blocks, each with a 3×3 conv (5×5 receptive field) and a 1×1 MLP;\n- global mean pooling.\n\nThe fixed budget is 1200 updates of batch 32, about 37 epochs over 1024 training images. Gradients are clipped at norm 1.0 and the learning rate is constant. Only the AdamW learning rate varies: 1e‑4 (A), 1e‑3 (B) and 1e‑2 (C).\n\n**Main factor.** The question is whether each learning rate can reach a low‑loss solution within 1200 steps. Shapes are told apart by local edge‑orientation and corner statistics pooled globally. Mass normalization adds a per‑pixel intensity cue that partly overlaps with area. This is learnable but not trivial. Because the model is small and globally pooled, overfitting is limited, so optimization speed and final‑iterate stability dominate.\n\n**B before C.** AdamW at 1e‑3 is the well‑tuned regime for a LayerNorm residual CNN this size. It has enough steps to converge, and its final iterate is fairly stable. At 1e‑2 with a constant schedule, steps are ten times larger. LayerNorm and clipping make divergence unlikely, but the final checkpoint should sit in a noisier region. Without decay, logits can also become poorly calibrated, which inflates test cross‑entropy compared with B.\n\n**C before A.** At 1e‑4, 1200 Adam steps on a freshly initialized small CNN are likely clearly undertrained. Learning the shape‑discriminating edge features is slow, so test CE probably stays well above the other two. C still optimizes aggressively and should reach decent accuracy despite its noise.\n\n**Uncertainty.** C versus A is the least certain pair. If 1e‑2 makes training unstable through LayerNorm gain growth or oscillation, C could end up worst. A 1e‑4 run might also get further than expected on this small model. B being best is fairly confident.",
+      "model_identity_matches": true,
+      "question_sha256": "e9295f7e3d4ec6d81c798d4d1fc6a3096d0ce8078c216801b3eea1a2f503aa76",
+      "prompt_sha256": "f3537eac4759c8f01a1a47e0b0070b090c90bf07de006153996eeba4e8c6fa34"
+    },
+    {
+      "model": "claude-opus-5-5",
+      "question_id": "q_ba675b4af4aaa388d5e0ecb29edac798",
+      "family": "image_classification",
+      "task": "ranking3",
+      "probe": null,
+      "template_id": "learning_rate",
+      "instance_id": "learning_rate_s841902",
+      "status": "complete",
+      "gold_order": [
+        "C",
+        "A",
+        "B"
+      ],
+      "predicted_order": [
+        "A",
+        "C",
+        "B"
+      ],
+      "exact_order_correct": false,
+      "public_content": "<explanation>\n**Setup.** The task is `local_shape`: classify a circle, square, diamond or cross from channel 0. Channel 1 is a distractor. The model is a small CNN with a 1×1 stem, two residual 3×3 blocks, LayerNorm and global mean pooling, which gives a receptive field of about 5×5. It has to tell shapes apart from local edge and corner statistics, averaged over the image. The shapes have radius 2.5–4.5 px with soft edges, so this is learnable but not trivial. Training is 1200 steps at batch 32, about 37 passes over 1024 images, with constant LR and clipping at 1.0. Only the AdamW learning rate differs between choices.\n\n**A (lr 1e-3) before C (lr 1e-2).**\n- 1e-3 is the usual well-tuned Adam rate for a model of about 13k parameters. It should fit edge-orientation features within 1200 steps.\n- The model is small, so overfitting at 37 epochs should be modest.\n- At 1e-2 with a constant schedule, Adam's per-step updates are about 10× larger. Clipping does not limit the step size, because Adam normalises gradient magnitude.\n- That makes the final weights noisy, with likely loss spikes, miscalibrated or overconfident logits, and occasional bad seeds. Since the ranking uses the final checkpoint, this noise directly raises mean test cross-entropy.\n\n**C (lr 1e-2) before B (lr 1e-4).**\n- At 1e-4, each parameter can move at most about 0.12 in total over 1200 steps.\n- That is likely too little to form sharp shape-discriminating features and confident logits. The model probably stays well under-fit, with cross-entropy far above what the other two reach.\n- At 1e-2, the LayerNorm-stabilised residual CNN still usually learns the task despite the noise. So its average loss is likely lower than B's.\n\n**Uncertainty.**\n- The C vs B order is the least certain. If 1e-2 diverges or collapses for several seeds, C could end up last.\n- If the task is easier than it looks, 1e-4 might reach decent accuracy but still with soft logits, which keeps its loss high.\n- A being best is fairly confident.\n</explanation>\n\n<answer>{\"best_to_worst\": [\"A\", \"C\", \"B\"]}</answer>",
+      "public_explanation": "**Setup.** The task is `local_shape`: classify a circle, square, diamond or cross from channel 0. Channel 1 is a distractor. The model is a small CNN with a 1×1 stem, two residual 3×3 blocks, LayerNorm and global mean pooling, which gives a receptive field of about 5×5. It has to tell shapes apart from local edge and corner statistics, averaged over the image. The shapes have radius 2.5–4.5 px with soft edges, so this is learnable but not trivial. Training is 1200 steps at batch 32, about 37 passes over 1024 images, with constant LR and clipping at 1.0. Only the AdamW learning rate differs between choices.\n\n**A (lr 1e-3) before C (lr 1e-2).**\n- 1e-3 is the usual well-tuned Adam rate for a model of about 13k parameters. It should fit edge-orientation features within 1200 steps.\n- The model is small, so overfitting at 37 epochs should be modest.\n- At 1e-2 with a constant schedule, Adam's per-step updates are about 10× larger. Clipping does not limit the step size, because Adam normalises gradient magnitude.\n- That makes the final weights noisy, with likely loss spikes, miscalibrated or overconfident logits, and occasional bad seeds. Since the ranking uses the final checkpoint, this noise directly raises mean test cross-entropy.\n\n**C (lr 1e-2) before B (lr 1e-4).**\n- At 1e-4, each parameter can move at most about 0.12 in total over 1200 steps.\n- That is likely too little to form sharp shape-discriminating features and confident logits. The model probably stays well under-fit, with cross-entropy far above what the other two reach.\n- At 1e-2, the LayerNorm-stabilised residual CNN still usually learns the task despite the noise. So its average loss is likely lower than B's.\n\n**Uncertainty.**\n- The C vs B order is the least certain. If 1e-2 diverges or collapses for several seeds, C could end up last.\n- If the task is easier than it looks, 1e-4 might reach decent accuracy but still with soft logits, which keeps its loss high.\n- A being best is fairly confident.",
+      "model_identity_matches": true,
+      "question_sha256": "a6d58e10fb0789578052f2ab6a7a54ffdf1b4a6266febe3beab7faeffa67ab93",
+      "prompt_sha256": "7de2cb56a90c1d4ac62acd9eee3936a51001e894850713bbe796e9d1df9aaa0b"
+    },
+    {
+      "model": "claude-opus-5-5",
+      "question_id": "q_4b2c10d4bbd4687899ae46353ddde63e",
+      "family": "image_classification",
+      "task": "ranking3",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_ba675b4af4aaa388d5e0ecb29edac798"
+      },
+      "template_id": "learning_rate",
+      "instance_id": "learning_rate_s841902",
+      "status": "complete",
+      "gold_order": [
+        "A",
+        "B",
+        "C"
+      ],
+      "predicted_order": [
+        "B",
+        "A",
+        "C"
+      ],
+      "exact_order_correct": false,
+      "public_content": "<explanation>\n**Main factors.** Only the AdamW learning rate varies: 1e-2 for A, 1e-3 for B, 1e-4 for C. Everything else is fixed: 1200 constant-LR steps, batch size 32, and clipping at 1.0. The task is `local_shape`, where the network must tell a circle, square, diamond or cross apart on channel 0.\n\n**What the task demands.** Mass normalization removes the easy area and intensity cues. The model must instead learn edge-orientation and curvature features. It has only two 3×3 conv layers after a 1×1 stem, giving a 5×5 receptive field, followed by global mean pooling. It is a small network of about 15k parameters. Learning these subtle local features takes real optimization progress within 1200 steps, which is about 37 epochs of the 1024 training images.\n\n**B (1e-3) is best.** This is the standard Adam rate for a small pre-LayerNorm residual CNN. It should reach good accuracy within the budget. Its final-checkpoint noise should be modest, so its test cross entropy should be the lowest of the three.\n\n**A (1e-2) is second.** The LayerNorm, residual connections and gradient clipping should keep training from diverging. However, a constant 1e-2 rate with no decay leaves the final weights noisy. It also tends to produce overconfident logits as the model fits 1024 samples, and confident mistakes inflate test cross entropy. I expect it to learn the task but finish with higher loss than B.\n\n**C (1e-4) is worst.** Adam moves each weight by at most about 0.12 in total over 1200 steps. That is likely too little to build the discriminative shape features. C probably ends underfit, with cross entropy well above B's and likely above A's.\n\n**Uncertainty.** The A-versus-C order is the least certain call. If A suffers late loss spikes or heavy overfitting in its final checkpoint, its loss could exceed C's.\n</explanation>\n\n<answer>{\"best_to_worst\": [\"B\", \"A\", \"C\"]}</answer>",
+      "public_explanation": "**Main factors.** Only the AdamW learning rate varies: 1e-2 for A, 1e-3 for B, 1e-4 for C. Everything else is fixed: 1200 constant-LR steps, batch size 32, and clipping at 1.0. The task is `local_shape`, where the network must tell a circle, square, diamond or cross apart on channel 0.\n\n**What the task demands.** Mass normalization removes the easy area and intensity cues. The model must instead learn edge-orientation and curvature features. It has only two 3×3 conv layers after a 1×1 stem, giving a 5×5 receptive field, followed by global mean pooling. It is a small network of about 15k parameters. Learning these subtle local features takes real optimization progress within 1200 steps, which is about 37 epochs of the 1024 training images.\n\n**B (1e-3) is best.** This is the standard Adam rate for a small pre-LayerNorm residual CNN. It should reach good accuracy within the budget. Its final-checkpoint noise should be modest, so its test cross entropy should be the lowest of the three.\n\n**A (1e-2) is second.** The LayerNorm, residual connections and gradient clipping should keep training from diverging. However, a constant 1e-2 rate with no decay leaves the final weights noisy. It also tends to produce overconfident logits as the model fits 1024 samples, and confident mistakes inflate test cross entropy. I expect it to learn the task but finish with higher loss than B.\n\n**C (1e-4) is worst.** Adam moves each weight by at most about 0.12 in total over 1200 steps. That is likely too little to build the discriminative shape features. C probably ends underfit, with cross entropy well above B's and likely above A's.\n\n**Uncertainty.** The A-versus-C order is the least certain call. If A suffers late loss spikes or heavy overfitting in its final checkpoint, its loss could exceed C's.",
+      "model_identity_matches": true,
+      "question_sha256": "fe149e9843622bceb67c3b54cd250a4a37deca38ee361727b73d4cba653ef4a6",
+      "prompt_sha256": "4a96589a53222ebb608417c02f48bba546bab5a0c473dc0a2b316e468a30f89f"
+    },
+    {
+      "model": "claude-haiku-5-5",
+      "question_id": "q_ec5ca80d9651d097f461319ad3cd14b3",
+      "family": "image_classification",
+      "task": "ranking3",
+      "probe": null,
+      "template_id": "pooling_coordinate",
+      "instance_id": "pooling_coordinate_s841901",
+      "status": "complete",
+      "gold_order": [
+        "A",
+        "C",
+        "B"
+      ],
+      "predicted_order": [
+        "A",
+        "C",
+        "B"
+      ],
+      "exact_order_correct": true,
+      "public_content": "<explanation>\nThe task is `relative_position`: the model must decide whether the circle (channel 0) lies left, right, above, or below the square (channel 1). The decision depends on where the objects are, so the architecture's ability to preserve or encode spatial position matters most.\n\n- **Choice A (spatial 3x3 pooling, no coordinates)** keeps a coarse 3x3 grid of pooled features, so the linear head sees roughly where activity lies, about 8 pixels per cell. This preserves the coordinate information the label needs, so A should have the lowest cross-entropy.\n- **Choice B (mean pooling, no coordinates)** collapses everything to one vector per channel. The two conv blocks give only a 5x5 receptive field, so the network has no absolute position cue except weak boundary-padding effects. Its predictions should be close to chance, around ln4 ≈ 1.386, with high cross-entropy.\n- **Choice C (mean pooling plus coordinate channels)** adds fixed x and y coordinate maps to the input. After mean pooling, the network can compute mass-weighted coordinate averages, which are essentially object centroids. This gives it a route to the relative position that B lacks, so C should beat B. It probably still trails A, since A keeps a direct spatial layout and the coordinate-based route is harder to learn in 300 steps.\n\nThe ordering A < C < B is therefore driven by how much positional information each pooling and input choice preserves. Material uncertainty remains: with only 300 updates and 16 seeds, the gap between C and B could be small or reversed, and the C-vs-A gap might also be narrower than expected.\n</explanation>\n\n<answer>{\"best_to_worst\": [\"A\", \"C\", \"B\"]}</answer>",
+      "public_explanation": "The task is `relative_position`: the model must decide whether the circle (channel 0) lies left, right, above, or below the square (channel 1). The decision depends on where the objects are, so the architecture's ability to preserve or encode spatial position matters most.\n\n- **Choice A (spatial 3x3 pooling, no coordinates)** keeps a coarse 3x3 grid of pooled features, so the linear head sees roughly where activity lies, about 8 pixels per cell. This preserves the coordinate information the label needs, so A should have the lowest cross-entropy.\n- **Choice B (mean pooling, no coordinates)** collapses everything to one vector per channel. The two conv blocks give only a 5x5 receptive field, so the network has no absolute position cue except weak boundary-padding effects. Its predictions should be close to chance, around ln4 ≈ 1.386, with high cross-entropy.\n- **Choice C (mean pooling plus coordinate channels)** adds fixed x and y coordinate maps to the input. After mean pooling, the network can compute mass-weighted coordinate averages, which are essentially object centroids. This gives it a route to the relative position that B lacks, so C should beat B. It probably still trails A, since A keeps a direct spatial layout and the coordinate-based route is harder to learn in 300 steps.\n\nThe ordering A < C < B is therefore driven by how much positional information each pooling and input choice preserves. Material uncertainty remains: with only 300 updates and 16 seeds, the gap between C and B could be small or reversed, and the C-vs-A gap might also be narrower than expected.",
+      "model_identity_matches": true,
+      "question_sha256": "c49c76198b89f36b58a6aef21918d2eed4e8519e6d5bbe0ee7735814f794b70c",
+      "prompt_sha256": "96b9a7bf88c4db15676f0cee2e94a9aa27a5bd3f64d74e65576e236ca832403b"
+    },
+    {
+      "model": "claude-haiku-5-5",
+      "question_id": "q_d26f5adafb3e08bb7f45a0b9d0d21acd",
+      "family": "image_classification",
+      "task": "ranking3",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_ec5ca80d9651d097f461319ad3cd14b3"
+      },
+      "template_id": "pooling_coordinate",
+      "instance_id": "pooling_coordinate_s841901",
+      "status": "complete",
+      "gold_order": [
+        "B",
+        "A",
+        "C"
+      ],
+      "predicted_order": [
+        "B",
+        "A",
+        "C"
+      ],
+      "exact_order_correct": true,
+      "public_content": "<explanation>\n**Task setting.** All three choices share the same dataset (relative_position task, 24×24, two channels, four classes), the same 300-step AdamW budget at batch size 32, the same initial weights per seed, and the same batch stream. Only the model's pooling and coordinate settings differ.\n\n**Factors affecting test cross-entropy.**\n- **Pooling.** The base uses `spatial` pooling with a 3×3 grid, so the head sees 24×9 = 216 features that retain coarse location. Choice C switches to `mean` pooling, which collapses the map to 24 features and discards where the features fire. For relative_position, the label is a spatial relation (left/right/above/below), so positional information is directly needed. Global average pooling of a translation-equivariant CNN can still encode relations only weakly, since the receptive field is small (two 3×3 convs plus the stem, roughly 7×7 pixels) and the objects are separated by at least 12% of the image width. Mean pooling therefore should give the highest loss.\n- **Coordinates.** Choice A adds two CoordConv channels (x and y in [-1, 1]) to the input. These let the convolutional features know absolute position, which partly restores the positional information that mean pooling removes. Choice A combines mean pooling with coordinates, so it recovers some of the lost location signal, but absolute coordinates are a less direct way to encode the relative offset between two objects than the spatial grid head in the base.\n- **Capacity and optimization.** The parameter count is small under all variants (the head is the only difference in size: 216×4 vs 24×4 weights plus bias). The optimization budget, learning rate, and seeds are identical, so differences should come mainly from the information available to the head.\n\n**Ranking.** I expect B (spatial pooling, no coordinates) to be best, since its 3×3 grid head preserves the spatial layout the task requires. Between A and C, A should be better than C: coordinates add absolute position information that the mean-pooled features otherwise lack, while C has no positional signal at all. So the predicted order is B < A < C.\n\n**Uncertainty.** The margins may be small. Over 300 updates on 1024 images with a tiny CNN, the model may not fully fit the relation task, and mean pooling with a 7×7 receptive field may still learn enough from the image edges. Seed variance could also reorder A and C, since both lose the grid head. The B-first ordering is the most confident part; A versus C is less certain.\n</explanation>\n\n<answer>{\"best_to_worst\": [\"B\", \"A\", \"C\"]}</answer>",
+      "public_explanation": "**Task setting.** All three choices share the same dataset (relative_position task, 24×24, two channels, four classes), the same 300-step AdamW budget at batch size 32, the same initial weights per seed, and the same batch stream. Only the model's pooling and coordinate settings differ.\n\n**Factors affecting test cross-entropy.**\n- **Pooling.** The base uses `spatial` pooling with a 3×3 grid, so the head sees 24×9 = 216 features that retain coarse location. Choice C switches to `mean` pooling, which collapses the map to 24 features and discards where the features fire. For relative_position, the label is a spatial relation (left/right/above/below), so positional information is directly needed. Global average pooling of a translation-equivariant CNN can still encode relations only weakly, since the receptive field is small (two 3×3 convs plus the stem, roughly 7×7 pixels) and the objects are separated by at least 12% of the image width. Mean pooling therefore should give the highest loss.\n- **Coordinates.** Choice A adds two CoordConv channels (x and y in [-1, 1]) to the input. These let the convolutional features know absolute position, which partly restores the positional information that mean pooling removes. Choice A combines mean pooling with coordinates, so it recovers some of the lost location signal, but absolute coordinates are a less direct way to encode the relative offset between two objects than the spatial grid head in the base.\n- **Capacity and optimization.** The parameter count is small under all variants (the head is the only difference in size: 216×4 vs 24×4 weights plus bias). The optimization budget, learning rate, and seeds are identical, so differences should come mainly from the information available to the head.\n\n**Ranking.** I expect B (spatial pooling, no coordinates) to be best, since its 3×3 grid head preserves the spatial layout the task requires. Between A and C, A should be better than C: coordinates add absolute position information that the mean-pooled features otherwise lack, while C has no positional signal at all. So the predicted order is B < A < C.\n\n**Uncertainty.** The margins may be small. Over 300 updates on 1024 images with a tiny CNN, the model may not fully fit the relation task, and mean pooling with a 7×7 receptive field may still learn enough from the image edges. Seed variance could also reorder A and C, since both lose the grid head. The B-first ordering is the most confident part; A versus C is less certain.",
+      "model_identity_matches": true,
+      "question_sha256": "bcd642823764467e01977a3c0e3dd725658acbd0a5efb38574ea335e3895452f",
+      "prompt_sha256": "cb88b1fdcf74509478ae65ed806dec1790dcf7f8a5b27145004053558b0cf3ea"
+    },
+    {
+      "model": "claude-haiku-5-5",
+      "question_id": "q_8a36fc443f07ff9476da1cb066a63d67",
+      "family": "image_classification",
+      "task": "ranking3",
+      "probe": null,
+      "template_id": "pooling_coordinate",
+      "instance_id": "pooling_coordinate_s841902",
+      "status": "complete",
+      "gold_order": [
+        "B",
+        "C",
+        "A"
+      ],
+      "predicted_order": [
+        "B",
+        "C",
+        "A"
+      ],
+      "exact_order_correct": true,
+      "public_content": "<explanation>\n**Main factors.** The task is relative position: the label depends on which object's center lies left/right/above/below the other. That is a translation-invariant relation, but it still requires the model to know where each object is. The architecture is a 1x1 stem followed by two residual 3x3 blocks, so the receptive field is only 5x5 pixels. Any global information has to come from the pooling and head.\n\n**Choice A (base: mean pooling, no coordinates).** Global mean pooling over the whole 24x24 map discards where features occur. The network sees only local patterns and their average, so it has no direct way to compare the two objects' positions. Its loss should be the highest, close to chance for many seeds.\n\n**Choice B (3x3 spatial pooling, flattened into the head).** The 3x3 grid keeps coarse absolute location (8x8-pixel cells), and the linear head sees each cell separately. A linear readout over cell-wise features can approximate something like the centroid of each channel, which is enough to recover the dominant displacement axis. This should be a large improvement over A. The cost is about 4x more head parameters (216 inputs per class) on only 1024 training images, so some overfitting is possible.\n\n**Choice C (coordinate channels, mean pooling).** Adding x/y coordinate channels lets local features encode absolute position. Mean pooling then averages coordinate-dependent features, which can approximate per-channel centroids. This is a real improvement over A, but the GELU MLP has to learn the product of coordinates and channel activity before pooling, which is less direct than B's linear readout of cell features. I expect it to be somewhat worse than B.\n\n**Ranking.** B (best), then C, then A (worst). The ordering of B versus C is the most uncertain part. Their relative size depends on how well each learns the centroid-like readout in 300 Adam steps. The gap between A and the other two should be more robust, because A has no positional information at all.\n</explanation>\n\n<answer>{\"best_to_worst\": [\"B\", \"C\", \"A\"]}</answer>",
+      "public_explanation": "**Main factors.** The task is relative position: the label depends on which object's center lies left/right/above/below the other. That is a translation-invariant relation, but it still requires the model to know where each object is. The architecture is a 1x1 stem followed by two residual 3x3 blocks, so the receptive field is only 5x5 pixels. Any global information has to come from the pooling and head.\n\n**Choice A (base: mean pooling, no coordinates).** Global mean pooling over the whole 24x24 map discards where features occur. The network sees only local patterns and their average, so it has no direct way to compare the two objects' positions. Its loss should be the highest, close to chance for many seeds.\n\n**Choice B (3x3 spatial pooling, flattened into the head).** The 3x3 grid keeps coarse absolute location (8x8-pixel cells), and the linear head sees each cell separately. A linear readout over cell-wise features can approximate something like the centroid of each channel, which is enough to recover the dominant displacement axis. This should be a large improvement over A. The cost is about 4x more head parameters (216 inputs per class) on only 1024 training images, so some overfitting is possible.\n\n**Choice C (coordinate channels, mean pooling).** Adding x/y coordinate channels lets local features encode absolute position. Mean pooling then averages coordinate-dependent features, which can approximate per-channel centroids. This is a real improvement over A, but the GELU MLP has to learn the product of coordinates and channel activity before pooling, which is less direct than B's linear readout of cell features. I expect it to be somewhat worse than B.\n\n**Ranking.** B (best), then C, then A (worst). The ordering of B versus C is the most uncertain part. Their relative size depends on how well each learns the centroid-like readout in 300 Adam steps. The gap between A and the other two should be more robust, because A has no positional information at all.",
+      "model_identity_matches": true,
+      "question_sha256": "b654d1008856bbc9c8efc3cafe828fe806a3a470a2ca6349899acfa8d15fd97f",
+      "prompt_sha256": "bd9efbd2572219260c6ec3d160a4d2a8897683afe96d530a40444b8ca7c66ac3"
+    },
+    {
+      "model": "claude-haiku-5-5",
+      "question_id": "q_a1af9439f07fdde610fbdc50eea762d9",
+      "family": "image_classification",
+      "task": "ranking3",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_8a36fc443f07ff9476da1cb066a63d67"
+      },
+      "template_id": "pooling_coordinate",
+      "instance_id": "pooling_coordinate_s841902",
+      "status": "complete",
+      "gold_order": [
+        "C",
+        "A",
+        "B"
+      ],
+      "predicted_order": [
+        "C",
+        "A",
+        "B"
+      ],
+      "exact_order_correct": true,
+      "public_content": "<explanation>\n**Setup.** All three choices share the same dataset (relative_position task, 24×24 two-channel images, 4 classes), the same optimizer (AdamW, lr 1e-3), the same budget (300 steps, batch 32), and the same seeds. Only the model head/pooling/coordinate configuration differs.\n\n- **Choice B (base):** Dense CNN, depth 2, width 24, mean pooling to a single vector (`side = 1`), no coordinate channels. The head is a linear layer on 24 features.\n- **Choice C:** Identical except `pooling: \"spatial\"`, which activates `SpatialAveragePool(3)` and a 3×3 grid of pooled features, giving a head with 24×9 = 216 inputs.\n- **Choice A:** Identical except `coordinates: True`, which appends two fixed coordinate channels (x and y in [-1, 1]) to the input before the stem.\n\n**Key factors.**\n\n1. *Task requirement.* In `relative_position`, the label depends on where the circle sits relative to the square. Global mean pooling discards spatial layout after the convolutional blocks, so the base model must infer relative position from features that are translation-invariant. The network can still encode position implicitly through zero-padding boundary effects, but this is weak. Anything that preserves spatial layout should help.\n\n2. *Spatial pooling (C).* A 3×3 grid of average-pooled features retains coarse location information. The label is a coarse-grained spatial relation (left/right/above/below), which a 3×3 grid can represent well. The head sees 216 features instead of 24, and the receptive field and capacity are otherwise unchanged. This should lower cross entropy substantially relative to the base.\n\n3. *Coordinate channels (A).* Coordinate channels give the convolutions an explicit absolute-position signal. Because the relative-position label depends on the difference between two objects' positions, the network must compare locations across channels. Coordinates help with absolute-position cues, but the head still applies mean pooling, so the comparison is collapsed into a single global vector. The benefit is therefore likely smaller than the grid pooling in C, and the first-layer input changes slightly, which adds mild optimization variance.\n\n4. *Training dynamics.* With 300 AdamW steps at lr 1e-3, all models are likely under-trained, so the ranking is governed by how easily each architecture reaches a low-loss solution. The 3×3 spatial head adds parameters but a linear layer over pooled features is easy to fit with this budget. Gradient clipping at 1.0 is unlikely to be the binding constraint for any choice.\n\n**Predicted order (best to worst):** C, A, B.\n\n- **C vs. A:** Spatial grid pooling matches the coarse left/right/above/below structure of the label more directly than coordinate channels followed by global pooling. I expect C to beat A, though the gap could be small.\n- **A vs. B:** Coordinate channels give the base some absolute-position information, so A should improve on B. The margin depends on how much the convolutional features already encode boundary position.\n\n**Uncertainty.** The gaps are likely modest and may be within seed-to-seed variation across 16 seeds. The A-versus-B ordering is the least certain. Coordinate channels could also help B's and A's convergence in ways the static analysis doesn't capture. The C-first ordering is the most confident, because spatial pooling provides the most direct access to the position information the label requires. I have not run training, so these are architectural predictions.\n</explanation>\n\n<answer>{\"best_to_worst\": [\"C\", \"A\", \"B\"]}</answer>",
+      "public_explanation": "**Setup.** All three choices share the same dataset (relative_position task, 24×24 two-channel images, 4 classes), the same optimizer (AdamW, lr 1e-3), the same budget (300 steps, batch 32), and the same seeds. Only the model head/pooling/coordinate configuration differs.\n\n- **Choice B (base):** Dense CNN, depth 2, width 24, mean pooling to a single vector (`side = 1`), no coordinate channels. The head is a linear layer on 24 features.\n- **Choice C:** Identical except `pooling: \"spatial\"`, which activates `SpatialAveragePool(3)` and a 3×3 grid of pooled features, giving a head with 24×9 = 216 inputs.\n- **Choice A:** Identical except `coordinates: True`, which appends two fixed coordinate channels (x and y in [-1, 1]) to the input before the stem.\n\n**Key factors.**\n\n1. *Task requirement.* In `relative_position`, the label depends on where the circle sits relative to the square. Global mean pooling discards spatial layout after the convolutional blocks, so the base model must infer relative position from features that are translation-invariant. The network can still encode position implicitly through zero-padding boundary effects, but this is weak. Anything that preserves spatial layout should help.\n\n2. *Spatial pooling (C).* A 3×3 grid of average-pooled features retains coarse location information. The label is a coarse-grained spatial relation (left/right/above/below), which a 3×3 grid can represent well. The head sees 216 features instead of 24, and the receptive field and capacity are otherwise unchanged. This should lower cross entropy substantially relative to the base.\n\n3. *Coordinate channels (A).* Coordinate channels give the convolutions an explicit absolute-position signal. Because the relative-position label depends on the difference between two objects' positions, the network must compare locations across channels. Coordinates help with absolute-position cues, but the head still applies mean pooling, so the comparison is collapsed into a single global vector. The benefit is therefore likely smaller than the grid pooling in C, and the first-layer input changes slightly, which adds mild optimization variance.\n\n4. *Training dynamics.* With 300 AdamW steps at lr 1e-3, all models are likely under-trained, so the ranking is governed by how easily each architecture reaches a low-loss solution. The 3×3 spatial head adds parameters but a linear layer over pooled features is easy to fit with this budget. Gradient clipping at 1.0 is unlikely to be the binding constraint for any choice.\n\n**Predicted order (best to worst):** C, A, B.\n\n- **C vs. A:** Spatial grid pooling matches the coarse left/right/above/below structure of the label more directly than coordinate channels followed by global pooling. I expect C to beat A, though the gap could be small.\n- **A vs. B:** Coordinate channels give the base some absolute-position information, so A should improve on B. The margin depends on how much the convolutional features already encode boundary position.\n\n**Uncertainty.** The gaps are likely modest and may be within seed-to-seed variation across 16 seeds. The A-versus-B ordering is the least certain. Coordinate channels could also help B's and A's convergence in ways the static analysis doesn't capture. The C-first ordering is the most confident, because spatial pooling provides the most direct access to the position information the label requires. I have not run training, so these are architectural predictions.",
+      "model_identity_matches": true,
+      "question_sha256": "69ce17fda258c80295ce1eddac2cc20df9331b638163c10735358bac94126d2c",
+      "prompt_sha256": "a7cbc05675747c48578f0b6cdadc6bd2c71c8a6452acff8534078b2252305975"
+    },
+    {
+      "model": "claude-haiku-5-5",
+      "question_id": "q_ededc5c5112d4fee539b6d60dbb9549c",
+      "family": "image_classification",
+      "task": "ranking3",
+      "probe": null,
+      "template_id": "pooling_coordinate",
+      "instance_id": "pooling_coordinate_s841903",
+      "status": "complete",
+      "gold_order": [
+        "A",
+        "B",
+        "C"
+      ],
+      "predicted_order": [
+        "A",
+        "B",
+        "C"
+      ],
+      "exact_order_correct": true,
+      "public_content": "<explanation>\nThe task is relative_position on 24×24 two-channel images, 4 classes, with 300 AdamW steps at batch size 32 (about 9.4 epochs of the 1024-image training set). All three choices share the same CNN (width 24, depth 2, dense 3×3 convs with residual LayerNorm blocks), the same optimizer, loss, and seeds. They differ only in pooling and coordinate handling.\n\n- **Choice A (base):** spatial 3×3 average pooling with no coordinate channels. The head sees a 3×3 grid of local averages, so the flattened feature (24×9 = 216 values) keeps coarse position information. Relative position is a task about where the circle sits relative to the square, so this retained spatial layout is directly useful.\n\n- **Choice C:** identical to A except global mean pooling (side = 1). The head sees only 24 globally averaged features, which discards where the objects are. Relative position can still be inferred from channel-specific activations only if the convolutional receptive field encodes location, and with two 3×3 conv blocks plus padding this is weak. Expect a higher cross-entropy than A, and the gap should be systematic rather than seed noise.\n\n- **Choice B:** mean pooling plus coordinate channels. The added x/y coordinate maps give the convolutions an explicit absolute-position signal, so the network can represent the relative offset between the two objects even after global pooling. This partly recovers what C loses. It still typically lags the spatial-grid model, because the global mean has to compress the relation into 24 channel averages, whereas the spatial grid preserves a 3×3 layout directly. It should land between A and C, or possibly close to A.\n\nRanking reasoning: A (spatial grid, no coordinates) keeps the most positional information in the head with the fewest extra inputs, so it should have the lowest loss. B adds explicit coordinates that help with absolute location, so it should beat the pure mean-pooled C. C has the least spatial information, so it should be worst.\n\nMaterial uncertainty: 300 steps is short, and the coordinate-plus-mean model could match or beat the spatial-grid model if the coordinate channels are used efficiently by the convolutions. The A-versus-B gap is the least certain pair. The B-versus-C ordering is more confident, since coordinates add information that C lacks. The A-versus-C gap is likely the most stable of the three comparisons.\n</explanation>\n\n<answer>{\"best_to_worst\": [\"A\", \"B\", \"C\"]}</answer>",
+      "public_explanation": "The task is relative_position on 24×24 two-channel images, 4 classes, with 300 AdamW steps at batch size 32 (about 9.4 epochs of the 1024-image training set). All three choices share the same CNN (width 24, depth 2, dense 3×3 convs with residual LayerNorm blocks), the same optimizer, loss, and seeds. They differ only in pooling and coordinate handling.\n\n- **Choice A (base):** spatial 3×3 average pooling with no coordinate channels. The head sees a 3×3 grid of local averages, so the flattened feature (24×9 = 216 values) keeps coarse position information. Relative position is a task about where the circle sits relative to the square, so this retained spatial layout is directly useful.\n\n- **Choice C:** identical to A except global mean pooling (side = 1). The head sees only 24 globally averaged features, which discards where the objects are. Relative position can still be inferred from channel-specific activations only if the convolutional receptive field encodes location, and with two 3×3 conv blocks plus padding this is weak. Expect a higher cross-entropy than A, and the gap should be systematic rather than seed noise.\n\n- **Choice B:** mean pooling plus coordinate channels. The added x/y coordinate maps give the convolutions an explicit absolute-position signal, so the network can represent the relative offset between the two objects even after global pooling. This partly recovers what C loses. It still typically lags the spatial-grid model, because the global mean has to compress the relation into 24 channel averages, whereas the spatial grid preserves a 3×3 layout directly. It should land between A and C, or possibly close to A.\n\nRanking reasoning: A (spatial grid, no coordinates) keeps the most positional information in the head with the fewest extra inputs, so it should have the lowest loss. B adds explicit coordinates that help with absolute location, so it should beat the pure mean-pooled C. C has the least spatial information, so it should be worst.\n\nMaterial uncertainty: 300 steps is short, and the coordinate-plus-mean model could match or beat the spatial-grid model if the coordinate channels are used efficiently by the convolutions. The A-versus-B gap is the least certain pair. The B-versus-C ordering is more confident, since coordinates add information that C lacks. The A-versus-C gap is likely the most stable of the three comparisons.",
+      "model_identity_matches": true,
+      "question_sha256": "661745595e37e2eb51a8e4ea9f4541b5ac196612d45a257c6c3c0273fe6336e3",
+      "prompt_sha256": "da0d0d7d07d60af1902e5beb2ba66445e0a15d1a289ccee9caed204f50087383"
+    },
+    {
+      "model": "claude-haiku-5-5",
+      "question_id": "q_89167763187b9bba108b563ae46fedb6",
+      "family": "image_classification",
+      "task": "ranking3",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_ededc5c5112d4fee539b6d60dbb9549c"
+      },
+      "template_id": "pooling_coordinate",
+      "instance_id": "pooling_coordinate_s841903",
+      "status": "complete",
+      "gold_order": [
+        "B",
+        "C",
+        "A"
+      ],
+      "predicted_order": [
+        "B",
+        "C",
+        "A"
+      ],
+      "exact_order_correct": true,
+      "public_content": "<explanation>\nThe task is `relative_position`: the class depends on where the circle (channel 0) sits relative to the square (channel 1). Solving it requires absolute or relative spatial location, so the pooling and coordinate design matter most. All three choices share the same width-24, depth-2 residual conv trunk with 3×3 kernels, the same AdamW settings, and the same 300-step budget. The only differences are the pooling and the coordinate channels.\n\n- **Choice B (base):** Spatial pooling on a 3×3 grid keeps a coarse map of where features occur. The linear head sees 24×9 location-specific features, so it can read off object positions directly. This is the most position-aware design here.\n- **Choice C:** Mean pooling collapses the map to one vector per channel, which discards location. The added coordinate channels let the GELU blocks multiply intensity by x or y, so the averaged features can encode something like each object's centroid. That gives a route to the answer, but it is indirect and harder to learn in 300 steps.\n- **Choice A:** Mean pooling with no coordinates. The trunk's receptive field is only about 5×5, so a globally averaged feature has little access to absolute position. Padding gives only weak boundary cues. The model is likely near chance, with cross-entropy close to ln 4 ≈ 1.386.\n\nRanking: B is best because its spatial head directly preserves the position information the labels depend on. C is second because the coordinate channels partly recover position under mean pooling. A is worst because it has neither positional mechanism.\n\nUncertainty: the B vs C ordering is the least certain. Mean pooling with coordinates could train well enough to approach the spatial model, and seed variance over 16 runs may blur the gap. The A vs C gap should be more reliable.\n</explanation>\n\n<answer>{\"best_to_worst\": [\"B\", \"C\", \"A\"]}</answer>",
+      "public_explanation": "The task is `relative_position`: the class depends on where the circle (channel 0) sits relative to the square (channel 1). Solving it requires absolute or relative spatial location, so the pooling and coordinate design matter most. All three choices share the same width-24, depth-2 residual conv trunk with 3×3 kernels, the same AdamW settings, and the same 300-step budget. The only differences are the pooling and the coordinate channels.\n\n- **Choice B (base):** Spatial pooling on a 3×3 grid keeps a coarse map of where features occur. The linear head sees 24×9 location-specific features, so it can read off object positions directly. This is the most position-aware design here.\n- **Choice C:** Mean pooling collapses the map to one vector per channel, which discards location. The added coordinate channels let the GELU blocks multiply intensity by x or y, so the averaged features can encode something like each object's centroid. That gives a route to the answer, but it is indirect and harder to learn in 300 steps.\n- **Choice A:** Mean pooling with no coordinates. The trunk's receptive field is only about 5×5, so a globally averaged feature has little access to absolute position. Padding gives only weak boundary cues. The model is likely near chance, with cross-entropy close to ln 4 ≈ 1.386.\n\nRanking: B is best because its spatial head directly preserves the position information the labels depend on. C is second because the coordinate channels partly recover position under mean pooling. A is worst because it has neither positional mechanism.\n\nUncertainty: the B vs C ordering is the least certain. Mean pooling with coordinates could train well enough to approach the spatial model, and seed variance over 16 runs may blur the gap. The A vs C gap should be more reliable.",
+      "model_identity_matches": true,
+      "question_sha256": "759fa1e04034653734a16f38b0104330b14502983317cb0bc8f4117f41e6a124",
+      "prompt_sha256": "434ca069d2d5e78f113d3a2b99af570fdd19daaf0239cc568f3f7c481444684d"
+    },
+    {
+      "model": "claude-haiku-5-5",
+      "question_id": "q_fcf232651387ce984a8140da96c318d3",
+      "family": "image_classification",
+      "task": "ranking3",
+      "probe": null,
+      "template_id": "kernel_stride_texture",
+      "instance_id": "kernel_stride_texture_s841901",
+      "status": "complete",
+      "gold_order": [
+        "B",
+        "A",
+        "C"
+      ],
+      "predicted_order": [
+        "A",
+        "B",
+        "C"
+      ],
+      "exact_order_correct": false,
+      "public_content": "<explanation>\nThe task is texture_orientation: the label is the grating's wave-vector angle (0/45/90/135°), with frequency 1.5–3.0 cycles over 24 px (periods about 8–16 px), a Gaussian envelope, and an independent distractor in channel 1. Identifying orientation requires integrating local oriented stripe evidence over a region of several periods, then pooling globally. Receptive field and the stem's spatial downsampling therefore matter most, with overfitting on 1024 training images as a secondary factor. All choices share the same optimizer, budget, and seeds, so only the architecture differs.\n\n- **Choice A** (5×5 kernels, stride-2 stem, 12×12 feature map): the receptive field is roughly 18 px, which covers more than one stripe period. The 12×12 map keeps reasonable spatial resolution, so it should extract oriented-stripe features well before global mean pooling.\n- **Choice B** (3×3 kernels, stride-4 stem with 4×4 patches, 6×6 map): the receptive field is still roughly 20 px, so context is adequate. The coarse 6×6 map and 4-px patches discard more fine oscillation detail, and the model is smaller and less expressive, which probably costs some accuracy. It may partly offset this by overfitting less.\n- **Choice C** (3×3 kernels, stride-1 1×1 stem, full 24×24 resolution): the receptive field is only about 5 px, which is less than half a grating period. Orientation has to be inferred from very local patches and then averaged globally, which is a weaker cue. Full resolution gives fine detail, but the limited context is likely the dominant factor.\n\nRanking: A < B < C by held-out cross entropy.\n\nMaterial uncertainty: B and A could swap, since B's smaller capacity may generalize comparably on 1024 samples. The ordering of C relative to B is also less certain, because full-resolution features could compensate for the small receptive field.\n</explanation>\n\n<answer>{\"best_to_worst\": [\"A\", \"B\", \"C\"]}</answer>",
+      "public_explanation": "The task is texture_orientation: the label is the grating's wave-vector angle (0/45/90/135°), with frequency 1.5–3.0 cycles over 24 px (periods about 8–16 px), a Gaussian envelope, and an independent distractor in channel 1. Identifying orientation requires integrating local oriented stripe evidence over a region of several periods, then pooling globally. Receptive field and the stem's spatial downsampling therefore matter most, with overfitting on 1024 training images as a secondary factor. All choices share the same optimizer, budget, and seeds, so only the architecture differs.\n\n- **Choice A** (5×5 kernels, stride-2 stem, 12×12 feature map): the receptive field is roughly 18 px, which covers more than one stripe period. The 12×12 map keeps reasonable spatial resolution, so it should extract oriented-stripe features well before global mean pooling.\n- **Choice B** (3×3 kernels, stride-4 stem with 4×4 patches, 6×6 map): the receptive field is still roughly 20 px, so context is adequate. The coarse 6×6 map and 4-px patches discard more fine oscillation detail, and the model is smaller and less expressive, which probably costs some accuracy. It may partly offset this by overfitting less.\n- **Choice C** (3×3 kernels, stride-1 1×1 stem, full 24×24 resolution): the receptive field is only about 5 px, which is less than half a grating period. Orientation has to be inferred from very local patches and then averaged globally, which is a weaker cue. Full resolution gives fine detail, but the limited context is likely the dominant factor.\n\nRanking: A < B < C by held-out cross entropy.\n\nMaterial uncertainty: B and A could swap, since B's smaller capacity may generalize comparably on 1024 samples. The ordering of C relative to B is also less certain, because full-resolution features could compensate for the small receptive field.",
+      "model_identity_matches": true,
+      "question_sha256": "4431e62e0873c40530257a955543666435e139e1b1b061c71a2417ff7a9b6c4d",
+      "prompt_sha256": "b3e5dee7dad45d67683d82256d6dedda1524634b927722ee0cb2fae8b0fec85c"
+    },
+    {
+      "model": "claude-haiku-5-5",
+      "question_id": "q_9d3f74e3a6db4ef85ae57f643c6a4f29",
+      "family": "image_classification",
+      "task": "ranking3",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_fcf232651387ce984a8140da96c318d3"
+      },
+      "template_id": "kernel_stride_texture",
+      "instance_id": "kernel_stride_texture_s841901",
+      "status": "complete",
+      "gold_order": [
+        "C",
+        "B",
+        "A"
+      ],
+      "predicted_order": [
+        "A",
+        "B",
+        "C"
+      ],
+      "exact_order_correct": false,
+      "public_content": "<explanation>\n**Task.** The question uses the `texture_orientation` variant: the label is the grating's wave-vector angle (0, 45, 90, or 135 degrees), and the second channel is a distractor. The grating period is roughly size/frequency = 8 to 16 pixels on a 24×24 image, under a Gaussian envelope. Recognizing orientation requires integrating local oriented-edge evidence over a region of several pixels and then pooling globally.\n\n**Main factors.** All three choices share the same training budget (1200 AdamW steps, batch 32, lr 3e-3) and width 24. They differ only in the stem stride (which also sets the stem's kernel size, since the stem is a `Conv2d(kernel=stride, stride=stride)`) and in the block kernel size (5 in the base, 3 in A and C).\n\n- **Choice A (stem stride 1, kernel 3):** The stem is a 1×1 conv, so it keeps full 24×24 resolution and per-pixel information. The two 3×3 blocks give a receptive field of about 5 px, which is enough to capture local oriented structure at 8–16 px periods. It also has the most spatial compute and the most spatial positions before global mean pooling. This should give the lowest test cross-entropy.\n- **Choice B (base, stem stride 2, kernel 5):** The features are at 12×12 with a 5×5 kernel, giving a receptive field of roughly 10 to 12 px in input pixels. This is a reasonable middle ground, with some downsampling loss but a larger receptive field.\n- **Choice C (stem stride 4, kernel 3):** The features are at 6×6 after a 4×4 patch embedding, and the 3×3 blocks run at that coarse resolution. Orientation information within each 4×4 patch is compressed early, so fine angular discrimination is lost. This should be the least accurate and most uncertain of the three.\n\n**Ranking.** I order A < B < C in loss (best to worst), so A, B, C. The A–B boundary is the less certain one. A's 5-px receptive field may be too local for global orientation, and the base's larger receptive field could compensate. The B–C gap is more likely to hold, since coarser downsampling discards more of the grating structure.\n\n**Uncertainty.** Differences between seeds and the modest size of the architectural changes could reorder adjacent pairs, especially A versus B. Final cross-entropy also depends on overconfidence after 1200 steps, which these diagnostics don't resolve.\n</explanation>\n\n<answer>{\"best_to_worst\": [\"A\", \"B\", \"C\"]}</answer>",
+      "public_explanation": "**Task.** The question uses the `texture_orientation` variant: the label is the grating's wave-vector angle (0, 45, 90, or 135 degrees), and the second channel is a distractor. The grating period is roughly size/frequency = 8 to 16 pixels on a 24×24 image, under a Gaussian envelope. Recognizing orientation requires integrating local oriented-edge evidence over a region of several pixels and then pooling globally.\n\n**Main factors.** All three choices share the same training budget (1200 AdamW steps, batch 32, lr 3e-3) and width 24. They differ only in the stem stride (which also sets the stem's kernel size, since the stem is a `Conv2d(kernel=stride, stride=stride)`) and in the block kernel size (5 in the base, 3 in A and C).\n\n- **Choice A (stem stride 1, kernel 3):** The stem is a 1×1 conv, so it keeps full 24×24 resolution and per-pixel information. The two 3×3 blocks give a receptive field of about 5 px, which is enough to capture local oriented structure at 8–16 px periods. It also has the most spatial compute and the most spatial positions before global mean pooling. This should give the lowest test cross-entropy.\n- **Choice B (base, stem stride 2, kernel 5):** The features are at 12×12 with a 5×5 kernel, giving a receptive field of roughly 10 to 12 px in input pixels. This is a reasonable middle ground, with some downsampling loss but a larger receptive field.\n- **Choice C (stem stride 4, kernel 3):** The features are at 6×6 after a 4×4 patch embedding, and the 3×3 blocks run at that coarse resolution. Orientation information within each 4×4 patch is compressed early, so fine angular discrimination is lost. This should be the least accurate and most uncertain of the three.\n\n**Ranking.** I order A < B < C in loss (best to worst), so A, B, C. The A–B boundary is the less certain one. A's 5-px receptive field may be too local for global orientation, and the base's larger receptive field could compensate. The B–C gap is more likely to hold, since coarser downsampling discards more of the grating structure.\n\n**Uncertainty.** Differences between seeds and the modest size of the architectural changes could reorder adjacent pairs, especially A versus B. Final cross-entropy also depends on overconfidence after 1200 steps, which these diagnostics don't resolve.",
+      "model_identity_matches": true,
+      "question_sha256": "bf83f5ad28cb340602450b99ae2a826faf255b52db902074be2ee3dd627a6629",
+      "prompt_sha256": "71986c2ff181efef6d0cf1939f367e0eeb4af4813ce7e96f5da633d052e4bc23"
+    },
+    {
+      "model": "claude-haiku-5-5",
+      "question_id": "q_a5f2d1e9542f2df31803626953d1af76",
+      "family": "image_classification",
+      "task": "ranking3",
+      "probe": null,
+      "template_id": "learning_rate",
+      "instance_id": "learning_rate_s841901",
+      "status": "complete",
+      "gold_order": [
+        "B",
+        "A",
+        "C"
+      ],
+      "predicted_order": [
+        "A",
+        "C",
+        "B"
+      ],
+      "exact_order_correct": false,
+      "public_content": "<explanation>\n**Main factors.** The only axis that varies is the AdamW learning rate: A uses 1e-3, B uses 1e-2, and C uses 1e-4. Everything else is shared: the 2-layer width-24 dense CNN with LayerNorm and residuals, batch size 32, 1200 updates, gradient clipping at 1.0, a constant schedule, and identical initial weights and batch streams per seed. The task is local shape classification (circle, square, diamond, cross) on 1024 training images. The 1200 updates correspond to about 37 passes over the training set, so the model can fit the training data substantially.\n\n**Pair A vs. C.** At 1e-4, Adam moves weights slowly. Over 1200 steps the model is likely to be underfit, with a higher test cross-entropy than a run at 1e-3. Since cross-entropy rewards well-calibrated confident predictions, underfitting hurts it. A at 1e-3 is the conventional AdamW setting for a small CNN of this size, so I expect A to reach a lower held-out loss.\n\n**Pair C vs. B.** At 1e-2 the step size is ten times the default. With clipping and LayerNorm the run should still train, but the optimization is noisier and the final weights are less stable. The model is also more likely to overfit the 1024 training images over ~37 epochs, which inflates test cross-entropy through overconfident wrong predictions. This makes B the most likely to have the worst held-out loss, though with a larger error rate than C it could tie.\n\n**Material uncertainty.** The ordering of A against C is the most uncertain. If 1200 steps at 1e-4 is already enough to converge on this easy synthetic task, C could match or beat A, because the 1024-sample training set makes overfitting at 1e-3 a real risk. The placement of B is more secure, since 1e-2 is a large step for AdamW on a dataset this small, but I have not verified this and the seed-averaged result depends on run-to-run variability I cannot estimate from the code alone.\n</explanation>\n\n<answer>{\"best_to_worst\": [\"A\", \"C\", \"B\"]}</answer>",
+      "public_explanation": "**Main factors.** The only axis that varies is the AdamW learning rate: A uses 1e-3, B uses 1e-2, and C uses 1e-4. Everything else is shared: the 2-layer width-24 dense CNN with LayerNorm and residuals, batch size 32, 1200 updates, gradient clipping at 1.0, a constant schedule, and identical initial weights and batch streams per seed. The task is local shape classification (circle, square, diamond, cross) on 1024 training images. The 1200 updates correspond to about 37 passes over the training set, so the model can fit the training data substantially.\n\n**Pair A vs. C.** At 1e-4, Adam moves weights slowly. Over 1200 steps the model is likely to be underfit, with a higher test cross-entropy than a run at 1e-3. Since cross-entropy rewards well-calibrated confident predictions, underfitting hurts it. A at 1e-3 is the conventional AdamW setting for a small CNN of this size, so I expect A to reach a lower held-out loss.\n\n**Pair C vs. B.** At 1e-2 the step size is ten times the default. With clipping and LayerNorm the run should still train, but the optimization is noisier and the final weights are less stable. The model is also more likely to overfit the 1024 training images over ~37 epochs, which inflates test cross-entropy through overconfident wrong predictions. This makes B the most likely to have the worst held-out loss, though with a larger error rate than C it could tie.\n\n**Material uncertainty.** The ordering of A against C is the most uncertain. If 1200 steps at 1e-4 is already enough to converge on this easy synthetic task, C could match or beat A, because the 1024-sample training set makes overfitting at 1e-3 a real risk. The placement of B is more secure, since 1e-2 is a large step for AdamW on a dataset this small, but I have not verified this and the seed-averaged result depends on run-to-run variability I cannot estimate from the code alone.",
+      "model_identity_matches": true,
+      "question_sha256": "25d9c3f94ad5b600270323b7d112c86f38e7651901282008cca2ddc2b73c52e0",
+      "prompt_sha256": "19e459c7fe0bbf7fbf89134a8b1169e6f621274eb8b134ae9313ed9aab7e070e"
+    },
+    {
+      "model": "claude-haiku-5-5",
+      "question_id": "q_ccb7af737a4a7277553ef9ecb8d05e6b",
+      "family": "image_classification",
+      "task": "ranking3",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_a5f2d1e9542f2df31803626953d1af76"
+      },
+      "template_id": "learning_rate",
+      "instance_id": "learning_rate_s841901",
+      "status": "complete",
+      "gold_order": [
+        "C",
+        "B",
+        "A"
+      ],
+      "predicted_order": [
+        "B",
+        "A",
+        "C"
+      ],
+      "exact_order_correct": false,
+      "public_content": "<explanation>\nAll three choices share the same model (a small residual dense-conv CNN with LayerNorm, width 24, depth 2, mean pooling, about a few thousand parameters), the same data, the same 1200 AdamW updates at batch size 32, the same gradient clipping at norm 1.0, and the same seeds. The only difference is the AdamW learning rate: Choice A uses 1e-4, Choice B uses 1e-3 (the base), and Choice C uses 1e-2.\n\nFactors affecting held-out cross entropy:\n- The task is a 4-way shape classification on 24x24 synthetic images with 1024 training examples. The model is small enough that it can fit the training set within 1200 updates (about 37 epochs), so the main constraint is how far optimization gets within the fixed budget rather than capacity.\n- With 1200 updates, a learning rate of 1e-4 with Adam moves each weight only a limited distance (roughly lr per step in the early phase), so the network is likely undertrained. Cross entropy stays relatively high, though classification is probably still learnable.\n- 1e-3 is the standard Adam default and is typically a good fit for small conv nets on this kind of data; it should reach a low loss within the budget while staying stable under clipping.\n- 1e-2 is aggressive for Adam on a LayerNorm conv net. Gradient clipping at 1.0 limits the damage from spikes, but the larger step size can cause overconfident logits and noisy late-stage updates. Cross entropy is sensitive to overconfidence, so the test loss may be worse even if accuracy is comparable.\n\nRanking reasoning:\n- B (1e-3) most likely has the lowest test loss: it is the well-tuned middle of the range, fitting well within the budget without instability.\n- A (1e-4) is probably second: it is stable but likely undertrained at 1200 steps, so its loss stays higher than B's, though it avoids overconfidence.\n- C (1e-2) is probably worst: the high learning rate risks overfitting the 1024-sample training set and overconfident predictions, which inflate cross entropy.\n\nMaterial uncertainty: The A-vs-C ordering is the least certain. If the model is severely underfit at 1e-4, C could beat A in loss. The B-first placement is more confident, though a high LR could in principle act as an effective regularizer here, and the 16-seed mean could be close between candidates.\n</explanation>\n\n<answer>{\"best_to_worst\": [\"B\", \"A\", \"C\"]}</answer>",
+      "public_explanation": "All three choices share the same model (a small residual dense-conv CNN with LayerNorm, width 24, depth 2, mean pooling, about a few thousand parameters), the same data, the same 1200 AdamW updates at batch size 32, the same gradient clipping at norm 1.0, and the same seeds. The only difference is the AdamW learning rate: Choice A uses 1e-4, Choice B uses 1e-3 (the base), and Choice C uses 1e-2.\n\nFactors affecting held-out cross entropy:\n- The task is a 4-way shape classification on 24x24 synthetic images with 1024 training examples. The model is small enough that it can fit the training set within 1200 updates (about 37 epochs), so the main constraint is how far optimization gets within the fixed budget rather than capacity.\n- With 1200 updates, a learning rate of 1e-4 with Adam moves each weight only a limited distance (roughly lr per step in the early phase), so the network is likely undertrained. Cross entropy stays relatively high, though classification is probably still learnable.\n- 1e-3 is the standard Adam default and is typically a good fit for small conv nets on this kind of data; it should reach a low loss within the budget while staying stable under clipping.\n- 1e-2 is aggressive for Adam on a LayerNorm conv net. Gradient clipping at 1.0 limits the damage from spikes, but the larger step size can cause overconfident logits and noisy late-stage updates. Cross entropy is sensitive to overconfidence, so the test loss may be worse even if accuracy is comparable.\n\nRanking reasoning:\n- B (1e-3) most likely has the lowest test loss: it is the well-tuned middle of the range, fitting well within the budget without instability.\n- A (1e-4) is probably second: it is stable but likely undertrained at 1200 steps, so its loss stays higher than B's, though it avoids overconfidence.\n- C (1e-2) is probably worst: the high learning rate risks overfitting the 1024-sample training set and overconfident predictions, which inflate cross entropy.\n\nMaterial uncertainty: The A-vs-C ordering is the least certain. If the model is severely underfit at 1e-4, C could beat A in loss. The B-first placement is more confident, though a high LR could in principle act as an effective regularizer here, and the 16-seed mean could be close between candidates.",
+      "model_identity_matches": true,
+      "question_sha256": "e9295f7e3d4ec6d81c798d4d1fc6a3096d0ce8078c216801b3eea1a2f503aa76",
+      "prompt_sha256": "f3537eac4759c8f01a1a47e0b0070b090c90bf07de006153996eeba4e8c6fa34"
+    },
+    {
+      "model": "claude-haiku-5-5",
+      "question_id": "q_ba675b4af4aaa388d5e0ecb29edac798",
+      "family": "image_classification",
+      "task": "ranking3",
+      "probe": null,
+      "template_id": "learning_rate",
+      "instance_id": "learning_rate_s841902",
+      "status": "complete",
+      "gold_order": [
+        "C",
+        "A",
+        "B"
+      ],
+      "predicted_order": [
+        "A",
+        "B",
+        "C"
+      ],
+      "exact_order_correct": false,
+      "public_content": "<explanation>\nThe three choices differ only in AdamW learning rate: A uses 1e-3 (base), B uses 1e-4, C uses 1e-2. Architecture, data, batch size (32), and step count (1200) are identical, and all start from the same saved initial weights per seed.\n\nKey factors:\n- The model is a small residual conv net (width 24, depth 2, LayerNorm, mean pooling) with roughly tens of thousands of parameters, trained on 1024 synthetic images for 1200 updates. This is a small, fast-to-fit problem: 1200 steps at batch 32 is about 37 passes over the training set, so the model can get close to fitting it at lr 1e-3.\n- Gradient clipping at norm 1.0 limits the damage from large steps, but it does not fully protect against an lr of 1e-2 with Adam, which takes sign-like steps of size ~lr per parameter regardless of gradient magnitude. At 1e-2, per-step parameter movement is ten times larger, which tends to produce noisier late-training iterates and overconfident logits, both of which raise held-out cross entropy.\n- At 1e-4, the model is likely undertrained within 1200 steps. Adam's per-step movement is small, so after this budget the network may still have relatively high training loss, giving higher test cross entropy than at 1e-3.\n- Cross entropy is sensitive to overconfidence, so the ordering among the two faster rates depends on whether 1e-2 causes instability in this small model. With the clipping and the small width, I expect 1e-2 to be noisy but not catastrophically divergent.\n\nRanking: 1e-3 (A) is the most likely sweet spot for this budget, so it should be best. Between the two alternatives, 1e-4 (B) is probably undertrained, while 1e-2 (C) is likely the most unstable. The expected order is A < B < C.\n\nMaterial uncertainty: the gap between B and C could go either way. If 1e-4 is still well short of convergence, C could be better despite its noise. Also, the relative loss gaps may be small, so seed variance over 16 seeds could shift adjacent pairs. The A-best ranking is the most confident part of the prediction.\n</explanation>\n\n<answer>{\"best_to_worst\": [\"A\", \"B\", \"C\"]}</answer>",
+      "public_explanation": "The three choices differ only in AdamW learning rate: A uses 1e-3 (base), B uses 1e-4, C uses 1e-2. Architecture, data, batch size (32), and step count (1200) are identical, and all start from the same saved initial weights per seed.\n\nKey factors:\n- The model is a small residual conv net (width 24, depth 2, LayerNorm, mean pooling) with roughly tens of thousands of parameters, trained on 1024 synthetic images for 1200 updates. This is a small, fast-to-fit problem: 1200 steps at batch 32 is about 37 passes over the training set, so the model can get close to fitting it at lr 1e-3.\n- Gradient clipping at norm 1.0 limits the damage from large steps, but it does not fully protect against an lr of 1e-2 with Adam, which takes sign-like steps of size ~lr per parameter regardless of gradient magnitude. At 1e-2, per-step parameter movement is ten times larger, which tends to produce noisier late-training iterates and overconfident logits, both of which raise held-out cross entropy.\n- At 1e-4, the model is likely undertrained within 1200 steps. Adam's per-step movement is small, so after this budget the network may still have relatively high training loss, giving higher test cross entropy than at 1e-3.\n- Cross entropy is sensitive to overconfidence, so the ordering among the two faster rates depends on whether 1e-2 causes instability in this small model. With the clipping and the small width, I expect 1e-2 to be noisy but not catastrophically divergent.\n\nRanking: 1e-3 (A) is the most likely sweet spot for this budget, so it should be best. Between the two alternatives, 1e-4 (B) is probably undertrained, while 1e-2 (C) is likely the most unstable. The expected order is A < B < C.\n\nMaterial uncertainty: the gap between B and C could go either way. If 1e-4 is still well short of convergence, C could be better despite its noise. Also, the relative loss gaps may be small, so seed variance over 16 seeds could shift adjacent pairs. The A-best ranking is the most confident part of the prediction.",
+      "model_identity_matches": true,
+      "question_sha256": "a6d58e10fb0789578052f2ab6a7a54ffdf1b4a6266febe3beab7faeffa67ab93",
+      "prompt_sha256": "7de2cb56a90c1d4ac62acd9eee3936a51001e894850713bbe796e9d1df9aaa0b"
+    },
+    {
+      "model": "claude-haiku-5-5",
+      "question_id": "q_4b2c10d4bbd4687899ae46353ddde63e",
+      "family": "image_classification",
+      "task": "ranking3",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_ba675b4af4aaa388d5e0ecb29edac798"
+      },
+      "template_id": "learning_rate",
+      "instance_id": "learning_rate_s841902",
+      "status": "complete",
+      "gold_order": [
+        "A",
+        "B",
+        "C"
+      ],
+      "predicted_order": [
+        "B",
+        "C",
+        "A"
+      ],
+      "exact_order_correct": false,
+      "public_content": "<explanation>\nAll three choices share the same architecture (a 2-layer residual dense CNN with width 24, LayerNorm, GELU, mean pooling), the same dataset (local_shape task, 1024 training images, 24x24 two-channel input), the same budget (1200 AdamW updates, batch size 32), and the same gradient clipping at global norm 1.0. The only axis that varies is the AdamW learning rate: Choice B uses 1e-3 (the base), Choice C uses 1e-4, and Choice A uses 1e-2.\n\nThe task is a 4-way shape classification problem with exact labels and no noise, so a small CNN should be able to fit it well within 1200 steps. Under this budget:\n\n- **Choice B (lr 1e-3)** is the standard AdamW rate for a small convnet. With about 38k samples seen (roughly 37 epochs over the 1024 training images), it should reach a low training loss while the clipped, moderate step sizes avoid instability. This is the most likely setting to achieve the lowest held-out cross entropy.\n- **Choice C (lr 1e-4)** is ten times smaller. The model is small and the data is easy, but 1200 updates at this rate may leave it under-converged, leaving a higher test cross entropy than B.\n- **Choice A (lr 1e-2)** is ten times larger than the standard rate. For a LayerNorm-equipped residual CNN with AdamW, this is aggressive. Gradient clipping limits the damage, but the noisier trajectory tends to end at a worse minimum and can produce overconfident predictions, which inflates cross entropy on the test set. I expect it to be the worst of the three.\n\nAdjacent pair justifications: B over C because B's rate is better matched to the number of updates, so it converges further; C over A because A's large rate is more likely to overshoot and produce overconfident wrong predictions, which hurts cross entropy more than a slower but stable run.\n\nMaterial uncertainty: the gap between B and C could be small if both reach near-zero training loss, and the ordering between C and A depends on how much clipping stabilizes the 1e-2 run. Cross entropy is sensitive to confidence, so the ranking may differ from the classification error ranking. Seed variance across 16 runs could also reorder close pairs.\n</explanation>\n\n<answer>{\"best_to_worst\": [\"B\", \"C\", \"A\"]}</answer>",
+      "public_explanation": "All three choices share the same architecture (a 2-layer residual dense CNN with width 24, LayerNorm, GELU, mean pooling), the same dataset (local_shape task, 1024 training images, 24x24 two-channel input), the same budget (1200 AdamW updates, batch size 32), and the same gradient clipping at global norm 1.0. The only axis that varies is the AdamW learning rate: Choice B uses 1e-3 (the base), Choice C uses 1e-4, and Choice A uses 1e-2.\n\nThe task is a 4-way shape classification problem with exact labels and no noise, so a small CNN should be able to fit it well within 1200 steps. Under this budget:\n\n- **Choice B (lr 1e-3)** is the standard AdamW rate for a small convnet. With about 38k samples seen (roughly 37 epochs over the 1024 training images), it should reach a low training loss while the clipped, moderate step sizes avoid instability. This is the most likely setting to achieve the lowest held-out cross entropy.\n- **Choice C (lr 1e-4)** is ten times smaller. The model is small and the data is easy, but 1200 updates at this rate may leave it under-converged, leaving a higher test cross entropy than B.\n- **Choice A (lr 1e-2)** is ten times larger than the standard rate. For a LayerNorm-equipped residual CNN with AdamW, this is aggressive. Gradient clipping limits the damage, but the noisier trajectory tends to end at a worse minimum and can produce overconfident predictions, which inflates cross entropy on the test set. I expect it to be the worst of the three.\n\nAdjacent pair justifications: B over C because B's rate is better matched to the number of updates, so it converges further; C over A because A's large rate is more likely to overshoot and produce overconfident wrong predictions, which hurts cross entropy more than a slower but stable run.\n\nMaterial uncertainty: the gap between B and C could be small if both reach near-zero training loss, and the ordering between C and A depends on how much clipping stabilizes the 1e-2 run. Cross entropy is sensitive to confidence, so the ranking may differ from the classification error ranking. Seed variance across 16 runs could also reorder close pairs.",
+      "model_identity_matches": true,
+      "question_sha256": "fe149e9843622bceb67c3b54cd250a4a37deca38ee361727b73d4cba653ef4a6",
+      "prompt_sha256": "4a96589a53222ebb608417c02f48bba546bab5a0c473dc0a2b316e468a30f89f"
+    }
+  ],
+  "missing": [
+    {
+      "requested_model": "gpt-6-luna",
+      "question_id": "q_ec5ca80d9651d097f461319ad3cd14b3",
+      "probe": null
+    },
+    {
+      "requested_model": "gpt-6-luna",
+      "question_id": "q_d26f5adafb3e08bb7f45a0b9d0d21acd",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_ec5ca80d9651d097f461319ad3cd14b3"
+      }
+    },
+    {
+      "requested_model": "gpt-6-luna",
+      "question_id": "q_ededc5c5112d4fee539b6d60dbb9549c",
+      "probe": null
+    },
+    {
+      "requested_model": "gpt-6-luna",
+      "question_id": "q_89167763187b9bba108b563ae46fedb6",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_ededc5c5112d4fee539b6d60dbb9549c"
+      }
+    },
+    {
+      "requested_model": "gpt-6-luna",
+      "question_id": "q_9d3f74e3a6db4ef85ae57f643c6a4f29",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_fcf232651387ce984a8140da96c318d3"
+      }
+    },
+    {
+      "requested_model": "gpt-6-luna",
+      "question_id": "q_ccb7af737a4a7277553ef9ecb8d05e6b",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_a5f2d1e9542f2df31803626953d1af76"
+      }
+    },
+    {
+      "requested_model": "gpt-6-luna",
+      "question_id": "q_4b2c10d4bbd4687899ae46353ddde63e",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_ba675b4af4aaa388d5e0ecb29edac798"
+      }
+    },
+    {
+      "requested_model": "gpt-6.1-sol",
+      "question_id": "q_ededc5c5112d4fee539b6d60dbb9549c",
+      "probe": null
+    },
+    {
+      "requested_model": "gpt-6.1-sol",
+      "question_id": "q_89167763187b9bba108b563ae46fedb6",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_ededc5c5112d4fee539b6d60dbb9549c"
+      }
+    },
+    {
+      "requested_model": "gpt-6.1-sol",
+      "question_id": "q_ccb7af737a4a7277553ef9ecb8d05e6b",
+      "probe": {
+        "type": "letter_permutation",
+        "source_question_id": "q_a5f2d1e9542f2df31803626953d1af76"
+      }
+    },
+    {
+      "requested_model": "gpt-6.1-sol",
+      "question_id": "q_ba675b4af4aaa388d5e0ecb29edac798",
+      "probe": null
+    }
+  ],
+  "contains_raw_transport_attempts": false
+}

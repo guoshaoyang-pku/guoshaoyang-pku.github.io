@@ -1,0 +1,256 @@
+schema_version: vision_question_clusters_v1
+description: One bounded supplementary image-generation cluster selected using original discovery validation only.
+  Independent new data/training seeds and multiplicity family; original rejected triples remain unchanged.
+dataset_family: conditional_image_generation
+selection_metric: test_energy_score
+base_profile: image-generation-ranking-base-v1.yaml
+default_num_choices: 3
+allowed_num_choices:
+- 3
+- 4
+- 5
+instance_seeds:
+- 852001
+- 852002
+- 852003
+discovery_training_seeds:
+- 40
+- 41
+- 42
+- 43
+confirmation_training_seeds:
+- 240
+- 241
+- 242
+- 243
+- 244
+- 245
+- 246
+- 247
+- 248
+- 249
+- 250
+- 251
+- 252
+- 253
+- 254
+- 255
+statistics:
+  discovery:
+    n_seeds: 4
+    split: validation
+    method: direction_estimation
+    ordering: mean_validation_energy_score
+    admission_gate: false
+    purpose: Freeze adjacent ranking directions before independent confirmation; no significance claim from four
+      discovery seeds.
+  confirmation:
+    n_seeds: 16
+    split: test
+    test: one_sided_paired_sign_test
+    alpha: 0.05
+    correction: holm
+    minimum_mean_gap: 0.003
+  estimand: Training-seed paired direction stability conditional on one fixed dataset and fixed evaluation-noise/reference
+    stream, with observed mean energy-score gap; not a test of expected-score mean difference or a natural-image
+    population claim.
+selection_contract:
+  discovery_split: validation
+  confirmation_split: test
+  minimum_mean_gap: 0.003
+  require_nonoverlap: false
+  multiplicity: 'Independent supplement family: Holm across all six frozen adjacent hypotheses, including rejected
+    instances.'
+  claim_scope: Fixed synthetic image distribution and fixed independent evaluation sample streams; training-seed
+    robustness only.
+  difficulty_policy: Evaluate every admitted supplemental triple and report all rejects separately from the original
+    fixed batch; no answer-based selection or replacement.
+defaults:
+  dataset:
+    size: 16
+    noise_steps: 32
+    condition_dim: 6
+    brightness_min: 0.65
+    brightness_max: 1.0
+    texture_strength: 0.12
+    radius_min: 0.25
+    radius_max: 0.42
+    position_extent: 0.45
+    reference_samples: 4
+    train_size: 1024
+    validation_size: 64
+    test_size: 64
+    ood_size: 32
+    evaluation_shift: {}
+    ood_shift:
+      position_extent: 0.55
+  optimizer:
+    type: AdamW
+    lr: 0.001
+    weight_decay: 0.01
+    betas:
+    - 0.9
+    - 0.999
+    eps: 1.0e-08
+    foreach: false
+  loss:
+    loss_id: diffusion_mse
+  training:
+    batch_size: 16
+    training_steps: 3000
+    total_samples_seen: 48000
+    gradient_accumulation: 1
+    clip_norm: 1.0
+    schedule: constant
+    precision: fp32
+    tf32: false
+    deterministic_algorithms: true
+    warmup_updates: 0
+    batch_rng_device: cpu
+    paired_cpu_batch_stream: true
+    persist_initial_state: true
+    batch_seed_offset: 500000
+    noise_seed_offset: 600000
+    evaluation_split: validation
+    eval_steps:
+    - 750
+    - 1500
+    - 3000
+    prediction_type: x0
+    noise_steps: 32
+    noise_schedule: cosine
+    loss_weighting: uniform
+    min_snr_gamma: 5.0
+    sampling_steps: 16
+    sampling_eta: 0.0
+    evaluation_samples_per_condition: 4
+    evaluation_seed: 314159
+    evaluation_batch_conditions: 16
+models:
+  conv:
+    type: image_generation_denoiser
+    mode: conv
+    width: 24
+    depth: 3
+    kernel: 3
+    norm: group
+    activation: silu
+    residual: true
+    block: dense
+    conditioning: concat
+    coordinates: absolute
+    time_embedding: sinusoidal
+    max_parameters: 2000000
+  unet:
+    type: image_generation_denoiser
+    mode: unet
+    width: 24
+    depth: 3
+    kernel: 3
+    norm: group
+    activation: silu
+    residual: true
+    block: dense
+    skip: true
+    conditioning: concat
+    coordinates: absolute
+    time_embedding: sinusoidal
+    max_parameters: 2000000
+  mlp:
+    type: image_generation_denoiser
+    mode: mlp
+    width: 24
+    depth: 3
+    activation: silu
+    conditioning: concat
+    coordinates: absolute
+    time_embedding: sinusoidal
+    max_parameters: 2000000
+  transformer:
+    type: image_generation_denoiser
+    mode: patch_transformer
+    width: 24
+    depth: 3
+    activation: gelu
+    conditioning: concat
+    coordinates: absolute
+    time_embedding: sinusoidal
+    patch_size: 2
+    max_parameters: 2000000
+    num_heads: 4
+    ff_multiplier: 2
+contexts:
+  textured: {}
+  clean:
+    texture_strength: 0.0
+  small_data:
+    train_size: 96
+  shifted:
+    evaluation_shift:
+      position_extent: 0.55
+surface_heuristics:
+- id: more_parameters
+  field: parameter_count
+  higher_is_better: true
+- id: more_training_steps
+  field: training.training_steps
+  higher_is_better: true
+- id: more_sampling_steps
+  field: training.sampling_steps
+  higher_is_better: true
+templates:
+- id: operator_native_matched
+  category: operator
+  context_ref: textured
+  budget_semantics: matched_steps
+  hypothesis: Four native denoisers share absolute coordinate input, data, optimizer, target and update budget.
+    Their operator, parameter count, normalization and connectivity differ as shown; finite-budget ordering requires
+    actual sampled image quality.
+  varying_axes:
+  - model.mode
+  choices:
+  - id: conv
+    model_ref: conv
+  - id: unet
+    model_ref: unet
+  - id: mlp
+    model_ref: mlp
+  diagnostics:
+  - id: transformer
+    model_ref: transformer
+  controls:
+  - 'All four available native operator cells are retained: convolution, one-level U-Net, flat MLP and patch Transformer.'
+  - Every cell uses absolute coordinates, concat conditions, sinusoidal time, x0 target, 3000 updates, batch16,
+    AdamW1e-3, the same materialized data and fixed evaluation noise/reference draws.
+  - 'This is a bundled native-recipe contrast: parameter count, activation, normalization and connectivity are explicitly
+    shown; do not attribute the total difference exclusively to operator name.'
+  - Primary choices were selected from original discovery validation only; the diagnostic Transformer is not promoted
+    or substituted after new confirmation.
+  shortcut_checks:
+  - always prefer U-Net for diffusion
+  - always prefer more parameters
+  - always prefer globally mixing operator
+  explanation_target: Explain both adjacent comparisons using exact native code and the fixed finite-budget task;
+    use all four local cells and image/geometry/diversity diagnostics, while acknowledging unresolved parameter-count
+    and optimization attribution.
+  admission: Freeze the new four-seed validation order, then independently test all six adjacent hypotheses from
+    three new dataset instances using the unchanged16-seed sign-Holm rule and gap0.003. Keep rejected instances;
+    no replacement.
+selection_provenance:
+  source_dsl: profiles/image-generation-ranking-clusters-v1.yaml
+  source_dsl_sha256: 9066b70f1272f930381c8c017b7daf9d74ce93bc79d4eb6204395e08c0a0470e
+  source_plan_sha256: 004fa55685f56051cb0de5788733a3c476ca2f8721d9c1ee6ec7d7c0b55403eb
+  selection_policy: data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/supplement_proposal/selection_policy.json
+  selection_policy_sha256: b9d104c2474895543a9159e723e9112d2d6a19214fe940d763a6492f963b75f4
+  selection_evidence: data/task_expansion/vision_batch/image_ranking_v1_20261015/generation/supplement_proposal/selection_evidence.json
+  selection_evidence_sha256: 01768104dc3c38a11175697129407e1c5a4b853bac0dbfa7b76560396aafcf79
+  selector_sha256: 661858113970e129c33d9c91889a8d7d7c8dd7ceba953de77fd188916ee30cef
+  only_metric: original discovery final_validation_metric
+  enumerated_triples: 33
+  unchanged_original_triples_excluded: 4
+  selected_new_clusters: 1
+  selection_reads_confirmation_outputs: false
+  selection_reads_llm_answers: false
+  scope_limit: The analyst already knew original batch aggregate admission and quality; candidate selection is independently
+    replayable using discovery validation alone. This is a validation-selected supplementary batch, not a repair
+    or replacement of the original frozen test.
