@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="genshin-agent 复用 BetterGI 运行云原神。查看实测功能，选择哥伦比娅的突破和天赋材料，生成采集需求。">
+<title>genshin-agent · 选择角色养成与材料采集功能</title>
+<style>
+
+  :root {
+    --dark: #141413;   /* primary text */
+    --light: #faf9f5;  /* page background */
+    --mid: #b0aea5;    /* borders, axes */
+    --soft: #e8e6dc;   /* subtle fills */
+    --muted: #5e5d59;  /* secondary text (darker than --mid for contrast) */
+    --orange: #d97757; /* primary accent: the main result */
+    --blue: #6a9bcc;   /* secondary accent */
+    --green: #788c5d;  /* tertiary accent */
+    --head: "Poppins", "PingFang SC", "Noto Sans CJK SC", "Hiragino Sans GB", Arial, sans-serif;
+    --body: "Lora", "Noto Serif CJK SC", "Songti SC", Georgia, serif;
+    --mono: "SF Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--light); color: var(--dark); font: 17px/1.8 var(--body); }
+  main { max-width: 760px; margin: 0 auto; padding: 72px 24px 96px; }
+  h1, h2, h3 { font-family: var(--head); font-weight: 600; line-height: 1.35; letter-spacing: -0.01em; }
+  h1 { font-size: 32px; margin: 0 0 16px; }
+  h2 { font-size: 22px; margin: 64px 0 12px; }
+  p { margin: 0 0 16px; }
+  .lede { font-size: 19px; }
+  a { color: inherit; text-decoration: underline; text-decoration-color: var(--orange); text-underline-offset: 3px; }
+  code, .id { font-family: var(--mono); font-size: 0.86em; background: var(--soft); padding: 1px 5px; border-radius: 4px; }
+
+  /* L2 settings row: monochrome line icons + label, never color emoji */
+  .settings { display: flex; flex-wrap: wrap; gap: 8px 20px; list-style: none; padding: 0; margin: 24px 0 0;
+              font: 14px/1.6 var(--head); color: var(--muted); }
+  .settings li { display: inline-flex; align-items: center; gap: 6px; }
+  .settings svg { width: 15px; height: 15px; stroke: var(--dark); fill: none; stroke-width: 1.6;
+                  stroke-linecap: round; stroke-linejoin: round; }
+  .settings b { color: var(--dark); font-weight: 500; }
+
+  figure { margin: 28px 0; padding: 20px; background: #fff; border: 1px solid var(--soft); border-radius: 10px; }
+  figure img, figure svg.chart { display: block; width: 100%; height: auto; }
+  figcaption { margin-top: 12px; font: 14px/1.6 var(--head); color: var(--muted); }
+  .legend { display: flex; gap: 18px; font: 13px var(--head); color: var(--muted); margin-bottom: 8px; }
+  .legend i { display: inline-block; width: 14px; height: 2px; vertical-align: middle; margin-right: 6px; }
+
+  .warn { border-left: 3px solid var(--orange); padding: 4px 0 4px 16px; margin: 24px 0; }
+  .warn strong { font-family: var(--head); }
+
+  /* sample browser: compare outputs side by side */
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--soft); margin-bottom: 12px; }
+  .tabs button { font: 14px var(--head); background: none; border: 0; padding: 8px 12px; cursor: pointer;
+                 color: var(--muted); border-bottom: 2px solid transparent; }
+  .tabs button[aria-selected="true"] { color: var(--dark); border-bottom-color: var(--orange); }
+  .sample { display: none; white-space: pre-wrap; font: 14px/1.7 var(--mono); }
+  .sample.on { display: block; }
+
+  details { margin: 16px 0; }
+  summary { cursor: pointer; font: 15px var(--head); color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font: 14px/1.6 var(--head); margin: 16px 0; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--soft); }
+  th { font-weight: 500; color: var(--muted); }
+  footer { margin-top: 80px; font: 13px var(--head); color: var(--mid); }
+
+input,select,textarea,button { font:15px/1.5 var(--head); }
+input[type=text],input[type=search],select,textarea { width:100%;padding:10px 12px;border:1px solid #aaa89f;border-radius:5px;color:var(--dark);background:#fff; }
+input[type=checkbox] { width:18px;height:18px;accent-color:#9b4e35;flex-shrink:0; }
+textarea { min-height:180px;resize:vertical; }
+label { display:block;font:15px/1.6 var(--head); }
+.field { margin:20px 0; }
+.field > label { margin-bottom:6px; }
+fieldset { border:0;padding:0;margin:20px 0; }
+legend { margin-bottom:8px;padding:0;font:15px var(--head); }
+.checks,.actions,.filters { display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center; }
+.checks label { display:inline-flex;align-items:center;gap:8px; }
+.filters { margin:18px 0;gap:8px; }
+button { padding:8px 14px;border:1px solid #aaa89f;border-radius:5px;color:var(--dark);background:transparent;cursor:pointer; }
+button:hover { background:var(--soft); }
+button[aria-pressed=true],button.primary { background:var(--dark);border-color:var(--dark);color:var(--light); }
+button:disabled { color:var(--muted);background:var(--soft);cursor:default; }
+:focus-visible { outline:3px solid #6a9bcc;outline-offset:3px; }
+.search-row { display:grid;grid-template-columns:1fr 140px;gap:12px;margin:18px 0 10px; }
+.hint,.meta { font:14px/1.65 var(--head);color:var(--muted); }
+.empty { font:15px/1.7 var(--head);color:var(--muted);padding:15px 0; }
+.material-results { max-height:330px;overflow:auto;border-top:1px solid var(--soft); }
+.material-row { display:flex;align-items:center;gap:16px;padding:12px 0;border-bottom:1px solid var(--soft); }
+.material-row .material-info { flex:1;min-width:0; }
+.material-row strong { display:block;font:500 16px/1.6 var(--head); }
+.material-row .meta { display:block; }
+.selected-list { margin:12px 0;padding:0;list-style:none; }
+.selected-list li { display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--soft);font:15px var(--head); }
+.selected-list span { flex:1; }
+.selected-list input { width:88px;padding:7px;border:1px solid #aaa89f;border-radius:4px; }
+.catalog { border-top:1px solid var(--soft); }
+.feature { display:grid;grid-template-columns:24px 1fr;gap:10px;padding:18px 0;border-bottom:1px solid var(--soft); }
+.feature input { margin:4px 0 0; }
+.feature label { font-size:17px;font-weight:500;cursor:pointer; }
+.feature p { margin:6px 0 0;font:15px/1.7 var(--head);color:var(--muted); }
+.feature .status { margin-left:10px;font-size:13px;font-weight:400; }
+.status.live { color:#46602f; }.status.pending { color:#91543b; }.status.missing { color:var(--muted); }
+.progress-controls { display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:20px 0; }.progress-controls select { margin-top:5px; }.plan-table-wrap { max-width:100%;overflow-x:auto;margin:18px 0; }.plan-table-wrap table { min-width:350px; }.plan-table-wrap input { width:90px;padding:6px;border:1px solid #aaa89f;border-radius:3px; }.plan-table-wrap th { white-space:nowrap; }
+.acquisition { padding-left:20px;font:14px/1.75 var(--head); }.acquisition li { margin:8px 0; }
+#character-materials table { font-size:12px; }#character-materials th,#character-materials td { padding:7px 5px; }
+.catalog-legend { margin:8px 0 16px;font:14px/1.7 var(--head);color:var(--muted); }
+.workflow { list-style:none;margin:24px 0;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:10px; }
+.workflow li { font:14px/1.7 var(--head);border-top:2px solid var(--mid);padding-top:10px; }
+.workflow strong { display:block;font-weight:500; }.workflow span { color:var(--muted); }.workflow li:first-child { border-color:var(--green); }
+pre { overflow:auto;padding:16px;background:var(--soft);font:12px/1.8 var(--mono);border-radius:5px; }pre code { padding:0;background:none; }
+.source-links { font:14px/1.8 var(--head); }footer { color:var(--muted); }noscript p { padding:16px;border:1px solid var(--mid); }
+@media(max-width:600px) { main { padding:40px 20px 64px; }h1 { font-size:27px; }h2 { font-size:21px;margin-top:44px; }.lede { font-size:17px; }.settings { gap:8px 14px; }.search-row { grid-template-columns:1fr;gap:10px; }.workflow { grid-template-columns:1fr 1fr;gap:18px; }.material-row button { padding:7px 10px; }.feature .status { display:block;margin:3px 0 0; }.selected-list li { flex-wrap:wrap; } }
+</style>
+</head>
+<body>
+<main>
+<h1>先核对库存，再安排哥伦比娅的材料</h1>
+<p class="lede">genshin-agent 已实测后台行走、视角和背包统计，材料采集与战斗流程仍需逐项验证。</p>
+<ul class="settings">
+<li><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>平台 <b>macOS 云原神</b></li>
+<li><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M11 5L6 9H3v6h3l5 4zM16 9l5 6M21 9l-5 6"/></svg>声音 <b>默认关闭</b></li>
+<li><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M9 3H5v18h14V3h-4M9 2h6v4H9zM8 11h8M8 15h5"/></svg>目标 <b>突破与天赋材料</b></li>
+</ul>
+
+<h2>先选培养目标，再核对缺少的材料</h2>
+<p>默认培养哥伦比娅，同时收集突破与天赋材料。可先填写目标，再从下方路线目录选材料。</p>
+<div class="field"><label for="character">培养角色</label><input id="character" type="text" value="哥伦比娅" maxlength="100" autocomplete="off"></div>
+<fieldset><legend>培养目标</legend><div class="checks"><label><input type="checkbox" id="goal-ascension" checked>等级突破</label><label><input type="checkbox" id="goal-talents" checked>天赋升级</label></div></fieldset>
+<div class="field"><label for="goal-notes">目标等级或补充要求</label><input id="goal-notes" type="text" placeholder="例如：先收集到足够突破 90 级，天赋优先元素战技" maxlength="300"></div>
+<div id="character-materials"></div>
+
+<h2>原版路线可以按材料查找，先选一段试跑</h2>
+<p>路线来自 BetterGI（开源原神自动化工具）的原始脚本仓库，名称保留原样；收录路线不等于采集成功。</p>
+<div class="search-row"><label for="material-search"><span class="hint">搜索材料或地区</span><input id="material-search" type="search" placeholder="清水玉、月落银、挪德卡莱…" autocomplete="off"></label><label for="material-category"><span class="hint">路线类型</span><select id="material-category"><option value="">全部类型</option><option>地方特产</option><option>敌人与魔物</option><option>矿物</option><option>食材与炼金</option><option>其他</option><option>锄地专区</option></select></label></div>
+<p id="material-count" class="hint" aria-live="polite"></p>
+<div id="material-results" class="material-results" aria-label="可选材料路线"></div>
+<p class="hint">没有匹配路线的材料也能加入需求，后续再核对获取方式。</p>
+<div class="search-row"><label for="custom-material"><span class="hint">手动填写材料名</span><input id="custom-material" type="text" maxlength="80" placeholder="填写完整材料名"></label><div class="field"><button id="add-custom" type="button">加入清单</button></div></div>
+<ul id="selected-materials" class="selected-list" aria-label="已选材料"></ul>
+
+<h2>按养成、采集和日常挑选要用的功能</h2>
+<p class="catalog-legend">「已实测」只覆盖写明的游戏内行为。「待实测」表示接口与离线测试已接通。「未接通」暂不能运行，仍可列入需求。</p>
+<div class="filters" aria-label="筛选功能"><button type="button" data-filter="全部" aria-pressed="true">全部</button><button type="button" data-filter="养成" aria-pressed="false">养成</button><button type="button" data-filter="采集" aria-pressed="false">采集</button><button type="button" data-filter="日常" aria-pressed="false">日常</button><button type="button" data-filter="其他" aria-pressed="false">其他</button></div>
+<div id="feature-catalog" class="catalog"></div>
+
+<h2>选完会生成需求，运行仍由本机完成</h2>
+<p>选择保存在此浏览器。复制需求后交给 Codex，可先核对库存和缺口，再验证指定路线。网页不会连接账号或启动游戏。</p>
+<div class="field"><label for="request">可以复制回聊天的需求</label><textarea id="request" readonly spellcheck="false" aria-describedby="copy-status"></textarea></div>
+<div class="actions"><button id="copy-request" type="button" class="primary">复制需求</button><button id="download-request" type="button">保存需求 JSON</button></div>
+<p id="copy-status" class="hint" role="status" aria-live="polite"></p>
+<ol class="workflow" aria-label="建议验证顺序"><li><strong>核对库存</strong><span>用背包统计确认已有数量。</span></li><li><strong>计算缺口</strong><span>确认角色材料与目标数量。</span></li><li><strong>试跑短路线</strong><span>核对角色、传送点和采集动作。</span></li><li><strong>核对结果</strong><span>比较前后库存，再扩大运行范围。</span></li></ol>
+<div class="warn"><strong>注意：</strong>领取秘境和首领奖励会消耗树脂。采集需要已解锁地图和路线指定的角色。圣遗物分解会移除物品，五星仍需人工复查。</div>
+
+<h2>核心后台操作已通过，完整迁移仍在继续</h2>
+<p>项目原样复用 BetterGI 的云输入、脚本、地图、模型与素材。后台模式不占用本机前台键鼠，原版「取消任务追踪」和一次背包数量识别已经在游戏内通过。</p>
+<details><summary>查看验收范围与本机运行入口</summary>
+<p>公开包的 628 项 Node 测试与 309 项 Python 测试通过。实机验证包含行走、相机转向、菜单往返、原版脚本，以及清水玉数量 的背包读取。这些结果不能推导为全路线或全战斗可用。</p>
+<p>已收录 144 个活动脚本包和 5,308 份路线文件。尚未逐包验收，角色自动养成、一条龙、原生地脉花和幽境危战等仍有缺项。</p>
+<p>安装与登录按仓库文档完成后，可在项目目录运行以下已验收入口。物品名需按实际需求替换。</p>
+<pre><code>bash scripts/launch-browser.sh --headless
+node scripts/harness.mjs bettergi.enter timeoutMs=180000
+node scripts/harness.mjs bettergi.script package=取消任务追踪
+node scripts/harness.mjs bettergi.task task=CountInventoryItem --json '{"taskConfig":{"ItemNames":["清水玉"]},"detailed":true}'</code></pre>
+<p>云游戏需要已有登录态和可用权益。畅玩卡不取消服务端空闲断线，重新连接后才可继续任务。所有任务保留超时和输入释放。</p>
+</details>
+<p class="source-links"><a href="https://github.com/guoshaoyang-pku/genshin-agent" rel="noopener">GitHub 源码与安装说明</a> · <a href="https://github.com/guoshaoyang-pku/genshin-agent/blob/main/NOTICE.md" rel="noopener">上游来源与许可</a></p>
+<footer>Guo Shaoyang · 复用 BetterGI 0.66.2-alpha.2 与原始脚本资源 · 2026-10-17</footer>
+<noscript><p>开启 JavaScript 后可筛选功能、选择材料并生成需求。源码与安装说明仍可通过上方链接访问。</p></noscript>
+</main>
+<script id="materials-data" type="application/json">[{"id":"其他/成就","name":"成就","category":"其他","region":"","count":30},{"id":"其他/提瓦特钓鱼指南","name":"提瓦特钓鱼指南","category":"其他","region":"","count":34},{"id":"其他/木材伐木点","name":"木材伐木点","category":"其他","region":"","count":29},{"id":"地方特产/挪德卡莱/便携轴承","name":"便携轴承","category":"地方特产","region":"挪德卡莱","count":6},{"id":"地方特产/挪德卡莱/冬凌草","name":"冬凌草","category":"地方特产","region":"挪德卡莱","count":12},{"id":"地方特产/挪德卡莱/月落银","name":"月落银","category":"地方特产","region":"挪德卡莱","count":6},{"id":"地方特产/挪德卡莱/松珀香","name":"松珀香","category":"地方特产","region":"挪德卡莱","count":4},{"id":"地方特产/挪德卡莱/霜盏花","name":"霜盏花","category":"地方特产","region":"挪德卡莱","count":4},{"id":"地方特产/枫丹/初露之源","name":"初露之源","category":"地方特产","region":"枫丹","count":4},{"id":"地方特产/枫丹/子探测单元","name":"子探测单元","category":"地方特产","region":"枫丹","count":10},{"id":"地方特产/枫丹/幽光星星","name":"幽光星星","category":"地方特产","region":"枫丹","count":11},{"id":"地方特产/枫丹/柔灯铃","name":"柔灯铃","category":"地方特产","region":"枫丹","count":9},{"id":"地方特产/枫丹/海露花","name":"海露花","category":"地方特产","region":"枫丹","count":28},{"id":"地方特产/枫丹/湖光铃兰","name":"湖光铃兰","category":"地方特产","region":"枫丹","count":7},{"id":"地方特产/枫丹/苍晶螺","name":"苍晶螺","category":"地方特产","region":"枫丹","count":19},{"id":"地方特产/枫丹/虹彩蔷薇","name":"虹彩蔷薇","category":"地方特产","region":"枫丹","count":7},{"id":"地方特产/璃月/夜泊石","name":"夜泊石","category":"地方特产","region":"璃月","count":23},{"id":"地方特产/璃月/星螺","name":"星螺","category":"地方特产","region":"璃月","count":5},{"id":"地方特产/璃月/清心","name":"清心","category":"地方特产","region":"璃月","count":15},{"id":"地方特产/璃月/清水玉","name":"清水玉","category":"地方特产","region":"璃月","count":19},{"id":"地方特产/璃月/琉璃百合","name":"琉璃百合","category":"地方特产","region":"璃月","count":8},{"id":"地方特产/璃月/琉璃袋","name":"琉璃袋","category":"地方特产","region":"璃月","count":25},{"id":"地方特产/璃月/石珀","name":"石珀","category":"地方特产","region":"璃月","count":42},{"id":"地方特产/璃月/绝云椒椒","name":"绝云椒椒","category":"地方特产","region":"璃月","count":10},{"id":"地方特产/璃月/霓裳花","name":"霓裳花","category":"地方特产","region":"璃月","count":2},{"id":"地方特产/稻妻/天云草实","name":"天云草实","category":"地方特产","region":"稻妻","count":7},{"id":"地方特产/稻妻/幽灯蕈","name":"幽灯蕈","category":"地方特产","region":"稻妻","count":7},{"id":"地方特产/稻妻/晶化骨髓","name":"晶化骨髓","category":"地方特产","region":"稻妻","count":6},{"id":"地方特产/稻妻/海灵芝","name":"海灵芝","category":"地方特产","region":"稻妻","count":18},{"id":"地方特产/稻妻/珊瑚真珠","name":"珊瑚真珠","category":"地方特产","region":"稻妻","count":10},{"id":"地方特产/稻妻/绯樱绣球","name":"绯樱绣球","category":"地方特产","region":"稻妻","count":37},{"id":"地方特产/稻妻/血斛","name":"血斛","category":"地方特产","region":"稻妻","count":7},{"id":"地方特产/稻妻/鬼兜虫","name":"鬼兜虫","category":"地方特产","region":"稻妻","count":23},{"id":"地方特产/稻妻/鸣草","name":"鸣草","category":"地方特产","region":"稻妻","count":5},{"id":"地方特产/纳塔/云岩裂叶","name":"云岩裂叶","category":"地方特产","region":"纳塔","count":10},{"id":"地方特产/纳塔/微光角菌","name":"微光角菌","category":"地方特产","region":"纳塔","count":11},{"id":"地方特产/纳塔/枯叶紫英","name":"枯叶紫英","category":"地方特产","region":"纳塔","count":8},{"id":"地方特产/纳塔/浪沫羽鳃","name":"浪沫羽鳃","category":"地方特产","region":"纳塔","count":5},{"id":"地方特产/纳塔/灼灼彩菊","name":"灼灼彩菊","category":"地方特产","region":"纳塔","count":9},{"id":"地方特产/纳塔/琉鳞石","name":"琉鳞石","category":"地方特产","region":"纳塔","count":6},{"id":"地方特产/纳塔/肉龙掌","name":"肉龙掌","category":"地方特产","region":"纳塔","count":7},{"id":"地方特产/纳塔/青蜜莓","name":"青蜜莓","category":"地方特产","region":"纳塔","count":14},{"id":"地方特产/至冬/植绒草","name":"植绒草","category":"地方特产","region":"至冬","count":9},{"id":"地方特产/至冬/金蕨","name":"金蕨","category":"地方特产","region":"至冬","count":2},{"id":"地方特产/至冬/霜仙花","name":"霜仙花","category":"地方特产","region":"至冬","count":7},{"id":"地方特产/蒙德/嘟嘟莲","name":"嘟嘟莲","category":"地方特产","region":"蒙德","count":16},{"id":"地方特产/蒙德/塞西莉亚花","name":"塞西莉亚花","category":"地方特产","region":"蒙德","count":2},{"id":"地方特产/蒙德/小灯草","name":"小灯草","category":"地方特产","region":"蒙德","count":13},{"id":"地方特产/蒙德/慕风蘑菇","name":"慕风蘑菇","category":"地方特产","region":"蒙德","count":17},{"id":"地方特产/蒙德/空羽蛾","name":"空羽蛾","category":"地方特产","region":"蒙德","count":12},{"id":"地方特产/蒙德/落落莓","name":"落落莓","category":"地方特产","region":"蒙德","count":13},{"id":"地方特产/蒙德/蒲公英籽","name":"蒲公英籽","category":"地方特产","region":"蒙德","count":26},{"id":"地方特产/蒙德/钩钩果","name":"钩钩果","category":"地方特产","region":"蒙德","count":2},{"id":"地方特产/蒙德/风车菊","name":"风车菊","category":"地方特产","region":"蒙德","count":14},{"id":"地方特产/须弥/万相石","name":"万相石","category":"地方特产","region":"须弥","count":16},{"id":"地方特产/须弥/劫波莲","name":"劫波莲","category":"地方特产","region":"须弥","count":20},{"id":"地方特产/须弥/圣金虫","name":"圣金虫","category":"地方特产","region":"须弥","count":9},{"id":"地方特产/须弥/帕蒂沙兰","name":"帕蒂沙兰","category":"地方特产","region":"须弥","count":9},{"id":"地方特产/须弥/悼灵花","name":"悼灵花","category":"地方特产","region":"须弥","count":9},{"id":"地方特产/须弥/月莲","name":"月莲","category":"地方特产","region":"须弥","count":11},{"id":"地方特产/须弥/树王圣体菇","name":"树王圣体菇","category":"地方特产","region":"须弥","count":38},{"id":"地方特产/须弥/沙脂蛹","name":"沙脂蛹","category":"地方特产","region":"须弥","count":10},{"id":"地方特产/须弥/赤念果","name":"赤念果","category":"地方特产","region":"须弥","count":15},{"id":"敌人与魔物/丘丘人射手","name":"丘丘人射手","category":"敌人与魔物","region":"","count":73},{"id":"敌人与魔物/丘丘游侠","name":"丘丘游侠","category":"敌人与魔物","region":"","count":19},{"id":"敌人与魔物/丘丘王","name":"丘丘王","category":"敌人与魔物","region":"","count":17},{"id":"敌人与魔物/丘丘萨满","name":"丘丘萨满","category":"敌人与魔物","region":"","count":12},{"id":"敌人与魔物/债务处理人","name":"债务处理人","category":"敌人与魔物","region":"","count":24},{"id":"敌人与魔物/元能构装体","name":"元能构装体","category":"敌人与魔物","region":"","count":21},{"id":"敌人与魔物/先驱秘源统辖阵列","name":"先驱秘源统辖阵列","category":"敌人与魔物","region":"","count":2},{"id":"敌人与魔物/兽境之狼","name":"兽境之狼","category":"敌人与魔物","region":"","count":8},{"id":"敌人与魔物/兽怪暴徒","name":"兽怪暴徒","category":"敌人与魔物","region":"","count":13},{"id":"敌人与魔物/冬国仕女","name":"冬国仕女","category":"敌人与魔物","region":"","count":14},{"id":"敌人与魔物/原海异种","name":"原海异种","category":"敌人与魔物","region":"","count":54},{"id":"敌人与魔物/发条机关","name":"发条机关","category":"敌人与魔物","region":"","count":8},{"id":"敌人与魔物/史莱姆","name":"史莱姆","category":"敌人与魔物","region":"","count":1},{"id":"敌人与魔物/圣骸兽","name":"圣骸兽","category":"敌人与魔物","region":"","count":29},{"id":"敌人与魔物/大灵显化身","name":"大灵显化身","category":"敌人与魔物","region":"","count":20},{"id":"敌人与魔物/大驮兽","name":"大驮兽","category":"敌人与魔物","region":"","count":18},{"id":"敌人与魔物/奇怪的丘丘人","name":"奇怪的丘丘人","category":"敌人与魔物","region":"","count":14},{"id":"敌人与魔物/小型深海龙蜥","name":"小型深海龙蜥","category":"敌人与魔物","region":"","count":1},{"id":"敌人与魔物/小驮兽(面具驮)","name":"小驮兽(面具驮)","category":"敌人与魔物","region":"","count":13},{"id":"敌人与魔物/巡陆艇","name":"巡陆艇","category":"敌人与魔物","region":"","count":7},{"id":"敌人与魔物/异种合成魔兽","name":"异种合成魔兽","category":"敌人与魔物","region":"","count":6},{"id":"敌人与魔物/愚人众先遣队","name":"愚人众先遣队","category":"敌人与魔物","region":"","count":6},{"id":"敌人与魔物/愚人众特辖队","name":"愚人众特辖队","category":"敌人与魔物","region":"","count":14},{"id":"敌人与魔物/愚人众风役人","name":"愚人众风役人","category":"敌人与魔物","region":"","count":11},{"id":"敌人与魔物/浊水幻灵","name":"浊水幻灵","category":"敌人与魔物","region":"","count":65},{"id":"敌人与魔物/深渊法师","name":"深渊法师","category":"敌人与魔物","region":"","count":10},{"id":"敌人与魔物/深邃拟覆叶","name":"深邃拟覆叶","category":"敌人与魔物","region":"","count":19},{"id":"敌人与魔物/深黯钓客","name":"深黯钓客","category":"敌人与魔物","region":"","count":6},{"id":"敌人与魔物/炉壳山鼬","name":"炉壳山鼬","category":"敌人与魔物","region":"","count":9},{"id":"敌人与魔物/熔岩游像","name":"熔岩游像","category":"敌人与魔物","region":"","count":9},{"id":"敌人与魔物/玄文兽","name":"玄文兽","category":"敌人与魔物","region":"","count":9},{"id":"敌人与魔物/盗宝团","name":"盗宝团","category":"敌人与魔物","region":"","count":13},{"id":"敌人与魔物/秘源机兵","name":"秘源机兵","category":"敌人与魔物","region":"","count":24},{"id":"敌人与魔物/纳塔龙众","name":"纳塔龙众","category":"敌人与魔物","region":"","count":14},{"id":"敌人与魔物/纳塔龙众和部族龙形武士","name":"纳塔龙众和部族龙形武士","category":"敌人与魔物","region":"","count":15},{"id":"敌人与魔物/肌生晶石的妖精","name":"肌生晶石的妖精","category":"敌人与魔物","region":"","count":6},{"id":"敌人与魔物/荒野树妖","name":"荒野树妖","category":"敌人与魔物","region":"","count":1},{"id":"敌人与魔物/荒野狂猎","name":"荒野狂猎","category":"敌人与魔物","region":"","count":17},{"id":"敌人与魔物/萤术士","name":"萤术士","category":"敌人与魔物","region":"","count":32},{"id":"敌人与魔物/蕈兽","name":"蕈兽","category":"敌人与魔物","region":"","count":25},{"id":"敌人与魔物/蕴光异兽","name":"蕴光异兽","category":"敌人与魔物","region":"","count":10},{"id":"敌人与魔物/辖域守护者","name":"辖域守护者","category":"敌人与魔物","region":"","count":6},{"id":"敌人与魔物/遗迹守卫","name":"遗迹守卫","category":"敌人与魔物","region":"","count":15},{"id":"敌人与魔物/遗迹机兵","name":"遗迹机兵","category":"敌人与魔物","region":"","count":5},{"id":"敌人与魔物/遗迹龙兽","name":"遗迹龙兽","category":"敌人与魔物","region":"","count":23},{"id":"敌人与魔物/部族龙形武士","name":"部族龙形武士","category":"敌人与魔物","region":"","count":13},{"id":"敌人与魔物/野伏众","name":"野伏众","category":"敌人与魔物","region":"","count":57},{"id":"敌人与魔物/镀金旅团","name":"镀金旅团","category":"敌人与魔物","region":"","count":11},{"id":"敌人与魔物/隙境原体","name":"隙境原体","category":"敌人与魔物","region":"","count":3},{"id":"敌人与魔物/雷火大蕈","name":"雷火大蕈","category":"敌人与魔物","region":"","count":12},{"id":"敌人与魔物/霜夜灵嗣","name":"霜夜灵嗣","category":"敌人与魔物","region":"","count":18},{"id":"敌人与魔物/飘浮灵","name":"飘浮灵","category":"敌人与魔物","region":"","count":38},{"id":"敌人与魔物/飞萤","name":"飞萤","category":"敌人与魔物","region":"","count":19},{"id":"敌人与魔物/骗骗花","name":"骗骗花","category":"敌人与魔物","region":"","count":86},{"id":"敌人与魔物/魔像禁卫","name":"魔像禁卫","category":"敌人与魔物","region":"","count":8},{"id":"敌人与魔物/黑蛇众","name":"黑蛇众","category":"敌人与魔物","region":"","count":9},{"id":"敌人与魔物/龙蜥","name":"龙蜥","category":"敌人与魔物","region":"","count":6},{"id":"矿物/星银矿石","name":"星银矿石","category":"矿物","region":"","count":17},{"id":"矿物/水晶块","name":"水晶块","category":"矿物","region":"","count":162},{"id":"矿物/白铁块","name":"白铁块","category":"矿物","region":"","count":39},{"id":"矿物/紫晶块","name":"紫晶块","category":"矿物","region":"","count":76},{"id":"矿物/莉奈娅一条龙","name":"莉奈娅一条龙","category":"矿物","region":"","count":24},{"id":"矿物/萃凝晶","name":"萃凝晶","category":"矿物","region":"","count":177},{"id":"矿物/虹滴晶","name":"虹滴晶","category":"矿物","region":"","count":24},{"id":"矿物/铁块","name":"铁块","category":"矿物","region":"","count":6},{"id":"矿物/魔晶矿","name":"魔晶矿","category":"矿物","region":"","count":146},{"id":"锄地专区/小怪2000@mno","name":"小怪2000@mno","category":"锄地专区","region":"","count":222},{"id":"锄地专区/挪德卡莱锄地小怪","name":"挪德卡莱锄地小怪","category":"锄地专区","region":"","count":18},{"id":"锄地专区/精英400@汐","name":"精英400@汐","category":"锄地专区","region":"","count":177},{"id":"食材与炼金/「冷鲜肉」","name":"「冷鲜肉」","category":"食材与炼金","region":"","count":5},{"id":"食材与炼金/久雨莲","name":"久雨莲","category":"食材与炼金","region":"","count":15},{"id":"食材与炼金/兽肉","name":"兽肉","category":"食材与炼金","region":"","count":47},{"id":"食材与炼金/冰醋栗","name":"冰醋栗","category":"食材与炼金","region":"","count":9},{"id":"食材与炼金/冰雾花花朵","name":"冰雾花花朵","category":"食材与炼金","region":"","count":38},{"id":"食材与炼金/发光髓","name":"发光髓","category":"食材与炼金","region":"","count":5},{"id":"食材与炼金/堇瓜","name":"堇瓜","category":"食材与炼金","region":"","count":66},{"id":"食材与炼金/墩墩桃","name":"墩墩桃","category":"食材与炼金","region":"","count":15},{"id":"食材与炼金/夏槲果","name":"夏槲果","category":"食材与炼金","region":"","count":9},{"id":"食材与炼金/奇异的「牙齿」","name":"奇异的「牙齿」","category":"食材与炼金","region":"","count":4},{"id":"食材与炼金/宿影花","name":"宿影花","category":"食材与炼金","region":"","count":9},{"id":"食材与炼金/寒涌石","name":"寒涌石","category":"食材与炼金","region":"","count":12},{"id":"食材与炼金/提瓦特食材一条龙","name":"提瓦特食材一条龙","category":"食材与炼金","region":"","count":386},{"id":"食材与炼金/日落果","name":"日落果","category":"食材与炼金","region":"","count":112},{"id":"食材与炼金/晶蝶","name":"晶蝶","category":"食材与炼金","region":"","count":28},{"id":"食材与炼金/松果","name":"松果","category":"食材与炼金","region":"","count":7},{"id":"食材与炼金/松茸","name":"松茸","category":"食材与炼金","region":"","count":156},{"id":"食材与炼金/枣椰","name":"枣椰","category":"食材与炼金","region":"","count":30},{"id":"食材与炼金/树莓","name":"树莓","category":"食材与炼金","region":"","count":20},{"id":"食材与炼金/毗波耶","name":"毗波耶","category":"食材与炼金","region":"","count":1},{"id":"食材与炼金/汐藻","name":"汐藻","category":"食材与炼金","region":"","count":31},{"id":"食材与炼金/沉玉仙茗","name":"沉玉仙茗","category":"食材与炼金","region":"","count":8},{"id":"食材与炼金/泡泡桔","name":"泡泡桔","category":"食材与炼金","region":"","count":33},{"id":"食材与炼金/海草","name":"海草","category":"食材与炼金","region":"","count":30},{"id":"食材与炼金/澄晶实","name":"澄晶实","category":"食材与炼金","region":"","count":17},{"id":"食材与炼金/烈焰花花蕊","name":"烈焰花花蕊","category":"食材与炼金","region":"","count":11},{"id":"食材与炼金/烛伞蘑菇","name":"烛伞蘑菇","category":"食材与炼金","region":"","count":5},{"id":"食材与炼金/烬芯花","name":"烬芯花","category":"食材与炼金","region":"","count":22},{"id":"食材与炼金/爱可菲","name":"爱可菲","category":"食材与炼金","region":"","count":1},{"id":"食材与炼金/瓦雷莎家的果园","name":"瓦雷莎家的果园","category":"食材与炼金","region":"","count":2},{"id":"食材与炼金/甜甜花","name":"甜甜花","category":"食材与炼金","region":"","count":94},{"id":"食材与炼金/电气水晶","name":"电气水晶","category":"食材与炼金","region":"","count":10},{"id":"食材与炼金/白灵果","name":"白灵果","category":"食材与炼金","region":"","count":9},{"id":"食材与炼金/白萝卜","name":"白萝卜","category":"食材与炼金","region":"","count":13},{"id":"食材与炼金/神秘的肉","name":"神秘的肉","category":"食材与炼金","region":"","count":17},{"id":"食材与炼金/禽肉","name":"禽肉","category":"食材与炼金","region":"","count":90},{"id":"食材与炼金/竹笋","name":"竹笋","category":"食材与炼金","region":"","count":3},{"id":"食材与炼金/红果果菇","name":"红果果菇","category":"食材与炼金","region":"","count":1},{"id":"食材与炼金/红甜菜","name":"红甜菜","category":"食材与炼金","region":"","count":5},{"id":"食材与炼金/纳塔食材一条龙","name":"纳塔食材一条龙","category":"食材与炼金","region":"","count":11},{"id":"食材与炼金/胡萝卜","name":"胡萝卜","category":"食材与炼金","region":"","count":19},{"id":"食材与炼金/苦种","name":"苦种","category":"食材与炼金","region":"","count":66},{"id":"食材与炼金/苹果","name":"苹果","category":"食材与炼金","region":"","count":14},{"id":"食材与炼金/茉洁草","name":"茉洁草","category":"食材与炼金","region":"","count":43},{"id":"食材与炼金/莲蓬","name":"莲蓬","category":"食材与炼金","region":"","count":50},{"id":"食材与炼金/薄荷","name":"薄荷","category":"食材与炼金","region":"","count":273},{"id":"食材与炼金/蘑菇","name":"蘑菇","category":"食材与炼金","region":"","count":9},{"id":"食材与炼金/蜥蜴尾巴","name":"蜥蜴尾巴","category":"食材与炼金","region":"","count":8},{"id":"食材与炼金/螃蟹","name":"螃蟹","category":"食材与炼金","region":"","count":95},{"id":"食材与炼金/金鱼草","name":"金鱼草","category":"食材与炼金","region":"","count":76},{"id":"食材与炼金/雪球花","name":"雪球花","category":"食材与炼金","region":"","count":6},{"id":"食材与炼金/青蛙","name":"青蛙","category":"食材与炼金","region":"","count":29},{"id":"食材与炼金/须弥蔷薇","name":"须弥蔷薇","category":"食材与炼金","region":"","count":7},{"id":"食材与炼金/颗粒果","name":"颗粒果","category":"食材与炼金","region":"","count":11},{"id":"食材与炼金/风息花","name":"风息花","category":"食材与炼金","region":"","count":2},{"id":"食材与炼金/香辛果","name":"香辛果","category":"食材与炼金","region":"","count":30},{"id":"食材与炼金/马尾","name":"马尾","category":"食材与炼金","region":"","count":5},{"id":"食材与炼金/鱼肉","name":"鱼肉","category":"食材与炼金","region":"","count":10},{"id":"食材与炼金/鳅鳅宝玉","name":"鳅鳅宝玉","category":"食材与炼金","region":"","count":2},{"id":"食材与炼金/鳗肉","name":"鳗肉","category":"食材与炼金","region":"","count":80},{"id":"食材与炼金/鸟蛋","name":"鸟蛋","category":"食材与炼金","region":"","count":151}]</script>
+<!-- Columbina material data adapted from theBowja/genshin-db at 49a6544a6c6ae36089cb42fa591fc46f01de8bcf.
+MIT License
+
+Copyright (c) 2020 theBowja
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+-->
+<script id="character-data" type="application/json">{"character":{"id":10000125,"name":"哥伦比娅","englishName":"Columbina","element":"水","weapon":"法器"},"dataSource":{"name":"genshin-db community game-data extraction","repository":"https://github.com/theBowja/genshin-db","revision":"49a6544a6c6ae36089cb42fa591fc46f01de8bcf","revisionDate":"2026-09-21T20:39:46Z","files":[{"path":"characters/columbina.json","url":"https://raw.githubusercontent.com/theBowja/genshin-db/49a6544a6c6ae36089cb42fa591fc46f01de8bcf/src/data/ChineseSimplified/characters/columbina.json","sha256":"c81d35dcb01d7f01ad5d100965abf01b0865633cba7abd908a93fd49869c3a3c"},{"path":"talents/columbina.json","url":"https://raw.githubusercontent.com/theBowja/genshin-db/49a6544a6c6ae36089cb42fa591fc46f01de8bcf/src/data/ChineseSimplified/talents/columbina.json","sha256":"e663dadbbf3ad3e2d50442ed07ffa24fdb0a1e4c23efe1ae3bd99f1ff64caf4f"},{"path":"materials/wintericelea.json","url":"https://raw.githubusercontent.com/theBowja/genshin-db/49a6544a6c6ae36089cb42fa591fc46f01de8bcf/src/data/ChineseSimplified/materials/wintericelea.json","sha256":"954868baa3fcdcd6ad50622bc364628575212770c803952333fa00c11ee35fc5"},{"path":"materials/radiantantler.json","url":"https://raw.githubusercontent.com/theBowja/genshin-db/49a6544a6c6ae36089cb42fa591fc46f01de8bcf/src/data/ChineseSimplified/materials/radiantantler.json","sha256":"686c0c3541a16503b9bb49c4787b6b60d58ee0d93d249293def96d9274a07016"},{"path":"materials/teachingsofmoonlight.json","url":"https://raw.githubusercontent.com/theBowja/genshin-db/49a6544a6c6ae36089cb42fa591fc46f01de8bcf/src/data/ChineseSimplified/materials/teachingsofmoonlight.json","sha256":"d8cf75276610617beb6b5b3ed2e1f2f0be4d4f45b0fdd4fe966a90527a10b7ec"},{"path":"materials/guidetomoonlight.json","url":"https://raw.githubusercontent.com/theBowja/genshin-db/49a6544a6c6ae36089cb42fa591fc46f01de8bcf/src/data/ChineseSimplified/materials/guidetomoonlight.json","sha256":"74ae63c8b3a919975db814032570fdd5887d4f98902e0e01f289686bc646e147"},{"path":"materials/philosophiesofmoonlight.json","url":"https://raw.githubusercontent.com/theBowja/genshin-db/49a6544a6c6ae36089cb42fa591fc46f01de8bcf/src/data/ChineseSimplified/materials/philosophiesofmoonlight.json","sha256":"c91088247904b7881909d0305a8043bd10cf0e6a00c4f89ee790feb386b0f4de"},{"path":"materials/maskofthevirtuousdoctor.json","url":"https://raw.githubusercontent.com/theBowja/genshin-db/49a6544a6c6ae36089cb42fa591fc46f01de8bcf/src/data/ChineseSimplified/materials/maskofthevirtuousdoctor.json","sha256":"919e74a4ef390b4aca80f3a5628d2061be30bc5d5fc519982913217f53970b97"},{"path":"materials/slimecondensate.json","url":"https://raw.githubusercontent.com/theBowja/genshin-db/49a6544a6c6ae36089cb42fa591fc46f01de8bcf/src/data/ChineseSimplified/materials/slimecondensate.json","sha256":"a3c7d879c98e588d8c08bb6f60ffa03a1634a0cabf8c1ff76fb507b27fa1a845"},{"path":"materials/slimesecretions.json","url":"https://raw.githubusercontent.com/theBowja/genshin-db/49a6544a6c6ae36089cb42fa591fc46f01de8bcf/src/data/ChineseSimplified/materials/slimesecretions.json","sha256":"b3ca92f1a195d748aee58f3313a943ff8d1ae9934905c30daebb212139f68e45"},{"path":"materials/slimeconcentrate.json","url":"https://raw.githubusercontent.com/theBowja/genshin-db/49a6544a6c6ae36089cb42fa591fc46f01de8bcf/src/data/ChineseSimplified/materials/slimeconcentrate.json","sha256":"efa9e885b9735407a4ef05e92b30a3f8d1073bcdf440583c950a1e6b48144ed8"},{"path":"domains/domainofmasteryfallencityiv.json","url":"https://raw.githubusercontent.com/theBowja/genshin-db/49a6544a6c6ae36089cb42fa591fc46f01de8bcf/src/data/ChineseSimplified/domains/domainofmasteryfallencityiv.json","sha256":"f59678d8ae0fbbd50d95158127684a10ce2ab8bd5833a220fae71ad57d329a8f"}],"license":{"name":"MIT","copyright":"Copyright (c) 2020 theBowja","url":"https://raw.githubusercontent.com/theBowja/genshin-db/49a6544a6c6ae36089cb42fa591fc46f01de8bcf/LICENSE"}},"scopeNotes":["突破材料对应从未突破到完成第六次突破；未计入角色经验与角色升级摩拉。","天赋费用为单个天赋1→10；三项全满乘3。不推断用户当前等级、库存或应优先升级哪一项。","素材可合成的低阶与高阶暂分开计数；未把高阶自动折算成低阶。","原路线已存在不代表采集流程已在当前账号实测；网页仅规划任务。"],"ascensionTotals":[{"id":202,"name":"摩拉","count":420000},{"id":104121,"name":"涤净青金碎屑","count":1},{"id":101268,"name":"冬凌草","count":168},{"id":112002,"name":"史莱姆凝液","count":18},{"id":104122,"name":"涤净青金断片","count":9},{"id":113079,"name":"漫光的辉角","count":46},{"id":112003,"name":"史莱姆清","count":30},{"id":104123,"name":"涤净青金块","count":9},{"id":112004,"name":"史莱姆原浆","count":36},{"id":104124,"name":"涤净青金","count":6}],"talentOneMaxTotals":[{"id":202,"name":"摩拉","count":1652500},{"id":104356,"name":"「月光」的教导","count":3},{"id":112002,"name":"史莱姆凝液","count":6},{"id":104357,"name":"「月光」的指引","count":21},{"id":112003,"name":"史莱姆清","count":22},{"id":104358,"name":"「月光」的哲学","count":38},{"id":112004,"name":"史莱姆原浆","count":31},{"id":113081,"name":"贤医的假面","count":6},{"id":104319,"name":"智识之冕","count":1}],"talentThreeMaxTotals":[{"id":202,"name":"摩拉","count":4957500},{"id":104356,"name":"「月光」的教导","count":9},{"id":112002,"name":"史莱姆凝液","count":18},{"id":104357,"name":"「月光」的指引","count":63},{"id":112003,"name":"史莱姆清","count":66},{"id":104358,"name":"「月光」的哲学","count":114},{"id":112004,"name":"史莱姆原浆","count":93},{"id":113081,"name":"贤医的假面","count":18},{"id":104319,"name":"智识之冕","count":3}],"combinedMaxTotals":[{"id":202,"name":"摩拉","count":5377500},{"id":104121,"name":"涤净青金碎屑","count":1},{"id":101268,"name":"冬凌草","count":168},{"id":112002,"name":"史莱姆凝液","count":36},{"id":104122,"name":"涤净青金断片","count":9},{"id":113079,"name":"漫光的辉角","count":46},{"id":112003,"name":"史莱姆清","count":96},{"id":104123,"name":"涤净青金块","count":9},{"id":112004,"name":"史莱姆原浆","count":129},{"id":104124,"name":"涤净青金","count":6},{"id":104356,"name":"「月光」的教导","count":9},{"id":104357,"name":"「月光」的指引","count":63},{"id":104358,"name":"「月光」的哲学","count":114},{"id":113081,"name":"贤医的假面","count":18},{"id":104319,"name":"智识之冕","count":3}],"acquisition":{"winterIcelea":{"ids":[101268],"text":"挪德卡莱特产：厄布拉神柱、安瓦蒂尼尔湖等；原资源有两组作者路线，不能把两组的点位简单相加。","sourceFiles":["materials/wintericelea.json"],"routeGroup":"地方特产/挪德卡莱/冬凌草"},"slime":{"ids":[112002,112003,112004],"text":"史莱姆掉落，原资源有史莱姆速刷路线；高阶可合成。","sourceFiles":["materials/slimecondensate.json","materials/slimesecretions.json","materials/slimeconcentrate.json"],"routeGroup":"敌人与魔物/史莱姆"},"boss":{"ids":[113079],"text":"30级以上霜夜巡天灵主掉落；原资源有首领前往路线和自动首领流程，当前未实测完整击败领奖。","sourceFiles":["materials/radiantantler.json"],"originalPath":"BetterGenshinImpact/GameTask/AutoBoss/Assets/Pathing/霜夜巡天灵主前往.json"},"talent":{"ids":[104356,104357,104358],"text":"无光的深都 · 精通秘境：墟都，周一、周四、周日开放「月光」；当前未实测完整刷本领奖。","days":["周一","周四","周日"],"entranceId":1690,"domainId":4654,"sourceFiles":["materials/teachingsofmoonlight.json","domains/domainofmasteryfallencityiv.json"]},"weekly":{"ids":[113081],"text":"70级以上「博士」挑战奖励，征讨领域「赝月的研究所」；可在合成台转化，当前没有完整流程验收。","sourceFiles":["materials/maskofthevirtuousdoctor.json"],"entranceId":1919},"gem":{"ids":[104121,104122,104123,104124],"text":"涤净青金系列，按游戏内首领掉落、合成或转换获取；此处不承诺霜夜巡天灵主同时掉落水宝石。"},"moraCrown":{"ids":[202,104319],"text":"摩拉与智识之冕另外准备；不默认消耗脆弱树脂、原石、星尘或皇冠。"}},"ascensionStages":{"ascend1":[{"id":202,"name":"摩拉","count":20000},{"id":104121,"name":"涤净青金碎屑","count":1},{"id":101268,"name":"冬凌草","count":3},{"id":112002,"name":"史莱姆凝液","count":3}],"ascend2":[{"id":202,"name":"摩拉","count":40000},{"id":104122,"name":"涤净青金断片","count":3},{"id":113079,"name":"漫光的辉角","count":2},{"id":101268,"name":"冬凌草","count":10},{"id":112002,"name":"史莱姆凝液","count":15}],"ascend3":[{"id":202,"name":"摩拉","count":60000},{"id":104122,"name":"涤净青金断片","count":6},{"id":113079,"name":"漫光的辉角","count":4},{"id":101268,"name":"冬凌草","count":20},{"id":112003,"name":"史莱姆清","count":12}],"ascend4":[{"id":202,"name":"摩拉","count":80000},{"id":104123,"name":"涤净青金块","count":3},{"id":113079,"name":"漫光的辉角","count":8},{"id":101268,"name":"冬凌草","count":30},{"id":112003,"name":"史莱姆清","count":18}],"ascend5":[{"id":202,"name":"摩拉","count":100000},{"id":104123,"name":"涤净青金块","count":6},{"id":113079,"name":"漫光的辉角","count":12},{"id":101268,"name":"冬凌草","count":45},{"id":112004,"name":"史莱姆原浆","count":12}],"ascend6":[{"id":202,"name":"摩拉","count":120000},{"id":104124,"name":"涤净青金","count":6},{"id":113079,"name":"漫光的辉角","count":20},{"id":101268,"name":"冬凌草","count":60},{"id":112004,"name":"史莱姆原浆","count":24}]},"talentLevels":{"lvl2":[{"id":202,"name":"摩拉","count":12500},{"id":104356,"name":"「月光」的教导","count":3},{"id":112002,"name":"史莱姆凝液","count":6}],"lvl3":[{"id":202,"name":"摩拉","count":17500},{"id":104357,"name":"「月光」的指引","count":2},{"id":112003,"name":"史莱姆清","count":3}],"lvl4":[{"id":202,"name":"摩拉","count":25000},{"id":104357,"name":"「月光」的指引","count":4},{"id":112003,"name":"史莱姆清","count":4}],"lvl5":[{"id":202,"name":"摩拉","count":30000},{"id":104357,"name":"「月光」的指引","count":6},{"id":112003,"name":"史莱姆清","count":6}],"lvl6":[{"id":202,"name":"摩拉","count":37500},{"id":104357,"name":"「月光」的指引","count":9},{"id":112003,"name":"史莱姆清","count":9}],"lvl7":[{"id":202,"name":"摩拉","count":120000},{"id":104358,"name":"「月光」的哲学","count":4},{"id":112004,"name":"史莱姆原浆","count":4},{"id":113081,"name":"贤医的假面","count":1}],"lvl8":[{"id":202,"name":"摩拉","count":260000},{"id":104358,"name":"「月光」的哲学","count":6},{"id":112004,"name":"史莱姆原浆","count":6},{"id":113081,"name":"贤医的假面","count":1}],"lvl9":[{"id":202,"name":"摩拉","count":450000},{"id":104358,"name":"「月光」的哲学","count":12},{"id":112004,"name":"史莱姆原浆","count":9},{"id":113081,"name":"贤医的假面","count":2}],"lvl10":[{"id":202,"name":"摩拉","count":700000},{"id":104358,"name":"「月光」的哲学","count":16},{"id":112004,"name":"史莱姆原浆","count":12},{"id":113081,"name":"贤医的假面","count":2},{"id":104319,"name":"智识之冕","count":1}]}}</script>
+<script id="features-data" type="application/json">[{"id":"inventory","name":"背包物品统计","category":"养成","status":"已实测","detail":"原模型与数量识别已在游戏内读取清水玉数量，并返回主界面。其他物品仍须核对。","recommend":true},{"id":"routes","name":"地方特产与材料路线","category":"采集","status":"待实测","detail":"已接入定位、传送、路线动作和拾取。完整路线尚未验收，须先试跑一段。","recommend":true},{"id":"domain","name":"天赋与突破材料秘境","category":"养成","status":"待实测","detail":"已接入进场、战斗、树脂和领奖流程。需选对秘境、队伍与次数，领取会消耗树脂。","recommend":true},{"id":"boss","name":"首领材料与自动战斗","category":"养成","status":"待实测","detail":"已接入原策略、路线、复活和领奖。完整战斗未验收，领取会消耗树脂。","recommend":true},{"id":"mining","name":"挖矿、元素采集与拾取","category":"采集","status":"待实测","detail":"已接入路线动作、角色切换、纳西妲采集与拾取。需要路线指定的角色和已解锁地区。","recommend":false},{"id":"daily","name":"邮件、派遣与日常领奖","category":"日常","status":"待实测","detail":"接口已接通，邮件领取有早期实机记录。派遣、纪行与历练点完整流程仍待逐项验收。","recommend":false},{"id":"script","name":"运行原版 BetterGI 脚本","category":"日常","status":"已实测","detail":"原版「取消任务追踪」已运行通过。其他包是否可用取决于所需接口，不能按收录数量判断。","recommend":false},{"id":"fishing","name":"自动钓鱼","category":"采集","status":"待实测","detail":"复用鱼类模型、选饵、抛竿与收竿流程，完整钓鱼尚未实机验收。","recommend":false},{"id":"wood","name":"伐木与木材统计","category":"采集","status":"待实测","detail":"复用王树瑞佑、重登与木材统计流程，需具备对应小道具。","recommend":false},{"id":"food","name":"烹饪与自动吃药","category":"养成","status":"待实测","detail":"已接入烹饪判断、营养袋及指定料理流程，未实机验证消耗行为。","recommend":false},{"id":"tcg","name":"七圣召唤与千音雅集","category":"其他","status":"待实测","detail":"策略解析、识别和输入已接通。需具备卡组或活动前提，尚无完整游戏内验收。","recommend":false},{"id":"salvage","name":"圣遗物分解与筛选","category":"其他","status":"待实测","detail":"低星分解和五星筛选已接入。五星保留人工复查，未实机分解，不作默认选择。","recommend":false},{"id":"planner","name":"自动角色养成规划","category":"养成","status":"未接通","detail":"角色养成后端尚未实现，不能直接按角色名自动安排全套材料。","recommend":false},{"id":"leyline","name":"原生地脉花与幽境危战","category":"养成","status":"未接通","detail":"对应原生流程未迁移。原仓库中的相关脚本也未逐包验收。","recommend":false},{"id":"flow","name":"一条龙、配置组与原琴演奏","category":"其他","status":"未接通","detail":"整组调度和 MIDI 谱面演奏尚未接通。快捷商店、锻造等也在迁移范围内。","recommend":false}]</script>
+<script>
+'use strict';
+const materials=JSON.parse(document.getElementById('materials-data').textContent);
+const features=JSON.parse(document.getElementById('features-data').textContent);
+const characterData=JSON.parse(document.getElementById('character-data').textContent);
+const storageKey='genshin-agent-requests-v1';
+const el=id=>document.getElementById(id);
+const initial={planSignature:null,character:'哥伦比娅',ascension:true,talents:true,notes:'',ascensionCurrent:0,ascensionTarget:6,talentCurrent:[1,1,1],talentTarget:[10,10,10],stock:{},selectedMaterials:[],selectedFeatures:features.filter(x=>x.recommend).map(x=>x.id)};
+let state=structuredClone(initial);
+let storageAvailable=true;
+try {
+ const saved=JSON.parse(localStorage.getItem(storageKey)||'null');
+ if(saved&&typeof saved==='object') {
+  if(typeof saved.planSignature==='string')state.planSignature=saved.planSignature;
+  for(const key of ['character','notes'])if(typeof saved[key]==='string')state[key]=saved[key].slice(0,key==='character'?100:300);
+  for(const key of ['ascensionCurrent','ascensionTarget'])if(Number.isInteger(saved[key])&&saved[key]>=0&&saved[key]<=6)state[key]=saved[key];
+  for(const key of ['talentCurrent','talentTarget'])if(Array.isArray(saved[key])&&saved[key].length===3&&saved[key].every(x=>Number.isInteger(x)&&x>=1&&x<=10))state[key]=saved[key];
+  if(saved.stock&&typeof saved.stock==='object')for(const [id,n] of Object.entries(saved.stock))if(/^\d+$/.test(id)&&Number.isInteger(n)&&n>=0&&n<=99999999)state.stock[id]=n;
+  for(const key of ['ascension','talents'])if(typeof saved[key]==='boolean')state[key]=saved[key];
+  if(Array.isArray(saved.selectedFeatures))state.selectedFeatures=saved.selectedFeatures.filter(id=>features.some(f=>f.id===id));
+  if(Array.isArray(saved.selectedMaterials))state.selectedMaterials=saved.selectedMaterials.filter(x=>x&&typeof x.id==='string'&&typeof x.name==='string').slice(0,100).map(x=>({id:x.id,name:x.name.slice(0,80),plannedTotal:Number.isInteger(x.plannedTotal)?x.plannedTotal:null,quantity:Number.isInteger(x.quantity)&&x.quantity>0?Math.min(x.quantity,99999999):null,routeGroup:typeof x.routeGroup==='string'?x.routeGroup:null}));
+ }
+}catch{storageAvailable=false;}
+el('character').value=state.character;el('goal-notes').value=state.notes;el('goal-ascension').checked=state.ascension;el('goal-talents').checked=state.talents;
+const create=(tag,text,cls)=>{const e=document.createElement(tag);if(text!==undefined)e.textContent=text;if(cls)e.className=cls;return e;};
+function requestData(){return {materialPlanState:state.planSignature&&(state.planSignature===planSignature()?'已按当前进度与库存生成':'进度或库存已改变，材料清单需重新生成'),materialQuantityBasis:'哥伦比娅参考清单按所填阶段计算，手填库存只按同阶材料扣除，未折算合成',characterProgress:{ascensionCurrent:state.ascensionCurrent,ascensionTarget:state.ascensionTarget,talentCurrent:state.talentCurrent,talentTarget:state.talentTarget},character:state.character.trim()||'待填写',goals:[state.ascension&&'等级突破',state.talents&&'天赋升级'].filter(Boolean),notes:state.notes.trim(),materials:state.selectedMaterials.map(x=>({name:x.name,targetQuantity:x.quantity,requiredQuantity:x.plannedTotal??null,routeGroup:x.routeGroup||(x.id.startsWith('custom:')||x.id.startsWith('character:')?null:x.id)})),features:features.filter(x=>state.selectedFeatures.includes(x.id)).map(x=>({name:x.name,status:x.status,boundary:x.detail})),execution:'仅生成需求，未启动游戏',workflow:['核对角色材料与当前库存','按缺口安排采集或副本','待实测功能先验证短流程','运行后比较库存与任务回执']};}
+function updateRequest(){
+ const r=requestData();const lines=['请为'+r.character+'安排材料收集。','培养目标：'+(r.goals.join('、')||'待选择')];
+ if(['哥伦比娅','columbina'].includes(state.character.trim().toLowerCase()))lines.push('突破阶段：'+state.ascensionCurrent+'→'+state.ascensionTarget+'；普攻/战技/爆发：'+state.talentCurrent.join('/')+'→'+state.talentTarget.join('/'));
+ if(r.notes)lines.push('补充要求：'+r.notes);if(r.materialPlanState)lines.push('材料清单：'+r.materialPlanState);
+ lines.push('','材料清单：');lines.push(...(r.materials.length?r.materials.map(m=>'- '+m.name+'：'+(m.targetQuantity?'计划收集 '+m.targetQuantity:(m.requiredQuantity?'阶段所需 '+m.requiredQuantity+'，库存与缺口待核对':'目标数量待核对'))+(m.routeGroup?'（原路线目录：'+m.routeGroup+'）':'（获取方式待核对）')):['- 先核对该角色的突破与天赋材料，再读取背包库存，计算缺口。']));
+ lines.push('','希望使用的功能：');lines.push(...(r.features.length?r.features.map(f=>'- '+f.name+'〔'+f.status+'〕：'+f.boundary):['- 暂未选择']));
+ lines.push('','缺口只对已填库存的材料计算，空白库存保留待核对。游戏内运行前再次核对，低高阶未折算合成。','先核对库存、角色和地图前提；待实测功能先跑短流程，确认实际结果后再扩大范围。','此需求由网页生成，尚未启动任何游戏任务。');el('request').value=lines.join('\n');
+ try{localStorage.setItem(storageKey,JSON.stringify(state));}catch{storageAvailable=false;}
+ if(!storageAvailable)el('copy-status').textContent='浏览器未允许保存，关闭后选择可能丢失。仍可复制需求。';
+}
+function addMaterial(item){if(state.selectedMaterials.some(x=>x.id===item.id))return;state.selectedMaterials.push({id:item.id,name:item.name,quantity:null});renderSelected();renderMaterials();updateRequest();}
+function renderMaterials(){
+ const query=el('material-search').value.trim().toLowerCase();const category=el('material-category').value;
+ const list=materials.filter(x=>(!category||category===x.category)&&(!query||(x.name+' '+x.category+' '+x.region).toLowerCase().includes(query)));
+ el('material-count').textContent=list.length+' 个匹配目录 · 数量表示原始路线文件数，未逐条验收';const box=el('material-results');box.replaceChildren();
+ if(!list.length){box.append(create('p','没有匹配的路线目录，可手动添加材料。','empty'));return;}
+ for(const item of list){
+  const row=create('div',undefined,'material-row');const info=create('div',undefined,'material-info');info.append(create('strong',item.name),create('span',item.category+(item.region?' / '+item.region:'')+' · '+item.count+' 份路线','meta'));
+  const b=create('button',state.selectedMaterials.some(x=>x.id===item.id)?'已加入':'加入');b.type='button';b.disabled=state.selectedMaterials.some(x=>x.id===item.id);b.setAttribute('aria-label','加入材料 '+item.name+'（'+item.id+'）');b.onclick=()=>addMaterial(item);row.append(info,b);box.append(row);
+ }
+}
+function renderSelected(){
+ const box=el('selected-materials');box.replaceChildren();
+ if(!state.selectedMaterials.length){box.append(create('li','尚未选择材料。可先保留培养目标，核对材料后再补齐。','empty'));return;}
+ for(const item of state.selectedMaterials){
+  const row=create('li');row.append(create('span',item.name));const quantity=create('input');quantity.type='number';quantity.min='1';quantity.max='99999999';quantity.step='1';quantity.placeholder='收集数';quantity.value=item.quantity??'';quantity.setAttribute('aria-label',item.name+'计划收集数量');
+  quantity.oninput=()=>{const n=Number(quantity.value);item.quantity=Number.isInteger(n)&&n>0&&n<=99999999?n:null;updateRequest();};
+  const remove=create('button','移除');remove.type='button';remove.setAttribute('aria-label','移除材料 '+item.name);remove.onclick=()=>{state.selectedMaterials=state.selectedMaterials.filter(x=>x.id!==item.id);renderSelected();renderMaterials();updateRequest();};row.append(quantity,remove);box.append(row);
+ }
+}
+function renderFeatures(filter='全部'){
+ const box=el('feature-catalog');box.replaceChildren();
+ for(const f of features.filter(x=>filter==='全部'||x.category===filter)){
+  const row=create('div',undefined,'feature');const input=create('input');input.type='checkbox';input.id='feature-'+f.id;input.checked=state.selectedFeatures.includes(f.id);
+  input.onchange=()=>{state.selectedFeatures=input.checked?[...new Set([...state.selectedFeatures,f.id])]:state.selectedFeatures.filter(id=>id!==f.id);updateRequest();};
+  const body=create('div');const label=create('label',f.name);label.htmlFor=input.id;label.append(create('span',f.status,'status '+(f.status==='已实测'?'live':f.status==='待实测'?'pending':'missing')));body.append(label,create('p',f.detail));row.append(input,body);box.append(row);
+ }
+}
+for(const id of ['character','goal-notes','goal-ascension','goal-talents'])el(id).addEventListener('input',()=>{state.character=el('character').value;state.notes=el('goal-notes').value;state.ascension=el('goal-ascension').checked;state.talents=el('goal-talents').checked;renderCharacterMaterials();updateRequest();});
+el('material-search').oninput=renderMaterials;el('material-category').onchange=renderMaterials;
+el('add-custom').onclick=()=>{const name=el('custom-material').value.trim();if(!name){el('custom-material').focus();return;}addMaterial({id:'custom:'+name,name});el('custom-material').value='';};
+el('custom-material').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();el('add-custom').click();}};
+document.querySelectorAll('[data-filter]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-filter]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));renderFeatures(b.dataset.filter);});
+el('copy-request').onclick=async()=>{try{await navigator.clipboard.writeText(el('request').value);el('copy-status').textContent='已复制需求，可粘贴回聊天。';}catch{el('request').focus();el('request').select();el('copy-status').textContent='自动复制未获浏览器允许，需求已选中，请按系统复制键。';}};
+el('download-request').onclick=()=>{const blob=new Blob([JSON.stringify(requestData(),null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=create('a');a.href=url;a.download='genshin-agent-request.json';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);el('copy-status').textContent='需求文件已生成，未启动游戏。';};
+function planSignature(){return JSON.stringify([state.character,state.ascension,state.talents,state.ascensionCurrent,state.ascensionTarget,state.talentCurrent,state.talentTarget,state.stock]);}
+function requiredCharacterMaterials(){
+ const totals=new Map();
+ const add=list=>{for(const item of list||[]){const old=totals.get(item.id);totals.set(item.id,{...item,count:item.count+(old?.count||0)});}};
+ if(state.ascension)for(let n=state.ascensionCurrent+1;n<=state.ascensionTarget;n++)add(characterData.ascensionStages['ascend'+n]);
+ if(state.talents)for(let i=0;i<3;i++)for(let n=state.talentCurrent[i]+1;n<=state.talentTarget[i];n++)add(characterData.talentLevels['lvl'+n]);
+ return [...totals.values()];
+}
+function renderCharacterMaterials(){
+ const box=el('character-materials');box.replaceChildren();
+ if(!['哥伦比娅','columbina'].includes(state.character.trim().toLowerCase()))return;
+ const details=create('details');const summary=create('summary','填写当前进度，可计算哥伦比娅的材料缺口');details.append(summary);
+ details.append(create('p','初始数值仅为参考目标，并非账号进度：突破 0→6，三项天赋 1→10。请按实际修改，不含角色经验书和升级摩拉。'));
+ const controls=create('div',undefined,'progress-controls');
+ function select(label,value,min,max,onchange,id){const wrapper=create('label',label);const input=create('select');input.id=id;for(let n=min;n<=max;n++){const option=create('option',String(n));option.value=String(n);input.append(option);}input.value=String(value);input.onchange=()=>{onchange(Number(input.value));updateCharacterRows();updateRequest();};wrapper.append(input);controls.append(wrapper);}
+ select('当前突破阶段',state.ascensionCurrent,0,6,n=>state.ascensionCurrent=n,'ascension-current');select('目标突破阶段',state.ascensionTarget,0,6,n=>state.ascensionTarget=n,'ascension-target');
+ for(const [i,name] of ['普通攻击','元素战技','元素爆发'].entries()){select(name+'当前等级',state.talentCurrent[i],1,10,n=>state.talentCurrent[i]=n,'talent-current-'+i);select(name+'目标等级',state.talentTarget[i],1,10,n=>state.talentTarget[i]=n,'talent-target-'+i);}
+ details.append(controls);const progressHint=create('p','突破阶段为 0–6 次，目标不能低于当前。材料数量不包含已经消耗的部分。','hint');details.append(progressHint);
+ const tableWrap=create('div',undefined,'plan-table-wrap');tableWrap.tabIndex=0;tableWrap.setAttribute('aria-label','材料缺口表，可横向滚动');const table=create('table');const head=create('tr');for(const x of ['材料','阶段所需','已有库存','还缺'])head.append(create('th',x));const thead=create('thead');thead.append(head);table.append(thead);const tbody=create('tbody');table.append(tbody);tableWrap.append(table);details.append(tableWrap);
+ const button=create('button','把当前材料缺口加入需求');button.id='add-character-materials';button.type='button';button.onclick=()=>{
+  state.selectedMaterials=state.selectedMaterials.filter(x=>!x.id.startsWith('character:'));
+  for(const item of requiredCharacterMaterials()){const known=Object.hasOwn(state.stock,String(item.id));const deficit=known?Math.max(0,item.count-state.stock[item.id]):null;if(known&&!deficit)continue;let routeGroup=null;for(const group of Object.values(characterData.acquisition))if(group.ids.includes(item.id)&&group.routeGroup)routeGroup=group.routeGroup;state.selectedMaterials.push({id:'character:'+item.id,name:item.name,plannedTotal:item.count,quantity:deficit,routeGroup});}
+  state.planSignature=planSignature();renderSelected();renderMaterials();updateRequest();el('copy-status').textContent='已加入阶段需求。填过库存的材料计算缺口，未填库存的材料保留待核对。';
+ };details.append(button);
+ const sources=create('details');sources.append(create('summary','查看材料获取位置与参考总量'));const acquire=create('ul',undefined,'acquisition');for(const key of ['winterIcelea','slime','boss','talent','weekly','gem'])acquire.append(create('li',characterData.acquisition[key].text));sources.append(acquire,create('p','完整突破需要冬凌草 168、漫光的辉角 46；单项天赋 1→10 需要「月光」教导 3、指引 21、哲学 38，贤医的假面 6 和智识之冕 1。史莱姆与摩拉按所填目标分别计入上表。','hint'));
+ const source=create('p',undefined,'hint');source.append('材料数据来自 ');const link=create('a','genshin-db 的固定版本（社区整理的游戏数据）');link.href='https://github.com/theBowja/genshin-db/tree/'+characterData.dataSource.revision+'/src/data/ChineseSimplified';link.rel='noopener';source.append(link,'，名称与原版物品目录交叉核对。');sources.append(source);details.append(sources);box.append(details);
+ function updateCharacterRows(){
+  tbody.replaceChildren();const invalid=state.ascensionCurrent>state.ascensionTarget||state.talentCurrent.some((n,i)=>n>state.talentTarget[i]);button.disabled=invalid;progressHint.textContent=invalid?'目标不能低于当前，请调整后生成缺口。':'突破阶段为 0–6 次。库存空白表示未知，填数后才计算缺口，高低阶材料未折算合成。';
+  if(invalid)return;
+  const totals=requiredCharacterMaterials();if(!totals.length){const row=create('tr');const cell=create('td','当前选择没有需要新增的材料。');cell.colSpan=4;row.append(cell);tbody.append(row);return;}
+  for(const item of totals){const row=create('tr');row.append(create('td',item.name),create('td',item.count.toLocaleString('zh-CN')));const cell=create('td');const stock=create('input');stock.type='number';stock.min='0';stock.max='99999999';stock.step='1';stock.placeholder='未知';stock.value=state.stock[item.id]??'';stock.setAttribute('aria-label',item.name+'已有库存');const deficit=create('td',Object.hasOwn(state.stock,String(item.id))?Math.max(0,item.count-state.stock[item.id]).toLocaleString('zh-CN'):'待核对');stock.oninput=()=>{const n=Number(stock.value);if(stock.value.trim()&&Number.isInteger(n)&&n>=0&&n<=99999999)state.stock[item.id]=n;else delete state.stock[item.id];deficit.textContent=Object.hasOwn(state.stock,String(item.id))?Math.max(0,item.count-state.stock[item.id]).toLocaleString('zh-CN'):'待核对';updateRequest();};cell.append(stock);row.append(cell,deficit);tbody.append(row);}
+ }
+ updateCharacterRows();
+}
+renderCharacterMaterials();renderMaterials();renderSelected();renderFeatures();updateRequest();
+</script>
+</body>
+</html>
