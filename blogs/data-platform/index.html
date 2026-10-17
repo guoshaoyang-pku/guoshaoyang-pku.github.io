@@ -26,7 +26,12 @@
     <noscript><p>浏览器未启用 JavaScript，请点击上方链接进入。</p></noscript>
   </main>
   <script>
-    window.location.replace(document.getElementById('platform-link').href);
+    (() => {
+      const base = document.getElementById('platform-link').href.replace(/\/$/, '');
+      const to = new URLSearchParams(location.search).get('to');
+      const target = (to && /^\/(?!\/)[A-Za-z0-9_./-]*$/.test(to)) ? base + to : base + '/';
+      window.location.replace(target);
+    })();
   </script>
 </body>
 </html>
