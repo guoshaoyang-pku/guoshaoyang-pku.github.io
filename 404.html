@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>页面不存在</title>
+<script>
+  // The Suika project Pages site moved when the repo was renamed to MelonRL.
+  // Deep links such as /suika/showcase/web/index.html?... land here first.
+  (function () {
+    if (/^\/suika(?=\/|$)/.test(location.pathname)) {
+      var rest = location.pathname.replace(/^\/suika(?=\/|$)/, "");
+      location.replace("/MelonRL" + rest + location.search + location.hash);
+    }
+  })();
+</script>
+<style>
+  body { margin:0; background:#0d1117; color:#e6edf3;
+         font:14px/1.6 -apple-system, "PingFang SC", sans-serif; }
+  main { max-width:640px; margin:14vh auto; padding:0 24px; }
+  h1 { font-size:20px; margin:0 0 10px; }
+  p { color:#8b949e; }
+  a { color:#58a6ff; text-decoration:none; }
+  a:hover { text-decoration:underline; }
+</style>
+</head>
+<body>
+<main>
+  <h1 id="t">页面不存在</h1>
+  <p id="m">这个地址没有对应内容。</p>
+  <p><a href="/">返回首页</a> · <a href="/MelonRL/">合成大西瓜 · MelonRL</a></p>
+</main>
+<script>
+  if (!/^\/suika(?=\/|$)/.test(location.pathname)) {
+    document.getElementById("m").textContent =
+      "这个地址没有对应内容：" + location.pathname;
+  } else {
+    document.getElementById("t").textContent = "页面已迁移";
+    document.getElementById("m").textContent = "正在跳转到 MelonRL…";
+  }
+</script>
+</body>
+</html>
