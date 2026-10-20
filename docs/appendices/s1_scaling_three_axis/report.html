@@ -1,0 +1,1189 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>S1 三轴 scaling 当前结果</title><style>
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.55;max-width:1180px;margin:0 auto;padding:28px;color:#202124}
+h1{font-size:2em;border-bottom:2px solid #222;padding-bottom:.3em}
+h2{margin-top:2em;border-bottom:1px solid #ddd;padding-bottom:.25em}
+h3{margin-top:1.5em}
+blockquote{margin:1em 0;padding:.6em 1em;border-left:4px solid #777;background:#f5f5f5}
+p{margin:.55em 0}
+li{margin:.2em 0}
+hr{border:0;border-top:1px solid #ddd;margin:2em 0}
+table{border-collapse:collapse;margin:1em 0;font-size:.95em}
+td,th{border:1px solid #ccc;padding:6px 10px;text-align:left}
+figure{margin:2.2em 0;padding:1em;background:#fafafa;border:1px solid #eee}
+img{display:block;max-width:100%;height:auto;margin:auto}
+figcaption{text-align:center;color:#555;margin-top:.6em;font-size:.95em}
+code{background:#f3f3f3;padding:.08em .25em;border-radius:3px}
+.takeaway-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin:1.2em 0 2em}
+.takeaway{padding:18px 20px;border:1px solid #d7d0c5;border-top:5px solid #9b5d30;background:#fffcf8}
+.takeaway h3{margin:.1em 0 .55em;font-size:1.12em}
+.takeaway p{margin:.45em 0}.formula{font-size:1.35em;font-weight:700;color:#6c3717}.tag{font-size:.78em;letter-spacing:.04em;font-weight:700;color:#7a4a28}
+.scope{padding:.8em 1em;background:#f3f7fb;border-left:4px solid #4f7897}.archive{margin:2.5em 0;padding:0 1.2em 1.2em;border:1px solid #ddd;background:#fafafa}.archive summary{cursor:pointer;padding:1em 0;font-weight:700}
+</style></head><body><p><a href="../../report/index.html">返回主报告</a></p><h1>附录 · S1 三轴 scaling 验证</h1>
+<blockquote>
+<p><strong>这页只回答三个关系</strong>：真实 context 的训练频率 <code>f</code>、clean table 大小 <code>R</code>，以及 replay exposure <code>L</code> 如何对应 gap。当前可展示的 v5 结果位于页首；旧 <code>torch.compile</code> 波次完整保留在下方折叠区，只作溯源。</p>
+<p><strong>当前口径</strong>：bf16 autocast、默认不 compile；主 gap = 同一 logged step 的 <code>fixed val loss − current-batch train loss</code>。除特别标注外，不把诊断 probe 或旧波次拟合升级成普适定律。</p>
+</blockquote>
+<h2>先看关系：v5 主线</h2>
+<div class="takeaway-grid">
+<section class="takeaway"><div class="tag">主关系 1 · 频率</div><h3>真实 context 频率 <code>f</code> → gap</h3><p class="formula">G<sub>bi</sub>∝f<sup>−0.252746</sup> · G<sub>tri</sub>∝f<sup>−0.318121</sup></p><p>7 个宽几何 bin 的单 seed 诊断摘要（R²=0.997165 / 0.995548）。<strong><code>hit count</code> = 同一真实 n-gram context 在训练语料中出现的次数</strong>，在 hash 前计数；它不是 table 的物理 row load，也不是碰撞后的 table hit count。</p></section>
+<section class="takeaway"><div class="tag">主关系 2 · 表大小</div><h3>clean table 大小 <code>R</code> → gap</h3><p class="formula">G<sub>bi</sub>(R) ∝ R<sup>0.429</sup> · G<sub>tri</sub>(R) ∝ R<sup>0.658</sup></p><p>两条正式单表轴各有 18 个正终点、seed 42、step 1000；每条轴只开启被扫描的表，另一张表关闭。R² 分别为 .976/.995；两条 branch 不能合并成一个指数。</p></section>
+
+<section class="takeaway"><div class="tag">相邻关系 · 数据剂量</div><h3>fixed-step dose <code>D</code> → gap</h3><p class="formula">强 dilution / crossover，不是一条幂律</p><p>v5 seed 42：<code>.25×</code> 为 11.536，<code>5×</code> 为 0.084，<code>6×</code> 后穿过 0；局部拟合指数随窗口漂移。</p></section>
+<section class="takeaway"><div class="tag">伴随关系 · exposure</div><h3>epoch length <code>L</code> → gap</h3><p class="formula">12 个点；每个 run 完成 3 个 epoch</p><p>该轴用于检查 replay/exposure 的变化；当前单 seed v5 不把它写成幂律或因果律。</p></section>
+</div>
+<p class="scope"><strong>读图规则。</strong> 频率图的横轴是 exact context frequency；table 图的横轴是每个 clean table 的行数 <code>R</code>。table occupancy / collision 是解释 <code>R</code> 效应的另一条观测轴，不能替代 <code>f</code>。</p>
+<h2>1. 频率分 bin：先看真实 context frequency，不看 table hit count</h2>
+<p>主展示采用 v5 M2 的<strong>当前训练 batch</strong>频率分 bin（step 2000；每 10 步记录）。因此这里的 gap 符合当前主口径。它回答的是：在自然语料中，不同出现次数的真实 context 对应怎样的 token-level gap；不是 hash row 被写入多少次。</p>
+<figure><img src="../../figs/main/fig_v5_injection_frequency_bigram.png" alt="v5 bigram current-batch frequency bins"><figcaption><strong>Bigram：</strong>v5 当前 batch 的 frequency-bin gap。横轴为真实 bigram context 的训练频率。</figcaption></figure>
+<figure><img src="../../figs/main/fig_v5_injection_frequency_trigram.png" alt="v5 trigram current-batch frequency bins"><figcaption><strong>Trigram：</strong>v5 当前 batch 的 frequency-bin gap。与 bigram 使用同一“hash 前真实 context”口径。</figcaption></figure>
+<p>作为更细的 <em>exact-f</em> 形状诊断，S1 v5 把 eligible exact-f 条目按对数范围合并为 <strong>7 个宽几何 bin</strong>；每个 bin 内按 shared-context token mass 加权，高频尾部不再由少数 exact-f 点主导。seed 42、step 1000 的双对数摘要为：<strong>bigram <code>G(f)∝f^-0.252746</code>（R²=0.997165），trigram <code>G(f)∝f^-0.318121</code>（R²=0.995548）</strong>。这两个数使用 fixed train probe，且只有单 seed；它们是当前诊断图中很清楚的<strong>局部形状摘要</strong>，仍不是普适幂律指数的结论。</p>
+<figure><img src="../../figs/main/fig_v5_s1_frequency_exact_f.png" alt="v5 exact context frequency diagnostic"><figcaption>v5 S1 exact-frequency 诊断：7 个宽几何 bin、横向 whisker 为 bin 范围；图例直接标出 branch-wise log-log 摘要。不以 fixed-probe gap 替代上方主口径。</figcaption></figure>
+<h2>2. 表大小：clean table 的 R → gap 双对数关系</h2>
+<p>这里 <code>R</code> 是被改变的 clean 单表物理行数；另一张表在该轴中关闭。bigram-only 与 trigram-only 是两条独立的单表轴：<strong><code>G_bi(R) ∝ R^0.429</code></strong>、<strong><code>G_tri(R) ∝ R^0.658</code></strong>（各 18 个正终点，seed 42，step 1000，R² 分别为 .976/.995）。这两个描述性指数只对应当前扫描窗口，不能合并成一个双表指数；相较此前双表轴的 .041/.247，单表设计消除了固定背景 gap 的斜率稀释。</p><figure><img src="../../figs/main/fig_v5_s1_table_size.png" alt="v5 clean single-table size"><figcaption>v5 clean table size：bigram-only 与 trigram-only 分支分别变化；横轴为物理行数 <code>R</code>，另一张表关闭。</figcaption></figure>
+<figure><img src="../../figs/main/fig_v5_s1_table_size_loglog.png" alt="v5 clean single-table table size log-log"><figcaption><strong>v5 clean 单表轴：</strong>R 与 final online gap 的双对数端点图；bigram / trigram 的 log-log 拟合摘要分别为 <code>+0.429</code> / <code>+0.658</code>。</figcaption></figure>
+<figure><img src="../../figs/main/fig_v5_s1_table_load_proxy.png" alt="v5 clean table load proxy"><figcaption>K/R 只是 distinct-context load proxy；正式 run 未记录 occupied rows，因此不报告 collision rate，也不把 K/R 当成 frequency-bin hit count。</figcaption></figure>
+
+<h3>2.1 数据剂量：强单调 dilution，但不是单一幂律</h3>
+<p>这里 <code>D</code> 是训练 shard dose；总训练步数固定为 2000，因此 D 越大，每个样本在该预算内被 replay 的次数越少。v5 frequency-refresh 扫描（seed 42）从 <code>D=.25×</code> 的 gap 11.536 下降到 <code>D=5×</code> 的 0.084，<code>D=6×/8×</code> 为 −0.088/−0.075。它是很强的剂量/重复暴露关系，但不宜命名为一条全区间 <code>G(D)∝D^{-α}</code>：正 gap 的 5× 以内拟合斜率为 <code>−1.727</code>（R²=0.887），随后 gap 过零而 log(y) 不再定义。这说明当前曲线是 crossover 到 near-zero floor，而不是常数指数。</p>
+<figure><img src="../../figs/main/fig_v5_dose_trajectories.png" alt="v5 dose trajectories"><figcaption>v5 dose refresh：显示 12 个 dose 的 online train / fixed validation / online gap 原始轨迹；细线仅为 3 点视觉连接。</figcaption></figure>
+<h2>3. Replay exposure：保留为相邻关系，不宣称幂律</h2>
+<p>v5 的 trigram-only epoch-length 阵列只有单 seed。它用于把“频率效应”和“训练流重复暴露”并列观察；当前证据不足以写出稳定的 <code>G(L)</code> 幂律或独立因果关系。</p>
+<figure><img src="../../figs/main/fig_v5_s1_epoch_length_scaling.png" alt="v5 trigram-only epoch-length scaling"><figcaption>v5 epoch-length scaling：12 个 trigram-only、相对标准 <code>L4</code> 的 epoch-length 点，横轴直接使用 <code>L4</code> 倍数。</figcaption></figure><figure><img src="../../figs/main/fig_v5_s1_epoch_length_trajectories.png" alt="v5 epoch-length trajectories"><figcaption>v5 epoch-length trajectories：各 run 的原始在线 gap 与 epoch boundary 观察。</figcaption></figure>
+<details class="archive"><summary>展开历史 S1 审计（261 个 compile run、旧表架构与旧拟合；保留，不作为页首结论）</summary>
+<h2>0. 研究问题与 claim boundary</h2>
+<p>在唯一极简 setting（vanilla nanoGPT 8L·6H·768D、learned absolute
+position、LayerNorm、tied embedding、input/wte n-gram 注入、自然语料）下，
+本附录分别检查：</p>
+<ol>
+<li>epoch 长度 <code>L</code> 在 fixed-step 与 fixed-epoch 两种对齐下如何影响 gap；</li>
+<li>exact context frequency <code>f</code> 与 gap 是否符合两因素形式
+   <code>G(f) = A f^(-β) [1 − exp(−c f^γ)]</code>；</li>
+<li>table size 从默认 1M logical addresses 向下缩放时，gap 如何随 logical
+   addresses 和 collision 改变。</li>
+</ol>
+<p>本报告中的历史 gap 数值来自同一 fixed train probe 和 fixed validation probe 上的
+<code>fixed_val_loss − fixed_train_loss</code>；这些结果保留用于历史追溯，但该口径现已标记为
+exposure-contaminated 诊断，不再作为主结论。三 seed 汇总部分改用旧波次产物中
+<code>train_log.jsonl</code> 的在线训练 batch：<code>val_loss − train_loss</code>，但其 compute contract
+仍是 <code>bf16 + torch.compile</code>。最新标准 gap 仍定义为在线训练 batch 与 fixed validation
+的 <code>val_loss − train_loss</code>，并要求 bf16 不 compile。frequency 轴只做自然语料下的
+<strong>observational consistency</strong> 检验，不是 <code>f</code> 的因果证明。除非特别注明，数值均为
+对应 run 的最终 step；没有当前标准重跑时，不把旧波次结果升级为新标准下稳定
+的指数或定律。</p>
+<h2>1. 冻结 setting</h2>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th>值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>backbone</td>
+<td>vanilla nanoGPT，8L / 6H / 768D，learned absolute position，LayerNorm，tied embedding</td>
+</tr>
+<tr>
+<td>n-gram 注入</td>
+<td><code>input</code> / wte over-encoding</td>
+</tr>
+<tr>
+<td>模块臂</td>
+<td><code>bigram</code>、<code>trigram</code>、<code>both</code>、<code>nogram</code></td>
+</tr>
+<tr>
+<td>table optimizer</td>
+<td>RMSProp，无动量，<code>table_betas=(0.0, 0.99)</code></td>
+</tr>
+<tr>
+<td>table learning-rate scale</td>
+<td><code>table_lr_scale=2.0</code>，实际 table lr 为 0.008</td>
+</tr>
+<tr>
+<td>backbone optimizer</td>
+<td>AdamW，betas <code>(0.8, 0.95)</code>，lr 0.004</td>
+</tr>
+<tr>
+<td>数据</td>
+<td>shard 1 fixed 顺序 replay；train / val shard 完全不重叠</td>
+</tr>
+<tr>
+<td>历史计算</td>
+<td>S1 261-run 波次为 bf16 autocast + <code>torch.compile</code>，仅作历史审计</td>
+</tr>
+<tr>
+<td>当前计算标准</td>
+<td>bf16 autocast，默认不 <code>torch.compile</code>；当前标准 S1 scaling 结果尚未重跑</td>
+</tr>
+<tr>
+<td>历史测量</td>
+<td>fixed train probe（4 batches）+ fixed validation；probe SHA256 为 <code>38d1254a827759d6</code></td>
+</tr>
+<tr>
+<td>当前主测量</td>
+<td>online train loss + fixed validation，即 <code>val_loss − train_loss</code>；fixed probe 仅诊断</td>
+</tr>
+<tr>
+<td>cadence</td>
+<td>当前默认主实验为每 10 步；只需曲线可用每 50 步；只需末端可用 <code>--val_steps 1000</code>；frequency eval 必须跟随所选测量步点</td>
+</tr>
+<tr>
+<td>结果命名</td>
+<td><code>data/runs_scaling/&lt;run_id&gt;_fixed/</code></td>
+</tr>
+</tbody>
+</table>
+<p>历史普通 epoch/table 网格不计算 exact-frequency，也不传 <code>--freq_index</code>，只保留
+在线 train/val 与 online gap 指标；fixed-probe 仅作诊断；历史 frequency 轴单独使用
+<code>freq_{arm}_{fs,fe}_fixed</code> 八个 run，并开启 exact-frequency 观测。按最新标准
+重跑时，频率观测应按实验目的选择完整曲线或末端 <code>val_steps</code>，不能沿用旧波次
+的 compile 假设。</p>
+<h2>2. 数据完整性与 QC（历史 S1 波次）</h2>
+<p>历史 S1 波次共 <strong>seed 42：109 个 run + seed 43/44：各 76 个 run = 261 个 run</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>网格</th>
+<th style="text-align: right;">seed 42</th>
+<th style="text-align: right;">seed 43/44 各</th>
+<th>run 范围</th>
+<th style="text-align: right;">最终 step</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>epoch · fixed-step</td>
+<td style="text-align: right;">16</td>
+<td style="text-align: right;">16</td>
+<td><code>ep_L{1..4}_{bigram,trigram,both,nogram}_fs[_s{43,44}]_fixed</code></td>
+<td style="text-align: right;">1000</td>
+</tr>
+<tr>
+<td>epoch · fixed-epoch</td>
+<td style="text-align: right;">16</td>
+<td style="text-align: right;">16</td>
+<td><code>ep_L{1..4}_{bigram,trigram,both,nogram}_fe[_s{43,44}]_fixed</code></td>
+<td style="text-align: right;">L1/L2/L3/L4 = 252/504/1008/2022</td>
+</tr>
+<tr>
+<td>table size</td>
+<td style="text-align: right;">69</td>
+<td style="text-align: right;">36</td>
+<td>seed 42：23 个 mult × 3 module；seed 43/44：12 个 mult（1,2,3,4,6,8,12,16,24,32,48,64）× 3 module</td>
+<td style="text-align: right;">1000</td>
+</tr>
+<tr>
+<td>frequency axis</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">8</td>
+<td><code>freq_{bigram,trigram,both,nogram}_{fs,fe}[_s{43,44}]_fixed</code></td>
+<td style="text-align: right;">fs=1000，fe=2022</td>
+</tr>
+</tbody>
+</table>
+<p>这 261 个历史 run 均通过当时计算契约下的统一 QC：</p>
+<ul>
+<li><code>summary.json</code> 存在且 run id、步数、epoch batches 与命名一致；</li>
+<li>261 个 run 使用 <code>compute_dtype=bf16</code>、<code>torch_compile=true</code>、RMSProp <code>(0.0,0.99)</code>、
+  <code>table_lr_scale=2.0</code>。其中 <code>torch_compile=true</code> 是旧波次事实，不符合最新
+  <code>agents.md</code> 的默认标准；</li>
+<li>原始 epoch 网格、21 个 table dense run 及 frequency 轴的 validation/table norm
+  cadence 为 10 步；48 个 seed-42 与全部 72 个 seed-43/44 table sparse run 的
+  val/table norm 只在最终 step 1000 触发；</li>
+<li>seed 42 正式 run 的 fixed train probe SHA256 全部为
+  <code>38d1254a827759d6</code>；</li>
+<li>JSON/JSONL 产物无 NaN、无坏行；table 网格均有
+  <code>table_occupancy.json</code>；</li>
+<li>历史网格无缺失 run，无异常 loss；这不等价于当前 no-compile 标准已通过 QC。</li>
+</ul>
+<p>当前标准下的 S1 epoch/table/frequency 重跑尚未产生可纳入本报告的结果，因此
+后文所有三 seed 数字都应读作“旧计算契约下的探索性数学审计”。</p>
+<p>独立的 <code>bb_safety_L1_nogram_5000</code> 不是这 109 个正式 run 的一部分：它使用
+旧 cadence（50 步）和 fp32、无 compile，只作为长训 backbone gap 的量级
+参考。它在 step 5000 的 fixed train / val / gap 为
+<code>0.0065 / 16.666 / +16.660</code>。因此正式 <code>nogram</code> 对照不能被假设为恒等于零。</p>
+<h2>3. Epoch-length scaling</h2>
+<p>L4 按用户决策定义为 <strong>337 device batches/epoch</strong>，即 shard 1 的完整
+<code>24,264 / 72</code> 个 batch；L1/L2/L3 为同一 shard 流的嵌套前缀
+42/84/168。正式结果中的 epoch batches 为：</p>
+<table>
+<thead>
+<tr>
+<th>L</th>
+<th style="text-align: right;">batches/epoch</th>
+<th style="text-align: right;">fixed-step target</th>
+<th style="text-align: right;">fixed-epoch target</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>L1</td>
+<td style="text-align: right;">42</td>
+<td style="text-align: right;">1000</td>
+<td style="text-align: right;">252</td>
+</tr>
+<tr>
+<td>L2</td>
+<td style="text-align: right;">84</td>
+<td style="text-align: right;">1000</td>
+<td style="text-align: right;">504</td>
+</tr>
+<tr>
+<td>L3</td>
+<td style="text-align: right;">168</td>
+<td style="text-align: right;">1000</td>
+<td style="text-align: right;">1008</td>
+</tr>
+<tr>
+<td>L4</td>
+<td style="text-align: right;">337</td>
+<td style="text-align: right;">1000</td>
+<td style="text-align: right;">2022</td>
+</tr>
+</tbody>
+</table>
+<h3>3.1 历史最终 fixed gap（seed 42；仅诊断）</h3>
+<p>下表来自 <code>ep_{L}_{module}_{align}_fixed</code> 的最终 probe 记录；每个格子的
+step 分别由上表给出。</p>
+<table>
+<thead>
+<tr>
+<th>L</th>
+<th style="text-align: right;">bigram fs</th>
+<th style="text-align: right;">trigram fs</th>
+<th style="text-align: right;">both fs</th>
+<th style="text-align: right;">nogram fs</th>
+<th style="text-align: right;">bigram fe</th>
+<th style="text-align: right;">trigram fe</th>
+<th style="text-align: right;">both fe</th>
+<th style="text-align: right;">nogram fe</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>L1</td>
+<td style="text-align: right;">5.0698</td>
+<td style="text-align: right;">1.4811</td>
+<td style="text-align: right;"><strong>10.8446</strong></td>
+<td style="text-align: right;">0.1223</td>
+<td style="text-align: right;">0.6031</td>
+<td style="text-align: right;">0.4810</td>
+<td style="text-align: right;">1.0079</td>
+<td style="text-align: right;">0.0639</td>
+</tr>
+<tr>
+<td>L2</td>
+<td style="text-align: right;">2.2394</td>
+<td style="text-align: right;">1.1632</td>
+<td style="text-align: right;">6.0760</td>
+<td style="text-align: right;">0.0289</td>
+<td style="text-align: right;">1.1779</td>
+<td style="text-align: right;">0.8657</td>
+<td style="text-align: right;">1.8853</td>
+<td style="text-align: right;">0.0664</td>
+</tr>
+<tr>
+<td>L3</td>
+<td style="text-align: right;">1.6309</td>
+<td style="text-align: right;">1.5637</td>
+<td style="text-align: right;">2.0769</td>
+<td style="text-align: right;">0.0072</td>
+<td style="text-align: right;">1.8447</td>
+<td style="text-align: right;">2.2188</td>
+<td style="text-align: right;"><strong>5.9113</strong></td>
+<td style="text-align: right;">0.0500</td>
+</tr>
+<tr>
+<td>L4</td>
+<td style="text-align: right;">0.9406</td>
+<td style="text-align: right;">0.8682</td>
+<td style="text-align: right;">0.9696</td>
+<td style="text-align: right;">−0.0087</td>
+<td style="text-align: right;">1.1759</td>
+<td style="text-align: right;"><strong>6.0557</strong></td>
+<td style="text-align: right;">2.2658</td>
+<td style="text-align: right;">0.1974</td>
+</tr>
+</tbody>
+</table>
+<h3>3.2 单 seed 可支持的观察</h3>
+<ul>
+<li>fixed-step 下，<code>both</code> 的 raw gap 从
+  <code>ep_L1_both_fs_fixed</code> 的 <strong>+10.8446 @ step 1000</strong> 降到
+  <code>ep_L4_both_fs_fixed</code> 的 <strong>+0.9696 @ step 1000</strong>；但 no-ngram 基线也
+  随 L 改变，主比较应使用图中的
+  <code>ΔG = G(module) − G(no-ngram)</code>，不能只比较 raw gap。</li>
+<li>fixed-epoch 下，结果明显不是一条简单的 L 单调曲线：
+  <code>ep_L3_both_fe_fixed</code> 在 step 1008 为 <strong>+5.9113</strong>，而
+  <code>ep_L4_trigram_fe_fixed</code> 在 step 2022 为 <strong>+6.0557</strong>。</li>
+<li>因此 seed 42 显示出 alignment-dependent 的 replay / epoch 结构，但
+  不能仅凭这一 seed 拟合或宣称 epoch-length scaling 定律。</li>
+</ul>
+<p>图：</p>
+<ul>
+<li><code>figs/epoch_gap_by_alignment.png</code>：16 个 epoch run 的历史 fixed-probe gap；</li>
+<li><code>figs/epoch_deltaG_fs.png</code>：fixed-step 下相对各 L no-ngram 的 <code>ΔG</code>；</li>
+<li><code>figs/epoch_final_gap.csv</code>：逐 run 最终 gap 表。</li>
+</ul>
+<h2>4. Table-size scaling</h2>
+<p>所有 table run 固定 L4（337 batches/epoch）、1000 steps、seed 42，唯一变化
+是 <code>table_mult</code>。共 23 个实测规模；bigram/trigram/both 各 23 点。原始 7
+个规模的 21 个 run 使用 dense monitor（每 10 步），其余 48 个加密 run 使用
+sparse monitor（只在最终步 1000 记录 gap）。每个 n-gram、每层、两组 hash
+的 logical addresses 为
+<code>2R = 16,384 × table_mult</code>。</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;"><code>table_mult</code></th>
+<th style="text-align: right;">logical <code>2R</code></th>
+<th style="text-align: right;">bigram online gap</th>
+<th style="text-align: right;">trigram online gap</th>
+<th style="text-align: right;">both online gap</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">16,384</td>
+<td style="text-align: right;">0.0914</td>
+<td style="text-align: right;">0.0686</td>
+<td style="text-align: right;">0.0983</td>
+</tr>
+<tr>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">32,768</td>
+<td style="text-align: right;">0.1021</td>
+<td style="text-align: right;">0.0636</td>
+<td style="text-align: right;">0.1319</td>
+</tr>
+<tr>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">49,152</td>
+<td style="text-align: right;">0.1145</td>
+<td style="text-align: right;">0.1419</td>
+<td style="text-align: right;">0.2157</td>
+</tr>
+<tr>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">65,536</td>
+<td style="text-align: right;">0.1527</td>
+<td style="text-align: right;">0.1717</td>
+<td style="text-align: right;">0.2163</td>
+</tr>
+<tr>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">81,920</td>
+<td style="text-align: right;">0.1550</td>
+<td style="text-align: right;">0.1517</td>
+<td style="text-align: right;">0.2552</td>
+</tr>
+<tr>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">98,304</td>
+<td style="text-align: right;">0.2342</td>
+<td style="text-align: right;">0.1699</td>
+<td style="text-align: right;">0.3142</td>
+</tr>
+<tr>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">114,688</td>
+<td style="text-align: right;">0.1764</td>
+<td style="text-align: right;">0.1700</td>
+<td style="text-align: right;">0.3592</td>
+</tr>
+<tr>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">131,072</td>
+<td style="text-align: right;">0.1958</td>
+<td style="text-align: right;">0.2722</td>
+<td style="text-align: right;">0.3225</td>
+</tr>
+<tr>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">147,456</td>
+<td style="text-align: right;">0.2163</td>
+<td style="text-align: right;">0.2958</td>
+<td style="text-align: right;">0.2887</td>
+</tr>
+<tr>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">163,840</td>
+<td style="text-align: right;">0.2086</td>
+<td style="text-align: right;">0.3351</td>
+<td style="text-align: right;">0.3238</td>
+</tr>
+<tr>
+<td style="text-align: right;">12</td>
+<td style="text-align: right;">196,608</td>
+<td style="text-align: right;">0.2223</td>
+<td style="text-align: right;">0.2897</td>
+<td style="text-align: right;">0.4594</td>
+</tr>
+<tr>
+<td style="text-align: right;">14</td>
+<td style="text-align: right;">229,376</td>
+<td style="text-align: right;">0.2776</td>
+<td style="text-align: right;">0.3294</td>
+<td style="text-align: right;">0.4324</td>
+</tr>
+<tr>
+<td style="text-align: right;">16</td>
+<td style="text-align: right;">262,144</td>
+<td style="text-align: right;">0.2663</td>
+<td style="text-align: right;">0.3569</td>
+<td style="text-align: right;">0.5429</td>
+</tr>
+<tr>
+<td style="text-align: right;">18</td>
+<td style="text-align: right;">294,912</td>
+<td style="text-align: right;">0.2591</td>
+<td style="text-align: right;">0.4364</td>
+<td style="text-align: right;">0.5714</td>
+</tr>
+<tr>
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">327,680</td>
+<td style="text-align: right;">0.4594</td>
+<td style="text-align: right;">0.4801</td>
+<td style="text-align: right;">0.7584</td>
+</tr>
+<tr>
+<td style="text-align: right;">24</td>
+<td style="text-align: right;">393,216</td>
+<td style="text-align: right;">0.3386</td>
+<td style="text-align: right;">0.4962</td>
+<td style="text-align: right;">0.5570</td>
+</tr>
+<tr>
+<td style="text-align: right;">28</td>
+<td style="text-align: right;">458,752</td>
+<td style="text-align: right;">0.3239</td>
+<td style="text-align: right;">0.6350</td>
+<td style="text-align: right;">0.6847</td>
+</tr>
+<tr>
+<td style="text-align: right;">32</td>
+<td style="text-align: right;">524,288</td>
+<td style="text-align: right;">0.3032</td>
+<td style="text-align: right;">0.7170</td>
+<td style="text-align: right;">0.6978</td>
+</tr>
+<tr>
+<td style="text-align: right;">36</td>
+<td style="text-align: right;">589,824</td>
+<td style="text-align: right;">0.7663</td>
+<td style="text-align: right;">0.5966</td>
+<td style="text-align: right;">0.8062</td>
+</tr>
+<tr>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">655,360</td>
+<td style="text-align: right;">0.3866</td>
+<td style="text-align: right;">0.6999</td>
+<td style="text-align: right;">0.8418</td>
+</tr>
+<tr>
+<td style="text-align: right;">48</td>
+<td style="text-align: right;">786,432</td>
+<td style="text-align: right;">0.4457</td>
+<td style="text-align: right;">0.8780</td>
+<td style="text-align: right;">2.2445</td>
+</tr>
+<tr>
+<td style="text-align: right;">56</td>
+<td style="text-align: right;">917,504</td>
+<td style="text-align: right;">0.4199</td>
+<td style="text-align: right;">1.0232</td>
+<td style="text-align: right;">2.2568</td>
+</tr>
+<tr>
+<td style="text-align: right;">64</td>
+<td style="text-align: right;">1,048,576</td>
+<td style="text-align: right;"><strong>0.9985</strong></td>
+<td style="text-align: right;">0.8606</td>
+<td style="text-align: right;"><strong>2.2462</strong></td>
+</tr>
+</tbody>
+</table>
+<p>表中数值来自 <code>tbl_{mult}_{module}_fixed</code> 的 final <strong>online</strong> gap
+<code>val_loss − train_loss</code> @ step 1000；其中 train loss 是当前在线训练 batch，
+val loss 是同一步的 fixed validation。第一轮加密取点为
+<code>mult=48,24,12,6,3</code> 的 15 个 run，第二轮新增
+<code>mult=56,40,36,28,20,18,14,10,9,7,5</code> 的 33 个 module run（包含
+<code>both</code>）。所有 sparse run 只保存最终点，不产生中间曲线，因此没有把稀疏
+观测伪装成完整训练轨迹。seed 42 下三条 module 曲线总体随 table 增大，
+但并非逐点单调；<code>both</code> 在大表区的 gap 最大（<code>tbl_56_both_fixed</code>，
+<strong>+2.2568</strong>）。这支持“更大的 table 保留更多低频 context-specific 更新、
+从而可能放大 gap”的候选机制；它不是仅凭参数量就能证明的因果结论。</p>
+<p>同一批 occupancy 结果中，bigram layer-0/hash-0 的 collision rate 从
+<code>0.9977</code>（16,384 addresses）降到 <code>0.8521</code>（1,048,576 addresses），而
+occupancy 从约 1.0 降到 0.9983。该 collision 方向与 gap 的上升方向一致，
+但只有一个 seed，且 collision 与 table size 共变，尚不能区分两者的独立
+贡献或证明 saturation。</p>
+<p>加密取点解决的是横轴取点过稀，不会消除单 seed 的纵轴噪声。例如 bigram
+在 <code>mult=6→7</code>、<code>24→28</code> 处回落，trigram 在 <code>32→36</code>、<code>56→64</code> 处回落；
+因此双对数图看起来不完美线性，主要是单 seed 波动与强碰撞区的非理想
+响应，不是简单增加横轴点数就能修复。图中的虚线只是 log-log
+guide，不是已确认的幂律。</p>
+<p>图和摘要（均纳入 69 个 table 点）：</p>
+<ul>
+<li><code>figs/table_gap_vs_2R.png</code>：双对数坐标，使用 final online gap；虚线仅为
+  log-log guide，不是 scaling-law claim；</li>
+<li><code>figs/table_gap_vs_collision.png</code>：横轴使用 <code>1 − collision_rate</code> 的
+  双对数视图，因为 collision rate 本身接近 1，不能直接取对数；</li>
+<li><code>figs/table_gap_vs_2R.html</code> / <code>figs/table_gap_vs_collision.html</code>：交互版；
+  可点击 legend 隐藏/显示 module 曲线，并分别切换 x/y 轴为 linear 或 log；</li>
+<li><code>figs/table_summary.csv</code>；</li>
+<li><code>table_occupancy.json</code> 位于每个 <code>tbl_*_fixed</code> 目录。</li>
+</ul>
+<h3>4.1 Row-level recovery pilot（bigram，seed 42）</h3>
+<p>为检查 table-size 效应是否来自“某些高命中 row”，额外保存
+<code>final_model.pt</code>，在固定 train/val probe 上离线重算 layer 0、hash 0/1
+的逐 row train/val token loss。row-level gap 只在 train/val 都命中的 row
+上定义，因此它是 overlap subset 的诊断统计，不替代上面的全 probe
+<code>final_fixed_gap</code>。</p>
+<p>对 <code>table_mult=64,32,16,8,4,2,1</code> 的 7 档结果，按 train-token 数加权的
+overlap-row mean gap 分别约为 <code>1.883, 0.267, 0.201, 0.159, 0.102,
+0.052, 0.043</code>。但在每个 table size 内，gap 与 row 的 distinct-context
+load 的加权 log-slope 都接近 0（加权 R² 约为 0），以实际 train-token
+hits 为横轴时同样没有可辨识的趋势。也就是说，当前 pilot 支持
+“table size 改变整体 gap，而单个 row 的命中次数/碰撞负载不是主要的一维
+解释变量”；它还不能排除 context identity、训练历史或 module interaction
+的作用。图 <code>figs/rowlevel_gap_vs_table_size.png</code> 同时展示 row-level
+分布、load 分箱曲线，以及与正式 fixed gap 的对照。</p>
+<h3>4.2 clean 单表重扫（2026-08-25，新 SSOT 框架）</h3>
+<p><strong>框架说明。</strong>本节之前的 table 轴全部基于旧架构（4 层独立表求和 ×
+每层 2-hash 半维拼接 × <code>vocab × mult</code> 锁定），已降级为
+<strong>[HISTORICAL 4-LAYER FRAMEWORK]</strong>。2026-08-25 用户拍板的新 SSOT
+（<code>docs/notes/method/clean-table-rework.md</code>）改为 <strong>clean 单表</strong>：
+单个 <code>nn.Embedding(R, 768)</code>、单层、单 hash、<strong>R 任意设定</strong>
+（<code>--bigram_clean_table R</code>，run_id namespace <code>ctbl_*</code>）。
+零碰撞锚点复用 packed-context→row 静态映射（<code>--bigram_perfect_map</code>，
+R = distinct+1 = 3,538,294；val OOV token 率 4.30%）。</p>
+<p><strong>结果</strong>（seed 42，1000 步，online final gap；N = 3,538,293 distinct
+bigram contexts）：</p>
+<table border="1" cellspacing="0" cellpadding="4">
+<tr><th>R</th><th>K/N</th><th>gap</th><th>R</th><th>K/N</th><th>gap</th></tr>
+<tr><td>64K</td><td>0.019</td><td>+0.097</td><td>1.5M</td><td>0.444</td><td>+0.306</td></tr>
+<tr><td>128K</td><td>0.037</td><td>+0.146</td><td>2M</td><td>0.593</td><td>+0.305</td></tr>
+<tr><td>256K</td><td>0.074</td><td>+0.159</td><td>2.5M</td><td>0.741</td><td>+0.370</td></tr>
+<tr><td>384K</td><td>0.111</td><td>+0.190</td><td>3M</td><td>0.889</td><td>+0.393</td></tr>
+<tr><td>512K</td><td>0.148</td><td>+0.218</td><td>4M</td><td>1.185</td><td>+0.466</td></tr>
+<tr><td>768K</td><td>0.222</td><td>+0.281</td><td><strong>perfect</strong></td><td><strong>1.0 零碰撞</strong></td><td><strong>+0.561</strong></td></tr>
+<tr><td>1M</td><td>0.296</td><td>+0.265</td><td></td><td></td><td></td></tr>
+</table>
+<figure><img src="figs/fig_clean_gap_vs_KN.png" alt="clean single-table gap vs R"><figcaption>clean 单表
+bigram 的 gap vs K/N（蓝线，wave-1+wave-2 共 29 个 hash 点 + 红星零碰撞锚点）；灰色细线为旧
+4 层框架 34 点对照。clean 曲线光滑近似单调，旧框架 ±0.3–0.4 的"jamming 锯齿"消失。</figcaption></figure>
+<figure><img src="figs/fig_clean_forking.png" alt="clean forking comparison"><figcaption>clean 框架下的
+forking 对比：零碰撞（红）vs R=1M 碰撞（蓝），同架构唯一差异是碰撞。epoch 边界（337/674）
+瞬时 train 跳变与 epoch 级 gap 增速都是零碰撞更大。</figcaption></figure>
+<p><strong>发现：</strong></p>
+<ol>
+<li><strong>旧框架的"jamming 锯齿"是架构伪影，不是 jamming 物理</strong>。clean 单表下
+gap-R 曲线光滑近似单调（仅 768K→1M 微降 0.016、1.5M≈2M 平台），旧 4 层的剧烈锯齿
+（§4 正文）来自 4 层 × 2-hash 共 8 组 hash 的干涉。此前的临界涨落解释被新框架否证。</li>
+<li><strong>碰撞抑制 gap 跨框架复现</strong>：clean perfect（+0.561）vs clean R=1M 碰撞
+（+0.265）= <strong>2.12 倍</strong>（旧框架单层对为 2.17 倍）。R=4M（K/N=1.19，
+collision=0.325）的 hash 点（+0.466）仍显著低于 perfect——<strong>R&gt;N 时 hash 伪碰撞
+继续压制 gap，零碰撞的价值不随容量增大消失</strong>。</li>
+<li><strong>旧 4 层的高 gap 主要是参数量+求和结构</strong>：同 R≈512K，旧 4 层 mult=64
+gap=0.999 vs clean 0.218（4.6 倍）；旧单层 K=2 拼接 0.260 vs clean 0.218——
+2-hash 拼接贡献约 19%，4 层求和贡献约 3.8 倍，"表记忆容量"本身不是主因。</li>
+<li><strong>forking 在 clean 下零碰撞双赢</strong>：瞬时跳变（@337 −0.136 vs −0.115）
+与 epoch 净积累都快；旧框架"碰撞版瞬时跳变更大"的干涉模式消失，进一步佐证锯齿=伪影。</li>
+<li>min(N,K) 模型（虚线，归一化到 perfect）在 K/N&lt;0.3 段仍高估斜率（实测 log 斜率
+约 0.35–0.5），频率加权修正依然必要。</li>
+</ol>
+<h4>4.2.1 wave-2 加密网格 + trigram 首扫（2026-08-25）</h4>
+<p>用户拍板：table size 自由加密（小 R 区重点）、新增双对数视图、forking 只画
+小表 / 大表 / 零碰撞三条曲线。launcher
+<code>tasks/s1_scaling_three_axis/launchers/run_clean_table_dense2.sh</code>
+（25 run，360-2 GPU 1-7，wave 调度）。bigram 累计 <strong>29 点</strong>，trigram 首扫
+<strong>6 点</strong>（N_tri = 18,989,467，无零碰撞锚点——R=N 需 19M 行放不下单卡）。</p>
+<p><strong>bigram 全网格</strong>（seed 42，1000 步，online final gap；N_bi = 3,538,293）：</p>
+<table border="1" cellspacing="0" cellpadding="4">
+<tr><th>R</th><th>K/N</th><th>gap</th><th>R</th><th>K/N</th><th>gap</th><th>R</th><th>K/N</th><th>gap</th></tr>
+<tr><td>16K</td><td>0.0046</td><td>+0.081</td><td>320K</td><td>0.0926</td><td>+0.192</td><td>2.25M</td><td>0.667</td><td>+0.346</td></tr>
+<tr><td>32K</td><td>0.0093</td><td>+0.079</td><td>448K</td><td>0.1297</td><td>+0.215</td><td>2.75M</td><td>0.815</td><td>+0.383</td></tr>
+<tr><td>48K</td><td>0.0139</td><td>+0.106</td><td>640K</td><td>0.1852</td><td>+0.262</td><td>3.5M</td><td>1.037</td><td>+0.434</td></tr>
+<tr><td>96K</td><td>0.0278</td><td>+0.134</td><td>896K</td><td>0.2593</td><td>+0.280</td><td>5M</td><td>1.482</td><td>+0.407</td></tr>
+<tr><td>160K</td><td>0.0463</td><td>+0.146</td><td>1.25M</td><td>0.3704</td><td>+0.318</td><td>6M</td><td>1.778</td><td><strong>+0.751</strong></td></tr>
+<tr><td>192K</td><td>0.0556</td><td>+0.166</td><td>1.75M</td><td>0.5186</td><td>+0.330</td><td><strong>perfect</strong></td><td>1.0 零碰撞</td><td><strong>+0.561</strong></td></tr>
+<tr><td>256K</td><td>0.074</td><td>+0.159</td><td>2M</td><td>0.593</td><td>+0.305</td><td></td><td></td><td></td></tr>
+</table>
+<p><strong>trigram 首扫</strong>（seed 42，1000 步，online final gap；N_tri = 18,989,467）：</p>
+<table border="1" cellspacing="0" cellpadding="4">
+<tr><th>R</th><th>K/N</th><th>gap</th></tr>
+<tr><td>64K</td><td>0.0035</td><td>+0.066</td></tr>
+<tr><td>256K</td><td>0.0138</td><td>+0.220</td></tr>
+<tr><td>1M</td><td>0.0552</td><td>+0.521</td></tr>
+<tr><td>2M</td><td>0.1104</td><td>+0.791</td></tr>
+<tr><td>4M</td><td>0.2209</td><td>+1.071</td></tr>
+<tr><td>8M</td><td>0.4418</td><td>+1.525</td></tr>
+</table>
+<figure><img src="figs/fig_clean_gap_vs_KN_loglog.png" alt="clean gap vs K/N log-log"><figcaption>双对数视图：
+bigram 29 点（蓝）+ trigram 6 点（绿）。bigram 主体近似幂律（log-log 斜率约 0.33），大 R 端
+（K/N&gt;1.5）出现断点/涨落；trigram 全段更接近直线幂律（斜率约 0.67），远陡于 bigram。
+min(N,K) 模型预言的斜率 1 均不满足。</figcaption></figure>
+<p><strong>wave-2 发现：</strong></p>
+<ol start="6">
+<li><strong>大 R 区（K/N&gt;1）涨落回归</strong>：5M 回落到 +0.407（低于 4M 的 +0.466），
+<strong>6M 跳到 +0.751，超过 perfect 锚点 +0.561</strong>。"零碰撞是所有 hash 表上界"
+在 K/N≤1.19 区全部成立，但在 K/N&gt;1.5 区被否证。单 seed 无法区分 hash 实例噪声与真实
+过饱和行为——此点按用户拍板<strong>不跑 seed 43/44 仲裁</strong>，作为观察记录在案。</li>
+<li><strong>低 R 饱和（backbone 过拟合地板）</strong>：16K/32K 均约 +0.08，与 64K 的 +0.097
+接近——小表端 gap 由 backbone 自身过拟合地板主导，表贡献趋零。</li>
+<li><strong>trigram 远陡于 bigram</strong>：同 K/N 下 trigram gap 是 bigram 的 3–5 倍；
+log-log 低 K 段斜率 tri ≈ 0.67 vs bi ≈ 0.33。min(N,K) 模型预言低 K 斜率 1，两者均不满足
+（bigram 0.33–0.49、trigram 0.67），频率加权 × 采样律修正仍必要。</li>
+<li><strong>双对数视图</strong>：bigram 主体近似幂律但大 R 断点清晰；trigram 全段更接近
+直线幂律。</li>
+<li><strong>forking 三曲线</strong>（64K / 4M / perfect，freq=50 补跑 <code>_curve</code> 后缀）：
+64K gap 轨迹平（&lt;0.1）但瞬时跳变幅度与其他曲线相当（@337 −0.107）；4M 与 perfect 前
+2 epoch 重合，epoch 3 perfect 拉开——零碰撞优势主要在 replay 后期的积累阶段。</li>
+</ol>
+<p>产物：<code>figs/fig_clean_gap_vs_KN.png</code>（semilog 29+6 点）、
+<code>figs/fig_clean_gap_vs_KN_loglog.png</code>、<code>figs/fig_clean_forking.png</code>；
+分析脚本 <code>tasks/s1_scaling_three_axis/analysis/plot_clean_figures.py</code>；
+launcher <code>tasks/s1_scaling_three_axis/launchers/run_clean_table_grid.sh</code> 与
+<code>run_clean_table_dense2.sh</code>；每档 <code>table_occupancy.json</code> 在对应
+<code>ctbl_*_fixed</code> 目录。
+详细登记见 <code>docs/experiment-log.md</code> §22 / §22b。后续（已按用户拍板收缩）：
+clean 版 trigram 加密、clean 版 both module、clean 版 row-level；seed 43/44 仲裁不做。</p>
+<h2>5. Exact-frequency axis</h2>
+<p>frequency 轴使用 L4 + 1M table 的
+<code>freq_{bigram,trigram,both,nogram}_{fs,fe}_fixed</code>。历史最终 fixed-step
+frequency 图取 step 1000 的 <code>freq_{module}_fs_fixed/exact_freq_loss.jsonl</code>；
+满足 <code>token_count &gt;= 1024</code> 且 <code>distinct_contexts &gt;= 32</code> 的 train/val
+共同 exact-f 值才进入 marginal gap。<code>novel</code> 和没有 train loss 的 bucket
+不定义 gap，也不进入 log-fit。</p>
+<h3>5.1 形状观察</h3>
+<p><code>freq_gap_bigram_final.png</code> 和 <code>freq_gap_trigram_final.png</code> 显示：在 seed 42
+的 L4 fixed-step 截面中，bigram 与 trigram branch 的 gap 通常随 exact
+frequency 增大而下降；<code>nogram</code> 大多围绕零附近波动。高频端的点更噪，不能
+把局部反弹写成单调性破坏或新的机制。</p>
+<p>canonical 图使用从 eligible per-f 条目直接构造的 8 个等计数 log-f bins：
+每个点的横坐标是 bin 内 exact-f 的几何中点，横向误差棒表示该 bin 的
+<code>[f_min, f_max]</code> 范围，纵向误差棒是按 token 数加权后的 pooled SEM。
+<code>freq_gap_bigram_final_raw.png</code> 和 <code>freq_gap_trigram_final_raw.png</code> 保留全部
+eligible per-f 点及其 SEM，作为用户要求的 debug 原图；它们故意较为拥挤，
+不作为主展示图。</p>
+<h3>5.2 两因素拟合（探索性）</h3>
+<p>分析脚本对 L4 fixed-step 的 bigram/trigram module 做 token-marginal
+raw-space fit：
+<code>G(f) = A f^(-β) [1 − exp(−c f^γ)]</code>。</p>
+<table>
+<thead>
+<tr>
+<th>branch</th>
+<th>module run</th>
+<th style="text-align: right;">A</th>
+<th style="text-align: right;">β</th>
+<th style="text-align: right;">c</th>
+<th style="text-align: right;">γ</th>
+<th style="text-align: right;">eligible f</th>
+<th style="text-align: right;">positive-fit f</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>bigram</td>
+<td><code>freq_bigram_fs_fixed</code></td>
+<td style="text-align: right;">7.594</td>
+<td style="text-align: right;">0.752</td>
+<td style="text-align: right;">1.394</td>
+<td style="text-align: right;">0.755</td>
+<td style="text-align: right;">63</td>
+<td style="text-align: right;">62</td>
+</tr>
+<tr>
+<td>bigram</td>
+<td><code>freq_trigram_fs_fixed</code></td>
+<td style="text-align: right;">1.560</td>
+<td style="text-align: right;">0.126</td>
+<td style="text-align: right;">2.293</td>
+<td style="text-align: right;">0.776</td>
+<td style="text-align: right;">63</td>
+<td style="text-align: right;">63</td>
+</tr>
+<tr>
+<td>trigram</td>
+<td><code>freq_bigram_fs_fixed</code></td>
+<td style="text-align: right;">1.147</td>
+<td style="text-align: right;">0.544</td>
+<td style="text-align: right;">1.980</td>
+<td style="text-align: right;">~0</td>
+<td style="text-align: right;">57</td>
+<td style="text-align: right;">51</td>
+</tr>
+<tr>
+<td>trigram</td>
+<td><code>freq_trigram_fs_fixed</code></td>
+<td style="text-align: right;">1.922</td>
+<td style="text-align: right;">0.560</td>
+<td style="text-align: right;">0.709</td>
+<td style="text-align: right;">0.748</td>
+<td style="text-align: right;">57</td>
+<td style="text-align: right;">54</td>
+</tr>
+</tbody>
+</table>
+<p>完整参数、标准误以及每个被排除的 exact-f 和原因记录在
+<code>figs/fit_manifest.json</code>。拟合只保留 positive gap；不满足 train/val
+token/context 纳入门槛的频率也被逐项记录。trigram branch 的
+<code>freq_bigram_fs_fixed</code> 拟合出现 <code>γ≈0</code> 且参数标准误很大，说明单 seed /
+当前覆盖下可辨识性不足。因此这些数字只能作为形状的 exploratory summary，
+不能作为稳定的 <code>A, β, c, γ</code> 估计，也不能替代计划中的 epoch 截面、
+profile-likelihood 和 seed 43/44。</p>
+<h2>6. 多 seed 复现与数学猜想检验（2026-08-25，H1–H4）</h2>
+<p>以下全部基于 <strong>online gap 主口径</strong>（<code>val_loss − train_loss</code>，<code>train_log.jsonl</code>），
+三 seed（42/43/44）汇总。跨 seed 变异度用 cv = std/mean 表示；
+结论强度按 plan-5 约定标注为 <code>seed-stable</code> / <code>seed-sensitive</code> /
+<code>identifiability-limited</code> / <code>not yet causal</code>。</p>
+<h3>7.1 H2：epoch 对齐律 —— 方向 seed-stable，幅度 fixed-epoch 更稳</h3>
+<p><code>ΔG = G(module) − G(no-ngram)</code>（online final gap）在全部
+<strong>24/24 个 (L × module × 对齐) 组合 × 3 seed 中均为正</strong>，方向 seed-stable。</p>
+<p>fixed-step（1000 步，ΔG，三 seed）：</p>
+<table>
+<thead>
+<tr>
+<th>L</th>
+<th>bigram</th>
+<th>trigram</th>
+<th>both</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>L1</td>
+<td>+4.99 / +2.14 / +1.50</td>
+<td>+1.37 / +1.11 / +1.43</td>
+<td>+10.72 / +2.67 / +11.03</td>
+</tr>
+<tr>
+<td>L2</td>
+<td>+2.27 / +1.54 / +1.60</td>
+<td>+1.13 / +4.02 / +4.72</td>
+<td>+6.14 / +4.04 / +6.73</td>
+</tr>
+<tr>
+<td>L3</td>
+<td>+1.60 / +1.05 / +1.03</td>
+<td>+1.64 / +1.63 / +2.38</td>
+<td>+2.10 / +2.59 / +5.24</td>
+</tr>
+<tr>
+<td>L4</td>
+<td>+0.95 / +0.44 / +0.41</td>
+<td>+0.88 / +1.78 / +0.94</td>
+<td>+0.98 / +1.00 / +2.22</td>
+</tr>
+</tbody>
+</table>
+<p>fixed-epoch（6 epoch，ΔG，三 seed）：</p>
+<table>
+<thead>
+<tr>
+<th>L</th>
+<th>bigram</th>
+<th>trigram</th>
+<th>both</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>L1</td>
+<td>+0.55 / +0.81 / +0.60</td>
+<td>+0.42 / +0.66 / +0.87</td>
+<td>+0.95 / +1.73 / +1.88</td>
+</tr>
+<tr>
+<td>L2</td>
+<td>+1.13 / +1.03 / +1.07</td>
+<td>+0.81 / +0.63 / +0.86</td>
+<td>+1.83 / +2.18 / +2.14</td>
+</tr>
+<tr>
+<td>L3</td>
+<td>+1.81 / +1.02 / +1.00</td>
+<td>+2.21 / +2.19 / +2.64</td>
+<td>+5.89 / +4.65 / +4.09</td>
+</tr>
+<tr>
+<td>L4</td>
+<td>+0.98 / +2.00 / +0.87</td>
+<td><strong>+5.90 / +5.72 / +5.56</strong></td>
+<td>+2.08 / +5.45 / +5.47</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>方向</strong>：seed-stable（24/24 同号为正）。</li>
+<li><strong>幅度</strong>：fixed-step 幅度 seed-sensitive（L1_both 跨 seed 2.67–11.03，cv&gt;50%）；
+  <strong>fixed-epoch 对齐显著更稳</strong>，L4_trigram 三 seed 为 5.90/5.72/5.56（cv≈2%）——
+  在相同重播次数下，epoch 长度 L4 的 trigram ΔG 是一个可复现的大效应。</li>
+<li>fixed-epoch 下 trigram ΔG 随 L 单调上升（0.42→0.81→2.21→5.90），
+  三 seed 同趋势；这是"重播次数固定时，更长 epoch 的 trigram 注入放大 gap"
+  的 seed-stable 证据，但仍为 observational（<code>not yet causal</code>）。</li>
+</ul>
+<p>图：<code>figs/epoch_deltaG_fs_multiseed.png</code>（逐 seed 点 + 均值）；汇总表
+<code>figs/epoch_final_gap.csv</code>（96 行，三 seed）。</p>
+<h3>7.2 H3：table collision/saturation 律 —— 有限窗口上升，但饱和未解析</h3>
+<p>table 轴三 seed（12 个公共 mult × 3 module，online final gap @1000）：</p>
+<p><strong>trigram</strong>（seed-stable，单调）：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">mult</th>
+<th style="text-align: right;">s42</th>
+<th style="text-align: right;">s43</th>
+<th style="text-align: right;">s44</th>
+<th style="text-align: right;">cv</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0.069</td>
+<td style="text-align: right;">0.052</td>
+<td style="text-align: right;">0.072</td>
+<td style="text-align: right;">14%</td>
+</tr>
+<tr>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">0.172</td>
+<td style="text-align: right;">0.155</td>
+<td style="text-align: right;">0.123</td>
+<td style="text-align: right;">13%</td>
+</tr>
+<tr>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">0.272</td>
+<td style="text-align: right;">0.251</td>
+<td style="text-align: right;">0.217</td>
+<td style="text-align: right;">9%</td>
+</tr>
+<tr>
+<td style="text-align: right;">16</td>
+<td style="text-align: right;">0.357</td>
+<td style="text-align: right;">0.372</td>
+<td style="text-align: right;">0.361</td>
+<td style="text-align: right;">2%</td>
+</tr>
+<tr>
+<td style="text-align: right;">24</td>
+<td style="text-align: right;">0.496</td>
+<td style="text-align: right;">0.517</td>
+<td style="text-align: right;">0.547</td>
+<td style="text-align: right;">4%</td>
+</tr>
+<tr>
+<td style="text-align: right;">32</td>
+<td style="text-align: right;">0.717</td>
+<td style="text-align: right;">0.665</td>
+<td style="text-align: right;">0.661</td>
+<td style="text-align: right;">4%</td>
+</tr>
+<tr>
+<td style="text-align: right;">48</td>
+<td style="text-align: right;">0.878</td>
+<td style="text-align: right;">0.734</td>
+<td style="text-align: right;">0.857</td>
+<td style="text-align: right;">8%</td>
+</tr>
+<tr>
+<td style="text-align: right;">64</td>
+<td style="text-align: right;">0.861</td>
+<td style="text-align: right;">0.849</td>
+<td style="text-align: right;">1.021</td>
+<td style="text-align: right;">9%</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>trigram gap 在 mult 1→64 的观测窗口内总体上升，跨 seed 离散度为
+  2–17%；mult 8–64 的 log-log 斜率约 0.6–1.0，只能作为有限窗口的
+  形状摘要，不能升级为全区间幂律。</li>
+<li>seed 43/44 在 48→64 仍上升，但 seed 42 在 56→64 回落；因此当前窗口
+  未解析出稳定的饱和平台，也不能据此否证饱和。是否存在 jamming/saturation
+  转折，需要 no-compile 标准下的扩展 table 轴和更多 seed。</li>
+</ul>
+<p><strong>bigram</strong>：mult 8–32 稳（cv 2–13%），但 mult=6/24/48/64 个别点 cv 25–48%
+（seed-sensitive 点）；总体随 mult 上升但无干净幂律。</p>
+<p><strong>both</strong>（不可定量）：mult≥16 后 cv 普遍 24–45%（如 mult=32：0.698/1.595/0.748；
+mult=48：2.244/0.860/1.028）。<strong>双表干涉导致 both 在大表区不可定量</strong>，
+不能合并进单一幂律公式（见 §6.4）。</p>
+<p>图：<code>figs/table_gap_vs_2R.png</code>（双对数）/ <code>figs/table_gap_vs_collision.png</code>
+/ 交互版 <code>.html</code>；汇总 <code>figs/table_summary.csv</code>（141 行，三 seed）。</p>
+<h3>7.3 H1：两因素频率律 —— β 可辨识，A/c/γ 不可辨识</h3>
+<p>对 L4 + 1M 锚点的 <code>freq_{module}_fs[_s{43,44}]_fixed</code>（step 1000 截面，
+token-marginal）做 raw-space 拟合
+<code>G(f) = A·f^(−β)·[1 − exp(−c·f^γ)]</code>，三 seed 参数 cv：</p>
+<table>
+<thead>
+<tr>
+<th>branch / module</th>
+<th>β（mean±sd）</th>
+<th>γ</th>
+<th>A</th>
+<th>c</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>bigram/bigram</td>
+<td><strong>0.713±0.029（cv 4%）</strong></td>
+<td>cv 11%</td>
+<td>cv 35%</td>
+<td>cv 6%</td>
+</tr>
+<tr>
+<td>bigram/trigram</td>
+<td><strong>0.128±0.005（cv 4%）</strong></td>
+<td>cv 7%</td>
+<td>cv 33%</td>
+<td>cv 6%</td>
+</tr>
+<tr>
+<td>trigram/bigram</td>
+<td>0.483±0.044（cv 9%）</td>
+<td>cv 141%</td>
+<td>cv 38%</td>
+<td>cv 91%</td>
+</tr>
+<tr>
+<td>trigram/trigram</td>
+<td>0.673±0.088（cv 13%）</td>
+<td>cv 6%</td>
+<td>cv 64%</td>
+<td>cv 39%</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>β 是唯一 seed-stable 的可辨识参数</strong>（四组 cv 4–13%）：gap 随 exact
+  frequency 的衰减指数可复现，且 branch/module 组合间差异显著
+  （bigram 表对 bigram context 的 β≈0.71 vs trigram context 的 β≈0.13）。</li>
+<li><strong>A 与 c 不可辨识</strong>（cv 33–91%），trigram/bigram 交叉项的 γ 与 c 完全不可辨识
+  （γ 在 0 与 1.87 间跳，c 在 2.0 与 27.5 间跳）。</li>
+<li>结论：H1 的两因素形式与数据<strong>方向一致</strong>，但当前覆盖下只能可信地报告
+  <strong>衰减指数 β</strong>；A/c/γ 为 <code>identifiability-limited</code>，不写绝对值。
+  完整参数、标准误与逐 f 排除原因见 <code>figs/fit_manifest.json</code>（12 个拟合）。</li>
+</ul>
+<h3>7.4 H4：模块交互 —— 显著且 seed-sensitive，不允许合并单公式</h3>
+<p>epoch 网格（相对各 L no-ngram 的 ΔG）上的交互项
+<code>I = ΔG_both − ΔG_bigram − ΔG_trigram</code>：</p>
+<ul>
+<li><strong>fixed-step</strong>：I 跨 seed 大幅摆动且<strong>变号</strong>（L1：+4.37/−0.58/+8.10；
+  L2：+2.74/−1.52/+0.42；L3/L4 同样正负混合）——seed-sensitive。</li>
+<li><strong>fixed-epoch</strong>：I 同样非零且 L4 出现强负值（−4.80/−2.27/−0.96），
+  方向在 L 间翻转（L1–L3 偏正，L4 偏负）。</li>
+</ul>
+<p>table 网格上的交互（raw gap，无 nogram 对照）：
+mult≤40 时 I 普遍为<strong>小幅负值</strong>（亚可加，−0.03~−0.56），三 seed 同号；
+mult≥48 时 I 跨 seed 剧烈变号（mult=48：+0.92/−0.27/−0.90）——
+大表区双表干涉 seed-sensitive。</p>
+<p><strong>结论</strong>：模块交互 I 显著非零且方向/幅度随 seed、对齐方式、表大小变化，
+因此 <strong>不允许把 bigram+trigram 合并成单一公式解释</strong>；<code>both</code> 臂只作对照，
+不进任何合并 scaling 定律。</p>
+<h3>7.5 对四个猜想的总判定</h3>
+<table>
+<thead>
+<tr>
+<th>猜想</th>
+<th>判定</th>
+<th>依据</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>H1 两因素频率律</td>
+<td><strong>β seed-stable（cv 4–13%）；A/c/γ identifiability-limited</strong></td>
+<td>§6.3，三 seed 12 个拟合</td>
+</tr>
+<tr>
+<td>H2 epoch 对齐律</td>
+<td><strong>方向 seed-stable（24/24 同号）；幅度 fixed-step seed-sensitive、fixed-epoch 稳</strong></td>
+<td>§6.1</td>
+</tr>
+<tr>
+<td>H3 table saturation</td>
+<td><strong>有限窗口上升；饱和与全区间幂律均未解析；both 大表区不可定量</strong></td>
+<td>§6.2</td>
+</tr>
+<tr>
+<td>H4 模块交互</td>
+<td><strong>显著且 seed-sensitive，不允许合并单公式</strong></td>
+<td>§6.4</td>
+</tr>
+</tbody>
+</table>
+<p>以上全部为 observational 证据；epoch/table 的方向性结论已满足
+"三 seed 同号才写方向稳定"的登记标准，但不升级为因果 claim
+（<code>not yet causal</code>）。</p>
+<h2>7. 关系图谱与绘图口径</h2>
+<p>本附录新增的关系图不把几条曲线简单叠在一起，而是按同一条证据链组织：</p>
+<pre><code class="language-text">table size (2R) ──┐
+collision state ──┼──&gt; table-induced online gap
+exposure (L) ────┤
+frequency (f) ───┘
+</code></pre>
+<p>图中的每个箭头都对应一个可测关系，不代表已经证明因果机制。变量和图的
+对应关系如下：</p>
+<table>
+<thead>
+<tr>
+<th>关系</th>
+<th>图</th>
+<th>坐标与可见内容</th>
+<th>读图目的</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>2R → gap</code></td>
+<td><code>figs/rel_gap_vs_2R_multiseed.png</code></td>
+<td>横纵轴均为 log；颜色区分 module，marker 区分 seed；虚线为每组的 log-log guide</td>
+<td>看 table 容量增加是否伴随 gap 上升、是否出现饱和</td>
+</tr>
+<tr>
+<td><code>1−collision → gap</code></td>
+<td><code>figs/rel_gap_vs_physical.png</code></td>
+<td>横纵轴均为 log；collision 来自 bigram layer-0 hash-0 的 occupancy 统计</td>
+<td>把逻辑地址关系投影到实际 hash 碰撞状态</td>
+</tr>
+<tr>
+<td><code>L → ΔG</code></td>
+<td><code>figs/rel_deltaG_vs_epoch.png</code></td>
+<td>左 fixed-step，右 fixed-epoch；<code>ΔG = G(module)−G(nogram)</code>；线性 y 轴保留零线</td>
+<td>区分计算步数对齐和 replay/epoch 对齐</td>
+</tr>
+<tr>
+<td><code>f → gap(f)</code></td>
+<td><code>figs/rel_gap_vs_frequency_bigram.png</code>、<code>figs/rel_gap_vs_frequency_trigram.png</code></td>
+<td>横纵轴均为 log；fs/fe 并列；带 error bar 与 two-factor guide</td>
+<td>看 exact frequency 的衰减形状及其对齐依赖</td>
+</tr>
+<tr>
+<td><code>E × f → gap(f)</code></td>
+<td><code>figs/rel_gap_vs_frequency_epoch_bigram.png</code>、<code>figs/rel_gap_vs_frequency_epoch_trigram.png</code></td>
+<td>fixed-epoch 的 epoch 1/3/6 三截面；每个截面含三 seed、bin 内 SEM、拟合 guide</td>
+<td>检查频率关系随 exposure 是否改变</td>
+</tr>
+<tr>
+<td>四轴总览</td>
+<td><code>figs/rel_relationship_map.png</code></td>
+<td><code>(a)</code> table，<code>(b)</code> collision，<code>(c)</code> fixed-epoch exposure，<code>(d)</code> trigram frequency</td>
+<td>作为报告的关系地图，不替代逐图检查</td>
+</tr>
+</tbody>
+</table>
+<h3>7.1 Exact-frequency 分 bin 与误差棒</h3>
+<p>频率图不是把旧的粗 bin 再切细，而是直接读取
+<code>exact_freq_loss.jsonl</code> 的 exact context frequency。对每个 branch/module/seed/
+alignment，处理步骤为：</p>
+<ol>
+<li>丢弃 <code>f=0</code>（novel）；它没有 train token loss，不能定义 gap；</li>
+<li>要求 train 与 validation 都有至少 1024 tokens、至少 32 个 distinct contexts；</li>
+<li>计算 token-marginal gap：<code>gap(f) = mean_val_loss(f) − mean_train_loss(f)</code>；</li>
+<li>仅在 log 图中保留 <code>gap(f)&gt;0</code> 的点；</li>
+<li>对 eligible per-f 点按 <code>log(f)</code> 排序，等数量切成最多 8 个 bin；</li>
+<li>x 坐标是该 bin 内 <code>exp(mean(log f))</code> 的 geometric midpoint；</li>
+<li>y 坐标是 bin 内 gap 的算术平均；误差棒是 bin 内 gap 的
+   <code>SEM = std(gap(f))/sqrt(n_bin)</code>，表示<strong>bin 内异质性诊断</strong>，不是独立
+   seed 的置信区间。</li>
+</ol>
+<p>因此，带 error bar 的图适合判断频率关系是否被少数 noisy frequency
+支配；它不能被解释成每个频率点的重复实验置信区间。<code>*_final_raw.png</code>
+保留所有 eligible per-f 点、含 SEM 的拥挤 debug 图，便于检查分 bin 是否
+掩盖了结构。所有频率图都明确标注 fs（1000 steps）或 fe（6 epochs，
+2022 steps），不混用两个截面。<code>rel_gap_vs_frequency_epoch_{branch}.png</code> 进一步
+使用 fe 的 epoch 1（约 337 steps）、epoch 3（约 1012 steps）和 epoch 6
+（2022 steps）三个 exact-freq 截面；对应的 54 条成功拟合记录（branch ×
+module × seed × snapshot；少数低频截面因正 gap/样本门槛不足被排除）写入
+<code>figs/frequency_snapshot_fit.csv</code>。</p>
+<h3>7.2 Table-size 图的 log 轴与 occupancy 限制</h3>
+<p><code>rel_gap_vs_2R_multiseed.png</code> 是主 table 图：横轴是每个 n-gram、每层的
+logical addresses <code>2R = 16384 × table_mult</code>，纵轴是最终 online gap。
+双对数坐标只显示正 gap；负值或零值不被隐式替换。每个 module 有三种
+marker（circle/square/triangle = seed 42/43/44），颜色固定为
+bigram/trigram/both。</p>
+<p>collision 图使用 <code>1−collision_rate</code> 而不是 collision rate 本身，因为
+collision rate 接近 1，直接画会压缩所有点。occupancy 没有作为独立主图：
+在 mult 1–8 时 occupancy 已接近 1，继续使用 log occupancy 会制造几乎
+垂直的伪关系；它仍保存在 <code>table_summary.csv</code> 中用于审计。该选择是为了
+避免把一个已饱和的诊断量误写成解释变量。</p>
+<h3>7.3 交互可见性</h3>
+<p>静态 PNG 保留完整三 seed 与三个 module，方便审稿/归档；同一目录中的
+Plotly HTML（<code>rel_gap_vs_2R_multiseed.html</code>、<code>rel_gap_vs_frequency_multiseed.html</code>）
+仍可通过图例隐藏曲线，并用按钮独立切换 x/y 轴为 log 或 linear。原有
+<code>table_gap_vs_2R.html</code>、<code>table_gap_vs_collision.html</code> 继续保留。关系图脚本在
+§8 的统一重建命令中调用。它只读取 <code>data/runs_scaling/*_fixed/</code>，不会修改
+训练产物。重新生成后，先
+检查 PNG，再执行 <code>git diff --check</code>；原始 per-f debug 图不作为主报告结论。</p>
+<h2>8. 生成命令与后续边界</h2>
+<p>从仓库根目录重建当前三轴结果：</p>
+<pre><code class="language-bash">.venv/bin/python tasks/s1_scaling_three_axis/analysis/analyze_scaling_epoch.py \
+  data/runs_scaling
+.venv/bin/python tasks/s1_scaling_three_axis/analysis/analyze_scaling_table.py \
+  data/runs_scaling
+.venv/bin/python tasks/s1_scaling_three_axis/analysis/analyze_scaling_frequency.py \
+  data/runs_scaling
+.venv/bin/python docs/plot_scripts/gen_s1_relationship_figs.py
+</code></pre>
+<p>当前已完成的是旧 compile 波次的 seed 42/43/44 数据归档、测量审计、
+三轴图和探索性数学摘要；这些产物不构成当前 no-compile 标准下的完成证明。
+仍待完成 no-compile 标准的基础 QC、三轴重跑、跨 seed profile-likelihood，
+以及将三轴结果提升为主报告的最终 scaling claim；在这些完成前，不更新
+<code>docs/report/index.html</code> 的主线结论。</p>
+<h2>9. 关系图产物索引</h2>
+<p>以下产物由 <code>docs/plot_scripts/gen_s1_relationship_figs.py</code> 生成，均只读取
+<code>data/runs_scaling/*_fixed/</code>：</p>
+<table>
+<thead>
+<tr>
+<th>产物</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>figs/rel_relationship_map.png</code></td>
+<td>四轴总览：table、collision、exposure、frequency</td>
+</tr>
+<tr>
+<td><code>figs/rel_gap_vs_2R_multiseed.png</code> / <code>.html</code></td>
+<td>logical addresses → gap；静态双对数 + 可切换轴的交互版</td>
+</tr>
+<tr>
+<td><code>figs/rel_gap_vs_physical.png</code></td>
+<td>module-matched collision complement → gap</td>
+</tr>
+<tr>
+<td><code>figs/rel_deltaG_vs_epoch.png</code></td>
+<td>fixed-step / fixed-epoch 的 exposure → ΔG</td>
+</tr>
+<tr>
+<td><code>figs/rel_gap_vs_frequency_{bigram,trigram}.png</code></td>
+<td>final fs/fe frequency → gap，带 bin 内 SEM</td>
+</tr>
+<tr>
+<td><code>figs/rel_gap_vs_frequency_epoch_{bigram,trigram}.png</code></td>
+<td>fe 的 epoch 1/3/6 frequency → gap</td>
+</tr>
+<tr>
+<td><code>figs/rel_gap_vs_frequency_multiseed.html</code></td>
+<td>可隐藏 branch/module/seed、可切换 log/linear 轴</td>
+</tr>
+<tr>
+<td><code>figs/frequency_snapshot_fit.csv</code></td>
+<td>54 条 epoch 1/3/6 成功拟合记录</td>
+</tr>
+</tbody>
+</table>
+<p><code>figs/epoch3000_deltaG_both_minus_nogram.png</code> 是已有的独立 3000-step 诊断图，
+</details>
+<details class="archive"><summary>展开历史静态图集（旧 compile 波次；仅供溯源）</summary>
+不属于本轮三 seed canonical 关系图集，保留作 provenance。</p><h2>图集：关系展示</h2><p>静态图遵循 warm paper 调色板；颜色表示 module，marker 表示 seed。静态图中的 log 轴只显示正 gap；可隐藏曲线、切换坐标轴的版本见交互图。</p><figure><img src="figs/rel_relationship_map.png" alt="S1 three-axis relationship map"><figcaption>总览：table size、collision complement、exposure 与 exact frequency 对 online gap 的关系。</figcaption></figure><figure><img src="figs/rel_gap_vs_2R_multiseed.png" alt="Table logical addresses versus online gap"><figcaption>Table size → gap：logical addresses 2R 与最终 online gap，双对数；虚线为逐组 log-log guide。</figcaption></figure><p><a href="figs/rel_gap_vs_2R_multiseed.html">打开交互版 table 图（可隐藏 module/seed、切换 x/y 对数轴）</a></p><figure><img src="figs/rel_gap_vs_physical.png" alt="Collision complement versus online gap"><figcaption>Physical hash state → gap：使用对应 module 的 layer-0/hash-0 collision complement。</figcaption></figure><figure><img src="figs/rel_deltaG_vs_epoch.png" alt="Epoch length versus delta gap"><figcaption>Exposure → ΔG：fixed-step 与 fixed-epoch 并列，ΔG 相对同 L no-ngram。</figcaption></figure><figure><img src="figs/rel_gap_vs_frequency_bigram.png" alt="Bigram exact frequency versus gap"><figcaption>Bigram branch：exact frequency → token-marginal gap，带 bin 内 SEM 误差棒。</figcaption></figure><figure><img src="figs/rel_gap_vs_frequency_trigram.png" alt="Trigram exact frequency versus gap"><figcaption>Trigram branch：exact frequency → token-marginal gap，带 bin 内 SEM 误差棒。</figcaption></figure><figure><img src="figs/rel_gap_vs_frequency_epoch_bigram.png" alt="Bigram frequency across epochs"><figcaption>Bigram branch：epoch 1/3/6 的 frequency-gap 关系。</figcaption></figure><figure><img src="figs/rel_gap_vs_frequency_epoch_trigram.png" alt="Trigram frequency across epochs"><figcaption>Trigram branch：epoch 1/3/6 的 frequency-gap 关系。</figcaption></figure><p><a href="figs/rel_gap_vs_frequency_multiseed.html">打开交互版 frequency 图（可隐藏 branch/module/seed、切换 x/y 对数轴）</a></p><p><strong>Debug 原图：</strong><a href="figs/freq_gap_bigram_final_raw.png">bigram raw per-f</a> · <a href="figs/freq_gap_trigram_final_raw.png">trigram raw per-f</a>。这些图保留所有 eligible per-f 点和 SEM，故较拥挤，不作为主结论图。</p></body></html>
