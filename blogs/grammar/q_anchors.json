@@ -1,0 +1,1320 @@
+{
+  "version": "q-anchors-v1",
+  "date": "2026-10-24",
+  "source_catalog_version": "setting-v1.4-draft",
+  "default_contract": "A/M norm inheritance: module > layer_loop > root > pre_rms_norm; eps=1e-5; standard residual; independent depth parameters; causal attention; gated=false; lm_head norm=rms_norm,tie_embedding=true; time_loop zero state/shared parameters; mHC streams=4,sinkhorn_iters=20,eps=1e-6; AttnRes without block_size=Full",
+  "protocol": {
+    "task": "causal_continuation",
+    "vocab_size": 1024,
+    "prefix_tokens": 256,
+    "output_tokens": 256,
+    "model_input_tokens": 511,
+    "context_capacity": 512,
+    "loss": "cross_entropy_output_only",
+    "ignore_index": -100,
+    "masked_target_positions": 255,
+    "prefix_gradient": "full; no detach, no truncated BPTT",
+    "initialization": "independent per candidate and seed; no walk weight inheritance",
+    "dataset_status": "not_materialized",
+    "training_budget": {
+      "kind": "wall_clock",
+      "seconds": 30,
+      "status": "proposed_not_calibrated",
+      "hardware": "not_selected"
+    },
+    "size_policy": "width128; depth chosen to retain mechanisms; not matched parameters or FLOPs"
+  },
+  "status": {
+    "configurations": "seed specifications",
+    "model_execution": "not_run",
+    "learning_quality": "not_measured",
+    "training_pipeline": "not_integrated",
+    "traversal": "not_registered_in_existing_43_layer_graph"
+  },
+  "models": [
+    {
+      "id": "q_gpt2",
+      "source_id": "gpt2",
+      "name": "GPT-2 · Q",
+      "kind": "自建Q版种子",
+      "note": "4层MHA+非门控MLP，保留pre-LayerNorm与GELU；沿用现有RoPE投影，不是原GPT-2位置编码复刻。",
+      "sources": [
+        "https://huggingface.co/openai-community/gpt2/blob/main/config.json"
+      ],
+      "dependencies": [
+        "torch"
+      ],
+      "status": "seed_unvalidated",
+      "spec": {
+        "vocab_size": 1024,
+        "d_model": 128,
+        "act": "gelu_new",
+        "forward": [
+          {
+            "layer_loop": {
+              "iteration": 4,
+              "body": [
+                {
+                  "type": "attention",
+                  "n_heads": 4
+                },
+                {
+                  "type": "mlp",
+                  "hidden_dim": 384
+                }
+              ]
+            }
+          },
+          {
+            "lm_head": {
+              "norm": "layer_norm"
+            }
+          }
+        ],
+        "norm": "pre_layer_norm"
+      },
+      "spec_sha256": "689c8429920ae2a5558fed05ee27d9afd14166c5b9462d6ce249481acc55779b"
+    },
+    {
+      "id": "q_rnn",
+      "source_id": "rnn",
+      "name": "MLP-RNN · Q",
+      "kind": "自建Q版种子",
+      "note": "单个共享MLP状态转移，state_dim=128；保持完整511步递归与反向传播，不截断前缀。串行执行可能限制固定时间内的更新数。",
+      "sources": [],
+      "dependencies": [
+        "torch"
+      ],
+      "status": "seed_unvalidated",
+      "spec": {
+        "vocab_size": 1024,
+        "d_model": 128,
+        "act": "tanh",
+        "forward": [
+          {
+            "time_loop": {
+              "state_dim": 128,
+              "body": [
+                {
+                  "type": "mlp",
+                  "input": [
+                    "token",
+                    "state"
+                  ],
+                  "merge": "concat",
+                  "hidden_dim": 256,
+                  "out_dim": 128,
+                  "output": "state"
+                }
+              ]
+            }
+          },
+          {
+            "lm_head": {
+              "tie_embedding": false,
+              "norm": "none"
+            }
+          }
+        ]
+      },
+      "spec_sha256": "ed7bbf133486305e6d536933b38768e3c14e725dc8adaab85aaa285a60706d8e"
+    },
+    {
+      "id": "q_bert",
+      "source_id": "bert",
+      "name": "BERT-style causal · Q",
+      "kind": "自建Q版种子",
+      "note": "BERT风格因果适配：causal=true，保留post-LayerNorm、GELU与head transform。用于同一续写任务，非原始双向MLM BERT。",
+      "sources": [
+        "https://huggingface.co/google-bert/bert-base-uncased/blob/main/config.json"
+      ],
+      "dependencies": [
+        "torch"
+      ],
+      "status": "seed_unvalidated",
+      "spec": {
+        "vocab_size": 1024,
+        "d_model": 128,
+        "act": "gelu",
+        "forward": [
+          {
+            "layer_loop": {
+              "iteration": 4,
+              "body": [
+                {
+                  "type": "attention",
+                  "n_heads": 4,
+                  "causal": true
+                },
+                {
+                  "type": "mlp",
+                  "hidden_dim": 384
+                }
+              ]
+            }
+          },
+          {
+            "lm_head": {
+              "transform": true,
+              "norm": "layer_norm"
+            }
+          }
+        ],
+        "norm": "post_layer_norm"
+      },
+      "spec_sha256": "5ea7dc5da39c530f0e965c9e50a94b013c5d3f246a3a73eb386edaba48adbcea"
+    },
+    {
+      "id": "q_llama3",
+      "source_id": "llama3",
+      "name": "Llama 3 · Q",
+      "kind": "自建Q版种子",
+      "note": "4层，4个query heads/1个KV head，保留SwiGLU与独立lm_head；缩小后的GQA只保留共享机制，不复刻原分组规模。",
+      "sources": [
+        "https://github.com/meta-pytorch/gpt-fast/blob/main/model.py",
+        "https://github.com/meta-llama/llama3/blob/main/llama/model.py"
+      ],
+      "dependencies": [
+        "torch"
+      ],
+      "status": "seed_unvalidated",
+      "spec": {
+        "vocab_size": 1024,
+        "d_model": 128,
+        "act": "silu",
+        "forward": [
+          {
+            "layer_loop": {
+              "iteration": 4,
+              "body": [
+                {
+                  "type": "attention",
+                  "n_heads": 4,
+                  "gqa_kvheads": 1
+                },
+                {
+                  "type": "mlp",
+                  "hidden_dim": 256,
+                  "gated": true
+                }
+              ]
+            }
+          },
+          {
+            "lm_head": {
+              "tie_embedding": false
+            }
+          }
+        ]
+      },
+      "spec_sha256": "9dccec79c0e93312c051faad6bdea4ec9743aff62aae1d5e14efa2eb353f3b56"
+    },
+    {
+      "id": "q_qwen3",
+      "source_id": "qwen3",
+      "name": "Qwen3 · Q",
+      "kind": "自建Q版种子",
+      "note": "4层，4个query heads/2个KV heads，head_dim=64，保留QK RMSNorm与大于主流宽度的注意力内部投影。",
+      "sources": [
+        "https://huggingface.co/Qwen/Qwen3-0.6B/blob/main/config.json"
+      ],
+      "dependencies": [
+        "torch"
+      ],
+      "status": "seed_unvalidated",
+      "spec": {
+        "vocab_size": 1024,
+        "d_model": 128,
+        "act": "silu",
+        "forward": [
+          {
+            "layer_loop": {
+              "iteration": 4,
+              "body": [
+                {
+                  "type": "attention",
+                  "n_heads": 4,
+                  "gqa_kvheads": 2,
+                  "head_dim": 64,
+                  "qk_norm": "rms_norm"
+                },
+                {
+                  "type": "mlp",
+                  "hidden_dim": 256,
+                  "gated": true
+                }
+              ]
+            }
+          },
+          {
+            "lm_head": {}
+          }
+        ]
+      },
+      "spec_sha256": "33fca1b450d8586a592c2ce9aa63f0fab38e75291610f89d75ba3f8a6f0ca051"
+    },
+    {
+      "id": "q_mixtral",
+      "source_id": "mixtral",
+      "name": "Mixtral · Q",
+      "kind": "自建Q版种子",
+      "note": "4层，每层8个路由专家、激活2个；专家hidden_dim=128，避免专家总量主导Q版资源。",
+      "sources": [
+        "https://huggingface.co/mistralai/Mixtral-8x7B-v0.1/blob/main/config.json"
+      ],
+      "dependencies": [
+        "torch"
+      ],
+      "status": "seed_unvalidated",
+      "spec": {
+        "vocab_size": 1024,
+        "d_model": 128,
+        "act": "silu",
+        "forward": [
+          {
+            "layer_loop": {
+              "iteration": 4,
+              "body": [
+                {
+                  "type": "attention",
+                  "n_heads": 4,
+                  "gqa_kvheads": 1
+                },
+                {
+                  "type": "moe",
+                  "n_experts": 8,
+                  "top_k": [
+                    2,
+                    0
+                  ],
+                  "expert": {
+                    "hidden_dim": 128,
+                    "gated": true
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "lm_head": {
+              "tie_embedding": false
+            }
+          }
+        ]
+      },
+      "spec_sha256": "8ed2697c6f508e6254cfa34572d2c194c0faa0a15b80bfefbfd1881cbbe73a33"
+    },
+    {
+      "id": "q_loop_moe",
+      "source_id": "loop_moe",
+      "name": "MoE + Loop · Q",
+      "kind": "自建Q版种子",
+      "note": "与Q Mixtral使用相同算子和4次深度执行；所有循环位置共享同一套A/M子层（含norm）。",
+      "sources": [
+        "https://huggingface.co/mistralai/Mixtral-8x7B-v0.1/blob/main/config.json"
+      ],
+      "dependencies": [
+        "torch"
+      ],
+      "status": "seed_unvalidated",
+      "spec": {
+        "vocab_size": 1024,
+        "d_model": 128,
+        "act": "silu",
+        "forward": [
+          {
+            "layer_loop": {
+              "iteration": 4,
+              "body": [
+                {
+                  "type": "attention",
+                  "n_heads": 4,
+                  "gqa_kvheads": 1
+                },
+                {
+                  "type": "moe",
+                  "n_experts": 8,
+                  "top_k": [
+                    2,
+                    0
+                  ],
+                  "expert": {
+                    "hidden_dim": 128,
+                    "gated": true
+                  }
+                }
+              ],
+              "share_weights": true
+            }
+          },
+          {
+            "lm_head": {
+              "tie_embedding": false
+            }
+          }
+        ]
+      },
+      "spec_sha256": "43587af058c6ddbe426985d15bc9e2c8a1715350e3428d28bcb69080658a01ec"
+    },
+    {
+      "id": "q_mamba",
+      "source_id": "mamba",
+      "name": "Mamba · Q",
+      "kind": "自建Q版种子",
+      "note": "4层纯Mamba，无额外M槽；state16、短卷积4、expand2保留。需要mamba-ssm及支持环境。",
+      "sources": [
+        "https://huggingface.co/state-spaces/mamba-130m/blob/main/config.json",
+        "https://github.com/state-spaces/mamba/blob/main/mamba_ssm/modules/mamba_simple.py"
+      ],
+      "dependencies": [
+        "torch",
+        "mamba-ssm",
+        "supported CUDA environment"
+      ],
+      "status": "seed_unvalidated",
+      "spec": {
+        "vocab_size": 1024,
+        "d_model": 128,
+        "act": "silu",
+        "forward": [
+          {
+            "layer_loop": {
+              "iteration": 4,
+              "body": [
+                {
+                  "type": "mamba",
+                  "d_state": 16,
+                  "conv_size": 4,
+                  "expand": 2
+                }
+              ]
+            }
+          },
+          {
+            "lm_head": {}
+          }
+        ]
+      },
+      "spec_sha256": "c56d047ac474fcfd42500d60f83ef0030fd1a302c736c040ec8903c3afcfa6cc"
+    },
+    {
+      "id": "q_kda",
+      "source_id": "kda",
+      "name": "纯 KDA · Q",
+      "kind": "自建Q版种子",
+      "note": "4层KDA+门控MLP；2头×64维，保留短卷积4。需要FLA及支持的CUDA/Triton环境。",
+      "sources": [
+        "https://huggingface.co/moonshotai/Kimi-Linear-48B-A3B-Instruct/blob/main/modeling_kimi.py"
+      ],
+      "dependencies": [
+        "torch",
+        "flash-linear-attention",
+        "supported CUDA/Triton environment"
+      ],
+      "status": "seed_unvalidated",
+      "spec": {
+        "vocab_size": 1024,
+        "d_model": 128,
+        "act": "silu",
+        "forward": [
+          {
+            "layer_loop": {
+              "iteration": 4,
+              "body": [
+                {
+                  "type": "kda",
+                  "n_heads": 2,
+                  "head_dim": 64,
+                  "conv_size": 4
+                },
+                {
+                  "type": "mlp",
+                  "hidden_dim": 256,
+                  "gated": true
+                }
+              ]
+            }
+          },
+          {
+            "lm_head": {}
+          }
+        ]
+      },
+      "spec_sha256": "371bfc11df1a4306e654e1f7b1fe6a22292a7ecd655c3f63a3f0526647795cf0"
+    },
+    {
+      "id": "q_kimi",
+      "source_id": "kimi",
+      "name": "Kimi Linear · Q",
+      "kind": "自建Q版种子",
+      "note": "8层；KDA为默认，第4/8层MLA；第1层dense，其余9专家（8路由+1共享），每次2路由+1共享。保留混合结构与稀疏选择。",
+      "sources": [
+        "https://huggingface.co/moonshotai/Kimi-Linear-48B-A3B-Instruct/blob/main/config.json",
+        "https://huggingface.co/moonshotai/Kimi-Linear-48B-A3B-Instruct/blob/main/modeling_kimi.py"
+      ],
+      "dependencies": [
+        "torch",
+        "flash-linear-attention",
+        "supported CUDA/Triton environment"
+      ],
+      "status": "seed_unvalidated",
+      "spec": {
+        "vocab_size": 1024,
+        "d_model": 128,
+        "act": "silu",
+        "forward": [
+          {
+            "layer_loop": {
+              "iteration": 8,
+              "body": [
+                {
+                  "type": "kda",
+                  "n_heads": 2,
+                  "head_dim": 64,
+                  "conv_size": 4
+                },
+                {
+                  "type": "mla",
+                  "layers": [
+                    4,
+                    8
+                  ],
+                  "n_heads": 2,
+                  "kv_rank": 32,
+                  "qk_nope_dim": 32,
+                  "qk_shared_dim": 16,
+                  "v_head_dim": 64,
+                  "position": "none"
+                },
+                {
+                  "type": "moe",
+                  "n_experts": 9,
+                  "top_k": [
+                    3,
+                    1
+                  ],
+                  "expert": {
+                    "hidden_dim": 128,
+                    "gated": true
+                  },
+                  "router": {
+                    "score": "sigmoid",
+                    "correction_bias": true,
+                    "scale": 2.446
+                  }
+                },
+                {
+                  "type": "mlp",
+                  "hidden_dim": 256,
+                  "gated": true,
+                  "layers": [
+                    1
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "lm_head": {
+              "tie_embedding": false
+            }
+          }
+        ]
+      },
+      "spec_sha256": "de4653095286afe46e156b7338462aae86c27219b4a910f680e06095274d99b1"
+    },
+    {
+      "id": "q_full_attnres",
+      "source_id": "full_attnres",
+      "name": "Kimi + Full AttnRes · Q",
+      "kind": "自建Q版种子",
+      "note": "与Q Kimi完全相同的骨干，加Full AttnRes；用于残差机制的直接对照。",
+      "sources": [
+        "https://github.com/MoonshotAI/Attention-Residuals"
+      ],
+      "dependencies": [
+        "torch",
+        "flash-linear-attention",
+        "supported CUDA/Triton environment"
+      ],
+      "status": "seed_unvalidated",
+      "spec": {
+        "vocab_size": 1024,
+        "d_model": 128,
+        "act": "silu",
+        "forward": [
+          {
+            "layer_loop": {
+              "iteration": 8,
+              "body": [
+                {
+                  "type": "kda",
+                  "n_heads": 2,
+                  "head_dim": 64,
+                  "conv_size": 4
+                },
+                {
+                  "type": "mla",
+                  "layers": [
+                    4,
+                    8
+                  ],
+                  "n_heads": 2,
+                  "kv_rank": 32,
+                  "qk_nope_dim": 32,
+                  "qk_shared_dim": 16,
+                  "v_head_dim": 64,
+                  "position": "none"
+                },
+                {
+                  "type": "moe",
+                  "n_experts": 9,
+                  "top_k": [
+                    3,
+                    1
+                  ],
+                  "expert": {
+                    "hidden_dim": 128,
+                    "gated": true
+                  },
+                  "router": {
+                    "score": "sigmoid",
+                    "correction_bias": true,
+                    "scale": 2.446
+                  }
+                },
+                {
+                  "type": "mlp",
+                  "hidden_dim": 256,
+                  "gated": true,
+                  "layers": [
+                    1
+                  ]
+                }
+              ],
+              "residual": {
+                "type": "attnres"
+              }
+            }
+          },
+          {
+            "lm_head": {
+              "tie_embedding": false
+            }
+          }
+        ]
+      },
+      "spec_sha256": "da82de3dd6bba60aadd2498355cfac0c66c17cffb6110c0ef7b3b60a4b63bca9"
+    },
+    {
+      "id": "q_block_attnres",
+      "source_id": "block_attnres",
+      "name": "Kimi + Block AttnRes · Q",
+      "kind": "自建Q版种子",
+      "note": "与Q Kimi相同骨干；block_size=4个A/M操作，即2层一块，形成4个残差块，避免缩小后退化成单块。",
+      "sources": [
+        "https://github.com/MoonshotAI/Attention-Residuals"
+      ],
+      "dependencies": [
+        "torch",
+        "flash-linear-attention",
+        "supported CUDA/Triton environment"
+      ],
+      "status": "seed_unvalidated",
+      "spec": {
+        "vocab_size": 1024,
+        "d_model": 128,
+        "act": "silu",
+        "forward": [
+          {
+            "layer_loop": {
+              "iteration": 8,
+              "body": [
+                {
+                  "type": "kda",
+                  "n_heads": 2,
+                  "head_dim": 64,
+                  "conv_size": 4
+                },
+                {
+                  "type": "mla",
+                  "layers": [
+                    4,
+                    8
+                  ],
+                  "n_heads": 2,
+                  "kv_rank": 32,
+                  "qk_nope_dim": 32,
+                  "qk_shared_dim": 16,
+                  "v_head_dim": 64,
+                  "position": "none"
+                },
+                {
+                  "type": "moe",
+                  "n_experts": 9,
+                  "top_k": [
+                    3,
+                    1
+                  ],
+                  "expert": {
+                    "hidden_dim": 128,
+                    "gated": true
+                  },
+                  "router": {
+                    "score": "sigmoid",
+                    "correction_bias": true,
+                    "scale": 2.446
+                  }
+                },
+                {
+                  "type": "mlp",
+                  "hidden_dim": 256,
+                  "gated": true,
+                  "layers": [
+                    1
+                  ]
+                }
+              ],
+              "residual": {
+                "type": "attnres",
+                "block_size": 4
+              }
+            }
+          },
+          {
+            "lm_head": {
+              "tie_embedding": false
+            }
+          }
+        ]
+      },
+      "spec_sha256": "b47cbe0cf2a2d20999f4a80a85d5fad587826a6144d45da6203becc410aedc96"
+    },
+    {
+      "id": "q_deepseek_v4",
+      "source_id": "deepseek_v4",
+      "name": "DeepSeek V4 Flash · Q",
+      "kind": "自建Q版种子",
+      "note": "8层；前2层滑窗，3/5/7层CSA，4/6/8层HCA；window32，CSA压缩4+index top16，HCA压缩32。保留mHC四流、hash前三层与动态路由后续层。 当前参考实现的indexer仅通过离散top-k选择，未接索引辅助训练损失；固定时间成绩会受参考算子实现效率影响。",
+      "sources": [
+        "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash/blob/main/config.json",
+        "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash/blob/main/inference/model.py"
+      ],
+      "dependencies": [
+        "torch"
+      ],
+      "status": "seed_unvalidated",
+      "spec": {
+        "vocab_size": 1024,
+        "d_model": 128,
+        "act": "silu",
+        "forward": [
+          {
+            "layer_loop": {
+              "iteration": 8,
+              "residual": {
+                "type": "mhc"
+              },
+              "body": [
+                {
+                  "type": "csa",
+                  "n_heads": 4,
+                  "head_dim": 64,
+                  "q_rank": 32,
+                  "o_rank": 32,
+                  "o_groups": 2,
+                  "rope_dim": 16,
+                  "window": 32,
+                  "compression": 4,
+                  "indexer": {
+                    "n_heads": 2,
+                    "head_dim": 32,
+                    "top_k": 16
+                  }
+                },
+                {
+                  "type": "sliding_attention",
+                  "n_heads": 4,
+                  "head_dim": 64,
+                  "q_rank": 32,
+                  "o_rank": 32,
+                  "o_groups": 2,
+                  "rope_dim": 16,
+                  "window": 32,
+                  "layers": [
+                    1,
+                    2
+                  ]
+                },
+                {
+                  "type": "hca",
+                  "n_heads": 4,
+                  "head_dim": 64,
+                  "q_rank": 32,
+                  "o_rank": 32,
+                  "o_groups": 2,
+                  "rope_dim": 16,
+                  "window": 32,
+                  "layers": "array(4,2)",
+                  "compression": 32
+                },
+                {
+                  "type": "moe",
+                  "n_experts": 9,
+                  "top_k": [
+                    3,
+                    1
+                  ],
+                  "expert": {
+                    "hidden_dim": 128,
+                    "gated": true
+                  },
+                  "router": {
+                    "score": "sqrtsoftplus",
+                    "scale": 1.5,
+                    "hash_layers": [
+                      1,
+                      2,
+                      3
+                    ]
+                  },
+                  "swiglu_limit": 10
+                }
+              ]
+            }
+          },
+          {
+            "lm_head": {
+              "tie_embedding": false
+            }
+          }
+        ]
+      },
+      "search_policy": {
+        "groups": [
+          {
+            "id": "moe",
+            "scope": "/forward/0/layer_loop/body/3",
+            "members": [
+              "type",
+              "n_experts",
+              "top_k",
+              "expert"
+            ],
+            "weak_lock": [
+              "router",
+              "swiglu_limit"
+            ],
+            "entry_weight": 0.05,
+            "weak_weight": 0.1,
+            "inner_steps": 4
+          }
+        ]
+      },
+      "spec_sha256": "a9f29377bbe49d606d26d3f733e93d8f6e1b94ddd570f1c18268db3e09688a66"
+    },
+    {
+      "id": "q_v4_shared",
+      "source_id": "v4_shared",
+      "name": "V4 + 跨层复用 · Q",
+      "kind": "自建Q版种子",
+      "note": "与Q V4相同骨干；CSA层3/5/7复用compressed KV、index K和top-k，均由第3层产生。 当前参考实现的indexer仅通过离散top-k选择，未接索引辅助训练损失；固定时间成绩会受参考算子实现效率影响。",
+      "sources": [
+        "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash/blob/main/inference/model.py",
+        "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash-1017/blob/main/inference/model.py"
+      ],
+      "dependencies": [
+        "torch"
+      ],
+      "status": "seed_unvalidated",
+      "spec": {
+        "vocab_size": 1024,
+        "d_model": 128,
+        "act": "silu",
+        "forward": [
+          {
+            "layer_loop": {
+              "iteration": 8,
+              "residual": {
+                "type": "mhc"
+              },
+              "body": [
+                {
+                  "type": "csa",
+                  "n_heads": 4,
+                  "head_dim": 64,
+                  "q_rank": 32,
+                  "o_rank": 32,
+                  "o_groups": 2,
+                  "rope_dim": 16,
+                  "window": 32,
+                  "compression": 4,
+                  "indexer": {
+                    "n_heads": 2,
+                    "head_dim": 32,
+                    "top_k": 16
+                  }
+                },
+                {
+                  "type": "sliding_attention",
+                  "n_heads": 4,
+                  "head_dim": 64,
+                  "q_rank": 32,
+                  "o_rank": 32,
+                  "o_groups": 2,
+                  "rope_dim": 16,
+                  "window": 32,
+                  "layers": [
+                    1,
+                    2
+                  ]
+                },
+                {
+                  "type": "hca",
+                  "n_heads": 4,
+                  "head_dim": 64,
+                  "q_rank": 32,
+                  "o_rank": 32,
+                  "o_groups": 2,
+                  "rope_dim": 16,
+                  "window": 32,
+                  "layers": "array(4,2)",
+                  "compression": 32
+                },
+                {
+                  "type": "moe",
+                  "n_experts": 9,
+                  "top_k": [
+                    3,
+                    1
+                  ],
+                  "expert": {
+                    "hidden_dim": 128,
+                    "gated": true
+                  },
+                  "router": {
+                    "score": "sqrtsoftplus",
+                    "scale": 1.5,
+                    "hash_layers": [
+                      1,
+                      2,
+                      3
+                    ]
+                  },
+                  "swiglu_limit": 10
+                }
+              ],
+              "share": {
+                "compressed_kv": [
+                  [
+                    3,
+                    5,
+                    7
+                  ]
+                ],
+                "index_k": [
+                  [
+                    3,
+                    5,
+                    7
+                  ]
+                ],
+                "topk": [
+                  [
+                    3,
+                    5,
+                    7
+                  ]
+                ]
+              }
+            }
+          },
+          {
+            "lm_head": {
+              "tie_embedding": false
+            }
+          }
+        ]
+      },
+      "search_policy": {
+        "groups": [
+          {
+            "id": "moe",
+            "scope": "/forward/0/layer_loop/body/3",
+            "members": [
+              "type",
+              "n_experts",
+              "top_k",
+              "expert"
+            ],
+            "weak_lock": [
+              "router",
+              "swiglu_limit"
+            ],
+            "entry_weight": 0.05,
+            "weak_weight": 0.1,
+            "inner_steps": 4
+          }
+        ]
+      },
+      "spec_sha256": "3eae233bbf76553882ceed12660460e6af163efdbc8dbe24e020cdae418c25b2"
+    },
+    {
+      "id": "q_llama_shared",
+      "source_id": "llama_shared",
+      "name": "Llama 3 + 局部参数复用 · Q",
+      "kind": "自建Q版种子",
+      "note": "6层以保留原共享组：A层1/3/5共享，M层2/4/6共享；共享的是整个子层，含norm。",
+      "sources": [
+        "https://github.com/meta-llama/llama3/blob/main/llama/model.py"
+      ],
+      "dependencies": [
+        "torch"
+      ],
+      "status": "seed_unvalidated",
+      "spec": {
+        "vocab_size": 1024,
+        "d_model": 128,
+        "act": "silu",
+        "forward": [
+          {
+            "layer_loop": {
+              "iteration": 6,
+              "body": [
+                {
+                  "type": "attention",
+                  "n_heads": 4,
+                  "gqa_kvheads": 1
+                },
+                {
+                  "type": "mlp",
+                  "hidden_dim": 256,
+                  "gated": true
+                }
+              ],
+              "share": {
+                "attn_weights": [
+                  [
+                    1,
+                    3,
+                    5
+                  ]
+                ],
+                "mlp_weights": [
+                  [
+                    2,
+                    4,
+                    6
+                  ]
+                ]
+              }
+            }
+          },
+          {
+            "lm_head": {
+              "tie_embedding": false
+            }
+          }
+        ]
+      },
+      "spec_sha256": "4ac205848cdb20975626a5655c38012830ae88a50a81e61a74ef107e4bcba16e"
+    },
+    {
+      "id": "q_pg_bigram",
+      "source_id": "pg_bigram",
+      "name": "PG · BigramHash + SmearGate · Q",
+      "kind": "自建Q版种子",
+      "note": "保留4物理层、Smear、初始混合与U形skip；bigram表缩为1024桶×32维。",
+      "sources": [
+        "https://github.com/openai/parameter-golf/tree/f5c079314c4877fbb0af378c0abade5a8ca33d3a/records/track_10min_16mb/2026-03-20_Int6_MLP3x_SmearGate_BigramHash_MuonWD_SWA"
+      ],
+      "dependencies": [
+        "torch"
+      ],
+      "status": "seed_unvalidated",
+      "spec": {
+        "vocab_size": 1024,
+        "d_model": 128,
+        "act": "gelu",
+        "forward": [
+          {
+            "layer_loop": {
+              "iteration": 4,
+              "body": [
+                {
+                  "type": "attention",
+                  "n_heads": 4,
+                  "qk_norm": "rms_norm"
+                },
+                {
+                  "type": "mlp",
+                  "hidden_dim": 384
+                }
+              ],
+              "smear": true,
+              "bigram_hash": {
+                "buckets": 1024,
+                "dim": 32
+              },
+              "residual": {
+                "initial_mix": true,
+                "unet_skip": true
+              }
+            }
+          },
+          {
+            "lm_head": {}
+          }
+        ]
+      },
+      "spec_sha256": "fb5cdea3dc4561c28bf484dd3443b0d6ea6481291b962bd543ed1b058b6f5768"
+    },
+    {
+      "id": "q_pg_recur",
+      "source_id": "pg_recur",
+      "name": "PG · MiniDepthRecurrence · Q",
+      "kind": "自建Q版种子",
+      "note": "4物理层、5次执行[1,2,3,3,4]；保留双流与重复调用的mlp.down独立参数。",
+      "sources": [
+        "https://github.com/openai/parameter-golf/tree/f5c079314c4877fbb0af378c0abade5a8ca33d3a/records/track_10min_16mb/2026-03-31_ParallelResiduals_MiniDepthRecurrence"
+      ],
+      "dependencies": [
+        "torch"
+      ],
+      "status": "seed_unvalidated",
+      "spec": {
+        "vocab_size": 1024,
+        "d_model": 128,
+        "act": "gelu",
+        "forward": [
+          {
+            "layer_loop": {
+              "iteration": 4,
+              "body": [
+                {
+                  "type": "attention",
+                  "n_heads": 4,
+                  "qk_norm": "rms_norm"
+                },
+                {
+                  "type": "mlp",
+                  "hidden_dim": 384
+                }
+              ],
+              "execution": [
+                1,
+                2,
+                3,
+                3,
+                4
+              ],
+              "repeat_untie": [
+                "mlp.down"
+              ],
+              "residual": {
+                "type": "dual_stream",
+                "initial_mix": true
+              }
+            }
+          },
+          {
+            "lm_head": {}
+          }
+        ]
+      },
+      "spec_sha256": "451d2d36555c7b603923bfac0ac09a8e0311b875b938ff97b7ca16dcf1efe1e1"
+    },
+    {
+      "id": "q_pg_xsa",
+      "source_id": "pg_xsa",
+      "name": "PG · XSA + PartialRoPE · Q",
+      "kind": "自建Q版种子",
+      "note": "4层，head_dim=32，rope_dim=16；仅半头旋转，保留XSA。",
+      "sources": [
+        "https://github.com/openai/parameter-golf/tree/f5c079314c4877fbb0af378c0abade5a8ca33d3a/records/track_10min_16mb/2026-03-21_11L_XSA4_EMA_PartialRoPE_LateQAT_1.1248"
+      ],
+      "dependencies": [
+        "torch"
+      ],
+      "status": "seed_unvalidated",
+      "spec": {
+        "vocab_size": 1024,
+        "d_model": 128,
+        "act": "gelu",
+        "forward": [
+          {
+            "layer_loop": {
+              "iteration": 4,
+              "body": [
+                {
+                  "type": "attention",
+                  "n_heads": 4,
+                  "rope_dim": 16,
+                  "xsa": true,
+                  "qk_norm": "rms_norm"
+                },
+                {
+                  "type": "mlp",
+                  "hidden_dim": 384
+                }
+              ]
+            }
+          },
+          {
+            "lm_head": {}
+          }
+        ]
+      },
+      "spec_sha256": "8834faff900ff06c5063e7aa49306056e78caedf8584c32dd2bbfe12d6c323a7"
+    },
+    {
+      "id": "q_pg_progressive",
+      "source_id": "pg_progressive",
+      "name": "PG · Recurrence + Parallel residual · Q",
+      "kind": "自建Q版种子",
+      "note": "4物理层、5次执行[1,2,2,3,4]；保留A/M并行残差。",
+      "sources": [
+        "https://github.com/openai/parameter-golf/tree/f5c079314c4877fbb0af378c0abade5a8ca33d3a/records/track_10min_16mb/2026-04-06_SP8192_HessianSDClip_ProgressiveRecurrence"
+      ],
+      "dependencies": [
+        "torch"
+      ],
+      "status": "seed_unvalidated",
+      "spec": {
+        "vocab_size": 1024,
+        "d_model": 128,
+        "act": "gelu",
+        "forward": [
+          {
+            "layer_loop": {
+              "iteration": 4,
+              "body": [
+                {
+                  "type": "attention",
+                  "n_heads": 4,
+                  "qk_norm": "rms_norm"
+                },
+                {
+                  "type": "mlp",
+                  "hidden_dim": 384
+                }
+              ],
+              "execution": [
+                1,
+                2,
+                2,
+                3,
+                4
+              ],
+              "residual": {
+                "type": "parallel"
+              }
+            }
+          },
+          {
+            "lm_head": {}
+          }
+        ]
+      },
+      "spec_sha256": "1a97a8ced296e5ca7283d9454d5423248fd0c3791c690437b197a2e2110d7281"
+    },
+    {
+      "id": "q_pg_outputgate",
+      "source_id": "pg_outputgate",
+      "name": "PG · Attention output gate · Q",
+      "kind": "自建Q版种子",
+      "note": "4层，保留attention output gate、QK norm与Smear。",
+      "sources": [
+        "https://github.com/openai/parameter-golf/tree/f5c079314c4877fbb0af378c0abade5a8ca33d3a/records/track_10min_16mb/2026-04-16_SmearGate_AttentionOutputGate_ScoreFirstTTT"
+      ],
+      "dependencies": [
+        "torch"
+      ],
+      "status": "seed_unvalidated",
+      "spec": {
+        "vocab_size": 1024,
+        "d_model": 128,
+        "act": "gelu",
+        "forward": [
+          {
+            "layer_loop": {
+              "iteration": 4,
+              "body": [
+                {
+                  "type": "attention",
+                  "n_heads": 4,
+                  "output_gate": true,
+                  "qk_norm": "rms_norm"
+                },
+                {
+                  "type": "mlp",
+                  "hidden_dim": 384
+                }
+              ],
+              "smear": true
+            }
+          },
+          {
+            "lm_head": {}
+          }
+        ]
+      },
+      "spec_sha256": "4380c85e6e50bd78d839f397bd901443cd457f210f6c8c28c9b1eefb4f2c2436"
+    },
+    {
+      "id": "q_oe_mlp",
+      "source_id": "oe_mlp",
+      "name": "Over-encoding · MLP gate · Q",
+      "kind": "自建Q版种子",
+      "note": "4层；保留2/3-gram、每阶2个哈希头、A/M位置1/5/6注入与MLP门；每表512桶，控制独立多位置表的总容量。",
+      "sources": [
+        "https://github.com/deepseek-ai/Engram/blob/main/engram_demo_v1.py"
+      ],
+      "dependencies": [
+        "torch"
+      ],
+      "status": "seed_unvalidated",
+      "spec": {
+        "vocab_size": 1024,
+        "d_model": 128,
+        "act": "silu",
+        "over-encoding": {
+          "ngram": [
+            2,
+            3
+          ],
+          "heads": 2,
+          "buckets": 512,
+          "layers": [
+            1,
+            5,
+            6
+          ],
+          "gate": "mlp"
+        },
+        "forward": [
+          {
+            "layer_loop": {
+              "iteration": 4,
+              "body": [
+                {
+                  "type": "attention",
+                  "n_heads": 4
+                },
+                {
+                  "type": "mlp",
+                  "hidden_dim": 256,
+                  "gated": true
+                }
+              ]
+            }
+          },
+          {
+            "lm_head": {}
+          }
+        ]
+      },
+      "spec_sha256": "364c1734e04d8c5664cc5eed77cfcbf937f4337acc62d872fbb646a3b8df9e7d"
+    }
+  ]
+}

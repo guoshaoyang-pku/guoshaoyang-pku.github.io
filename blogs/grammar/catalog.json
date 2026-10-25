@@ -1,0 +1,1171 @@
+{
+  "version": "setting-v1.4-draft",
+  "date": "2026-10-23",
+  "default_contract": "A/M norm inheritance: module > layer_loop > root > pre_rms_norm; eps=1e-5; standard residual; independent depth parameters; causal attention; gated=false; lm_head norm=rms_norm,tie_embedding=true; time_loop zero state/shared parameters; mHC streams=4,sinkhorn_iters=20,eps=1e-6; AttnRes without block_size=Full",
+  "sources": {
+    "gpt": "https://huggingface.co/openai-community/gpt2/blob/main/config.json",
+    "bert": "https://huggingface.co/google-bert/bert-base-uncased/blob/main/config.json",
+    "llama": "https://github.com/meta-pytorch/gpt-fast/blob/main/model.py",
+    "llamacode": "https://github.com/meta-llama/llama3/blob/main/llama/model.py",
+    "qwen": "https://huggingface.co/Qwen/Qwen3-0.6B/blob/main/config.json",
+    "mixtral": "https://huggingface.co/mistralai/Mixtral-8x7B-v0.1/blob/main/config.json",
+    "mamba": "https://huggingface.co/state-spaces/mamba-130m/blob/main/config.json",
+    "mambacode": "https://github.com/state-spaces/mamba/blob/main/mamba_ssm/modules/mamba_simple.py",
+    "kimi": "https://huggingface.co/moonshotai/Kimi-Linear-48B-A3B-Instruct/blob/main/config.json",
+    "kimicode": "https://huggingface.co/moonshotai/Kimi-Linear-48B-A3B-Instruct/blob/main/modeling_kimi.py",
+    "attnres": "https://github.com/MoonshotAI/Attention-Residuals",
+    "v4": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash/blob/main/config.json",
+    "v4code": "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash/blob/main/inference/model.py",
+    "v41": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash-1017/blob/main/inference/model.py"
+  },
+  "models": [
+    {
+      "id": "gpt2",
+      "name": "GPT-2",
+      "spec": {
+        "vocab_size": 50257,
+        "d_model": 768,
+        "act": "gelu_new",
+        "forward": [
+          {
+            "layer_loop": {
+              "iteration": 12,
+              "body": [
+                {
+                  "type": "attention",
+                  "n_heads": 12
+                },
+                {
+                  "type": "mlp",
+                  "hidden_dim": 3072
+                }
+              ]
+            }
+          },
+          {
+            "lm_head": {
+              "norm": "layer_norm"
+            }
+          }
+        ],
+        "norm": "pre_layer_norm"
+      },
+      "note": "保留主干宽度、层数和 Pre-LN；本版固定位置机制，未复刻原始绝对位置、bias/dropout。",
+      "sources": [
+        "https://huggingface.co/openai-community/gpt2/blob/main/config.json"
+      ],
+      "kind": "论文主干投影"
+    },
+    {
+      "id": "rnn",
+      "name": "MLP-RNN",
+      "spec": {
+        "vocab_size": 1024,
+        "d_model": 256,
+        "act": "tanh",
+        "forward": [
+          {
+            "time_loop": {
+              "state_dim": 256,
+              "body": [
+                {
+                  "type": "mlp",
+                  "input": [
+                    "token",
+                    "state"
+                  ],
+                  "merge": "concat",
+                  "hidden_dim": 512,
+                  "out_dim": 256,
+                  "output": "state"
+                }
+              ]
+            }
+          },
+          {
+            "lm_head": {
+              "tie_embedding": false,
+              "norm": "none"
+            }
+          }
+        ]
+      },
+      "note": "设计原型；time_loop 默认零状态、时间步共享、收集每步新状态。MLP 中间使用 act，最后线性输出。无 Transformer 残差。",
+      "sources": [],
+      "kind": "设计原型"
+    },
+    {
+      "id": "bert",
+      "name": "BERT-base",
+      "spec": {
+        "vocab_size": 30522,
+        "d_model": 768,
+        "act": "gelu",
+        "forward": [
+          {
+            "layer_loop": {
+              "iteration": 12,
+              "body": [
+                {
+                  "type": "attention",
+                  "n_heads": 12,
+                  "causal": false
+                },
+                {
+                  "type": "mlp",
+                  "hidden_dim": 3072
+                }
+              ]
+            }
+          },
+          {
+            "lm_head": {
+              "transform": true,
+              "norm": "layer_norm"
+            }
+          }
+        ],
+        "norm": "post_layer_norm"
+      },
+      "note": "双向与 Post-LN；本版暂不搜索原始绝对位置、句段嵌入、embedding norm、eps差异。MLM 的训练目标在模型JSON外。",
+      "sources": [
+        "https://huggingface.co/google-bert/bert-base-uncased/blob/main/config.json"
+      ],
+      "kind": "论文主干投影"
+    },
+    {
+      "id": "llama3",
+      "name": "Llama 3 · 8B",
+      "spec": {
+        "vocab_size": 128256,
+        "d_model": 4096,
+        "act": "silu",
+        "forward": [
+          {
+            "layer_loop": {
+              "iteration": 32,
+              "body": [
+                {
+                  "type": "attention",
+                  "n_heads": 32,
+                  "gqa_kvheads": 8
+                },
+                {
+                  "type": "mlp",
+                  "hidden_dim": 14336,
+                  "gated": true
+                }
+              ]
+            }
+          },
+          {
+            "lm_head": {
+              "tie_embedding": false
+            }
+          }
+        ]
+      },
+      "note": "固定保留的语法回归样本。尺寸由 Meta 的 gpt-fast 配置核对；本版省略 RoPE theta=500000 等尚未开放项。",
+      "sources": [
+        "https://github.com/meta-pytorch/gpt-fast/blob/main/model.py",
+        "https://github.com/meta-llama/llama3/blob/main/llama/model.py"
+      ],
+      "kind": "论文主干投影"
+    },
+    {
+      "id": "qwen3",
+      "name": "Qwen3 · 0.6B",
+      "spec": {
+        "vocab_size": 151936,
+        "d_model": 1024,
+        "act": "silu",
+        "forward": [
+          {
+            "layer_loop": {
+              "iteration": 28,
+              "body": [
+                {
+                  "type": "attention",
+                  "n_heads": 16,
+                  "gqa_kvheads": 8,
+                  "head_dim": 128,
+                  "qk_norm": "rms_norm"
+                },
+                {
+                  "type": "mlp",
+                  "hidden_dim": 3072,
+                  "gated": true
+                }
+              ]
+            }
+          },
+          {
+            "lm_head": {}
+          }
+        ]
+      },
+      "note": "head_dim 显式为128，不能从 d_model/n_heads 推导；加入独立Q/K归一化。eps和RoPE细节仍固定。",
+      "sources": [
+        "https://huggingface.co/Qwen/Qwen3-0.6B/blob/main/config.json"
+      ],
+      "kind": "论文主干投影"
+    },
+    {
+      "id": "mixtral",
+      "name": "Mixtral · 8×7B",
+      "spec": {
+        "vocab_size": 32000,
+        "d_model": 4096,
+        "act": "silu",
+        "forward": [
+          {
+            "layer_loop": {
+              "iteration": 32,
+              "body": [
+                {
+                  "type": "attention",
+                  "n_heads": 32,
+                  "gqa_kvheads": 8
+                },
+                {
+                  "type": "moe",
+                  "n_experts": 8,
+                  "top_k": [
+                    2,
+                    0
+                  ],
+                  "expert": {
+                    "hidden_dim": 14336,
+                    "gated": true
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "lm_head": {
+              "tie_embedding": false
+            }
+          }
+        ]
+      },
+      "note": "8个路由专家，无共享专家，每token选2个；默认router为softmax，选中权重归一化。",
+      "sources": [
+        "https://huggingface.co/mistralai/Mixtral-8x7B-v0.1/blob/main/config.json"
+      ],
+      "kind": "论文主干投影"
+    },
+    {
+      "id": "loop_moe",
+      "name": "MoE + Loop",
+      "spec": {
+        "vocab_size": 32000,
+        "d_model": 4096,
+        "act": "silu",
+        "forward": [
+          {
+            "layer_loop": {
+              "iteration": 32,
+              "body": [
+                {
+                  "type": "attention",
+                  "n_heads": 32,
+                  "gqa_kvheads": 8
+                },
+                {
+                  "type": "moe",
+                  "n_experts": 8,
+                  "top_k": [
+                    2,
+                    0
+                  ],
+                  "expert": {
+                    "hidden_dim": 14336,
+                    "gated": true
+                  }
+                }
+              ],
+              "share_weights": true
+            }
+          },
+          {
+            "lm_head": {
+              "tie_embedding": false
+            }
+          }
+        ]
+      },
+      "note": "构造对照：相同选择项的参数跨深度复用；缓存仍按逻辑层实例隔离。不是发布的Mixtral检查点。",
+      "sources": [
+        "https://huggingface.co/mistralai/Mixtral-8x7B-v0.1/blob/main/config.json"
+      ],
+      "kind": "设计原型"
+    },
+    {
+      "id": "mamba",
+      "name": "Mamba · 130M",
+      "spec": {
+        "vocab_size": 50280,
+        "d_model": 768,
+        "act": "silu",
+        "forward": [
+          {
+            "layer_loop": {
+              "iteration": 24,
+              "body": [
+                {
+                  "type": "mamba",
+                  "d_state": 16,
+                  "conv_size": 4,
+                  "expand": 2
+                }
+              ]
+            }
+          },
+          {
+            "lm_head": {}
+          }
+        ]
+      },
+      "note": "纯Mamba允许没有M槽位。词表50277按官方pad_vocab_size_multiple=8补齐至50280；扫描kernel内部固有算法由模块注册表绑定。",
+      "sources": [
+        "https://huggingface.co/state-spaces/mamba-130m/blob/main/config.json",
+        "https://github.com/state-spaces/mamba/blob/main/mamba_ssm/modules/mamba_simple.py"
+      ],
+      "kind": "论文主干投影"
+    },
+    {
+      "id": "kda",
+      "name": "纯 KDA",
+      "spec": {
+        "vocab_size": 1024,
+        "d_model": 256,
+        "act": "silu",
+        "forward": [
+          {
+            "layer_loop": {
+              "iteration": 6,
+              "body": [
+                {
+                  "type": "kda",
+                  "n_heads": 4,
+                  "head_dim": 64,
+                  "conv_size": 4
+                },
+                {
+                  "type": "mlp",
+                  "hidden_dim": 768,
+                  "gated": true
+                }
+              ]
+            }
+          },
+          {
+            "lm_head": {}
+          }
+        ]
+      },
+      "note": "纯KDA构造原型；不是Kimi Linear发布配置。",
+      "sources": [
+        "https://huggingface.co/moonshotai/Kimi-Linear-48B-A3B-Instruct/blob/main/modeling_kimi.py"
+      ],
+      "kind": "设计原型"
+    },
+    {
+      "id": "kimi",
+      "name": "Kimi Linear · 48B-A3B",
+      "spec": {
+        "vocab_size": 163840,
+        "d_model": 2304,
+        "act": "silu",
+        "forward": [
+          {
+            "layer_loop": {
+              "iteration": 27,
+              "body": [
+                {
+                  "type": "kda",
+                  "n_heads": 32,
+                  "head_dim": 128,
+                  "conv_size": 4
+                },
+                {
+                  "type": "mla",
+                  "layers": [
+                    "array(4,4,6)",
+                    27
+                  ],
+                  "n_heads": 32,
+                  "kv_rank": 512,
+                  "qk_nope_dim": 128,
+                  "qk_shared_dim": 64,
+                  "v_head_dim": 128,
+                  "position": "none"
+                },
+                {
+                  "type": "moe",
+                  "n_experts": 257,
+                  "top_k": [
+                    9,
+                    1
+                  ],
+                  "expert": {
+                    "hidden_dim": 1024,
+                    "gated": true
+                  },
+                  "router": {
+                    "score": "sigmoid",
+                    "correction_bias": true,
+                    "scale": 2.446
+                  }
+                },
+                {
+                  "type": "mlp",
+                  "hidden_dim": 9216,
+                  "gated": true,
+                  "layers": [
+                    1
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "lm_head": {
+              "tie_embedding": false
+            }
+          }
+        ]
+      },
+      "note": "27层：20 KDA + 7 MLA；第1层dense，其后MoE。256路由+1共享，激活8路由+1共享，故top_k=[9,1]。MLA实际不应用RoPE；qk_shared_dim对应官方qk_rope_head_dim的64维共享分支，名称不代表使用旋转位置编码。保留router sigmoid、选择校正偏置、路由输出scale。",
+      "sources": [
+        "https://huggingface.co/moonshotai/Kimi-Linear-48B-A3B-Instruct/blob/main/config.json",
+        "https://huggingface.co/moonshotai/Kimi-Linear-48B-A3B-Instruct/blob/main/modeling_kimi.py"
+      ],
+      "kind": "论文主干投影"
+    },
+    {
+      "id": "full_attnres",
+      "name": "Kimi 主干 + Full AttnRes",
+      "spec": {
+        "vocab_size": 163840,
+        "d_model": 2304,
+        "act": "silu",
+        "forward": [
+          {
+            "layer_loop": {
+              "iteration": 27,
+              "body": [
+                {
+                  "type": "kda",
+                  "n_heads": 32,
+                  "head_dim": 128,
+                  "conv_size": 4
+                },
+                {
+                  "type": "mla",
+                  "layers": [
+                    "array(4,4,6)",
+                    27
+                  ],
+                  "n_heads": 32,
+                  "kv_rank": 512,
+                  "qk_nope_dim": 128,
+                  "qk_shared_dim": 64,
+                  "v_head_dim": 128,
+                  "position": "none"
+                },
+                {
+                  "type": "moe",
+                  "n_experts": 257,
+                  "top_k": [
+                    9,
+                    1
+                  ],
+                  "expert": {
+                    "hidden_dim": 1024,
+                    "gated": true
+                  },
+                  "router": {
+                    "score": "sigmoid",
+                    "correction_bias": true,
+                    "scale": 2.446
+                  }
+                },
+                {
+                  "type": "mlp",
+                  "hidden_dim": 9216,
+                  "gated": true,
+                  "layers": [
+                    1
+                  ]
+                }
+              ],
+              "residual": {
+                "type": "attnres"
+              }
+            }
+          },
+          {
+            "lm_head": {
+              "tie_embedding": false
+            }
+          }
+        ]
+      },
+      "note": "机制组合原型。每个A/M子层以独立learned pseudo-query在深度上读取此前输出；不是声称复刻论文训练检查点。",
+      "sources": [
+        "https://github.com/MoonshotAI/Attention-Residuals"
+      ],
+      "kind": "机制组合原型"
+    },
+    {
+      "id": "block_attnres",
+      "name": "Kimi 主干 + Block AttnRes",
+      "spec": {
+        "vocab_size": 163840,
+        "d_model": 2304,
+        "act": "silu",
+        "forward": [
+          {
+            "layer_loop": {
+              "iteration": 27,
+              "body": [
+                {
+                  "type": "kda",
+                  "n_heads": 32,
+                  "head_dim": 128,
+                  "conv_size": 4
+                },
+                {
+                  "type": "mla",
+                  "layers": [
+                    "array(4,4,6)",
+                    27
+                  ],
+                  "n_heads": 32,
+                  "kv_rank": 512,
+                  "qk_nope_dim": 128,
+                  "qk_shared_dim": 64,
+                  "v_head_dim": 128,
+                  "position": "none"
+                },
+                {
+                  "type": "moe",
+                  "n_experts": 257,
+                  "top_k": [
+                    9,
+                    1
+                  ],
+                  "expert": {
+                    "hidden_dim": 1024,
+                    "gated": true
+                  },
+                  "router": {
+                    "score": "sigmoid",
+                    "correction_bias": true,
+                    "scale": 2.446
+                  }
+                },
+                {
+                  "type": "mlp",
+                  "hidden_dim": 9216,
+                  "gated": true,
+                  "layers": [
+                    1
+                  ]
+                }
+              ],
+              "residual": {
+                "type": "attnres",
+                "block_size": 8
+              }
+            }
+          },
+          {
+            "lm_head": {
+              "tie_embedding": false
+            }
+          }
+        ]
+      },
+      "note": "block_size=8按A/M子层计数，即4个AM层；最后可有不完整block。已完成块表示和当前块部分和构成候选源。",
+      "sources": [
+        "https://github.com/MoonshotAI/Attention-Residuals"
+      ],
+      "kind": "机制组合原型"
+    },
+    {
+      "id": "deepseek_v4",
+      "name": "DeepSeek V4 · Flash",
+      "spec": {
+        "vocab_size": 129280,
+        "d_model": 4096,
+        "act": "silu",
+        "forward": [
+          {
+            "layer_loop": {
+              "iteration": 43,
+              "residual": {
+                "type": "mhc"
+              },
+              "body": [
+                {
+                  "type": "csa",
+                  "n_heads": 64,
+                  "head_dim": 512,
+                  "q_rank": 1024,
+                  "o_rank": 1024,
+                  "o_groups": 8,
+                  "rope_dim": 64,
+                  "window": 128,
+                  "compression": 4,
+                  "indexer": {
+                    "n_heads": 64,
+                    "head_dim": 128,
+                    "top_k": 512
+                  }
+                },
+                {
+                  "type": "sliding_attention",
+                  "n_heads": 64,
+                  "head_dim": 512,
+                  "q_rank": 1024,
+                  "o_rank": 1024,
+                  "o_groups": 8,
+                  "rope_dim": 64,
+                  "window": 128,
+                  "layers": [
+                    1,
+                    2
+                  ]
+                },
+                {
+                  "type": "hca",
+                  "n_heads": 64,
+                  "head_dim": 512,
+                  "q_rank": 1024,
+                  "o_rank": 1024,
+                  "o_groups": 8,
+                  "rope_dim": 64,
+                  "window": 128,
+                  "layers": "array(4,2)",
+                  "compression": 128
+                },
+                {
+                  "type": "moe",
+                  "n_experts": 257,
+                  "top_k": [
+                    7,
+                    1
+                  ],
+                  "expert": {
+                    "hidden_dim": 2048,
+                    "gated": true
+                  },
+                  "router": {
+                    "score": "sqrtsoftplus",
+                    "scale": 1.5,
+                    "hash_layers": [
+                      1,
+                      2,
+                      3
+                    ]
+                  },
+                  "swiglu_limit": 10
+                }
+              ]
+            }
+          },
+          {
+            "lm_head": {
+              "tie_embedding": false
+            }
+          }
+        ]
+      },
+      "note": "43主干层；1–2滑窗，之后CSA(ratio4)与HCA(ratio128)交替。mHC默认4条流；前3层hash路由。未展开MTP、低精度执行和YaRN等配置；官方参考代码未启用本页share关系。主干eps固定1e-5与官方1e-6存在差异。",
+      "sources": [
+        "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash/blob/main/config.json",
+        "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash/blob/main/inference/model.py"
+      ],
+      "kind": "论文主干投影",
+      "search_policy": {
+        "groups": [
+          {
+            "id": "moe",
+            "scope": "/forward/0/layer_loop/body/3",
+            "members": [
+              "type",
+              "n_experts",
+              "top_k",
+              "expert"
+            ],
+            "weak_lock": [
+              "router",
+              "swiglu_limit"
+            ],
+            "entry_weight": 0.05,
+            "weak_weight": 0.1,
+            "inner_steps": 4
+          }
+        ]
+      }
+    },
+    {
+      "id": "v4_shared",
+      "name": "V4 主干 + 跨层复用",
+      "spec": {
+        "vocab_size": 129280,
+        "d_model": 4096,
+        "act": "silu",
+        "forward": [
+          {
+            "layer_loop": {
+              "iteration": 43,
+              "residual": {
+                "type": "mhc"
+              },
+              "body": [
+                {
+                  "type": "csa",
+                  "n_heads": 64,
+                  "head_dim": 512,
+                  "q_rank": 1024,
+                  "o_rank": 1024,
+                  "o_groups": 8,
+                  "rope_dim": 64,
+                  "window": 128,
+                  "compression": 4,
+                  "indexer": {
+                    "n_heads": 64,
+                    "head_dim": 128,
+                    "top_k": 512
+                  }
+                },
+                {
+                  "type": "sliding_attention",
+                  "n_heads": 64,
+                  "head_dim": 512,
+                  "q_rank": 1024,
+                  "o_rank": 1024,
+                  "o_groups": 8,
+                  "rope_dim": 64,
+                  "window": 128,
+                  "layers": [
+                    1,
+                    2
+                  ]
+                },
+                {
+                  "type": "hca",
+                  "n_heads": 64,
+                  "head_dim": 512,
+                  "q_rank": 1024,
+                  "o_rank": 1024,
+                  "o_groups": 8,
+                  "rope_dim": 64,
+                  "window": 128,
+                  "layers": "array(4,2)",
+                  "compression": 128
+                },
+                {
+                  "type": "moe",
+                  "n_experts": 257,
+                  "top_k": [
+                    7,
+                    1
+                  ],
+                  "expert": {
+                    "hidden_dim": 2048,
+                    "gated": true
+                  },
+                  "router": {
+                    "score": "sqrtsoftplus",
+                    "scale": 1.5,
+                    "hash_layers": [
+                      1,
+                      2,
+                      3
+                    ]
+                  },
+                  "swiglu_limit": 10
+                }
+              ],
+              "share": {
+                "compressed_kv": [
+                  [
+                    3,
+                    5,
+                    7
+                  ]
+                ],
+                "index_k": [
+                  [
+                    3,
+                    5,
+                    7
+                  ]
+                ],
+                "topk": [
+                  [
+                    3,
+                    5,
+                    7
+                  ]
+                ]
+              }
+            }
+          },
+          {
+            "lm_head": {
+              "tie_embedding": false
+            }
+          }
+        ]
+      },
+      "note": "语法能力示例，不是官方V4或V4.1配置。第3层产生压缩KV/索引键/top-k，第5、7层消费；三个关系独立，已显式选择共享三者。共享KV时复用源层位置编码后的状态，不再按消费层输入重新投影。",
+      "sources": [
+        "https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash/blob/main/inference/model.py",
+        "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash-1017/blob/main/inference/model.py"
+      ],
+      "kind": "机制组合原型",
+      "search_policy": {
+        "groups": [
+          {
+            "id": "moe",
+            "scope": "/forward/0/layer_loop/body/3",
+            "members": [
+              "type",
+              "n_experts",
+              "top_k",
+              "expert"
+            ],
+            "weak_lock": [
+              "router",
+              "swiglu_limit"
+            ],
+            "entry_weight": 0.05,
+            "weak_weight": 0.1,
+            "inner_steps": 4
+          }
+        ]
+      }
+    },
+    {
+      "id": "llama_shared",
+      "name": "Llama 3 + 局部参数复用",
+      "spec": {
+        "vocab_size": 128256,
+        "d_model": 4096,
+        "act": "silu",
+        "forward": [
+          {
+            "layer_loop": {
+              "iteration": 32,
+              "body": [
+                {
+                  "type": "attention",
+                  "n_heads": 32,
+                  "gqa_kvheads": 8
+                },
+                {
+                  "type": "mlp",
+                  "hidden_dim": 14336,
+                  "gated": true
+                }
+              ],
+              "share": {
+                "attn_weights": [
+                  [
+                    1,
+                    3,
+                    5
+                  ]
+                ],
+                "mlp_weights": [
+                  [
+                    2,
+                    4,
+                    6
+                  ]
+                ]
+              }
+            }
+          },
+          {
+            "lm_head": {
+              "tie_embedding": false
+            }
+          }
+        ]
+      },
+      "note": "语法能力示例：只绑定指定层的子层权重，KV缓存仍按逻辑层独立。",
+      "sources": [
+        "https://github.com/meta-llama/llama3/blob/main/llama/model.py"
+      ],
+      "kind": "设计原型"
+    },
+    {
+      "id": "pg_bigram",
+      "name": "PG · BigramHash + SmearGate",
+      "kind": "来源机制原型",
+      "spec": {
+        "vocab_size": 1024,
+        "d_model": 256,
+        "act": "gelu",
+        "forward": [
+          {
+            "layer_loop": {
+              "iteration": 4,
+              "body": [
+                {
+                  "type": "attention",
+                  "n_heads": 4,
+                  "qk_norm": "rms_norm"
+                },
+                {
+                  "type": "mlp",
+                  "hidden_dim": 768
+                }
+              ],
+              "smear": true,
+              "bigram_hash": {
+                "buckets": 4096,
+                "dim": 128
+              },
+              "residual": {
+                "initial_mix": true,
+                "unet_skip": true
+              }
+            }
+          },
+          {
+            "lm_head": {}
+          }
+        ]
+      },
+      "note": "覆盖输入二元哈希、相邻 token 门控、初始 embedding 混合和 U-Net 跳连。 本例为统一小规模机制投影，非原 checkpoint/完整训练程序，未运行训练或模型测试。",
+      "sources": [
+        "https://github.com/openai/parameter-golf/tree/f5c079314c4877fbb0af378c0abade5a8ca33d3a/records/track_10min_16mb/2026-03-20_Int6_MLP3x_SmearGate_BigramHash_MuonWD_SWA"
+      ]
+    },
+    {
+      "id": "pg_recur",
+      "name": "PG · MiniDepthRecurrence",
+      "kind": "来源机制原型",
+      "spec": {
+        "vocab_size": 1024,
+        "d_model": 256,
+        "act": "gelu",
+        "forward": [
+          {
+            "layer_loop": {
+              "iteration": 4,
+              "body": [
+                {
+                  "type": "attention",
+                  "n_heads": 4,
+                  "qk_norm": "rms_norm"
+                },
+                {
+                  "type": "mlp",
+                  "hidden_dim": 768
+                }
+              ],
+              "execution": [
+                1,
+                2,
+                3,
+                3,
+                4
+              ],
+              "repeat_untie": [
+                "mlp.down"
+              ],
+              "residual": {
+                "type": "dual_stream",
+                "initial_mix": true
+              }
+            }
+          },
+          {
+            "lm_head": {}
+          }
+        ]
+      },
+      "note": "覆盖物理层复用、重复调用独立 MLP 下投影和顺序读写双流。norm/分支缩放按执行位置独立；未复刻候选的可选 value embedding、canon 残差和门控 skip。 本例为统一小规模机制投影，非原 checkpoint/完整训练程序，未运行训练或模型测试。",
+      "sources": [
+        "https://github.com/openai/parameter-golf/tree/f5c079314c4877fbb0af378c0abade5a8ca33d3a/records/track_10min_16mb/2026-03-31_ParallelResiduals_MiniDepthRecurrence"
+      ]
+    },
+    {
+      "id": "pg_xsa",
+      "name": "PG · XSA + PartialRoPE",
+      "kind": "来源机制原型",
+      "spec": {
+        "vocab_size": 1024,
+        "d_model": 256,
+        "act": "gelu",
+        "forward": [
+          {
+            "layer_loop": {
+              "iteration": 4,
+              "body": [
+                {
+                  "type": "attention",
+                  "n_heads": 4,
+                  "rope_dim": 32,
+                  "xsa": true,
+                  "qk_norm": "rms_norm"
+                },
+                {
+                  "type": "mlp",
+                  "hidden_dim": 768
+                }
+              ]
+            }
+          },
+          {
+            "lm_head": {}
+          }
+        ]
+      },
+      "note": "覆盖 self-value 方向投影扣除和部分 RoPE；XSA 本例应用所有层，未声称复刻候选末四层布局。 本例为统一小规模机制投影，非原 checkpoint/完整训练程序，未运行训练或模型测试。",
+      "sources": [
+        "https://github.com/openai/parameter-golf/tree/f5c079314c4877fbb0af378c0abade5a8ca33d3a/records/track_10min_16mb/2026-03-21_11L_XSA4_EMA_PartialRoPE_LateQAT_1.1248"
+      ]
+    },
+    {
+      "id": "pg_progressive",
+      "name": "PG · Recurrence + Parallel residual",
+      "kind": "来源机制原型",
+      "spec": {
+        "vocab_size": 1024,
+        "d_model": 256,
+        "act": "gelu",
+        "forward": [
+          {
+            "layer_loop": {
+              "iteration": 4,
+              "body": [
+                {
+                  "type": "attention",
+                  "n_heads": 4,
+                  "qk_norm": "rms_norm"
+                },
+                {
+                  "type": "mlp",
+                  "hidden_dim": 768
+                }
+              ],
+              "execution": [
+                1,
+                2,
+                2,
+                3,
+                4
+              ],
+              "residual": {
+                "type": "parallel"
+              }
+            }
+          },
+          {
+            "lm_head": {}
+          }
+        ]
+      },
+      "note": "表示 progressive recurrence 的一个静态执行快照；训练期间递增的日程不在静态 setting。原 README 为 non-record。 本例为统一小规模机制投影，非原 checkpoint/完整训练程序，未运行训练或模型测试。",
+      "sources": [
+        "https://github.com/openai/parameter-golf/tree/f5c079314c4877fbb0af378c0abade5a8ca33d3a/records/track_10min_16mb/2026-04-06_SP8192_HessianSDClip_ProgressiveRecurrence"
+      ]
+    },
+    {
+      "id": "pg_outputgate",
+      "name": "PG · Attention output gate",
+      "kind": "来源机制原型",
+      "spec": {
+        "vocab_size": 1024,
+        "d_model": 256,
+        "act": "gelu",
+        "forward": [
+          {
+            "layer_loop": {
+              "iteration": 4,
+              "body": [
+                {
+                  "type": "attention",
+                  "n_heads": 4,
+                  "output_gate": true,
+                  "qk_norm": "rms_norm"
+                },
+                {
+                  "type": "mlp",
+                  "hidden_dim": 768
+                }
+              ],
+              "smear": true
+            }
+          },
+          {
+            "lm_head": {}
+          }
+        ]
+      },
+      "note": "覆盖基于归一化 attention 输入、全宽线性映射的逐头 2·sigmoid 输出门控；不包含 Q-source/窄门宽选项或 Score-first TTT。 本例为统一小规模机制投影，非原 checkpoint/完整训练程序，未运行训练或模型测试。",
+      "sources": [
+        "https://github.com/openai/parameter-golf/tree/f5c079314c4877fbb0af378c0abade5a8ca33d3a/records/track_10min_16mb/2026-04-16_SmearGate_AttentionOutputGate_ScoreFirstTTT"
+      ]
+    },
+    {
+      "id": "oe_mlp",
+      "name": "Over-encoding · MLP gate",
+      "kind": "构造机制原型",
+      "spec": {
+        "vocab_size": 1024,
+        "d_model": 256,
+        "act": "silu",
+        "over-encoding": {
+          "ngram": [
+            2,
+            3
+          ],
+          "heads": 2,
+          "buckets": 4096,
+          "layers": [
+            1,
+            5,
+            6
+          ],
+          "gate": "mlp"
+        },
+        "forward": [
+          {
+            "layer_loop": {
+              "iteration": 4,
+              "body": [
+                {
+                  "type": "attention",
+                  "n_heads": 4
+                },
+                {
+                  "type": "mlp",
+                  "hidden_dim": 768,
+                  "gated": true
+                }
+              ]
+            }
+          },
+          {
+            "lm_head": {}
+          }
+        ]
+      },
+      "note": "用户定义的 ngram 哈希增广 + main-only MLP gate；不是官方 Engram gate。A/M 按展开后执行位置编号，操作之前注入；各位置独立表与投影。固定哈希，buckets 为每阶每头精确容量。每阶总宽 d_model，heads 均分，所有阶拼接再投影。门控 RMSNorm→Linear(d,d//4)→全局 act→Linear(...,1)→sigmoid。",
+      "sources": [
+        "https://github.com/deepseek-ai/Engram/blob/main/engram_demo_v1.py"
+      ]
+    }
+  ]
+}
