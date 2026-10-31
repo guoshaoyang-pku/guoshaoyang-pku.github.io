@@ -1,0 +1,1495 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>训练时间一长，结论会翻：2 分钟要快，10 分钟要大</title>
+<style>
+  :root {
+    --dark: #141413;   /* primary text */
+    --light: #faf9f5;  /* page background */
+    --mid: #b0aea5;    /* borders, axes */
+    --soft: #e8e6dc;   /* subtle fills */
+    --muted: #5e5d59;  /* secondary text (darker than --mid for contrast) */
+    --orange: #d97757; /* primary accent: the main result */
+    --blue: #6a9bcc;   /* secondary accent */
+    --green: #788c5d;  /* tertiary accent */
+    --head: "Poppins", "PingFang SC", "Noto Sans CJK SC", "Hiragino Sans GB", Arial, sans-serif;
+    --body: "Lora", "Noto Serif CJK SC", "Songti SC", Georgia, serif;
+    --mono: "SF Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--light); color: var(--dark); font: 17px/1.8 var(--body); }
+  main { max-width: 760px; margin: 0 auto; padding: 72px 24px 96px; }
+  h1, h2, h3 { font-family: var(--head); font-weight: 600; line-height: 1.35; letter-spacing: -0.01em; }
+  h1 { font-size: 32px; margin: 0 0 16px; }
+  h2 { font-size: 22px; margin: 64px 0 12px; }
+  p { margin: 0 0 16px; }
+  .lede { font-size: 19px; }
+  a { color: inherit; text-decoration: underline; text-decoration-color: var(--orange); text-underline-offset: 3px; }
+  code, .id { font-family: var(--mono); font-size: 0.86em; background: var(--soft); padding: 1px 5px; border-radius: 4px; }
+
+  /* L2 settings row: monochrome line icons + label, never color emoji */
+  .settings { display: flex; flex-wrap: wrap; gap: 8px 20px; list-style: none; padding: 0; margin: 24px 0 0;
+              font: 14px/1.6 var(--head); color: var(--muted); }
+  .settings li { display: inline-flex; align-items: center; gap: 6px; }
+  .settings svg { width: 15px; height: 15px; stroke: var(--dark); fill: none; stroke-width: 1.6;
+                  stroke-linecap: round; stroke-linejoin: round; }
+  .settings b { color: var(--dark); font-weight: 500; }
+
+  figure { margin: 28px 0; padding: 20px; background: #fff; border: 1px solid var(--soft); border-radius: 10px; }
+  figure img, figure svg.chart { display: block; width: 100%; height: auto; }
+  figcaption { margin-top: 12px; font: 14px/1.6 var(--head); color: var(--muted); }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font: 13px var(--head); color: var(--muted); margin-bottom: 8px; }
+  .legend i { display: inline-block; width: 14px; height: 2px; vertical-align: middle; margin-right: 6px; }
+
+  .warn { border-left: 3px solid var(--orange); padding: 4px 0 4px 16px; margin: 24px 0; }
+  .warn strong { font-family: var(--head); }
+
+  /* sample browser: compare outputs side by side */
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--soft); margin-bottom: 12px; }
+  .tabs button { font: 14px var(--head); background: none; border: 0; padding: 8px 12px; cursor: pointer;
+                 color: var(--muted); border-bottom: 2px solid transparent; }
+  .tabs button[aria-selected="true"] { color: var(--dark); border-bottom-color: var(--orange); }
+  .sample { display: none; white-space: pre-wrap; font: 14px/1.7 var(--mono); }
+  .sample.on { display: block; }
+
+  details { margin: 16px 0; }
+  summary { cursor: pointer; font: 15px var(--head); color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font: 14px/1.6 var(--head); margin: 16px 0; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--soft); }
+  th { font-weight: 500; color: var(--muted); }
+  footer { margin-top: 80px; font: 13px var(--head); color: var(--mid); }
+  .legend span { white-space: nowrap; }
+  .num { font-family: var(--mono); font-size: 0.86em; }
+  td { vertical-align: top; }
+</style>
+</head>
+<body>
+<main>
+<h1>训练时间一长，结论会翻：2 分钟要快，10 分钟要大</h1>
+<p class="lede">44 种 4–12 层结构，每种在 2 分钟和 10 分钟各跑 4 个种子。加宽 MLP 在 2 分钟时变差约 0.02，在 10 分钟时变好约 0.01；最好的 8 层在 2 分钟时比 4 层差 0.014，在 10 分钟时好 0.034。不随预算变的是层的分工：开头用局部混合，后段要有全注意力。</p>
+<ul class="settings">
+<li><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18M12 7v5l3 2"/></svg>训练 <b>120 秒和 600 秒 · 1 张 RTX PRO 5000</b></li>
+<li><svg viewBox="0 0 24 24"><path d="M4 19l5-7 4 4 7-10"/></svg>分数 <b>最后 64 步训练 loss，越低越好</b></li>
+<li><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>数据 <b>FineWeb · 1024 词表 · 序列长 256</b></li>
+<li><svg viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4"/></svg>种子 <b>42–45</b></li>
+<li><svg viewBox="0 0 24 24"><path d="M5 5h14v14H5zM9 1v4M15 1v4M9 19v4M15 19v4"/></svg>模型 <b>宽 256 · softcap 15 · 学习率 0.01</b></li>
+</ul>
+<h2>前 4 层：开头放全注意力差 0.057，只放 MLP 差约 0.09；加宽 MLP 在 2 分钟变差、10 分钟变好</h2>
+<p>层用字母表示：C 短卷积，A 全注意力，G 为 GDN，I 表示跳过混合。后 4 层固定为 G·A·G·A（MLP ×12），前 4 层换 17 种排法。中心模型是 C·A·G·A·G·A·G·A，120 秒 2.7020，600 秒 2.5298。前 4 层全用全注意力，两种预算都明显更差（+0.057 / +0.039）。前 4 层全用短卷积在 120 秒最好（-0.017），到 600 秒优势消失。10 分钟时的第一名是 “MLP 加宽到 ×24”（120 秒 2.7209，600 秒 2.5220）。</p>
+<figure><div class="legend"><span><i style="background:#d97757;height:10px;width:10px"></i>全注意力（A）</span><span><i style="background:#6a9bcc;height:10px;width:10px"></i>GDN（G）</span><span><i style="background:#788c5d;height:10px;width:10px"></i>短卷积（C）</span><span><i style="background:#fff;border:1px dashed #b0aea5;height:10px;width:10px"></i>跳过（I）</span><span><i style="background:#6a9bcc;height:8px;width:14px"></i>120 秒</span><span><i style="background:#d97757;height:8px;width:14px"></i>600 秒</span></div><svg class="chart" viewBox="0 0 720 604" font-family="Poppins, PingFang SC, sans-serif">
+<text x="186" y="12" font-size="11" fill="#5e5d59">各层，左边是第 1 层</text>
+<text x="372" y="12" font-size="11" fill="#5e5d59">比中心模型差多少（负数更好）</text>
+<line x1="438.5" y1="18" x2="438.5" y2="604" stroke="#141413" stroke-width="0.8"/>
+<text x="0" y="40" font-size="12.5" fill="#141413">MLP 加宽到 ×24</text>
+<rect x="184" y="25" width="54" height="27" rx="3" fill="#e8e6dc"/>
+<rect x="186" y="28" width="11" height="10" rx="1.5" fill="#788c5d"/>
+<rect x="186" y="41" width="6.0" height="4" fill="#141413"/>
+<rect x="199" y="28" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="199" y="41" width="6.0" height="4" fill="#141413"/>
+<rect x="212" y="28" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="212" y="41" width="6.0" height="4" fill="#141413"/>
+<rect x="225" y="28" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="225" y="41" width="6.0" height="4" fill="#141413"/>
+<rect x="238" y="28" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="238" y="41" width="3.0" height="4" fill="#141413"/>
+<rect x="251" y="28" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="251" y="41" width="3.0" height="4" fill="#141413"/>
+<rect x="264" y="28" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="264" y="41" width="3.0" height="4" fill="#141413"/>
+<rect x="277" y="28" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="277" y="41" width="3.0" height="4" fill="#141413"/>
+<rect x="438.5" y="28" width="42.0" height="10" fill="#6a9bcc"/>
+<text x="485.5" y="37" font-size="11" fill="#141413" text-anchor="start" font-weight="600">+0.019</text>
+<rect x="421.3" y="41" width="17.2" height="10" fill="#d97757"/>
+<text x="416.3" y="50" font-size="11" fill="#141413" text-anchor="end">-0.0077</text>
+<text x="0" y="74" font-size="12.5" fill="#141413">第 1 层 MLP ×48</text>
+<rect x="184" y="59" width="54" height="27" rx="3" fill="#e8e6dc"/>
+<rect x="186" y="62" width="11" height="10" rx="1.5" fill="#788c5d"/>
+<rect x="186" y="75" width="12.0" height="4" fill="#141413"/>
+<rect x="199" y="62" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="199" y="75" width="3.0" height="4" fill="#141413"/>
+<rect x="212" y="62" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="212" y="75" width="3.0" height="4" fill="#141413"/>
+<rect x="225" y="62" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="225" y="75" width="3.0" height="4" fill="#141413"/>
+<rect x="238" y="62" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="238" y="75" width="3.0" height="4" fill="#141413"/>
+<rect x="251" y="62" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="251" y="75" width="3.0" height="4" fill="#141413"/>
+<rect x="264" y="62" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="264" y="75" width="3.0" height="4" fill="#141413"/>
+<rect x="277" y="62" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="277" y="75" width="3.0" height="4" fill="#141413"/>
+<rect x="438.5" y="62" width="45.0" height="10" fill="#6a9bcc"/>
+<text x="488.4" y="71" font-size="11" fill="#141413" text-anchor="start" font-weight="600">+0.020</text>
+<rect x="422.2" y="75" width="16.3" height="10" fill="#d97757"/>
+<text x="417.2" y="84" font-size="11" fill="#141413" text-anchor="end">-0.0074</text>
+<text x="0" y="108" font-size="12.5" fill="#141413">2 短卷积 + 2 注意力</text>
+<rect x="184" y="93" width="54" height="27" rx="3" fill="#e8e6dc"/>
+<rect x="186" y="96" width="11" height="10" rx="1.5" fill="#788c5d"/>
+<rect x="186" y="109" width="3.0" height="4" fill="#141413"/>
+<rect x="199" y="96" width="11" height="10" rx="1.5" fill="#788c5d"/>
+<rect x="199" y="109" width="3.0" height="4" fill="#141413"/>
+<rect x="212" y="96" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="212" y="109" width="3.0" height="4" fill="#141413"/>
+<rect x="225" y="96" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="225" y="109" width="3.0" height="4" fill="#141413"/>
+<rect x="238" y="96" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="238" y="109" width="3.0" height="4" fill="#141413"/>
+<rect x="251" y="96" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="251" y="109" width="3.0" height="4" fill="#141413"/>
+<rect x="264" y="96" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="264" y="109" width="3.0" height="4" fill="#141413"/>
+<rect x="277" y="96" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="277" y="109" width="3.0" height="4" fill="#141413"/>
+<rect x="417.6" y="96" width="20.8" height="10" fill="#6a9bcc"/>
+<text x="412.6" y="105" font-size="11" fill="#141413" text-anchor="end" font-weight="600">-0.0094</text>
+<rect x="436.8" y="109" width="1.7" height="10" fill="#d97757"/>
+<text x="431.8" y="118" font-size="11" fill="#141413" text-anchor="end">-0.0007</text>
+<text x="0" y="142" font-size="12.5" fill="#141413">中心 C·A·G·A</text>
+<rect x="184" y="127" width="54" height="27" rx="3" fill="#e8e6dc"/>
+<rect x="186" y="130" width="11" height="10" rx="1.5" fill="#788c5d"/>
+<rect x="186" y="143" width="3.0" height="4" fill="#141413"/>
+<rect x="199" y="130" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="199" y="143" width="3.0" height="4" fill="#141413"/>
+<rect x="212" y="130" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="212" y="143" width="3.0" height="4" fill="#141413"/>
+<rect x="225" y="130" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="225" y="143" width="3.0" height="4" fill="#141413"/>
+<rect x="238" y="130" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="238" y="143" width="3.0" height="4" fill="#141413"/>
+<rect x="251" y="130" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="251" y="143" width="3.0" height="4" fill="#141413"/>
+<rect x="264" y="130" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="264" y="143" width="3.0" height="4" fill="#141413"/>
+<rect x="277" y="130" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="277" y="143" width="3.0" height="4" fill="#141413"/>
+<text x="444.5" y="139" font-size="11.5" fill="#141413">120 秒 2.7020（基准）</text>
+<text x="444.5" y="152" font-size="11.5" fill="#141413">600 秒 2.5298（基准）</text>
+<text x="0" y="176" font-size="12.5" fill="#141413">GDN/注意力交替</text>
+<rect x="184" y="161" width="54" height="27" rx="3" fill="#e8e6dc"/>
+<rect x="186" y="164" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="186" y="177" width="3.0" height="4" fill="#141413"/>
+<rect x="199" y="164" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="199" y="177" width="3.0" height="4" fill="#141413"/>
+<rect x="212" y="164" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="212" y="177" width="3.0" height="4" fill="#141413"/>
+<rect x="225" y="164" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="225" y="177" width="3.0" height="4" fill="#141413"/>
+<rect x="238" y="164" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="238" y="177" width="3.0" height="4" fill="#141413"/>
+<rect x="251" y="164" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="251" y="177" width="3.0" height="4" fill="#141413"/>
+<rect x="264" y="164" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="264" y="177" width="3.0" height="4" fill="#141413"/>
+<rect x="277" y="164" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="277" y="177" width="3.0" height="4" fill="#141413"/>
+<rect x="438.5" y="164" width="16.4" height="10" fill="#6a9bcc"/>
+<text x="459.9" y="173" font-size="11" fill="#141413" text-anchor="start" font-weight="600">+0.0074</text>
+<rect x="438.5" y="177" width="5.0" height="10" fill="#d97757"/>
+<text x="448.5" y="186" font-size="11" fill="#141413" text-anchor="start">+0.0023</text>
+<text x="0" y="210" font-size="12.5" fill="#141413">短卷积 + 3 GDN</text>
+<rect x="184" y="195" width="54" height="27" rx="3" fill="#e8e6dc"/>
+<rect x="186" y="198" width="11" height="10" rx="1.5" fill="#788c5d"/>
+<rect x="186" y="211" width="3.0" height="4" fill="#141413"/>
+<rect x="199" y="198" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="199" y="211" width="3.0" height="4" fill="#141413"/>
+<rect x="212" y="198" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="212" y="211" width="3.0" height="4" fill="#141413"/>
+<rect x="225" y="198" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="225" y="211" width="3.0" height="4" fill="#141413"/>
+<rect x="238" y="198" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="238" y="211" width="3.0" height="4" fill="#141413"/>
+<rect x="251" y="198" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="251" y="211" width="3.0" height="4" fill="#141413"/>
+<rect x="264" y="198" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="264" y="211" width="3.0" height="4" fill="#141413"/>
+<rect x="277" y="198" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="277" y="211" width="3.0" height="4" fill="#141413"/>
+<rect x="438.5" y="198" width="2.5" height="10" fill="#6a9bcc"/>
+<text x="446.0" y="207" font-size="11" fill="#141413" text-anchor="start">+0.0011</text>
+<rect x="438.5" y="211" width="5.2" height="10" fill="#d97757"/>
+<text x="448.6" y="220" font-size="11" fill="#141413" text-anchor="start">+0.0023</text>
+<text x="0" y="244" font-size="12.5" fill="#141413">全短卷积</text>
+<rect x="184" y="229" width="54" height="27" rx="3" fill="#e8e6dc"/>
+<rect x="186" y="232" width="11" height="10" rx="1.5" fill="#788c5d"/>
+<rect x="186" y="245" width="3.0" height="4" fill="#141413"/>
+<rect x="199" y="232" width="11" height="10" rx="1.5" fill="#788c5d"/>
+<rect x="199" y="245" width="3.0" height="4" fill="#141413"/>
+<rect x="212" y="232" width="11" height="10" rx="1.5" fill="#788c5d"/>
+<rect x="212" y="245" width="3.0" height="4" fill="#141413"/>
+<rect x="225" y="232" width="11" height="10" rx="1.5" fill="#788c5d"/>
+<rect x="225" y="245" width="3.0" height="4" fill="#141413"/>
+<rect x="238" y="232" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="238" y="245" width="3.0" height="4" fill="#141413"/>
+<rect x="251" y="232" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="251" y="245" width="3.0" height="4" fill="#141413"/>
+<rect x="264" y="232" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="264" y="245" width="3.0" height="4" fill="#141413"/>
+<rect x="277" y="232" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="277" y="245" width="3.0" height="4" fill="#141413"/>
+<rect x="401.0" y="232" width="37.5" height="10" fill="#6a9bcc"/>
+<text x="396.0" y="241" font-size="11" fill="#141413" text-anchor="end" font-weight="600">-0.017</text>
+<rect x="438.5" y="245" width="6.4" height="10" fill="#d97757"/>
+<text x="449.8" y="254" font-size="11" fill="#141413" text-anchor="start">+0.0029</text>
+<text x="0" y="278" font-size="12.5" fill="#141413">全 GDN</text>
+<rect x="184" y="263" width="54" height="27" rx="3" fill="#e8e6dc"/>
+<rect x="186" y="266" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="186" y="279" width="3.0" height="4" fill="#141413"/>
+<rect x="199" y="266" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="199" y="279" width="3.0" height="4" fill="#141413"/>
+<rect x="212" y="266" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="212" y="279" width="3.0" height="4" fill="#141413"/>
+<rect x="225" y="266" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="225" y="279" width="3.0" height="4" fill="#141413"/>
+<rect x="238" y="266" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="238" y="279" width="3.0" height="4" fill="#141413"/>
+<rect x="251" y="266" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="251" y="279" width="3.0" height="4" fill="#141413"/>
+<rect x="264" y="266" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="264" y="279" width="3.0" height="4" fill="#141413"/>
+<rect x="277" y="266" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="277" y="279" width="3.0" height="4" fill="#141413"/>
+<rect x="438.5" y="266" width="25.1" height="10" fill="#6a9bcc"/>
+<text x="468.6" y="275" font-size="11" fill="#141413" text-anchor="start">+0.011</text>
+<rect x="438.5" y="279" width="10.0" height="10" fill="#d97757"/>
+<text x="453.4" y="288" font-size="11" fill="#141413" text-anchor="start">+0.0045</text>
+<text x="0" y="312" font-size="12.5" fill="#141413">跳过注意力，MLP ×24</text>
+<rect x="184" y="297" width="54" height="27" rx="3" fill="#e8e6dc"/>
+<rect x="186" y="300" width="11" height="10" rx="1.5" fill="#788c5d"/>
+<rect x="186" y="313" width="3.0" height="4" fill="#141413"/>
+<rect x="199" y="300" width="11" height="10" rx="1.5" fill="#fff" stroke="#b0aea5" stroke-dasharray="2 1.5"/>
+<rect x="199" y="313" width="6.0" height="4" fill="#141413"/>
+<rect x="212" y="300" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="212" y="313" width="3.0" height="4" fill="#141413"/>
+<rect x="225" y="300" width="11" height="10" rx="1.5" fill="#fff" stroke="#b0aea5" stroke-dasharray="2 1.5"/>
+<rect x="225" y="313" width="6.0" height="4" fill="#141413"/>
+<rect x="238" y="300" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="238" y="313" width="3.0" height="4" fill="#141413"/>
+<rect x="251" y="300" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="251" y="313" width="3.0" height="4" fill="#141413"/>
+<rect x="264" y="300" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="264" y="313" width="3.0" height="4" fill="#141413"/>
+<rect x="277" y="300" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="277" y="313" width="3.0" height="4" fill="#141413"/>
+<rect x="438.5" y="300" width="11.6" height="10" fill="#6a9bcc"/>
+<text x="455.0" y="309" font-size="11" fill="#141413" text-anchor="start">+0.0052</text>
+<rect x="438.5" y="313" width="10.1" height="10" fill="#d97757"/>
+<text x="453.5" y="322" font-size="11" fill="#141413" text-anchor="start">+0.0045</text>
+<text x="0" y="346" font-size="12.5" fill="#141413">短卷积 + 3 注意力</text>
+<rect x="184" y="331" width="54" height="27" rx="3" fill="#e8e6dc"/>
+<rect x="186" y="334" width="11" height="10" rx="1.5" fill="#788c5d"/>
+<rect x="186" y="347" width="3.0" height="4" fill="#141413"/>
+<rect x="199" y="334" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="199" y="347" width="3.0" height="4" fill="#141413"/>
+<rect x="212" y="334" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="212" y="347" width="3.0" height="4" fill="#141413"/>
+<rect x="225" y="334" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="225" y="347" width="3.0" height="4" fill="#141413"/>
+<rect x="238" y="334" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="238" y="347" width="3.0" height="4" fill="#141413"/>
+<rect x="251" y="334" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="251" y="347" width="3.0" height="4" fill="#141413"/>
+<rect x="264" y="334" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="264" y="347" width="3.0" height="4" fill="#141413"/>
+<rect x="277" y="334" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="277" y="347" width="3.0" height="4" fill="#141413"/>
+<rect x="438.5" y="334" width="10.8" height="10" fill="#6a9bcc"/>
+<text x="454.2" y="343" font-size="11" fill="#141413" text-anchor="start" font-weight="600">+0.0049</text>
+<rect x="438.5" y="347" width="12.3" height="10" fill="#d97757"/>
+<text x="455.7" y="356" font-size="11" fill="#141413" text-anchor="start">+0.0055</text>
+<text x="0" y="380" font-size="12.5" fill="#141413">注意力/GDN 交替</text>
+<rect x="184" y="365" width="54" height="27" rx="3" fill="#e8e6dc"/>
+<rect x="186" y="368" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="186" y="381" width="3.0" height="4" fill="#141413"/>
+<rect x="199" y="368" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="199" y="381" width="3.0" height="4" fill="#141413"/>
+<rect x="212" y="368" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="212" y="381" width="3.0" height="4" fill="#141413"/>
+<rect x="225" y="368" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="225" y="381" width="3.0" height="4" fill="#141413"/>
+<rect x="238" y="368" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="238" y="381" width="3.0" height="4" fill="#141413"/>
+<rect x="251" y="368" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="251" y="381" width="3.0" height="4" fill="#141413"/>
+<rect x="264" y="368" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="264" y="381" width="3.0" height="4" fill="#141413"/>
+<rect x="277" y="368" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="277" y="381" width="3.0" height="4" fill="#141413"/>
+<rect x="438.5" y="368" width="42.6" height="10" fill="#6a9bcc"/>
+<text x="486.0" y="377" font-size="11" fill="#141413" text-anchor="start" font-weight="600">+0.019</text>
+<rect x="438.5" y="381" width="33.8" height="10" fill="#d97757"/>
+<text x="477.3" y="390" font-size="11" fill="#141413" text-anchor="start" font-weight="600">+0.015</text>
+<text x="0" y="414" font-size="12.5" fill="#141413">先混合、后 MLP</text>
+<rect x="184" y="399" width="54" height="27" rx="3" fill="#e8e6dc"/>
+<rect x="186" y="402" width="11" height="10" rx="1.5" fill="#788c5d"/>
+<rect x="199" y="402" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="212" y="402" width="11" height="10" rx="1.5" fill="#fff" stroke="#b0aea5" stroke-dasharray="2 1.5"/>
+<rect x="212" y="415" width="6.0" height="4" fill="#141413"/>
+<rect x="225" y="402" width="11" height="10" rx="1.5" fill="#fff" stroke="#b0aea5" stroke-dasharray="2 1.5"/>
+<rect x="225" y="415" width="6.0" height="4" fill="#141413"/>
+<rect x="238" y="402" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="238" y="415" width="3.0" height="4" fill="#141413"/>
+<rect x="251" y="402" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="251" y="415" width="3.0" height="4" fill="#141413"/>
+<rect x="264" y="402" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="264" y="415" width="3.0" height="4" fill="#141413"/>
+<rect x="277" y="402" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="277" y="415" width="3.0" height="4" fill="#141413"/>
+<rect x="438.5" y="402" width="31.6" height="10" fill="#6a9bcc"/>
+<text x="475.0" y="411" font-size="11" fill="#141413" text-anchor="start" font-weight="600">+0.014</text>
+<rect x="438.5" y="415" width="59.3" height="10" fill="#d97757"/>
+<text x="502.7" y="424" font-size="11" fill="#141413" text-anchor="start" font-weight="600">+0.027</text>
+<text x="0" y="448" font-size="12.5" fill="#141413">全注意力</text>
+<rect x="184" y="433" width="54" height="27" rx="3" fill="#e8e6dc"/>
+<rect x="186" y="436" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="186" y="449" width="3.0" height="4" fill="#141413"/>
+<rect x="199" y="436" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="199" y="449" width="3.0" height="4" fill="#141413"/>
+<rect x="212" y="436" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="212" y="449" width="3.0" height="4" fill="#141413"/>
+<rect x="225" y="436" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="225" y="449" width="3.0" height="4" fill="#141413"/>
+<rect x="238" y="436" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="238" y="449" width="3.0" height="4" fill="#141413"/>
+<rect x="251" y="436" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="251" y="449" width="3.0" height="4" fill="#141413"/>
+<rect x="264" y="436" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="264" y="449" width="3.0" height="4" fill="#141413"/>
+<rect x="277" y="436" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="277" y="449" width="3.0" height="4" fill="#141413"/>
+<rect x="438.5" y="436" width="127.4" height="10" fill="#6a9bcc"/>
+<text x="570.8" y="445" font-size="11" fill="#141413" text-anchor="start" font-weight="600">+0.057</text>
+<rect x="438.5" y="449" width="85.5" height="10" fill="#d97757"/>
+<text x="529.0" y="458" font-size="11" fill="#141413" text-anchor="start" font-weight="600">+0.039</text>
+<text x="0" y="482" font-size="12.5" fill="#141413">前 2 层只有 MLP</text>
+<rect x="184" y="467" width="54" height="27" rx="3" fill="#e8e6dc"/>
+<rect x="186" y="470" width="11" height="10" rx="1.5" fill="#fff" stroke="#b0aea5" stroke-dasharray="2 1.5"/>
+<rect x="186" y="483" width="6.0" height="4" fill="#141413"/>
+<rect x="199" y="470" width="11" height="10" rx="1.5" fill="#fff" stroke="#b0aea5" stroke-dasharray="2 1.5"/>
+<rect x="199" y="483" width="6.0" height="4" fill="#141413"/>
+<rect x="212" y="470" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="212" y="483" width="3.0" height="4" fill="#141413"/>
+<rect x="225" y="470" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="225" y="483" width="3.0" height="4" fill="#141413"/>
+<rect x="238" y="470" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="238" y="483" width="3.0" height="4" fill="#141413"/>
+<rect x="251" y="470" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="251" y="483" width="3.0" height="4" fill="#141413"/>
+<rect x="264" y="470" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="264" y="483" width="3.0" height="4" fill="#141413"/>
+<rect x="277" y="470" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="277" y="483" width="3.0" height="4" fill="#141413"/>
+<rect x="438.5" y="470" width="107.4" height="10" fill="#6a9bcc"/>
+<text x="550.9" y="479" font-size="11" fill="#141413" text-anchor="start" font-weight="600">+0.048</text>
+<rect x="438.5" y="483" width="86.4" height="10" fill="#d97757"/>
+<text x="529.9" y="492" font-size="11" fill="#141413" text-anchor="start" font-weight="600">+0.039</text>
+<text x="0" y="516" font-size="12.5" fill="#141413">去掉 MLP</text>
+<rect x="184" y="501" width="54" height="27" rx="3" fill="#e8e6dc"/>
+<rect x="186" y="504" width="11" height="10" rx="1.5" fill="#788c5d"/>
+<rect x="199" y="504" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="212" y="504" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="225" y="504" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="238" y="504" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="238" y="517" width="3.0" height="4" fill="#141413"/>
+<rect x="251" y="504" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="251" y="517" width="3.0" height="4" fill="#141413"/>
+<rect x="264" y="504" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="264" y="517" width="3.0" height="4" fill="#141413"/>
+<rect x="277" y="504" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="277" y="517" width="3.0" height="4" fill="#141413"/>
+<rect x="438.5" y="504" width="57.9" height="10" fill="#6a9bcc"/>
+<text x="501.3" y="513" font-size="11" fill="#141413" text-anchor="start" font-weight="600">+0.026</text>
+<rect x="438.5" y="517" width="132.2" height="10" fill="#d97757"/>
+<text x="575.7" y="526" font-size="11" fill="#141413" text-anchor="start" font-weight="600">+0.060</text>
+<text x="0" y="550" font-size="12.5" fill="#141413">前 4 层全空</text>
+<rect x="184" y="535" width="54" height="27" rx="3" fill="#e8e6dc"/>
+<rect x="186" y="538" width="11" height="10" rx="1.5" fill="#fff" stroke="#b0aea5" stroke-dasharray="2 1.5"/>
+<rect x="199" y="538" width="11" height="10" rx="1.5" fill="#fff" stroke="#b0aea5" stroke-dasharray="2 1.5"/>
+<rect x="212" y="538" width="11" height="10" rx="1.5" fill="#fff" stroke="#b0aea5" stroke-dasharray="2 1.5"/>
+<rect x="225" y="538" width="11" height="10" rx="1.5" fill="#fff" stroke="#b0aea5" stroke-dasharray="2 1.5"/>
+<rect x="238" y="538" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="238" y="551" width="3.0" height="4" fill="#141413"/>
+<rect x="251" y="538" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="251" y="551" width="3.0" height="4" fill="#141413"/>
+<rect x="264" y="538" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="264" y="551" width="3.0" height="4" fill="#141413"/>
+<rect x="277" y="538" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="277" y="551" width="3.0" height="4" fill="#141413"/>
+<rect x="438.5" y="538" width="46.9" height="10" fill="#6a9bcc"/>
+<text x="490.4" y="547" font-size="11" fill="#141413" text-anchor="start" font-weight="600">+0.021</text>
+<rect x="438.5" y="551" width="154.7" height="10" fill="#d97757"/>
+<text x="598.2" y="560" font-size="11" fill="#141413" text-anchor="start" font-weight="600">+0.070</text>
+<text x="0" y="584" font-size="12.5" fill="#141413">只有 MLP，跳过混合</text>
+<rect x="184" y="569" width="54" height="27" rx="3" fill="#e8e6dc"/>
+<rect x="186" y="572" width="11" height="10" rx="1.5" fill="#fff" stroke="#b0aea5" stroke-dasharray="2 1.5"/>
+<rect x="186" y="585" width="6.0" height="4" fill="#141413"/>
+<rect x="199" y="572" width="11" height="10" rx="1.5" fill="#fff" stroke="#b0aea5" stroke-dasharray="2 1.5"/>
+<rect x="199" y="585" width="6.0" height="4" fill="#141413"/>
+<rect x="212" y="572" width="11" height="10" rx="1.5" fill="#fff" stroke="#b0aea5" stroke-dasharray="2 1.5"/>
+<rect x="212" y="585" width="6.0" height="4" fill="#141413"/>
+<rect x="225" y="572" width="11" height="10" rx="1.5" fill="#fff" stroke="#b0aea5" stroke-dasharray="2 1.5"/>
+<rect x="225" y="585" width="6.0" height="4" fill="#141413"/>
+<rect x="238" y="572" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="238" y="585" width="3.0" height="4" fill="#141413"/>
+<rect x="251" y="572" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="251" y="585" width="3.0" height="4" fill="#141413"/>
+<rect x="264" y="572" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="264" y="585" width="3.0" height="4" fill="#141413"/>
+<rect x="277" y="572" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="277" y="585" width="3.0" height="4" fill="#141413"/>
+<rect x="438.5" y="572" width="216.8" height="10" fill="#6a9bcc"/>
+<text x="660.3" y="581" font-size="11" fill="#141413" text-anchor="start" font-weight="600">+0.098</text>
+<rect x="438.5" y="585" width="201.8" height="10" fill="#d97757"/>
+<text x="645.2" y="594" font-size="11" fill="#141413" text-anchor="start" font-weight="600">+0.091</text>
+</svg><figcaption>每行 4 个种子，按 600 秒的结果从好到差排。差值按种子配对计算；粗体数字超过 3 个标准误。灰底是这一组在变的 4 层。</figcaption></figure>
+<h2>后 4 层：要有全注意力（全换 GDN 差 0.029）；去掉 MLP 在 10 分钟时代价翻倍</h2>
+<p>前 4 层固定为 C·A·G·A，后 4 层换 14 种排法。后 4 层只要有全注意力，排法差别不大，不一定要放在最后一层。去掉后 4 层的 MLP：120 秒差 +0.030，600 秒差 +0.066。10 分钟时的第一名是 “MLP 加宽到 ×24”（120 秒 2.7199，600 秒 2.5197）。</p>
+<figure><div class="legend"><span><i style="background:#d97757;height:10px;width:10px"></i>全注意力（A）</span><span><i style="background:#6a9bcc;height:10px;width:10px"></i>GDN（G）</span><span><i style="background:#788c5d;height:10px;width:10px"></i>短卷积（C）</span><span><i style="background:#fff;border:1px dashed #b0aea5;height:10px;width:10px"></i>跳过（I）</span><span><i style="background:#6a9bcc;height:8px;width:14px"></i>120 秒</span><span><i style="background:#d97757;height:8px;width:14px"></i>600 秒</span></div><svg class="chart" viewBox="0 0 720 502" font-family="Poppins, PingFang SC, sans-serif">
+<text x="186" y="12" font-size="11" fill="#5e5d59">各层，左边是第 1 层</text>
+<text x="372" y="12" font-size="11" fill="#5e5d59">比中心模型差多少（负数更好）</text>
+<line x1="438.5" y1="18" x2="438.5" y2="502" stroke="#141413" stroke-width="0.8"/>
+<text x="0" y="40" font-size="12.5" fill="#141413">MLP 加宽到 ×24</text>
+<rect x="236" y="25" width="54" height="27" rx="3" fill="#e8e6dc"/>
+<rect x="186" y="28" width="11" height="10" rx="1.5" fill="#788c5d"/>
+<rect x="186" y="41" width="3.0" height="4" fill="#141413"/>
+<rect x="199" y="28" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="199" y="41" width="3.0" height="4" fill="#141413"/>
+<rect x="212" y="28" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="212" y="41" width="3.0" height="4" fill="#141413"/>
+<rect x="225" y="28" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="225" y="41" width="3.0" height="4" fill="#141413"/>
+<rect x="238" y="28" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="238" y="41" width="6.0" height="4" fill="#141413"/>
+<rect x="251" y="28" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="251" y="41" width="6.0" height="4" fill="#141413"/>
+<rect x="264" y="28" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="264" y="41" width="6.0" height="4" fill="#141413"/>
+<rect x="277" y="28" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="277" y="41" width="6.0" height="4" fill="#141413"/>
+<rect x="438.5" y="28" width="39.8" height="10" fill="#6a9bcc"/>
+<text x="483.3" y="37" font-size="11" fill="#141413" text-anchor="start" font-weight="600">+0.018</text>
+<rect x="416.1" y="41" width="22.4" height="10" fill="#d97757"/>
+<text x="411.1" y="50" font-size="11" fill="#141413" text-anchor="end" font-weight="600">-0.010</text>
+<text x="0" y="74" font-size="12.5" fill="#141413">最后一层 MLP ×48</text>
+<rect x="236" y="59" width="54" height="27" rx="3" fill="#e8e6dc"/>
+<rect x="186" y="62" width="11" height="10" rx="1.5" fill="#788c5d"/>
+<rect x="186" y="75" width="3.0" height="4" fill="#141413"/>
+<rect x="199" y="62" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="199" y="75" width="3.0" height="4" fill="#141413"/>
+<rect x="212" y="62" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="212" y="75" width="3.0" height="4" fill="#141413"/>
+<rect x="225" y="62" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="225" y="75" width="3.0" height="4" fill="#141413"/>
+<rect x="238" y="62" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="238" y="75" width="3.0" height="4" fill="#141413"/>
+<rect x="251" y="62" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="251" y="75" width="3.0" height="4" fill="#141413"/>
+<rect x="264" y="62" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="264" y="75" width="3.0" height="4" fill="#141413"/>
+<rect x="277" y="62" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="277" y="75" width="12.0" height="4" fill="#141413"/>
+<rect x="438.5" y="62" width="49.8" height="10" fill="#6a9bcc"/>
+<text x="493.2" y="71" font-size="11" fill="#141413" text-anchor="start" font-weight="600">+0.022</text>
+<rect x="418.9" y="75" width="19.5" height="10" fill="#d97757"/>
+<text x="413.9" y="84" font-size="11" fill="#141413" text-anchor="end">-0.0088</text>
+<text x="0" y="108" font-size="12.5" fill="#141413">最后一层 MLP ×24</text>
+<rect x="236" y="93" width="54" height="27" rx="3" fill="#e8e6dc"/>
+<rect x="186" y="96" width="11" height="10" rx="1.5" fill="#788c5d"/>
+<rect x="186" y="109" width="3.0" height="4" fill="#141413"/>
+<rect x="199" y="96" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="199" y="109" width="3.0" height="4" fill="#141413"/>
+<rect x="212" y="96" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="212" y="109" width="3.0" height="4" fill="#141413"/>
+<rect x="225" y="96" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="225" y="109" width="3.0" height="4" fill="#141413"/>
+<rect x="238" y="96" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="238" y="109" width="3.0" height="4" fill="#141413"/>
+<rect x="251" y="96" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="251" y="109" width="3.0" height="4" fill="#141413"/>
+<rect x="264" y="96" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="264" y="109" width="3.0" height="4" fill="#141413"/>
+<rect x="277" y="96" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="277" y="109" width="6.0" height="4" fill="#141413"/>
+<rect x="438.5" y="96" width="10.4" height="10" fill="#6a9bcc"/>
+<text x="453.9" y="105" font-size="11" fill="#141413" text-anchor="start">+0.0047</text>
+<rect x="423.5" y="109" width="15.0" height="10" fill="#d97757"/>
+<text x="418.5" y="118" font-size="11" fill="#141413" text-anchor="end">-0.0068</text>
+<text x="0" y="142" font-size="12.5" fill="#141413">最后 2 层只有 MLP</text>
+<rect x="236" y="127" width="54" height="27" rx="3" fill="#e8e6dc"/>
+<rect x="186" y="130" width="11" height="10" rx="1.5" fill="#788c5d"/>
+<rect x="186" y="143" width="3.0" height="4" fill="#141413"/>
+<rect x="199" y="130" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="199" y="143" width="3.0" height="4" fill="#141413"/>
+<rect x="212" y="130" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="212" y="143" width="3.0" height="4" fill="#141413"/>
+<rect x="225" y="130" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="225" y="143" width="3.0" height="4" fill="#141413"/>
+<rect x="238" y="130" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="238" y="143" width="3.0" height="4" fill="#141413"/>
+<rect x="251" y="130" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="251" y="143" width="3.0" height="4" fill="#141413"/>
+<rect x="264" y="130" width="11" height="10" rx="1.5" fill="#fff" stroke="#b0aea5" stroke-dasharray="2 1.5"/>
+<rect x="264" y="143" width="6.0" height="4" fill="#141413"/>
+<rect x="277" y="130" width="11" height="10" rx="1.5" fill="#fff" stroke="#b0aea5" stroke-dasharray="2 1.5"/>
+<rect x="277" y="143" width="6.0" height="4" fill="#141413"/>
+<rect x="438.5" y="130" width="8.9" height="10" fill="#6a9bcc"/>
+<text x="452.4" y="139" font-size="11" fill="#141413" text-anchor="start">+0.0040</text>
+<rect x="427.1" y="143" width="11.4" height="10" fill="#d97757"/>
+<text x="422.1" y="152" font-size="11" fill="#141413" text-anchor="end">-0.0051</text>
+<text x="0" y="176" font-size="12.5" fill="#141413">全注意力</text>
+<rect x="236" y="161" width="54" height="27" rx="3" fill="#e8e6dc"/>
+<rect x="186" y="164" width="11" height="10" rx="1.5" fill="#788c5d"/>
+<rect x="186" y="177" width="3.0" height="4" fill="#141413"/>
+<rect x="199" y="164" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="199" y="177" width="3.0" height="4" fill="#141413"/>
+<rect x="212" y="164" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="212" y="177" width="3.0" height="4" fill="#141413"/>
+<rect x="225" y="164" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="225" y="177" width="3.0" height="4" fill="#141413"/>
+<rect x="238" y="164" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="238" y="177" width="3.0" height="4" fill="#141413"/>
+<rect x="251" y="164" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="251" y="177" width="3.0" height="4" fill="#141413"/>
+<rect x="264" y="164" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="264" y="177" width="3.0" height="4" fill="#141413"/>
+<rect x="277" y="164" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="277" y="177" width="3.0" height="4" fill="#141413"/>
+<rect x="436.8" y="164" width="1.7" height="10" fill="#6a9bcc"/>
+<text x="431.8" y="173" font-size="11" fill="#141413" text-anchor="end">-0.0007</text>
+<rect x="431.2" y="177" width="7.3" height="10" fill="#d97757"/>
+<text x="426.2" y="186" font-size="11" fill="#141413" text-anchor="end">-0.0033</text>
+<text x="0" y="210" font-size="12.5" fill="#141413">2 GDN + 2 注意力</text>
+<rect x="236" y="195" width="54" height="27" rx="3" fill="#e8e6dc"/>
+<rect x="186" y="198" width="11" height="10" rx="1.5" fill="#788c5d"/>
+<rect x="186" y="211" width="3.0" height="4" fill="#141413"/>
+<rect x="199" y="198" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="199" y="211" width="3.0" height="4" fill="#141413"/>
+<rect x="212" y="198" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="212" y="211" width="3.0" height="4" fill="#141413"/>
+<rect x="225" y="198" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="225" y="211" width="3.0" height="4" fill="#141413"/>
+<rect x="238" y="198" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="238" y="211" width="3.0" height="4" fill="#141413"/>
+<rect x="251" y="198" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="251" y="211" width="3.0" height="4" fill="#141413"/>
+<rect x="264" y="198" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="264" y="211" width="3.0" height="4" fill="#141413"/>
+<rect x="277" y="198" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="277" y="211" width="3.0" height="4" fill="#141413"/>
+<rect x="437.8" y="198" width="1.0" height="10" fill="#6a9bcc"/>
+<text x="432.8" y="207" font-size="11" fill="#141413" text-anchor="end">-0.0003</text>
+<rect x="434.7" y="211" width="3.8" height="10" fill="#d97757"/>
+<text x="429.7" y="220" font-size="11" fill="#141413" text-anchor="end">-0.0017</text>
+<text x="0" y="244" font-size="12.5" fill="#141413">以 GDN 结尾</text>
+<rect x="236" y="229" width="54" height="27" rx="3" fill="#e8e6dc"/>
+<rect x="186" y="232" width="11" height="10" rx="1.5" fill="#788c5d"/>
+<rect x="186" y="245" width="3.0" height="4" fill="#141413"/>
+<rect x="199" y="232" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="199" y="245" width="3.0" height="4" fill="#141413"/>
+<rect x="212" y="232" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="212" y="245" width="3.0" height="4" fill="#141413"/>
+<rect x="225" y="232" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="225" y="245" width="3.0" height="4" fill="#141413"/>
+<rect x="238" y="232" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="238" y="245" width="3.0" height="4" fill="#141413"/>
+<rect x="251" y="232" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="251" y="245" width="3.0" height="4" fill="#141413"/>
+<rect x="264" y="232" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="264" y="245" width="3.0" height="4" fill="#141413"/>
+<rect x="277" y="232" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="277" y="245" width="3.0" height="4" fill="#141413"/>
+<rect x="438.5" y="232" width="10.2" height="10" fill="#6a9bcc"/>
+<text x="453.6" y="241" font-size="11" fill="#141413" text-anchor="start">+0.0046</text>
+<rect x="435.1" y="245" width="3.3" height="10" fill="#d97757"/>
+<text x="430.1" y="254" font-size="11" fill="#141413" text-anchor="end">-0.0015</text>
+<text x="0" y="278" font-size="12.5" fill="#141413">跳过 GDN，MLP ×24</text>
+<rect x="236" y="263" width="54" height="27" rx="3" fill="#e8e6dc"/>
+<rect x="186" y="266" width="11" height="10" rx="1.5" fill="#788c5d"/>
+<rect x="186" y="279" width="3.0" height="4" fill="#141413"/>
+<rect x="199" y="266" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="199" y="279" width="3.0" height="4" fill="#141413"/>
+<rect x="212" y="266" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="212" y="279" width="3.0" height="4" fill="#141413"/>
+<rect x="225" y="266" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="225" y="279" width="3.0" height="4" fill="#141413"/>
+<rect x="238" y="266" width="11" height="10" rx="1.5" fill="#fff" stroke="#b0aea5" stroke-dasharray="2 1.5"/>
+<rect x="238" y="279" width="6.0" height="4" fill="#141413"/>
+<rect x="251" y="266" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="251" y="279" width="3.0" height="4" fill="#141413"/>
+<rect x="264" y="266" width="11" height="10" rx="1.5" fill="#fff" stroke="#b0aea5" stroke-dasharray="2 1.5"/>
+<rect x="264" y="279" width="6.0" height="4" fill="#141413"/>
+<rect x="277" y="266" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="277" y="279" width="3.0" height="4" fill="#141413"/>
+<rect x="438.5" y="266" width="17.6" height="10" fill="#6a9bcc"/>
+<text x="461.0" y="275" font-size="11" fill="#141413" text-anchor="start" font-weight="600">+0.0079</text>
+<rect x="435.2" y="279" width="3.3" height="10" fill="#d97757"/>
+<text x="430.2" y="288" font-size="11" fill="#141413" text-anchor="end">-0.0015</text>
+<text x="0" y="312" font-size="12.5" fill="#141413">中心 G·A·G·A</text>
+<rect x="236" y="297" width="54" height="27" rx="3" fill="#e8e6dc"/>
+<rect x="186" y="300" width="11" height="10" rx="1.5" fill="#788c5d"/>
+<rect x="186" y="313" width="3.0" height="4" fill="#141413"/>
+<rect x="199" y="300" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="199" y="313" width="3.0" height="4" fill="#141413"/>
+<rect x="212" y="300" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="212" y="313" width="3.0" height="4" fill="#141413"/>
+<rect x="225" y="300" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="225" y="313" width="3.0" height="4" fill="#141413"/>
+<rect x="238" y="300" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="238" y="313" width="3.0" height="4" fill="#141413"/>
+<rect x="251" y="300" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="251" y="313" width="3.0" height="4" fill="#141413"/>
+<rect x="264" y="300" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="264" y="313" width="3.0" height="4" fill="#141413"/>
+<rect x="277" y="300" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="277" y="313" width="3.0" height="4" fill="#141413"/>
+<text x="444.5" y="309" font-size="11.5" fill="#141413">120 秒 2.7020（基准）</text>
+<text x="444.5" y="322" font-size="11.5" fill="#141413">600 秒 2.5298（基准）</text>
+<text x="0" y="346" font-size="12.5" fill="#141413">短卷积/注意力交替</text>
+<rect x="236" y="331" width="54" height="27" rx="3" fill="#e8e6dc"/>
+<rect x="186" y="334" width="11" height="10" rx="1.5" fill="#788c5d"/>
+<rect x="186" y="347" width="3.0" height="4" fill="#141413"/>
+<rect x="199" y="334" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="199" y="347" width="3.0" height="4" fill="#141413"/>
+<rect x="212" y="334" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="212" y="347" width="3.0" height="4" fill="#141413"/>
+<rect x="225" y="334" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="225" y="347" width="3.0" height="4" fill="#141413"/>
+<rect x="238" y="334" width="11" height="10" rx="1.5" fill="#788c5d"/>
+<rect x="238" y="347" width="3.0" height="4" fill="#141413"/>
+<rect x="251" y="334" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="251" y="347" width="3.0" height="4" fill="#141413"/>
+<rect x="264" y="334" width="11" height="10" rx="1.5" fill="#788c5d"/>
+<rect x="264" y="347" width="3.0" height="4" fill="#141413"/>
+<rect x="277" y="334" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="277" y="347" width="3.0" height="4" fill="#141413"/>
+<rect x="428.0" y="334" width="10.5" height="10" fill="#6a9bcc"/>
+<text x="423.0" y="343" font-size="11" fill="#141413" text-anchor="end">-0.0047</text>
+<rect x="438.5" y="347" width="8.0" height="10" fill="#d97757"/>
+<text x="451.5" y="356" font-size="11" fill="#141413" text-anchor="start">+0.0036</text>
+<text x="0" y="380" font-size="12.5" fill="#141413">3 GDN + 注意力</text>
+<rect x="236" y="365" width="54" height="27" rx="3" fill="#e8e6dc"/>
+<rect x="186" y="368" width="11" height="10" rx="1.5" fill="#788c5d"/>
+<rect x="186" y="381" width="3.0" height="4" fill="#141413"/>
+<rect x="199" y="368" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="199" y="381" width="3.0" height="4" fill="#141413"/>
+<rect x="212" y="368" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="212" y="381" width="3.0" height="4" fill="#141413"/>
+<rect x="225" y="368" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="225" y="381" width="3.0" height="4" fill="#141413"/>
+<rect x="238" y="368" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="238" y="381" width="3.0" height="4" fill="#141413"/>
+<rect x="251" y="368" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="251" y="381" width="3.0" height="4" fill="#141413"/>
+<rect x="264" y="368" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="264" y="381" width="3.0" height="4" fill="#141413"/>
+<rect x="277" y="368" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="277" y="381" width="3.0" height="4" fill="#141413"/>
+<rect x="438.5" y="368" width="12.1" height="10" fill="#6a9bcc"/>
+<text x="455.6" y="377" font-size="11" fill="#141413" text-anchor="start" font-weight="600">+0.0055</text>
+<rect x="438.5" y="381" width="10.4" height="10" fill="#d97757"/>
+<text x="453.9" y="390" font-size="11" fill="#141413" text-anchor="start">+0.0047</text>
+<text x="0" y="414" font-size="12.5" fill="#141413">全 GDN，结尾无注意力</text>
+<rect x="236" y="399" width="54" height="27" rx="3" fill="#e8e6dc"/>
+<rect x="186" y="402" width="11" height="10" rx="1.5" fill="#788c5d"/>
+<rect x="186" y="415" width="3.0" height="4" fill="#141413"/>
+<rect x="199" y="402" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="199" y="415" width="3.0" height="4" fill="#141413"/>
+<rect x="212" y="402" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="212" y="415" width="3.0" height="4" fill="#141413"/>
+<rect x="225" y="402" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="225" y="415" width="3.0" height="4" fill="#141413"/>
+<rect x="238" y="402" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="238" y="415" width="3.0" height="4" fill="#141413"/>
+<rect x="251" y="402" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="251" y="415" width="3.0" height="4" fill="#141413"/>
+<rect x="264" y="402" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="264" y="415" width="3.0" height="4" fill="#141413"/>
+<rect x="277" y="402" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="277" y="415" width="3.0" height="4" fill="#141413"/>
+<rect x="438.5" y="402" width="63.2" height="10" fill="#6a9bcc"/>
+<text x="506.6" y="411" font-size="11" fill="#141413" text-anchor="start" font-weight="600">+0.029</text>
+<rect x="438.5" y="415" width="41.9" height="10" fill="#d97757"/>
+<text x="485.3" y="424" font-size="11" fill="#141413" text-anchor="start" font-weight="600">+0.019</text>
+<text x="0" y="448" font-size="12.5" fill="#141413">只有 MLP，跳过混合</text>
+<rect x="236" y="433" width="54" height="27" rx="3" fill="#e8e6dc"/>
+<rect x="186" y="436" width="11" height="10" rx="1.5" fill="#788c5d"/>
+<rect x="186" y="449" width="3.0" height="4" fill="#141413"/>
+<rect x="199" y="436" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="199" y="449" width="3.0" height="4" fill="#141413"/>
+<rect x="212" y="436" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="212" y="449" width="3.0" height="4" fill="#141413"/>
+<rect x="225" y="436" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="225" y="449" width="3.0" height="4" fill="#141413"/>
+<rect x="238" y="436" width="11" height="10" rx="1.5" fill="#fff" stroke="#b0aea5" stroke-dasharray="2 1.5"/>
+<rect x="238" y="449" width="6.0" height="4" fill="#141413"/>
+<rect x="251" y="436" width="11" height="10" rx="1.5" fill="#fff" stroke="#b0aea5" stroke-dasharray="2 1.5"/>
+<rect x="251" y="449" width="6.0" height="4" fill="#141413"/>
+<rect x="264" y="436" width="11" height="10" rx="1.5" fill="#fff" stroke="#b0aea5" stroke-dasharray="2 1.5"/>
+<rect x="264" y="449" width="6.0" height="4" fill="#141413"/>
+<rect x="277" y="436" width="11" height="10" rx="1.5" fill="#fff" stroke="#b0aea5" stroke-dasharray="2 1.5"/>
+<rect x="277" y="449" width="6.0" height="4" fill="#141413"/>
+<rect x="438.5" y="436" width="69.2" height="10" fill="#6a9bcc"/>
+<text x="512.7" y="445" font-size="11" fill="#141413" text-anchor="start" font-weight="600">+0.031</text>
+<rect x="438.5" y="449" width="48.2" height="10" fill="#d97757"/>
+<text x="491.6" y="458" font-size="11" fill="#141413" text-anchor="start" font-weight="600">+0.022</text>
+<text x="0" y="482" font-size="12.5" fill="#141413">去掉 MLP</text>
+<rect x="236" y="467" width="54" height="27" rx="3" fill="#e8e6dc"/>
+<rect x="186" y="470" width="11" height="10" rx="1.5" fill="#788c5d"/>
+<rect x="186" y="483" width="3.0" height="4" fill="#141413"/>
+<rect x="199" y="470" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="199" y="483" width="3.0" height="4" fill="#141413"/>
+<rect x="212" y="470" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="212" y="483" width="3.0" height="4" fill="#141413"/>
+<rect x="225" y="470" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="225" y="483" width="3.0" height="4" fill="#141413"/>
+<rect x="238" y="470" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="251" y="470" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="264" y="470" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="277" y="470" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="438.5" y="470" width="67.0" height="10" fill="#6a9bcc"/>
+<text x="510.4" y="479" font-size="11" fill="#141413" text-anchor="start" font-weight="600">+0.030</text>
+<rect x="438.5" y="483" width="145.6" height="10" fill="#d97757"/>
+<text x="589.1" y="492" font-size="11" fill="#141413" text-anchor="start" font-weight="600">+0.066</text>
+</svg><figcaption>每行 4 个种子，按 600 秒的结果从好到差排。差值按种子配对计算；粗体数字超过 3 个标准误。灰底是这一组在变的 4 层。</figcaption></figure>
+<h2>整体：10 分钟时最好的 8 层比 4 层最好好 0.034，2 分钟时反而差 0.014</h2>
+<p>10 分钟第一是 “中心，首尾 MLP ×24”（120 秒 2.7066，600 秒 2.5182），2 分钟第一的 8 层是 “全短卷积”（120 秒 2.6851，600 秒 2.5327），4 层最好的是 “4 层最好”（120 秒 2.6715，600 秒 2.5522）。加宽 MLP（前 4 层 / 后 4 层）：120 秒 +0.019 / +0.018，600 秒 -0.008 / -0.010。短预算下步数更重要，长预算下容量更重要。</p>
+<p>同事 spec 的三个 A/M 参照，各 12 个子层（A 是只有全注意力的子层，M 是只有 MLP ×12 的子层）：AMAMAMAMAMAM 2.7227 / 2.5534；MAAMAMAMAMAM 2.7390 / 2.5719；MAAMAMAMMAAM 2.7398 / 2.5745（120 秒 / 600 秒）。这里 AMAMAMAMAMAM 最好，MAAMAMAMAMAM 比它差 0.016 / 0.018，和同事 pilot 里“首对交换更好”的结论相反。一个可能的原因：M 开头等于第 1 层没有任何混合。为了检验，又跑了两种：第一个子层换成短卷积 2.7133 / 2.5540；M 开头、再接短卷积 2.7305 / 2.5734。第一个子层换成短卷积，600 秒和 AMAM… 只差 +0.0006；M 开头再接短卷积，仍差 +0.020。所以关键是第一个子层要做混合，用全注意力还是短卷积不重要。</p>
+<figure><div class="legend"><span><i style="background:#d97757;height:10px;width:10px"></i>全注意力（A）</span><span><i style="background:#6a9bcc;height:10px;width:10px"></i>GDN（G）</span><span><i style="background:#788c5d;height:10px;width:10px"></i>短卷积（C）</span><span><i style="background:#fff;border:1px dashed #b0aea5;height:10px;width:10px"></i>跳过（I）</span><span><i style="background:#6a9bcc;height:8px;width:14px"></i>120 秒</span><span><i style="background:#d97757;height:8px;width:14px"></i>600 秒</span></div><svg class="chart" viewBox="0 0 720 536" font-family="Poppins, PingFang SC, sans-serif">
+<text x="186" y="12" font-size="11" fill="#5e5d59">各层，左边是第 1 层</text>
+<text x="372" y="12" font-size="11" fill="#5e5d59">比中心模型差多少（负数更好）</text>
+<line x1="438.5" y1="18" x2="438.5" y2="536" stroke="#141413" stroke-width="0.8"/>
+<text x="0" y="40" font-size="12.5" fill="#141413">中心，首尾 MLP ×24</text>
+<rect x="186" y="28" width="11" height="10" rx="1.5" fill="#788c5d"/>
+<rect x="186" y="41" width="6.0" height="4" fill="#141413"/>
+<rect x="199" y="28" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="199" y="41" width="3.0" height="4" fill="#141413"/>
+<rect x="212" y="28" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="212" y="41" width="3.0" height="4" fill="#141413"/>
+<rect x="225" y="28" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="225" y="41" width="3.0" height="4" fill="#141413"/>
+<rect x="238" y="28" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="238" y="41" width="3.0" height="4" fill="#141413"/>
+<rect x="251" y="28" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="251" y="41" width="3.0" height="4" fill="#141413"/>
+<rect x="264" y="28" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="264" y="41" width="3.0" height="4" fill="#141413"/>
+<rect x="277" y="28" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="277" y="41" width="6.0" height="4" fill="#141413"/>
+<rect x="438.5" y="28" width="10.2" height="10" fill="#6a9bcc"/>
+<text x="453.6" y="37" font-size="11" fill="#141413" text-anchor="start">+0.0046</text>
+<rect x="412.8" y="41" width="25.7" height="10" fill="#d97757"/>
+<text x="407.8" y="50" font-size="11" fill="#141413" text-anchor="end" font-weight="600">-0.012</text>
+<text x="0" y="74" font-size="12.5" fill="#141413">4 层最好 ×2</text>
+<rect x="186" y="62" width="11" height="10" rx="1.5" fill="#788c5d"/>
+<rect x="186" y="75" width="6.0" height="4" fill="#141413"/>
+<rect x="199" y="62" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="199" y="75" width="3.0" height="4" fill="#141413"/>
+<rect x="212" y="62" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="212" y="75" width="3.0" height="4" fill="#141413"/>
+<rect x="225" y="62" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="225" y="75" width="6.0" height="4" fill="#141413"/>
+<rect x="238" y="62" width="11" height="10" rx="1.5" fill="#788c5d"/>
+<rect x="238" y="75" width="6.0" height="4" fill="#141413"/>
+<rect x="251" y="62" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="251" y="75" width="3.0" height="4" fill="#141413"/>
+<rect x="264" y="62" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="264" y="75" width="3.0" height="4" fill="#141413"/>
+<rect x="277" y="62" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="277" y="75" width="6.0" height="4" fill="#141413"/>
+<rect x="438.5" y="62" width="29.0" height="10" fill="#6a9bcc"/>
+<text x="472.4" y="71" font-size="11" fill="#141413" text-anchor="start" font-weight="600">+0.013</text>
+<rect x="418.5" y="75" width="19.9" height="10" fill="#d97757"/>
+<text x="413.5" y="84" font-size="11" fill="#141413" text-anchor="end" font-weight="600">-0.0090</text>
+<text x="0" y="108" font-size="12.5" fill="#141413">普通 Transformer</text>
+<rect x="186" y="96" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="186" y="109" width="3.0" height="4" fill="#141413"/>
+<rect x="199" y="96" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="199" y="109" width="3.0" height="4" fill="#141413"/>
+<rect x="212" y="96" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="212" y="109" width="3.0" height="4" fill="#141413"/>
+<rect x="225" y="96" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="225" y="109" width="3.0" height="4" fill="#141413"/>
+<rect x="238" y="96" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="238" y="109" width="3.0" height="4" fill="#141413"/>
+<rect x="251" y="96" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="251" y="109" width="3.0" height="4" fill="#141413"/>
+<rect x="264" y="96" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="264" y="109" width="3.0" height="4" fill="#141413"/>
+<rect x="277" y="96" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="277" y="109" width="3.0" height="4" fill="#141413"/>
+<rect x="438.5" y="96" width="12.5" height="10" fill="#6a9bcc"/>
+<text x="456.0" y="105" font-size="11" fill="#141413" text-anchor="start">+0.0056</text>
+<rect x="429.2" y="109" width="9.3" height="10" fill="#d97757"/>
+<text x="424.2" y="118" font-size="11" fill="#141413" text-anchor="end">-0.0042</text>
+<text x="0" y="142" font-size="12.5" fill="#141413">短卷积 + 7 注意力</text>
+<rect x="186" y="130" width="11" height="10" rx="1.5" fill="#788c5d"/>
+<rect x="186" y="143" width="3.0" height="4" fill="#141413"/>
+<rect x="199" y="130" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="199" y="143" width="3.0" height="4" fill="#141413"/>
+<rect x="212" y="130" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="212" y="143" width="3.0" height="4" fill="#141413"/>
+<rect x="225" y="130" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="225" y="143" width="3.0" height="4" fill="#141413"/>
+<rect x="238" y="130" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="238" y="143" width="3.0" height="4" fill="#141413"/>
+<rect x="251" y="130" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="251" y="143" width="3.0" height="4" fill="#141413"/>
+<rect x="264" y="130" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="264" y="143" width="3.0" height="4" fill="#141413"/>
+<rect x="277" y="130" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="277" y="143" width="3.0" height="4" fill="#141413"/>
+<rect x="438.5" y="130" width="9.0" height="10" fill="#6a9bcc"/>
+<text x="452.5" y="139" font-size="11" fill="#141413" text-anchor="start">+0.0041</text>
+<rect x="437.9" y="143" width="1.0" height="10" fill="#d97757"/>
+<text x="432.9" y="152" font-size="11" fill="#141413" text-anchor="end">-0.0003</text>
+<text x="0" y="176" font-size="12.5" fill="#141413">短卷积 + 3:1</text>
+<rect x="186" y="164" width="11" height="10" rx="1.5" fill="#788c5d"/>
+<rect x="186" y="177" width="3.0" height="4" fill="#141413"/>
+<rect x="199" y="164" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="199" y="177" width="3.0" height="4" fill="#141413"/>
+<rect x="212" y="164" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="212" y="177" width="3.0" height="4" fill="#141413"/>
+<rect x="225" y="164" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="225" y="177" width="3.0" height="4" fill="#141413"/>
+<rect x="238" y="164" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="238" y="177" width="3.0" height="4" fill="#141413"/>
+<rect x="251" y="164" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="251" y="177" width="3.0" height="4" fill="#141413"/>
+<rect x="264" y="164" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="264" y="177" width="3.0" height="4" fill="#141413"/>
+<rect x="277" y="164" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="277" y="177" width="3.0" height="4" fill="#141413"/>
+<rect x="438.5" y="164" width="3.7" height="10" fill="#6a9bcc"/>
+<text x="447.2" y="173" font-size="11" fill="#141413" text-anchor="start">+0.0017</text>
+<rect x="438.5" y="177" width="4.8" height="10" fill="#d97757"/>
+<text x="448.3" y="186" font-size="11" fill="#141413" text-anchor="start">+0.0022</text>
+<text x="0" y="210" font-size="12.5" fill="#141413">GDN/注意力交替</text>
+<rect x="186" y="198" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="186" y="211" width="3.0" height="4" fill="#141413"/>
+<rect x="199" y="198" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="199" y="211" width="3.0" height="4" fill="#141413"/>
+<rect x="212" y="198" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="212" y="211" width="3.0" height="4" fill="#141413"/>
+<rect x="225" y="198" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="225" y="211" width="3.0" height="4" fill="#141413"/>
+<rect x="238" y="198" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="238" y="211" width="3.0" height="4" fill="#141413"/>
+<rect x="251" y="198" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="251" y="211" width="3.0" height="4" fill="#141413"/>
+<rect x="264" y="198" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="264" y="211" width="3.0" height="4" fill="#141413"/>
+<rect x="277" y="198" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="277" y="211" width="3.0" height="4" fill="#141413"/>
+<rect x="438.5" y="198" width="16.4" height="10" fill="#6a9bcc"/>
+<text x="459.9" y="207" font-size="11" fill="#141413" text-anchor="start" font-weight="600">+0.0074</text>
+<rect x="438.5" y="211" width="5.0" height="10" fill="#d97757"/>
+<text x="448.5" y="220" font-size="11" fill="#141413" text-anchor="start">+0.0023</text>
+<text x="0" y="244" font-size="12.5" fill="#141413">GDN:注意力 3:1</text>
+<rect x="186" y="232" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="186" y="245" width="3.0" height="4" fill="#141413"/>
+<rect x="199" y="232" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="199" y="245" width="3.0" height="4" fill="#141413"/>
+<rect x="212" y="232" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="212" y="245" width="3.0" height="4" fill="#141413"/>
+<rect x="225" y="232" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="225" y="245" width="3.0" height="4" fill="#141413"/>
+<rect x="238" y="232" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="238" y="245" width="3.0" height="4" fill="#141413"/>
+<rect x="251" y="232" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="251" y="245" width="3.0" height="4" fill="#141413"/>
+<rect x="264" y="232" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="264" y="245" width="3.0" height="4" fill="#141413"/>
+<rect x="277" y="232" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="277" y="245" width="3.0" height="4" fill="#141413"/>
+<rect x="438.5" y="232" width="28.9" height="10" fill="#6a9bcc"/>
+<text x="472.4" y="241" font-size="11" fill="#141413" text-anchor="start">+0.013</text>
+<rect x="438.5" y="245" width="12.3" height="10" fill="#d97757"/>
+<text x="455.7" y="254" font-size="11" fill="#141413" text-anchor="start">+0.0055</text>
+<text x="0" y="278" font-size="12.5" fill="#141413">注意力/GDN 交替</text>
+<rect x="186" y="266" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="186" y="279" width="3.0" height="4" fill="#141413"/>
+<rect x="199" y="266" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="199" y="279" width="3.0" height="4" fill="#141413"/>
+<rect x="212" y="266" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="212" y="279" width="3.0" height="4" fill="#141413"/>
+<rect x="225" y="266" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="225" y="279" width="3.0" height="4" fill="#141413"/>
+<rect x="238" y="266" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="238" y="279" width="3.0" height="4" fill="#141413"/>
+<rect x="251" y="266" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="251" y="279" width="3.0" height="4" fill="#141413"/>
+<rect x="264" y="266" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="264" y="279" width="3.0" height="4" fill="#141413"/>
+<rect x="277" y="266" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="277" y="279" width="3.0" height="4" fill="#141413"/>
+<rect x="438.5" y="266" width="58.1" height="10" fill="#6a9bcc"/>
+<text x="501.5" y="275" font-size="11" fill="#141413" text-anchor="start" font-weight="600">+0.026</text>
+<rect x="438.5" y="279" width="38.7" height="10" fill="#d97757"/>
+<text x="482.2" y="288" font-size="11" fill="#141413" text-anchor="start" font-weight="600">+0.017</text>
+<text x="0" y="312" font-size="12.5" fill="#141413">4 层最好</text>
+<rect x="186" y="300" width="11" height="10" rx="1.5" fill="#788c5d"/>
+<rect x="186" y="313" width="6.0" height="4" fill="#141413"/>
+<rect x="199" y="300" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="199" y="313" width="3.0" height="4" fill="#141413"/>
+<rect x="212" y="300" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="212" y="313" width="3.0" height="4" fill="#141413"/>
+<rect x="225" y="300" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="225" y="313" width="6.0" height="4" fill="#141413"/>
+<rect x="372.0" y="300" width="66.5" height="10" fill="#6a9bcc"/>
+<text x="367.0" y="309" font-size="11" fill="#141413" text-anchor="end" font-weight="600">-0.031</text>
+<rect x="438.5" y="313" width="49.6" height="10" fill="#d97757"/>
+<text x="493.0" y="322" font-size="11" fill="#141413" text-anchor="start" font-weight="600">+0.022</text>
+<text x="0" y="346" font-size="12.5" fill="#141413">A/M 参照 AMAMAMAMAMAM</text>
+<rect x="186" y="334" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="199" y="334" width="11" height="10" rx="1.5" fill="#fff" stroke="#b0aea5" stroke-dasharray="2 1.5"/>
+<rect x="199" y="347" width="3.0" height="4" fill="#141413"/>
+<rect x="212" y="334" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="225" y="334" width="11" height="10" rx="1.5" fill="#fff" stroke="#b0aea5" stroke-dasharray="2 1.5"/>
+<rect x="225" y="347" width="3.0" height="4" fill="#141413"/>
+<rect x="238" y="334" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="251" y="334" width="11" height="10" rx="1.5" fill="#fff" stroke="#b0aea5" stroke-dasharray="2 1.5"/>
+<rect x="251" y="347" width="3.0" height="4" fill="#141413"/>
+<rect x="264" y="334" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="277" y="334" width="11" height="10" rx="1.5" fill="#fff" stroke="#b0aea5" stroke-dasharray="2 1.5"/>
+<rect x="277" y="347" width="3.0" height="4" fill="#141413"/>
+<rect x="290" y="334" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="303" y="334" width="11" height="10" rx="1.5" fill="#fff" stroke="#b0aea5" stroke-dasharray="2 1.5"/>
+<rect x="303" y="347" width="3.0" height="4" fill="#141413"/>
+<rect x="316" y="334" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="329" y="334" width="11" height="10" rx="1.5" fill="#fff" stroke="#b0aea5" stroke-dasharray="2 1.5"/>
+<rect x="329" y="347" width="3.0" height="4" fill="#141413"/>
+<rect x="438.5" y="334" width="45.8" height="10" fill="#6a9bcc"/>
+<text x="489.3" y="343" font-size="11" fill="#141413" text-anchor="start" font-weight="600">+0.021</text>
+<rect x="438.5" y="347" width="52.4" height="10" fill="#d97757"/>
+<text x="495.9" y="356" font-size="11" fill="#141413" text-anchor="start" font-weight="600">+0.024</text>
+<text x="0" y="380" font-size="12.5" fill="#141413">4 层最好拆成 A/M</text>
+<rect x="186" y="368" width="11" height="10" rx="1.5" fill="#788c5d"/>
+<rect x="199" y="368" width="11" height="10" rx="1.5" fill="#fff" stroke="#b0aea5" stroke-dasharray="2 1.5"/>
+<rect x="199" y="381" width="6.0" height="4" fill="#141413"/>
+<rect x="212" y="368" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="225" y="368" width="11" height="10" rx="1.5" fill="#fff" stroke="#b0aea5" stroke-dasharray="2 1.5"/>
+<rect x="225" y="381" width="3.0" height="4" fill="#141413"/>
+<rect x="238" y="368" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="251" y="368" width="11" height="10" rx="1.5" fill="#fff" stroke="#b0aea5" stroke-dasharray="2 1.5"/>
+<rect x="251" y="381" width="3.0" height="4" fill="#141413"/>
+<rect x="264" y="368" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="277" y="368" width="11" height="10" rx="1.5" fill="#fff" stroke="#b0aea5" stroke-dasharray="2 1.5"/>
+<rect x="277" y="381" width="6.0" height="4" fill="#141413"/>
+<rect x="433.3" y="368" width="5.2" height="10" fill="#6a9bcc"/>
+<text x="428.3" y="377" font-size="11" fill="#141413" text-anchor="end">-0.0023</text>
+<rect x="438.5" y="381" width="72.8" height="10" fill="#d97757"/>
+<text x="516.3" y="390" font-size="11" fill="#141413" text-anchor="start" font-weight="600">+0.033</text>
+<text x="0" y="414" font-size="12.5" fill="#141413">A/M 参照 MAAMAMAMAMAM</text>
+<rect x="186" y="402" width="11" height="10" rx="1.5" fill="#fff" stroke="#b0aea5" stroke-dasharray="2 1.5"/>
+<rect x="186" y="415" width="3.0" height="4" fill="#141413"/>
+<rect x="199" y="402" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="212" y="402" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="225" y="402" width="11" height="10" rx="1.5" fill="#fff" stroke="#b0aea5" stroke-dasharray="2 1.5"/>
+<rect x="225" y="415" width="3.0" height="4" fill="#141413"/>
+<rect x="238" y="402" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="251" y="402" width="11" height="10" rx="1.5" fill="#fff" stroke="#b0aea5" stroke-dasharray="2 1.5"/>
+<rect x="251" y="415" width="3.0" height="4" fill="#141413"/>
+<rect x="264" y="402" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="277" y="402" width="11" height="10" rx="1.5" fill="#fff" stroke="#b0aea5" stroke-dasharray="2 1.5"/>
+<rect x="277" y="415" width="3.0" height="4" fill="#141413"/>
+<rect x="290" y="402" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="303" y="402" width="11" height="10" rx="1.5" fill="#fff" stroke="#b0aea5" stroke-dasharray="2 1.5"/>
+<rect x="303" y="415" width="3.0" height="4" fill="#141413"/>
+<rect x="316" y="402" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="329" y="402" width="11" height="10" rx="1.5" fill="#fff" stroke="#b0aea5" stroke-dasharray="2 1.5"/>
+<rect x="329" y="415" width="3.0" height="4" fill="#141413"/>
+<rect x="438.5" y="402" width="82.0" height="10" fill="#6a9bcc"/>
+<text x="525.4" y="411" font-size="11" fill="#141413" text-anchor="start" font-weight="600">+0.037</text>
+<rect x="438.5" y="415" width="93.2" height="10" fill="#d97757"/>
+<text x="536.7" y="424" font-size="11" fill="#141413" text-anchor="start" font-weight="600">+0.042</text>
+<text x="0" y="448" font-size="12.5" fill="#141413">A/M 参照 MAAMAMAMMAAM</text>
+<rect x="186" y="436" width="11" height="10" rx="1.5" fill="#fff" stroke="#b0aea5" stroke-dasharray="2 1.5"/>
+<rect x="186" y="449" width="3.0" height="4" fill="#141413"/>
+<rect x="199" y="436" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="212" y="436" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="225" y="436" width="11" height="10" rx="1.5" fill="#fff" stroke="#b0aea5" stroke-dasharray="2 1.5"/>
+<rect x="225" y="449" width="3.0" height="4" fill="#141413"/>
+<rect x="238" y="436" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="251" y="436" width="11" height="10" rx="1.5" fill="#fff" stroke="#b0aea5" stroke-dasharray="2 1.5"/>
+<rect x="251" y="449" width="3.0" height="4" fill="#141413"/>
+<rect x="264" y="436" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="277" y="436" width="11" height="10" rx="1.5" fill="#fff" stroke="#b0aea5" stroke-dasharray="2 1.5"/>
+<rect x="277" y="449" width="3.0" height="4" fill="#141413"/>
+<rect x="290" y="436" width="11" height="10" rx="1.5" fill="#fff" stroke="#b0aea5" stroke-dasharray="2 1.5"/>
+<rect x="290" y="449" width="3.0" height="4" fill="#141413"/>
+<rect x="303" y="436" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="316" y="436" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="329" y="436" width="11" height="10" rx="1.5" fill="#fff" stroke="#b0aea5" stroke-dasharray="2 1.5"/>
+<rect x="329" y="449" width="3.0" height="4" fill="#141413"/>
+<rect x="438.5" y="436" width="83.8" height="10" fill="#6a9bcc"/>
+<text x="527.2" y="445" font-size="11" fill="#141413" text-anchor="start" font-weight="600">+0.038</text>
+<rect x="438.5" y="449" width="99.1" height="10" fill="#d97757"/>
+<text x="542.6" y="458" font-size="11" fill="#141413" text-anchor="start" font-weight="600">+0.045</text>
+<text x="0" y="482" font-size="12.5" fill="#141413">全 GDN</text>
+<rect x="186" y="470" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="186" y="483" width="3.0" height="4" fill="#141413"/>
+<rect x="199" y="470" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="199" y="483" width="3.0" height="4" fill="#141413"/>
+<rect x="212" y="470" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="212" y="483" width="3.0" height="4" fill="#141413"/>
+<rect x="225" y="470" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="225" y="483" width="3.0" height="4" fill="#141413"/>
+<rect x="238" y="470" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="238" y="483" width="3.0" height="4" fill="#141413"/>
+<rect x="251" y="470" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="251" y="483" width="3.0" height="4" fill="#141413"/>
+<rect x="264" y="470" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="264" y="483" width="3.0" height="4" fill="#141413"/>
+<rect x="277" y="470" width="11" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="277" y="483" width="3.0" height="4" fill="#141413"/>
+<rect x="438.5" y="470" width="193.0" height="10" fill="#6a9bcc"/>
+<text x="636.4" y="479" font-size="11" fill="#141413" text-anchor="start" font-weight="600">+0.087</text>
+<rect x="438.5" y="483" width="103.3" height="10" fill="#d97757"/>
+<text x="546.8" y="492" font-size="11" fill="#141413" text-anchor="start" font-weight="600">+0.047</text>
+<text x="0" y="516" font-size="12.5" fill="#141413">4 层普通 Transformer</text>
+<rect x="186" y="504" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="186" y="517" width="3.0" height="4" fill="#141413"/>
+<rect x="199" y="504" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="199" y="517" width="3.0" height="4" fill="#141413"/>
+<rect x="212" y="504" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="212" y="517" width="3.0" height="4" fill="#141413"/>
+<rect x="225" y="504" width="11" height="10" rx="1.5" fill="#d97757"/>
+<rect x="225" y="517" width="3.0" height="4" fill="#141413"/>
+<rect x="417.6" y="504" width="20.9" height="10" fill="#6a9bcc"/>
+<text x="412.6" y="513" font-size="11" fill="#141413" text-anchor="end" font-weight="600">-0.0094</text>
+<rect x="438.5" y="517" width="136.7" height="10" fill="#d97757"/>
+<text x="580.1" y="526" font-size="11" fill="#141413" text-anchor="start" font-weight="600">+0.062</text>
+</svg><figcaption>每行 4 个种子，按 600 秒的结果从好到差排。差值按种子配对计算；粗体数字超过 3 个标准误。灰底是这一组在变的 4 层。</figcaption></figure>
+<h2>120 秒的排名只能部分预测 600 秒（名次相关 0.43），深而宽的模型后来居上</h2>
+<p>44 个不同模型，每个点是一个模型 4 个种子的均值。120 秒第一是“4 层最好”，600 秒第一是“中心，首尾 MLP ×24”。600 秒运行里第 120 秒的检查点和单独跑 120 秒的结果平均只差 0.0007（相关 1.00），所以以后一次 600 秒运行就能同时给出两种预算的分数。</p>
+<figure><div class="legend"><span><i style="background:#788c5d;height:9px;width:9px;border-radius:50%"></i>4 层</span><span><i style="background:#d97757;height:9px;width:9px;border-radius:50%"></i>8 层</span><span><i style="background:#6a9bcc;height:9px;width:9px;border-radius:50%"></i>12 子层（A/M）</span></div><svg class="chart" viewBox="0 0 720 330" font-family="Poppins, PingFang SC, sans-serif">
+<line x1="58" y1="290.0" x2="708" y2="290.0" stroke="#e8e6dc"/>
+<text x="52" y="294.0" font-size="11" fill="#5e5d59" text-anchor="end">2.51</text>
+<line x1="58" y1="260.4" x2="708" y2="260.4" stroke="#e8e6dc"/>
+<text x="52" y="264.4" font-size="11" fill="#5e5d59" text-anchor="end">2.52</text>
+<line x1="58" y1="230.9" x2="708" y2="230.9" stroke="#e8e6dc"/>
+<text x="52" y="234.9" font-size="11" fill="#5e5d59" text-anchor="end">2.53</text>
+<line x1="58" y1="201.3" x2="708" y2="201.3" stroke="#e8e6dc"/>
+<text x="52" y="205.3" font-size="11" fill="#5e5d59" text-anchor="end">2.54</text>
+<line x1="58" y1="171.8" x2="708" y2="171.8" stroke="#e8e6dc"/>
+<text x="52" y="175.8" font-size="11" fill="#5e5d59" text-anchor="end">2.55</text>
+<line x1="58" y1="142.2" x2="708" y2="142.2" stroke="#e8e6dc"/>
+<text x="52" y="146.2" font-size="11" fill="#5e5d59" text-anchor="end">2.56</text>
+<line x1="58" y1="112.7" x2="708" y2="112.7" stroke="#e8e6dc"/>
+<text x="52" y="116.7" font-size="11" fill="#5e5d59" text-anchor="end">2.57</text>
+<line x1="58" y1="83.1" x2="708" y2="83.1" stroke="#e8e6dc"/>
+<text x="52" y="87.1" font-size="11" fill="#5e5d59" text-anchor="end">2.58</text>
+<line x1="58" y1="53.6" x2="708" y2="53.6" stroke="#e8e6dc"/>
+<text x="52" y="57.6" font-size="11" fill="#5e5d59" text-anchor="end">2.59</text>
+<line x1="58" y1="24.0" x2="708" y2="24.0" stroke="#e8e6dc"/>
+<text x="52" y="28.0" font-size="11" fill="#5e5d59" text-anchor="end">2.60</text>
+<text x="58.0" y="306" font-size="11" fill="#5e5d59" text-anchor="middle">2.67</text>
+<text x="130.2" y="306" font-size="11" fill="#5e5d59" text-anchor="middle">2.68</text>
+<text x="202.4" y="306" font-size="11" fill="#5e5d59" text-anchor="middle">2.69</text>
+<text x="274.7" y="306" font-size="11" fill="#5e5d59" text-anchor="middle">2.70</text>
+<text x="346.9" y="306" font-size="11" fill="#5e5d59" text-anchor="middle">2.71</text>
+<text x="419.1" y="306" font-size="11" fill="#5e5d59" text-anchor="middle">2.72</text>
+<text x="491.3" y="306" font-size="11" fill="#5e5d59" text-anchor="middle">2.73</text>
+<text x="563.6" y="306" font-size="11" fill="#5e5d59" text-anchor="middle">2.74</text>
+<text x="635.8" y="306" font-size="11" fill="#5e5d59" text-anchor="middle">2.75</text>
+<text x="708.0" y="306" font-size="11" fill="#5e5d59" text-anchor="middle">2.76</text>
+<text x="383.0" y="326" font-size="11.5" fill="#5e5d59" text-anchor="middle">训练 120 秒的 loss</text>
+<text x="58" y="12" font-size="11.5" fill="#5e5d59">训练 600 秒的 loss</text>
+<circle cx="322.1" cy="265.8" r="4.5" fill="#d97757" fill-opacity="0.8"/>
+<circle cx="418.7" cy="261.4" r="4.5" fill="#d97757" fill-opacity="0.8"/>
+<circle cx="383.4" cy="258.1" r="4.5" fill="#d97757" fill-opacity="0.8"/>
+<circle cx="451.3" cy="257.6" r="4.5" fill="#d97757" fill-opacity="0.8"/>
+<circle cx="425.9" cy="254.4" r="4.5" fill="#d97757" fill-opacity="0.8"/>
+<circle cx="435.5" cy="253.3" r="4.5" fill="#d97757" fill-opacity="0.8"/>
+<circle cx="323.0" cy="251.5" r="4.5" fill="#d97757" fill-opacity="0.8"/>
+<circle cx="318.1" cy="246.7" r="4.5" fill="#d97757" fill-opacity="0.8"/>
+<circle cx="329.8" cy="243.9" r="4.5" fill="#d97757" fill-opacity="0.8"/>
+<circle cx="283.6" cy="241.2" r="4.5" fill="#d97757" fill-opacity="0.8"/>
+<circle cx="286.7" cy="236.5" r="4.5" fill="#d97757" fill-opacity="0.8"/>
+<circle cx="322.2" cy="236.0" r="4.5" fill="#d97757" fill-opacity="0.8"/>
+<circle cx="346.2" cy="235.9" r="4.5" fill="#d97757" fill-opacity="0.8"/>
+<circle cx="221.0" cy="233.7" r="4.5" fill="#d97757" fill-opacity="0.8"/>
+<circle cx="318.4" cy="232.3" r="4.5" fill="#d97757" fill-opacity="0.8"/>
+<circle cx="289.0" cy="231.5" r="4.5" fill="#d97757" fill-opacity="0.8"/>
+<circle cx="301.2" cy="225.1" r="4.5" fill="#d97757" fill-opacity="0.8"/>
+<circle cx="342.5" cy="224.9" r="4.5" fill="#d97757" fill-opacity="0.8"/>
+<circle cx="297.3" cy="224.7" r="4.5" fill="#d97757" fill-opacity="0.8"/>
+<circle cx="166.8" cy="223.1" r="4.5" fill="#d97757" fill-opacity="0.8"/>
+<circle cx="254.8" cy="220.9" r="4.5" fill="#d97757" fill-opacity="0.8"/>
+<circle cx="370.9" cy="218.3" r="4.5" fill="#d97757" fill-opacity="0.8"/>
+<circle cx="326.7" cy="218.1" r="4.5" fill="#d97757" fill-opacity="0.8"/>
+<circle cx="328.5" cy="217.6" r="4.5" fill="#d97757" fill-opacity="0.8"/>
+<circle cx="324.0" cy="215.2" r="4.5" fill="#d97757" fill-opacity="0.8"/>
+<circle cx="383.3" cy="215.2" r="4.5" fill="#d97757" fill-opacity="0.8"/>
+<circle cx="427.8" cy="186.4" r="4.5" fill="#d97757" fill-opacity="0.8"/>
+<circle cx="478.3" cy="179.9" r="4.5" fill="#d97757" fill-opacity="0.8"/>
+<circle cx="494.9" cy="175.7" r="4.5" fill="#d97757" fill-opacity="0.8"/>
+<circle cx="514.7" cy="167.3" r="4.5" fill="#d97757" fill-opacity="0.8"/>
+<circle cx="68.5" cy="165.4" r="4.5" fill="#788c5d" fill-opacity="0.8"/>
+<circle cx="438.3" cy="161.6" r="4.5" fill="#6a9bcc" fill-opacity="0.8"/>
+<circle cx="391.9" cy="152.5" r="4.5" fill="#d97757" fill-opacity="0.8"/>
+<circle cx="272.0" cy="134.4" r="4.5" fill="#d97757" fill-opacity="0.8"/>
+<circle cx="704.1" cy="117.4" r="4.5" fill="#d97757" fill-opacity="0.8"/>
+<circle cx="639.2" cy="116.3" r="4.5" fill="#d97757" fill-opacity="0.8"/>
+<circle cx="556.1" cy="107.1" r="4.5" fill="#6a9bcc" fill-opacity="0.8"/>
+<circle cx="562.1" cy="99.3" r="4.5" fill="#6a9bcc" fill-opacity="0.8"/>
+<circle cx="708.0" cy="93.7" r="4.5" fill="#d97757" fill-opacity="0.8"/>
+<circle cx="477.6" cy="55.2" r="4.5" fill="#d97757" fill-opacity="0.8"/>
+<circle cx="220.9" cy="49.2" r="4.5" fill="#788c5d" fill-opacity="0.8"/>
+<circle cx="507.3" cy="37.3" r="4.5" fill="#d97757" fill-opacity="0.8"/>
+<circle cx="441.9" cy="25.1" r="4.5" fill="#d97757" fill-opacity="0.8"/>
+<circle cx="708.0" cy="24.0" r="4.5" fill="#d97757" fill-opacity="0.8"/>
+<text x="329.1" y="269.8" font-size="11.5" fill="#141413">中心，首尾 MLP ×24</text>
+<text x="336.8" y="247.9" font-size="11.5" fill="#141413">普通 Transformer</text>
+<text x="75.5" y="169.4" font-size="11.5" fill="#141413">4 层最好</text>
+<text x="227.9" y="53.2" font-size="11.5" fill="#141413">4 层普通 Transformer</text>
+</svg><figcaption>少数很差的模型超出范围，画在边上。</figcaption></figure>
+<h2>6 个注意力子层 + 6 个 MLP 子层怎么排：严格交错最好，夹心越大越差，M 开头更差</h2>
+<p>A 是只有全注意力的子层，M 是只有 MLP（×12）的子层。同一组里各种次序的参数量和每步耗时都相同（10 分钟都跑约 4502 步），差别只来自每一步学到多少。夹心 k 指底部多放 k 个 A、顶部多放 k 个 M（Press 等人 2020 年提出的 sandwich 排法），k = 0 就是严格交错。</p>
+<p>和严格交错打平的只有夹心 1 和两两成块。从夹心 2 开始越夹越差：夹心 2 +0.014，夹心 3 +0.031，夹心 4 +0.049，夹心 5 +0.076。M 开头都更差，同事 pilot 里最好的 MAAMAMAMAMAM 差 +0.016。</p>
+<figure><svg class="chart" viewBox="0 0 720 306" font-family="Poppins, PingFang SC, sans-serif">
+<line x1="276.7" y1="4" x2="276.7" y2="298" stroke="#141413" stroke-width="0.8"/>
+<text x="0" y="23" font-size="12" fill="#141413">AAMAMAMAMAMM（夹心 1）</text>
+<rect x="270.9" y="13" width="5.8" height="12" fill="#b0aea5"/>
+<line x1="252.4" y1="19" x2="289.4" y2="19" stroke="#141413" stroke-width="1"/>
+<text x="246.4" y="23" font-size="11.5" fill="#141413" text-anchor="end">-0.0012</text>
+<text x="0" y="49" font-size="12" fill="#141413">AAMMAAMMAAMM</text>
+<rect x="276.7" y="39" width="15.4" height="12" fill="#b0aea5"/>
+<line x1="267.5" y1="45" x2="316.6" y2="45" stroke="#141413" stroke-width="1"/>
+<text x="322.6" y="49" font-size="11.5" fill="#141413" text-anchor="start">+0.0033</text>
+<text x="0" y="75" font-size="12" fill="#141413">AAAMAMAMAMMM（夹心 2）</text>
+<rect x="276.7" y="65" width="65.9" height="12" fill="#d97757"/>
+<line x1="334.4" y1="71" x2="350.8" y2="71" stroke="#141413" stroke-width="1"/>
+<text x="356.8" y="75" font-size="11.5" fill="#141413" text-anchor="start">+0.014</text>
+<text x="0" y="101" font-size="12" fill="#141413">MAAMAMAMAMAM</text>
+<rect x="276.7" y="91" width="76.0" height="12" fill="#d97757"/>
+<line x1="337.7" y1="97" x2="367.7" y2="97" stroke="#141413" stroke-width="1"/>
+<text x="373.7" y="101" font-size="11.5" fill="#141413" text-anchor="start">+0.016</text>
+<text x="0" y="127" font-size="12" fill="#141413">AAAMMMAAAMMM</text>
+<rect x="276.7" y="117" width="107.9" height="12" fill="#d97757"/>
+<line x1="373.2" y1="123" x2="395.9" y2="123" stroke="#141413" stroke-width="1"/>
+<text x="401.9" y="127" font-size="11.5" fill="#141413" text-anchor="start">+0.023</text>
+<text x="0" y="153" font-size="12" fill="#141413">MAMAMAMAMAMA</text>
+<rect x="276.7" y="143" width="108.6" height="12" fill="#d97757"/>
+<line x1="364.8" y1="149" x2="405.7" y2="149" stroke="#141413" stroke-width="1"/>
+<text x="411.7" y="153" font-size="11.5" fill="#141413" text-anchor="start">+0.023</text>
+<text x="0" y="179" font-size="12" fill="#141413">AAAAMAMAMMMM（夹心 3）</text>
+<rect x="276.7" y="169" width="142.7" height="12" fill="#d97757"/>
+<line x1="390.8" y1="175" x2="447.8" y2="175" stroke="#141413" stroke-width="1"/>
+<text x="453.8" y="179" font-size="11.5" fill="#141413" text-anchor="start">+0.031</text>
+<text x="0" y="205" font-size="12" fill="#141413">MMAMAMAMAMAA</text>
+<rect x="276.7" y="195" width="227.5" height="12" fill="#d97757"/>
+<line x1="487.1" y1="201" x2="521.2" y2="201" stroke="#141413" stroke-width="1"/>
+<text x="527.2" y="205" font-size="11.5" fill="#141413" text-anchor="start">+0.049</text>
+<text x="0" y="231" font-size="12" fill="#141413">AAAAAMAMMMMM（夹心 4）</text>
+<rect x="276.7" y="221" width="228.8" height="12" fill="#d97757"/>
+<line x1="501.4" y1="227" x2="509.5" y2="227" stroke="#141413" stroke-width="1"/>
+<text x="515.5" y="231" font-size="11.5" fill="#141413" text-anchor="start">+0.049</text>
+<text x="0" y="257" font-size="12" fill="#141413">AAAAAAMMMMMM（夹心 5）</text>
+<rect x="276.7" y="247" width="353.7" height="12" fill="#d97757"/>
+<line x1="616.8" y1="253" x2="643.9" y2="253" stroke="#141413" stroke-width="1"/>
+<text x="649.9" y="257" font-size="11.5" fill="#141413" text-anchor="start">+0.076</text>
+<text x="0" y="283" font-size="12" fill="#141413">MMMMMMAAAAAA</text>
+<rect x="276.7" y="273" width="373.3" height="12" fill="#d97757"/>
+<line x1="650.0" y1="279" x2="650.0" y2="279" stroke="#141413" stroke-width="1"/>
+<text x="656.0" y="283" font-size="11.5" fill="#141413" text-anchor="start">+0.325</text>
+</svg><figcaption>宽 256，600 秒，和严格交错 AMAMAMAMAMAM（2.5550）按种子配对，4 个种子。负数是更好。超出 0.08 的画在边上。</figcaption></figure>
+<h2>换成宽 512 或 16 个子层，次序的结论不变；更大的代价是把注意力和 MLP 拆开，差 0.047</h2>
+<p>宽 512、4 A + 4 M（MLP ×16，学习率用 10 分钟的最优值）：交错、夹心 1、两两成块仍在噪声内，夹心 2 差 +0.024，M 开头差 +0.028，完全分开（夹心 3）差 +0.065。第一个 A 换成短卷积好 0.021。不拆开的普通块 C16·A16·A16·A16 比拆开的交错好 0.047：拆开后层数翻倍，每层的固定开销让 10 分钟的步数从 2795 降到 2282。</p>
+<p>宽 256、8 A + 8 M 时，两两成块 -0.0016 ± 0.0008，夹心 1 +0.0010，夹心 2、3 分别 +0.0080、+0.016：子层多了，夹心也没有变好。</p>
+<figure><svg class="chart" viewBox="0 0 720 228" font-family="Poppins, PingFang SC, sans-serif">
+<line x1="423.8" y1="4" x2="423.8" y2="220" stroke="#141413" stroke-width="0.8"/>
+<text x="0" y="23" font-size="12" fill="#141413">C16·A16·A16·A16（不拆）</text>
+<rect x="272.1" y="13" width="151.8" height="12" fill="#d97757"/>
+<line x1="254.2" y1="19" x2="289.9" y2="19" stroke="#141413" stroke-width="1"/>
+<text x="248.2" y="23" font-size="11.5" fill="#141413" text-anchor="end">-0.047</text>
+<text x="0" y="49" font-size="12" fill="#141413">A16·A16·A16·A16（不拆）</text>
+<rect x="341.8" y="39" width="82.1" height="12" fill="#d97757"/>
+<line x1="331.1" y1="45" x2="352.4" y2="45" stroke="#141413" stroke-width="1"/>
+<text x="325.1" y="49" font-size="11.5" fill="#141413" text-anchor="end">-0.025</text>
+<text x="0" y="75" font-size="12" fill="#141413">CMAMAMAM</text>
+<rect x="355.0" y="65" width="68.9" height="12" fill="#d97757"/>
+<line x1="342.7" y1="71" x2="367.2" y2="71" stroke="#141413" stroke-width="1"/>
+<text x="336.7" y="75" font-size="11.5" fill="#141413" text-anchor="end">-0.021</text>
+<text x="0" y="101" font-size="12" fill="#141413">AAMAMAMM（夹心 1）</text>
+<rect x="423.8" y="91" width="2.6" height="12" fill="#b0aea5"/>
+<line x1="411.0" y1="97" x2="441.8" y2="97" stroke="#141413" stroke-width="1"/>
+<text x="447.8" y="101" font-size="11.5" fill="#141413" text-anchor="start">+0.0008</text>
+<text x="0" y="127" font-size="12" fill="#141413">AAMMAAMM</text>
+<rect x="423.8" y="117" width="9.7" height="12" fill="#eab8a6"/>
+<line x1="425.4" y1="123" x2="441.7" y2="123" stroke="#141413" stroke-width="1"/>
+<text x="447.7" y="127" font-size="11.5" fill="#141413" text-anchor="start">+0.0030</text>
+<text x="0" y="153" font-size="12" fill="#141413">AAAMAMMM（夹心 2）</text>
+<rect x="423.8" y="143" width="76.3" height="12" fill="#d97757"/>
+<line x1="490.5" y1="149" x2="509.7" y2="149" stroke="#141413" stroke-width="1"/>
+<text x="515.7" y="153" font-size="11.5" fill="#141413" text-anchor="start">+0.024</text>
+<text x="0" y="179" font-size="12" fill="#141413">MAMAMAMA</text>
+<rect x="423.8" y="169" width="89.7" height="12" fill="#d97757"/>
+<line x1="498.0" y1="175" x2="529.0" y2="175" stroke="#141413" stroke-width="1"/>
+<text x="535.0" y="179" font-size="11.5" fill="#141413" text-anchor="start">+0.028</text>
+<text x="0" y="205" font-size="12" fill="#141413">AAAAMMMM（夹心 3）</text>
+<rect x="423.8" y="195" width="209.8" height="12" fill="#d97757"/>
+<line x1="630.7" y1="201" x2="636.6" y2="201" stroke="#141413" stroke-width="1"/>
+<text x="642.6" y="205" font-size="11.5" fill="#141413" text-anchor="start">+0.065</text>
+</svg><figcaption>宽 512，600 秒，和拆开的严格交错 AMAMAMAM（2.4910）按种子配对，4 个种子。</figcaption></figure>
+<h2>夹心 1 在 10 组设置里合计 +0.0019 ± 0.0008：没有收益，反而比严格交错略差</h2>
+<p>夹心 1（AAMAM…MM：底部多 1 个 A、顶部多 1 个 M）和严格交错按种子配对。训练程序只允许种子 42–45，所以重复在不同的宽度、子层数、MLP 宽度和学习率上做：10 组 × 4 个种子 = 40 对。夹心 1 在 3 组里略好、7 组里略差，单组在 -0.0037 到 +0.0086 之间。</p>
+<p>训练越久，两者越接近（同一次 600 秒运行在各时刻的读数，全部配对合计）：15 秒 +0.020 ± 0.0039，30 秒 +0.0058 ± 0.0035，60 秒 +0.0044 ± 0.0017，2 分钟 +0.0037 ± 0.0016，10 分钟 +0.0019 ± 0.0008。训练程序最长只允许 600 秒。</p>
+<figure><svg class="chart" viewBox="0 0 720 306" font-family="Poppins, PingFang SC, sans-serif">
+<line x1="440.0" y1="4" x2="440.0" y2="298" stroke="#141413" stroke-width="0.8"/>
+<text x="0" y="23" font-size="12" fill="#141413">宽 256，6+6</text>
+<rect x="418.4" y="13" width="21.6" height="12" fill="#b0aea5"/>
+<line x1="349.0" y1="19" x2="487.7" y2="19" stroke="#141413" stroke-width="1"/>
+<text x="343.0" y="23" font-size="11.5" fill="#141413" text-anchor="end">-0.0012</text>
+<text x="0" y="49" font-size="12" fill="#141413">宽 512，4+4，MLP ×16</text>
+<rect x="440.0" y="39" width="13.8" height="12" fill="#b0aea5"/>
+<line x1="370.3" y1="45" x2="537.4" y2="45" stroke="#141413" stroke-width="1"/>
+<text x="543.4" y="49" font-size="11.5" fill="#141413" text-anchor="start">+0.0008</text>
+<text x="0" y="75" font-size="12" fill="#141413">宽 256，8+8</text>
+<rect x="440.0" y="65" width="17.9" height="12" fill="#b0aea5"/>
+<line x1="402.6" y1="71" x2="513.2" y2="71" stroke="#141413" stroke-width="1"/>
+<text x="519.2" y="75" font-size="11.5" fill="#141413" text-anchor="start">+0.0010</text>
+<text x="0" y="101" font-size="12" fill="#141413">宽 192，6+6</text>
+<rect x="440.0" y="91" width="149.9" height="12" fill="#eab8a6"/>
+<line x1="428.6" y1="97" x2="650.0" y2="97" stroke="#141413" stroke-width="1"/>
+<text x="656.0" y="101" font-size="11.5" fill="#141413" text-anchor="start">+0.0086</text>
+<text x="0" y="127" font-size="12" fill="#141413">宽 384，6+6</text>
+<rect x="440.0" y="117" width="60.0" height="12" fill="#d97757"/>
+<line x1="483.6" y1="123" x2="516.4" y2="123" stroke="#141413" stroke-width="1"/>
+<text x="522.4" y="127" font-size="11.5" fill="#141413" text-anchor="start">+0.0034</text>
+<text x="0" y="153" font-size="12" fill="#141413">宽 256，4+4</text>
+<rect x="440.0" y="143" width="122.2" height="12" fill="#d97757"/>
+<line x1="493.7" y1="149" x2="630.8" y2="149" stroke="#141413" stroke-width="1"/>
+<text x="636.8" y="153" font-size="11.5" fill="#141413" text-anchor="start">+0.0070</text>
+<text x="0" y="179" font-size="12" fill="#141413">宽 256，7+7</text>
+<rect x="430.9" y="169" width="9.1" height="12" fill="#b0aea5"/>
+<line x1="390.5" y1="175" x2="471.4" y2="175" stroke="#141413" stroke-width="1"/>
+<text x="384.5" y="179" font-size="11.5" fill="#141413" text-anchor="end">-0.0005</text>
+<text x="0" y="205" font-size="12" fill="#141413">宽 256，6+6，MLP ×24</text>
+<rect x="440.0" y="195" width="10.8" height="12" fill="#b0aea5"/>
+<line x1="358.6" y1="201" x2="542.9" y2="201" stroke="#141413" stroke-width="1"/>
+<text x="548.9" y="205" font-size="11.5" fill="#141413" text-anchor="start">+0.0006</text>
+<text x="0" y="231" font-size="12" fill="#141413">宽 256，6+6，学习率 0.005</text>
+<rect x="374.6" y="221" width="65.4" height="12" fill="#eab8a6"/>
+<line x1="315.7" y1="227" x2="433.5" y2="227" stroke="#141413" stroke-width="1"/>
+<text x="309.7" y="231" font-size="11.5" fill="#141413" text-anchor="end">-0.0037</text>
+<text x="0" y="257" font-size="12" fill="#141413">宽 384，8+8</text>
+<rect x="440.0" y="247" width="56.1" height="12" fill="#d97757"/>
+<line x1="478.3" y1="253" x2="513.9" y2="253" stroke="#141413" stroke-width="1"/>
+<text x="519.9" y="257" font-size="11.5" fill="#141413" text-anchor="start">+0.0032</text>
+<text x="0" y="283" font-size="12" fill="#141413">合计（40 对）</text>
+<rect x="440.0" y="273" width="33.5" height="12" fill="#eab8a6"/>
+<line x1="444.2" y1="279" x2="502.7" y2="279" stroke="#141413" stroke-width="1"/>
+<text x="508.7" y="283" font-size="11.5" fill="#141413" text-anchor="start">+0.0019</text>
+</svg><figcaption>600 秒，夹心 1 减严格交错，负数是夹心 1 更好。黑线是 ±2 个标准误。</figcaption></figure>
+<h2>A 和 M 不必一样多：10 分钟最好的是 4 个 A + 12 个 M，2 分钟最好的是 3 + 6</h2>
+<p>宽 256，MLP ×12，学习率 0.01。A 的个数和 M 的个数各取 2–12（总数不超过设置语言的上限 16），A 从底部均匀铺开，最上面一个子层是 M；两者相等时就是严格交错。每格 4 个种子。黑框是这一预算下最好的一格，蓝框是同样子层总数里最好的一格。</p>
+<p>每个子层的耗时（按 600 秒的步数拟合）：一个 A 约 10.2 ms，一个 M 约 11.9 ms，固定开销约 1 ms。同样总数时最好的配比：6 个子层 3:3，8 个子层 4:4，10 个子层 4:6，12 个子层 4:8，14 个子层 4:10，16 个子层 4:12。A 和 M 每个的耗时差不多，所以这不是速度的差别：注意力子层到 3–4 个就够了，再多不如把位置给 MLP。</p>
+<p>按种子配对（600 秒，负数是前者更好）：12 个子层 4:8 比 6:6 -0.0048 ± 0.0028，反过来 8:4 比 4:8 +0.031 ± 0.0017；16 个子层 4:12 比 8:8 -0.0053 ± 0.0014，反过来 12:4 比 4:12 +0.044 ± 0.0021。</p>
+<figure><svg class="chart" viewBox="0 0 720 238" font-family="Poppins, PingFang SC, sans-serif">
+<text x="218.0" y="13" font-size="12.5" fill="#141413" text-anchor="middle">训练 2 分钟</text>
+<text x="218.0" y="28" font-size="10.5" fill="#5e5d59" text-anchor="middle">M 子层数 →</text>
+<text x="86.0" y="42" font-size="10.5" fill="#5e5d59" text-anchor="middle">2</text>
+<text x="130.0" y="42" font-size="10.5" fill="#5e5d59" text-anchor="middle">3</text>
+<text x="174.0" y="42" font-size="10.5" fill="#5e5d59" text-anchor="middle">4</text>
+<text x="218.0" y="42" font-size="10.5" fill="#5e5d59" text-anchor="middle">6</text>
+<text x="262.0" y="42" font-size="10.5" fill="#5e5d59" text-anchor="middle">8</text>
+<text x="306.0" y="42" font-size="10.5" fill="#5e5d59" text-anchor="middle">10</text>
+<text x="350.0" y="42" font-size="10.5" fill="#5e5d59" text-anchor="middle">12</text>
+<text x="56" y="65" font-size="10.5" fill="#5e5d59" text-anchor="end">2 个 A</text>
+<rect x="65" y="49" width="42" height="24" fill="rgb(243,241,234)" stroke="#6a9bcc" stroke-width="1.6"/>
+<text x="86.0" y="65" font-size="9.5" fill="#141413" text-anchor="middle">2.788</text>
+<rect x="109" y="49" width="42" height="24" fill="rgb(241,234,226)" stroke="#6a9bcc" stroke-width="1.6"/>
+<text x="130.0" y="65" font-size="9.5" fill="#141413" text-anchor="middle">2.768</text>
+<rect x="153" y="49" width="42" height="24" fill="rgb(227,170,148)"/>
+<text x="174.0" y="65" font-size="9.5" fill="#141413" text-anchor="middle">2.736</text>
+<rect x="197" y="49" width="42" height="24" fill="rgb(225,159,136)"/>
+<text x="218.0" y="65" font-size="9.5" fill="#fff" text-anchor="middle">2.731</text>
+<rect x="241" y="49" width="42" height="24" fill="rgb(230,180,161)"/>
+<text x="262.0" y="65" font-size="9.5" fill="#141413" text-anchor="middle">2.741</text>
+<rect x="285" y="49" width="42" height="24" fill="rgb(239,224,213)"/>
+<text x="306.0" y="65" font-size="9.5" fill="#141413" text-anchor="middle">2.763</text>
+<rect x="329" y="49" width="42" height="24" fill="rgb(243,241,234)"/>
+<text x="350.0" y="65" font-size="9.5" fill="#141413" text-anchor="middle">2.786</text>
+<text x="56" y="91" font-size="10.5" fill="#5e5d59" text-anchor="end">3 个 A</text>
+<rect x="65" y="75" width="42" height="24" fill="rgb(242,237,230)"/>
+<text x="86.0" y="91" font-size="9.5" fill="#141413" text-anchor="middle">2.769</text>
+<rect x="109" y="75" width="42" height="24" fill="rgb(225,157,133)" stroke="#6a9bcc" stroke-width="1.6"/>
+<text x="130.0" y="91" font-size="9.5" fill="#fff" text-anchor="middle">2.730</text>
+<rect x="153" y="75" width="42" height="24" fill="rgb(219,129,99)" stroke="#6a9bcc" stroke-width="1.6"/>
+<text x="174.0" y="91" font-size="9.5" fill="#fff" text-anchor="middle">2.716</text>
+<rect x="197" y="75" width="42" height="24" fill="rgb(217,119,87)" stroke="#141413" stroke-width="2"/>
+<text x="218.0" y="91" font-size="9.5" fill="#fff" text-anchor="middle">2.711</text>
+<rect x="241" y="75" width="42" height="24" fill="rgb(221,139,112)" stroke="#6a9bcc" stroke-width="1.6"/>
+<text x="262.0" y="91" font-size="9.5" fill="#fff" text-anchor="middle">2.721</text>
+<rect x="285" y="75" width="42" height="24" fill="rgb(227,169,147)" stroke="#6a9bcc" stroke-width="1.6"/>
+<text x="306.0" y="91" font-size="9.5" fill="#141413" text-anchor="middle">2.736</text>
+<rect x="329" y="75" width="42" height="24" fill="rgb(238,218,206)" stroke="#6a9bcc" stroke-width="1.6"/>
+<text x="350.0" y="91" font-size="9.5" fill="#141413" text-anchor="middle">2.760</text>
+<text x="56" y="117" font-size="10.5" fill="#5e5d59" text-anchor="end">4 个 A</text>
+<rect x="65" y="101" width="42" height="24" fill="rgb(237,214,202)"/>
+<text x="86.0" y="117" font-size="9.5" fill="#141413" text-anchor="middle">2.758</text>
+<rect x="109" y="101" width="42" height="24" fill="rgb(225,157,133)"/>
+<text x="130.0" y="117" font-size="9.5" fill="#fff" text-anchor="middle">2.730</text>
+<rect x="153" y="101" width="42" height="24" fill="rgb(218,124,93)" stroke="#6a9bcc" stroke-width="1.6"/>
+<text x="174.0" y="117" font-size="9.5" fill="#fff" text-anchor="middle">2.713</text>
+<rect x="197" y="101" width="42" height="24" fill="rgb(218,126,95)" stroke="#6a9bcc" stroke-width="1.6"/>
+<text x="218.0" y="117" font-size="9.5" fill="#fff" text-anchor="middle">2.714</text>
+<rect x="241" y="101" width="42" height="24" fill="rgb(221,141,114)" stroke="#6a9bcc" stroke-width="1.6"/>
+<text x="262.0" y="117" font-size="9.5" fill="#fff" text-anchor="middle">2.722</text>
+<rect x="285" y="101" width="42" height="24" fill="rgb(231,187,169)"/>
+<text x="306.0" y="117" font-size="9.5" fill="#141413" text-anchor="middle">2.745</text>
+<rect x="329" y="101" width="42" height="24" fill="rgb(238,221,210)" stroke="#6a9bcc" stroke-width="1.6"/>
+<text x="350.0" y="117" font-size="9.5" fill="#141413" text-anchor="middle">2.761</text>
+<text x="56" y="143" font-size="10.5" fill="#5e5d59" text-anchor="end">6 个 A</text>
+<rect x="65" y="127" width="42" height="24" fill="rgb(239,223,213)"/>
+<text x="86.0" y="143" font-size="9.5" fill="#141413" text-anchor="middle">2.762</text>
+<rect x="109" y="127" width="42" height="24" fill="rgb(227,167,145)"/>
+<text x="130.0" y="143" font-size="9.5" fill="#141413" text-anchor="middle">2.735</text>
+<rect x="153" y="127" width="42" height="24" fill="rgb(221,139,111)"/>
+<text x="174.0" y="143" font-size="9.5" fill="#fff" text-anchor="middle">2.721</text>
+<rect x="197" y="127" width="42" height="24" fill="rgb(222,143,116)"/>
+<text x="218.0" y="143" font-size="9.5" fill="#fff" text-anchor="middle">2.723</text>
+<rect x="241" y="127" width="42" height="24" fill="rgb(230,183,164)" stroke="#6a9bcc" stroke-width="1.6"/>
+<text x="262.0" y="143" font-size="9.5" fill="#141413" text-anchor="middle">2.742</text>
+<rect x="285" y="127" width="42" height="24" fill="rgb(241,235,227)"/>
+<text x="306.0" y="143" font-size="9.5" fill="#141413" text-anchor="middle">2.768</text>
+<text x="56" y="169" font-size="10.5" fill="#5e5d59" text-anchor="end">8 个 A</text>
+<rect x="65" y="153" width="42" height="24" fill="rgb(243,241,234)"/>
+<text x="86.0" y="169" font-size="9.5" fill="#141413" text-anchor="middle">2.774</text>
+<rect x="109" y="153" width="42" height="24" fill="rgb(233,194,178)"/>
+<text x="130.0" y="169" font-size="9.5" fill="#141413" text-anchor="middle">2.748</text>
+<rect x="153" y="153" width="42" height="24" fill="rgb(229,175,154)"/>
+<text x="174.0" y="169" font-size="9.5" fill="#141413" text-anchor="middle">2.739</text>
+<rect x="197" y="153" width="42" height="24" fill="rgb(232,190,172)"/>
+<text x="218.0" y="169" font-size="9.5" fill="#141413" text-anchor="middle">2.746</text>
+<rect x="241" y="153" width="42" height="24" fill="rgb(239,225,214)"/>
+<text x="262.0" y="169" font-size="9.5" fill="#141413" text-anchor="middle">2.763</text>
+<text x="56" y="195" font-size="10.5" fill="#5e5d59" text-anchor="end">10 个 A</text>
+<rect x="65" y="179" width="42" height="24" fill="rgb(243,241,234)"/>
+<text x="86.0" y="195" font-size="9.5" fill="#141413" text-anchor="middle">2.791</text>
+<rect x="109" y="179" width="42" height="24" fill="rgb(242,236,228)"/>
+<text x="130.0" y="195" font-size="9.5" fill="#141413" text-anchor="middle">2.769</text>
+<rect x="153" y="179" width="42" height="24" fill="rgb(240,227,217)"/>
+<text x="174.0" y="195" font-size="9.5" fill="#141413" text-anchor="middle">2.764</text>
+<rect x="197" y="179" width="42" height="24" fill="rgb(242,240,233)"/>
+<text x="218.0" y="195" font-size="9.5" fill="#141413" text-anchor="middle">2.771</text>
+<text x="56" y="221" font-size="10.5" fill="#5e5d59" text-anchor="end">12 个 A</text>
+<rect x="65" y="205" width="42" height="24" fill="rgb(243,241,234)"/>
+<text x="86.0" y="221" font-size="9.5" fill="#141413" text-anchor="middle">2.812</text>
+<rect x="109" y="205" width="42" height="24" fill="rgb(243,241,234)"/>
+<text x="130.0" y="221" font-size="9.5" fill="#141413" text-anchor="middle">2.789</text>
+<rect x="153" y="205" width="42" height="24" fill="rgb(243,241,234)"/>
+<text x="174.0" y="221" font-size="9.5" fill="#141413" text-anchor="middle">2.787</text>
+<text x="552.0" y="13" font-size="12.5" fill="#141413" text-anchor="middle">训练 10 分钟</text>
+<text x="552.0" y="28" font-size="10.5" fill="#5e5d59" text-anchor="middle">M 子层数 →</text>
+<text x="420.0" y="42" font-size="10.5" fill="#5e5d59" text-anchor="middle">2</text>
+<text x="464.0" y="42" font-size="10.5" fill="#5e5d59" text-anchor="middle">3</text>
+<text x="508.0" y="42" font-size="10.5" fill="#5e5d59" text-anchor="middle">4</text>
+<text x="552.0" y="42" font-size="10.5" fill="#5e5d59" text-anchor="middle">6</text>
+<text x="596.0" y="42" font-size="10.5" fill="#5e5d59" text-anchor="middle">8</text>
+<text x="640.0" y="42" font-size="10.5" fill="#5e5d59" text-anchor="middle">10</text>
+<text x="684.0" y="42" font-size="10.5" fill="#5e5d59" text-anchor="middle">12</text>
+<rect x="399" y="49" width="42" height="24" fill="rgb(243,241,234)" stroke="#6a9bcc" stroke-width="1.6"/>
+<text x="420.0" y="65" font-size="9.5" fill="#141413" text-anchor="middle">2.711</text>
+<rect x="443" y="49" width="42" height="24" fill="rgb(243,241,234)" stroke="#6a9bcc" stroke-width="1.6"/>
+<text x="464.0" y="65" font-size="9.5" fill="#141413" text-anchor="middle">2.673</text>
+<rect x="487" y="49" width="42" height="24" fill="rgb(243,241,234)"/>
+<text x="508.0" y="65" font-size="9.5" fill="#141413" text-anchor="middle">2.639</text>
+<rect x="531" y="49" width="42" height="24" fill="rgb(243,241,234)"/>
+<text x="552.0" y="65" font-size="9.5" fill="#141413" text-anchor="middle">2.611</text>
+<rect x="575" y="49" width="42" height="24" fill="rgb(243,241,234)"/>
+<text x="596.0" y="65" font-size="9.5" fill="#141413" text-anchor="middle">2.596</text>
+<rect x="619" y="49" width="42" height="24" fill="rgb(241,233,224)"/>
+<text x="640.0" y="65" font-size="9.5" fill="#141413" text-anchor="middle">2.591</text>
+<rect x="663" y="49" width="42" height="24" fill="rgb(240,228,219)"/>
+<text x="684.0" y="65" font-size="9.5" fill="#141413" text-anchor="middle">2.588</text>
+<rect x="399" y="75" width="42" height="24" fill="rgb(243,241,234)"/>
+<text x="420.0" y="91" font-size="9.5" fill="#141413" text-anchor="middle">2.691</text>
+<rect x="443" y="75" width="42" height="24" fill="rgb(243,241,234)" stroke="#6a9bcc" stroke-width="1.6"/>
+<text x="464.0" y="91" font-size="9.5" fill="#141413" text-anchor="middle">2.635</text>
+<rect x="487" y="75" width="42" height="24" fill="rgb(243,241,234)" stroke="#6a9bcc" stroke-width="1.6"/>
+<text x="508.0" y="91" font-size="9.5" fill="#141413" text-anchor="middle">2.612</text>
+<rect x="531" y="75" width="42" height="24" fill="rgb(237,213,201)" stroke="#6a9bcc" stroke-width="1.6"/>
+<text x="552.0" y="91" font-size="9.5" fill="#141413" text-anchor="middle">2.581</text>
+<rect x="575" y="75" width="42" height="24" fill="rgb(229,179,160)" stroke="#6a9bcc" stroke-width="1.6"/>
+<text x="596.0" y="91" font-size="9.5" fill="#141413" text-anchor="middle">2.564</text>
+<rect x="619" y="75" width="42" height="24" fill="rgb(224,152,127)" stroke="#6a9bcc" stroke-width="1.6"/>
+<text x="640.0" y="91" font-size="9.5" fill="#fff" text-anchor="middle">2.551</text>
+<rect x="663" y="75" width="42" height="24" fill="rgb(224,153,129)" stroke="#6a9bcc" stroke-width="1.6"/>
+<text x="684.0" y="91" font-size="9.5" fill="#fff" text-anchor="middle">2.552</text>
+<rect x="399" y="101" width="42" height="24" fill="rgb(243,241,234)"/>
+<text x="420.0" y="117" font-size="9.5" fill="#141413" text-anchor="middle">2.676</text>
+<rect x="443" y="101" width="42" height="24" fill="rgb(243,241,234)"/>
+<text x="464.0" y="117" font-size="9.5" fill="#141413" text-anchor="middle">2.632</text>
+<rect x="487" y="101" width="42" height="24" fill="rgb(243,241,234)" stroke="#6a9bcc" stroke-width="1.6"/>
+<text x="508.0" y="117" font-size="9.5" fill="#141413" text-anchor="middle">2.597</text>
+<rect x="531" y="101" width="42" height="24" fill="rgb(231,186,168)" stroke="#6a9bcc" stroke-width="1.6"/>
+<text x="552.0" y="117" font-size="9.5" fill="#141413" text-anchor="middle">2.568</text>
+<rect x="575" y="101" width="42" height="24" fill="rgb(223,150,125)" stroke="#6a9bcc" stroke-width="1.6"/>
+<text x="596.0" y="117" font-size="9.5" fill="#fff" text-anchor="middle">2.550</text>
+<rect x="619" y="101" width="42" height="24" fill="rgb(220,137,109)" stroke="#6a9bcc" stroke-width="1.6"/>
+<text x="640.0" y="117" font-size="9.5" fill="#fff" text-anchor="middle">2.544</text>
+<rect x="663" y="101" width="42" height="24" fill="rgb(217,119,87)" stroke="#141413" stroke-width="2"/>
+<text x="684.0" y="117" font-size="9.5" fill="#fff" text-anchor="middle">2.534</text>
+<rect x="399" y="127" width="42" height="24" fill="rgb(243,241,234)"/>
+<text x="420.0" y="143" font-size="9.5" fill="#141413" text-anchor="middle">2.658</text>
+<rect x="443" y="127" width="42" height="24" fill="rgb(243,241,234)"/>
+<text x="464.0" y="143" font-size="9.5" fill="#141413" text-anchor="middle">2.616</text>
+<rect x="487" y="127" width="42" height="24" fill="rgb(238,219,207)"/>
+<text x="508.0" y="143" font-size="9.5" fill="#141413" text-anchor="middle">2.584</text>
+<rect x="531" y="127" width="42" height="24" fill="rgb(225,160,137)"/>
+<text x="552.0" y="143" font-size="9.5" fill="#fff" text-anchor="middle">2.555</text>
+<rect x="575" y="127" width="42" height="24" fill="rgb(221,138,110)"/>
+<text x="596.0" y="143" font-size="9.5" fill="#fff" text-anchor="middle">2.544</text>
+<rect x="619" y="127" width="42" height="24" fill="rgb(217,121,90)"/>
+<text x="640.0" y="143" font-size="9.5" fill="#fff" text-anchor="middle">2.536</text>
+<rect x="399" y="153" width="42" height="24" fill="rgb(243,241,234)"/>
+<text x="420.0" y="169" font-size="9.5" fill="#141413" text-anchor="middle">2.648</text>
+<rect x="443" y="153" width="42" height="24" fill="rgb(243,241,234)"/>
+<text x="464.0" y="169" font-size="9.5" fill="#141413" text-anchor="middle">2.608</text>
+<rect x="487" y="153" width="42" height="24" fill="rgb(237,213,200)"/>
+<text x="508.0" y="169" font-size="9.5" fill="#141413" text-anchor="middle">2.581</text>
+<rect x="531" y="153" width="42" height="24" fill="rgb(226,162,139)"/>
+<text x="552.0" y="169" font-size="9.5" fill="#fff" text-anchor="middle">2.556</text>
+<rect x="575" y="153" width="42" height="24" fill="rgb(219,129,100)"/>
+<text x="596.0" y="169" font-size="9.5" fill="#fff" text-anchor="middle">2.540</text>
+<rect x="399" y="179" width="42" height="24" fill="rgb(243,241,234)"/>
+<text x="420.0" y="195" font-size="9.5" fill="#141413" text-anchor="middle">2.640</text>
+<rect x="443" y="179" width="42" height="24" fill="rgb(243,241,234)"/>
+<text x="464.0" y="195" font-size="9.5" fill="#141413" text-anchor="middle">2.607</text>
+<rect x="487" y="179" width="42" height="24" fill="rgb(235,208,194)"/>
+<text x="508.0" y="195" font-size="9.5" fill="#141413" text-anchor="middle">2.578</text>
+<rect x="531" y="179" width="42" height="24" fill="rgb(224,154,129)"/>
+<text x="552.0" y="195" font-size="9.5" fill="#fff" text-anchor="middle">2.552</text>
+<rect x="399" y="205" width="42" height="24" fill="rgb(243,241,234)"/>
+<text x="420.0" y="221" font-size="9.5" fill="#141413" text-anchor="middle">2.638</text>
+<rect x="443" y="205" width="42" height="24" fill="rgb(243,241,234)"/>
+<text x="464.0" y="221" font-size="9.5" fill="#141413" text-anchor="middle">2.605</text>
+<rect x="487" y="205" width="42" height="24" fill="rgb(236,209,195)"/>
+<text x="508.0" y="221" font-size="9.5" fill="#141413" text-anchor="middle">2.579</text>
+</svg><figcaption>每格是最后 64 步的训练 loss，越低越好。空白格的子层总数超过 16。</figcaption></figure>
+<h2>MLP 总宽度不变时，M 宁多勿宽：3 M × MLP 24 +0.023，9 M × MLP 8 +0.0026（比 6 个 ×12）</h2>
+<p>6 个 A 不变，M 的个数 × MLP 倍数固定为 72（6 × 12 是严格交错）。按种子配对。</p>
+<figure><svg class="chart" viewBox="0 0 720 72" font-family="Poppins, PingFang SC, sans-serif">
+<line x1="440.0" y1="4" x2="440.0" y2="64" stroke="#141413" stroke-width="0.8"/>
+<text x="0" y="23" font-size="12" fill="#141413">6 A + 3 M × MLP 24</text>
+<rect x="440.0" y="13" width="162.7" height="12" fill="#d97757"/>
+<line x1="591.3" y1="19" x2="614.2" y2="19" stroke="#141413" stroke-width="1"/>
+<text x="620.2" y="23" font-size="11.5" fill="#141413" text-anchor="start">+0.023</text>
+<text x="0" y="49" font-size="12" fill="#141413">6 A + 9 M × MLP 8</text>
+<rect x="440.0" y="39" width="18.1" height="12" fill="#b0aea5"/>
+<line x1="415.1" y1="45" x2="501.2" y2="45" stroke="#141413" stroke-width="1"/>
+<text x="507.2" y="49" font-size="11.5" fill="#141413" text-anchor="start">+0.0026</text>
+</svg><figcaption>600 秒，和 6 A + 6 M × MLP 12 比，负数是更好。</figcaption></figure>
+<h2>还没回答的问题</h2>
+<p>学习率固定 0.01，没有为 8 层或 12 子层单独调；更深的模型可能需要更小的学习率。</p>
+<p>600 秒时数据会重复：每步 65,536 个 token，4 层最好的模型 6667 步，约看了 2.2 遍 2 亿 token 的训练数据；8 层中心模型 3997 步，约 1.3 遍。重复对两者的影响可能不同，方向未查。</p>
+<p>原计划是 300 秒，但这一轮 worker 只允许 10、120、600 秒三种预算，所以用了 600 秒。</p>
+<footer>来源：harvest 里的 l8s_*（120 秒）和 l8l_*（600 秒）运行 · 工具 tools/pg_research_reports.py · 2026-10-28</footer>
+</main>
+</body>
+</html>

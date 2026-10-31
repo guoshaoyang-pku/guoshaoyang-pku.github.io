@@ -1,0 +1,578 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>时间怎么花：注意力便宜，只有深模型靠后的层可以跳过混合</title>
+<style>
+  :root {
+    --dark: #141413;   /* primary text */
+    --light: #faf9f5;  /* page background */
+    --mid: #b0aea5;    /* borders, axes */
+    --soft: #e8e6dc;   /* subtle fills */
+    --muted: #5e5d59;  /* secondary text (darker than --mid for contrast) */
+    --orange: #d97757; /* primary accent: the main result */
+    --blue: #6a9bcc;   /* secondary accent */
+    --green: #788c5d;  /* tertiary accent */
+    --head: "Poppins", "PingFang SC", "Noto Sans CJK SC", "Hiragino Sans GB", Arial, sans-serif;
+    --body: "Lora", "Noto Serif CJK SC", "Songti SC", Georgia, serif;
+    --mono: "SF Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--light); color: var(--dark); font: 17px/1.8 var(--body); }
+  main { max-width: 760px; margin: 0 auto; padding: 72px 24px 96px; }
+  h1, h2, h3 { font-family: var(--head); font-weight: 600; line-height: 1.35; letter-spacing: -0.01em; }
+  h1 { font-size: 32px; margin: 0 0 16px; }
+  h2 { font-size: 22px; margin: 64px 0 12px; }
+  p { margin: 0 0 16px; }
+  .lede { font-size: 19px; }
+  a { color: inherit; text-decoration: underline; text-decoration-color: var(--orange); text-underline-offset: 3px; }
+  code, .id { font-family: var(--mono); font-size: 0.86em; background: var(--soft); padding: 1px 5px; border-radius: 4px; }
+
+  /* L2 settings row: monochrome line icons + label, never color emoji */
+  .settings { display: flex; flex-wrap: wrap; gap: 8px 20px; list-style: none; padding: 0; margin: 24px 0 0;
+              font: 14px/1.6 var(--head); color: var(--muted); }
+  .settings li { display: inline-flex; align-items: center; gap: 6px; }
+  .settings svg { width: 15px; height: 15px; stroke: var(--dark); fill: none; stroke-width: 1.6;
+                  stroke-linecap: round; stroke-linejoin: round; }
+  .settings b { color: var(--dark); font-weight: 500; }
+
+  figure { margin: 28px 0; padding: 20px; background: #fff; border: 1px solid var(--soft); border-radius: 10px; }
+  figure img, figure svg.chart { display: block; width: 100%; height: auto; }
+  figcaption { margin-top: 12px; font: 14px/1.6 var(--head); color: var(--muted); }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font: 13px var(--head); color: var(--muted); margin-bottom: 8px; }
+  .legend i { display: inline-block; width: 14px; height: 2px; vertical-align: middle; margin-right: 6px; }
+
+  .warn { border-left: 3px solid var(--orange); padding: 4px 0 4px 16px; margin: 24px 0; }
+  .warn strong { font-family: var(--head); }
+
+  /* sample browser: compare outputs side by side */
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--soft); margin-bottom: 12px; }
+  .tabs button { font: 14px var(--head); background: none; border: 0; padding: 8px 12px; cursor: pointer;
+                 color: var(--muted); border-bottom: 2px solid transparent; }
+  .tabs button[aria-selected="true"] { color: var(--dark); border-bottom-color: var(--orange); }
+  .sample { display: none; white-space: pre-wrap; font: 14px/1.7 var(--mono); }
+  .sample.on { display: block; }
+
+  details { margin: 16px 0; }
+  summary { cursor: pointer; font: 15px var(--head); color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font: 14px/1.6 var(--head); margin: 16px 0; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--soft); }
+  th { font-weight: 500; color: var(--muted); }
+  footer { margin-top: 80px; font: 13px var(--head); color: var(--mid); }
+  .legend span { white-space: nowrap; }
+  .num { font-family: var(--mono); font-size: 0.86em; }
+  td { vertical-align: top; }
+</style>
+</head>
+<body>
+<main>
+<h1>时间怎么花：注意力便宜，只有深模型靠后的层可以跳过混合</h1>
+<p class="lede">在宽 256、序列长 256 的设置下，一层全注意力只占每步约 7 ms（最好的 4 层模型每步约 90 ms），跳过它几乎省不出时间。4 层模型里每层都要有混合层；6 层模型里，靠后的一层跳过混合常常不亏。</p>
+<ul class="settings">
+<li><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18M12 7v5l3 2"/></svg>训练 <b>120 秒 · 1 张 RTX PRO 5000</b></li>
+<li><svg viewBox="0 0 24 24"><path d="M4 19l5-7 4 4 7-10"/></svg>分数 <b>最后 64 步训练 loss，越低越好</b></li>
+<li><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>数据 <b>FineWeb · 1024 词表 · 序列长 256</b></li>
+<li><svg viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4"/></svg>种子 <b>直接测试 42–45 · 随机结构 42</b></li>
+<li><svg viewBox="0 0 24 24"><path d="M5 5h14v14H5zM9 1v4M15 1v4M9 19v4M15 19v4"/></svg>模型 <b>宽 256 · softcap 15</b></li>
+</ul>
+<h2>每步时间主要花在 MLP 和层数上，一层全注意力只要 7 ms</h2>
+<p>用 26287 次 4 层随机结构的运行，把每步耗时拆成固定部分、每层开销、各种混合层和 MLP 宽度，按部件相加能解释 99.8% 的差异。一层全注意力 7.0 ms，GDN 8.4 ms，短卷积 2.9 ms；MLP 每 ×1 宽度 0.68 ms（×24 约 16 ms）；每多一层还有 3.8 ms 的固定开销。</p>
+<figure><div class="legend"><span><i style="background:#b0aea5;height:10px;width:10px"></i>固定部分</span><span><i style="background:#cfccc0;height:10px;width:10px"></i>每层固定开销</span><span><i style="background:#d97757;height:10px;width:10px"></i>全注意力</span><span><i style="background:#6a9bcc;height:10px;width:10px"></i>GDN</span><span><i style="background:#788c5d;height:10px;width:10px"></i>短卷积</span><span><i style="background:#141413;height:10px;width:10px"></i>MLP</span></div><svg class="chart" viewBox="0 0 720 184" font-family="Poppins, PingFang SC, sans-serif">
+<text x="0" y="25" font-size="12.5" fill="#141413">4 层最好</text>
+<rect x="150.0" y="10" width="2.4" height="20" fill="#b0aea5"/>
+<rect x="152.4" y="10" width="39.1" height="20" fill="#cfccc0"/>
+<text x="172.0" y="24" font-size="10.5" fill="#fff" text-anchor="middle">15</text>
+<rect x="191.6" y="10" width="35.9" height="20" fill="#d97757"/>
+<text x="209.5" y="24" font-size="10.5" fill="#fff" text-anchor="middle">14</text>
+<rect x="227.5" y="10" width="21.3" height="20" fill="#6a9bcc"/>
+<rect x="248.8" y="10" width="7.5" height="20" fill="#788c5d"/>
+<rect x="256.3" y="10" width="124.5" height="20" fill="#141413"/>
+<text x="318.6" y="24" font-size="10.5" fill="#fff" text-anchor="middle">49</text>
+<text x="386.9" y="25" font-size="12" fill="#141413">91 ms</text>
+<text x="0" y="65" font-size="12.5" fill="#141413">8 层中心</text>
+<rect x="150.0" y="50" width="2.4" height="20" fill="#b0aea5"/>
+<rect x="152.4" y="50" width="78.3" height="20" fill="#cfccc0"/>
+<text x="191.6" y="64" font-size="10.5" fill="#fff" text-anchor="middle">31</text>
+<rect x="230.7" y="50" width="71.9" height="20" fill="#d97757"/>
+<text x="266.6" y="64" font-size="10.5" fill="#fff" text-anchor="middle">28</text>
+<rect x="302.6" y="50" width="63.9" height="20" fill="#6a9bcc"/>
+<text x="334.5" y="64" font-size="10.5" fill="#fff" text-anchor="middle">25</text>
+<rect x="366.5" y="50" width="7.5" height="20" fill="#788c5d"/>
+<rect x="374.0" y="50" width="166.0" height="20" fill="#141413"/>
+<text x="457.0" y="64" font-size="10.5" fill="#fff" text-anchor="middle">65</text>
+<text x="546.0" y="65" font-size="12" fill="#141413">153 ms</text>
+<text x="0" y="105" font-size="12.5" fill="#141413">8 层普通 Transformer</text>
+<rect x="150.0" y="90" width="2.4" height="20" fill="#b0aea5"/>
+<rect x="152.4" y="90" width="78.3" height="20" fill="#cfccc0"/>
+<text x="191.6" y="104" font-size="10.5" fill="#fff" text-anchor="middle">31</text>
+<rect x="230.7" y="90" width="143.7" height="20" fill="#d97757"/>
+<text x="302.6" y="104" font-size="10.5" fill="#fff" text-anchor="middle">56</text>
+<rect x="374.4" y="90" width="166.0" height="20" fill="#141413"/>
+<text x="457.4" y="104" font-size="10.5" fill="#fff" text-anchor="middle">65</text>
+<text x="546.5" y="105" font-size="12" fill="#141413">153 ms</text>
+<text x="0" y="145" font-size="12.5" fill="#141413">12 子层 A/M</text>
+<rect x="150.0" y="130" width="2.4" height="20" fill="#b0aea5"/>
+<rect x="152.4" y="130" width="117.4" height="20" fill="#cfccc0"/>
+<text x="211.1" y="144" font-size="10.5" fill="#fff" text-anchor="middle">46</text>
+<rect x="269.8" y="130" width="107.8" height="20" fill="#d97757"/>
+<text x="323.7" y="144" font-size="10.5" fill="#fff" text-anchor="middle">42</text>
+<rect x="377.6" y="130" width="124.5" height="20" fill="#141413"/>
+<text x="439.9" y="144" font-size="10.5" fill="#fff" text-anchor="middle">49</text>
+<text x="508.1" y="145" font-size="12" fill="#141413">138 ms</text>
+</svg><figcaption>按拆分结果估算的每步耗时（毫秒）。</figcaption></figure>
+<h2>从最好的 4 层模型出发，13 种“跳过一部分、把时间挪给别处”的做法有 12 种明显更差</h2>
+<p>跳过一层注意力省下的时间，只够把那层 MLP 从 ×12 加到 ×24，步数几乎不变，loss 却差 0.02 左右。在前面加只有 MLP 的层、去掉中间层的 MLP、把每层拆成两个子层，都更差。</p>
+<figure><div class="legend"><span><i style="background:#d97757;height:10px;width:10px"></i>全注意力（A）</span><span><i style="background:#6a9bcc;height:10px;width:10px"></i>GDN（G）</span><span><i style="background:#788c5d;height:10px;width:10px"></i>短卷积（C）</span><span><i style="background:#fff;border:1px dashed #b0aea5;height:10px;width:10px"></i>跳过（I）</span><span><i style="background:#141413;height:5px;width:14px"></i>MLP，条越长越宽</span></div><svg class="chart" viewBox="0 0 720 444" font-family="Poppins, PingFang SC, sans-serif">
+<text x="200" y="12" font-size="11" fill="#5e5d59">各层，左边是第 1 层</text>
+<text x="430" y="12" font-size="11" fill="#5e5d59">比最好的模型差多少</text>
+<text x="720" y="12" font-size="11" fill="#5e5d59" text-anchor="end">120 秒内步数</text>
+<text x="0" y="39" font-size="12.5" fill="#141413">最好的模型</text>
+<rect x="200" y="27" width="20" height="12" rx="2" fill="#788c5d"/>
+<rect x="200" y="42" width="11.0" height="5" fill="#141413"/>
+<rect x="226" y="27" width="20" height="12" rx="2" fill="#d97757"/>
+<rect x="226" y="42" width="5.5" height="5" fill="#141413"/>
+<rect x="252" y="27" width="20" height="12" rx="2" fill="#6a9bcc"/>
+<rect x="252" y="42" width="5.5" height="5" fill="#141413"/>
+<rect x="278" y="27" width="20" height="12" rx="2" fill="#d97757"/>
+<rect x="278" y="42" width="11.0" height="5" fill="#141413"/>
+<text x="430" y="39" font-size="12.5" fill="#141413">loss 2.6715</text>
+<text x="720" y="39" font-size="12" fill="#5e5d59" text-anchor="end">1335</text>
+<text x="0" y="69" font-size="12.5" fill="#141413">第 2 层跳过混合，MLP ×24</text>
+<rect x="200" y="57" width="20" height="12" rx="2" fill="#788c5d"/>
+<rect x="200" y="72" width="11.0" height="5" fill="#141413"/>
+<rect x="226" y="57" width="20" height="12" rx="2" fill="#fff" stroke="#b0aea5" stroke-dasharray="2 2"/>
+<rect x="226" y="72" width="11.0" height="5" fill="#141413"/>
+<rect x="252" y="57" width="20" height="12" rx="2" fill="#6a9bcc"/>
+<rect x="252" y="72" width="5.5" height="5" fill="#141413"/>
+<rect x="278" y="57" width="20" height="12" rx="2" fill="#d97757"/>
+<rect x="278" y="72" width="11.0" height="5" fill="#141413"/>
+<rect x="430" y="58" width="28.9" height="12" fill="#d97757"/>
+<text x="464.9" y="69" font-size="12" fill="#141413">+0.019</text>
+<text x="720" y="69" font-size="12" fill="#5e5d59" text-anchor="end">1323</text>
+<text x="0" y="99" font-size="12.5" fill="#141413">第 3 层跳过混合，MLP ×24</text>
+<rect x="200" y="87" width="20" height="12" rx="2" fill="#788c5d"/>
+<rect x="200" y="102" width="11.0" height="5" fill="#141413"/>
+<rect x="226" y="87" width="20" height="12" rx="2" fill="#d97757"/>
+<rect x="226" y="102" width="5.5" height="5" fill="#141413"/>
+<rect x="252" y="87" width="20" height="12" rx="2" fill="#fff" stroke="#b0aea5" stroke-dasharray="2 2"/>
+<rect x="252" y="102" width="11.0" height="5" fill="#141413"/>
+<rect x="278" y="87" width="20" height="12" rx="2" fill="#d97757"/>
+<rect x="278" y="102" width="11.0" height="5" fill="#141413"/>
+<rect x="430" y="88" width="34.7" height="12" fill="#d97757"/>
+<text x="470.7" y="99" font-size="12" fill="#141413">+0.022</text>
+<text x="720" y="99" font-size="12" fill="#5e5d59" text-anchor="end">1332</text>
+<text x="0" y="129" font-size="12.5" fill="#141413">中间两层都跳过混合</text>
+<rect x="200" y="117" width="20" height="12" rx="2" fill="#788c5d"/>
+<rect x="200" y="132" width="11.0" height="5" fill="#141413"/>
+<rect x="226" y="117" width="20" height="12" rx="2" fill="#fff" stroke="#b0aea5" stroke-dasharray="2 2"/>
+<rect x="226" y="132" width="11.0" height="5" fill="#141413"/>
+<rect x="252" y="117" width="20" height="12" rx="2" fill="#fff" stroke="#b0aea5" stroke-dasharray="2 2"/>
+<rect x="252" y="132" width="11.0" height="5" fill="#141413"/>
+<rect x="278" y="117" width="20" height="12" rx="2" fill="#d97757"/>
+<rect x="278" y="132" width="11.0" height="5" fill="#141413"/>
+<rect x="430" y="118" width="110.9" height="12" fill="#d97757"/>
+<text x="546.9" y="129" font-size="12" fill="#141413">+0.072</text>
+<text x="720" y="129" font-size="12" fill="#5e5d59" text-anchor="end">1329</text>
+<text x="0" y="159" font-size="12.5" fill="#141413">删掉第 3 层</text>
+<rect x="200" y="147" width="20" height="12" rx="2" fill="#788c5d"/>
+<rect x="200" y="162" width="11.0" height="5" fill="#141413"/>
+<rect x="226" y="147" width="20" height="12" rx="2" fill="#d97757"/>
+<rect x="226" y="162" width="5.5" height="5" fill="#141413"/>
+<rect x="252" y="147" width="20" height="12" rx="2" fill="#d97757"/>
+<rect x="252" y="162" width="11.0" height="5" fill="#141413"/>
+<rect x="430" y="148" width="36.0" height="12" fill="#d97757"/>
+<text x="472.0" y="159" font-size="12" fill="#141413">+0.023</text>
+<text x="720" y="159" font-size="12" fill="#5e5d59" text-anchor="end">1738</text>
+<text x="0" y="189" font-size="12.5" fill="#141413">删掉第 3 层，首尾 MLP ×32</text>
+<rect x="200" y="177" width="20" height="12" rx="2" fill="#788c5d"/>
+<rect x="200" y="192" width="14.7" height="5" fill="#141413"/>
+<rect x="226" y="177" width="20" height="12" rx="2" fill="#d97757"/>
+<rect x="226" y="192" width="5.5" height="5" fill="#141413"/>
+<rect x="252" y="177" width="20" height="12" rx="2" fill="#d97757"/>
+<rect x="252" y="192" width="14.7" height="5" fill="#141413"/>
+<rect x="430" y="178" width="28.8" height="12" fill="#d97757"/>
+<text x="464.8" y="189" font-size="12" fill="#141413">+0.019</text>
+<text x="720" y="189" font-size="12" fill="#5e5d59" text-anchor="end">1500</text>
+<text x="0" y="219" font-size="12.5" fill="#141413">前面加一层只有 MLP</text>
+<rect x="200" y="207" width="20" height="12" rx="2" fill="#fff" stroke="#b0aea5" stroke-dasharray="2 2"/>
+<rect x="200" y="222" width="11.0" height="5" fill="#141413"/>
+<rect x="226" y="207" width="20" height="12" rx="2" fill="#788c5d"/>
+<rect x="226" y="222" width="11.0" height="5" fill="#141413"/>
+<rect x="252" y="207" width="20" height="12" rx="2" fill="#d97757"/>
+<rect x="252" y="222" width="5.5" height="5" fill="#141413"/>
+<rect x="278" y="207" width="20" height="12" rx="2" fill="#6a9bcc"/>
+<rect x="278" y="222" width="5.5" height="5" fill="#141413"/>
+<rect x="304" y="207" width="20" height="12" rx="2" fill="#d97757"/>
+<rect x="304" y="222" width="11.0" height="5" fill="#141413"/>
+<rect x="430" y="208" width="46.0" height="12" fill="#d97757"/>
+<text x="482.0" y="219" font-size="12" fill="#141413">+0.030</text>
+<text x="720" y="219" font-size="12" fill="#5e5d59" text-anchor="end">1096</text>
+<text x="0" y="249" font-size="12.5" fill="#141413">前面加一层只有 MLP ×48</text>
+<rect x="200" y="237" width="20" height="12" rx="2" fill="#fff" stroke="#b0aea5" stroke-dasharray="2 2"/>
+<rect x="200" y="252" width="22.0" height="5" fill="#141413"/>
+<rect x="226" y="237" width="20" height="12" rx="2" fill="#788c5d"/>
+<rect x="226" y="252" width="11.0" height="5" fill="#141413"/>
+<rect x="252" y="237" width="20" height="12" rx="2" fill="#d97757"/>
+<rect x="252" y="252" width="5.5" height="5" fill="#141413"/>
+<rect x="278" y="237" width="20" height="12" rx="2" fill="#6a9bcc"/>
+<rect x="278" y="252" width="5.5" height="5" fill="#141413"/>
+<rect x="304" y="237" width="20" height="12" rx="2" fill="#d97757"/>
+<rect x="304" y="252" width="11.0" height="5" fill="#141413"/>
+<rect x="430" y="238" width="86.6" height="12" fill="#d97757"/>
+<text x="522.6" y="249" font-size="12" fill="#141413">+0.056</text>
+<text x="720" y="249" font-size="12" fill="#5e5d59" text-anchor="end">933</text>
+<text x="0" y="279" font-size="12.5" fill="#141413">第 1 层跳过混合，MLP ×48</text>
+<rect x="200" y="267" width="20" height="12" rx="2" fill="#fff" stroke="#b0aea5" stroke-dasharray="2 2"/>
+<rect x="200" y="282" width="22.0" height="5" fill="#141413"/>
+<rect x="226" y="267" width="20" height="12" rx="2" fill="#d97757"/>
+<rect x="226" y="282" width="5.5" height="5" fill="#141413"/>
+<rect x="252" y="267" width="20" height="12" rx="2" fill="#6a9bcc"/>
+<rect x="252" y="282" width="5.5" height="5" fill="#141413"/>
+<rect x="278" y="267" width="20" height="12" rx="2" fill="#d97757"/>
+<rect x="278" y="282" width="11.0" height="5" fill="#141413"/>
+<rect x="430" y="268" width="159.6" height="12" fill="#d97757"/>
+<text x="595.6" y="279" font-size="12" fill="#141413">+0.103</text>
+<text x="720" y="279" font-size="12" fill="#5e5d59" text-anchor="end">1134</text>
+<text x="0" y="309" font-size="12.5" fill="#141413">中间两层去掉 MLP</text>
+<rect x="200" y="297" width="20" height="12" rx="2" fill="#788c5d"/>
+<rect x="200" y="312" width="11.0" height="5" fill="#141413"/>
+<rect x="226" y="297" width="20" height="12" rx="2" fill="#d97757"/>
+<rect x="252" y="297" width="20" height="12" rx="2" fill="#6a9bcc"/>
+<rect x="278" y="297" width="20" height="12" rx="2" fill="#d97757"/>
+<rect x="278" y="312" width="11.0" height="5" fill="#141413"/>
+<rect x="430" y="298" width="49.3" height="12" fill="#d97757"/>
+<text x="485.3" y="309" font-size="12" fill="#141413">+0.032</text>
+<text x="720" y="309" font-size="12" fill="#5e5d59" text-anchor="end">1637</text>
+<text x="0" y="339" font-size="12.5" fill="#141413">去掉中间 MLP，多一层注意力</text>
+<rect x="200" y="327" width="20" height="12" rx="2" fill="#788c5d"/>
+<rect x="200" y="342" width="11.0" height="5" fill="#141413"/>
+<rect x="226" y="327" width="20" height="12" rx="2" fill="#d97757"/>
+<rect x="252" y="327" width="20" height="12" rx="2" fill="#6a9bcc"/>
+<rect x="278" y="327" width="20" height="12" rx="2" fill="#d97757"/>
+<rect x="304" y="327" width="20" height="12" rx="2" fill="#d97757"/>
+<rect x="304" y="342" width="11.0" height="5" fill="#141413"/>
+<rect x="430" y="328" width="54.4" height="12" fill="#d97757"/>
+<text x="490.4" y="339" font-size="12" fill="#141413">+0.035</text>
+<text x="720" y="339" font-size="12" fill="#5e5d59" text-anchor="end">1442</text>
+<text x="0" y="369" font-size="12.5" fill="#141413">拆成 A/M 子层</text>
+<rect x="200" y="357" width="20" height="12" rx="2" fill="#788c5d"/>
+<rect x="226" y="357" width="20" height="12" rx="2" fill="#fff" stroke="#b0aea5" stroke-dasharray="2 2"/>
+<rect x="226" y="372" width="11.0" height="5" fill="#141413"/>
+<rect x="252" y="357" width="20" height="12" rx="2" fill="#d97757"/>
+<rect x="278" y="357" width="20" height="12" rx="2" fill="#fff" stroke="#b0aea5" stroke-dasharray="2 2"/>
+<rect x="278" y="372" width="5.5" height="5" fill="#141413"/>
+<rect x="304" y="357" width="20" height="12" rx="2" fill="#6a9bcc"/>
+<rect x="330" y="357" width="20" height="12" rx="2" fill="#fff" stroke="#b0aea5" stroke-dasharray="2 2"/>
+<rect x="330" y="372" width="5.5" height="5" fill="#141413"/>
+<rect x="356" y="357" width="20" height="12" rx="2" fill="#d97757"/>
+<rect x="382" y="357" width="20" height="12" rx="2" fill="#fff" stroke="#b0aea5" stroke-dasharray="2 2"/>
+<rect x="382" y="372" width="11.0" height="5" fill="#141413"/>
+<rect x="430" y="358" width="43.8" height="12" fill="#d97757"/>
+<text x="479.8" y="369" font-size="12" fill="#141413">+0.028</text>
+<text x="720" y="369" font-size="12" fill="#5e5d59" text-anchor="end">1141</text>
+<text x="0" y="399" font-size="12.5" fill="#141413">不跳过，第 1 层 MLP ×48</text>
+<rect x="200" y="387" width="20" height="12" rx="2" fill="#788c5d"/>
+<rect x="200" y="402" width="22.0" height="5" fill="#141413"/>
+<rect x="226" y="387" width="20" height="12" rx="2" fill="#d97757"/>
+<rect x="226" y="402" width="5.5" height="5" fill="#141413"/>
+<rect x="252" y="387" width="20" height="12" rx="2" fill="#6a9bcc"/>
+<rect x="252" y="402" width="5.5" height="5" fill="#141413"/>
+<rect x="278" y="387" width="20" height="12" rx="2" fill="#d97757"/>
+<rect x="278" y="402" width="11.0" height="5" fill="#141413"/>
+<rect x="430" y="388" width="18.5" height="12" fill="#d97757"/>
+<text x="454.5" y="399" font-size="12" fill="#141413">+0.012</text>
+<text x="720" y="399" font-size="12" fill="#5e5d59" text-anchor="end">1102</text>
+<text x="0" y="429" font-size="12.5" fill="#141413">不跳过，全部 MLP 加宽</text>
+<rect x="200" y="417" width="20" height="12" rx="2" fill="#788c5d"/>
+<rect x="200" y="432" width="14.7" height="5" fill="#141413"/>
+<rect x="226" y="417" width="20" height="12" rx="2" fill="#d97757"/>
+<rect x="226" y="432" width="7.3" height="5" fill="#141413"/>
+<rect x="252" y="417" width="20" height="12" rx="2" fill="#6a9bcc"/>
+<rect x="252" y="432" width="7.3" height="5" fill="#141413"/>
+<rect x="278" y="417" width="20" height="12" rx="2" fill="#d97757"/>
+<rect x="278" y="432" width="14.7" height="5" fill="#141413"/>
+<rect x="430" y="418" width="13.0" height="12" fill="#eab8a6"/>
+<text x="449.0" y="429" font-size="12" fill="#141413">+0.0084</text>
+<text x="720" y="429" font-size="12" fill="#5e5d59" text-anchor="end">1122</text>
+</svg><figcaption>每行 3–5 个种子；条的颜色：橙色超过 3 倍噪声，浅橙 1.5–3 倍，灰色在噪声内。右列是 120 秒内的步数。</figcaption></figure>
+<h2>6 层随机结构：前两层要 GDN 或短卷积，后几层要全注意力；平均来看跳过混合是最差的选择</h2>
+<p>在每层“混合方式 × MLP 宽度”共 16 种选择的 6 层空间里均匀抽了 2400 个结构（种子 42）。每格是第 i 层用这种选择的所有结构的平均 loss，减去这一层最好的选择（单位 0.001）。记法：字母是混合方式（A 全注意力，G 为 GDN，C 短卷积，I 跳过），数字是 MLP 宽度，0 表示没有 MLP。各层最好的选择：第 1 层 G12、第 2 层 G32、第 3 层 A24、第 4 层 A12、第 5 层 A24、第 6 层 A24。</p>
+<figure><svg class="chart" viewBox="0 0 720 228" font-family="Poppins, PingFang SC, sans-serif">
+<text x="146.0" y="13" font-size="12" fill="#141413" text-anchor="middle">全注意力</text>
+<text x="84.5" y="31" font-size="10.5" fill="#5e5d59" text-anchor="middle">无 MLP</text>
+<text x="125.5" y="31" font-size="10.5" fill="#5e5d59" text-anchor="middle">×12</text>
+<text x="166.5" y="31" font-size="10.5" fill="#5e5d59" text-anchor="middle">×24</text>
+<text x="207.5" y="31" font-size="10.5" fill="#5e5d59" text-anchor="middle">×32</text>
+<text x="310.0" y="13" font-size="12" fill="#141413" text-anchor="middle">GDN</text>
+<text x="248.5" y="31" font-size="10.5" fill="#5e5d59" text-anchor="middle">无 MLP</text>
+<text x="289.5" y="31" font-size="10.5" fill="#5e5d59" text-anchor="middle">×12</text>
+<text x="330.5" y="31" font-size="10.5" fill="#5e5d59" text-anchor="middle">×24</text>
+<text x="371.5" y="31" font-size="10.5" fill="#5e5d59" text-anchor="middle">×32</text>
+<text x="474.0" y="13" font-size="12" fill="#141413" text-anchor="middle">短卷积</text>
+<text x="412.5" y="31" font-size="10.5" fill="#5e5d59" text-anchor="middle">无 MLP</text>
+<text x="453.5" y="31" font-size="10.5" fill="#5e5d59" text-anchor="middle">×12</text>
+<text x="494.5" y="31" font-size="10.5" fill="#5e5d59" text-anchor="middle">×24</text>
+<text x="535.5" y="31" font-size="10.5" fill="#5e5d59" text-anchor="middle">×32</text>
+<text x="638.0" y="13" font-size="12" fill="#141413" text-anchor="middle">跳过混合</text>
+<text x="576.5" y="31" font-size="10.5" fill="#5e5d59" text-anchor="middle">无 MLP</text>
+<text x="617.5" y="31" font-size="10.5" fill="#5e5d59" text-anchor="middle">×12</text>
+<text x="658.5" y="31" font-size="10.5" fill="#5e5d59" text-anchor="middle">×24</text>
+<text x="699.5" y="31" font-size="10.5" fill="#5e5d59" text-anchor="middle">×32</text>
+<text x="0" y="59" font-size="12" fill="#5e5d59">第 1 层</text>
+<rect x="65.0" y="41" width="39.0" height="28" fill="rgb(222,144,117)"/>
+<text x="84.5" y="59" font-size="10" fill="#fff" text-anchor="middle">+17</text>
+<rect x="106.0" y="41" width="39.0" height="28" fill="rgb(223,149,123)"/>
+<text x="125.5" y="59" font-size="10" fill="#fff" text-anchor="middle">+20</text>
+<rect x="147.0" y="41" width="39.0" height="28" fill="rgb(227,167,145)"/>
+<text x="166.5" y="59" font-size="10" fill="#fff" text-anchor="middle">+32</text>
+<rect x="188.0" y="41" width="39.0" height="28" fill="rgb(228,172,151)"/>
+<text x="207.5" y="59" font-size="10" fill="#fff" text-anchor="middle">+35</text>
+<rect x="229.0" y="41" width="39.0" height="28" fill="rgb(224,151,126)"/>
+<text x="248.5" y="59" font-size="10" fill="#fff" text-anchor="middle">+22</text>
+<rect x="270.0" y="41" width="39.0" height="28" fill="rgb(217,119,87)"/>
+<rect x="272.0" y="43" width="35.0" height="24" fill="none" stroke="#141413" stroke-width="1.5"/>
+<text x="289.5" y="59" font-size="10" fill="#fff" text-anchor="middle">最好</text>
+<rect x="311.0" y="41" width="39.0" height="28" fill="rgb(218,128,98)"/>
+<text x="330.5" y="59" font-size="10" fill="#fff" text-anchor="middle">+6</text>
+<rect x="352.0" y="41" width="39.0" height="28" fill="rgb(219,130,101)"/>
+<text x="371.5" y="59" font-size="10" fill="#fff" text-anchor="middle">+8</text>
+<rect x="393.0" y="41" width="39.0" height="28" fill="rgb(225,159,136)"/>
+<text x="412.5" y="59" font-size="10" fill="#fff" text-anchor="middle">+27</text>
+<rect x="434.0" y="41" width="39.0" height="28" fill="rgb(218,126,96)"/>
+<text x="453.5" y="59" font-size="10" fill="#fff" text-anchor="middle">+5</text>
+<rect x="475.0" y="41" width="39.0" height="28" fill="rgb(218,127,97)"/>
+<text x="494.5" y="59" font-size="10" fill="#fff" text-anchor="middle">+6</text>
+<rect x="516.0" y="41" width="39.0" height="28" fill="rgb(219,131,102)"/>
+<text x="535.5" y="59" font-size="10" fill="#fff" text-anchor="middle">+8</text>
+<rect x="557.0" y="41" width="39.0" height="28" fill="rgb(235,203,189)"/>
+<text x="576.5" y="59" font-size="10" fill="#141413" text-anchor="middle">+56</text>
+<rect x="598.0" y="41" width="39.0" height="28" fill="rgb(237,216,204)"/>
+<text x="617.5" y="59" font-size="10" fill="#141413" text-anchor="middle">+64</text>
+<rect x="639.0" y="41" width="39.0" height="28" fill="rgb(238,219,208)"/>
+<text x="658.5" y="59" font-size="10" fill="#141413" text-anchor="middle">+66</text>
+<rect x="680.0" y="41" width="39.0" height="28" fill="rgb(242,238,231)"/>
+<text x="699.5" y="59" font-size="10" fill="#141413" text-anchor="middle">+79</text>
+<text x="0" y="89" font-size="12" fill="#5e5d59">第 2 层</text>
+<rect x="65.0" y="71" width="39.0" height="28" fill="rgb(218,127,96)"/>
+<text x="84.5" y="89" font-size="10" fill="#fff" text-anchor="middle">+5</text>
+<rect x="106.0" y="71" width="39.0" height="28" fill="rgb(217,122,91)"/>
+<text x="125.5" y="89" font-size="10" fill="#fff" text-anchor="middle">+2</text>
+<rect x="147.0" y="71" width="39.0" height="28" fill="rgb(219,128,98)"/>
+<text x="166.5" y="89" font-size="10" fill="#fff" text-anchor="middle">+6</text>
+<rect x="188.0" y="71" width="39.0" height="28" fill="rgb(219,131,101)"/>
+<text x="207.5" y="89" font-size="10" fill="#fff" text-anchor="middle">+8</text>
+<rect x="229.0" y="71" width="39.0" height="28" fill="rgb(224,154,130)"/>
+<text x="248.5" y="89" font-size="10" fill="#fff" text-anchor="middle">+23</text>
+<rect x="270.0" y="71" width="39.0" height="28" fill="rgb(217,119,88)"/>
+<text x="289.5" y="89" font-size="10" fill="#fff" text-anchor="middle">+1</text>
+<rect x="311.0" y="71" width="39.0" height="28" fill="rgb(217,123,92)"/>
+<text x="330.5" y="89" font-size="10" fill="#fff" text-anchor="middle">+3</text>
+<rect x="352.0" y="71" width="39.0" height="28" fill="rgb(217,119,87)"/>
+<rect x="354.0" y="73" width="35.0" height="24" fill="none" stroke="#141413" stroke-width="1.5"/>
+<text x="371.5" y="89" font-size="10" fill="#fff" text-anchor="middle">最好</text>
+<rect x="393.0" y="71" width="39.0" height="28" fill="rgb(225,159,135)"/>
+<text x="412.5" y="89" font-size="10" fill="#fff" text-anchor="middle">+27</text>
+<rect x="434.0" y="71" width="39.0" height="28" fill="rgb(219,131,101)"/>
+<text x="453.5" y="89" font-size="10" fill="#fff" text-anchor="middle">+8</text>
+<rect x="475.0" y="71" width="39.0" height="28" fill="rgb(222,144,118)"/>
+<text x="494.5" y="89" font-size="10" fill="#fff" text-anchor="middle">+17</text>
+<rect x="516.0" y="71" width="39.0" height="28" fill="rgb(221,140,112)"/>
+<text x="535.5" y="89" font-size="10" fill="#fff" text-anchor="middle">+14</text>
+<rect x="557.0" y="71" width="39.0" height="28" fill="rgb(231,187,169)"/>
+<text x="576.5" y="89" font-size="10" fill="#141413" text-anchor="middle">+45</text>
+<rect x="598.0" y="71" width="39.0" height="28" fill="rgb(232,193,177)"/>
+<text x="617.5" y="89" font-size="10" fill="#141413" text-anchor="middle">+49</text>
+<rect x="639.0" y="71" width="39.0" height="28" fill="rgb(228,172,150)"/>
+<text x="658.5" y="89" font-size="10" fill="#fff" text-anchor="middle">+35</text>
+<rect x="680.0" y="71" width="39.0" height="28" fill="rgb(232,193,176)"/>
+<text x="699.5" y="89" font-size="10" fill="#141413" text-anchor="middle">+49</text>
+<text x="0" y="119" font-size="12" fill="#5e5d59">第 3 层</text>
+<rect x="65.0" y="101" width="39.0" height="28" fill="rgb(220,136,107)"/>
+<text x="84.5" y="119" font-size="10" fill="#fff" text-anchor="middle">+11</text>
+<rect x="106.0" y="101" width="39.0" height="28" fill="rgb(217,119,87)"/>
+<text x="125.5" y="119" font-size="10" fill="#fff" text-anchor="middle">+0</text>
+<rect x="147.0" y="101" width="39.0" height="28" fill="rgb(217,119,87)"/>
+<rect x="149.0" y="103" width="35.0" height="24" fill="none" stroke="#141413" stroke-width="1.5"/>
+<text x="166.5" y="119" font-size="10" fill="#fff" text-anchor="middle">最好</text>
+<rect x="188.0" y="101" width="39.0" height="28" fill="rgb(218,124,93)"/>
+<text x="207.5" y="119" font-size="10" fill="#fff" text-anchor="middle">+4</text>
+<rect x="229.0" y="101" width="39.0" height="28" fill="rgb(223,150,125)"/>
+<text x="248.5" y="119" font-size="10" fill="#fff" text-anchor="middle">+21</text>
+<rect x="270.0" y="101" width="39.0" height="28" fill="rgb(221,140,113)"/>
+<text x="289.5" y="119" font-size="10" fill="#fff" text-anchor="middle">+14</text>
+<rect x="311.0" y="101" width="39.0" height="28" fill="rgb(221,138,111)"/>
+<text x="330.5" y="119" font-size="10" fill="#fff" text-anchor="middle">+13</text>
+<rect x="352.0" y="101" width="39.0" height="28" fill="rgb(221,141,114)"/>
+<text x="371.5" y="119" font-size="10" fill="#fff" text-anchor="middle">+15</text>
+<rect x="393.0" y="101" width="39.0" height="28" fill="rgb(229,175,155)"/>
+<text x="412.5" y="119" font-size="10" fill="#141413" text-anchor="middle">+37</text>
+<rect x="434.0" y="101" width="39.0" height="28" fill="rgb(225,157,133)"/>
+<text x="453.5" y="119" font-size="10" fill="#fff" text-anchor="middle">+25</text>
+<rect x="475.0" y="101" width="39.0" height="28" fill="rgb(226,164,141)"/>
+<text x="494.5" y="119" font-size="10" fill="#fff" text-anchor="middle">+30</text>
+<rect x="516.0" y="101" width="39.0" height="28" fill="rgb(228,172,151)"/>
+<text x="535.5" y="119" font-size="10" fill="#fff" text-anchor="middle">+35</text>
+<rect x="557.0" y="101" width="39.0" height="28" fill="rgb(231,188,171)"/>
+<text x="576.5" y="119" font-size="10" fill="#141413" text-anchor="middle">+46</text>
+<rect x="598.0" y="101" width="39.0" height="28" fill="rgb(232,193,177)"/>
+<text x="617.5" y="119" font-size="10" fill="#141413" text-anchor="middle">+49</text>
+<rect x="639.0" y="101" width="39.0" height="28" fill="rgb(233,194,178)"/>
+<text x="658.5" y="119" font-size="10" fill="#141413" text-anchor="middle">+50</text>
+<rect x="680.0" y="101" width="39.0" height="28" fill="rgb(234,201,186)"/>
+<text x="699.5" y="119" font-size="10" fill="#141413" text-anchor="middle">+54</text>
+<text x="0" y="149" font-size="12" fill="#5e5d59">第 4 层</text>
+<rect x="65.0" y="131" width="39.0" height="28" fill="rgb(218,126,95)"/>
+<text x="84.5" y="149" font-size="10" fill="#fff" text-anchor="middle">+5</text>
+<rect x="106.0" y="131" width="39.0" height="28" fill="rgb(217,119,87)"/>
+<rect x="108.0" y="133" width="35.0" height="24" fill="none" stroke="#141413" stroke-width="1.5"/>
+<text x="125.5" y="149" font-size="10" fill="#fff" text-anchor="middle">最好</text>
+<rect x="147.0" y="131" width="39.0" height="28" fill="rgb(218,124,93)"/>
+<text x="166.5" y="149" font-size="10" fill="#fff" text-anchor="middle">+3</text>
+<rect x="188.0" y="131" width="39.0" height="28" fill="rgb(217,121,90)"/>
+<text x="207.5" y="149" font-size="10" fill="#fff" text-anchor="middle">+2</text>
+<rect x="229.0" y="131" width="39.0" height="28" fill="rgb(227,169,147)"/>
+<text x="248.5" y="149" font-size="10" fill="#fff" text-anchor="middle">+33</text>
+<rect x="270.0" y="131" width="39.0" height="28" fill="rgb(224,153,128)"/>
+<text x="289.5" y="149" font-size="10" fill="#fff" text-anchor="middle">+23</text>
+<rect x="311.0" y="131" width="39.0" height="28" fill="rgb(224,154,130)"/>
+<text x="330.5" y="149" font-size="10" fill="#fff" text-anchor="middle">+23</text>
+<rect x="352.0" y="131" width="39.0" height="28" fill="rgb(224,152,126)"/>
+<text x="371.5" y="149" font-size="10" fill="#fff" text-anchor="middle">+22</text>
+<rect x="393.0" y="131" width="39.0" height="28" fill="rgb(236,209,195)"/>
+<text x="412.5" y="149" font-size="10" fill="#141413" text-anchor="middle">+59</text>
+<rect x="434.0" y="131" width="39.0" height="28" fill="rgb(229,177,157)"/>
+<text x="453.5" y="149" font-size="10" fill="#141413" text-anchor="middle">+38</text>
+<rect x="475.0" y="131" width="39.0" height="28" fill="rgb(233,196,179)"/>
+<text x="494.5" y="149" font-size="10" fill="#141413" text-anchor="middle">+51</text>
+<rect x="516.0" y="131" width="39.0" height="28" fill="rgb(234,200,185)"/>
+<text x="535.5" y="149" font-size="10" fill="#141413" text-anchor="middle">+54</text>
+<rect x="557.0" y="131" width="39.0" height="28" fill="rgb(233,196,180)"/>
+<text x="576.5" y="149" font-size="10" fill="#141413" text-anchor="middle">+51</text>
+<rect x="598.0" y="131" width="39.0" height="28" fill="rgb(230,183,164)"/>
+<text x="617.5" y="149" font-size="10" fill="#141413" text-anchor="middle">+42</text>
+<rect x="639.0" y="131" width="39.0" height="28" fill="rgb(230,180,161)"/>
+<text x="658.5" y="149" font-size="10" fill="#141413" text-anchor="middle">+41</text>
+<rect x="680.0" y="131" width="39.0" height="28" fill="rgb(239,225,215)"/>
+<text x="699.5" y="149" font-size="10" fill="#141413" text-anchor="middle">+70</text>
+<text x="0" y="179" font-size="12" fill="#5e5d59">第 5 层</text>
+<rect x="65.0" y="161" width="39.0" height="28" fill="rgb(221,137,109)"/>
+<text x="84.5" y="179" font-size="10" fill="#fff" text-anchor="middle">+12</text>
+<rect x="106.0" y="161" width="39.0" height="28" fill="rgb(217,122,90)"/>
+<text x="125.5" y="179" font-size="10" fill="#fff" text-anchor="middle">+2</text>
+<rect x="147.0" y="161" width="39.0" height="28" fill="rgb(217,119,87)"/>
+<rect x="149.0" y="163" width="35.0" height="24" fill="none" stroke="#141413" stroke-width="1.5"/>
+<text x="166.5" y="179" font-size="10" fill="#fff" text-anchor="middle">最好</text>
+<rect x="188.0" y="161" width="39.0" height="28" fill="rgb(217,123,91)"/>
+<text x="207.5" y="179" font-size="10" fill="#fff" text-anchor="middle">+3</text>
+<rect x="229.0" y="161" width="39.0" height="28" fill="rgb(231,186,167)"/>
+<text x="248.5" y="179" font-size="10" fill="#141413" text-anchor="middle">+44</text>
+<rect x="270.0" y="161" width="39.0" height="28" fill="rgb(227,166,143)"/>
+<text x="289.5" y="179" font-size="10" fill="#fff" text-anchor="middle">+31</text>
+<rect x="311.0" y="161" width="39.0" height="28" fill="rgb(227,167,145)"/>
+<text x="330.5" y="179" font-size="10" fill="#fff" text-anchor="middle">+32</text>
+<rect x="352.0" y="161" width="39.0" height="28" fill="rgb(226,163,140)"/>
+<text x="371.5" y="179" font-size="10" fill="#fff" text-anchor="middle">+29</text>
+<rect x="393.0" y="161" width="39.0" height="28" fill="rgb(236,208,195)"/>
+<text x="412.5" y="179" font-size="10" fill="#141413" text-anchor="middle">+59</text>
+<rect x="434.0" y="161" width="39.0" height="28" fill="rgb(235,207,193)"/>
+<text x="453.5" y="179" font-size="10" fill="#141413" text-anchor="middle">+58</text>
+<rect x="475.0" y="161" width="39.0" height="28" fill="rgb(235,204,190)"/>
+<text x="494.5" y="179" font-size="10" fill="#141413" text-anchor="middle">+56</text>
+<rect x="516.0" y="161" width="39.0" height="28" fill="rgb(233,195,179)"/>
+<text x="535.5" y="179" font-size="10" fill="#141413" text-anchor="middle">+50</text>
+<rect x="557.0" y="161" width="39.0" height="28" fill="rgb(238,217,206)"/>
+<text x="576.5" y="179" font-size="10" fill="#141413" text-anchor="middle">+65</text>
+<rect x="598.0" y="161" width="39.0" height="28" fill="rgb(236,208,195)"/>
+<text x="617.5" y="179" font-size="10" fill="#141413" text-anchor="middle">+59</text>
+<rect x="639.0" y="161" width="39.0" height="28" fill="rgb(231,186,168)"/>
+<text x="658.5" y="179" font-size="10" fill="#141413" text-anchor="middle">+44</text>
+<rect x="680.0" y="161" width="39.0" height="28" fill="rgb(235,204,190)"/>
+<text x="699.5" y="179" font-size="10" fill="#141413" text-anchor="middle">+56</text>
+<text x="0" y="209" font-size="12" fill="#5e5d59">第 6 层</text>
+<rect x="65.0" y="191" width="39.0" height="28" fill="rgb(224,152,127)"/>
+<text x="84.5" y="209" font-size="10" fill="#fff" text-anchor="middle">+22</text>
+<rect x="106.0" y="191" width="39.0" height="28" fill="rgb(218,127,97)"/>
+<text x="125.5" y="209" font-size="10" fill="#fff" text-anchor="middle">+6</text>
+<rect x="147.0" y="191" width="39.0" height="28" fill="rgb(217,119,87)"/>
+<rect x="149.0" y="193" width="35.0" height="24" fill="none" stroke="#141413" stroke-width="1.5"/>
+<text x="166.5" y="209" font-size="10" fill="#fff" text-anchor="middle">最好</text>
+<rect x="188.0" y="191" width="39.0" height="28" fill="rgb(217,120,88)"/>
+<text x="207.5" y="209" font-size="10" fill="#fff" text-anchor="middle">+1</text>
+<rect x="229.0" y="191" width="39.0" height="28" fill="rgb(234,202,187)"/>
+<text x="248.5" y="209" font-size="10" fill="#141413" text-anchor="middle">+55</text>
+<rect x="270.0" y="191" width="39.0" height="28" fill="rgb(228,171,150)"/>
+<text x="289.5" y="209" font-size="10" fill="#fff" text-anchor="middle">+34</text>
+<rect x="311.0" y="191" width="39.0" height="28" fill="rgb(226,164,142)"/>
+<text x="330.5" y="209" font-size="10" fill="#fff" text-anchor="middle">+30</text>
+<rect x="352.0" y="191" width="39.0" height="28" fill="rgb(227,168,146)"/>
+<text x="371.5" y="209" font-size="10" fill="#fff" text-anchor="middle">+32</text>
+<rect x="393.0" y="191" width="39.0" height="28" fill="rgb(238,217,206)"/>
+<text x="412.5" y="209" font-size="10" fill="#141413" text-anchor="middle">+65</text>
+<rect x="434.0" y="191" width="39.0" height="28" fill="rgb(235,204,190)"/>
+<text x="453.5" y="209" font-size="10" fill="#141413" text-anchor="middle">+56</text>
+<rect x="475.0" y="191" width="39.0" height="28" fill="rgb(233,198,182)"/>
+<text x="494.5" y="209" font-size="10" fill="#141413" text-anchor="middle">+52</text>
+<rect x="516.0" y="191" width="39.0" height="28" fill="rgb(235,205,190)"/>
+<text x="535.5" y="209" font-size="10" fill="#141413" text-anchor="middle">+56</text>
+<rect x="557.0" y="191" width="39.0" height="28" fill="rgb(238,220,209)"/>
+<text x="576.5" y="209" font-size="10" fill="#141413" text-anchor="middle">+66</text>
+<rect x="598.0" y="191" width="39.0" height="28" fill="rgb(229,178,159)"/>
+<text x="617.5" y="209" font-size="10" fill="#141413" text-anchor="middle">+39</text>
+<rect x="639.0" y="191" width="39.0" height="28" fill="rgb(234,199,184)"/>
+<text x="658.5" y="209" font-size="10" fill="#141413" text-anchor="middle">+53</text>
+<rect x="680.0" y="191" width="39.0" height="28" fill="rgb(240,230,221)"/>
+<text x="699.5" y="209" font-size="10" fill="#141413" text-anchor="middle">+73</text>
+</svg><figcaption>颜色越深越好。其余 5 层是随机的，所以这是“平均情况”，和最好结构附近的结论可以不同。</figcaption></figure>
+<h2>但最好的 50 个 6 层结构里有 36 个跳过了一两层混合，77% 的跳过在第 4–6 层</h2>
+<p>跳过混合的层从 0 增加到 3，平均 loss 2.733、2.745、2.763、2.805：跳过一层代价小，跳过三层代价大。没有 MLP 的层 1–2 个时平均反而略好（2.764、2.757、2.758），因为省下的时间换成了步数。6 层模型在 120 秒内步数少，靠后的一层跳过混合能多跑一些步。6 层里最好的 5 个结构（单种子）：C32 C0 A24 G12 I12 A24 2.6795；C32 I0 A12 A24 A12 C24 2.6804；C24 A12 A12 C0 A12 I12 2.6815；G32 A0 C12 G12 A24 I12 2.6817；C24 I12 G24 G12 A24 I0 2.6838。</p>
+<figure><div class="legend"><span><i style="background:#d97757;height:3px"></i>跳过混合的层数</span><span><i style="background:#6a9bcc;height:3px"></i>没有 MLP 的层数</span></div><svg class="chart" viewBox="0 0 720 250" font-family="Poppins, PingFang SC, sans-serif">
+<line x1="52" y1="210.0" x2="708" y2="210.0" stroke="#e8e6dc"/>
+<text x="46" y="214.0" font-size="11" fill="#5e5d59" text-anchor="end">2.72</text>
+<line x1="52" y1="189.3" x2="708" y2="189.3" stroke="#e8e6dc"/>
+<text x="46" y="193.3" font-size="11" fill="#5e5d59" text-anchor="end">2.74</text>
+<line x1="52" y1="168.7" x2="708" y2="168.7" stroke="#e8e6dc"/>
+<text x="46" y="172.7" font-size="11" fill="#5e5d59" text-anchor="end">2.76</text>
+<line x1="52" y1="148.0" x2="708" y2="148.0" stroke="#e8e6dc"/>
+<text x="46" y="152.0" font-size="11" fill="#5e5d59" text-anchor="end">2.78</text>
+<line x1="52" y1="127.3" x2="708" y2="127.3" stroke="#e8e6dc"/>
+<text x="46" y="131.3" font-size="11" fill="#5e5d59" text-anchor="end">2.80</text>
+<line x1="52" y1="106.7" x2="708" y2="106.7" stroke="#e8e6dc"/>
+<text x="46" y="110.7" font-size="11" fill="#5e5d59" text-anchor="end">2.82</text>
+<line x1="52" y1="86.0" x2="708" y2="86.0" stroke="#e8e6dc"/>
+<text x="46" y="90.0" font-size="11" fill="#5e5d59" text-anchor="end">2.84</text>
+<line x1="52" y1="65.3" x2="708" y2="65.3" stroke="#e8e6dc"/>
+<text x="46" y="69.3" font-size="11" fill="#5e5d59" text-anchor="end">2.86</text>
+<line x1="52" y1="44.7" x2="708" y2="44.7" stroke="#e8e6dc"/>
+<text x="46" y="48.7" font-size="11" fill="#5e5d59" text-anchor="end">2.88</text>
+<line x1="52" y1="24.0" x2="708" y2="24.0" stroke="#e8e6dc"/>
+<text x="46" y="28.0" font-size="11" fill="#5e5d59" text-anchor="end">2.90</text>
+<text x="81.8" y="226" font-size="11" fill="#5e5d59" text-anchor="middle">0</text>
+<text x="181.2" y="226" font-size="11" fill="#5e5d59" text-anchor="middle">1</text>
+<text x="280.6" y="226" font-size="11" fill="#5e5d59" text-anchor="middle">2</text>
+<text x="380.0" y="226" font-size="11" fill="#5e5d59" text-anchor="middle">3</text>
+<text x="479.4" y="226" font-size="11" fill="#5e5d59" text-anchor="middle">4</text>
+<text x="578.8" y="226" font-size="11" fill="#5e5d59" text-anchor="middle">5</text>
+<text x="678.2" y="226" font-size="11" fill="#5e5d59" text-anchor="middle">6</text>
+<text x="380.0" y="246" font-size="11.5" fill="#5e5d59" text-anchor="middle">6 层里有几层</text>
+<text x="52" y="12" font-size="11.5" fill="#5e5d59">平均 loss（种子 42）</text>
+<polyline points="81.8,196.5 181.2,184.5 280.6,165.6 380.0,122.5 479.4,37.5" fill="none" stroke="#d97757" stroke-width="2.2"/>
+<circle cx="81.8" cy="196.5" r="3.5" fill="#d97757"/>
+<circle cx="181.2" cy="184.5" r="3.5" fill="#d97757"/>
+<circle cx="280.6" cy="165.6" r="3.5" fill="#d97757"/>
+<circle cx="380.0" cy="122.5" r="3.5" fill="#d97757"/>
+<circle cx="479.4" cy="37.5" r="3.5" fill="#d97757"/>
+<polyline points="81.8,164.5 181.2,171.7 280.6,170.4 380.0,158.4 479.4,129.1" fill="none" stroke="#6a9bcc" stroke-width="2.2"/>
+<circle cx="81.8" cy="164.5" r="3.5" fill="#6a9bcc"/>
+<circle cx="181.2" cy="171.7" r="3.5" fill="#6a9bcc"/>
+<circle cx="280.6" cy="170.4" r="3.5" fill="#6a9bcc"/>
+<circle cx="380.0" cy="158.4" r="3.5" fill="#6a9bcc"/>
+<circle cx="479.4" cy="129.1" r="3.5" fill="#6a9bcc"/>
+</svg><figcaption>每个点至少 20 个结构，种子 42。</figcaption></figure>
+<h2>还没回答的问题</h2>
+<p>“更宽的注意力”测不了：头数和宽度是全局字段，不能按层设。</p>
+<p>序列更长时注意力的耗时会上升，这个结论可能变。</p>
+<footer>来源：results_120s.jsonl.gz（t4_*、t6_* 和直接测试）· 工具 tools/pg_research_reports.py · 2026-10-28</footer>
+</main>
+</body>
+</html>

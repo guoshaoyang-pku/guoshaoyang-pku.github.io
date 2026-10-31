@@ -1,0 +1,549 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>训练 10 分钟时，最优模型更宽、MLP 更大、学习率更低</title>
+<style>
+  :root {
+    --dark: #141413;   /* primary text */
+    --light: #faf9f5;  /* page background */
+    --mid: #b0aea5;    /* borders, axes */
+    --soft: #e8e6dc;   /* subtle fills */
+    --muted: #5e5d59;  /* secondary text (darker than --mid for contrast) */
+    --orange: #d97757; /* primary accent: the main result */
+    --blue: #6a9bcc;   /* secondary accent */
+    --green: #788c5d;  /* tertiary accent */
+    --head: "Poppins", "PingFang SC", "Noto Sans CJK SC", "Hiragino Sans GB", Arial, sans-serif;
+    --body: "Lora", "Noto Serif CJK SC", "Songti SC", Georgia, serif;
+    --mono: "SF Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--light); color: var(--dark); font: 17px/1.8 var(--body); }
+  main { max-width: 760px; margin: 0 auto; padding: 72px 24px 96px; }
+  h1, h2, h3 { font-family: var(--head); font-weight: 600; line-height: 1.35; letter-spacing: -0.01em; }
+  h1 { font-size: 32px; margin: 0 0 16px; }
+  h2 { font-size: 22px; margin: 64px 0 12px; }
+  p { margin: 0 0 16px; }
+  .lede { font-size: 19px; }
+  a { color: inherit; text-decoration: underline; text-decoration-color: var(--orange); text-underline-offset: 3px; }
+  code, .id { font-family: var(--mono); font-size: 0.86em; background: var(--soft); padding: 1px 5px; border-radius: 4px; }
+
+  /* L2 settings row: monochrome line icons + label, never color emoji */
+  .settings { display: flex; flex-wrap: wrap; gap: 8px 20px; list-style: none; padding: 0; margin: 24px 0 0;
+              font: 14px/1.6 var(--head); color: var(--muted); }
+  .settings li { display: inline-flex; align-items: center; gap: 6px; }
+  .settings svg { width: 15px; height: 15px; stroke: var(--dark); fill: none; stroke-width: 1.6;
+                  stroke-linecap: round; stroke-linejoin: round; }
+  .settings b { color: var(--dark); font-weight: 500; }
+
+  figure { margin: 28px 0; padding: 20px; background: #fff; border: 1px solid var(--soft); border-radius: 10px; }
+  figure img, figure svg.chart { display: block; width: 100%; height: auto; }
+  figcaption { margin-top: 12px; font: 14px/1.6 var(--head); color: var(--muted); }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font: 13px var(--head); color: var(--muted); margin-bottom: 8px; }
+  .legend i { display: inline-block; width: 14px; height: 2px; vertical-align: middle; margin-right: 6px; }
+
+  .warn { border-left: 3px solid var(--orange); padding: 4px 0 4px 16px; margin: 24px 0; }
+  .warn strong { font-family: var(--head); }
+
+  /* sample browser: compare outputs side by side */
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--soft); margin-bottom: 12px; }
+  .tabs button { font: 14px var(--head); background: none; border: 0; padding: 8px 12px; cursor: pointer;
+                 color: var(--muted); border-bottom: 2px solid transparent; }
+  .tabs button[aria-selected="true"] { color: var(--dark); border-bottom-color: var(--orange); }
+  .sample { display: none; white-space: pre-wrap; font: 14px/1.7 var(--mono); }
+  .sample.on { display: block; }
+
+  details { margin: 16px 0; }
+  summary { cursor: pointer; font: 15px var(--head); color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font: 14px/1.6 var(--head); margin: 16px 0; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--soft); }
+  th { font-weight: 500; color: var(--muted); }
+  footer { margin-top: 80px; font: 13px var(--head); color: var(--mid); }
+  .legend span { white-space: nowrap; }
+  .num { font-family: var(--mono); font-size: 0.86em; }
+  td { vertical-align: top; }
+</style>
+</head>
+<body>
+<main>
+<h1>训练 10 分钟时，最优模型更宽、MLP 更大、学习率更低</h1>
+<p class="lede">在 185 个跑满 10 分钟的设置里，最好的是宽 512、4 层、Muon 0.0025 / AdamW 0.0025（2.4412）。2 分钟的冠军（宽 256 × 4 层，学习率 0.01）在 10 分钟时排第 169 / 185：短预算选出的结构和学习率，不能直接用于长预算。</p>
+<ul class="settings">
+<li><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18M12 7v5l3 2"/></svg>训练 <b>600 秒（同时读出第 120 秒）· 1 张 RTX PRO 5000</b></li>
+<li><svg viewBox="0 0 24 24"><path d="M4 19l5-7 4 4 7-10"/></svg>分数 <b>最后 64 步训练 loss，越低越好</b></li>
+<li><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>数据 <b>FineWeb · 1024 词表 · 序列长 256</b></li>
+<li><svg viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4"/></svg>种子 <b>42–45</b></li>
+<li><svg viewBox="0 0 24 24"><path d="M5 5h14v14H5zM9 1v4M15 1v4M9 19v4M15 19v4"/></svg>模型 <b>softcap 15 · K/V 卷积 4</b></li>
+</ul>
+<h2>宽 256 时，最好的深度从 4 层（2 分钟）变成 8 层（10 分钟），MLP 也要更宽</h2>
+<p>学习率固定 0.01。2 分钟最好的是 4 层、首尾 ×24；10 分钟最好的是 8 层、MLP 都 ×24。每格 4 个种子；两张图各自以最好的一格为最深色。</p>
+<figure><svg class="chart" viewBox="0 0 720 194" font-family="Poppins, PingFang SC, sans-serif">
+<text x="70" y="13" font-size="12.5" fill="#141413">训练 120 秒</text>
+<text x="116.0" y="33" font-size="11" fill="#5e5d59" text-anchor="middle">MLP 都 ×12</text>
+<text x="208.0" y="33" font-size="11" fill="#5e5d59" text-anchor="middle">首尾 ×24</text>
+<text x="300.0" y="33" font-size="11" fill="#5e5d59" text-anchor="middle">MLP 都 ×24</text>
+<text x="0" y="63" font-size="12" fill="#5e5d59">4 层</text>
+<rect x="71" y="45" width="90" height="28" fill="rgb(223,151,125)"/>
+<text x="116.0" y="63" font-size="11" fill="#fff" text-anchor="middle">2.6816</text>
+<rect x="163" y="45" width="90" height="28" fill="rgb(217,119,87)" stroke="#141413" stroke-width="1.5"/>
+<text x="208.0" y="63" font-size="11" fill="#fff" text-anchor="middle">2.6711</text>
+<rect x="255" y="45" width="90" height="28" fill="rgb(223,151,126)"/>
+<text x="300.0" y="63" font-size="11" fill="#fff" text-anchor="middle">2.6818</text>
+<text x="0" y="93" font-size="12" fill="#5e5d59">6 层</text>
+<rect x="71" y="75" width="90" height="28" fill="rgb(224,156,131)"/>
+<text x="116.0" y="93" font-size="11" fill="#fff" text-anchor="middle">2.6833</text>
+<rect x="163" y="75" width="90" height="28" fill="rgb(224,152,127)"/>
+<text x="208.0" y="93" font-size="11" fill="#fff" text-anchor="middle">2.6821</text>
+<rect x="255" y="75" width="90" height="28" fill="rgb(235,208,194)"/>
+<text x="300.0" y="93" font-size="11" fill="#141413" text-anchor="middle">2.7003</text>
+<text x="0" y="123" font-size="12" fill="#5e5d59">8 层</text>
+<rect x="71" y="105" width="90" height="28" fill="rgb(237,213,201)"/>
+<text x="116.0" y="123" font-size="11" fill="#141413" text-anchor="middle">2.7021</text>
+<rect x="163" y="105" width="90" height="28" fill="rgb(239,225,215)"/>
+<text x="208.0" y="123" font-size="11" fill="#141413" text-anchor="middle">2.7059</text>
+<rect x="255" y="105" width="90" height="28" fill="rgb(243,241,234)"/>
+<text x="300.0" y="123" font-size="11" fill="#141413" text-anchor="middle">2.7395</text>
+<text x="0" y="153" font-size="12" fill="#5e5d59">10 层</text>
+<rect x="71" y="135" width="90" height="28" fill="rgb(243,241,234)"/>
+<text x="116.0" y="153" font-size="11" fill="#141413" text-anchor="middle">2.7317</text>
+<rect x="163" y="135" width="90" height="28" fill="rgb(243,241,234)"/>
+<text x="208.0" y="153" font-size="11" fill="#141413" text-anchor="middle">2.7414</text>
+<rect x="255" y="135" width="90" height="28" fill="rgb(243,241,234)"/>
+<text x="300.0" y="153" font-size="11" fill="#141413" text-anchor="middle">2.7947</text>
+<text x="0" y="183" font-size="12" fill="#5e5d59">12 层</text>
+<rect x="71" y="165" width="90" height="28" fill="rgb(243,241,234)"/>
+<text x="116.0" y="183" font-size="11" fill="#141413" text-anchor="middle">2.7656</text>
+<rect x="163" y="165" width="90" height="28" fill="rgb(243,241,234)"/>
+<text x="208.0" y="183" font-size="11" fill="#141413" text-anchor="middle">2.7803</text>
+<rect x="255" y="165" width="90" height="28" fill="rgb(243,241,234)"/>
+<text x="300.0" y="183" font-size="11" fill="#141413" text-anchor="middle">2.8472</text>
+<text x="382" y="13" font-size="12.5" fill="#141413">训练 600 秒</text>
+<text x="428.0" y="33" font-size="11" fill="#5e5d59" text-anchor="middle">MLP 都 ×12</text>
+<text x="520.0" y="33" font-size="11" fill="#5e5d59" text-anchor="middle">首尾 ×24</text>
+<text x="612.0" y="33" font-size="11" fill="#5e5d59" text-anchor="middle">MLP 都 ×24</text>
+<rect x="383" y="45" width="90" height="28" fill="rgb(243,241,234)"/>
+<text x="428.0" y="63" font-size="11" fill="#141413" text-anchor="middle">2.5842</text>
+<rect x="475" y="45" width="90" height="28" fill="rgb(243,241,234)"/>
+<text x="520.0" y="63" font-size="11" fill="#141413" text-anchor="middle">2.5521</text>
+<rect x="567" y="45" width="90" height="28" fill="rgb(238,220,208)"/>
+<text x="612.0" y="63" font-size="11" fill="#141413" text-anchor="middle">2.5452</text>
+<rect x="383" y="75" width="90" height="28" fill="rgb(240,231,222)"/>
+<text x="428.0" y="93" font-size="11" fill="#141413" text-anchor="middle">2.5490</text>
+<rect x="475" y="75" width="90" height="28" fill="rgb(227,166,144)"/>
+<text x="520.0" y="93" font-size="11" fill="#fff" text-anchor="middle">2.5278</text>
+<rect x="567" y="75" width="90" height="28" fill="rgb(222,146,120)"/>
+<text x="612.0" y="93" font-size="11" fill="#fff" text-anchor="middle">2.5212</text>
+<rect x="383" y="105" width="90" height="28" fill="rgb(227,169,147)"/>
+<text x="428.0" y="123" font-size="11" fill="#fff" text-anchor="middle">2.5286</text>
+<rect x="475" y="105" width="90" height="28" fill="rgb(220,137,109)"/>
+<text x="520.0" y="123" font-size="11" fill="#fff" text-anchor="middle">2.5182</text>
+<rect x="567" y="105" width="90" height="28" fill="rgb(217,119,87)" stroke="#141413" stroke-width="1.5"/>
+<text x="612.0" y="123" font-size="11" fill="#fff" text-anchor="middle">2.5121</text>
+<rect x="383" y="135" width="90" height="28" fill="rgb(227,169,147)"/>
+<text x="428.0" y="153" font-size="11" fill="#fff" text-anchor="middle">2.5286</text>
+<rect x="475" y="135" width="90" height="28" fill="rgb(218,124,93)"/>
+<text x="520.0" y="153" font-size="11" fill="#fff" text-anchor="middle">2.5140</text>
+<rect x="567" y="135" width="90" height="28" fill="rgb(221,139,111)"/>
+<text x="612.0" y="153" font-size="11" fill="#fff" text-anchor="middle">2.5189</text>
+<rect x="383" y="165" width="90" height="28" fill="rgb(225,160,136)"/>
+<text x="428.0" y="183" font-size="11" fill="#fff" text-anchor="middle">2.5256</text>
+<rect x="475" y="165" width="90" height="28" fill="rgb(221,140,112)"/>
+<text x="520.0" y="183" font-size="11" fill="#fff" text-anchor="middle">2.5191</text>
+<rect x="567" y="165" width="90" height="28" fill="rgb(224,154,129)"/>
+<text x="612.0" y="183" font-size="11" fill="#fff" text-anchor="middle">2.5237</text>
+</svg><figcaption>层的排法统一是：第 1 层短卷积，之后 GDN 和全注意力交替，最后一层全注意力。</figcaption></figure>
+<h2>最好的学习率随预算下降：2 分钟时 Muon 0.015，10 分钟时 0.0035</h2>
+<p>实线是 10 分钟，虚线是 2 分钟（同一次运行的第 120 秒）。纵轴是比这一预算下最好的学习率差多少。学习率在整个训练里不变，所以短预算偏好大学习率（快下降），长预算偏好小学习率（低噪声）。</p>
+<figure><div class="legend"><span><i style="background:#d97757;height:3px"></i>宽 256 · 8 层 · AdamW 0.01</span><span><i style="background:#6a9bcc;height:3px"></i>宽 384 · 6 层 · AdamW 0.005</span></div><svg class="chart" viewBox="0 0 720 260" font-family="Poppins, PingFang SC, sans-serif">
+<line x1="52" y1="204.9" x2="708" y2="204.9" stroke="#e8e6dc"/>
+<text x="46" y="208.9" font-size="11" fill="#5e5d59" text-anchor="end">0</text>
+<line x1="52" y1="144.6" x2="708" y2="144.6" stroke="#e8e6dc"/>
+<text x="46" y="148.6" font-size="11" fill="#5e5d59" text-anchor="end">+0.02</text>
+<line x1="52" y1="84.3" x2="708" y2="84.3" stroke="#e8e6dc"/>
+<text x="46" y="88.3" font-size="11" fill="#5e5d59" text-anchor="end">+0.04</text>
+<line x1="52" y1="24.0" x2="708" y2="24.0" stroke="#e8e6dc"/>
+<text x="46" y="28.0" font-size="11" fill="#5e5d59" text-anchor="end">+0.06</text>
+<text x="93.0" y="236" font-size="11" fill="#5e5d59" text-anchor="middle">0.0025</text>
+<text x="201.0" y="236" font-size="11" fill="#5e5d59" text-anchor="middle">0.0035</text>
+<text x="315.4" y="236" font-size="11" fill="#5e5d59" text-anchor="middle">0.005</text>
+<text x="445.5" y="236" font-size="11" fill="#5e5d59" text-anchor="middle">0.0075</text>
+<text x="537.8" y="236" font-size="11" fill="#5e5d59" text-anchor="middle">0.01</text>
+<text x="667.8" y="236" font-size="11" fill="#5e5d59" text-anchor="middle">0.015</text>
+<text x="380.0" y="256" font-size="11.5" fill="#5e5d59" text-anchor="middle">Muon 学习率（对数刻度）</text>
+<text x="52" y="12" font-size="11.5" fill="#5e5d59">比这一预算下最好的学习率差多少</text>
+<polyline points="201.0,77.1 315.4,144.8 445.5,185.6 537.8,203.9 609.4,202.6 667.8,204.9" fill="none" stroke="#d97757" stroke-width="2.2" stroke-dasharray="5 4"/>
+<circle cx="537.8" cy="203.9" r="3" fill="#d97757"/>
+<circle cx="445.5" cy="185.6" r="3" fill="#d97757"/>
+<circle cx="609.4" cy="202.6" r="3" fill="#d97757"/>
+<circle cx="667.8" cy="204.9" r="3" fill="#d97757"/>
+<circle cx="315.4" cy="144.8" r="3" fill="#d97757"/>
+<circle cx="201.0" cy="77.1" r="3" fill="#d97757"/>
+<polyline points="201.0,204.9 315.4,190.0 445.5,147.7 537.8,107.1 609.4,68.0 667.8,30.6" fill="none" stroke="#d97757" stroke-width="2.2"/>
+<circle cx="537.8" cy="107.1" r="3" fill="#d97757"/>
+<circle cx="445.5" cy="147.7" r="3" fill="#d97757"/>
+<circle cx="609.4" cy="68.0" r="3" fill="#d97757"/>
+<circle cx="667.8" cy="30.6" r="3" fill="#d97757"/>
+<circle cx="315.4" cy="190.0" r="3" fill="#d97757"/>
+<circle cx="201.0" cy="204.9" r="3" fill="#d97757"/>
+<polyline points="93.0,24.0 201.0,95.2 315.4,204.9" fill="none" stroke="#6a9bcc" stroke-width="2.2" stroke-dasharray="5 4"/>
+<circle cx="201.0" cy="95.2" r="3" fill="#6a9bcc"/>
+<circle cx="315.4" cy="204.9" r="3" fill="#6a9bcc"/>
+<circle cx="93.0" cy="24.0" r="3" fill="#6a9bcc"/>
+<polyline points="93.0,188.3 201.0,204.9 315.4,204.4" fill="none" stroke="#6a9bcc" stroke-width="2.2"/>
+<circle cx="201.0" cy="204.9" r="3" fill="#6a9bcc"/>
+<circle cx="315.4" cy="204.4" r="3" fill="#6a9bcc"/>
+<circle cx="93.0" cy="188.3" r="3" fill="#6a9bcc"/>
+</svg><figcaption>每个点 4 个种子。</figcaption></figure>
+<h2>越宽越好，到宽 512 附近到顶：10 分钟最好的是 512 × 4 层（2.4412）</h2>
+<p>每个宽度取 10 分钟最好的配置（结构和学习率一起选）：宽 256 是 2.4816，宽 384 是 2.4539，宽 512 是 2.4412，宽 640 是 2.4487，宽 768 是 2.4598。它们在 2 分钟时都很差：宽模型每步慢，120 秒只够跑几百步。2 分钟最好的仍是 256 × 4 层（2.6711）。和 2 分钟冠军结构（宽 256 × 4 层，学习率 0.01）比，10 分钟最好的配置好 0.111。</p>
+<figure><div class="legend"><span><i style="background:#d97757;height:10px;width:10px"></i>全注意力（A）</span><span><i style="background:#6a9bcc;height:10px;width:10px"></i>GDN（G）</span><span><i style="background:#788c5d;height:10px;width:10px"></i>短卷积（C）</span><span><i style="background:#141413;height:4px;width:14px"></i>MLP，条越长越宽</span></div><svg class="chart" viewBox="0 0 720 228" font-family="Poppins, PingFang SC, sans-serif">
+<text x="60" y="12" font-size="11" fill="#5e5d59">600 秒最好的结构</text>
+<text x="250" y="12" font-size="11" fill="#5e5d59">600 秒 loss（橙）· 同一结构 120 秒 loss（蓝）· 学习率 Muon / AdamW</text>
+<text x="0" y="40" font-size="12.5" fill="#141413">宽 256</text>
+<rect x="60" y="29" width="12" height="10" rx="1.5" fill="#788c5d"/>
+<rect x="60" y="42" width="6.0" height="4" fill="#141413"/>
+<rect x="74" y="29" width="12" height="10" rx="1.5" fill="#d97757"/>
+<rect x="74" y="42" width="3.0" height="4" fill="#141413"/>
+<rect x="88" y="29" width="12" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="88" y="42" width="3.0" height="4" fill="#141413"/>
+<rect x="102" y="29" width="12" height="10" rx="1.5" fill="#d97757"/>
+<rect x="102" y="42" width="3.0" height="4" fill="#141413"/>
+<rect x="116" y="29" width="12" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="116" y="42" width="3.0" height="4" fill="#141413"/>
+<rect x="130" y="29" width="12" height="10" rx="1.5" fill="#d97757"/>
+<rect x="130" y="42" width="3.0" height="4" fill="#141413"/>
+<rect x="144" y="29" width="12" height="10" rx="1.5" fill="#6a9bcc"/>
+<rect x="144" y="42" width="3.0" height="4" fill="#141413"/>
+<rect x="158" y="29" width="12" height="10" rx="1.5" fill="#d97757"/>
+<rect x="158" y="42" width="6.0" height="4" fill="#141413"/>
+<rect x="250" y="27" width="29.7" height="11" fill="#d97757"/>
+<text x="284.7" y="36" font-size="11" fill="#141413">2.4816</text>
+<rect x="250" y="41" width="229.4" height="11" fill="#6a9bcc"/>
+<text x="484.4" y="50" font-size="11" fill="#141413">2.7612</text>
+<text x="720" y="42" font-size="11" fill="#5e5d59" text-anchor="end">0.0035 / 0.005</text>
+<text x="0" y="80" font-size="12.5" fill="#141413">宽 384</text>
+<rect x="60" y="69" width="12" height="10" rx="1.5" fill="#788c5d"/>
+<rect x="60" y="82" width="6.0" height="4" fill="#141413"/>
+<rect x="74" y="69" width="12" height="10" rx="1.5" fill="#d97757"/>
+<rect x="74" y="82" width="6.0" height="4" fill="#141413"/>
+<rect x="88" y="69" width="12" height="10" rx="1.5" fill="#d97757"/>
+<rect x="88" y="82" width="6.0" height="4" fill="#141413"/>
+<rect x="102" y="69" width="12" height="10" rx="1.5" fill="#d97757"/>
+<rect x="102" y="82" width="6.0" height="4" fill="#141413"/>
+<rect x="250" y="67" width="10.0" height="11" fill="#d97757"/>
+<text x="265.0" y="76" font-size="11" fill="#141413">2.4539</text>
+<rect x="250" y="81" width="244.9" height="11" fill="#6a9bcc"/>
+<text x="499.9" y="90" font-size="11" fill="#141413">2.7828</text>
+<text x="720" y="82" font-size="11" fill="#5e5d59" text-anchor="end">0.0035 / 0.0025</text>
+<text x="0" y="120" font-size="12.5" fill="#141413">宽 512</text>
+<rect x="60" y="109" width="12" height="10" rx="1.5" fill="#788c5d"/>
+<rect x="60" y="122" width="4.0" height="4" fill="#141413"/>
+<rect x="74" y="109" width="12" height="10" rx="1.5" fill="#d97757"/>
+<rect x="74" y="122" width="4.0" height="4" fill="#141413"/>
+<rect x="88" y="109" width="12" height="10" rx="1.5" fill="#d97757"/>
+<rect x="88" y="122" width="4.0" height="4" fill="#141413"/>
+<rect x="102" y="109" width="12" height="10" rx="1.5" fill="#d97757"/>
+<rect x="102" y="122" width="4.0" height="4" fill="#141413"/>
+<rect x="250" y="107" width="0.9" height="11" fill="#d97757"/>
+<text x="255.9" y="116" font-size="11" fill="#141413">2.4412</text>
+<rect x="250" y="121" width="300.0" height="11" fill="#6a9bcc"/>
+<text x="555.0" y="130" font-size="11" fill="#141413">2.8617</text>
+<text x="720" y="122" font-size="11" fill="#5e5d59" text-anchor="end">0.0025 / 0.0025</text>
+<text x="0" y="160" font-size="12.5" fill="#141413">宽 640</text>
+<rect x="60" y="149" width="12" height="10" rx="1.5" fill="#788c5d"/>
+<rect x="60" y="162" width="3.0" height="4" fill="#141413"/>
+<rect x="74" y="149" width="12" height="10" rx="1.5" fill="#d97757"/>
+<rect x="74" y="162" width="3.0" height="4" fill="#141413"/>
+<rect x="88" y="149" width="12" height="10" rx="1.5" fill="#d97757"/>
+<rect x="88" y="162" width="3.0" height="4" fill="#141413"/>
+<rect x="102" y="149" width="12" height="10" rx="1.5" fill="#d97757"/>
+<rect x="102" y="162" width="3.0" height="4" fill="#141413"/>
+<rect x="250" y="147" width="6.2" height="11" fill="#d97757"/>
+<text x="261.2" y="156" font-size="11" fill="#141413">2.4487</text>
+<rect x="250" y="161" width="300.0" height="11" fill="#6a9bcc"/>
+<text x="555.0" y="170" font-size="11" fill="#141413">2.8746</text>
+<text x="720" y="162" font-size="11" fill="#5e5d59" text-anchor="end">0.0035 / 0.0025</text>
+<text x="0" y="200" font-size="12.5" fill="#141413">宽 768</text>
+<rect x="60" y="189" width="12" height="10" rx="1.5" fill="#788c5d"/>
+<rect x="60" y="202" width="3.0" height="4" fill="#141413"/>
+<rect x="74" y="189" width="12" height="10" rx="1.5" fill="#d97757"/>
+<rect x="74" y="202" width="3.0" height="4" fill="#141413"/>
+<rect x="88" y="189" width="12" height="10" rx="1.5" fill="#d97757"/>
+<rect x="88" y="202" width="3.0" height="4" fill="#141413"/>
+<rect x="250" y="187" width="14.1" height="11" fill="#d97757"/>
+<text x="269.1" y="196" font-size="11" fill="#141413">2.4598</text>
+<rect x="250" y="201" width="282.3" height="11" fill="#6a9bcc"/>
+<text x="537.3" y="210" font-size="11" fill="#141413">2.8352</text>
+<text x="720" y="202" font-size="11" fill="#5e5d59" text-anchor="end">0.0035 / 0.0025</text>
+</svg><figcaption>右侧数字是这个配置的学习率 Muon / AdamW。每个配置 4 个种子。</figcaption></figure>
+<h2>在最优区域随机抽 360 个再精修：10 分钟最好的是宽 512 × 4 层 C·A·A·A，MLP 都 ×16（2.4413）</h2>
+<p>最优区域抽样：宽 384 / 512 / 640，3–6 层，第 1 层短卷积或 GDN，中间层任选，最后一层全注意力，每层 MLP 宽度和学习率随机，每个配置 1 个种子。单种子前 10 名补跑到 4 个种子后，最好的是 C16·A16·A16·A12（字母是层的类型，数字是 MLP 宽度倍数；2.4434），其余 9 个回落到 2.4489–2.4614。</p>
+<p>在它上面改各层 MLP 宽度：4 层都 ×16 最好，其他分法都更差。第 1 层收窄到 ×8、中间加宽到 ×24 都明显变差。</p>
+<figure><svg class="chart" viewBox="0 0 720 280" font-family="Poppins, PingFang SC, sans-serif">
+<line x1="314.0" y1="4" x2="314.0" y2="272" stroke="#141413" stroke-width="0.8"/>
+<text x="0" y="23" font-size="12" fill="#141413">各层 MLP 16/16/16/12</text>
+<rect x="314.0" y="13" width="36.0" height="12" fill="#eab8a6"/>
+<line x1="317.9" y1="19" x2="382.2" y2="19" stroke="#141413" stroke-width="1"/>
+<text x="388.2" y="23" font-size="11.5" fill="#141413" text-anchor="start">+0.0021</text>
+<text x="0" y="49" font-size="12" fill="#141413">各层 MLP 12/16/16/12</text>
+<rect x="314.0" y="39" width="109.9" height="12" fill="#d97757"/>
+<line x1="359.5" y1="45" x2="488.2" y2="45" stroke="#141413" stroke-width="1"/>
+<text x="494.2" y="49" font-size="11.5" fill="#141413" text-anchor="start">+0.0065</text>
+<text x="0" y="75" font-size="12" fill="#141413">各层 MLP 16/16/16/24</text>
+<rect x="314.0" y="65" width="113.7" height="12" fill="#eab8a6"/>
+<line x1="338.7" y1="71" x2="516.7" y2="71" stroke="#141413" stroke-width="1"/>
+<text x="522.7" y="75" font-size="11.5" fill="#141413" text-anchor="start">+0.0068</text>
+<text x="0" y="101" font-size="12" fill="#141413">各层 MLP 16/16/24/12</text>
+<rect x="314.0" y="91" width="134.8" height="12" fill="#d97757"/>
+<line x1="378.0" y1="97" x2="519.5" y2="97" stroke="#141413" stroke-width="1"/>
+<text x="525.5" y="101" font-size="11.5" fill="#141413" text-anchor="start">+0.0080</text>
+<text x="0" y="127" font-size="12" fill="#141413">各层 MLP 16/16/16/8</text>
+<rect x="314.0" y="117" width="149.7" height="12" fill="#d97757"/>
+<line x1="425.5" y1="123" x2="501.9" y2="123" stroke="#141413" stroke-width="1"/>
+<text x="507.9" y="127" font-size="11.5" fill="#141413" text-anchor="start">+0.0089</text>
+<text x="0" y="153" font-size="12" fill="#141413">各层 MLP 24/16/16/12</text>
+<rect x="314.0" y="143" width="157.9" height="12" fill="#d97757"/>
+<line x1="383.2" y1="149" x2="560.7" y2="149" stroke="#141413" stroke-width="1"/>
+<text x="566.7" y="153" font-size="11.5" fill="#141413" text-anchor="start">+0.0094</text>
+<text x="0" y="179" font-size="12" fill="#141413">各层 MLP 16/24/16/12</text>
+<rect x="314.0" y="169" width="161.1" height="12" fill="#d97757"/>
+<line x1="401.2" y1="175" x2="549.0" y2="175" stroke="#141413" stroke-width="1"/>
+<text x="555.0" y="179" font-size="11.5" fill="#141413" text-anchor="start">+0.0096</text>
+<text x="0" y="205" font-size="12" fill="#141413">各层 MLP 8/16/16/12</text>
+<rect x="314.0" y="195" width="182.5" height="12" fill="#d97757"/>
+<line x1="459.2" y1="201" x2="533.8" y2="201" stroke="#141413" stroke-width="1"/>
+<text x="539.8" y="205" font-size="11.5" fill="#141413" text-anchor="start">+0.011</text>
+<text x="0" y="231" font-size="12" fill="#141413">各层 MLP 16/24/24/12</text>
+<rect x="314.0" y="221" width="202.6" height="12" fill="#d97757"/>
+<line x1="441.7" y1="227" x2="591.6" y2="227" stroke="#141413" stroke-width="1"/>
+<text x="597.6" y="231" font-size="11.5" fill="#141413" text-anchor="start">+0.012</text>
+<text x="0" y="257" font-size="12" fill="#141413">各层 MLP 12/24/24/12</text>
+<rect x="314.0" y="247" width="227.2" height="12" fill="#d97757"/>
+<line x1="443.3" y1="253" x2="639.0" y2="253" stroke="#141413" stroke-width="1"/>
+<text x="645.0" y="257" font-size="11.5" fill="#141413" text-anchor="start">+0.014</text>
+</svg><figcaption>和“4 层都 ×16”按种子配对比较，4 个种子。负数是更好。黑线是 ±2 个标准误。</figcaption></figure>
+<h2>这个配置是局部最优：一次改一处，23 种改动没有一种明显更好</h2>
+<p>参照：宽 512 × 4 层，第 1 层短卷积、后 3 层全注意力，MLP 都 ×16，8 个注意力头（K/V 4 个），Muon 0.0035 / AdamW 0.0025，softcap 15。</p>
+<p>Muon 学习率在 0.0025–0.003 之间打平，0.005 明显更差。第 1 层必须是短卷积：换成全注意力差最多。宽度 512 正好：换成 640 或 384，配什么 MLP 宽度都更差。XSA（最后一层的注意力输出去掉自身 value 的方向）也变差。</p>
+<figure><svg class="chart" viewBox="0 0 720 618" font-family="Poppins, PingFang SC, sans-serif">
+<line x1="300.0" y1="4" x2="300.0" y2="610" stroke="#141413" stroke-width="0.8"/>
+<text x="0" y="23" font-size="12" fill="#141413">Muon 0.0025</text>
+<rect x="298.8" y="13" width="1.2" height="12" fill="#b0aea5"/>
+<line x1="290.1" y1="19" x2="307.5" y2="19" stroke="#141413" stroke-width="1"/>
+<text x="284.1" y="23" font-size="11.5" fill="#141413" text-anchor="end">-0.0001</text>
+<text x="0" y="49" font-size="12" fill="#141413">Muon 0.003</text>
+<rect x="300.0" y="39" width="4.7" height="12" fill="#b0aea5"/>
+<line x1="258.6" y1="45" x2="350.9" y2="45" stroke="#141413" stroke-width="1"/>
+<text x="356.9" y="49" font-size="11.5" fill="#141413" text-anchor="start">+0.0003</text>
+<text x="0" y="75" font-size="12" fill="#141413">K/V 卷积 4 → 2</text>
+<rect x="300.0" y="65" width="20.8" height="12" fill="#b0aea5"/>
+<line x1="277.9" y1="71" x2="363.7" y2="71" stroke="#141413" stroke-width="1"/>
+<text x="369.7" y="75" font-size="11.5" fill="#141413" text-anchor="start">+0.0015</text>
+<text x="0" y="101" font-size="12" fill="#141413">K/V 卷积 4 → 8</text>
+<rect x="300.0" y="91" width="31.6" height="12" fill="#b0aea5"/>
+<line x1="270.8" y1="97" x2="392.4" y2="97" stroke="#141413" stroke-width="1"/>
+<text x="398.4" y="101" font-size="11.5" fill="#141413" text-anchor="start">+0.0023</text>
+<text x="0" y="127" font-size="12" fill="#141413">rope 维数 16 → 32</text>
+<rect x="300.0" y="117" width="32.8" height="12" fill="#b0aea5"/>
+<line x1="269.6" y1="123" x2="396.1" y2="123" stroke="#141413" stroke-width="1"/>
+<text x="402.1" y="127" font-size="11.5" fill="#141413" text-anchor="start">+0.0023</text>
+<text x="0" y="153" font-size="12" fill="#141413">softcap 15 → 12</text>
+<rect x="300.0" y="143" width="34.1" height="12" fill="#b0aea5"/>
+<line x1="274.3" y1="149" x2="394.0" y2="149" stroke="#141413" stroke-width="1"/>
+<text x="400.0" y="153" font-size="11.5" fill="#141413" text-anchor="start">+0.0024</text>
+<text x="0" y="179" font-size="12" fill="#141413">AdamW 0.0015</text>
+<rect x="300.0" y="169" width="35.9" height="12" fill="#b0aea5"/>
+<line x1="257.9" y1="175" x2="413.8" y2="175" stroke="#141413" stroke-width="1"/>
+<text x="419.8" y="179" font-size="11.5" fill="#141413" text-anchor="start">+0.0026</text>
+<text x="0" y="205" font-size="12" fill="#141413">AdamW 0.0035</text>
+<rect x="300.0" y="195" width="51.5" height="12" fill="#d97757"/>
+<line x1="326.1" y1="201" x2="376.9" y2="201" stroke="#141413" stroke-width="1"/>
+<text x="382.9" y="205" font-size="11.5" fill="#141413" text-anchor="start">+0.0037</text>
+<text x="0" y="231" font-size="12" fill="#141413">4 头 / K/V 2 头</text>
+<rect x="300.0" y="221" width="60.5" height="12" fill="#d97757"/>
+<line x1="330.8" y1="227" x2="390.2" y2="227" stroke="#141413" stroke-width="1"/>
+<text x="396.2" y="231" font-size="11.5" fill="#141413" text-anchor="start">+0.0043</text>
+<text x="0" y="257" font-size="12" fill="#141413">Muon 0.002</text>
+<rect x="300.0" y="247" width="61.0" height="12" fill="#eab8a6"/>
+<line x1="317.5" y1="253" x2="404.5" y2="253" stroke="#141413" stroke-width="1"/>
+<text x="410.5" y="257" font-size="11.5" fill="#141413" text-anchor="start">+0.0044</text>
+<text x="0" y="283" font-size="12" fill="#141413">softcap 15 → 10</text>
+<rect x="300.0" y="273" width="65.8" height="12" fill="#d97757"/>
+<line x1="332.1" y1="279" x2="399.6" y2="279" stroke="#141413" stroke-width="1"/>
+<text x="405.6" y="283" font-size="11.5" fill="#141413" text-anchor="start">+0.0047</text>
+<text x="0" y="309" font-size="12" fill="#141413">8 头 / K/V 2 头</text>
+<rect x="300.0" y="299" width="76.8" height="12" fill="#eab8a6"/>
+<line x1="276.2" y1="305" x2="477.5" y2="305" stroke="#141413" stroke-width="1"/>
+<text x="483.5" y="309" font-size="11.5" fill="#141413" text-anchor="start">+0.0055</text>
+<text x="0" y="335" font-size="12" fill="#141413">加到 5 层</text>
+<rect x="300.0" y="325" width="86.6" height="12" fill="#eab8a6"/>
+<line x1="324.1" y1="331" x2="449.1" y2="331" stroke="#141413" stroke-width="1"/>
+<text x="455.1" y="335" font-size="11.5" fill="#141413" text-anchor="start">+0.0062</text>
+<text x="0" y="361" font-size="12" fill="#141413">宽 640，MLP ×12</text>
+<rect x="300.0" y="351" width="104.2" height="12" fill="#eab8a6"/>
+<line x1="277.8" y1="357" x2="530.6" y2="357" stroke="#141413" stroke-width="1"/>
+<text x="536.6" y="361" font-size="11.5" fill="#141413" text-anchor="start">+0.0074</text>
+<text x="0" y="387" font-size="12" fill="#141413">第 1 层换成 GDN</text>
+<rect x="300.0" y="377" width="123.2" height="12" fill="#d97757"/>
+<line x1="364.2" y1="383" x2="482.2" y2="383" stroke="#141413" stroke-width="1"/>
+<text x="488.2" y="387" font-size="11.5" fill="#141413" text-anchor="start">+0.0088</text>
+<text x="0" y="413" font-size="12" fill="#141413">最后一层用 XSA</text>
+<rect x="300.0" y="403" width="132.5" height="12" fill="#d97757"/>
+<line x1="369.9" y1="409" x2="495.2" y2="409" stroke="#141413" stroke-width="1"/>
+<text x="501.2" y="413" font-size="11.5" fill="#141413" text-anchor="start">+0.0095</text>
+<text x="0" y="439" font-size="12" fill="#141413">Muon 0.005</text>
+<rect x="300.0" y="429" width="153.3" height="12" fill="#d97757"/>
+<line x1="379.1" y1="435" x2="527.4" y2="435" stroke="#141413" stroke-width="1"/>
+<text x="533.4" y="439" font-size="11.5" fill="#141413" text-anchor="start">+0.011</text>
+<text x="0" y="465" font-size="12" fill="#141413">宽 384，MLP ×24</text>
+<rect x="300.0" y="455" width="177.2" height="12" fill="#d97757"/>
+<line x1="386.7" y1="461" x2="567.8" y2="461" stroke="#141413" stroke-width="1"/>
+<text x="573.8" y="465" font-size="11.5" fill="#141413" text-anchor="start">+0.013</text>
+<text x="0" y="491" font-size="12" fill="#141413">16 头 / K/V 4 头</text>
+<rect x="300.0" y="481" width="199.5" height="12" fill="#d97757"/>
+<line x1="477.7" y1="487" x2="521.3" y2="487" stroke="#141413" stroke-width="1"/>
+<text x="527.3" y="491" font-size="11.5" fill="#141413" text-anchor="start">+0.014</text>
+<text x="0" y="517" font-size="12" fill="#141413">宽 640，MLP ×16</text>
+<rect x="300.0" y="507" width="202.0" height="12" fill="#d97757"/>
+<line x1="430.5" y1="513" x2="573.5" y2="513" stroke="#141413" stroke-width="1"/>
+<text x="579.5" y="517" font-size="11.5" fill="#141413" text-anchor="start">+0.014</text>
+<text x="0" y="543" font-size="12" fill="#141413">宽 384，MLP ×16</text>
+<rect x="300.0" y="533" width="231.1" height="12" fill="#d97757"/>
+<line x1="454.8" y1="539" x2="607.3" y2="539" stroke="#141413" stroke-width="1"/>
+<text x="613.3" y="543" font-size="11.5" fill="#141413" text-anchor="start">+0.017</text>
+<text x="0" y="569" font-size="12" fill="#141413">减到 3 层</text>
+<rect x="300.0" y="559" width="276.3" height="12" fill="#d97757"/>
+<line x1="527.0" y1="565" x2="625.7" y2="565" stroke="#141413" stroke-width="1"/>
+<text x="631.7" y="569" font-size="11.5" fill="#141413" text-anchor="start">+0.020</text>
+<text x="0" y="595" font-size="12" fill="#141413">第 1 层换成全注意力</text>
+<rect x="300.0" y="585" width="311.6" height="12" fill="#d97757"/>
+<line x1="505.0" y1="591" x2="650.0" y2="591" stroke="#141413" stroke-width="1"/>
+<text x="656.0" y="595" font-size="11.5" fill="#141413" text-anchor="start">+0.022</text>
+</svg><figcaption>橙色超过 3 个标准误，浅橙 1.5–3 个，灰色在噪声内。</figcaption></figure>
+<h2>再换 12 种机制也没有更好：value residual 开在噪声内，其余都更差</h2>
+<p>KDA 和 GLA 是和 GDN 同类的线性注意力。smear 把前一个 token 的表示按门控混进当前 token。value residual 让后面的注意力层复用第一层的 value。并行块让同一层的注意力和 MLP 读同一个输入、同时算。循环是让同一组层用同一套权重再跑 2 遍。</p>
+<p>换 relu² 激活和加循环的模型每步更慢，10 分钟内的步数：MLP 激活换成 relu² 2010，第 4 层循环 3 遍 1892，MLP 激活换成 leaky relu² 2001，第 2–3 层循环 3 遍 1413，参照模型 2804。</p>
+<figure><svg class="chart" viewBox="0 0 720 332" font-family="Poppins, PingFang SC, sans-serif">
+<line x1="258.0" y1="4" x2="258.0" y2="324" stroke="#141413" stroke-width="0.8"/>
+<text x="0" y="23" font-size="12" fill="#141413">value residual 开</text>
+<rect x="258.0" y="13" width="1.9" height="12" fill="#b0aea5"/>
+<line x1="237.1" y1="19" x2="282.7" y2="19" stroke="#141413" stroke-width="1"/>
+<text x="288.7" y="23" font-size="11.5" fill="#141413" text-anchor="start">+0.0003</text>
+<text x="0" y="49" font-size="12" fill="#141413">smear 开</text>
+<rect x="258.0" y="39" width="15.8" height="12" fill="#d97757"/>
+<line x1="266.9" y1="45" x2="280.6" y2="45" stroke="#141413" stroke-width="1"/>
+<text x="286.6" y="49" font-size="11.5" fill="#141413" text-anchor="start">+0.0028</text>
+<text x="0" y="75" font-size="12" fill="#141413">第 2 层注意力只看前 64 个 token</text>
+<rect x="258.0" y="65" width="33.5" height="12" fill="#d97757"/>
+<line x1="282.3" y1="71" x2="300.7" y2="71" stroke="#141413" stroke-width="1"/>
+<text x="306.7" y="75" font-size="11.5" fill="#141413" text-anchor="start">+0.0060</text>
+<text x="0" y="101" font-size="12" fill="#141413">第 2 层换成 KDA</text>
+<rect x="258.0" y="91" width="54.5" height="12" fill="#d97757"/>
+<line x1="293.7" y1="97" x2="331.3" y2="97" stroke="#141413" stroke-width="1"/>
+<text x="337.3" y="101" font-size="11.5" fill="#141413" text-anchor="start">+0.0097</text>
+<text x="0" y="127" font-size="12" fill="#141413">第 2 层换成 GLA</text>
+<rect x="258.0" y="117" width="61.0" height="12" fill="#d97757"/>
+<line x1="299.4" y1="123" x2="338.6" y2="123" stroke="#141413" stroke-width="1"/>
+<text x="344.6" y="127" font-size="11.5" fill="#141413" text-anchor="start">+0.011</text>
+<text x="0" y="153" font-size="12" fill="#141413">第 3 层换成 KDA</text>
+<rect x="258.0" y="143" width="70.4" height="12" fill="#d97757"/>
+<line x1="291.2" y1="149" x2="365.5" y2="149" stroke="#141413" stroke-width="1"/>
+<text x="371.5" y="153" font-size="11.5" fill="#141413" text-anchor="start">+0.013</text>
+<text x="0" y="179" font-size="12" fill="#141413">第 1 层换成 KDA</text>
+<rect x="258.0" y="169" width="80.0" height="12" fill="#d97757"/>
+<line x1="313.7" y1="175" x2="362.3" y2="175" stroke="#141413" stroke-width="1"/>
+<text x="368.3" y="179" font-size="11.5" fill="#141413" text-anchor="start">+0.014</text>
+<text x="0" y="205" font-size="12" fill="#141413">第 2 层起并行块</text>
+<rect x="258.0" y="195" width="149.7" height="12" fill="#d97757"/>
+<line x1="366.6" y1="201" x2="448.8" y2="201" stroke="#141413" stroke-width="1"/>
+<text x="454.8" y="205" font-size="11.5" fill="#141413" text-anchor="start">+0.027</text>
+<text x="0" y="231" font-size="12" fill="#141413">MLP 激活换成 relu²</text>
+<rect x="258.0" y="221" width="274.1" height="12" fill="#d97757"/>
+<line x1="508.1" y1="227" x2="556.2" y2="227" stroke="#141413" stroke-width="1"/>
+<text x="562.2" y="231" font-size="11.5" fill="#141413" text-anchor="start">+0.049</text>
+<text x="0" y="257" font-size="12" fill="#141413">第 4 层循环 3 遍</text>
+<rect x="258.0" y="247" width="279.0" height="12" fill="#d97757"/>
+<line x1="508.4" y1="253" x2="565.6" y2="253" stroke="#141413" stroke-width="1"/>
+<text x="571.6" y="257" font-size="11.5" fill="#141413" text-anchor="start">+0.050</text>
+<text x="0" y="283" font-size="12" fill="#141413">MLP 激活换成 leaky relu²</text>
+<rect x="258.0" y="273" width="283.4" height="12" fill="#d97757"/>
+<line x1="514.9" y1="279" x2="567.9" y2="279" stroke="#141413" stroke-width="1"/>
+<text x="573.9" y="283" font-size="11.5" fill="#141413" text-anchor="start">+0.051</text>
+<text x="0" y="309" font-size="12" fill="#141413">第 2–3 层循环 3 遍</text>
+<rect x="258.0" y="299" width="383.4" height="12" fill="#d97757"/>
+<line x1="615.3" y1="305" x2="650.0" y2="305" stroke="#141413" stroke-width="1"/>
+<text x="656.0" y="309" font-size="11.5" fill="#141413" text-anchor="start">+0.068</text>
+</svg><figcaption>和参照模型按种子配对比较，4 个种子。</figcaption></figure>
+<h2>2 分钟时定下的开关，在宽 512 的 10 分钟模型上大多仍成立</h2>
+<p>参照模型：宽 512 × 4 层 C·A·G·A，MLP 首尾 ×24，Muon 0.0035 / AdamW 0.0025，loss 2.4517。每次只改一项，按种子配对比较。softcap 15、K/V 卷积和跳连门在 10 分钟时仍然有用；qk_gain 和 value residual 在噪声内；MLP 再加宽反而变差。唯一明显更好的改动是“各层 → C·A·A·A 24/12/12/24”（-0.0033），第 1 层用全注意力、最后一层用 GDN 最差。</p>
+<figure><svg class="chart" viewBox="0 0 720 410" font-family="Poppins, PingFang SC, sans-serif">
+<line x1="286.0" y1="4" x2="286.0" y2="402" stroke="#141413" stroke-width="0.8"/>
+<text x="0" y="23" font-size="12" fill="#141413">各层 → C·A·A·A 24/12/12/24</text>
+<rect x="267.5" y="13" width="18.5" height="12" fill="#d97757"/>
+<line x1="257.1" y1="19" x2="277.9" y2="19" stroke="#141413" stroke-width="1"/>
+<text x="251.1" y="23" font-size="11.5" fill="#141413" text-anchor="end">-0.0033</text>
+<text x="0" y="49" font-size="12" fill="#141413">各层 → C·A·G·A 16/16/16/16</text>
+<rect x="286.0" y="39" width="5.7" height="12" fill="#b0aea5"/>
+<line x1="260.2" y1="45" x2="323.1" y2="45" stroke="#141413" stroke-width="1"/>
+<text x="329.1" y="49" font-size="11.5" fill="#141413" text-anchor="start">+0.0010</text>
+<text x="0" y="75" font-size="12" fill="#141413">value residual 关 → 开</text>
+<rect x="286.0" y="65" width="10.1" height="12" fill="#b0aea5"/>
+<line x1="277.3" y1="71" x2="314.9" y2="71" stroke="#141413" stroke-width="1"/>
+<text x="320.9" y="75" font-size="11.5" fill="#141413" text-anchor="start">+0.0018</text>
+<text x="0" y="101" font-size="12" fill="#141413">qk_gain 0.75 → 0.5</text>
+<rect x="286.0" y="91" width="11.4" height="12" fill="#eab8a6"/>
+<line x1="287.8" y1="97" x2="307.0" y2="97" stroke="#141413" stroke-width="1"/>
+<text x="313.0" y="101" font-size="11.5" fill="#141413" text-anchor="start">+0.0020</text>
+<text x="0" y="127" font-size="12" fill="#141413">qk_gain 0.75 → 1.5</text>
+<rect x="286.0" y="117" width="12.7" height="12" fill="#b0aea5"/>
+<line x1="270.4" y1="123" x2="327.0" y2="123" stroke="#141413" stroke-width="1"/>
+<text x="333.0" y="127" font-size="11.5" fill="#141413" text-anchor="start">+0.0023</text>
+<text x="0" y="153" font-size="12" fill="#141413">softcap 15.0 → 20.0</text>
+<rect x="286.0" y="143" width="13.6" height="12" fill="#eab8a6"/>
+<line x1="286.9" y1="149" x2="312.3" y2="149" stroke="#141413" stroke-width="1"/>
+<text x="318.3" y="153" font-size="11.5" fill="#141413" text-anchor="start">+0.0024</text>
+<text x="0" y="179" font-size="12" fill="#141413">跳连门 开 → 关</text>
+<rect x="286.0" y="169" width="23.3" height="12" fill="#eab8a6"/>
+<line x1="290.8" y1="175" x2="327.9" y2="175" stroke="#141413" stroke-width="1"/>
+<text x="333.9" y="179" font-size="11.5" fill="#141413" text-anchor="start">+0.0042</text>
+<text x="0" y="205" font-size="12" fill="#141413">各层 → G·A·G·A 24/12/12/24</text>
+<rect x="286.0" y="195" width="27.0" height="12" fill="#eab8a6"/>
+<line x1="281.9" y1="201" x2="344.1" y2="201" stroke="#141413" stroke-width="1"/>
+<text x="350.1" y="205" font-size="11.5" fill="#141413" text-anchor="start">+0.0048</text>
+<text x="0" y="231" font-size="12" fill="#141413">softcap 15.0 → 30.0</text>
+<rect x="286.0" y="221" width="41.9" height="12" fill="#d97757"/>
+<line x1="324.0" y1="227" x2="331.9" y2="227" stroke="#141413" stroke-width="1"/>
+<text x="337.9" y="231" font-size="11.5" fill="#141413" text-anchor="start">+0.0075</text>
+<text x="0" y="257" font-size="12" fill="#141413">K/V 卷积宽度 4 → 0</text>
+<rect x="286.0" y="247" width="43.0" height="12" fill="#d97757"/>
+<line x1="314.6" y1="253" x2="343.4" y2="253" stroke="#141413" stroke-width="1"/>
+<text x="349.4" y="257" font-size="11.5" fill="#141413" text-anchor="start">+0.0077</text>
+<text x="0" y="283" font-size="12" fill="#141413">各层 → C·A·G·A 24/24/24/24</text>
+<rect x="286.0" y="273" width="51.1" height="12" fill="#d97757"/>
+<line x1="326.4" y1="279" x2="347.7" y2="279" stroke="#141413" stroke-width="1"/>
+<text x="353.7" y="283" font-size="11.5" fill="#141413" text-anchor="start">+0.0091</text>
+<text x="0" y="309" font-size="12" fill="#141413">各层 → C·A·G·A 32/12/12/32</text>
+<rect x="286.0" y="299" width="53.3" height="12" fill="#d97757"/>
+<line x1="328.2" y1="305" x2="350.4" y2="305" stroke="#141413" stroke-width="1"/>
+<text x="356.4" y="309" font-size="11.5" fill="#141413" text-anchor="start">+0.0095</text>
+<text x="0" y="335" font-size="12" fill="#141413">各层 → C·A·G·A 32/16/16/32</text>
+<rect x="286.0" y="325" width="80.3" height="12" fill="#d97757"/>
+<line x1="361.0" y1="331" x2="371.6" y2="331" stroke="#141413" stroke-width="1"/>
+<text x="377.6" y="335" font-size="11.5" fill="#141413" text-anchor="start">+0.014</text>
+<text x="0" y="361" font-size="12" fill="#141413">各层 → A·A·A·A 24/12/12/24</text>
+<rect x="286.0" y="351" width="94.2" height="12" fill="#d97757"/>
+<line x1="335.0" y1="357" x2="425.4" y2="357" stroke="#141413" stroke-width="1"/>
+<text x="431.4" y="361" font-size="11.5" fill="#141413" text-anchor="start">+0.017</text>
+<text x="0" y="387" font-size="12" fill="#141413">各层 → A·G·A·G 24/12/12/24</text>
+<rect x="286.0" y="377" width="335.0" height="12" fill="#d97757"/>
+<line x1="597.0" y1="383" x2="645.1" y2="383" stroke="#141413" stroke-width="1"/>
+<text x="651.1" y="387" font-size="11.5" fill="#141413" text-anchor="start">+0.060</text>
+</svg><figcaption>黑线是 ±2 个标准误；橙色超过 3 个标准误，浅橙 1.5–3 个，灰色在噪声内。负数是更好。</figcaption></figure>
+<h2>还没回答的问题</h2>
+<p>宽 512 以上不再变好，但更宽时只试了 3–4 层和少数 MLP 宽度，学习率也只扫了两档。</p>
+<p>10 分钟时 4 层宽 256 的模型会把 2 亿 token 的数据看两遍多，宽模型步数少，重复得少；这对比较有多大影响没有单独测。</p>
+<footer>来源：harvest 里的 l8l_*、l10_*、l11_*、l12_*、l13_*、l14_*、l15_*、l16_*、l17_* 运行（600 秒）· 工具 tools/pg_research_reports.py · 2026-10-29</footer>
+</main>
+</body>
+</html>

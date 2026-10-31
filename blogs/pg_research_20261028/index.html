@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PG 研究报告</title>
+<style>
+  :root {
+    --dark: #141413;   /* primary text */
+    --light: #faf9f5;  /* page background */
+    --mid: #b0aea5;    /* borders, axes */
+    --soft: #e8e6dc;   /* subtle fills */
+    --muted: #5e5d59;  /* secondary text (darker than --mid for contrast) */
+    --orange: #d97757; /* primary accent: the main result */
+    --blue: #6a9bcc;   /* secondary accent */
+    --green: #788c5d;  /* tertiary accent */
+    --head: "Poppins", "PingFang SC", "Noto Sans CJK SC", "Hiragino Sans GB", Arial, sans-serif;
+    --body: "Lora", "Noto Serif CJK SC", "Songti SC", Georgia, serif;
+    --mono: "SF Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--light); color: var(--dark); font: 17px/1.8 var(--body); }
+  main { max-width: 760px; margin: 0 auto; padding: 72px 24px 96px; }
+  h1, h2, h3 { font-family: var(--head); font-weight: 600; line-height: 1.35; letter-spacing: -0.01em; }
+  h1 { font-size: 32px; margin: 0 0 16px; }
+  h2 { font-size: 22px; margin: 64px 0 12px; }
+  p { margin: 0 0 16px; }
+  .lede { font-size: 19px; }
+  a { color: inherit; text-decoration: underline; text-decoration-color: var(--orange); text-underline-offset: 3px; }
+  code, .id { font-family: var(--mono); font-size: 0.86em; background: var(--soft); padding: 1px 5px; border-radius: 4px; }
+
+  /* L2 settings row: monochrome line icons + label, never color emoji */
+  .settings { display: flex; flex-wrap: wrap; gap: 8px 20px; list-style: none; padding: 0; margin: 24px 0 0;
+              font: 14px/1.6 var(--head); color: var(--muted); }
+  .settings li { display: inline-flex; align-items: center; gap: 6px; }
+  .settings svg { width: 15px; height: 15px; stroke: var(--dark); fill: none; stroke-width: 1.6;
+                  stroke-linecap: round; stroke-linejoin: round; }
+  .settings b { color: var(--dark); font-weight: 500; }
+
+  figure { margin: 28px 0; padding: 20px; background: #fff; border: 1px solid var(--soft); border-radius: 10px; }
+  figure img, figure svg.chart { display: block; width: 100%; height: auto; }
+  figcaption { margin-top: 12px; font: 14px/1.6 var(--head); color: var(--muted); }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font: 13px var(--head); color: var(--muted); margin-bottom: 8px; }
+  .legend i { display: inline-block; width: 14px; height: 2px; vertical-align: middle; margin-right: 6px; }
+
+  .warn { border-left: 3px solid var(--orange); padding: 4px 0 4px 16px; margin: 24px 0; }
+  .warn strong { font-family: var(--head); }
+
+  /* sample browser: compare outputs side by side */
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--soft); margin-bottom: 12px; }
+  .tabs button { font: 14px var(--head); background: none; border: 0; padding: 8px 12px; cursor: pointer;
+                 color: var(--muted); border-bottom: 2px solid transparent; }
+  .tabs button[aria-selected="true"] { color: var(--dark); border-bottom-color: var(--orange); }
+  .sample { display: none; white-space: pre-wrap; font: 14px/1.7 var(--mono); }
+  .sample.on { display: block; }
+
+  details { margin: 16px 0; }
+  summary { cursor: pointer; font: 15px var(--head); color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font: 14px/1.6 var(--head); margin: 16px 0; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--soft); }
+  th { font-weight: 500; color: var(--muted); }
+  footer { margin-top: 80px; font: 13px var(--head); color: var(--mid); }
+  .legend span { white-space: nowrap; }
+  .num { font-family: var(--mono); font-size: 0.86em; }
+  td { vertical-align: top; }
+ li { margin: 0 0 20px; }</style>
+</head>
+<body>
+<main>
+<h1>PG 120 秒结构搜索：研究报告</h1>
+<ul><li><a href="ladder.html">训练预算从 15 秒到 10 分钟：最优模型大 13 倍，学习率降到约 1/4</a><br><span class="num">最优配置随预算变化：15 秒宽 256 × 2 层，10 分钟宽 512 × 4 层；参数量约 ∝ 预算^0.7；按 2 分钟选的配置训练 10 分钟差 0.101。</span></li><li><a href="long.html">训练 10 分钟时，最优模型更宽、MLP 更大、学习率更低</a><br><span class="num">10 分钟最好：宽 512 × 4 层，2.4412；2 分钟冠军在 10 分钟排第 169；最好的 Muon 学习率从 0.015 降到 0.0035。</span></li><li><a href="transfer.html">用 120 秒的结果预测 600 秒排名：按步数修正，学习率另调</a><br><span class="num">120 秒 loss 加步数修正后，预测 600 秒排名的秩相关从 0.65 升到 0.95；换学习率就失效。</span></li><li><a href="layout8.html">训练时间一长，结论会翻：2 分钟要快，10 分钟要大</a><br><span class="num">10 分钟时 8 层比 4 层好 0.034，2 分钟时差 0.014；加宽 MLP 只在长预算划算；两种预算的名次相关 0.43。</span></li><li><a href="am12.html">注意力和 MLP 子层怎么排：A 打头、紧跟几个 M、M 收尾，每个子层翻倍到 24 子层照样最好</a><br><span class="num">12 子层 4,096 种 A/M 排法粗排 + 161 种精测 + 局部搜索：AMMMAMAMMAMM 比 (A M M)×4 好约 0.007（换三种设置仍成立），严格交错差 0.010；每个子层翻倍到 24 子层，比 AAMM×6 好 0.012；2 分钟粗排能筛不能排。</span></li><li><a href="compute.html">时间怎么花：注意力便宜，只有深模型靠后的层可以跳过混合</a><br><span class="num">一层全注意力 7.0 ms / 每步约 90 ms；4 层里 13 种跳过做法 12 种明显更差；最好的 50 个 6 层结构里 36 个跳过了靠后的一两层。</span></li><li><a href="softcap.html">logit softcap 30 → 15：159 个模型里 157 个变好</a><br><span class="num">平均 -0.0038 ± 0.0002，12–20 是平台，排名基本不变。</span></li><li><a href="noise.html">同种子配对：两个模型越像，比较的噪声越小</a><br><span class="num">很像的两个模型同种子配对，比较噪声从 0.0087 降到 0.0036；评分窗口重叠贡献相关 +0.29。</span></li></ul>
+<footer>工具 tools/pg_research_reports.py · 2026-10-28</footer>
+</main>
+</body>
+</html>

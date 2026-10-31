@@ -1,0 +1,488 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>训练预算从 15 秒到 10 分钟：最优模型大 13 倍，学习率降到约 1/4</title>
+<style>
+  :root {
+    --dark: #141413;   /* primary text */
+    --light: #faf9f5;  /* page background */
+    --mid: #b0aea5;    /* borders, axes */
+    --soft: #e8e6dc;   /* subtle fills */
+    --muted: #5e5d59;  /* secondary text (darker than --mid for contrast) */
+    --orange: #d97757; /* primary accent: the main result */
+    --blue: #6a9bcc;   /* secondary accent */
+    --green: #788c5d;  /* tertiary accent */
+    --head: "Poppins", "PingFang SC", "Noto Sans CJK SC", "Hiragino Sans GB", Arial, sans-serif;
+    --body: "Lora", "Noto Serif CJK SC", "Songti SC", Georgia, serif;
+    --mono: "SF Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--light); color: var(--dark); font: 17px/1.8 var(--body); }
+  main { max-width: 760px; margin: 0 auto; padding: 72px 24px 96px; }
+  h1, h2, h3 { font-family: var(--head); font-weight: 600; line-height: 1.35; letter-spacing: -0.01em; }
+  h1 { font-size: 32px; margin: 0 0 16px; }
+  h2 { font-size: 22px; margin: 64px 0 12px; }
+  p { margin: 0 0 16px; }
+  .lede { font-size: 19px; }
+  a { color: inherit; text-decoration: underline; text-decoration-color: var(--orange); text-underline-offset: 3px; }
+  code, .id { font-family: var(--mono); font-size: 0.86em; background: var(--soft); padding: 1px 5px; border-radius: 4px; }
+
+  /* L2 settings row: monochrome line icons + label, never color emoji */
+  .settings { display: flex; flex-wrap: wrap; gap: 8px 20px; list-style: none; padding: 0; margin: 24px 0 0;
+              font: 14px/1.6 var(--head); color: var(--muted); }
+  .settings li { display: inline-flex; align-items: center; gap: 6px; }
+  .settings svg { width: 15px; height: 15px; stroke: var(--dark); fill: none; stroke-width: 1.6;
+                  stroke-linecap: round; stroke-linejoin: round; }
+  .settings b { color: var(--dark); font-weight: 500; }
+
+  figure { margin: 28px 0; padding: 20px; background: #fff; border: 1px solid var(--soft); border-radius: 10px; }
+  figure img, figure svg.chart { display: block; width: 100%; height: auto; }
+  figcaption { margin-top: 12px; font: 14px/1.6 var(--head); color: var(--muted); }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font: 13px var(--head); color: var(--muted); margin-bottom: 8px; }
+  .legend i { display: inline-block; width: 14px; height: 2px; vertical-align: middle; margin-right: 6px; }
+
+  .warn { border-left: 3px solid var(--orange); padding: 4px 0 4px 16px; margin: 24px 0; }
+  .warn strong { font-family: var(--head); }
+
+  /* sample browser: compare outputs side by side */
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--soft); margin-bottom: 12px; }
+  .tabs button { font: 14px var(--head); background: none; border: 0; padding: 8px 12px; cursor: pointer;
+                 color: var(--muted); border-bottom: 2px solid transparent; }
+  .tabs button[aria-selected="true"] { color: var(--dark); border-bottom-color: var(--orange); }
+  .sample { display: none; white-space: pre-wrap; font: 14px/1.7 var(--mono); }
+  .sample.on { display: block; }
+
+  details { margin: 16px 0; }
+  summary { cursor: pointer; font: 15px var(--head); color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; font: 14px/1.6 var(--head); margin: 16px 0; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--soft); }
+  th { font-weight: 500; color: var(--muted); }
+  footer { margin-top: 80px; font: 13px var(--head); color: var(--mid); }
+  .legend span { white-space: nowrap; }
+  .num { font-family: var(--mono); font-size: 0.86em; }
+  td { vertical-align: top; }
+</style>
+</head>
+<body>
+<main>
+<h1>训练预算从 15 秒到 10 分钟：最优模型大 13 倍，学习率降到约 1/4</h1>
+<p class="lede">同一类模型（第 1 层短卷积，其余全注意力）在每个预算下的最优：15 秒是宽 256 × 2 层、Muon 0.015，10 分钟是宽 512 × 4 层、Muon 0.0035。按 2 分钟选出的配置拿去训练 10 分钟会差 0.101，所以一道设计题必须写明训练预算。</p>
+<ul class="settings">
+<li><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18M12 7v5l3 2"/></svg>训练 <b>600 秒一次，读出第 15 / 30 / 60 / 120 / 600 秒</b></li>
+<li><svg viewBox="0 0 24 24"><path d="M4 19l5-7 4 4 7-10"/></svg>分数 <b>最后 64 步训练 loss，越低越好</b></li>
+<li><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>数据 <b>FineWeb · 1024 词表 · 序列长 256</b></li>
+<li><svg viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4"/></svg>种子 <b>42–45</b></li>
+<li><svg viewBox="0 0 24 24"><path d="M5 5h14v14H5zM9 1v4M15 1v4M9 19v4M15 19v4"/></svg>模型 <b>第 1 层短卷积 · softcap 15 · K/V 卷积 4</b></li>
+</ul>
+<h2>预算越长，最优模型越宽、越深：256 × 2 层 → 512 × 4 层</h2>
+<p>每个预算一张图，行是宽度（d_model），列是层数。每格取 3 种 MLP 宽度（×8、×16、×24）和 6 档学习率里最好的一组；颜色越深越接近这一预算下的最好，黑框是最好的一格。15 到 120 秒，最优都在宽 256 附近，只是层数从 2 层加到 4 层；到 10 分钟才跳到宽 512。</p>
+<figure><div class="legend"><span><i style="background:#d97757;height:10px;width:10px"></i>最好</span><span><i style="background:#e6b49c;height:10px;width:10px"></i>差 0.03</span><span><i style="background:#f3f1ea;height:10px;width:10px;border:1px solid #e8e6dc"></i>差 0.06 以上</span></div><svg class="chart" viewBox="0 0 720 206" font-family="Poppins, PingFang SC, sans-serif">
+<text x="106.0" y="13" font-size="12.5" fill="#141413" text-anchor="middle">15 秒</text>
+<text x="58.0" y="32" font-size="10.5" fill="#5e5d59" text-anchor="middle">2</text>
+<text x="82.0" y="32" font-size="10.5" fill="#5e5d59" text-anchor="middle">3</text>
+<text x="106.0" y="32" font-size="10.5" fill="#5e5d59" text-anchor="middle">4</text>
+<text x="130.0" y="32" font-size="10.5" fill="#5e5d59" text-anchor="middle">6</text>
+<text x="154.0" y="32" font-size="10.5" fill="#5e5d59" text-anchor="middle">8</text>
+<text x="40" y="55" font-size="11" fill="#5e5d59" text-anchor="end">192</text>
+<rect x="47" y="41" width="22" height="20" fill="rgb(222,146,119)"/>
+<rect x="71" y="41" width="22" height="20" fill="rgb(227,166,144)"/>
+<rect x="95" y="41" width="22" height="20" fill="rgb(234,200,185)"/>
+<rect x="119" y="41" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="143" y="41" width="22" height="20" fill="rgb(243,241,234)"/>
+<text x="40" y="77" font-size="11" fill="#5e5d59" text-anchor="end">256</text>
+<rect x="47" y="63" width="22" height="20" fill="rgb(217,119,87)" stroke="#141413" stroke-width="2"/>
+<rect x="71" y="63" width="22" height="20" fill="rgb(225,157,133)"/>
+<rect x="95" y="63" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="119" y="63" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="143" y="63" width="22" height="20" fill="rgb(243,241,234)"/>
+<text x="40" y="99" font-size="11" fill="#5e5d59" text-anchor="end">384</text>
+<rect x="47" y="85" width="22" height="20" fill="rgb(233,197,182)"/>
+<rect x="71" y="85" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="95" y="85" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="119" y="85" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="143" y="85" width="22" height="20" fill="rgb(243,241,234)"/>
+<text x="40" y="121" font-size="11" fill="#5e5d59" text-anchor="end">512</text>
+<rect x="47" y="107" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="71" y="107" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="95" y="107" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="119" y="107" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="143" y="107" width="22" height="20" fill="rgb(243,241,234)"/>
+<text x="40" y="143" font-size="11" fill="#5e5d59" text-anchor="end">640</text>
+<rect x="47" y="129" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="71" y="129" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="95" y="129" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="119" y="129" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="143" y="129" width="22" height="20" fill="rgb(243,241,234)"/>
+<text x="40" y="165" font-size="11" fill="#5e5d59" text-anchor="end">768</text>
+<rect x="47" y="151" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="71" y="151" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="95" y="151" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="119" y="151" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="143" y="151" width="22" height="20" fill="rgb(243,241,234)"/>
+<text x="106.0" y="188" font-size="10.5" fill="#141413" text-anchor="middle">最好 256 × 2 层</text>
+<text x="106.0" y="202" font-size="10.5" fill="#5e5d59" text-anchor="middle">MLP ×8 · Muon 0.015</text>
+<text x="240.0" y="13" font-size="12.5" fill="#141413" text-anchor="middle">30 秒</text>
+<text x="192.0" y="32" font-size="10.5" fill="#5e5d59" text-anchor="middle">2</text>
+<text x="216.0" y="32" font-size="10.5" fill="#5e5d59" text-anchor="middle">3</text>
+<text x="240.0" y="32" font-size="10.5" fill="#5e5d59" text-anchor="middle">4</text>
+<text x="264.0" y="32" font-size="10.5" fill="#5e5d59" text-anchor="middle">6</text>
+<text x="288.0" y="32" font-size="10.5" fill="#5e5d59" text-anchor="middle">8</text>
+<rect x="181" y="41" width="22" height="20" fill="rgb(229,177,157)"/>
+<rect x="205" y="41" width="22" height="20" fill="rgb(223,150,125)"/>
+<rect x="229" y="41" width="22" height="20" fill="rgb(224,155,131)"/>
+<rect x="253" y="41" width="22" height="20" fill="rgb(236,208,194)"/>
+<rect x="277" y="41" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="181" y="63" width="22" height="20" fill="rgb(218,125,94)"/>
+<rect x="205" y="63" width="22" height="20" fill="rgb(217,119,87)" stroke="#141413" stroke-width="2"/>
+<rect x="229" y="63" width="22" height="20" fill="rgb(221,139,111)"/>
+<rect x="253" y="63" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="277" y="63" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="181" y="85" width="22" height="20" fill="rgb(221,140,112)"/>
+<rect x="205" y="85" width="22" height="20" fill="rgb(229,177,156)"/>
+<rect x="229" y="85" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="253" y="85" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="277" y="85" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="181" y="107" width="22" height="20" fill="rgb(235,206,192)"/>
+<rect x="205" y="107" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="229" y="107" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="253" y="107" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="277" y="107" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="181" y="129" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="205" y="129" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="229" y="129" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="253" y="129" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="277" y="129" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="181" y="151" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="205" y="151" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="229" y="151" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="253" y="151" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="277" y="151" width="22" height="20" fill="rgb(243,241,234)"/>
+<text x="240.0" y="188" font-size="10.5" fill="#141413" text-anchor="middle">最好 256 × 3 层</text>
+<text x="240.0" y="202" font-size="10.5" fill="#5e5d59" text-anchor="middle">MLP ×8 · Muon 0.015</text>
+<text x="374.0" y="13" font-size="12.5" fill="#141413" text-anchor="middle">60 秒</text>
+<text x="326.0" y="32" font-size="10.5" fill="#5e5d59" text-anchor="middle">2</text>
+<text x="350.0" y="32" font-size="10.5" fill="#5e5d59" text-anchor="middle">3</text>
+<text x="374.0" y="32" font-size="10.5" fill="#5e5d59" text-anchor="middle">4</text>
+<text x="398.0" y="32" font-size="10.5" fill="#5e5d59" text-anchor="middle">6</text>
+<text x="422.0" y="32" font-size="10.5" fill="#5e5d59" text-anchor="middle">8</text>
+<rect x="315" y="41" width="22" height="20" fill="rgb(239,226,216)"/>
+<rect x="339" y="41" width="22" height="20" fill="rgb(230,184,165)"/>
+<rect x="363" y="41" width="22" height="20" fill="rgb(227,168,147)"/>
+<rect x="387" y="41" width="22" height="20" fill="rgb(229,176,156)"/>
+<rect x="411" y="41" width="22" height="20" fill="rgb(238,221,210)"/>
+<rect x="315" y="63" width="22" height="20" fill="rgb(225,157,133)"/>
+<rect x="339" y="63" width="22" height="20" fill="rgb(217,119,87)" stroke="#141413" stroke-width="2"/>
+<rect x="363" y="63" width="22" height="20" fill="rgb(218,125,94)"/>
+<rect x="387" y="63" width="22" height="20" fill="rgb(227,167,145)"/>
+<rect x="411" y="63" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="315" y="85" width="22" height="20" fill="rgb(223,148,123)"/>
+<rect x="339" y="85" width="22" height="20" fill="rgb(218,127,97)"/>
+<rect x="363" y="85" width="22" height="20" fill="rgb(227,165,143)"/>
+<rect x="387" y="85" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="411" y="85" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="315" y="107" width="22" height="20" fill="rgb(227,169,147)"/>
+<rect x="339" y="107" width="22" height="20" fill="rgb(229,178,158)"/>
+<rect x="363" y="107" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="387" y="107" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="411" y="107" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="315" y="129" width="22" height="20" fill="rgb(236,210,196)"/>
+<rect x="339" y="129" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="363" y="129" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="387" y="129" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="411" y="129" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="315" y="151" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="339" y="151" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="363" y="151" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="387" y="151" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="411" y="151" width="22" height="20" fill="rgb(243,241,234)"/>
+<text x="374.0" y="188" font-size="10.5" fill="#141413" text-anchor="middle">最好 256 × 3 层</text>
+<text x="374.0" y="202" font-size="10.5" fill="#5e5d59" text-anchor="middle">MLP ×16 · Muon 0.007</text>
+<text x="508.0" y="13" font-size="12.5" fill="#141413" text-anchor="middle">2 分钟</text>
+<text x="460.0" y="32" font-size="10.5" fill="#5e5d59" text-anchor="middle">2</text>
+<text x="484.0" y="32" font-size="10.5" fill="#5e5d59" text-anchor="middle">3</text>
+<text x="508.0" y="32" font-size="10.5" fill="#5e5d59" text-anchor="middle">4</text>
+<text x="532.0" y="32" font-size="10.5" fill="#5e5d59" text-anchor="middle">6</text>
+<text x="556.0" y="32" font-size="10.5" fill="#5e5d59" text-anchor="middle">8</text>
+<rect x="449" y="41" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="473" y="41" width="22" height="20" fill="rgb(240,229,220)"/>
+<rect x="497" y="41" width="22" height="20" fill="rgb(231,186,167)"/>
+<rect x="521" y="41" width="22" height="20" fill="rgb(229,177,158)"/>
+<rect x="545" y="41" width="22" height="20" fill="rgb(236,211,198)"/>
+<rect x="449" y="63" width="22" height="20" fill="rgb(239,224,213)"/>
+<rect x="473" y="63" width="22" height="20" fill="rgb(221,141,113)"/>
+<rect x="497" y="63" width="22" height="20" fill="rgb(217,119,87)" stroke="#141413" stroke-width="2"/>
+<rect x="521" y="63" width="22" height="20" fill="rgb(222,145,119)"/>
+<rect x="545" y="63" width="22" height="20" fill="rgb(233,195,178)"/>
+<rect x="449" y="85" width="22" height="20" fill="rgb(228,174,153)"/>
+<rect x="473" y="85" width="22" height="20" fill="rgb(218,124,94)"/>
+<rect x="497" y="85" width="22" height="20" fill="rgb(218,125,95)"/>
+<rect x="521" y="85" width="22" height="20" fill="rgb(231,186,168)"/>
+<rect x="545" y="85" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="449" y="107" width="22" height="20" fill="rgb(230,182,163)"/>
+<rect x="473" y="107" width="22" height="20" fill="rgb(219,130,100)"/>
+<rect x="497" y="107" width="22" height="20" fill="rgb(225,160,136)"/>
+<rect x="521" y="107" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="545" y="107" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="449" y="129" width="22" height="20" fill="rgb(233,196,179)"/>
+<rect x="473" y="129" width="22" height="20" fill="rgb(229,179,159)"/>
+<rect x="497" y="129" width="22" height="20" fill="rgb(239,224,214)"/>
+<rect x="521" y="129" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="545" y="129" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="449" y="151" width="22" height="20" fill="rgb(236,209,196)"/>
+<rect x="473" y="151" width="22" height="20" fill="rgb(238,220,209)"/>
+<rect x="497" y="151" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="521" y="151" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="545" y="151" width="22" height="20" fill="rgb(243,241,234)"/>
+<text x="508.0" y="188" font-size="10.5" fill="#141413" text-anchor="middle">最好 256 × 4 层</text>
+<text x="508.0" y="202" font-size="10.5" fill="#5e5d59" text-anchor="middle">MLP ×16 · Muon 0.007</text>
+<text x="642.0" y="13" font-size="12.5" fill="#141413" text-anchor="middle">10 分钟</text>
+<text x="594.0" y="32" font-size="10.5" fill="#5e5d59" text-anchor="middle">2</text>
+<text x="618.0" y="32" font-size="10.5" fill="#5e5d59" text-anchor="middle">3</text>
+<text x="642.0" y="32" font-size="10.5" fill="#5e5d59" text-anchor="middle">4</text>
+<text x="666.0" y="32" font-size="10.5" fill="#5e5d59" text-anchor="middle">6</text>
+<text x="690.0" y="32" font-size="10.5" fill="#5e5d59" text-anchor="middle">8</text>
+<rect x="583" y="41" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="607" y="41" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="631" y="41" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="655" y="41" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="679" y="41" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="583" y="63" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="607" y="63" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="631" y="63" width="22" height="20" fill="rgb(240,229,220)"/>
+<rect x="655" y="63" width="22" height="20" fill="rgb(230,181,161)"/>
+<rect x="679" y="63" width="22" height="20" fill="rgb(232,189,172)"/>
+<rect x="583" y="85" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="607" y="85" width="22" height="20" fill="rgb(228,173,153)"/>
+<rect x="631" y="85" width="22" height="20" fill="rgb(222,143,116)"/>
+<rect x="655" y="85" width="22" height="20" fill="rgb(220,134,105)"/>
+<rect x="679" y="85" width="22" height="20" fill="rgb(225,161,137)"/>
+<rect x="583" y="107" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="607" y="107" width="22" height="20" fill="rgb(224,153,128)"/>
+<rect x="631" y="107" width="22" height="20" fill="rgb(217,119,87)" stroke="#141413" stroke-width="2"/>
+<rect x="655" y="107" width="22" height="20" fill="rgb(221,139,111)"/>
+<rect x="679" y="107" width="22" height="20" fill="rgb(228,173,152)"/>
+<rect x="583" y="129" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="607" y="129" width="22" height="20" fill="rgb(225,158,134)"/>
+<rect x="631" y="129" width="22" height="20" fill="rgb(220,133,104)"/>
+<rect x="655" y="129" width="22" height="20" fill="rgb(225,160,136)"/>
+<rect x="679" y="129" width="22" height="20" fill="rgb(238,219,208)"/>
+<rect x="583" y="151" width="22" height="20" fill="rgb(243,241,234)"/>
+<rect x="607" y="151" width="22" height="20" fill="rgb(224,154,129)"/>
+<rect x="631" y="151" width="22" height="20" fill="rgb(220,135,106)"/>
+<rect x="655" y="151" width="22" height="20" fill="rgb(230,180,160)"/>
+<rect x="679" y="151" width="22" height="20" fill="rgb(243,241,234)"/>
+<text x="642.0" y="188" font-size="10.5" fill="#141413" text-anchor="middle">最好 512 × 4 层</text>
+<text x="642.0" y="202" font-size="10.5" fill="#5e5d59" text-anchor="middle">MLP ×16 · Muon 0.0035</text>
+<text x="0" y="32" font-size="10.5" fill="#5e5d59">宽＼层</text>
+</svg><figcaption>每个配置训练 600 秒一次，同一次运行里读出第 15、30、60、120、600 秒的 loss。每格 2–4 个种子。</figcaption></figure>
+<h2>按短预算选出的配置，放到长预算会吃亏：按 2 分钟选的，训练 10 分钟差 0.101</h2>
+<p>行是在哪个预算下选出的最优配置，列是拿它训练多久。按 2 分钟选的配置训练 10 分钟时，在 447 个配置里排第 233。反过来，10 分钟的最优配置只训练 15 秒，差 2.210。相邻预算之间亏得少，跨度越大亏得越多。种子噪声约 0.005，大于 0.01 的格子都是真实差距。</p>
+<figure><svg class="chart" viewBox="0 0 720 204" font-family="Poppins, PingFang SC, sans-serif">
+<text x="150" y="12" font-size="11" fill="#5e5d59">在这个预算下训练 →</text>
+<text x="206.0" y="32" font-size="11.5" fill="#141413" text-anchor="middle">15 秒</text>
+<text x="318.0" y="32" font-size="11.5" fill="#141413" text-anchor="middle">30 秒</text>
+<text x="430.0" y="32" font-size="11.5" fill="#141413" text-anchor="middle">60 秒</text>
+<text x="542.0" y="32" font-size="11.5" fill="#141413" text-anchor="middle">2 分钟</text>
+<text x="654.0" y="32" font-size="11.5" fill="#141413" text-anchor="middle">10 分钟</text>
+<text x="142" y="60" font-size="11.5" fill="#141413" text-anchor="end">按 15 秒 选的配置</text>
+<rect x="151" y="41" width="110" height="30" fill="rgb(243,241,234)"/>
+<text x="206.0" y="60" font-size="11.5" fill="#141413" text-anchor="middle">0</text>
+<rect x="263" y="41" width="110" height="30" fill="rgb(236,212,199)"/>
+<text x="318.0" y="60" font-size="11.5" fill="#141413" text-anchor="middle">+0.023</text>
+<rect x="375" y="41" width="110" height="30" fill="rgb(221,139,111)"/>
+<text x="430.0" y="60" font-size="11.5" fill="#fff" text-anchor="middle">+0.083</text>
+<rect x="487" y="41" width="110" height="30" fill="rgb(217,119,87)"/>
+<text x="542.0" y="60" font-size="11.5" fill="#fff" text-anchor="middle">+0.155</text>
+<rect x="599" y="41" width="110" height="30" fill="rgb(217,119,87)"/>
+<text x="654.0" y="60" font-size="11.5" fill="#fff" text-anchor="middle">+0.344</text>
+<text x="142" y="92" font-size="11.5" fill="#141413" text-anchor="end">按 30 秒 选的配置</text>
+<rect x="151" y="73" width="110" height="30" fill="rgb(238,217,205)"/>
+<text x="206.0" y="92" font-size="11.5" fill="#141413" text-anchor="middle">+0.019</text>
+<rect x="263" y="73" width="110" height="30" fill="rgb(243,241,234)"/>
+<text x="318.0" y="92" font-size="11.5" fill="#141413" text-anchor="middle">0</text>
+<rect x="375" y="73" width="110" height="30" fill="rgb(235,206,192)"/>
+<text x="430.0" y="92" font-size="11.5" fill="#141413" text-anchor="middle">+0.028</text>
+<rect x="487" y="73" width="110" height="30" fill="rgb(221,139,111)"/>
+<text x="542.0" y="92" font-size="11.5" fill="#fff" text-anchor="middle">+0.083</text>
+<rect x="599" y="73" width="110" height="30" fill="rgb(217,119,87)"/>
+<text x="654.0" y="92" font-size="11.5" fill="#fff" text-anchor="middle">+0.246</text>
+<text x="142" y="124" font-size="11.5" fill="#141413" text-anchor="end">按 60 秒 选的配置</text>
+<rect x="151" y="105" width="110" height="30" fill="rgb(217,119,87)"/>
+<text x="206.0" y="124" font-size="11.5" fill="#fff" text-anchor="middle">+0.184</text>
+<rect x="263" y="105" width="110" height="30" fill="rgb(234,202,187)"/>
+<text x="318.0" y="124" font-size="11.5" fill="#141413" text-anchor="middle">+0.032</text>
+<rect x="375" y="105" width="110" height="30" fill="rgb(243,241,234)"/>
+<text x="430.0" y="124" font-size="11.5" fill="#141413" text-anchor="middle">0</text>
+<rect x="487" y="105" width="110" height="30" fill="rgb(238,222,211)"/>
+<text x="542.0" y="124" font-size="11.5" fill="#141413" text-anchor="middle">+0.015</text>
+<rect x="599" y="105" width="110" height="30" fill="rgb(217,119,87)"/>
+<text x="654.0" y="124" font-size="11.5" fill="#fff" text-anchor="middle">+0.141</text>
+<text x="142" y="156" font-size="11.5" fill="#141413" text-anchor="end">按 2 分钟 选的配置</text>
+<rect x="151" y="137" width="110" height="30" fill="rgb(217,119,87)"/>
+<text x="206.0" y="156" font-size="11.5" fill="#fff" text-anchor="middle">+0.459</text>
+<rect x="263" y="137" width="110" height="30" fill="rgb(217,119,87)"/>
+<text x="318.0" y="156" font-size="11.5" fill="#fff" text-anchor="middle">+0.100</text>
+<rect x="375" y="137" width="110" height="30" fill="rgb(239,226,217)"/>
+<text x="430.0" y="156" font-size="11.5" fill="#141413" text-anchor="middle">+0.012</text>
+<rect x="487" y="137" width="110" height="30" fill="rgb(243,241,234)"/>
+<text x="542.0" y="156" font-size="11.5" fill="#141413" text-anchor="middle">0</text>
+<rect x="599" y="137" width="110" height="30" fill="rgb(217,119,87)"/>
+<text x="654.0" y="156" font-size="11.5" fill="#fff" text-anchor="middle">+0.101</text>
+<text x="142" y="188" font-size="11.5" fill="#141413" text-anchor="end">按 10 分钟 选的配置</text>
+<rect x="151" y="169" width="110" height="30" fill="rgb(217,119,87)"/>
+<text x="206.0" y="188" font-size="11.5" fill="#fff" text-anchor="middle">+2.210</text>
+<rect x="263" y="169" width="110" height="30" fill="rgb(217,119,87)"/>
+<text x="318.0" y="188" font-size="11.5" fill="#fff" text-anchor="middle">+1.151</text>
+<rect x="375" y="169" width="110" height="30" fill="rgb(217,119,87)"/>
+<text x="430.0" y="188" font-size="11.5" fill="#fff" text-anchor="middle">+0.456</text>
+<rect x="487" y="169" width="110" height="30" fill="rgb(217,119,87)"/>
+<text x="542.0" y="188" font-size="11.5" fill="#fff" text-anchor="middle">+0.138</text>
+<rect x="599" y="169" width="110" height="30" fill="rgb(243,241,234)"/>
+<text x="654.0" y="188" font-size="11.5" fill="#141413" text-anchor="middle">0</text>
+</svg><figcaption>每格的数是“该配置在这一预算下的 loss − 这一预算下最好的 loss”。</figcaption></figure>
+<h2>最优参数量大约按预算的 0.7 次方增长，每个参数看到的 token 数在变少</h2>
+<p>橙点是每个预算下最好的配置，灰条是与它差距在 2 个标准误以内的配置的参数量范围。15 秒最好的模型有 2.8M 参数，10 分钟是 37.3M，预算 40 倍，参数 13 倍。每个参数看到的 token 数从 12 个降到 5 个：加预算时，多出来的算力更多地花在了更大的模型上，而不是更多的数据上。参数多 13 倍，每秒的训练步数只少 7 倍，说明小模型没有用满 GPU，换大模型的代价比参数量看起来小。</p>
+<figure><svg class="chart" viewBox="0 0 720 260" font-family="Poppins, PingFang SC, sans-serif">
+<line x1="52" y1="169.1" x2="630" y2="169.1" stroke="#e8e6dc"/>
+<text x="46" y="173.1" font-size="11" fill="#5e5d59" text-anchor="end">5M</text>
+<line x1="52" y1="128.4" x2="630" y2="128.4" stroke="#e8e6dc"/>
+<text x="46" y="132.4" font-size="11" fill="#5e5d59" text-anchor="end">10M</text>
+<line x1="52" y1="87.7" x2="630" y2="87.7" stroke="#e8e6dc"/>
+<text x="46" y="91.7" font-size="11" fill="#5e5d59" text-anchor="end">20M</text>
+<line x1="52" y1="33.9" x2="630" y2="33.9" stroke="#e8e6dc"/>
+<text x="46" y="37.9" font-size="11" fill="#5e5d59" text-anchor="end">50M</text>
+<text x="83.1" y="236" font-size="11" fill="#5e5d59" text-anchor="middle">15 秒</text>
+<text x="179.7" y="236" font-size="11" fill="#5e5d59" text-anchor="middle">30 秒</text>
+<text x="276.2" y="236" font-size="11" fill="#5e5d59" text-anchor="middle">60 秒</text>
+<text x="372.8" y="236" font-size="11" fill="#5e5d59" text-anchor="middle">2 分钟</text>
+<text x="597.1" y="236" font-size="11" fill="#5e5d59" text-anchor="middle">10 分钟</text>
+<text x="341.0" y="256" font-size="11.5" fill="#5e5d59" text-anchor="middle">训练预算（对数刻度）</text>
+<text x="52" y="12" font-size="11.5" fill="#5e5d59">参数量（对数刻度）</text>
+<line x1="52.0" y1="213.0" x2="630.0" y2="41.8" stroke="#b0aea5" stroke-dasharray="5 4"/>
+<line x1="83.1" y1="203.8" x2="83.1" y2="203.8" stroke="#b0aea5" stroke-width="6" stroke-linecap="round" opacity="0.6"/>
+<circle cx="83.1" cy="203.8" r="5" fill="#d97757"/>
+<text x="92.1" y="207.8" font-size="11" fill="#141413">2.8M · 每参数 12 token</text>
+<line x1="179.7" y1="181.8" x2="179.7" y2="148.3" stroke="#b0aea5" stroke-width="6" stroke-linecap="round" opacity="0.6"/>
+<circle cx="179.7" cy="181.8" r="5" fill="#d97757"/>
+<text x="188.7" y="185.8" font-size="11" fill="#141413">4.0M · 每参数 11 token</text>
+<line x1="276.2" y1="165.9" x2="276.2" y2="148.3" stroke="#b0aea5" stroke-width="6" stroke-linecap="round" opacity="0.6"/>
+<circle cx="276.2" cy="148.3" r="5" fill="#d97757"/>
+<text x="285.2" y="152.3" font-size="11" fill="#141413">7.1M · 每参数 9 token</text>
+<line x1="372.8" y1="132.0" x2="372.8" y2="119.6" stroke="#b0aea5" stroke-width="6" stroke-linecap="round" opacity="0.6"/>
+<circle cx="372.8" cy="132.0" r="5" fill="#d97757"/>
+<text x="381.8" y="136.0" font-size="11" fill="#141413">9.4M · 每参数 10 token</text>
+<line x1="597.1" y1="51.1" x2="597.1" y2="51.1" stroke="#b0aea5" stroke-width="6" stroke-linecap="round" opacity="0.6"/>
+<circle cx="597.1" cy="51.1" r="5" fill="#d97757"/>
+<text x="606.1" y="55.1" font-size="11" fill="#141413">37.3M · 每参数 5 token</text>
+</svg><figcaption>虚线是对橙点的幂律拟合，斜率 0.70。</figcaption></figure>
+<h2>最好的学习率随预算下降：15 秒 Muon 0.015，10 分钟 0.0035</h2>
+<p>每条线是一个预算。每个学习率取所有结构里最好的一个，纵轴是比这一预算下最好的学习率差多少。学习率在训练中不变，所以短预算偏好大学习率（下降快），长预算偏好小学习率（噪声低）。网格两端补测到 0.0018 和 0.03 后，每个预算的最好学习率都在网格内部。</p>
+<figure><div class="legend"><span><i style="background:#eaa98d;height:3px"></i>15 秒</span><span><i style="background:#e08c6c;height:3px"></i>30 秒</span><span><i style="background:#d97757;height:3px"></i>60 秒</span><span><i style="background:#b2593d;height:3px"></i>2 分钟</span><span><i style="background:#7f3a24;height:3px"></i>10 分钟</span></div><svg class="chart" viewBox="0 0 720 260" font-family="Poppins, PingFang SC, sans-serif">
+<line x1="52" y1="220.0" x2="708" y2="220.0" stroke="#e8e6dc"/>
+<text x="46" y="224.0" font-size="11" fill="#5e5d59" text-anchor="end">0</text>
+<line x1="52" y1="171.0" x2="708" y2="171.0" stroke="#e8e6dc"/>
+<text x="46" y="175.0" font-size="11" fill="#5e5d59" text-anchor="end">+0.02</text>
+<line x1="52" y1="122.0" x2="708" y2="122.0" stroke="#e8e6dc"/>
+<text x="46" y="126.0" font-size="11" fill="#5e5d59" text-anchor="end">+0.04</text>
+<line x1="52" y1="73.0" x2="708" y2="73.0" stroke="#e8e6dc"/>
+<text x="46" y="77.0" font-size="11" fill="#5e5d59" text-anchor="end">+0.06</text>
+<line x1="52" y1="24.0" x2="708" y2="24.0" stroke="#e8e6dc"/>
+<text x="46" y="28.0" font-size="11" fill="#5e5d59" text-anchor="end">+0.08</text>
+<text x="81.6" y="236" font-size="11" fill="#5e5d59" text-anchor="middle">0.0018</text>
+<text x="151.3" y="236" font-size="11" fill="#5e5d59" text-anchor="middle">0.0025</text>
+<text x="222.7" y="236" font-size="11" fill="#5e5d59" text-anchor="middle">0.0035</text>
+<text x="369.7" y="236" font-size="11" fill="#5e5d59" text-anchor="middle">0.007</text>
+<text x="531.3" y="236" font-size="11" fill="#5e5d59" text-anchor="middle">0.015</text>
+<text x="678.4" y="236" font-size="11" fill="#5e5d59" text-anchor="middle">0.03</text>
+<text x="380.0" y="256" font-size="11.5" fill="#5e5d59" text-anchor="middle">Muon 学习率（对数刻度；AdamW 按同一档）</text>
+<text x="52" y="12" font-size="11.5" fill="#5e5d59">比这一预算下最好的学习率差多少</text>
+<polyline points="81.6,24.0 151.3,24.0 222.7,24.0 369.7,168.1 531.3,220.0 678.4,183.0" fill="none" stroke="#eaa98d" stroke-width="2.2"/>
+<circle cx="81.6" cy="24.0" r="3" fill="#eaa98d"/>
+<circle cx="151.3" cy="24.0" r="3" fill="#eaa98d"/>
+<circle cx="222.7" cy="24.0" r="3" fill="#eaa98d"/>
+<circle cx="369.7" cy="168.1" r="3" fill="#eaa98d"/>
+<circle cx="531.3" cy="220.0" r="3" fill="#eaa98d"/>
+<circle cx="678.4" cy="183.0" r="3" fill="#eaa98d"/>
+<polyline points="81.6,24.0 151.3,24.0 222.7,124.2 369.7,212.1 531.3,220.0 678.4,164.1" fill="none" stroke="#e08c6c" stroke-width="2.2"/>
+<circle cx="81.6" cy="24.0" r="3" fill="#e08c6c"/>
+<circle cx="151.3" cy="24.0" r="3" fill="#e08c6c"/>
+<circle cx="222.7" cy="124.2" r="3" fill="#e08c6c"/>
+<circle cx="369.7" cy="212.1" r="3" fill="#e08c6c"/>
+<circle cx="531.3" cy="220.0" r="3" fill="#e08c6c"/>
+<circle cx="678.4" cy="164.1" r="3" fill="#e08c6c"/>
+<polyline points="81.6,24.0 151.3,76.7 222.7,147.6 369.7,220.0 531.3,210.5 678.4,141.1" fill="none" stroke="#d97757" stroke-width="2.2"/>
+<circle cx="81.6" cy="24.0" r="3" fill="#d97757"/>
+<circle cx="151.3" cy="76.7" r="3" fill="#d97757"/>
+<circle cx="222.7" cy="147.6" r="3" fill="#d97757"/>
+<circle cx="369.7" cy="220.0" r="3" fill="#d97757"/>
+<circle cx="531.3" cy="210.5" r="3" fill="#d97757"/>
+<circle cx="678.4" cy="141.1" r="3" fill="#d97757"/>
+<polyline points="81.6,64.0 151.3,146.0 222.7,202.4 369.7,220.0 531.3,184.1 678.4,92.4" fill="none" stroke="#b2593d" stroke-width="2.2"/>
+<circle cx="81.6" cy="64.0" r="3" fill="#b2593d"/>
+<circle cx="151.3" cy="146.0" r="3" fill="#b2593d"/>
+<circle cx="222.7" cy="202.4" r="3" fill="#b2593d"/>
+<circle cx="369.7" cy="220.0" r="3" fill="#b2593d"/>
+<circle cx="531.3" cy="184.1" r="3" fill="#b2593d"/>
+<circle cx="678.4" cy="92.4" r="3" fill="#b2593d"/>
+<polyline points="81.6,178.9 151.3,212.9 222.7,220.0 369.7,171.1 531.3,53.3 678.4,24.0" fill="none" stroke="#7f3a24" stroke-width="2.2"/>
+<circle cx="81.6" cy="178.9" r="3" fill="#7f3a24"/>
+<circle cx="151.3" cy="212.9" r="3" fill="#7f3a24"/>
+<circle cx="222.7" cy="220.0" r="3" fill="#7f3a24"/>
+<circle cx="369.7" cy="171.1" r="3" fill="#7f3a24"/>
+<circle cx="531.3" cy="53.3" r="3" fill="#7f3a24"/>
+<circle cx="678.4" cy="24.0" r="3" fill="#7f3a24"/>
+</svg><figcaption>学习率档（Muon / AdamW）：0.0018、0.0025、0.0035、0.007、0.015、0.03。</figcaption></figure>
+<h2>MLP 宽度和混合器的差别随预算缩小：15 秒最好的是 MLP ×8，10 分钟最好的是 MLP ×16</h2>
+<p>每条线是一族模型（所有宽度、层数、学习率里最好的一个）比这一预算下最好的一族差多少。把一半注意力换成 GDN，15 秒时差 0.073，2 分钟以后差距缩到 0.003–0.007。MLP 宽度的差别在 0.01 左右，短预算时窄 MLP（每步快）占优，长预算时 ×16 占优。</p>
+<figure><div class="legend"><span><i style="background:#d97757;height:3px"></i>MLP ×16</span><span><i style="background:#6a9bcc;height:3px"></i>MLP ×8</span><span><i style="background:#788c5d;height:3px"></i>MLP ×24</span><span><i style="background:#b0aea5;height:3px"></i>GDN/注意力交替，MLP ×16</span></div><svg class="chart" viewBox="0 0 720 260" font-family="Poppins, PingFang SC, sans-serif">
+<line x1="52" y1="220.0" x2="708" y2="220.0" stroke="#e8e6dc"/>
+<text x="46" y="224.0" font-size="11" fill="#5e5d59" text-anchor="end">0</text>
+<line x1="52" y1="171.0" x2="708" y2="171.0" stroke="#e8e6dc"/>
+<text x="46" y="175.0" font-size="11" fill="#5e5d59" text-anchor="end">+0.02</text>
+<line x1="52" y1="122.0" x2="708" y2="122.0" stroke="#e8e6dc"/>
+<text x="46" y="126.0" font-size="11" fill="#5e5d59" text-anchor="end">+0.04</text>
+<line x1="52" y1="73.0" x2="708" y2="73.0" stroke="#e8e6dc"/>
+<text x="46" y="77.0" font-size="11" fill="#5e5d59" text-anchor="end">+0.06</text>
+<line x1="52" y1="24.0" x2="708" y2="24.0" stroke="#e8e6dc"/>
+<text x="46" y="28.0" font-size="11" fill="#5e5d59" text-anchor="end">+0.08</text>
+<text x="87.3" y="236" font-size="11" fill="#5e5d59" text-anchor="middle">15 秒</text>
+<text x="196.9" y="236" font-size="11" fill="#5e5d59" text-anchor="middle">30 秒</text>
+<text x="306.5" y="236" font-size="11" fill="#5e5d59" text-anchor="middle">60 秒</text>
+<text x="416.1" y="236" font-size="11" fill="#5e5d59" text-anchor="middle">2 分钟</text>
+<text x="670.6" y="236" font-size="11" fill="#5e5d59" text-anchor="middle">10 分钟</text>
+<text x="380.0" y="256" font-size="11.5" fill="#5e5d59" text-anchor="middle">训练预算（对数刻度）</text>
+<text x="52" y="12" font-size="11.5" fill="#5e5d59">比这一预算下最好的一族差多少</text>
+<polyline points="87.3,197.8 196.9,212.1 306.5,220.0 416.1,220.0 670.6,220.0" fill="none" stroke="#d97757" stroke-width="2.2"/>
+<circle cx="87.3" cy="197.8" r="3" fill="#d97757"/>
+<circle cx="196.9" cy="212.1" r="3" fill="#d97757"/>
+<circle cx="306.5" cy="220.0" r="3" fill="#d97757"/>
+<circle cx="416.1" cy="220.0" r="3" fill="#d97757"/>
+<circle cx="670.6" cy="220.0" r="3" fill="#d97757"/>
+<polyline points="87.3,220.0 196.9,220.0 306.5,212.1 416.1,212.8 670.6,202.2" fill="none" stroke="#6a9bcc" stroke-width="2.2"/>
+<circle cx="87.3" cy="220.0" r="3" fill="#6a9bcc"/>
+<circle cx="196.9" cy="220.0" r="3" fill="#6a9bcc"/>
+<circle cx="306.5" cy="212.1" r="3" fill="#6a9bcc"/>
+<circle cx="416.1" cy="212.8" r="3" fill="#6a9bcc"/>
+<circle cx="670.6" cy="202.2" r="3" fill="#6a9bcc"/>
+<polyline points="87.3,155.5 196.9,202.9 306.5,193.3 416.1,208.7 670.6,190.2" fill="none" stroke="#788c5d" stroke-width="2.2"/>
+<circle cx="87.3" cy="155.5" r="3" fill="#788c5d"/>
+<circle cx="196.9" cy="202.9" r="3" fill="#788c5d"/>
+<circle cx="306.5" cy="193.3" r="3" fill="#788c5d"/>
+<circle cx="416.1" cy="208.7" r="3" fill="#788c5d"/>
+<circle cx="670.6" cy="190.2" r="3" fill="#788c5d"/>
+<polyline points="87.3,42.2 196.9,181.3 306.5,206.5 416.1,213.3 670.6,202.8" fill="none" stroke="#b0aea5" stroke-width="2.2" stroke-dasharray="5 4"/>
+<circle cx="87.3" cy="42.2" r="3" fill="#b0aea5"/>
+<circle cx="196.9" cy="181.3" r="3" fill="#b0aea5"/>
+<circle cx="306.5" cy="206.5" r="3" fill="#b0aea5"/>
+<circle cx="416.1" cy="213.3" r="3" fill="#b0aea5"/>
+<circle cx="670.6" cy="202.8" r="3" fill="#b0aea5"/>
+</svg><figcaption>GDN/注意力交替只跑了 4 层及以上；2–3 层时它和全注意力相同。</figcaption></figure>
+<h2>还没回答的问题</h2>
+<p>10 分钟以上的预算没有测：训练程序只允许 10、120、600 秒三种预算。</p>
+<p>10 分钟时最好的模型约看 0.9 遍 2 亿 token 的数据，小模型会看到更多遍；数据重复对排名的影响没有单独测。</p>
+<footer>来源：harvest 里的 ld6_*、ld7_*、ld8_* 运行（1704 次 600 秒训练）· 工具 tools/pg_research_reports.py · 2026-10-29</footer>
+</main>
+</body>
+</html>
