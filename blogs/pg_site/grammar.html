@@ -1,0 +1,305 @@
+<!doctype html><html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>PG 语法与主语法对照</title><style>
+:root{--bg:#faf9f5;--fg:#141413;--mut:#6b6a63;--line:#e8e6dc;--card:#fff}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.65 "PingFang SC","Noto Sans SC",system-ui,sans-serif}
+main{max-width:1180px;margin:0 auto;padding:28px 16px 60px}
+h1{font-size:25px;margin:0 0 8px}h2{font-size:19px;margin:34px 0 10px}
+.lead{font-size:16px;max-width:860px}.mut{color:var(--mut);font-size:13px}
+table{border-collapse:collapse;width:100%;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;font-size:13.5px}
+th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{background:#f3f1ea;font-weight:600}
+code{font:12.5px/1.5 ui-monospace,Menlo,monospace}
+.pill{display:inline-block;padding:1px 8px;border-radius:10px;color:#fff;font-size:12px;white-space:nowrap}
+.bar{display:flex;height:22px;border-radius:6px;overflow:hidden;margin:10px 0 4px;max-width:860px}
+.bar div{color:#fff;font-size:12px;line-height:22px;text-align:center;white-space:nowrap;overflow:hidden}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:900px){.pair{grid-template-columns:1fr}}
+.box{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+.box h4{margin:0 0 6px;font-size:14px}pre{margin:0;white-space:pre-wrap;word-break:break-word;font:12px/1.5 ui-monospace,Menlo,monospace}
+.lost{margin:8px 0 0;padding:0;list-style:none}.lost li{font-size:13px;padding:2px 0}.lost li::before{content:"✕ ";color:#c8553d}
+.warn{background:#fbefe9;border-left:3px solid #c8553d;padding:8px 12px;border-radius:6px;font-size:13.5px;margin-top:8px}
+.ex{margin-top:22px}
+</style></head><body><main>
+<h1>PG 设置语言和主语法不一致：只有约一半字段对得上，我们的最优结构在主语法里写不出来</h1>
+<p class="lead">PG 设置语言是搜索时用的语法（<code>tools/pg_setting_lang.py</code>），主语法是 setting-v1.4（<a href="https://guoshaoyang-pku.github.io/blogs/grammar/json2code.html">json2code</a>）。下面逐个字段对照，再把几个真实搜到的结构翻译成主语法，列出翻不过去的部分。</p>
+<div class="bar"><div style="width:12.5%;background:#788c5d" title="一致">一致 4</div><div style="width:15.6%;background:#6a9bcc" title="换写法，意思相同">换写法，意思相同 5</div><div style="width:25.0%;background:#d9a43b" title="部分对得上">部分对得上 8</div><div style="width:40.6%;background:#c8553d" title="主语法没有">主语法没有 13</div><div style="width:6.2%;background:#9a968a" title="不属于模型语法">不属于模型语法 2</div></div>
+<div class="mut">PG 设置语言的 32 个字段或取值，按在主语法里的落点分类</div>
+<h2>结构不同：PG 语法逐层写，主语法用“默认模块 + 层号覆盖”</h2>
+<div class="pair"><div class="box"><h4>PG 设置语言：每层一个对象</h4><pre>{
+  &quot;layers&quot;: [
+    {&quot;type&quot;: &quot;own&quot;, &quot;mixer&quot;: {&quot;type&quot;: &quot;conv&quot;}, &quot;mlp&quot;: {&quot;type&quot;: &quot;swiglu&quot;, &quot;mult&quot;: 8}},
+    {
+      &quot;type&quot;: &quot;own&quot;,
+      &quot;mixer&quot;: {&quot;type&quot;: &quot;attention&quot;, &quot;window&quot;: &quot;full&quot;},
+      &quot;mlp&quot;: {&quot;type&quot;: &quot;swiglu&quot;, &quot;mult&quot;: 10}
+    },
+    {
+      &quot;type&quot;: &quot;own&quot;,
+      &quot;mixer&quot;: {&quot;type&quot;: &quot;attention&quot;, &quot;window&quot;: &quot;full&quot;},
+      &quot;mlp&quot;: {&quot;type&quot;: &quot;swiglu&quot;, &quot;mult&quot;: 12}
+    }
+  ]
+}</pre><p class="mut">PG 语言现在也接受主语法形状的“默认 + 覆盖”写法（<code>pg_setting_lang.serialize</code>），两种写法得到同一个 key；字母串 <code>C8 A10 A12</code> 只用于显示。</p></div><div class="box"><h4>主语法：每槽一个默认模块，少数层用 layers 覆盖</h4><pre>{
+  &quot;layer_loop&quot;: {
+    &quot;iteration&quot;: 3,
+    &quot;body&quot;: [
+      {&quot;type&quot;: &quot;attention&quot;, &quot;n_heads&quot;: 6, &quot;gqa_kvheads&quot;: 3},
+      {&quot;type&quot;: &quot;conv（主语法没有）&quot;, &quot;layers&quot;: [1]},
+      {&quot;type&quot;: &quot;mlp&quot;, &quot;hidden_dim&quot;: 2560, &quot;gated&quot;: true},
+      {&quot;type&quot;: &quot;mlp&quot;, &quot;hidden_dim&quot;: 2048, &quot;gated&quot;: true, &quot;layers&quot;: [1]},
+      {&quot;type&quot;: &quot;mlp&quot;, &quot;hidden_dim&quot;: 3072, &quot;gated&quot;: true, &quot;layers&quot;: [3]}
+    ]
+  }
+}</pre><p class="mut">层号从 1 开始；<code>"array(4,4,6)"</code> 表示从第 4 层起每隔 4 层取 6 个。MLP 写绝对隐藏宽度，SwiGLU 写成 <code>gated: true</code> 加全局 <code>act: silu</code>。</p></div></div>
+<h2>主语法有两条互斥的路径，我们的结构两边都要用</h2>
+<div class="warn">主语法里 smear、bigram_hash、rope_dim、output_gate、xsa、execution 只在 <b>PG 路径</b>可用；而 PG 路径要求 body 严格是一项 attention 加一项普通 MLP，不允许层覆盖、GQA 和 gated MLP。我们的前列结构同时用到 n-gram 表、smear、部分 RoPE（PG 路径）和逐层不同混合器、逐层 MLP 宽度、GQA、SwiGLU（普通路径），所以在现在的主语法里没有一条路径能完整写出来。</div>
+<h2>逐字段对照</h2><table><tr><th>PG 设置语言</th><th>含义</th><th>主语法里的位置</th><th>状态</th><th>说明</th></tr>
+<tr><td><code>d_model</code></td><td>主流宽度</td><td><code>/d_model</code></td><td><span class="pill" style="background:#788c5d">一致</span></td><td></td></tr>
+<tr><td><code>heads, kv_heads</code></td><td>全局头数、KV 头数</td><td><code>body[attention].n_heads, gqa_kvheads</code></td><td><span class="pill" style="background:#d9a43b">部分对得上</span></td><td>主语法写在每个注意力模块上；但 GQA 只在普通路径可用，PG 路径不接受 gqa_kvheads</td></tr>
+<tr><td><code>layers（逐层列表）</code></td><td>每层一个对象：混合器 + MLP</td><td><code>layer_loop.iteration + body 默认模块 + layers 选择器</code></td><td><span class="pill" style="background:#6a9bcc">换写法，意思相同</span></td><td>主语法是“每槽一个默认模块，再用 layers:[...] 覆盖少数层”，同类层不重复写</td></tr>
+<tr><td><code>mixer: attention, window full</code></td><td>全注意力</td><td><code>body: {type: attention}</code></td><td><span class="pill" style="background:#788c5d">一致</span></td><td></td></tr>
+<tr><td><code>mixer: attention, window W</code></td><td>窗口注意力</td><td><code>—（sliding_attention 是 V4 专用，带 q_rank/o_groups）</code></td><td><span class="pill" style="background:#c8553d">主语法没有</span></td><td></td></tr>
+<tr><td><code>mixer: kda</code></td><td>Kimi Delta Attention</td><td><code>body: {type: kda, n_heads, head_dim, conv_size}</code></td><td><span class="pill" style="background:#6a9bcc">换写法，意思相同</span></td><td>主语法要显式写头宽和卷积长度</td></tr>
+<tr><td><code>mixer: gdn</code></td><td>Gated DeltaNet</td><td><code>—</code></td><td><span class="pill" style="background:#c8553d">主语法没有</span></td><td>我们大搜索的最优结构用到它</td></tr>
+<tr><td><code>mixer: gla</code></td><td>门控线性注意力</td><td><code>—</code></td><td><span class="pill" style="background:#c8553d">主语法没有</span></td><td></td></tr>
+<tr><td><code>mixer: conv</code></td><td>4 token 因果卷积</td><td><code>—</code></td><td><span class="pill" style="background:#c8553d">主语法没有</span></td><td>我们前列结构的第一层几乎都是它</td></tr>
+<tr><td><code>mixer: none</code></td><td>这层没有混合器</td><td><code>—</code></td><td><span class="pill" style="background:#c8553d">主语法没有</span></td><td>主语法 A 槽不能空（工作区里有未提交的 identity 分型）</td></tr>
+<tr><td><code>mlp: swiglu, mult m</code></td><td>SwiGLU，隐藏宽 = 2/3·m·d（取 32 的倍数）</td><td><code>body: {type: mlp, hidden_dim, gated: true} + act: silu</code></td><td><span class="pill" style="background:#6a9bcc">换写法，意思相同</span></td><td>主语法写绝对宽度；参数量公式相同（3·hidden·d）</td></tr>
+<tr><td><code>mlp: relu2 / leaky_relu2</code></td><td>ReLU² MLP</td><td><code>—</code></td><td><span class="pill" style="background:#c8553d">主语法没有</span></td><td>主语法没有实现 ReLU 类激活</td></tr>
+<tr><td><code>mlp: none</code></td><td>这层没有 MLP</td><td><code>—</code></td><td><span class="pill" style="background:#c8553d">主语法没有</span></td><td>M 槽不能空</td></tr>
+<tr><td><code>layer type: repeat</code></td><td>复用上一层的矩阵，norm 和门各自独立</td><td><code>share: {attn_weights, mlp_weights}</code></td><td><span class="pill" style="background:#d9a43b">部分对得上</span></td><td>主语法共享整个残差层对象，连 norm 一起共享</td></tr>
+<tr><td><code>loop {start, end, extra_passes}</code></td><td>一段层多跑 2 遍</td><td><code>execution: [1,2,3,2,3,2,3,4]</code></td><td><span class="pill" style="background:#d9a43b">部分对得上</span></td><td>execution 更通用；但它触发 PG 路径，PG 路径禁止层覆盖、GQA 和 gated MLP</td></tr>
+<tr><td><code>parallel_from i</code></td><td>从第 i 层起分成两条车道</td><td><code>residual: {type: dual_stream}</code></td><td><span class="pill" style="background:#d9a43b">部分对得上</span></td><td>主语法对整个 layer_loop 生效，不能从中间某层开始</td></tr>
+<tr><td><code>value_residual</code></td><td>后面的注意力层混入第一层的 V</td><td><code>—</code></td><td><span class="pill" style="background:#c8553d">主语法没有</span></td><td></td></tr>
+<tr><td><code>attn.qk_gain</code></td><td>q 上可学习的初始增益</td><td><code>—（qk_norm 是另一种机制）</code></td><td><span class="pill" style="background:#c8553d">主语法没有</span></td><td></td></tr>
+<tr><td><code>attn.out_gate: output</code></td><td>每头输出门 2·sigmoid</td><td><code>body[attention].output_gate: true</code></td><td><span class="pill" style="background:#d9a43b">部分对得上</span></td><td>主语法的门读整个归一化输入；我们读前 12 维。只在 PG 路径可用</td></tr>
+<tr><td><code>attn.out_gate: sparse / gated</code></td><td>另两种输出门</td><td><code>—</code></td><td><span class="pill" style="background:#c8553d">主语法没有</span></td><td></td></tr>
+<tr><td><code>attn.kv_conv</code></td><td>K、V 先过因果卷积</td><td><code>—</code></td><td><span class="pill" style="background:#c8553d">主语法没有</span></td><td>前列结构普遍用 4–8</td></tr>
+<tr><td><code>attn.rope_dims</code></td><td>部分 RoPE 维数</td><td><code>body[attention].rope_dim</code></td><td><span class="pill" style="background:#788c5d">一致</span></td><td>只在 PG 路径可用</td></tr>
+<tr><td><code>attn.xsa_last n</code></td><td>最后 n 层用 XSA</td><td><code>body[attention].xsa: true</code></td><td><span class="pill" style="background:#d9a43b">部分对得上</span></td><td>主语法只能全部层开；PG 路径不允许按层覆盖</td></tr>
+<tr><td><code>smear</code></td><td>嵌入混入上一个 token</td><td><code>layer_loop.smear</code></td><td><span class="pill" style="background:#788c5d">一致</span></td><td>只在 PG 路径可用</td></tr>
+<tr><td><code>skip_gates</code></td><td>U 形跳连（总是开），是否加 sigmoid 门</td><td><code>residual.unet_skip</code></td><td><span class="pill" style="background:#d9a43b">部分对得上</span></td><td>主语法跳连可关，但没有门的选项</td></tr>
+<tr><td><code>ln_scale</code></td><td>第 i 层 norm 乘 1/√(i+1)</td><td><code>—</code></td><td><span class="pill" style="background:#c8553d">主语法没有</span></td><td></td></tr>
+<tr><td><code>logit_softcap</code></td><td>输出 logit 软截断</td><td><code>—</code></td><td><span class="pill" style="background:#c8553d">主语法没有</span></td><td>我们的规律之一是 softcap 15 好于 30</td></tr>
+<tr><td><code>ngram, order 2</code></td><td>哈希 bigram 表加到嵌入上</td><td><code>layer_loop.bigram_hash {buckets, dim}</code></td><td><span class="pill" style="background:#6a9bcc">换写法，意思相同</span></td><td>只在 PG 路径可用</td></tr>
+<tr><td><code>ngram, order 3</code></td><td>哈希 trigram 表加到嵌入上</td><td><code>over-encoding {ngram:[3], buckets, layers}</code></td><td><span class="pill" style="background:#d9a43b">部分对得上</span></td><td>主语法插在层的位置上，不是加到嵌入</td></tr>
+<tr><td><code>（固定）vocab 1024，pre-RMS norm</code></td><td>我们写死</td><td><code>/vocab_size, /norm</code></td><td><span class="pill" style="background:#6a9bcc">换写法，意思相同</span></td><td>主语法要显式写</td></tr>
+<tr><td><code>optim.muon_lr, adamw_lr</code></td><td>学习率</td><td><code>—</code></td><td><span class="pill" style="background:#9a968a">不属于模型语法</span></td><td>训练协议，本来就不在模型 JSON 里</td></tr>
+<tr><td><code>seq_len</code></td><td>序列长</td><td><code>—</code></td><td><span class="pill" style="background:#9a968a">不属于模型语法</span></td><td>数据协议</td></tr>
+</table>
+<h2>真实结构翻译：左边是搜索时的设置，右边是主语法能写出的部分</h2>
+<div class="ex"><h3 style="margin:0 0 6px;font-size:16px">大搜索种子 42 最好的结构 <span class="mut">种子 42 = 2.5076 · <code>C6 A8 G10 A16</code></span></h3><div class="pair"><div class="box"><h4>PG 设置语言</h4><pre>{
+  &quot;optim&quot;: {&quot;muon_lr&quot;: 0.005, &quot;adamw_lr&quot;: 0.005},
+  &quot;model&quot;: {
+    &quot;d_model&quot;: 256,
+    &quot;heads&quot;: 4,
+    &quot;kv_heads&quot;: 2,
+    &quot;layers&quot;: [
+      {&quot;type&quot;: &quot;own&quot;, &quot;mixer&quot;: {&quot;type&quot;: &quot;conv&quot;}, &quot;mlp&quot;: {&quot;type&quot;: &quot;swiglu&quot;, &quot;mult&quot;: 6}},
+      {
+        &quot;type&quot;: &quot;own&quot;,
+        &quot;mixer&quot;: {&quot;type&quot;: &quot;attention&quot;, &quot;window&quot;: &quot;full&quot;},
+        &quot;mlp&quot;: {&quot;type&quot;: &quot;swiglu&quot;, &quot;mult&quot;: 8}
+      },
+      {&quot;type&quot;: &quot;own&quot;, &quot;mixer&quot;: {&quot;type&quot;: &quot;gdn&quot;}, &quot;mlp&quot;: {&quot;type&quot;: &quot;swiglu&quot;, &quot;mult&quot;: 10}},
+      {
+        &quot;type&quot;: &quot;own&quot;,
+        &quot;mixer&quot;: {&quot;type&quot;: &quot;attention&quot;, &quot;window&quot;: &quot;full&quot;},
+        &quot;mlp&quot;: {&quot;type&quot;: &quot;swiglu&quot;, &quot;mult&quot;: 16}
+      }
+    ],
+    &quot;value_residual&quot;: false,
+    &quot;attn&quot;: {&quot;qk_gain&quot;: 1.0, &quot;out_gate&quot;: &quot;sparse&quot;, &quot;kv_conv&quot;: 8, &quot;rope_dims&quot;: 20, &quot;xsa_last&quot;: 0},
+    &quot;loop&quot;: null,
+    &quot;parallel_from&quot;: 3,
+    &quot;smear&quot;: true,
+    &quot;skip_gates&quot;: false,
+    &quot;ln_scale&quot;: false,
+    &quot;logit_softcap&quot;: 11.5,
+    &quot;seq_len&quot;: 1024,
+    &quot;ngram&quot;: {&quot;order&quot;: 2, &quot;rows&quot;: 16384, &quot;dim&quot;: 128}
+  }
+}</pre></div><div class="box"><h4>主语法 setting-v1.4（尽量翻译）</h4><pre>{
+  &quot;vocab_size&quot;: 1024,
+  &quot;d_model&quot;: 256,
+  &quot;act&quot;: &quot;silu&quot;,
+  &quot;norm&quot;: &quot;pre_rms_norm&quot;,
+  &quot;forward&quot;: [
+    {
+      &quot;layer_loop&quot;: {
+        &quot;iteration&quot;: 4,
+        &quot;body&quot;: [
+          {&quot;type&quot;: &quot;attention&quot;, &quot;n_heads&quot;: 4, &quot;gqa_kvheads&quot;: 2, &quot;rope_dim&quot;: 20},
+          {&quot;type&quot;: &quot;mlp&quot;, &quot;hidden_dim&quot;: 1376, &quot;gated&quot;: true},
+          {&quot;type&quot;: &quot;mlp&quot;, &quot;hidden_dim&quot;: 1024, &quot;gated&quot;: true, &quot;layers&quot;: [1]},
+          {&quot;type&quot;: &quot;mlp&quot;, &quot;hidden_dim&quot;: 1696, &quot;gated&quot;: true, &quot;layers&quot;: [3]},
+          {&quot;type&quot;: &quot;mlp&quot;, &quot;hidden_dim&quot;: 2720, &quot;gated&quot;: true, &quot;layers&quot;: [4]}
+        ],
+        &quot;residual&quot;: {&quot;type&quot;: &quot;dual_stream&quot;, &quot;unet_skip&quot;: true},
+        &quot;smear&quot;: true,
+        &quot;bigram_hash&quot;: {&quot;buckets&quot;: 16384, &quot;dim&quot;: 128}
+      }
+    },
+    {&quot;lm_head&quot;: {}}
+  ]
+}</pre><h4 style="margin-top:10px">翻不过去的 7 项</h4><ul class="lost"><li><code>第 1 层混合器</code>：conv</li><li><code>第 3 层混合器</code>：gdn</li><li><code>attn.out_gate</code>：sparse</li><li><code>parallel_from</code>：从第 4 层起（主语法只能整段）</li><li><code>attn.qk_gain</code>：1.0</li><li><code>attn.kv_conv</code>：8</li><li><code>logit_softcap</code>：11.5</li></ul><div class="warn">右侧同时用了 PG 路径字段（smear, bigram_hash, rope_dim）和普通路径字段（GQA、gated MLP、层覆盖），主语法的 build 会拒绝。</div></div></div></div>
+<div class="ex"><h3 style="margin:0 0 6px;font-size:16px">Claude Opus 簇模式提交 <span class="mut">种子 42 = 2.5300 · <code>C8 A10 A12</code></span></h3><div class="pair"><div class="box"><h4>PG 设置语言</h4><pre>{
+  &quot;optim&quot;: {&quot;muon_lr&quot;: 0.0055, &quot;adamw_lr&quot;: 0.003},
+  &quot;model&quot;: {
+    &quot;d_model&quot;: 384,
+    &quot;heads&quot;: 6,
+    &quot;kv_heads&quot;: 3,
+    &quot;layers&quot;: [
+      {&quot;type&quot;: &quot;own&quot;, &quot;mixer&quot;: {&quot;type&quot;: &quot;conv&quot;}, &quot;mlp&quot;: {&quot;type&quot;: &quot;swiglu&quot;, &quot;mult&quot;: 8}},
+      {
+        &quot;type&quot;: &quot;own&quot;,
+        &quot;mixer&quot;: {&quot;type&quot;: &quot;attention&quot;, &quot;window&quot;: &quot;full&quot;},
+        &quot;mlp&quot;: {&quot;type&quot;: &quot;swiglu&quot;, &quot;mult&quot;: 10}
+      },
+      {
+        &quot;type&quot;: &quot;own&quot;,
+        &quot;mixer&quot;: {&quot;type&quot;: &quot;attention&quot;, &quot;window&quot;: &quot;full&quot;},
+        &quot;mlp&quot;: {&quot;type&quot;: &quot;swiglu&quot;, &quot;mult&quot;: 12}
+      }
+    ],
+    &quot;value_residual&quot;: true,
+    &quot;attn&quot;: {&quot;qk_gain&quot;: 1.5, &quot;out_gate&quot;: &quot;output&quot;, &quot;kv_conv&quot;: 6, &quot;rope_dims&quot;: 32, &quot;xsa_last&quot;: 0},
+    &quot;loop&quot;: null,
+    &quot;parallel_from&quot;: null,
+    &quot;smear&quot;: true,
+    &quot;skip_gates&quot;: false,
+    &quot;ln_scale&quot;: false,
+    &quot;logit_softcap&quot;: 15.0,
+    &quot;seq_len&quot;: 1024,
+    &quot;ngram&quot;: {&quot;order&quot;: 2, &quot;rows&quot;: 16384, &quot;dim&quot;: 128}
+  }
+}</pre></div><div class="box"><h4>主语法 setting-v1.4（尽量翻译）</h4><pre>{
+  &quot;vocab_size&quot;: 1024,
+  &quot;d_model&quot;: 384,
+  &quot;act&quot;: &quot;silu&quot;,
+  &quot;norm&quot;: &quot;pre_rms_norm&quot;,
+  &quot;forward&quot;: [
+    {
+      &quot;layer_loop&quot;: {
+        &quot;iteration&quot;: 3,
+        &quot;body&quot;: [
+          {&quot;type&quot;: &quot;attention&quot;, &quot;n_heads&quot;: 6, &quot;gqa_kvheads&quot;: 3, &quot;rope_dim&quot;: 32, &quot;output_gate&quot;: true},
+          {&quot;type&quot;: &quot;mlp&quot;, &quot;hidden_dim&quot;: 2048, &quot;gated&quot;: true},
+          {&quot;type&quot;: &quot;mlp&quot;, &quot;hidden_dim&quot;: 2560, &quot;gated&quot;: true, &quot;layers&quot;: [2]},
+          {&quot;type&quot;: &quot;mlp&quot;, &quot;hidden_dim&quot;: 3072, &quot;gated&quot;: true, &quot;layers&quot;: [3]}
+        ],
+        &quot;residual&quot;: {&quot;unet_skip&quot;: true},
+        &quot;smear&quot;: true,
+        &quot;bigram_hash&quot;: {&quot;buckets&quot;: 16384, &quot;dim&quot;: 128}
+      }
+    },
+    {&quot;lm_head&quot;: {}}
+  ]
+}</pre><h4 style="margin-top:10px">翻不过去的 5 项</h4><ul class="lost"><li><code>第 1 层混合器</code>：conv</li><li><code>value_residual</code>：true</li><li><code>attn.qk_gain</code>：1.5</li><li><code>attn.kv_conv</code>：6</li><li><code>logit_softcap</code>：15.0</li></ul><div class="warn">右侧同时用了 PG 路径字段（smear, bigram_hash, rope_dim, output_gate）和普通路径字段（GQA、gated MLP、层覆盖），主语法的 build 会拒绝。</div></div></div></div>
+<div class="ex"><h3 style="margin:0 0 6px;font-size:16px">meta model（GBDT）提交 <span class="mut">种子 42 = 2.5315 · <code>G10 A16 G8 A12</code></span></h3><div class="pair"><div class="box"><h4>PG 设置语言</h4><pre>{
+  &quot;optim&quot;: {&quot;muon_lr&quot;: 0.005, &quot;adamw_lr&quot;: 0.005},
+  &quot;model&quot;: {
+    &quot;d_model&quot;: 256,
+    &quot;heads&quot;: 4,
+    &quot;kv_heads&quot;: 1,
+    &quot;layers&quot;: [
+      {&quot;type&quot;: &quot;own&quot;, &quot;mixer&quot;: {&quot;type&quot;: &quot;gdn&quot;}, &quot;mlp&quot;: {&quot;type&quot;: &quot;swiglu&quot;, &quot;mult&quot;: 10}},
+      {
+        &quot;type&quot;: &quot;own&quot;,
+        &quot;mixer&quot;: {&quot;type&quot;: &quot;attention&quot;, &quot;window&quot;: &quot;full&quot;},
+        &quot;mlp&quot;: {&quot;type&quot;: &quot;swiglu&quot;, &quot;mult&quot;: 16}
+      },
+      {&quot;type&quot;: &quot;own&quot;, &quot;mixer&quot;: {&quot;type&quot;: &quot;gdn&quot;}, &quot;mlp&quot;: {&quot;type&quot;: &quot;swiglu&quot;, &quot;mult&quot;: 8}},
+      {
+        &quot;type&quot;: &quot;own&quot;,
+        &quot;mixer&quot;: {&quot;type&quot;: &quot;attention&quot;, &quot;window&quot;: &quot;full&quot;},
+        &quot;mlp&quot;: {&quot;type&quot;: &quot;swiglu&quot;, &quot;mult&quot;: 12}
+      }
+    ],
+    &quot;value_residual&quot;: true,
+    &quot;attn&quot;: {&quot;qk_gain&quot;: 1.0, &quot;out_gate&quot;: &quot;none&quot;, &quot;kv_conv&quot;: 8, &quot;rope_dims&quot;: 24, &quot;xsa_last&quot;: 0},
+    &quot;loop&quot;: null,
+    &quot;parallel_from&quot;: null,
+    &quot;smear&quot;: false,
+    &quot;skip_gates&quot;: false,
+    &quot;ln_scale&quot;: false,
+    &quot;logit_softcap&quot;: 13.0,
+    &quot;seq_len&quot;: 1024,
+    &quot;ngram&quot;: {&quot;order&quot;: 2, &quot;rows&quot;: 16384, &quot;dim&quot;: 128}
+  }
+}</pre></div><div class="box"><h4>主语法 setting-v1.4（尽量翻译）</h4><pre>{
+  &quot;vocab_size&quot;: 1024,
+  &quot;d_model&quot;: 256,
+  &quot;act&quot;: &quot;silu&quot;,
+  &quot;norm&quot;: &quot;pre_rms_norm&quot;,
+  &quot;forward&quot;: [
+    {
+      &quot;layer_loop&quot;: {
+        &quot;iteration&quot;: 4,
+        &quot;body&quot;: [
+          {&quot;type&quot;: &quot;attention&quot;, &quot;n_heads&quot;: 4, &quot;gqa_kvheads&quot;: 1, &quot;rope_dim&quot;: 24},
+          {&quot;type&quot;: &quot;mlp&quot;, &quot;hidden_dim&quot;: 2720, &quot;gated&quot;: true},
+          {&quot;type&quot;: &quot;mlp&quot;, &quot;hidden_dim&quot;: 1376, &quot;gated&quot;: true, &quot;layers&quot;: [3]},
+          {&quot;type&quot;: &quot;mlp&quot;, &quot;hidden_dim&quot;: 1696, &quot;gated&quot;: true, &quot;layers&quot;: [1]},
+          {&quot;type&quot;: &quot;mlp&quot;, &quot;hidden_dim&quot;: 2048, &quot;gated&quot;: true, &quot;layers&quot;: [4]}
+        ],
+        &quot;residual&quot;: {&quot;unet_skip&quot;: true},
+        &quot;bigram_hash&quot;: {&quot;buckets&quot;: 16384, &quot;dim&quot;: 128}
+      }
+    },
+    {&quot;lm_head&quot;: {}}
+  ]
+}</pre><h4 style="margin-top:10px">翻不过去的 6 项</h4><ul class="lost"><li><code>第 1 层混合器</code>：gdn</li><li><code>第 3 层混合器</code>：gdn</li><li><code>value_residual</code>：true</li><li><code>attn.qk_gain</code>：1.0</li><li><code>attn.kv_conv</code>：8</li><li><code>logit_softcap</code>：13.0</li></ul><div class="warn">右侧同时用了 PG 路径字段（bigram_hash, rope_dim）和普通路径字段（GQA、gated MLP、层覆盖），主语法的 build 会拒绝。</div></div></div></div>
+<div class="ex"><h3 style="margin:0 0 6px;font-size:16px">用了权重共享的最好结构 <span class="mut">种子 42 = 2.5335 · <code>C16 A5 = A16</code></span></h3><div class="pair"><div class="box"><h4>PG 设置语言</h4><pre>{
+  &quot;optim&quot;: {&quot;muon_lr&quot;: 0.005, &quot;adamw_lr&quot;: 0.005},
+  &quot;model&quot;: {
+    &quot;d_model&quot;: 256,
+    &quot;heads&quot;: 4,
+    &quot;kv_heads&quot;: 2,
+    &quot;layers&quot;: [
+      {&quot;type&quot;: &quot;own&quot;, &quot;mixer&quot;: {&quot;type&quot;: &quot;conv&quot;}, &quot;mlp&quot;: {&quot;type&quot;: &quot;swiglu&quot;, &quot;mult&quot;: 16}},
+      {
+        &quot;type&quot;: &quot;own&quot;,
+        &quot;mixer&quot;: {&quot;type&quot;: &quot;attention&quot;, &quot;window&quot;: &quot;full&quot;},
+        &quot;mlp&quot;: {&quot;type&quot;: &quot;swiglu&quot;, &quot;mult&quot;: 5}
+      },
+      {&quot;type&quot;: &quot;repeat&quot;, &quot;of&quot;: &quot;previous&quot;},
+      {
+        &quot;type&quot;: &quot;own&quot;,
+        &quot;mixer&quot;: {&quot;type&quot;: &quot;attention&quot;, &quot;window&quot;: &quot;full&quot;},
+        &quot;mlp&quot;: {&quot;type&quot;: &quot;swiglu&quot;, &quot;mult&quot;: 16}
+      }
+    ],
+    &quot;value_residual&quot;: true,
+    &quot;attn&quot;: {&quot;qk_gain&quot;: 1.0, &quot;out_gate&quot;: &quot;output&quot;, &quot;kv_conv&quot;: 7, &quot;rope_dims&quot;: 24, &quot;xsa_last&quot;: 0},
+    &quot;loop&quot;: null,
+    &quot;parallel_from&quot;: 3,
+    &quot;smear&quot;: true,
+    &quot;skip_gates&quot;: false,
+    &quot;ln_scale&quot;: false,
+    &quot;logit_softcap&quot;: 13.0,
+    &quot;seq_len&quot;: 1024,
+    &quot;ngram&quot;: {&quot;order&quot;: 2, &quot;rows&quot;: 16384, &quot;dim&quot;: 128}
+  }
+}</pre></div><div class="box"><h4>主语法 setting-v1.4（尽量翻译）</h4><pre>{
+  &quot;vocab_size&quot;: 1024,
+  &quot;d_model&quot;: 256,
+  &quot;act&quot;: &quot;silu&quot;,
+  &quot;norm&quot;: &quot;pre_rms_norm&quot;,
+  &quot;forward&quot;: [
+    {
+      &quot;layer_loop&quot;: {
+        &quot;iteration&quot;: 4,
+        &quot;body&quot;: [
+          {&quot;type&quot;: &quot;attention&quot;, &quot;n_heads&quot;: 4, &quot;gqa_kvheads&quot;: 2, &quot;rope_dim&quot;: 24, &quot;output_gate&quot;: true},
+          {&quot;type&quot;: &quot;mlp&quot;, &quot;hidden_dim&quot;: 2720, &quot;gated&quot;: true},
+          {&quot;type&quot;: &quot;mlp&quot;, &quot;hidden_dim&quot;: 864, &quot;gated&quot;: true, &quot;layers&quot;: [2, 3]}
+        ],
+        &quot;share&quot;: {&quot;attn_weights&quot;: [[2, 3]], &quot;mlp_weights&quot;: [[2, 3]]},
+        &quot;residual&quot;: {&quot;type&quot;: &quot;dual_stream&quot;, &quot;unet_skip&quot;: true},
+        &quot;smear&quot;: true,
+        &quot;bigram_hash&quot;: {&quot;buckets&quot;: 16384, &quot;dim&quot;: 128}
+      }
+    },
+    {&quot;lm_head&quot;: {}}
+  ]
+}</pre><h4 style="margin-top:10px">翻不过去的 6 项</h4><ul class="lost"><li><code>第 1 层混合器</code>：conv</li><li><code>parallel_from</code>：从第 4 层起（主语法只能整段）</li><li><code>value_residual</code>：true</li><li><code>attn.qk_gain</code>：1.0</li><li><code>attn.kv_conv</code>：7</li><li><code>logit_softcap</code>：13.0</li></ul><div class="warn">右侧同时用了 PG 路径字段（smear, bigram_hash, rope_dim, output_gate）和普通路径字段（GQA、gated MLP、层覆盖），主语法的 build 会拒绝。</div></div></div></div>
+<h2>建议</h2><ol class="lead"><li>PG 设置语言已接受“默认模块 + layers 覆盖”写法，字母串只做显示（已做）。</li><li>主语法补上搜索里证明有用的分型和字段：gdn、gla、conv、窗口注意力、空槽（none/identity）、kv_conv、logit_softcap、value_residual、qk_gain、ln_scale、输出门的另两种。</li><li>让 PG 路径字段（smear、bigram_hash、rope_dim、output_gate、xsa）也能在普通路径上用，或者放宽 PG 路径接受层覆盖、GQA 和 gated MLP。</li><li>加一个双向转换器和往返测试：PG 设置 → 主语法 → 生成代码，与 worker 的实际模型逐层比参数量。</li></ol>
+<p class="mut">由 tools/pg_grammar_compare.py 生成。字段语义取自 RSI_challenge/agent_search/TASK.md 和 docs/architecture/setting-language-v1/syntax_fields.json。</p></main></body></html>
