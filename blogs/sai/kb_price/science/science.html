@@ -1,0 +1,2116 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>子系统里的全部科学</title><style>
+:root{color-scheme:light;--page:#f9f9f7;--surface:#fcfcfb;--ink:#0b0b0b;--ink2:#52514e;--muted:#898781;
+--grid:#e1e0d9;--axis:#c3c2b7;--border:rgba(11,11,11,.10);--s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--s0:#898781;
+--pos:#2a78d6;--neg:#e34948;--mid:#c3c2b7;--h1:#86b6ef;--h2:#5598e7;--h3:#2a78d6;--h4:#1c5cab;--h5:#104281;
+--d0:#86b6ef;--d1:#1c5cab;--wash:#f0efec;--good:#006300}
+@media (prefers-color-scheme:dark){:root:where(:not([data-theme="light"])){color-scheme:dark;--page:#0d0d0d;--surface:#1a1a19;
+--ink:#f0efec;--ink2:#c3c2b7;--muted:#898781;--grid:#2c2c2a;--axis:#383835;--border:rgba(255,255,255,.10);
+--s1:#3987e5;--s2:#d95926;--s3:#199e70;--pos:#3987e5;--neg:#e66767;--mid:#383835;
+--h1:#184f95;--h2:#256abf;--h3:#3987e5;--h4:#6da7ec;--h5:#9ec5f4;--d0:#184f95;--d1:#6da7ec;--wash:#262624;--good:#0ca30c}}
+:root[data-theme="dark"]{color-scheme:dark;--page:#0d0d0d;--surface:#1a1a19;--ink:#f0efec;--ink2:#c3c2b7;--muted:#898781;
+--grid:#2c2c2a;--axis:#383835;--border:rgba(255,255,255,.10);--s1:#3987e5;--s2:#d95926;--s3:#199e70;--pos:#3987e5;
+--neg:#e66767;--mid:#383835;--h1:#184f95;--h2:#256abf;--h3:#3987e5;--h4:#6da7ec;--h5:#9ec5f4;--d0:#184f95;--d1:#6da7ec;
+--wash:#262624;--good:#0ca30c}
+*{box-sizing:border-box}
+html{background:var(--page)}
+body{margin:0;background:var(--page);color:var(--ink);font:15px/1.7 system-ui,-apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Segoe UI",sans-serif}
+main{max-width:1060px;margin:0 auto;padding:28px 16px 80px}
+header h1{font-size:28px;line-height:1.3;margin:0 0 6px}
+header .sub{color:var(--ink2);margin:0}
+h2{font-size:21px;margin:44px 0 8px;padding-top:12px;border-top:1px solid var(--border)}
+h3{font-size:17px;margin:28px 0 6px}
+h4{font-size:15px;margin:0 0 4px}
+p{margin:8px 0}
+.lead{color:var(--ink)}
+.fine,.meta,.sub{color:var(--ink2);font-size:13px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin:12px 0}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+.tag{display:inline-block;font-size:12px;line-height:18px;padding:0 7px;border-radius:9px;border:1px solid var(--border);color:var(--ink2);margin-right:4px;white-space:nowrap}
+.tag.u{background:var(--wash)}
+.tldr li{margin:6px 0}
+figure{margin:14px 0 6px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 12px 6px}
+figcaption{font-size:14px;color:var(--ink2);margin:2px 4px 8px}
+figcaption b{color:var(--ink)}
+svg.chart{width:100%;height:auto;display:block}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--ink2);margin:0 4px 6px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{display:inline-block}
+.sw.dot{width:10px;height:10px;border-radius:50%}
+.sw.sq{width:10px;height:10px;border-radius:2px}
+.sw.bar{width:14px;height:10px;border-radius:2px}
+.sw.ln{width:18px;height:2px}
+.sw.dia{width:9px;height:9px;transform:rotate(45deg);background:var(--muted)}
+.sw.tk{width:2px;height:12px;background:var(--ink2)}
+.sw.s1,.sw.s1l{background:var(--s1)}.sw.s2,.sw.s2l{background:var(--s2)}.sw.s3,.sw.s3l{background:var(--s3)}.sw.s0{background:var(--s0)}
+.sw.front{background:var(--ink2)}.sw.d0{background:var(--d0)}.sw.d1{background:var(--d1)}
+.grid{stroke:var(--grid);stroke-width:1}
+.axis{stroke:var(--axis);stroke-width:1}
+.tick{fill:var(--muted);font-size:12px}
+.tick.sub{font-size:11px}
+.tick.mono{font-variant-numeric:tabular-nums}
+.axl{fill:var(--ink2);font-size:12.5px}
+.tl{fill:var(--ink);font-size:13px}
+.dl{fill:var(--ink);font-size:12.5px;paint-order:stroke;stroke:var(--surface);stroke-width:3px;stroke-linejoin:round}
+.note{fill:var(--ink2);font-size:12px;paint-order:stroke;stroke:var(--surface);stroke-width:3px}
+.ptitle{fill:var(--ink);font-size:14px;font-weight:600}
+.mk{stroke:var(--surface);stroke-width:2}
+.mk.s1{fill:var(--s1)}.mk.s2{fill:var(--s2)}.mk.s3{fill:var(--s3)}.mk.s0{fill:var(--s0)}
+.whisk{stroke-width:1.5;opacity:.55}.s1w{stroke:var(--s1)}.s2w{stroke:var(--s2)}.s3w{stroke:var(--s3)}
+.front{fill:none;stroke:var(--ink2);stroke-width:1.5}
+.line{fill:none;stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.s1l{stroke:var(--s1)}.s2l{stroke:var(--s2)}.s3l{stroke:var(--s3)}
+.conn{stroke:var(--ink2);stroke-width:1.2}
+.conn.soft{stroke:var(--muted);stroke-width:1}
+.leader{stroke:var(--muted);stroke-width:1}
+.dl.b{font-weight:600;font-size:13.5px}
+.ring{fill:none;stroke:var(--ink);stroke-width:1.5}
+.ht{fill:transparent}
+.hit{cursor:default;outline:none}
+.hit:hover .mk,.hit:focus .mk{stroke:var(--ink)}
+.hit:hover rect[class^="h"],.hit:focus rect[class^="h"]{stroke:var(--ink);stroke-width:1.5}
+.xh{stroke:var(--ink2);stroke-width:1}
+.xhov{fill:transparent}
+.h1{fill:var(--h1)}.h2{fill:var(--h2)}.h3{fill:var(--h3)}.h4{fill:var(--h4)}.h5{fill:var(--h5)}
+.diag{fill:none;stroke:var(--axis);stroke-width:1}
+.cf{fill:var(--s2);stroke:var(--surface);stroke-width:1.5}
+.cell.s1{fill:var(--s1)}.cell.s2{fill:var(--s2)}.cell.s3{fill:var(--s3)}
+rect.empty{fill:none;stroke:var(--grid);stroke-width:1}
+rect.shared{fill:var(--wash);stroke:var(--axis);stroke-width:1}
+.sw.shared{background:var(--wash);border:1px solid var(--axis)}
+.sw.emptysw{background:transparent;border:1px solid var(--grid)}
+h4.sub-h{margin:14px 4px 2px;font-size:14px}
+.inbar.big{font-size:14px}
+.mk.ctx{opacity:.5}
+td.tr{font-size:12.5px;min-width:150px}
+table.marg td.rname{min-width:170px}
+.tag.p{border-color:var(--s2);color:var(--ink)}
+.decided{background:var(--wash);border-radius:8px;padding:8px 12px;font-size:13.5px}
+rect.s1{fill:var(--s1)}rect.s2{fill:var(--s2)}rect.s0{fill:var(--s0)}rect.s3{fill:var(--s3)}
+.inbar{fill:#fff;font-size:11.5px;font-weight:600}
+.dbl{stroke:var(--axis);stroke-width:2}
+circle.d0{fill:var(--d0);stroke:var(--surface);stroke-width:2}circle.d1{fill:var(--d1);stroke:var(--surface);stroke-width:2}
+.tick10{stroke:var(--ink2);stroke-width:2}
+.node{fill:var(--surface);stroke:var(--axis);stroke-width:1.5}
+.node.win{stroke:var(--s3);stroke-width:2.5}
+.nodet{fill:var(--ink);font-size:14px;font-weight:600}
+.eok{stroke:var(--ink);stroke-width:1.8}
+.eover{stroke:var(--muted);stroke-width:1.5;opacity:.6}
+.ederiv{stroke:var(--s3);stroke-width:1.8}
+.arrowhead{fill:var(--ink)}.arrowhead2{fill:var(--s3)}
+.elab{fill:var(--ink2);font-size:12.5px;paint-order:stroke;stroke:var(--surface);stroke-width:4px;stroke-linejoin:round}
+.elab.b{fill:var(--ink);font-weight:600;font-size:13px}.elab.m{fill:var(--muted)}.elab.g{fill:var(--good)}
+.tablewrap{overflow-x:auto;margin:8px 0}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{padding:6px 8px;border-bottom:1px solid var(--grid);text-align:left;vertical-align:top}
+th{color:var(--ink2);font-weight:600;font-size:12.5px}
+td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+td.rname{min-width:210px}
+td.nw,th{white-space:nowrap}
+td.zero{color:var(--muted)}
+td svg{vertical-align:middle}
+td svg .mid{stroke:var(--mid);stroke-width:1}
+td svg .pos{fill:var(--pos)}td svg .neg{fill:var(--neg)}
+tr.k-补全 td,tr.k-直觉 td,tr.k-基线 td{background:var(--wash)}
+tr.bad td{background:color-mix(in srgb,var(--neg) 12%,transparent)}
+tr.dim td{color:var(--muted)}
+tr.det td{border-bottom:1px solid var(--grid);padding-top:0}
+tr.det summary{font-size:12.5px;color:var(--ink2);cursor:pointer}
+.orig{font-size:12.5px;color:var(--ink2);font-style:italic}
+.opn{font-size:12.5px}
+table.var td.hc{text-align:center;font-variant-numeric:tabular-nums;font-weight:600;border:2px solid var(--surface)}
+.h1t{background:var(--h1)}.h2t{background:var(--h2)}.h3t{background:var(--h3)}.h4t{background:var(--h4)}.h5t{background:var(--h5)}
+.h1t span{color:#0b0b0b}.h2t span,.h3t span,.h4t span,.h5t span{color:#fff}
+:root[data-theme="dark"] .h4t span,:root[data-theme="dark"] .h5t span{color:#0b0b0b}
+@media (prefers-color-scheme:dark){:root:where(:not([data-theme="light"])) .h4t span,:root:where(:not([data-theme="light"])) .h5t span{color:#0b0b0b}}
+td.empty{color:var(--muted);text-align:center}
+details.tv{margin:4px 4px 8px;font-size:13px;overflow-x:auto;max-width:100%}
+details.tv summary{color:var(--ink2);cursor:pointer}
+.case{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin:14px 0}
+.case .res{background:var(--wash);border-radius:6px;padding:6px 10px}
+ul.verd{margin:6px 0;padding-left:20px;font-size:13.5px}
+.defs dt{font-weight:600;margin-top:10px}
+.defs dd{margin:2px 0 0 0;color:var(--ink)}
+.formula{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;background:var(--wash);border-radius:6px;padding:8px 10px;white-space:pre-wrap;overflow-x:auto}
+#tip{position:fixed;z-index:10;pointer-events:none;background:var(--surface);color:var(--ink);border:1px solid var(--border);
+box-shadow:0 4px 16px rgba(0,0,0,.12);border-radius:8px;padding:8px 10px;font-size:12.5px;line-height:1.5;max-width:360px;display:none;white-space:pre-line}
+#tip .v{font-weight:600}
+.toggle{float:right;font-size:12px;border:1px solid var(--border);background:var(--surface);color:var(--ink2);border-radius:14px;padding:2px 10px;cursor:pointer}
+ul.tldr,ol{padding-left:22px}
+figure{overflow-x:auto}
+@media (max-width:640px){header h1{font-size:23px}h2{font-size:19px}table{font-size:12.5px}svg.chart{min-width:760px}}
+
+.fo{font-size:12.5px;line-height:1.45;color:var(--ink2)}
+.exitbox{fill:var(--wash);stroke:var(--border);stroke-width:1}
+.epsl{stroke:var(--ink2);stroke-width:1.2;stroke-dasharray:4 3}
+.wedge{fill:color-mix(in srgb,var(--s1) 10%,transparent)}
+.sw.wedgesw{background:color-mix(in srgb,var(--s1) 18%,transparent);border:1px solid var(--axis)}
+.sw.ringsw{border:1.5px solid var(--ink);background:transparent}
+.diag2{stroke:var(--ink2);stroke-width:1.2;stroke-dasharray:5 4}
+.dvp2{fill:#2a78d6}.dvp1{fill:#86b6ef}.dv0{fill:#e1e0d9}.dvn1{fill:#f2a5a4}.dvn2{fill:#e34948}
+.sw.dvp2{background:#2a78d6}.sw.dv0{background:#e1e0d9}.sw.dvn2{background:#e34948}
+.cellt{font-size:12.5px;font-variant-numeric:tabular-nums}
+.dvp2t,.dvn2t{fill:#fff;font-weight:600}.dvp1t,.dv0t,.dvn1t{fill:#0b0b0b}
+@media (prefers-color-scheme:dark){:root:where(:not([data-theme="light"])) .dvp2{fill:#3987e5}:root:where(:not([data-theme="light"])) .dvp1{fill:#184f95}
+:root:where(:not([data-theme="light"])) .dv0{fill:#383835}:root:where(:not([data-theme="light"])) .dvn1{fill:#7a2b2b}:root:where(:not([data-theme="light"])) .dvn2{fill:#e66767}
+:root:where(:not([data-theme="light"])) .dvp1t,:root:where(:not([data-theme="light"])) .dv0t,:root:where(:not([data-theme="light"])) .dvn1t{fill:#f0efec}}
+:root[data-theme="dark"] .dvp2{fill:#3987e5}:root[data-theme="dark"] .dvp1{fill:#184f95}:root[data-theme="dark"] .dv0{fill:#383835}
+:root[data-theme="dark"] .dvn1{fill:#7a2b2b}:root[data-theme="dark"] .dvn2{fill:#e66767}
+:root[data-theme="dark"] .dvp1t,:root[data-theme="dark"] .dv0t,:root[data-theme="dark"] .dvn1t{fill:#f0efec}
+table.cands td{font-size:12.5px}
+table.cands td.rname{min-width:200px}
+.big{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin:12px 0}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px}
+.kpi .fine{display:block}
+</style></head><body><div id="tip"></div><main>
+<header><button class="toggle" type="button">切换亮/暗</button>
+<h1>一个子系统里的全部科学：优化器比较</h1>
+<p class="sub">原型 · 2026-10-31 · 子系统：同数据、同模型、同损失、同批量、同预算 T 下的优化器比较 · 基准 523 对（187 题）· 实验室 7,901 对，数据集与基准不相交</p>
+<p class="fine">定义：<a href="S_procedure.md">S_procedure.md</a> · 报告：<a href="S_report.md">S_report.md</a> · 数字全部由 <code>scripts/sci_compute.py</code> 算出；没有调用模型。唯一的新实验是初始化处的梯度测量（只做前向和反向，不训练）。</p>
+<p class="decided"><b>已定（2026-10-31，用户“按建议定”）</b>：按格子核验前提算“已核验”，逐对核验的结果另报；第三道检验从严，排除被预测关系的平局点，放宽的结果作敏感性分析另报；映射没有核验的 S 不计入覆盖率，单列；做初始化处逐坐标梯度 RMS 的测量（只做前向和反向），给 SGD 对自适应补一条可独立检验的桥。</p></header>
+
+<section><h2>结论</h2>
+<div class="kpis">
+<div class="kpi"><span class="big">13 对 · 0 错</span><span class="fine">基准上事先核验后作答的方向判定；单侧 95% 误差上界 20.6%</span></div>
+<div class="kpi"><span class="big">547 · 1.8%</span><span class="fine">实验室上事先核验后作答（ε = 0.1）；单侧 95% 上界 3.1%</span></div>
+<div class="kpi"><span class="big">523/523</span><span class="fine">基准上有推导可达的对：同类 309 对靠时钟律，SGD 对自适应 214 对靠初始化处测得的桥</span></div>
+<div class="kpi"><span class="big">7.6%</span><span class="fine">测得的梯度 RMS 给 SGD 对自适应 210 对排序的误差（不核验前提）；K1001 用拟合常数错 10.1%</span></div>
+</div>
+<ol class="tldr">
+<li><b>判定 S 可以写成程序。</b>一条候选依次过七道检验：是不是子系统里的主张、前提是否写明、前提能否不经被预测关系检验、结论能否由前提推出、前提测过没有、在这一格成立没有、实际误差是否守住前提许诺的上界。每道检验都有可执行的实现，见下方流程图。</li>
+<li><b>这个子系统里找到的科学，核心是一条“时钟律”。</b>从 PyTorch 的更新规则推出每种优化器的进展时钟（Adam ηT，RMSprop 多出初期放大，Adagrad 约 2η√T，SGD 动量除以 1−m），结论是同一流类里时钟大者胜。两条前提（时钟相等则损失相等、同一配置训练更久更好）都在不含“同 T 比 lr”的实验上检验，与被预测关系独立。</li>
+<li><b>证据是事先作答的成绩。</b>基准上 13 对方向判定全对，单侧 95% 误差上界 20.6%（按定义稿的 1 − δ^(1/n)；三分之一法则给 23.1%）；实验室 547 对错 10 对，上界 3.1%。用基准自己的学习曲线逐对核验（要跑完整训练）时，285 对时钟不等的同类对里前提在 247 对上成立；前提成立时时钟大者必胜，这是按构造成立的一致性检查，不是证据。有信息的是失效归因：时钟大者输的 33 对，16 对是 A2 失效（训练更久不再更好），17 对是 A1 失效（噪声地板）。</li>
+<li><b>事先能核验的部分很小。</b>前提只能在实验室按（任务族、流类、时钟量级、lr 档）这样的粗格子核验，基准上事先核验后作答的只有 13 个方向判定和 5 个平局判定。同一推导不核验前提时答 285 对、错 11.6%，与 KB 的 L（K1001 错 10.5%）相当。</li>
+<li><b>新实验给 SGD 对自适应补了前提，但还核验不了。</b>在初始化处做前向和反向（532 组、每组 4 个种子），测得两种换算：下降速率桥 k 与位移桥 r。推导成立、前提可测；但实验室里能检验桥的跨类对只有 33 对、三个族，ε = 0.1 时事先作答 0 对。不核验前提时，测得的 r 给 210 对排序错 7.6%，好于 K1001（10.1%）、截断训练到同样代价（15.9%）和“自适应总胜”（18.2%）；KB 的拟合常数在样本内错 5.9%。KB 拟合的 |g| 原来大致就是可测的梯度 RMS。</li>
+<li><b>“找全了”只能相对地说。</b>相对于三条搜索路线和由更新规则出发的前提库，推导的闭包在全部对上逐一算过；覆盖率分层报告（可达、事后成立、事先核验），没有覆盖的部分逐类给出原因和补法。机制层面的捕获再捕获估计约 11.1 个，已找到 11 个；到 S 的机制估计约 9.0 个，已找到 9 个。</li>
+</ol></section>
+
+<section><h2>价值：三个坐标</h2>
+<p>同一批 523 对上，每条答案规则是三轴上的一个点：作答部分的误差 e、不作答的比例 u、代价 c（直接训练为 1）。按定义稿 §2.4，把不作答的对回退到直接训练，三轴就压成代价 c′ 与误差 e′ 两轴，可以和截断试探直接比：截断要花多少算力才达到同样误差，就是这条规则值多少算力（ρ*）。</p>
+<figure><figcaption><b>三轴上的价值。</b>左图：S 几乎全对，但几乎不作答（u ≈ 0.98）；KB 的定律几乎都作答，误差约 10%。右图：补全后 S 的代价接近直接训练，省不下算力；覆盖面广的规则落在截断曲线左下方，省下的算力最多。</figcaption><div class="legend"><span><i class="sw dot s3"></i>S（前提事先核验）</span><span><i class="sw dot s1"></i>同一推导，不核验前提</span><span><i class="sw dot s2"></i>KB 的定律（L，样本内）</span><span><i class="sw ln" style="background:var(--s0)"></i>截断试探</span><span>虚线：到截断曲线上同样误差处的距离，即这条规则省下的训练算力</span></div><svg class="chart" viewBox="0 0 960 380" role="img" aria-label="三轴上的价值：补全前与补全后" preserveAspectRatio="xMinYMin meet"><text x="70.0" y="18.0" class="ptitle" text-anchor="start" >补全前：每条规则在 (u, e) 上（c 都约为 0）</text><line x1="70" x2="460" y1="328.0" y2="328.0" class="grid"/><text x="62.0" y="332.0" class="tick" text-anchor="end" >0%</text><line x1="70" x2="460" y1="228.7" y2="228.7" class="grid"/><text x="62.0" y="232.7" class="tick" text-anchor="end" >5%</text><line x1="70" x2="460" y1="129.3" y2="129.3" class="grid"/><text x="62.0" y="133.3" class="tick" text-anchor="end" >10%</text><line x1="70" x2="460" y1="30.0" y2="30.0" class="grid"/><text x="62.0" y="34.0" class="tick" text-anchor="end" >15%</text><line x1="70.0" x2="70.0" y1="30" y2="328" class="grid"/><text x="70.0" y="344.0" class="tick" text-anchor="middle" >0.00</text><line x1="167.5" x2="167.5" y1="30" y2="328" class="grid"/><text x="167.5" y="344.0" class="tick" text-anchor="middle" >0.25</text><line x1="265.0" x2="265.0" y1="30" y2="328" class="grid"/><text x="265.0" y="344.0" class="tick" text-anchor="middle" >0.50</text><line x1="362.5" x2="362.5" y1="30" y2="328" class="grid"/><text x="362.5" y="344.0" class="tick" text-anchor="middle" >0.75</text><line x1="460.0" x2="460.0" y1="30" y2="328" class="grid"/><text x="460.0" y="344.0" class="tick" text-anchor="middle" >1.00</text><text x="265.0" y="366.0" class="axl" text-anchor="middle" >不作答的比例 u</text><text transform="translate(18,179.0) rotate(-90)" class="axl" text-anchor="middle">作答部分的误差 e</text><circle cx="70.0" cy="328.0" r="6" class="mk s0"/><text x="80.0" y="320.0" class="dl" text-anchor="start" >直接训练（c = 1）</text><g class="hit" tabindex="0" data-tip="S：时钟律，前提事先核验（ε=0.1）
+作答 13 对，u = 0.975
+误差 e = 0.0%
+代价 c = 0.0%"><circle cx="450.3" cy="328.0" r="7" class="mk s3"/></g><text x="440.3" y="318.0" class="dl" text-anchor="end" >S：时钟律（事先核验）</text><g class="hit" tabindex="0" data-tip="时钟律，不核验前提
+作答 285 对，u = 0.455
+误差 e = 11.6%
+代价 c = 0.0%"><circle cx="247.5" cy="98.0" r="7" class="mk s1"/></g><text x="257.5" y="90.0" class="dl" text-anchor="start" >时钟律（不核验）</text><g class="hit" tabindex="0" data-tip="K1001（KB，样本内）
+作答 488 对，u = 0.067
+误差 e = 10.5%
+代价 c = 0.0%"><circle cx="96.1" cy="120.4" r="7" class="mk s2"/></g><text x="106.1" y="110.4" class="dl" text-anchor="start" >K1001（KB）</text><g class="hit" tabindex="0" data-tip="位移族全部成员（KB，样本内）
+作答 464 对，u = 0.113
+误差 e = 8.0%
+代价 c = 0.0%"><circle cx="114.0" cy="169.6" r="7" class="mk s2"/></g><text x="124.0" y="173.6" class="dl" text-anchor="start" >位移族（KB）</text><g class="hit" tabindex="0" data-tip="时钟律 + 测得 r 的桥，都不核验前提
+作答 495 对，u = 0.054
+误差 e = 9.9%
+代价 c = 1.4%"><circle cx="90.9" cy="131.3" r="7" class="mk s1"/></g><text x="100.9" y="147.3" class="dl" text-anchor="start" >时钟律 + 测得的桥</text><text x="540.0" y="18.0" class="ptitle" text-anchor="start" >补全后：不作答的对回退到直接训练</text><line x1="540" x2="930" y1="328.0" y2="328.0" class="grid"/><text x="532.0" y="332.0" class="tick" text-anchor="end" >0%</text><line x1="540" x2="930" y1="228.7" y2="228.7" class="grid"/><text x="532.0" y="232.7" class="tick" text-anchor="end" >10%</text><line x1="540" x2="930" y1="129.3" y2="129.3" class="grid"/><text x="532.0" y="133.3" class="tick" text-anchor="end" >20%</text><line x1="540" x2="930" y1="30.0" y2="30.0" class="grid"/><text x="532.0" y="34.0" class="tick" text-anchor="end" >30%</text><line x1="540.0" x2="540.0" y1="30" y2="328" class="grid"/><text x="540.0" y="344.0" class="tick" text-anchor="middle" >0.5%</text><line x1="591.0" x2="591.0" y1="30" y2="328" class="grid"/><text x="591.0" y="344.0" class="tick" text-anchor="middle" >1%</text><line x1="671.9" x2="671.9" y1="30" y2="328" class="grid"/><text x="671.9" y="344.0" class="tick" text-anchor="middle" >3%</text><line x1="760.5" x2="760.5" y1="30" y2="328" class="grid"/><text x="760.5" y="344.0" class="tick" text-anchor="middle" >10%</text><line x1="841.4" x2="841.4" y1="30" y2="328" class="grid"/><text x="841.4" y="344.0" class="tick" text-anchor="middle" >30%</text><line x1="930.0" x2="930.0" y1="30" y2="328" class="grid"/><text x="930.0" y="344.0" class="tick" text-anchor="middle" >100%</text><text x="735.0" y="366.0" class="axl" text-anchor="middle" >代价 c′（直接训练 = 1，对数轴）</text><polyline points="540.0,54.5 591.0,75.4 620.9,98.2 642.0,107.7 658.5,119.1 671.9,128.6 683.2,128.6 693.1,138.1 701.7,149.5 709.5,149.5 716.5,153.3 722.9,159.0 728.8,151.4 734.3,170.4 739.3,174.2 744.1,176.1 748.5,179.9 752.8,193.2 756.7,179.9 760.5,187.5 764.1,195.0 767.5,200.7 770.8,198.8 773.9,202.6 776.9,202.6 779.8,202.6 782.6,204.5 785.3,206.4 787.9,210.2 790.4,212.1 792.8,214.0 795.1,214.0 797.4,221.6 799.6,214.0 801.7,219.7 803.8,223.5 805.8,223.5 807.8,227.3 809.7,219.7 811.5,234.9 813.3,234.9 815.1,236.8 816.9,234.9 818.5,236.8 820.2,234.9 821.8,236.8 823.4,238.7 825.0,242.5 826.5,240.6 828.0,240.6 829.4,240.6 830.8,242.5 832.2,242.5 833.6,238.7 835.0,238.7 836.3,238.7 837.6,244.4 838.9,246.3 840.1,248.2 841.4,248.2 842.6,248.2 843.8,244.4 845.0,242.5 846.1,248.2 847.3,248.2 848.4,244.4 849.5,246.3 850.6,250.1 851.7,253.9 852.7,253.9 853.8,257.7 854.8,255.8 855.8,253.9 856.8,261.5 857.8,255.8 858.8,255.8 859.7,261.5 860.7,263.4 861.6,261.5 862.6,267.2 863.5,261.5 864.4,267.2 865.3,267.2 866.1,271.0 867.0,267.2 867.9,261.5 868.7,263.4 869.6,271.0 870.4,267.2 871.2,267.2 872.0,267.2 872.8,267.2 873.6,263.4 874.4,269.1 875.2,269.1 876.0,272.9 876.7,274.8 877.5,272.9 878.2,278.6 879.0,274.8 879.7,272.9 880.4,271.0 881.2,269.1 881.9,276.7 882.6,276.7 883.3,280.5 884.0,276.7 884.6,276.7 885.3,284.3 886.0,276.7 886.7,280.5 887.3,288.1 888.0,288.1 888.6,288.1 889.3,284.3 889.9,286.2 890.5,284.3 891.2,284.3 891.8,282.4 892.4,288.1 893.0,284.3 893.6,288.1 894.2,286.2 894.8,290.0 895.4,282.4 896.0,286.2 896.6,284.3 897.1,282.4 897.7,295.7 898.3,290.0 898.9,291.9 899.4,295.7 900.0,290.0 900.5,291.9 901.1,295.7 901.6,297.6 902.2,297.6 902.7,297.6 903.2,301.4 903.7,299.5 904.3,299.5 904.8,301.4 905.3,307.1 905.8,303.3 906.3,301.4 906.8,301.4 907.3,305.2 907.8,301.4 908.3,303.3 908.8,299.5 909.3,303.3 909.8,303.3 910.3,310.9 910.8,310.9 911.2,309.0 911.7,310.9 912.2,309.0 912.6,314.7 913.1,310.9 913.6,307.1 914.0,312.8 914.5,314.7 914.9,310.9 915.4,312.8 915.8,310.9 916.3,309.0 916.7,309.0 917.2,305.2 917.6,307.1 918.0,309.0 918.5,309.0 918.9,314.7 919.3,318.5 919.7,314.7 920.2,314.7 920.6,312.8 921.0,314.7 921.4,310.9 921.8,314.7 922.2,316.6 922.7,314.7 923.1,316.6 923.5,312.8 923.9,314.7 924.3,316.6 924.7,318.5 925.1,322.3 925.4,324.2 925.8,318.5 926.2,322.3 926.6,324.2 927.0,322.3 927.4,322.3 927.8,320.4 928.1,318.5 928.5,318.5 928.9,322.3 929.3,324.2 929.6,324.2 930.0,328.0" class="line" style="stroke:var(--s0)"/><text x="553.4" y="59.8" class="note" text-anchor="start" >截断试探：每对都训练到 ρ，挑领先者</text><circle cx="930.0" cy="328.0" r="6" class="mk s0"/><line x1="928.1" x2="930.0" y1="328.0" y2="328.0" class="leader" stroke-dasharray="3 3"/><g class="hit" tabindex="0" data-tip="S：时钟律，前提事先核验（ε=0.1）
+补全后 c′ = 97.5%，e′ = 0.0%
+截断试探要 ρ = 100.0% 才达到同样误差"><circle cx="928.1" cy="328.0" r="7" class="mk s3"/></g><line x1="928.1" y1="328.0" x2="926.2" y2="125.3" class="leader"/><text x="922.2" y="129.3" class="dl" text-anchor="end" >S：时钟律（事先核验）（≈ 直接训练）</text><g class="hit" tabindex="0" data-tip="时钟律，不核验前提
+补全后 c′ = 45.5%，e′ = 6.3%
+截断试探要 ρ = 40.0% 才达到同样误差"><circle cx="872.0" cy="265.3" r="7" class="mk s1"/></g><line x1="872.0" y1="265.3" x2="894.8" y2="209.8" class="leader"/><text x="890.8" y="213.8" class="dl" text-anchor="end" >时钟律（不核验）</text><line x1="730.9" x2="811.5" y1="231.1" y2="231.1" class="leader" stroke-dasharray="3 3"/><g class="hit" tabindex="0" data-tip="K1001（KB，样本内）
+补全后 c′ = 6.7%，e′ = 9.8%
+截断试探要 ρ = 20.0% 才达到同样误差"><circle cx="730.9" cy="231.1" r="7" class="mk s2"/></g><line x1="730.9" y1="231.1" x2="752.8" y2="155.1" class="leader"/><text x="756.8" y="159.1" class="dl" text-anchor="start" >K1001（KB）</text><line x1="769.4" x2="853.8" y1="257.7" y2="257.7" class="leader" stroke-dasharray="3 3"/><g class="hit" tabindex="0" data-tip="位移族全部成员（KB，样本内）
+补全后 c′ = 11.3%，e′ = 7.1%
+截断试探要 ρ = 35.5% 才达到同样误差"><circle cx="769.4" cy="257.7" r="7" class="mk s2"/></g><line x1="769.4" y1="257.7" x2="790.4" y2="294.2" class="leader"/><text x="794.4" y="298.2" class="dl" text-anchor="start" >位移族（KB）</text><line x1="730.9" x2="811.5" y1="234.9" y2="234.9" class="leader" stroke-dasharray="3 3"/><g class="hit" tabindex="0" data-tip="时钟律 + 测得 r 的桥，都不核验前提
+补全后 c′ = 6.7%，e′ = 9.4%
+截断试探要 ρ = 20.0% 才达到同样误差"><circle cx="730.9" cy="234.9" r="7" class="mk s1"/></g><line x1="730.9" y1="234.9" x2="671.9" y2="264.4" class="leader"/><text x="667.9" y="268.4" class="dl" text-anchor="end" >时钟律 + 测得的桥</text></svg></figure>
+<div class="tablewrap"><table><tr><th>答案规则</th><th>作答</th><th>e</th><th>u</th><th>c</th><th>补全后 e′</th><th>补全后 c′</th><th>截断达到 e′ 要的 ρ*</th><th>ρ* − c′</th></tr><tr><td class="rname">S：时钟律，前提事先核验（ε=0.1）</td><td class="num">13</td><td class="num">0.0%</td><td class="num">0.975</td><td class="num">0.0%</td><td class="num">0.0%</td><td class="num">97.5%</td><td class="num">100.0%</td><td class="num">+2 点</td></tr><tr><td class="rname">时钟律，不核验前提</td><td class="num">285</td><td class="num">11.6%</td><td class="num">0.455</td><td class="num">0.0%</td><td class="num">6.3%</td><td class="num">45.5%</td><td class="num">40.0%</td><td class="num">-6 点</td></tr><tr><td class="rname">时钟律 + 测得 r 的桥，都不核验前提</td><td class="num">495</td><td class="num">9.9%</td><td class="num">0.054</td><td class="num">1.4%</td><td class="num">9.4%</td><td class="num">6.7%</td><td class="num">20.0%</td><td class="num">+13 点</td></tr><tr><td class="rname">K1001（KB，样本内）</td><td class="num">488</td><td class="num">10.5%</td><td class="num">0.067</td><td class="num">0.0%</td><td class="num">9.8%</td><td class="num">6.7%</td><td class="num">20.0%</td><td class="num">+13 点</td></tr><tr><td class="rname">位移族全部成员（KB，样本内）</td><td class="num">464</td><td class="num">8.0%</td><td class="num">0.113</td><td class="num">0.0%</td><td class="num">7.1%</td><td class="num">11.3%</td><td class="num">35.5%</td><td class="num">+24 点</td></tr></table></div>
+<p>在这个子系统里，层次和价值是两回事（定义稿 §6 第 6 条）：已核验的 S 准确但覆盖太小，补全后的价值约等于零；同一推导不核验前提时作答更多，但还没有截断试探省；加上初始化处测得的桥之后，覆盖到 95%，与 KB 的定律同样省下约 13 个点的训练算力，而它的数字不来自任何训练结果。KB 的数字是样本内的。</p></section>
+
+<section><h2>子系统与数据</h2>
+<p>一个条件是两份训练配置：数据集、模型、损失、批量和预算 T 都相同，只有优化器设置不同（类型、lr、动量、权重衰减、betas）。问题是谁的最终测试损失（10 个种子的平均）更低。选它的理由：边界清楚（只有一类设置在变），基准里有 523 对（481 对胜负超过 2 个标准误），实验室里另有 7,901 对同 T 的比较和大量只差 T、只差衰减的实验，可以用来独立检验前提。</p>
+<div class="tablewrap"><table><tr><th></th><th>同为自适应</th><th>SGD 对自适应</th><th>同为 SGD</th><th>合计</th></tr>
+<tr><td>基准（v1.5 主榜，同模型的候选对）</td><td class="num">284</td><td class="num">214</td><td class="num">25</td><td class="num">523</td></tr>
+<tr><td>实验室（同 T 的同模型对）</td><td class="num">5,690</td><td class="num">1,637</td><td class="num">574</td><td class="num">7,901</td></tr></table></div>
+<p class="fine">实验室数据来自 kb_lab 与六个 kb_science_loop 运行的 lab_experiments（共 16,574 行，与基准同一训练管线、10 个种子），数据集与基准不相交（读取时逐行断言）。注意：这些实验有一部分是科学循环为找反例专门设计的，偏向失败区域，所以用它核验前提偏保守。</p></section>
+
+<section><h2>怎样判定一条知识是 S</h2>
+<p>SAI 定义稿 §3 给了三个条件：前提 (a) 显式写出，(b) 可以独立于所预测的关系检验，(c) 结论由前提推出、边界就是前提失效的地方。下面把它写成七道可执行的检验。每道检验不通过，就从右侧出口离开，出口给出这条候选的判定。</p>
+<figure><figcaption><b>S 的判定流程。</b>左列从上到下依次检验，右列是不通过时的判定。</figcaption><svg class="chart" viewBox="0 0 980 704" role="img" aria-label="S 的判定流程" preserveAspectRatio="xMinYMin meet"><defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" class="arrowhead"/></marker></defs><rect x="20" y="18" width="500" height="66" rx="8" class="node"/><text x="34.0" y="40.0" class="nodet" text-anchor="start" >0　是子系统里的主张吗？</text><foreignObject x="34" y="46" width="476" height="36"><div xmlns="http://www.w3.org/1999/xhtml" class="fo">有答案规则和声明域，预测的是同数据、同模型、同预算下的优化器比较</div></foreignObject><line x1="520" y1="51.0" x2="590" y2="51.0" class="conn soft" marker-end="url(#ah)"/><text x="530.0" y="45.0" class="elab m" text-anchor="start" >否</text><rect x="596" y="36.0" width="364" height="30" rx="15" class="exitbox"/><text x="612.0" y="56.0" class="tl" text-anchor="start" >不计入</text><line x1="60" y1="84" x2="60" y2="104" class="conn" marker-end="url(#ah)"/><text x="68.0" y="98.0" class="elab" text-anchor="start" >是</text><rect x="20" y="106" width="500" height="66" rx="8" class="node"/><text x="34.0" y="128.0" class="nodet" text-anchor="start" >a　前提写明了吗？</text><foreignObject x="34" y="134" width="476" height="36"><div xmlns="http://www.w3.org/1999/xhtml" class="fo">列出推出结论所需的每一条前提</div></foreignObject><line x1="520" y1="139.0" x2="590" y2="139.0" class="conn soft" marker-end="url(#ah)"/><text x="530.0" y="133.0" class="elab m" text-anchor="start" >否</text><rect x="596" y="124.0" width="364" height="30" rx="15" class="exitbox"/><text x="612.0" y="144.0" class="tl" text-anchor="start" >K 或 L（按依据是观察还是系统扩展）</text><line x1="60" y1="172" x2="60" y2="192" class="conn" marker-end="url(#ah)"/><text x="68.0" y="186.0" class="elab" text-anchor="start" >是</text><rect x="20" y="194" width="500" height="66" rx="8" class="node"/><text x="34.0" y="216.0" class="nodet" text-anchor="start" >b　每条前提都能不经被预测关系检验吗？</text><foreignObject x="34" y="222" width="476" height="36"><div xmlns="http://www.w3.org/1999/xhtml" class="fo">检验用另一种关系：只差 T、时钟相等、只差 λ、读代码；被预测关系本身、它的特殊点或拟合版都不算</div></foreignObject><line x1="520" y1="227.0" x2="590" y2="227.0" class="conn soft" marker-end="url(#ah)"/><text x="530.0" y="221.0" class="elab m" text-anchor="start" >否</text><rect x="596" y="212.0" width="364" height="30" rx="15" class="exitbox"/><text x="612.0" y="232.0" class="tl" text-anchor="start" >L：前提就是结论换了说法</text><line x1="60" y1="260" x2="60" y2="280" class="conn" marker-end="url(#ah)"/><text x="68.0" y="274.0" class="elab" text-anchor="start" >是</text><rect x="20" y="282" width="500" height="66" rx="8" class="node"/><text x="34.0" y="304.0" class="nodet" text-anchor="start" >c　结论能由前提推出吗？</text><foreignObject x="34" y="310" width="476" height="36"><div xmlns="http://www.w3.org/1999/xhtml" class="fo">恒等式 D = δ1 + δ2；时钟公式用合成梯度跑更新规则核对</div></foreignObject><line x1="520" y1="315.0" x2="590" y2="315.0" class="conn soft" marker-end="url(#ah)"/><text x="530.0" y="309.0" class="elab m" text-anchor="start" >否</text><rect x="596" y="300.0" width="364" height="30" rx="15" class="exitbox"/><text x="612.0" y="320.0" class="tl" text-anchor="start" >推导不成立：排除</text><line x1="60" y1="348" x2="60" y2="368" class="conn" marker-end="url(#ah)"/><text x="68.0" y="362.0" class="elab" text-anchor="start" >是</text><rect x="20" y="370" width="500" height="66" rx="8" class="node"/><text x="34.0" y="392.0" class="nodet" text-anchor="start" >m　前提在独立数据上测过吗？</text><foreignObject x="34" y="398" width="476" height="36"><div xmlns="http://www.w3.org/1999/xhtml" class="fo">实验室与基准的数据集不相交；每个格子至少 5 个实验</div></foreignObject><line x1="520" y1="403.0" x2="590" y2="403.0" class="conn soft" marker-end="url(#ah)"/><text x="530.0" y="397.0" class="elab m" text-anchor="start" >否</text><rect x="596" y="388.0" width="364" height="30" rx="15" class="exitbox"/><text x="612.0" y="408.0" class="tl" text-anchor="start" >S · 映射未检（不作答）</text><line x1="60" y1="436" x2="60" y2="456" class="conn" marker-end="url(#ah)"/><text x="68.0" y="450.0" class="elab" text-anchor="start" >是</text><rect x="20" y="458" width="500" height="66" rx="8" class="node"/><text x="34.0" y="480.0" class="nodet" text-anchor="start" >v　前提在这个格子里成立吗？</text><foreignObject x="34" y="486" width="476" height="36"><div xmlns="http://www.w3.org/1999/xhtml" class="fo">失败率不超过 ε，或两条前提的卷积给出 P ≥ 1 − ε</div></foreignObject><line x1="520" y1="491.0" x2="590" y2="491.0" class="conn soft" marker-end="url(#ah)"/><text x="530.0" y="485.0" class="elab m" text-anchor="start" >否</text><rect x="596" y="476.0" width="364" height="30" rx="15" class="exitbox"/><text x="612.0" y="496.0" class="tl" text-anchor="start" >S · 这一格不作答（域收窄）</text><line x1="60" y1="524" x2="60" y2="544" class="conn" marker-end="url(#ah)"/><text x="68.0" y="538.0" class="elab" text-anchor="start" >是</text><rect x="20" y="546" width="500" height="66" rx="8" class="node"/><text x="34.0" y="568.0" class="nodet" text-anchor="start" >e　实际误差守住 ε 了吗？</text><foreignObject x="34" y="574" width="476" height="36"><div xmlns="http://www.w3.org/1999/xhtml" class="fo">在实验室和基准上检查实际误差是否超过前提许诺的上界</div></foreignObject><line x1="520" y1="579.0" x2="590" y2="579.0" class="conn soft" marker-end="url(#ah)"/><text x="530.0" y="573.0" class="elab m" text-anchor="start" >否</text><rect x="596" y="564.0" width="364" height="30" rx="15" class="exitbox"/><text x="612.0" y="584.0" class="tl" text-anchor="start" >S · 映射失败，域收窄</text><rect x="20" y="634" width="500" height="44" rx="22" class="node win"/><text x="36.0" y="661.0" class="nodet" text-anchor="start" >S · 已核验：只在前提通过的格子里作答</text></svg></figure>
+<p>(b) 的执行方式：每条前提都有一个“检验关系”（它在哪类实验对上检验）。被预测的是同 T 下两份配置的比较；前提的检验关系必须是另一种关系，例如只差 T、lr 与 T 都不同但时钟相等、只差衰减，或者读代码。若一对配置本身就只差衰减，那么“衰减可忽略”的检验关系与这对的预测重合，这对的平局判定只算 L（定律的直接应用），不算 S。同理，同 T 下动量匹配的对是被预测关系的平局点，不能拿来检验“动量并入时钟”。</p></section>
+
+<section><h2>怎样找：三条路线</h2>
+<p>同一个子系统里的候选从三处来，三条路线互不参照，最后在机制层面比对重叠，用来估计还有多少没找到。</p>
+<ul>
+<li><b>KB 路线</b>：读全部 KB（科学循环各运行的 kb_live 与历史快照、qwen kb_evolve 快照），筛出在子系统里作预测的主张，逐条判定依据。</li>
+<li><b>文献路线</b>：读研究库里与优化器、训练动力学有关的论文，提取在子系统里有预测或能当前提的主张。</li>
+<li><b>理论路线</b>：从 PyTorch 的更新规则出发，系统地问：每一种设置差异能不能被一个可独立检验的前提搬运到同一把“时钟”上。</li>
+</ul>
+<h3>KB 路线</h3><p>读了 kb_scratch 下全部 KB：各科学循环运行的 kb_live（含已退役条目）、qwen 的 kb_evolve 快照和种子 KB。按 KB 自己记录的依据定层次：K 213 条、L 39 条、S 0 条。</p>
+<div class="grid2"><div class="tablewrap"><table><tr><th>KB 路线的漏斗</th><th>条数</th></tr><tr><td>KB 文件里的主张记录（28 个 KB）</td><td class="num">4,885</td></tr><tr><td>文本归一化后</td><td class="num">904</td></tr><tr><td>合并近似文本后</td><td class="num">876</td></tr><tr><td>提到优化器</td><td class="num">778</td></tr><tr><td>人工逐条读出：说的是这个子系统</td><td class="num">270</td></tr><tr><td>去掉已被后继合并的</td><td class="num">252</td></tr><tr><td>写成可执行规则</td><td class="num">42</td></tr></table></div>
+<div class="tablewrap"><table><tr><th>写出推导的 40 条，为什么不是 S</th><th>条数</th></tr><tr><td>(b) 前提不独立（Δ 规则这座桥，或拟合常数）</td><td class="num">23</td></tr><tr><td>(c) 推导有误或没有推导</td><td class="num">10</td></tr><tr><td>(b)(c) 未检验且推导不全</td><td class="num">6</td></tr><tr><td>(a) 前提没写出</td><td class="num">1</td></tr></table></div></div>
+<ul>
+<li><b>推导大多是对的，但停在“位移换算”。</b>Adagrad 的 2·lr·√T、RMSprop 的初期放大、动量的 lr/(1−m) 与起步亏欠，按更新规则重算都一致。要预测谁胜，还得经过“位移大者胜”这座桥，而 KB 只用胜负计数检验它，胜负正是被预测的关系，所以 (b) 不成立。理论路线的 A1、A2 补的正是这座桥：它们在只差 T、时钟相等的实验上检验，不碰同 T 的胜负。</li>
+<li><b>K1001 自己的机制字段写着 no theory is established。</b>KB 不认为核心规则是理论。</li>
+<li><b>SGD 的换算常数 |g| 是拟合出来的</b>（0.01 / 0.03 / 0.003，来自 SGD 对自适应的比较），属于“把拟合出的关系换个说法当作前提”。</li>
+<li><b>有 8 条推导本身是错的</b>，都来自 qwen 起步的 KB，例如“Adagrad 位移反比于 |g|”与更新规则的尺度不变性矛盾。</li>
+<li><b>KB 规则的成绩都是样本内的。</b>v1.5 的 500 题有 498 题出现在某个 KB 的语料或解题记录里，实验室行就是这些循环自己跑的实验。理论路线的判定不用任何基准结果，所以它在基准上的成绩是样本外的。</li>
+</ul>
+<details class="tv"><summary>写出推导的 40 条 KB 主张，逐条检查</summary><div class="tablewrap"><table class="cands"><tr><th>主张</th><th>前提</th><th>(a) 写明</th><th>(b) 独立检验</th><th>(c) 推导</th><th>结论</th></tr><tr><td class="nw">_smoke_soa:K1001</td><td class="tr">每个任务都欠训练：Δ 大者胜</td><td class="tr">部分</td><td class="tr">否：前提就是所预测的排序</td><td class="tr">无推导</td><td class="tr">不是 S</td></tr><tr><td class="nw">kb_evolve_archonly:K0001</td><td class="tr">Adagrad 每参数近似尺度不变，位移 ≈2·lr·√T 与梯度尺度无关；Δ 相同则进展相同、Δ 大者胜（Δ 规则）</td><td class="tr">是：更新规则层面的前提写明了；Δ 规则作为桥被引用</td><td class="tr">否：桥（Δ 规则）只能用所预测的排序检验</td><td class="tr">是</td><td class="tr">不是 S：换算是推导，排序要经过未独立检验的 Δ 规则</td></tr><tr><td class="nw">kb_evolve_archonly:K0112</td><td class="tr">（无）</td><td class="tr">否：稳态条件（梯度在 1/(1−m) 步内变化小）没有写出</td><td class="tr">—</td><td class="tr">—</td><td class="tr">不是 S：前提没有写出</td></tr><tr><td class="nw">kb_evolve_archonly:K0157</td><td class="tr">RMSprop 零初始化、无偏差校正：第 t 步步长≈lr/√(1−α^t)（梯度量级平稳）；Δ 相同则进展相同、Δ 大者胜（Δ 规则）</td><td class="tr">是：更新规则层面的前提写明了；Δ 规则作为桥被引用</td><td class="tr">否：桥（Δ 规则）只能用所预测的排序检验</td><td class="tr">是</td><td class="tr">不是 S：换算是推导，排序要经过未独立检验的 Δ 规则</td></tr><tr><td class="nw">kb_evolve_archonly:K0207</td><td class="tr">偏差校正后每步位移 ≈lr，与 β₂ 无关（符号一致的梯度）；Δ 相同则进展相同、Δ 大者胜（Δ 规则）</td><td class="tr">是：更新规则层面的前提写明了；Δ 规则作为桥被引用</td><td class="tr">否：桥（Δ 规则）只能用所预测的排序检验</td><td class="tr">是</td><td class="tr">不是 S：换算是推导，排序要经过未独立检验的 Δ 规则</td></tr><tr><td class="nw">kb_evolve_archonly:K0247</td><td class="tr">RMSprop 累计位移 ≈ lr·T/√(1−α)</td><td class="tr">部分</td><td class="tr">未检验；需要梯度统计或参数位移的测量，现有数据只有终点</td><td class="tr">否：1/√(1−α) 只在第 1 步成立，全程平均是 F(T)（T=256 时 1.47，不是 10）</td><td class="tr">不是 S：推导本身有误</td></tr><tr><td class="nw">kb_evolve_archonly:K0364</td><td class="tr">Adagrad 位移修正式 2·lr·√T/(1+0.005·T)</td><td class="tr">是</td><td class="tr">否：拟合出的修正被当作前提</td><td class="tr">无推导</td><td class="tr">不是 S</td></tr><tr><td class="nw">kb_evolve_puct20_arch:K0210</td><td class="tr">各优化器的输出偏置位移：动量 SGD (lr/(1−m))·T·‖g‖，自适应 lr·T，SGD lr·T·‖g‖；Δ 相同则进展相同、Δ 大者胜（Δ 规则）</td><td class="tr">是：更新规则层面的前提写明了；Δ 规则作为桥被引用</td><td class="tr">否：桥（Δ 规则）只能用所预测的排序检验</td><td class="tr">部分：‖g‖ 未给定</td><td class="tr">不是 S：换算是推导，排序要经过未独立检验的 Δ 规则</td></tr><tr><td class="nw">kb_evolve_puct20_mixed:K0298</td><td class="tr">β₂=0.999 时二阶矩前 200 步低估约 5 倍，步长更大</td><td class="tr">部分</td><td class="tr">未检验；需要梯度统计或参数位移的测量，现有数据只有终点</td><td class="tr">否：Adam 有偏差校正，零初始化不会让 v̂ 系统性低估</td><td class="tr">不是 S：推导本身有误</td></tr><tr><td class="nw">kb_evolve_puct20_mixed:K0307</td><td class="tr">Adagrad 有效位移 ≈ lr·T/√(T+T_w)，是 2·lr·√T 的 3–5 倍</td><td class="tr">部分</td><td class="tr">未检验；需要梯度统计或参数位移的测量，现有数据只有终点</td><td class="tr">否：给出的式子约等于 lr·√T，小于 2·lr·√T，却说是它的 3–5 倍，前后矛盾</td><td class="tr">不是 S：推导本身有误</td></tr><tr><td class="nw">kb_evolve_puct20_mixed:K0310</td><td class="tr">Adam 初期每步位移 lr/max(√v̂, ε)，放大 10–100 倍</td><td class="tr">部分</td><td class="tr">未检验；需要梯度统计或参数位移的测量，现有数据只有终点</td><td class="tr">否：Adam 的偏差校正更新是 lr·m̂/(√v̂+ε)，每坐标步长 ≲lr；文中漏掉 m̂</td><td class="tr">不是 S：推导本身有误</td></tr><tr><td class="nw">kb_evolve_puct40_arch:K0012</td><td class="tr">偏置对齐时间 ≈1/(2·lr/(1−m))</td><td class="tr">部分</td><td class="tr">未检验</td><td class="tr">部分：缺 ‖h‖² 等因子</td><td class="tr">不是 S</td></tr><tr><td class="nw">kb_evolve_puct40_arch:K0027</td><td class="tr">RMSprop 零初始化、无偏差校正：第 t 步步长≈lr/√(1−α^t)（梯度量级平稳）；Δ 相同则进展相同、Δ 大者胜（Δ 规则）</td><td class="tr">是：更新规则层面的前提写明了；Δ 规则作为桥被引用</td><td class="tr">否：桥（Δ 规则）只能用所预测的排序检验</td><td class="tr">是</td><td class="tr">不是 S：换算是推导，排序要经过未独立检验的 Δ 规则</td></tr><tr><td class="nw">kb_evolve_puct40_arch:K0069</td><td class="tr">动量 SGD 的有效学习率与 Adagrad 衰减后的步长直接比较</td><td class="tr">部分</td><td class="tr">未检验；需要梯度统计或参数位移的测量，现有数据只有终点</td><td class="tr">否：把 SGD 的学习率直接和归一化步长比较，缺了 SGD 位移里的 |g|</td><td class="tr">不是 S：推导本身有误</td></tr><tr><td class="nw">kb_evolve_puct40_arch:K0289</td><td class="tr">RMSprop 零初始化、无偏差校正：第 t 步步长≈lr/√(1−α^t)（梯度量级平稳）；Δ 相同则进展相同、Δ 大者胜（Δ 规则）</td><td class="tr">是：更新规则层面的前提写明了；Δ 规则作为桥被引用</td><td class="tr">否：桥（Δ 规则）只能用所预测的排序检验</td><td class="tr">部分：忽略了初期放大（T=256 时 F=1.47）</td><td class="tr">不是 S：换算是推导，排序要经过未独立检验的 Δ 规则</td></tr><tr><td class="nw">kb_evolve_run3:K0297</td><td class="tr">RMSprop 前约 10 步放大 1/(1−β₂)≈10 倍</td><td class="tr">部分</td><td class="tr">未检验；需要梯度统计或参数位移的测量，现有数据只有终点</td><td class="tr">否：α=0.99 时 1/(1−α)=100；按更新规则是 1/√(1−α)=10，且只在第 1 步</td><td class="tr">不是 S：推导本身有误</td></tr><tr><td class="nw">kb_evolve_run3:K0305</td><td class="tr">曲率不连续处动量有效学习率公式高估位移 ≥2 倍</td><td class="tr">部分</td><td class="tr">未检验</td><td class="tr">否：断言，没有推导</td><td class="tr">不是 S</td></tr><tr><td class="nw">kb_evolve_smoke:K0297</td><td class="tr">RMSprop 前 20 步平均放大只有 2–3 倍</td><td class="tr">部分</td><td class="tr">未检验；需要梯度统计或参数位移的测量，现有数据只有终点</td><td class="tr">否：按更新规则前 20 步平均放大是 3.9 倍</td><td class="tr">不是 S：推导本身有误</td></tr><tr><td class="nw">luna_main:K0156</td><td class="tr">Adagrad 累加器按 t·g² 增长（梯度量级平稳），第 t 步步长≈lr/√t；Δ 相同则进展相同、Δ 大者胜（Δ 规则）</td><td class="tr">是：更新规则层面的前提写明了；Δ 规则作为桥被引用</td><td class="tr">否：桥（Δ 规则）只能用所预测的排序检验</td><td class="tr">是</td><td class="tr">不是 S：换算是推导，排序要经过未独立检验的 Δ 规则</td></tr><tr><td class="nw">qwen_6ep_40eval:K0012</td><td class="tr">偏置对齐时间 ≈1/(2·lr/(1−m))</td><td class="tr">部分</td><td class="tr">未检验</td><td class="tr">部分：缺 ‖h‖² 等因子</td><td class="tr">不是 S</td></tr><tr><td class="nw">qwen_6ep_40eval:K0019</td><td class="tr">Δ 相同则进展相同、Δ 大者胜（Δ 规则）；三处门限：过拟合（epochs≥16 且 params/N≥15）、MSE 大梯度、大偏移</td><td class="tr">是</td><td class="tr">否：Δ 规则就是所预测的排序</td><td class="tr">无推导</td><td class="tr">不是 S：是定律</td></tr><tr><td class="nw">qwen_6ep_40eval:K0024</td><td class="tr">稳态有效学习率 lr/(1−m)；重球加速与噪声平滑使动量更好</td><td class="tr">部分</td><td class="tr">未检验</td><td class="tr">否：“动量在等有效学习率时更好”没有由前提推出</td><td class="tr">不是 S</td></tr><tr><td class="nw">qwen_6ep_40eval:K0307</td><td class="tr">插值门限：epochs≥16 且 params/N≥15 时测试损失随 D 呈 U 形；最优 D≈(2–5)·d*，d*=σ_y/(0.5√W_last)</td><td class="tr">是</td><td class="tr">门限只能用所预测的胜负来定</td><td class="tr">部分：d* 有论证，门限是拟合</td><td class="tr">不是 S</td></tr><tr><td class="nw">qwen_6ep_40eval:K0309</td><td class="tr">插值门限：epochs≥16 且 params/N≥15 时测试损失随 D 呈 U 形；最优 D≈(2–5)·d*，d*=σ_y/(0.5√W_last)</td><td class="tr">是</td><td class="tr">门限只能用所预测的胜负来定</td><td class="tr">部分：d* 有论证，门限是拟合</td><td class="tr">不是 S</td></tr><tr><td class="nw">qwen_6ep_40eval:K0310</td><td class="tr">Adagrad 位移饱和：D≈2·lr/|g_rms|，与 T 无关</td><td class="tr">部分</td><td class="tr">未检验；需要梯度统计或参数位移的测量，现有数据只有终点</td><td class="tr">否：与更新规则的尺度不变性矛盾：梯度整体乘 c 时 Adagrad 的步长不变，D 不可能反比于 |g|；同一批 KB 的 K0001 正写着与梯度尺度无关</td><td class="tr">不是 S：推导本身有误</td></tr><tr><td class="nw">qwen_6ep_40eval:K0311</td><td class="tr">RMSprop 零初始化、无偏差校正：第 t 步步长≈lr/√(1−α^t)（梯度量级平稳）；Δ 相同则进展相同、Δ 大者胜（Δ 规则）</td><td class="tr">是：更新规则层面的前提写明了；Δ 规则作为桥被引用</td><td class="tr">否：桥（Δ 规则）只能用所预测的排序检验</td><td class="tr">是：F(T) 由更新规则推出</td><td class="tr">不是 S：换算是推导，排序要经过未独立检验的 Δ 规则</td></tr><tr><td class="nw">qwen_6ep_40eval:K0314</td><td class="tr">深层近似冻结（核区）；读出层按 df≈−2·lr_eff·‖h‖²(f−y) 收缩</td><td class="tr">是</td><td class="tr">可独立检验，但现有数据测不到</td><td class="tr">部分：比较结论没有推出</td><td class="tr">不是 S：比较这一步没有推导</td></tr><tr><td class="nw">qwen_6ep_40eval:K0315</td><td class="tr">插值门限：epochs≥16 且 params/N≥15 时测试损失随 D 呈 U 形；最优 D≈(2–5)·d*，d*=σ_y/(0.5√W_last)</td><td class="tr">是</td><td class="tr">门限只能用所预测的胜负来定</td><td class="tr">部分：d* 有论证，门限是拟合</td><td class="tr">不是 S</td></tr><tr><td class="nw">smoke_qwen:K0157</td><td class="tr">RMSprop 零初始化、无偏差校正：第 t 步步长≈lr/√(1−α^t)（梯度量级平稳）；Δ 相同则进展相同、Δ 大者胜（Δ 规则）</td><td class="tr">是：更新规则层面的前提写明了；Δ 规则作为桥被引用</td><td class="tr">否：桥（Δ 规则）只能用所预测的排序检验</td><td class="tr">是</td><td class="tr">不是 S：换算是推导，排序要经过未独立检验的 Δ 规则</td></tr><tr><td class="nw">soa_async_v1:K1001</td><td class="tr">同模型、饱和以下：名义累计位移 Δ 越大，进展越多</td><td class="tr">部分：Δ 公式写明，“饱和”没有判据</td><td class="tr">否：唯一的前提就是所预测的排序</td><td class="tr">无推导</td><td class="tr">不是 S：KB 自己写明这只是进展启发式</td></tr><tr><td class="nw">soa_async_v1:K1002</td><td class="tr">Adagrad 累加器按 t·g² 增长（梯度量级平稳），第 t 步步长≈lr/√t；Δ 相同则进展相同、Δ 大者胜（Δ 规则）</td><td class="tr">是：更新规则层面的前提写明了；Δ 规则作为桥被引用</td><td class="tr">否：桥（Δ 规则）只能用所预测的排序检验</td><td class="tr">是：Δ_Ada 由更新规则推出</td><td class="tr">不是 S：换算是推导，排序要经过未独立检验的 Δ 规则</td></tr><tr><td class="nw">soa_async_v1:K1019</td><td class="tr">SGD 的 Δ=lr·T·|g|/(1−m)；|g| 按任务取 0.01 / 0.03 / 0.003；Δ 相同则进展相同、Δ 大者胜（Δ 规则）</td><td class="tr">是</td><td class="tr">否：拟合出的常数被当作前提</td><td class="tr">部分：形式是推导，常数不是</td><td class="tr">不是 S：把拟合出的关系换个说法当作前提</td></tr><tr><td class="nw">soa_v1:K1001</td><td class="tr">每个任务都欠训练：Δ 大者胜</td><td class="tr">部分</td><td class="tr">否：前提就是所预测的排序</td><td class="tr">无推导</td><td class="tr">不是 S</td></tr><tr><td class="nw">soa_v1:K1002</td><td class="tr">Adagrad 累加器按 t·g² 增长（梯度量级平稳），第 t 步步长≈lr/√t；Δ 相同则进展相同、Δ 大者胜（Δ 规则）</td><td class="tr">是：更新规则层面的前提写明了；Δ 规则作为桥被引用</td><td class="tr">否：桥（Δ 规则）只能用所预测的排序检验</td><td class="tr">是：Δ_Ada 由更新规则推出</td><td class="tr">不是 S：换算是推导，排序要经过未独立检验的 Δ 规则</td></tr><tr><td class="nw">soa_v1:K1019</td><td class="tr">SGD 的 Δ=lr·T·|g|/(1−m)；|g| 按任务取 0.01 / 0.03 / 0.003；Δ 相同则进展相同、Δ 大者胜（Δ 规则）</td><td class="tr">是</td><td class="tr">否：拟合出的常数被当作前提</td><td class="tr">部分：形式是推导，常数不是</td><td class="tr">不是 S：把拟合出的关系换个说法当作前提</td></tr><tr><td class="nw">soa_v1:K1026</td><td class="tr">动量速度从 0 开始（PyTorch 定义），梯度近似不变；Δ 相同则进展相同、Δ 大者胜（Δ 规则）</td><td class="tr">是：更新规则层面的前提写明了；Δ 规则作为桥被引用</td><td class="tr">否：桥（Δ 规则）只能用所预测的排序检验</td><td class="tr">是：位移亏欠由更新规则推出</td><td class="tr">不是 S：换算是推导，排序要经过未独立检验的 Δ 规则；这是 KB 里最接近 S 的一条：推导正确，还推出差距随 T 按 1/T 缩小</td></tr><tr><td class="nw">soa_v1:K1035</td><td class="tr">RMSprop 零初始化、无偏差校正：第 t 步步长≈lr/√(1−α^t)（梯度量级平稳）；Δ 相同则进展相同、Δ 大者胜（Δ 规则）</td><td class="tr">是：更新规则层面的前提写明了；Δ 规则作为桥被引用</td><td class="tr">否：桥（Δ 规则）只能用所预测的排序检验</td><td class="tr">是：F(T) 由更新规则推出</td><td class="tr">不是 S：换算是推导，排序要经过未独立检验的 Δ 规则</td></tr><tr><td class="nw">soa_v2:K1002</td><td class="tr">Adagrad 累加器按 t·g² 增长（梯度量级平稳），第 t 步步长≈lr/√t；Δ 相同则进展相同、Δ 大者胜（Δ 规则）</td><td class="tr">是：更新规则层面的前提写明了；Δ 规则作为桥被引用</td><td class="tr">否：桥（Δ 规则）只能用所预测的排序检验</td><td class="tr">是：Δ_Ada 由更新规则推出</td><td class="tr">不是 S：换算是推导，排序要经过未独立检验的 Δ 规则</td></tr><tr><td class="nw">soa_v3:K1042</td><td class="tr">Adagrad 累加器按 t·g² 增长（梯度量级平稳），第 t 步步长≈lr/√t；Δ 相同则进展相同、Δ 大者胜（Δ 规则）</td><td class="tr">是：更新规则层面的前提写明了；Δ 规则作为桥被引用</td><td class="tr">否：桥（Δ 规则）只能用所预测的排序检验</td><td class="tr">是：Δ_Ada 由更新规则推出</td><td class="tr">不是 S：换算是推导，排序要经过未独立检验的 Δ 规则</td></tr><tr><td class="nw">soa_v3:K1049</td><td class="tr">SGD 的 Δ=lr·T·|g|/(1−m)；|g| 按任务取 0.01 / 0.03 / 0.003；Δ 相同则进展相同、Δ 大者胜（Δ 规则）</td><td class="tr">是</td><td class="tr">否：拟合出的常数被当作前提</td><td class="tr">部分：形式是推导，常数不是</td><td class="tr">不是 S：把拟合出的关系换个说法当作前提</td></tr></table></div></details>
+<p class="fine">完整清单（252 条，含层次、依据和可执行规则的成绩）见 <a href="routes/kb_route.md">routes/kb_route.md</a>。</p>
+<h3>文献路线</h3><p>读了研究库的预训练、RL、可解释性三个目录和 claims 试点：条目 344 + 271 + 317，关键词命中 86 + 49 + 7，读后补入 5 篇，与优化器或训练进程有关的共 54 篇。其中 14 篇在子系统里给出预测（共 18 条：K 8、L 5、S 5），15 篇只提供前提，25 篇两样都不给。前提记录 29 条、检验项 46 个，其中 16 个能用我们的数据绕开被预测关系检验。</p>
+<ul>
+<li><b>5 条 S 预测都没有在子系统里落地。</b>Saxe 要求深线性网络，Wilson 的构造数据不在子系统里；EoS 的稳定阈值要曲率；Mandt 与 Three Factors 的稳态规则只有“已到稳态”一条前提能检验。</li>
+<li><b>文献在同一关系上给出方向相反的两组规则，分界是能独立检验的前提。</b>过渡期有效 lr 大者胜，稳态有效 lr 小者胜；分界“是否已到稳态”可以在时间轴上检验。这与理论路线的 M1 / M3 完全对上。</li>
+<li><b>标为可检验的 4 条规律，在我们的数据上有一条方向相反。</b>Porian 的“β2=0.999 ≻ 0.95”在实验室只对 31.3%；文献设定是长训练的语言模型预训练，子系统里 T 只有 256–2048 步。</li>
+</ul>
+<div class="tablewrap"><table class="cands"><tr><th>编号</th><th>来源</th><th>子系统里的预测</th><th>层次</th><th>映射</th></tr><tr><td class="nw">LIT-ADAM-1</td><td class="tr">Adam: A Method for Stochastic Optimization<br><span class="fine">§6.4，图 4（VAE）</span></td><td class="tr">同学习率、同 β2 时 Adam ⪰ RMSprop（不会更差）</td><td class="nw"><span class="tag ">K</span></td><td class="tr">可检验<br><b>实验室 137 对，对 68.6%</b></td></tr><tr><td class="nw">LIT-ADAM-2</td><td class="tr">Adam: A Method for Stochastic Optimization<br><span class="fine">§6.1–6.3，图 1–3</span></td><td class="tr">各自在调优学习率下：Adam ≻ Adagrad（训练代价）；Adam ≈ SGD+Nesterov</td><td class="nw"><span class="tag ">K</span></td><td class="tr">开放：要用没有的量</td></tr><tr><td class="nw">LIT-ADAMW-1</td><td class="tr">Decoupled Weight Decay Regularization<br><span class="fine">§4.3，图 3；§4.2 图 2</span></td><td class="tr">同学习率：训练够长时 AdamW（解耦衰减）≻ Adam（L2）；训练前半程两者相近</td><td class="nw"><span class="tag ">K</span></td><td class="tr">开放：要用没有的量</td></tr><tr><td class="nw">LIT-EOS-2</td><td class="tr">Gradient Descent on Neural Networks Typically Occurs at the Edge of Stability<br><span class="fine">§1，§3.2–3.3，图 1</span></td><td class="tr">全批量 GD、同模型：不发散的前提下，较大 η 在固定迭代数时训练损失更低</td><td class="nw"><span class="tag ">K</span></td><td class="tr">开放：要用没有的量</td></tr><tr><td class="nw">LIT-EOS-3</td><td class="tr">Gradient Descent on Neural Networks Typically Occurs at the Edge of Stability; literature/science_boundary_cases.md<br><span class="fine">EoS §2；资料库 science_boundary_cases.md 第一节</span></td><td class="tr">若较大学习率越过 2/λmax 而较小者未越过，较小学习率胜（较大者发散）</td><td class="nw"><span class="tag p">S</span></td><td class="tr">开放：要用没有的量</td></tr><tr><td class="nw">LIT-SAXE-1</td><td class="tr">Exact solutions to the nonlinear dynamics of learning in deep linear neural networks<br><span class="fine">§1 式 (2)（τ≡1/λ）、§2 式 (11)–(12)</span></td><td class="tr">深线性网络、白化输入、小初值、全批量、λ 足够小：固定迭代数时较大 λ 训练误差更低（轨迹只依赖 λt）</td><td class="nw"><span class="tag p">S</span></td><td class="tr">前提在子系统里不成立</td></tr><tr><td class="nw">LIT-KAPLAN-1</td><td class="tr">Scaling Laws for Neural Language Models<br><span class="fine">附录 D.6，图 22；§2.2</span></td><td class="tr">常学习率、固定 T：若较小学习率的累计学习率 ηT 未到饱和，较大者胜；两者都已饱和则近似持平（差异在 0.05 量级的噪声内）</td><td class="nw"><span class="tag ">K</span></td><td class="tr">可检验<br><b>实验室 1755 对，对 75.0%</b></td></tr><tr><td class="nw">LIT-CHIN-1</td><td class="tr">Training Compute-Optimal Large Language Models<br><span class="fine">附录 G，图 A6–A7，脚注 8</span></td><td class="tr">同日程：训练够长时 AdamW ≻ Adam；较早阶段 Adam 领先或持平</td><td class="nw"><span class="tag ">K</span></td><td class="tr">开放：要用没有的量</td></tr><tr><td class="nw">LIT-PORIAN-1</td><td class="tr">Resolving Discrepancies in Compute-Optimal Scaling of Language Models<br><span class="fine">§3.5，附录 G.3；pilot pretrain:2406.19146#C4</span></td><td class="tr">同学习率、小 batch：β2=0.999 ≻ β2=0.95</td><td class="nw"><span class="tag ">L</span></td><td class="tr">可检验<br><b>实验室 83 对，对 31.3%</b></td></tr><tr><td class="nw">LIT-WARM-1</td><td class="tr">Why Warmup the Learning Rate? Underlying Mechanisms and Improvements<br><span class="fine">摘要、§1 贡献、§2（Twrm=1 即常学习率）、§3</span></td><td class="tr">常学习率：低于失败边界时较大学习率不差；越过边界后较大学习率变差或失败</td><td class="nw"><span class="tag ">L</span></td><td class="tr">开放：要用没有的量</td></tr><tr><td class="nw">LIT-PRELN-1</td><td class="tr">On Layer Normalization in the Transformer Architecture<br><span class="fine">§3（warmup 实验与定理 1：初始化处的梯度尺度）、§4 实验</span></td><td class="tr">Post-LN Transformer、Adam 类、无 warmup：较大学习率可能不稳而落后</td><td class="nw"><span class="tag ">K</span></td><td class="tr">开放：要用没有的量</td></tr><tr><td class="nw">LIT-MOM-1</td><td class="tr">On the importance of initialization and momentum in deep learning<br><span class="fine">§2 式 (1)–(2)，表 1，表 5</span></td><td class="tr">各自在最佳学习率下：SGD 动量 0.9 ≻ 无动量</td><td class="nw"><span class="tag ">L</span></td><td class="tr">可检验<br><b>实验室 9 对，对 100.0%</b></td></tr><tr><td class="nw">LIT-WILSON-1</td><td class="tr">The Marginal Value of Adaptive Gradient Methods in Machine Learning<br><span class="fine">§4 实验，图 1</span></td><td class="tr">训练到底并调好学习率与衰减时：SGD/动量 ≻ Adam、RMSprop、Adagrad（测试指标）；短训练时自适应方法常领先</td><td class="nw"><span class="tag ">K</span></td><td class="tr">开放：要用没有的量</td></tr><tr><td class="nw">LIT-WILSON-2</td><td class="tr">The Marginal Value of Adaptive Gradient Methods in Machine Learning<br><span class="fine">§3 引理 3.1 与构造</span></td><td class="tr">满足构造条件（X·sign(Xᵀy)=c·y 等）的数据上：SGD ≻ 自适应方法</td><td class="nw"><span class="tag p">S</span></td><td class="tr">前提在子系统里不成立</td></tr><tr><td class="nw">LIT-MANDT-1</td><td class="tr">Stochastic Gradient Descent as Approximate Bayesian Inference<br><span class="fine">§3.2 假设 1–4 与式 (13)；§4.1 定理 1 证明中的 Tr(AΣ)=(ε/2S)Tr(BBᵀ)；§4.3 式 (25)</span></td><td class="tr">两者都已进入稳态、同一极小值附近、同 batch 的 SGD：有效学习率 ε/(1−m) 较小者稳态期望（训练）损失更低；ε/(1−m) 相等则稳态分布相同</td><td class="nw"><span class="tag p">S</span></td><td class="tr">开放：要用没有的量</td></tr><tr><td class="nw">LIT-3F-1</td><td class="tr">Three Factors Influencing Minima in SGD<br><span class="fine">§2.2 假设 1–2，式 (9)</span></td><td class="tr">同 batch、同一极小值附近、均已稳态：较小 η 的期望训练损失更低</td><td class="nw"><span class="tag p">S</span></td><td class="tr">开放：要用没有的量</td></tr><tr><td class="nw">LIT-3F-2</td><td class="tr">Three Factors Influencing Minima in SGD<br><span class="fine">摘要，§2.1，§3 实验</span></td><td class="tr">同 batch：较大学习率终点更宽，测试表现常更好</td><td class="nw"><span class="tag ">L</span></td><td class="tr">开放：要用没有的量</td></tr><tr><td class="nw">LIT-SMITH-1</td><td class="tr">A Bayesian Perspective on Generalization and Stochastic Gradient Descent<br><span class="fine">摘要，§4–5</span></td><td class="tr">固定 batch 时测试表现对学习率非单调，存在最优 ε ∝ B/N；离最优点近者胜</td><td class="nw"><span class="tag ">L</span></td><td class="tr">开放：要用没有的量</td></tr></table></div>
+<p class="fine">逐篇的相关性判断、前提记录和排除理由见 <a href="routes/lit_route.md">routes/lit_route.md</a>。</p>
+</section>
+
+<section><h2>理论路线：从更新规则推出时钟</h2>
+<p>四种自适应优化器都把梯度除以自己估计的梯度 RMS。梯度统计平稳时，它们沿同一条归一化流走，区别只在每一步走多远；SGD 沿梯度流走。把每一步走的距离累加起来，得到每种优化器的时钟 τ：</p>
+<div class="formula">Adam / AdamW   τ = η·T                     （偏差校正后每步一个单位）
+RMSprop        τ = η·Σ (1 − 0.99^t)^(−1/2)    （v 从 0 起步、不校正，前约 100 步被放大）
+Adagrad        τ = η·Σ t^(−1/2) ≈ 2η√T        （累加器线性增长）
+SGD            τ = η·Σ (1 − m^t)/(1 − m)      （重球动量，梯度流单位）</div>
+<figure><figcaption><b>推导时钟与 KB 名义值。</b>KB 的 K1001 用 ηT、2η√T、ηT/(1−m)；RMSprop 在 T = 256 时差 1.47 倍。</figcaption><div class="tablewrap"><table><tr><th>T</th><th>Adam / AdamW</th><th>RMSprop</th><th>Adagrad</th><th>SGD（m = 0.9）</th></tr><tr><td class="num">256</td><td class="num">256.0<br><span class="fine">KB 名义值 256.0（×1.00）</span></td><td class="num">376.0<br><span class="fine">KB 名义值 256.0（×1.47）</span></td><td class="num">30.6<br><span class="fine">KB 名义值 32.0（×0.96）</span></td><td class="num">2,470.0<br><span class="fine">KB 名义值 2,560.0（×0.96）</span></td></tr><tr><td class="num">512</td><td class="num">512.0<br><span class="fine">KB 名义值 512.0（×1.00）</span></td><td class="num">635.6<br><span class="fine">KB 名义值 512.0（×1.24）</span></td><td class="num">43.8<br><span class="fine">KB 名义值 45.3（×0.97）</span></td><td class="num">5,030.0<br><span class="fine">KB 名义值 5,120.0（×0.98）</span></td></tr><tr><td class="num">1024</td><td class="num">1,024.0<br><span class="fine">KB 名义值 1,024.0（×1.00）</span></td><td class="num">1,147.9<br><span class="fine">KB 名义值 1,024.0（×1.12）</span></td><td class="num">62.6<br><span class="fine">KB 名义值 64.0（×0.98）</span></td><td class="num">10,150.0<br><span class="fine">KB 名义值 10,240.0（×0.99）</span></td></tr><tr><td class="num">2048</td><td class="num">2,048.0<br><span class="fine">KB 名义值 2,048.0（×1.00）</span></td><td class="num">2,171.9<br><span class="fine">KB 名义值 2,048.0（×1.06）</span></td><td class="num">89.1<br><span class="fine">KB 名义值 90.5（×0.98）</span></td><td class="num">20,390.0<br><span class="fine">KB 名义值 20,480.0（×1.00）</span></td></tr></table></div></figure>
+<p>条件 (c) 的数学一半（推导在假设内是否正确）用合成梯度检验：不训练任何模型，只把 PyTorch 的更新规则作用在平稳的随机梯度序列上，量沿梯度方向走了多远。常数梯度下与公式逐位相同；有噪声时四种自适应优化器按同一比例变慢，所以它们之间的换算比不变。</p>
+<figure><figcaption><b>时钟公式的模拟核对。</b></figcaption><div class="tablewrap"><table><tr><th>T</th><th>类型</th><th>公式</th><th>模拟（常数梯度）</th><th>模拟（噪声梯度，信噪比 1）</th><th>噪声下与 Adam 之比</th></tr><tr><td class="num">256</td><td>Adam</td><td class="num">256.00</td><td class="num">256.00</td><td class="num">181.16</td><td class="num">1.000（公式 1.000）</td></tr><tr><td class="num">256</td><td>RMSprop</td><td class="num">375.97</td><td class="num">375.97</td><td class="num">265.44</td><td class="num">1.465（公式 1.469）</td></tr><tr><td class="num">256</td><td>Adagrad</td><td class="num">30.57</td><td class="num">30.57</td><td class="num">21.63</td><td class="num">0.119（公式 0.119）</td></tr><tr><td class="num">256</td><td>SGD</td><td class="num">2,470.00</td><td class="num">2,470.00</td><td class="num">2,472.39</td><td class="num">—</td></tr><tr><td class="num">2048</td><td>Adam</td><td class="num">2,048.00</td><td class="num">2,048.00</td><td class="num">1,447.62</td><td class="num">1.000（公式 1.000）</td></tr><tr><td class="num">2048</td><td>RMSprop</td><td class="num">2,171.86</td><td class="num">2,171.86</td><td class="num">1,532.45</td><td class="num">1.059（公式 1.060）</td></tr><tr><td class="num">2048</td><td>Adagrad</td><td class="num">89.06</td><td class="num">89.06</td><td class="num">62.98</td><td class="num">0.044（公式 0.043）</td></tr><tr><td class="num">2048</td><td>SGD</td><td class="num">20,390.00</td><td class="num">20,390.00</td><td class="num">20,382.59</td><td class="num">—</td></tr></table></div></figure></section>
+
+<section><h2>前提逐条检验</h2>
+<p>推导用到两条主前提和几条搬运前提。所有检验都在实验室数据上做，检验关系都不是“同 T 比较两份配置”。</p>
+<h3>A1 时钟充分：时钟相等，损失相等</h3>
+<p>取同一类型、lr 与 T 都不同、时钟相差不到 15% 的实验对。若时钟抓住了 lr 与 T 的换算，这些对的损失应当接近；作为对照，时钟相差 2 倍以上的对差得多。</p>
+<figure><figcaption><b>A1 的检验。</b>时钟相等的对大多几乎无差，对照组的差通常在 100% 量级。时钟相等时仍有差的对，几乎都是 lr 小的一方更好（噪声地板）。</figcaption><div class="legend"><span><i class="sw bar s1"></i>时钟相等（lr 与 T 都不同）</span><span><i class="sw bar s0"></i>时钟相差 2 倍以上（对照）</span></div><svg class="chart" viewBox="0 0 960 300" role="img" aria-label="A1：时钟相等的对与时钟相差 2 倍以上的对的损失差分布" preserveAspectRatio="xMinYMin meet"><line x1="60" x2="940" y1="254.0" y2="254.0" class="grid"/><text x="52.0" y="258.0" class="tick" text-anchor="end" >0%</text><line x1="60" x2="940" y1="184.5" y2="184.5" class="grid"/><text x="52.0" y="188.5" class="tick" text-anchor="end" >20%</text><line x1="60" x2="940" y1="115.1" y2="115.1" class="grid"/><text x="52.0" y="119.1" class="tick" text-anchor="end" >40%</text><line x1="60" x2="940" y1="45.6" y2="45.6" class="grid"/><text x="52.0" y="49.6" class="tick" text-anchor="end" >60%</text><rect x="62.0" y="33.6" width="20.0" height="220.4" class="s1 hit" rx="2" tabindex="0" data-tip="时钟相等
+损失相对差 0–10%
+290 对，占 63%"/><rect x="82.0" y="187.5" width="20.0" height="66.5" class="s0 hit" rx="2" tabindex="0" data-tip="时钟差 ≥2 倍
+损失相对差 0–10%
+526 对，占 19%"/><rect x="106.0" y="223.6" width="20.0" height="30.4" class="s1 hit" rx="2" tabindex="0" data-tip="时钟相等
+损失相对差 10–20%
+40 对，占 9%"/><rect x="126.0" y="231.9" width="20.0" height="22.1" class="s0 hit" rx="2" tabindex="0" data-tip="时钟差 ≥2 倍
+损失相对差 10–20%
+175 对，占 6%"/><rect x="150.0" y="239.6" width="20.0" height="14.4" class="s1 hit" rx="2" tabindex="0" data-tip="时钟相等
+损失相对差 20–30%
+19 对，占 4%"/><rect x="170.0" y="237.1" width="20.0" height="16.9" class="s0 hit" rx="2" tabindex="0" data-tip="时钟差 ≥2 倍
+损失相对差 20–30%
+134 对，占 5%"/><rect x="194.0" y="245.6" width="20.0" height="8.4" class="s1 hit" rx="2" tabindex="0" data-tip="时钟相等
+损失相对差 30–40%
+11 对，占 2%"/><rect x="214.0" y="241.0" width="20.0" height="13.0" class="s0 hit" rx="2" tabindex="0" data-tip="时钟差 ≥2 倍
+损失相对差 30–40%
+103 对，占 4%"/><rect x="238.0" y="246.4" width="20.0" height="7.6" class="s1 hit" rx="2" tabindex="0" data-tip="时钟相等
+损失相对差 40–50%
+10 对，占 2%"/><rect x="258.0" y="243.8" width="20.0" height="10.2" class="s0 hit" rx="2" tabindex="0" data-tip="时钟差 ≥2 倍
+损失相对差 40–50%
+81 对，占 3%"/><rect x="282.0" y="247.9" width="20.0" height="6.1" class="s1 hit" rx="2" tabindex="0" data-tip="时钟相等
+损失相对差 50–60%
+8 对，占 2%"/><rect x="302.0" y="244.8" width="20.0" height="9.2" class="s0 hit" rx="2" tabindex="0" data-tip="时钟差 ≥2 倍
+损失相对差 50–60%
+73 对，占 3%"/><rect x="326.0" y="252.5" width="20.0" height="1.5" class="s1 hit" rx="2" tabindex="0" data-tip="时钟相等
+损失相对差 60–70%
+2 对，占 0%"/><rect x="346.0" y="243.8" width="20.0" height="10.2" class="s0 hit" rx="2" tabindex="0" data-tip="时钟差 ≥2 倍
+损失相对差 60–70%
+81 对，占 3%"/><rect x="370.0" y="254.0" width="20.0" height="0.0" class="s1 hit" rx="2" tabindex="0" data-tip="时钟相等
+损失相对差 70–80%
+0 对，占 0%"/><rect x="390.0" y="244.6" width="20.0" height="9.4" class="s0 hit" rx="2" tabindex="0" data-tip="时钟差 ≥2 倍
+损失相对差 70–80%
+74 对，占 3%"/><rect x="414.0" y="250.2" width="20.0" height="3.8" class="s1 hit" rx="2" tabindex="0" data-tip="时钟相等
+损失相对差 80–90%
+5 对，占 1%"/><rect x="434.0" y="244.6" width="20.0" height="9.4" class="s0 hit" rx="2" tabindex="0" data-tip="时钟差 ≥2 倍
+损失相对差 80–90%
+74 对，占 3%"/><rect x="458.0" y="249.4" width="20.0" height="4.6" class="s1 hit" rx="2" tabindex="0" data-tip="时钟相等
+损失相对差 90–100%
+6 对，占 1%"/><rect x="478.0" y="246.4" width="20.0" height="7.6" class="s0 hit" rx="2" tabindex="0" data-tip="时钟差 ≥2 倍
+损失相对差 90–100%
+60 对，占 2%"/><rect x="502.0" y="252.5" width="20.0" height="1.5" class="s1 hit" rx="2" tabindex="0" data-tip="时钟相等
+损失相对差 100–110%
+2 对，占 0%"/><rect x="522.0" y="247.6" width="20.0" height="6.4" class="s0 hit" rx="2" tabindex="0" data-tip="时钟差 ≥2 倍
+损失相对差 100–110%
+51 对，占 2%"/><rect x="546.0" y="250.2" width="20.0" height="3.8" class="s1 hit" rx="2" tabindex="0" data-tip="时钟相等
+损失相对差 110–120%
+5 对，占 1%"/><rect x="566.0" y="246.5" width="20.0" height="7.5" class="s0 hit" rx="2" tabindex="0" data-tip="时钟差 ≥2 倍
+损失相对差 110–120%
+59 对，占 2%"/><rect x="590.0" y="251.0" width="20.0" height="3.0" class="s1 hit" rx="2" tabindex="0" data-tip="时钟相等
+损失相对差 120–130%
+4 对，占 1%"/><rect x="610.0" y="246.9" width="20.0" height="7.1" class="s0 hit" rx="2" tabindex="0" data-tip="时钟差 ≥2 倍
+损失相对差 120–130%
+56 对，占 2%"/><rect x="634.0" y="247.2" width="20.0" height="6.8" class="s1 hit" rx="2" tabindex="0" data-tip="时钟相等
+损失相对差 130–140%
+9 对，占 2%"/><rect x="654.0" y="246.8" width="20.0" height="7.2" class="s0 hit" rx="2" tabindex="0" data-tip="时钟差 ≥2 倍
+损失相对差 130–140%
+57 对，占 2%"/><rect x="678.0" y="249.4" width="20.0" height="4.6" class="s1 hit" rx="2" tabindex="0" data-tip="时钟相等
+损失相对差 140–150%
+6 对，占 1%"/><rect x="698.0" y="243.4" width="20.0" height="10.6" class="s0 hit" rx="2" tabindex="0" data-tip="时钟差 ≥2 倍
+损失相对差 140–150%
+84 对，占 3%"/><rect x="722.0" y="250.2" width="20.0" height="3.8" class="s1 hit" rx="2" tabindex="0" data-tip="时钟相等
+损失相对差 150–160%
+5 对，占 1%"/><rect x="742.0" y="245.8" width="20.0" height="8.2" class="s0 hit" rx="2" tabindex="0" data-tip="时钟差 ≥2 倍
+损失相对差 150–160%
+65 对，占 2%"/><rect x="766.0" y="242.6" width="20.0" height="11.4" class="s1 hit" rx="2" tabindex="0" data-tip="时钟相等
+损失相对差 160–170%
+15 对，占 3%"/><rect x="786.0" y="243.4" width="20.0" height="10.6" class="s0 hit" rx="2" tabindex="0" data-tip="时钟差 ≥2 倍
+损失相对差 160–170%
+84 对，占 3%"/><rect x="810.0" y="247.2" width="20.0" height="6.8" class="s1 hit" rx="2" tabindex="0" data-tip="时钟相等
+损失相对差 170–180%
+9 对，占 2%"/><rect x="830.0" y="238.7" width="20.0" height="15.3" class="s0 hit" rx="2" tabindex="0" data-tip="时钟差 ≥2 倍
+损失相对差 170–180%
+121 对，占 4%"/><rect x="854.0" y="253.2" width="20.0" height="0.8" class="s1 hit" rx="2" tabindex="0" data-tip="时钟相等
+损失相对差 180–190%
+1 对，占 0%"/><rect x="874.0" y="236.9" width="20.0" height="17.1" class="s0 hit" rx="2" tabindex="0" data-tip="时钟差 ≥2 倍
+损失相对差 180–190%
+135 对，占 5%"/><rect x="898.0" y="246.4" width="20.0" height="7.6" class="s1 hit" rx="2" tabindex="0" data-tip="时钟相等
+损失相对差 ≥190%
+10 对，占 2%"/><rect x="918.0" y="171.3" width="20.0" height="82.7" class="s0 hit" rx="2" tabindex="0" data-tip="时钟差 ≥2 倍
+损失相对差 ≥190%
+654 对，占 24%"/><text x="60.0" y="272.0" class="tick" text-anchor="middle" >0%</text><text x="148.0" y="272.0" class="tick" text-anchor="middle" >20%</text><text x="236.0" y="272.0" class="tick" text-anchor="middle" >40%</text><text x="324.0" y="272.0" class="tick" text-anchor="middle" >60%</text><text x="412.0" y="272.0" class="tick" text-anchor="middle" >80%</text><text x="500.0" y="272.0" class="tick" text-anchor="middle" >100%</text><text x="588.0" y="272.0" class="tick" text-anchor="middle" >120%</text><text x="676.0" y="272.0" class="tick" text-anchor="middle" >140%</text><text x="764.0" y="272.0" class="tick" text-anchor="middle" >160%</text><text x="852.0" y="272.0" class="tick" text-anchor="middle" >180%</text><text x="940.0" y="272.0" class="tick" text-anchor="middle" >200%</text><text x="500.0" y="292.0" class="axl" text-anchor="middle" >两者损失的相对差（≥200% 并入最后一格）</text><text x="156.8" y="37.6" class="dl b" text-anchor="start" >时钟相等：中位差 2.4%（457 对）</text><text x="482.4" y="183.5" class="dl" text-anchor="start" >时钟差 ≥2 倍：中位差 98.5%（2,747 对）</text></svg></figure>
+<p>A1 失效有方向：显著的时钟相等对里，lr 小者更好的占 66.9%，单变量与螺旋为 100%，表格分类反过来。这就是噪声地板（候选 T12）。所以 A1 按 lr 档分格核验：地板随 lr 变大。</p>
+<h3>A2 沿时钟进展：同一配置训练更久更好</h3>
+<figure><figcaption><b>A2 的检验，按任务族、流类和时钟量级分格。</b>蓝色格子里更久几乎总更好；红色格子里更久显著更差，是过拟合。</figcaption><div class="legend"><span><i class="sw sq dvp2"></i>更久几乎总更好</span><span><i class="sw sq dv0"></i>混合</span><span><i class="sw sq dvn2"></i>更久显著更差（过拟合）</span><span>格内：更久更好的比例 · 实验对数</span></div><svg class="chart" viewBox="0 0 960 370" role="img" aria-label="A2：同一配置训练更久是否更好，按任务族、流类与时钟量级" preserveAspectRatio="xMinYMin meet"><text x="270.0" y="24.0" class="tick" text-anchor="middle" >时钟 10^-3</text><text x="390.0" y="24.0" class="tick" text-anchor="middle" >时钟 10^-2</text><text x="510.0" y="24.0" class="tick" text-anchor="middle" >时钟 10^-1</text><text x="630.0" y="24.0" class="tick" text-anchor="middle" >时钟 10^0</text><text x="750.0" y="24.0" class="tick" text-anchor="middle" >时钟 10^1</text><text x="200.0" y="55.0" class="tl" text-anchor="end" >单变量回归 · 自适应</text><g class="hit" tabindex="0" data-tip="单变量回归 · N · 时钟 10^-3
+4 对只差 T 的实验
+更久更好 100.0%
+更久显著更差 0.0%"><rect x="212" y="36" width="116" height="30" class="dvp2" rx="3"/><text x="270.0" y="55.0" text-anchor="middle" class="cellt dvp2t">100% · 4</text></g><g class="hit" tabindex="0" data-tip="单变量回归 · N · 时钟 10^-2
+123 对只差 T 的实验
+更久更好 91.9%
+更久显著更差 0.0%"><rect x="332" y="36" width="116" height="30" class="dvp2" rx="3"/><text x="390.0" y="55.0" text-anchor="middle" class="cellt dvp2t">92% · 123</text></g><g class="hit" tabindex="0" data-tip="单变量回归 · N · 时钟 10^-1
+155 对只差 T 的实验
+更久更好 96.8%
+更久显著更差 0.0%"><rect x="452" y="36" width="116" height="30" class="dvp2" rx="3"/><text x="510.0" y="55.0" text-anchor="middle" class="cellt dvp2t">97% · 155</text></g><g class="hit" tabindex="0" data-tip="单变量回归 · N · 时钟 10^0
+173 对只差 T 的实验
+更久更好 91.3%
+更久显著更差 0.0%"><rect x="572" y="36" width="116" height="30" class="dvp2" rx="3"/><text x="630.0" y="55.0" text-anchor="middle" class="cellt dvp2t">91% · 173</text></g><rect x="692" y="36" width="116" height="30" class="empty" rx="3"/><text x="200.0" y="89.0" class="tl" text-anchor="end" >多变量回归 · SGD</text><rect x="212" y="70" width="116" height="30" class="empty" rx="3"/><rect x="332" y="70" width="116" height="30" class="empty" rx="3"/><g class="hit" tabindex="0" data-tip="多变量回归 · G · 时钟 10^-1
+1 对只差 T 的实验
+更久更好 100.0%
+更久显著更差 0.0%"><rect x="452" y="70" width="116" height="30" class="dvp2" rx="3"/><text x="510.0" y="89.0" text-anchor="middle" class="cellt dvp2t">100% · 1</text></g><g class="hit" tabindex="0" data-tip="多变量回归 · G · 时钟 10^0
+30 对只差 T 的实验
+更久更好 100.0%
+更久显著更差 0.0%"><rect x="572" y="70" width="116" height="30" class="dvp2" rx="3"/><text x="630.0" y="89.0" text-anchor="middle" class="cellt dvp2t">100% · 30</text></g><g class="hit" tabindex="0" data-tip="多变量回归 · G · 时钟 10^1
+20 对只差 T 的实验
+更久更好 85.0%
+更久显著更差 5.0%"><rect x="692" y="70" width="116" height="30" class="dvp2" rx="3"/><text x="750.0" y="89.0" text-anchor="middle" class="cellt dvp2t">85% · 20</text></g><text x="200.0" y="123.0" class="tl" text-anchor="end" >多变量回归 · 自适应</text><g class="hit" tabindex="0" data-tip="多变量回归 · N · 时钟 10^-3
+2 对只差 T 的实验
+更久更好 100.0%
+更久显著更差 0.0%"><rect x="212" y="104" width="116" height="30" class="dvp2" rx="3"/><text x="270.0" y="123.0" text-anchor="middle" class="cellt dvp2t">100% · 2</text></g><g class="hit" tabindex="0" data-tip="多变量回归 · N · 时钟 10^-2
+4 对只差 T 的实验
+更久更好 100.0%
+更久显著更差 0.0%"><rect x="332" y="104" width="116" height="30" class="dvp2" rx="3"/><text x="390.0" y="123.0" text-anchor="middle" class="cellt dvp2t">100% · 4</text></g><g class="hit" tabindex="0" data-tip="多变量回归 · N · 时钟 10^-1
+24 对只差 T 的实验
+更久更好 75.0%
+更久显著更差 4.2%"><rect x="452" y="104" width="116" height="30" class="dvp2" rx="3"/><text x="510.0" y="123.0" text-anchor="middle" class="cellt dvp2t">75% · 24</text></g><g class="hit" tabindex="0" data-tip="多变量回归 · N · 时钟 10^0
+22 对只差 T 的实验
+更久更好 54.5%
+更久显著更差 22.7%"><rect x="572" y="104" width="116" height="30" class="dvp1" rx="3"/><text x="630.0" y="123.0" text-anchor="middle" class="cellt dvp1t">55% · 22</text></g><rect x="692" y="104" width="116" height="30" class="empty" rx="3"/><text x="200.0" y="157.0" class="tl" text-anchor="end" >表格分类 · 自适应</text><g class="hit" tabindex="0" data-tip="表格分类 · N · 时钟 10^-3
+1 对只差 T 的实验
+更久更好 100.0%
+更久显著更差 0.0%"><rect x="212" y="138" width="116" height="30" class="dvp2" rx="3"/><text x="270.0" y="157.0" text-anchor="middle" class="cellt dvp2t">100% · 1</text></g><g class="hit" tabindex="0" data-tip="表格分类 · N · 时钟 10^-2
+19 对只差 T 的实验
+更久更好 100.0%
+更久显著更差 0.0%"><rect x="332" y="138" width="116" height="30" class="dvp2" rx="3"/><text x="390.0" y="157.0" text-anchor="middle" class="cellt dvp2t">100% · 19</text></g><g class="hit" tabindex="0" data-tip="表格分类 · N · 时钟 10^-1
+30 对只差 T 的实验
+更久更好 66.7%
+更久显著更差 30.0%"><rect x="452" y="138" width="116" height="30" class="dvp1" rx="3"/><text x="510.0" y="157.0" text-anchor="middle" class="cellt dvp1t">67% · 30</text></g><g class="hit" tabindex="0" data-tip="表格分类 · N · 时钟 10^0
+8 对只差 T 的实验
+更久更好 62.5%
+更久显著更差 37.5%"><rect x="572" y="138" width="116" height="30" class="dvp1" rx="3"/><text x="630.0" y="157.0" text-anchor="middle" class="cellt dvp1t">62% · 8</text></g><rect x="692" y="138" width="116" height="30" class="empty" rx="3"/><text x="200.0" y="191.0" class="tl" text-anchor="end" >XOR 分类 · SGD</text><rect x="212" y="172" width="116" height="30" class="empty" rx="3"/><rect x="332" y="172" width="116" height="30" class="empty" rx="3"/><rect x="452" y="172" width="116" height="30" class="empty" rx="3"/><g class="hit" tabindex="0" data-tip="XOR 分类 · G · 时钟 10^0
+12 对只差 T 的实验
+更久更好 100.0%
+更久显著更差 0.0%"><rect x="572" y="172" width="116" height="30" class="dvp2" rx="3"/><text x="630.0" y="191.0" text-anchor="middle" class="cellt dvp2t">100% · 12</text></g><g class="hit" tabindex="0" data-tip="XOR 分类 · G · 时钟 10^1
+25 对只差 T 的实验
+更久更好 92.0%
+更久显著更差 0.0%"><rect x="692" y="172" width="116" height="30" class="dvp2" rx="3"/><text x="750.0" y="191.0" text-anchor="middle" class="cellt dvp2t">92% · 25</text></g><text x="200.0" y="225.0" class="tl" text-anchor="end" >XOR 分类 · 自适应</text><rect x="212" y="206" width="116" height="30" class="empty" rx="3"/><g class="hit" tabindex="0" data-tip="XOR 分类 · N · 时钟 10^-2
+4 对只差 T 的实验
+更久更好 100.0%
+更久显著更差 0.0%"><rect x="332" y="206" width="116" height="30" class="dvp2" rx="3"/><text x="390.0" y="225.0" text-anchor="middle" class="cellt dvp2t">100% · 4</text></g><g class="hit" tabindex="0" data-tip="XOR 分类 · N · 时钟 10^-1
+26 对只差 T 的实验
+更久更好 92.3%
+更久显著更差 3.8%"><rect x="452" y="206" width="116" height="30" class="dvp2" rx="3"/><text x="510.0" y="225.0" text-anchor="middle" class="cellt dvp2t">92% · 26</text></g><g class="hit" tabindex="0" data-tip="XOR 分类 · N · 时钟 10^0
+23 对只差 T 的实验
+更久更好 82.6%
+更久显著更差 4.3%"><rect x="572" y="206" width="116" height="30" class="dvp2" rx="3"/><text x="630.0" y="225.0" text-anchor="middle" class="cellt dvp2t">83% · 23</text></g><rect x="692" y="206" width="116" height="30" class="empty" rx="3"/><text x="200.0" y="259.0" class="tl" text-anchor="end" >螺旋分类 · 自适应</text><g class="hit" tabindex="0" data-tip="螺旋分类 · N · 时钟 10^-3
+4 对只差 T 的实验
+更久更好 100.0%
+更久显著更差 0.0%"><rect x="212" y="240" width="116" height="30" class="dvp2" rx="3"/><text x="270.0" y="259.0" text-anchor="middle" class="cellt dvp2t">100% · 4</text></g><g class="hit" tabindex="0" data-tip="螺旋分类 · N · 时钟 10^-2
+9 对只差 T 的实验
+更久更好 100.0%
+更久显著更差 0.0%"><rect x="332" y="240" width="116" height="30" class="dvp2" rx="3"/><text x="390.0" y="259.0" text-anchor="middle" class="cellt dvp2t">100% · 9</text></g><g class="hit" tabindex="0" data-tip="螺旋分类 · N · 时钟 10^-1
+75 对只差 T 的实验
+更久更好 100.0%
+更久显著更差 0.0%"><rect x="452" y="240" width="116" height="30" class="dvp2" rx="3"/><text x="510.0" y="259.0" text-anchor="middle" class="cellt dvp2t">100% · 75</text></g><g class="hit" tabindex="0" data-tip="螺旋分类 · N · 时钟 10^0
+97 对只差 T 的实验
+更久更好 94.8%
+更久显著更差 0.0%"><rect x="572" y="240" width="116" height="30" class="dvp2" rx="3"/><text x="630.0" y="259.0" text-anchor="middle" class="cellt dvp2t">95% · 97</text></g><rect x="692" y="240" width="116" height="30" class="empty" rx="3"/><text x="200.0" y="293.0" class="tl" text-anchor="end" >Bigram 语言模型 · SGD</text><rect x="212" y="274" width="116" height="30" class="empty" rx="3"/><g class="hit" tabindex="0" data-tip="Bigram 语言模型 · G · 时钟 10^-2
+20 对只差 T 的实验
+更久更好 100.0%
+更久显著更差 0.0%"><rect x="332" y="274" width="116" height="30" class="dvp2" rx="3"/><text x="390.0" y="293.0" text-anchor="middle" class="cellt dvp2t">100% · 20</text></g><g class="hit" tabindex="0" data-tip="Bigram 语言模型 · G · 时钟 10^-1
+24 对只差 T 的实验
+更久更好 100.0%
+更久显著更差 0.0%"><rect x="452" y="274" width="116" height="30" class="dvp2" rx="3"/><text x="510.0" y="293.0" text-anchor="middle" class="cellt dvp2t">100% · 24</text></g><g class="hit" tabindex="0" data-tip="Bigram 语言模型 · G · 时钟 10^0
+21 对只差 T 的实验
+更久更好 100.0%
+更久显著更差 0.0%"><rect x="572" y="274" width="116" height="30" class="dvp2" rx="3"/><text x="630.0" y="293.0" text-anchor="middle" class="cellt dvp2t">100% · 21</text></g><g class="hit" tabindex="0" data-tip="Bigram 语言模型 · G · 时钟 10^1
+4 对只差 T 的实验
+更久更好 100.0%
+更久显著更差 0.0%"><rect x="692" y="274" width="116" height="30" class="dvp2" rx="3"/><text x="750.0" y="293.0" text-anchor="middle" class="cellt dvp2t">100% · 4</text></g><text x="200.0" y="327.0" class="tl" text-anchor="end" >Bigram 语言模型 · 自适应</text><g class="hit" tabindex="0" data-tip="Bigram 语言模型 · N · 时钟 10^-3
+5 对只差 T 的实验
+更久更好 100.0%
+更久显著更差 0.0%"><rect x="212" y="308" width="116" height="30" class="dvp2" rx="3"/><text x="270.0" y="327.0" text-anchor="middle" class="cellt dvp2t">100% · 5</text></g><g class="hit" tabindex="0" data-tip="Bigram 语言模型 · N · 时钟 10^-2
+24 对只差 T 的实验
+更久更好 100.0%
+更久显著更差 0.0%"><rect x="332" y="308" width="116" height="30" class="dvp2" rx="3"/><text x="390.0" y="327.0" text-anchor="middle" class="cellt dvp2t">100% · 24</text></g><g class="hit" tabindex="0" data-tip="Bigram 语言模型 · N · 时钟 10^-1
+49 对只差 T 的实验
+更久更好 65.3%
+更久显著更差 32.7%"><rect x="452" y="308" width="116" height="30" class="dvp1" rx="3"/><text x="510.0" y="327.0" text-anchor="middle" class="cellt dvp1t">65% · 49</text></g><g class="hit" tabindex="0" data-tip="Bigram 语言模型 · N · 时钟 10^0
+24 对只差 T 的实验
+更久更好 0.0%
+更久显著更差 100.0%"><rect x="572" y="308" width="116" height="30" class="dvn2" rx="3"/><text x="630.0" y="327.0" text-anchor="middle" class="cellt dvn2t">0% · 24</text></g><rect x="692" y="308" width="116" height="30" class="empty" rx="3"/></svg></figure>
+<h3>搬运前提：其余设置能否忽略</h3>
+<p>一对配置若还差衰减、β2、动量或类型，必须有一条前提把这项差异搬走（并入时钟，或证明可忽略）。下图是每条搬运前提在“只差这一项”的实验对上的检验。</p>
+<figure><figcaption><b>搬运前提的检验。</b>解耦衰减（AdamW、SGD）从不显著；Adam 的耦合 L2 即使很小也有约四分之一显著，因为它在除以梯度 RMS 之前加入，梯度小时被放大；β2 有一半显著，平稳性前提不成立。</figcaption><div class="legend"><span><i class="sw bar s1"></i>通过：可当作可忽略</span><span><i class="sw bar s2"></i>失败：这项设置不同的对没有推导</span><span><i class="sw bar s0"></i>实验不足 5 对：未检</span></div><svg class="chart" viewBox="0 0 960 364" role="img" aria-label="搬运前提的检验：只差这一项设置的实验对里，显著不同的比例" preserveAspectRatio="xMinYMin meet"><line x1="300.0" x2="300.0" y1="18" y2="330" class="grid"/><text x="300.0" y="346.0" class="tick" text-anchor="middle" >0%</text><line x1="435.0" x2="435.0" y1="18" y2="330" class="grid"/><text x="435.0" y="346.0" class="tick" text-anchor="middle" >25%</text><line x1="570.0" x2="570.0" y1="18" y2="330" class="grid"/><text x="570.0" y="346.0" class="tick" text-anchor="middle" >50%</text><line x1="705.0" x2="705.0" y1="18" y2="330" class="grid"/><text x="705.0" y="346.0" class="tick" text-anchor="middle" >75%</text><line x1="840.0" x2="840.0" y1="18" y2="330" class="grid"/><text x="840.0" y="346.0" class="tick" text-anchor="middle" >100%</text><text x="290.0" y="43.0" class="tl" text-anchor="end" >恒等 Adam≡AdamW（wd=0）</text><rect x="300.0" y="30" width="2.0" height="18" class="s1 hit" rx="2" tabindex="0" data-tip="恒等 Adam≡AdamW（wd=0）
+50 对实验
+显著不同 0.0%
+通过"/><text x="360.0" y="43.0" class="dl" text-anchor="start" >0% · n=50 · 通过</text><text x="290.0" y="73.0" class="tl" text-anchor="end" >A4 解耦衰减可忽略</text><rect x="300.0" y="60" width="2.0" height="18" class="s1 hit" rx="2" tabindex="0" data-tip="A4 解耦衰减可忽略
+102 对实验
+显著不同 0.0%
+通过"/><text x="360.0" y="73.0" class="dl" text-anchor="start" >0% · n=102 · 通过</text><text x="290.0" y="103.0" class="tl" text-anchor="end" >A4c RMSprop 的 L2 ≤ 1e-4 可忽略</text><rect x="300.0" y="90" width="2.0" height="18" class="s1 hit" rx="2" tabindex="0" data-tip="A4c RMSprop 的 L2 ≤ 1e-4 可忽略
+8 对实验
+显著不同 0.0%
+通过"/><text x="360.0" y="103.0" class="dl" text-anchor="start" >0% · n=8 · 通过</text><text x="290.0" y="133.0" class="tl" text-anchor="end" >A4c Adagrad 的 L2 ≤ 1e-4 可忽略</text><rect x="300.0" y="120" width="2.0" height="18" class="s1 hit" rx="2" tabindex="0" data-tip="A4c Adagrad 的 L2 ≤ 1e-4 可忽略
+8 对实验
+显著不同 0.0%
+通过"/><text x="360.0" y="133.0" class="dl" text-anchor="start" >0% · n=8 · 通过</text><text x="290.0" y="163.0" class="tl" text-anchor="end" >A1m 动量并入时钟</text><rect x="300.0" y="150" width="135.0" height="18" class="s0 hit" rx="2" tabindex="0" data-tip="A1m 动量并入时钟
+4 对实验
+显著不同 25.0%
+实验不足"/><text x="441.0" y="163.0" class="dl" text-anchor="start" >25% · n=4 · 实验不足</text><text x="290.0" y="193.0" class="tl" text-anchor="end" >A4c Adam 的 L2 ≤ 1e-4 可忽略</text><rect x="300.0" y="180" width="130.9" height="18" class="s2 hit" rx="2" tabindex="0" data-tip="A4c Adam 的 L2 ≤ 1e-4 可忽略
+66 对实验
+显著不同 24.2%
+失败"/><text x="436.9" y="193.0" class="dl" text-anchor="start" >24% · n=66 · 失败</text><text x="290.0" y="223.0" class="tl" text-anchor="end" >A4c Adam 的 L2 &gt; 1e-4 可忽略</text><rect x="300.0" y="210" width="245.5" height="18" class="s2 hit" rx="2" tabindex="0" data-tip="A4c Adam 的 L2 &gt; 1e-4 可忽略
+66 对实验
+显著不同 45.5%
+失败"/><text x="551.5" y="223.0" class="dl" text-anchor="start" >45% · n=66 · 失败</text><text x="290.0" y="253.0" class="tl" text-anchor="end" >A6 β2 可忽略</text><rect x="300.0" y="240" width="273.3" height="18" class="s2 hit" rx="2" tabindex="0" data-tip="A6 β2 可忽略
+83 对实验
+显著不同 50.6%
+失败"/><text x="579.3" y="253.0" class="dl" text-anchor="start" >51% · n=83 · 失败</text><text x="290.0" y="283.0" class="tl" text-anchor="end" >A4c RMSprop 的 L2 &gt; 1e-4 可忽略</text><rect x="300.0" y="270" width="300.0" height="18" class="s2 hit" rx="2" tabindex="0" data-tip="A4c RMSprop 的 L2 &gt; 1e-4 可忽略
+9 对实验
+显著不同 55.6%
+失败"/><text x="606.0" y="283.0" class="dl" text-anchor="start" >56% · n=9 · 失败</text><text x="290.0" y="313.0" class="tl" text-anchor="end" >A4c Adagrad 的 L2 &gt; 1e-4 可忽略</text><rect x="300.0" y="300" width="432.0" height="18" class="s2 hit" rx="2" tabindex="0" data-tip="A4c Adagrad 的 L2 &gt; 1e-4 可忽略
+5 对实验
+显著不同 80.0%
+失败"/><text x="738.0" y="313.0" class="dl" text-anchor="start" >80% · n=5 · 失败</text><line x1="354.0" x2="354.0" y1="18" y2="330" class="epsl"/><text x="358.0" y="14.0" class="note" text-anchor="start" >ε = 10%</text></svg></figure></section>
+
+<section><h2>推导与误差传递</h2>
+<p>对同一流类、时钟 τ_大 > τ_小 的一对，把时钟大者训练到它的时钟等于 τ_小 的那一步 s*。则精确地有</p>
+<div class="formula">D = L_小(T) − L_大(T) = [L_小(T) − L_大(s*)] + [L_大(s*) − L_大(T)] = δ1 + δ2</div>
+<p>δ1 由 A1 管（时钟相等处的差），δ2 由 A2 管（时钟大者自己的进展）。两条都成立（δ2 > 0 且 |δ1| < δ2）时 D > 0，时钟大者胜；时钟大者输，就一定是其中一条失效。这是数学的一半，按构造成立。基准的学习曲线可以把每一对的 δ1、δ2 直接量出来，这就是用户定的“逐对核验”，另报于此；它要跑完整训练，代价等于直接比较。</p>
+<figure><figcaption><b>基准上的误差归因（逐对核验，要跑完整训练）。</b>每个点是一对时钟不等的同类配置。浅蓝楔形是两条前提都成立的区域，里面的点全是蓝色：这是按构造成立的一致性检查，不是证据。有信息的是楔形外的橙点：A2 失效的在左侧，A1 失效的在虚线下方。</figcaption><div class="legend"><span><i class="sw dot s1"></i>时钟大者胜（252 对）</span><span><i class="sw dot s2"></i>时钟大者输（33 对）</span><span><i class="sw dot ringsw"></i>事先核验并作答的对</span><span><i class="sw sq wedgesw"></i>两条前提都成立的区域</span></div><svg class="chart" viewBox="0 0 960 520" role="img" aria-label="基准曲线上的误差归因：δ2（A2 进展）对 δ1（A1 匹配差）" preserveAspectRatio="xMinYMin meet"><polygon points="500.0,241.0 930.0,18.0 930.0,464.0" class="wedge"/><line x1="294.8" x2="294.8" y1="18" y2="464" class="grid"/><text x="294.8" y="480.0" class="tick" text-anchor="middle" >-100%</text><line x1="70" x2="930" y1="347.4" y2="347.4" class="grid"/><text x="62.0" y="351.4" class="tick" text-anchor="end" >-100%</text><line x1="393.4" x2="393.4" y1="18" y2="464" class="grid"/><text x="393.4" y="480.0" class="tick" text-anchor="middle" >-10%</text><line x1="70" x2="930" y1="296.3" y2="296.3" class="grid"/><text x="62.0" y="300.3" class="tick" text-anchor="end" >-10%</text><line x1="469.2" x2="469.2" y1="18" y2="464" class="grid"/><text x="469.2" y="480.0" class="tick" text-anchor="middle" >-1%</text><line x1="70" x2="930" y1="257.0" y2="257.0" class="grid"/><text x="62.0" y="261.0" class="tick" text-anchor="end" >-1%</text><line x1="500.0" x2="500.0" y1="18" y2="464" class="grid"/><text x="500.0" y="480.0" class="tick" text-anchor="middle" >0</text><line x1="70" x2="930" y1="241.0" y2="241.0" class="grid"/><text x="62.0" y="245.0" class="tick" text-anchor="end" >0</text><line x1="530.8" x2="530.8" y1="18" y2="464" class="grid"/><text x="530.8" y="480.0" class="tick" text-anchor="middle" >1%</text><line x1="70" x2="930" y1="225.0" y2="225.0" class="grid"/><text x="62.0" y="229.0" class="tick" text-anchor="end" >1%</text><line x1="606.6" x2="606.6" y1="18" y2="464" class="grid"/><text x="606.6" y="480.0" class="tick" text-anchor="middle" >10%</text><line x1="70" x2="930" y1="185.7" y2="185.7" class="grid"/><text x="62.0" y="189.7" class="tick" text-anchor="end" >10%</text><line x1="705.2" x2="705.2" y1="18" y2="464" class="grid"/><text x="705.2" y="480.0" class="tick" text-anchor="middle" >100%</text><line x1="70" x2="930" y1="134.6" y2="134.6" class="grid"/><text x="62.0" y="138.6" class="tick" text-anchor="end" >100%</text><line x1="807.2" x2="807.2" y1="18" y2="464" class="grid"/><text x="807.2" y="480.0" class="tick" text-anchor="middle" >1,000%</text><line x1="70" x2="930" y1="81.7" y2="81.7" class="grid"/><text x="62.0" y="85.7" class="tick" text-anchor="end" >1,000%</text><line x1="909.5" x2="909.5" y1="18" y2="464" class="grid"/><text x="909.5" y="480.0" class="tick" text-anchor="middle" >10,000%</text><line x1="70" x2="930" y1="28.6" y2="28.6" class="grid"/><text x="62.0" y="32.6" class="tick" text-anchor="end" >10,000%</text><line x1="70.0" y1="18.0" x2="930.0" y2="464.0" class="diag2"/><text x="78.0" y="48.0" class="note" text-anchor="start" >δ1 + δ2 = 0：线的右上方时钟大者胜</text><text x="924.0" y="55.2" class="note" text-anchor="end" >两条前提都成立的楔形：δ2 &gt; 0 且 |δ1| &lt; δ2</text><g class="hit" tabindex="0" data-tip="q_8d1911:AB
+单变量回归 · RMSprop/Adagrad · 时钟比 4.1
+δ2（时钟大者自身的进展）+165.1%
+δ1（时钟相等处的差）-14.3%
+时钟大者胜
+"><circle cx="727.3" cy="303.9" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_50cd62:AB
+单变量回归 · RMSprop/Adagrad · 时钟比 1229.8
+δ2（时钟大者自身的进展）+2619.9%
+δ1（时钟相等处的差）-2600.7%
+时钟大者胜
+"><circle cx="850.0" cy="422.3" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_50cd62:AC
+单变量回归 · RMSprop/Adam · 时钟比 1.5
+δ2（时钟大者自身的进展）+2.5%
+δ1（时钟相等处的差）-44.2%
+时钟大者输
+"><circle cx="555.8" cy="328.9" r="4.5" class="mk s2"/></g><g class="hit" tabindex="0" data-tip="q_50cd62:BC
+单变量回归 · Adam/Adagrad · 时钟比 837.4
+δ2（时钟大者自身的进展）+47.2%
+δ1（时钟相等处的差）+12.5%
+时钟大者胜
+"><circle cx="672.3" cy="181.0" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_1bc410:AB
+单变量回归 · Adagrad/Adagrad · 时钟比 3.3
+δ2（时钟大者自身的进展）+14.2%
+δ1（时钟相等处的差）+0.1%
+时钟大者胜
+"><circle cx="621.0" cy="239.6" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_1bc410:AC
+单变量回归 · RMSprop/Adagrad · 时钟比 12.3
+δ2（时钟大者自身的进展）+104.1%
+δ1（时钟相等处的差）-3.3%
+时钟大者胜
+"><circle cx="707.0" cy="274.4" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_1bc410:BC
+单变量回归 · RMSprop/Adagrad · 时钟比 41.0
+δ2（时钟大者自身的进展）+112.3%
+δ1（时钟相等处的差）-1.2%
+时钟大者胜
+"><circle cx="710.3" cy="258.7" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_4af9e9:AC
+单变量回归 · AdamW/Adagrad · 时钟比 83.7
+δ2（时钟大者自身的进展）+985.7%
+δ1（时钟相等处的差）-788.4%
+时钟大者胜
+"><circle cx="806.5" cy="394.8" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_909c97:AB
+单变量回归 · Adagrad/Adagrad · 时钟比 3.0
+δ2（时钟大者自身的进展）+100.3%
+δ1（时钟相等处的差）-2.0%
+时钟大者胜
+"><circle cx="705.3" cy="266.5" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_909c97:AC
+单变量回归 · Adam/Adagrad · 时钟比 350.6
+δ2（时钟大者自身的进展）+337.7%
+δ1（时钟相等处的差）-139.1%
+时钟大者胜
+"><circle cx="759.0" cy="355.0" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_909c97:BC
+单变量回归 · Adam/Adagrad · 时钟比 116.9
+δ2（时钟大者自身的进展）+546.6%
+δ1（时钟相等处的差）-350.5%
+时钟大者胜
+"><circle cx="780.4" cy="376.2" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_0f9cad:AB
+单变量回归 · Adam/RMSprop · 时钟比 80.6
+δ2（时钟大者自身的进展）+90.9%
+δ1（时钟相等处的差）-11.8%
+时钟大者胜
+"><circle cx="701.0" cy="299.8" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_5a076f:AC
+单变量回归 · Adagrad/Adagrad · 时钟比 100.0
+δ2（时钟大者自身的进展）+6297.6%
+δ1（时钟相等处的差）-6101.4%
+时钟大者胜
+"><circle cx="889.0" cy="442.0" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_d7d583:AC
+单变量回归 · Adam/Adam · 时钟比 10.0
+δ2（时钟大者自身的进展）+242.3%
+δ1（时钟相等处的差）-42.9%
+时钟大者胜
+"><circle cx="744.3" cy="328.2" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_e45dc6:AB
+单变量回归 · RMSprop/Adagrad · 时钟比 123.0
+δ2（时钟大者自身的进展）+96.8%
+δ1（时钟相等处的差）+102.7%
+时钟大者胜
+"><circle cx="703.8" cy="134.0" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_e45dc6:AC
+单变量回归 · Adagrad/Adagrad · 时钟比 10.0
+δ2（时钟大者自身的进展）+167.7%
+δ1（时钟相等处的差）-0.3%
+时钟大者胜
+"><circle cx="728.0" cy="246.6" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_e45dc6:BC
+单变量回归 · RMSprop/Adagrad · 时钟比 12.3
+δ2（时钟大者自身的进展）+244.9%
+δ1（时钟相等处的差）-50.2%
+时钟大者胜
+"><circle cx="744.8" cy="331.8" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_45afc9:BC
+单变量回归 · RMSprop/Adam · 时钟比 14.7
+δ2（时钟大者自身的进展）+124933.7%
+δ1（时钟相等处的差）-125129.1%
+时钟大者输
+"><circle cx="930.0" cy="464.0" r="4.5" class="mk s2"/></g><g class="hit" tabindex="0" data-tip="q_764136:AB
+单变量回归 · RMSprop/Adam · 时钟比 112.1
+δ2（时钟大者自身的进展）+1466.1%
+δ1（时钟相等处的差）-1280.4%
+时钟大者胜
+"><circle cx="824.2" cy="406.0" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_ea39ad:AC
+单变量回归 · SGD/SGD · 时钟比 3.0
+δ2（时钟大者自身的进展）+5.8%
+δ1（时钟相等处的差）-0.1%
+时钟大者胜
+"><circle cx="585.5" cy="243.6" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_99e2a3:BC
+单变量回归 · SGD/SGD · 时钟比 10.0
+δ2（时钟大者自身的进展）+177.4%
+δ1（时钟相等处的差）-20.2%
+时钟大者胜
+"><circle cx="730.5" cy="311.4" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_e627c0:AC
+单变量回归 · Adagrad/AdamW · 时钟比 3.6
+δ2（时钟大者自身的进展）+173.2%
+δ1（时钟相等处的差）+0.5%
+时钟大者胜
+"><circle cx="729.4" cy="231.9" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_5cc19c:AC
+单变量回归 · SGD/SGD · 时钟比 33.3
+δ2（时钟大者自身的进展）+219.4%
+δ1（时钟相等处的差）-19.8%
+时钟大者胜
+"><circle cx="739.9" cy="311.0" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_98f152:AC
+单变量回归 · AdamW/Adagrad · 时钟比 8.4
+δ2（时钟大者自身的进展）+120.6%
+δ1（时钟相等处的差）-7.9%
+时钟大者胜
+"><circle cx="713.4" cy="291.5" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_98f152:BC
+单变量回归 · AdamW/Adagrad · 时钟比 8.4
+δ2（时钟大者自身的进展）+119.9%
+δ1（时钟相等处的差）-6.9%
+时钟大者胜
+"><circle cx="713.2" cy="288.6" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_c06365:AB
+单变量回归 · Adam/AdamW · 时钟比 33.3
+δ2（时钟大者自身的进展）+893.7%
+δ1（时钟相等处的差）-696.8%
+时钟大者胜
+"><circle cx="802.2" cy="392.0" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_66f7d3:AC
+单变量回归 · RMSprop/RMSprop · 时钟比 30.0
+δ2（时钟大者自身的进展）+197.5%
+δ1（时钟相等处的差）+1.2%
+时钟大者胜
+"><circle cx="735.3" cy="223.2" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_fa6715:AC
+单变量回归 · RMSprop/RMSprop · 时钟比 100.0
+δ2（时钟大者自身的进展）+201134.5%
+δ1（时钟相等处的差）-201269.5%
+时钟大者输
+"><circle cx="930.0" cy="464.0" r="4.5" class="mk s2"/></g><g class="hit" tabindex="0" data-tip="q_f8251d:BC
+单变量回归 · RMSprop/AdamW · 时钟比 44.1
+δ2（时钟大者自身的进展）+612213.9%
+δ1（时钟相等处的差）-612407.9%
+时钟大者输
+"><circle cx="930.0" cy="464.0" r="4.5" class="mk s2"/></g><g class="hit" tabindex="0" data-tip="q_098dc7:AC
+单变量回归 · SGD/SGD · 时钟比 331.9
+δ2（时钟大者自身的进展）+218.3%
+δ1（时钟相等处的差）-18.3%
+时钟大者胜
+"><circle cx="739.7" cy="309.3" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_098dc7:BC
+单变量回归 · SGD/SGD · 时钟比 331.9
+δ2（时钟大者自身的进展）+218.3%
+δ1（时钟相等处的差）-18.3%
+时钟大者胜
+"><circle cx="739.7" cy="309.3" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_91fe78:AB
+单变量回归 · SGD/SGD · 时钟比 9.8
+δ2（时钟大者自身的进展）+232.8%
+δ1（时钟相等处的差）-53.4%
+时钟大者胜
+"><circle cx="742.5" cy="333.2" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_476c97:AB
+单变量回归 · Adam/RMSprop · 时钟比 6.8
+δ2（时钟大者自身的进展）+385.7%
+δ1（时钟相等处的差）-192.0%
+时钟大者胜
+"><circle cx="764.9" cy="362.4" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_476c97:AC
+单变量回归 · Adam/RMSprop · 时钟比 6.8
+δ2（时钟大者自身的进展）+339.6%
+δ1（时钟相等处的差）-164.0%
+时钟大者胜
+"><circle cx="759.3" cy="358.7" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_533b36:AC
+单变量回归 · Adagrad/RMSprop · 时钟比 6.9
+δ2（时钟大者自身的进展）+5680.3%
+δ1（时钟相等处的差）-5483.3%
+时钟大者胜
+"><circle cx="884.4" cy="439.5" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_0b1ee6:AB
+单变量回归 · Adam/RMSprop · 时钟比 2.0
+δ2（时钟大者自身的进展）+0.4%
+δ1（时钟相等处的差）+187.5%
+时钟大者胜
+"><circle cx="515.1" cy="120.2" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_0b1ee6:AC
+单变量回归 · RMSprop/RMSprop · 时钟比 3.3
+δ2（时钟大者自身的进展）+821.0%
+δ1（时钟相等处的差）-819.5%
+时钟大者胜
+"><circle cx="798.4" cy="395.7" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_0b1ee6:BC
+单变量回归 · Adam/RMSprop · 时钟比 6.8
+δ2（时钟大者自身的进展）+1457.7%
+δ1（时钟相等处的差）-1269.6%
+时钟大者胜
+"><circle cx="823.9" cy="405.8" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_8b4289:AC
+单变量回归 · AdamW/Adagrad · 时钟比 16.4
+δ2（时钟大者自身的进展）+17.8%
+δ1（时钟相等处的差）-12.3%
+时钟大者胜
+"><circle cx="630.5" cy="300.6" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_c9b0f8:AB
+多变量回归 · Adam/Adagrad · 时钟比 8.4
+δ2（时钟大者自身的进展）+83.5%
+δ1（时钟相等处的差）-48.2%
+时钟大者胜
+"><circle cx="697.3" cy="330.8" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_c9b0f8:AC
+多变量回归 · RMSprop/Adagrad · 时钟比 36.9
+δ2（时钟大者自身的进展）+23800.0%
+δ1（时钟相等处的差）-23839.7%
+时钟大者输
+"><circle cx="930.0" cy="464.0" r="4.5" class="mk s2"/></g><g class="hit" tabindex="0" data-tip="q_c9b0f8:BC
+多变量回归 · RMSprop/Adam · 时钟比 4.4
+δ2（时钟大者自身的进展）+23.5%
+δ1（时钟相等处的差）-95.9%
+时钟大者输
+"><circle cx="642.2" cy="346.5" r="4.5" class="mk s2"/></g><g class="hit" tabindex="0" data-tip="q_659b2d:AC
+单变量回归 · AdamW/Adagrad · 时钟比 69.0
+δ2（时钟大者自身的进展）+228.7%
+δ1（时钟相等处的差）-28.9%
+时钟大者胜
+"><circle cx="741.7" cy="319.4" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_d325cd:AB
+多变量回归 · AdamW/Adagrad · 时钟比 8.4
+δ2（时钟大者自身的进展）+581.5%
+δ1（时钟相等处的差）-473.3%
+时钟大者胜
+"><circle cx="783.1" cy="383.1" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_d325cd:AC
+多变量回归 · Adagrad/Adam · 时钟比 1.2
+δ2（时钟大者自身的进展）+52.6%
+δ1（时钟相等处的差）+17.7%
+时钟大者胜
+"><circle cx="677.0" cy="173.5" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_d325cd:BC
+多变量回归 · AdamW/Adam · 时钟比 10.0
+δ2（时钟大者自身的进展）+492.6%
+δ1（时钟相等处的差）-342.7%
+时钟大者胜
+"><circle cx="775.8" cy="375.7" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_ad0a22:AB
+多变量回归 · Adagrad/Adagrad · 时钟比 3.0
+δ2（时钟大者自身的进展）+40.5%
+δ1（时钟相等处的差）-3.0%
+时钟大者胜
+"><circle cx="665.7" cy="272.9" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_ad0a22:AC
+多变量回归 · Adagrad/Adam · 时钟比 3.6
+δ2（时钟大者自身的进展）+54.5%
+δ1（时钟相等处的差）-3.9%
+时钟大者胜
+"><circle cx="678.6" cy="277.4" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_ad0a22:BC
+多变量回归 · Adagrad/Adam · 时钟比 1.2
+δ2（时钟大者自身的进展）+14.1%
+δ1（时钟相等处的差）-0.3%
+时钟大者胜
+"><circle cx="620.6" cy="246.6" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_96a6ac:AB
+多变量回归 · RMSprop/RMSprop · 时钟比 100.0
+δ2（时钟大者自身的进展）+284.7%
+δ1（时钟相等处的差）-112.7%
+时钟大者胜
+"><circle cx="751.4" cy="350.1" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_96a6ac:AC
+多变量回归 · Adam/RMSprop · 时钟比 22.7
+δ2（时钟大者自身的进展）+246.0%
+δ1（时钟相等处的差）-47.1%
+时钟大者胜
+"><circle cx="745.0" cy="330.3" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_96a6ac:BC
+多变量回归 · RMSprop/Adam · 时钟比 4.4
+δ2（时钟大者自身的进展）+837.4%
+δ1（时钟相等处的差）-1022.8%
+时钟大者输
+"><circle cx="799.3" cy="400.8" r="4.5" class="mk s2"/></g><g class="hit" tabindex="0" data-tip="q_26169c:AC
+多变量回归 · RMSprop/Adagrad · 时钟比 3.7
+δ2（时钟大者自身的进展）+112.7%
+δ1（时钟相等处的差）-33.3%
+时钟大者胜
+"><circle cx="710.5" cy="322.5" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_cdbed5:AB
+单变量回归 · AdamW/RMSprop · 时钟比 26.8
+δ2（时钟大者自身的进展）+200.5%
+δ1（时钟相等处的差）-1.6%
+时钟大者胜
+"><circle cx="735.9" cy="262.8" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_cdbed5:AC
+单变量回归 · AdamW/RMSprop · 时钟比 8.9
+δ2（时钟大者自身的进展）+206.4%
+δ1（时钟相等处的差）-7.5%
+时钟大者胜
+"><circle cx="737.2" cy="290.5" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_cdbed5:BC
+单变量回归 · RMSprop/RMSprop · 时钟比 3.0
+δ2（时钟大者自身的进展）+6.3%
+δ1（时钟相等处的差）+0.4%
+时钟大者胜
+"><circle cx="588.4" cy="233.9" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_3d7396:AB
+单变量回归 · Adagrad/RMSprop · 时钟比 2.1
+δ2（时钟大者自身的进展）+15.6%
+δ1（时钟相等处的差）+182.6%
+时钟大者胜
+"><circle cx="624.9" cy="120.8" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_3d7396:AC
+单变量回归 · AdamW/Adagrad · 时钟比 11.7
+δ2（时钟大者自身的进展）+31174.6%
+δ1（时钟相等处的差）-31362.8%
+时钟大者输
+"><circle cx="930.0" cy="464.0" r="4.5" class="mk s2"/></g><g class="hit" tabindex="0" data-tip="q_3d7396:BC
+单变量回归 · AdamW/RMSprop · 时钟比 24.2
+δ2（时钟大者自身的进展）+6704.5%
+δ1（时钟相等处的差）-6555.9%
+时钟大者胜
+"><circle cx="891.8" cy="443.6" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_5eb982:AB
+多变量回归 · AdamW/Adagrad · 时钟比 116.9
+δ2（时钟大者自身的进展）+62.1%
+δ1（时钟相等处的差）+0.1%
+时钟大者胜
+"><circle cx="684.3" cy="238.5" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_5eb982:AC
+多变量回归 · AdamW/Adagrad · 时钟比 1168.5
+δ2（时钟大者自身的进展）+124.6%
+δ1（时钟相等处的差）+3.5%
+时钟大者胜
+"><circle cx="714.9" cy="206.5" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_5eb982:BC
+多变量回归 · AdamW/AdamW · 时钟比 10.0
+δ2（时钟大者自身的进展）+111.6%
+δ1（时钟相等处的差）-29.4%
+时钟大者胜
+"><circle cx="710.0" cy="319.7" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_3cec3a:AB
+多变量回归 · AdamW/RMSprop · 时钟比 6.8
+δ2（时钟大者自身的进展）+155.5%
+δ1（时钟相等处的差）-56.7%
+时钟大者胜
+"><circle cx="724.7" cy="334.5" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_3cec3a:BC
+多变量回归 · AdamW/RMSprop · 时钟比 6.8
+δ2（时钟大者自身的进展）+155.5%
+δ1（时钟相等处的差）-56.8%
+时钟大者胜
+"><circle cx="724.7" cy="334.5" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_a36384:AB
+多变量回归 · Adam/RMSprop · 时钟比 2.0
+δ2（时钟大者自身的进展）+29.0%
+δ1（时钟相等处的差）-2.2%
+时钟大者胜
+"><circle cx="651.2" cy="267.9" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_a36384:AC
+多变量回归 · RMSprop/RMSprop · 时钟比 10.0
+δ2（时钟大者自身的进展）+36.7%
+δ1（时钟相等处的差）-2.8%
+时钟大者胜
+"><circle cx="661.3" cy="271.7" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_a36384:BC
+多变量回归 · RMSprop/Adam · 时钟比 4.9
+δ2（时钟大者自身的进展）+13.8%
+δ1（时钟相等处的差）-6.5%
+时钟大者胜
+"><circle cx="619.8" cy="287.6" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_b2b898:AC
+多变量回归 · RMSprop/Adam · 时钟比 11.2
+δ2（时钟大者自身的进展）+101.6%
+δ1（时钟相等处的差）-7.0%
+时钟大者胜
+"><circle cx="705.9" cy="288.9" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_fe3cc7:AB
+单变量回归 · RMSprop/Adagrad · 时钟比 369.0
+δ2（时钟大者自身的进展）+478672.9%
+δ1（时钟相等处的差）-478725.3%
+时钟大者输
+"><circle cx="930.0" cy="464.0" r="4.5" class="mk s2"/></g><g class="hit" tabindex="0" data-tip="q_fe3cc7:AC
+单变量回归 · AdamW/Adagrad · 时钟比 83.7
+δ2（时钟大者自身的进展）+5950.8%
+δ1（时钟相等处的差）-5752.7%
+时钟大者胜
+"><circle cx="886.5" cy="440.6" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_fe3cc7:BC
+单变量回归 · RMSprop/AdamW · 时钟比 4.4
+δ2（时钟大者自身的进展）+874.4%
+δ1（时钟相等处的差）-1073.3%
+时钟大者输
+"><circle cx="801.2" cy="401.9" r="4.5" class="mk s2"/></g><g class="hit" tabindex="0" data-tip="q_0290e5:AB
+多变量回归 · RMSprop/Adagrad · 时钟比 12.3
+δ2（时钟大者自身的进展）+222.5%
+δ1（时钟相等处的差）-132.7%
+时钟大者胜
+"><circle cx="740.5" cy="353.9" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_0290e5:AC
+多变量回归 · AdamW/Adagrad · 时钟比 2.8
+δ2（时钟大者自身的进展）+18.6%
+δ1（时钟相等处的差）-9.0%
+时钟大者胜
+"><circle cx="632.4" cy="294.1" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_0290e5:BC
+多变量回归 · RMSprop/AdamW · 时钟比 4.4
+δ2（时钟大者自身的进展）+121.3%
+δ1（时钟相等处的差）-39.3%
+时钟大者胜
+"><circle cx="713.7" cy="326.2" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_7b99b2:AB
+多变量回归 · Adam/RMSprop · 时钟比 6.8
+δ2（时钟大者自身的进展）+52.5%
+δ1（时钟相等处的差）-31.0%
+时钟大者胜
+"><circle cx="676.9" cy="320.9" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_839ea7:AB
+多变量回归 · AdamW/Adam · 时钟比 3.3
+δ2（时钟大者自身的进展）+8.9%
+δ1（时钟相等处的差）-1.2%
+时钟大者胜
+"><circle cx="601.8" cy="259.5" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_f292a2:AC
+多变量回归 · Adam/AdamW · 时钟比 10.0
+δ2（时钟大者自身的进展）+349.0%
+δ1（时钟相等处的差）-169.5%
+时钟大者胜
+"><circle cx="760.5" cy="359.5" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_8557f0:AB
+多变量回归 · SGD/SGD · 时钟比 3.3
+δ2（时钟大者自身的进展）+226.0%
+δ1（时钟相等处的差）-126.7%
+时钟大者胜
+"><circle cx="741.2" cy="352.8" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_79a3e7:AB
+多变量回归 · RMSprop/Adam · 时钟比 1.5
+δ2（时钟大者自身的进展）+29.2%
+δ1（时钟相等处的差）-171.0%
+时钟大者输
+"><circle cx="651.6" cy="359.7" r="4.5" class="mk s2"/></g><g class="hit" tabindex="0" data-tip="q_d5f933:AB
+多变量回归 · AdamW/Adagrad · 时钟比 8.4
+δ2（时钟大者自身的进展）+58.4%
+δ1（时钟相等处的差）-7.3%
+时钟大者胜
+"><circle cx="681.6" cy="289.7" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_e16ff4:AC
+多变量回归 · AdamW/RMSprop · 时钟比 68.1
+δ2（时钟大者自身的进展）+308.5%
+δ1（时钟相等处的差）-240.8%
+时钟大者胜
+"><circle cx="755.0" cy="367.6" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_cce03d:AB
+多变量回归 · Adam/AdamW · 时钟比 30.0
+δ2（时钟大者自身的进展）+257.4%
+δ1（时钟相等处的差）-150.0%
+时钟大者胜
+"><circle cx="747.0" cy="356.7" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_2d4dff:AB
+多变量回归 · Adam/Adagrad · 时钟比 8.4
+δ2（时钟大者自身的进展）+343.2%
+δ1（时钟相等处的差）-220.2%
+时钟大者胜
+"><circle cx="759.7" cy="365.5" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_130e1e:AB
+多变量回归 · Adam/Adam · 时钟比 10.0
+δ2（时钟大者自身的进展）+16.2%
+δ1（时钟相等处的差）-6.9%
+时钟大者胜
+"><circle cx="626.5" cy="288.5" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_420a5f:AB
+多变量回归 · AdamW/RMSprop · 时钟比 8.1
+δ2（时钟大者自身的进展）+154.9%
+δ1（时钟相等处的差）-93.0%
+时钟大者胜
+"><circle cx="724.5" cy="345.8" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_420a5f:AC
+多变量回归 · AdamW/RMSprop · 时钟比 8.1
+δ2（时钟大者自身的进展）+154.9%
+δ1（时钟相等处的差）-93.0%
+时钟大者胜
+"><circle cx="724.5" cy="345.8" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_ce0a6b:AC
+多变量回归 · RMSprop/RMSprop · 时钟比 33.3
+δ2（时钟大者自身的进展）+151.4%
+δ1（时钟相等处的差）-133.8%
+时钟大者胜
+"><circle cx="723.5" cy="354.1" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_e0430c:BC
+多变量回归 · Adam/Adam · 时钟比 3.3
+δ2（时钟大者自身的进展）+32.3%
+δ1（时钟相等处的差）-4.7%
+时钟大者胜
+"><circle cx="655.8" cy="281.3" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_5383ba:AB
+多变量回归 · Adam/Adagrad · 时钟比 27.9
+δ2（时钟大者自身的进展）+62.9%
+δ1（时钟相等处的差）-11.5%
+时钟大者胜
+"><circle cx="684.8" cy="299.2" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_9e733e:AB
+单变量回归 · Adam/Adagrad · 时钟比 230.0
+δ2（时钟大者自身的进展）+21007.3%
+δ1（时钟相等处的差）-21204.8%
+时钟大者输
+"><circle cx="930.0" cy="464.0" r="4.5" class="mk s2"/></g><g class="hit" tabindex="0" data-tip="q_9e733e:AC
+单变量回归 · Adagrad/Adagrad · 时钟比 3.0
+δ2（时钟大者自身的进展）+252.3%
+δ1（时钟相等处的差）-52.4%
+时钟大者胜
+"><circle cx="746.1" cy="332.7" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_9e733e:BC
+单变量回归 · Adam/Adagrad · 时钟比 689.9
+δ2（时钟大者自身的进展）+674.0%
+δ1（时钟相等处的差）-485.2%
+时钟大者胜
+"><circle cx="789.7" cy="383.7" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_e40bd1:AC
+多变量回归 · Adam/RMSprop · 时钟比 6.8
+δ2（时钟大者自身的进展）+24.5%
+δ1（时钟相等处的差）-1.9%
+时钟大者胜
+"><circle cx="644.1" cy="265.6" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_179f9a:AC
+多变量回归 · Adam/Adagrad · 时钟比 8.4
+δ2（时钟大者自身的进展）+96.9%
+δ1（时钟相等处的差）-59.8%
+时钟大者胜
+"><circle cx="703.8" cy="335.7" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_4f42f2:AB
+多变量回归 · AdamW/Adam · 时钟比 10.0
+δ2（时钟大者自身的进展）+269.9%
+δ1（时钟相等处的差）-82.1%
+时钟大者胜
+"><circle cx="749.1" cy="342.9" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_4f42f2:AC
+多变量回归 · AdamW/Adagrad · 时钟比 11.7
+δ2（时钟大者自身的进展）+247.6%
+δ1（时钟相等处的差）-58.1%
+时钟大者胜
+"><circle cx="745.3" cy="335.1" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_4f42f2:BC
+多变量回归 · Adam/Adagrad · 时钟比 1.2
+δ2（时钟大者自身的进展）+14.4%
+δ1（时钟相等处的差）+1.5%
+时钟大者胜
+"><circle cx="621.4" cy="219.7" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_0bdffa:AC
+表格分类 · Adam/Adam · 时钟比 10.0
+δ2（时钟大者自身的进展）+151.4%
+δ1（时钟相等处的差）-29.7%
+时钟大者胜
+"><circle cx="723.5" cy="319.9" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_168793:AC
+多变量回归 · AdamW/AdamW · 时钟比 10.0
+δ2（时钟大者自身的进展）+1.8%
+δ1（时钟相等处的差）-2.7%
+时钟大者输
+"><circle cx="545.1" cy="271.0" r="4.5" class="mk s2"/></g><g class="hit" tabindex="0" data-tip="q_675b98:AC
+表格分类 · RMSprop/Adam · 时钟比 146.9
+δ2（时钟大者自身的进展）+184.2%
+δ1（时钟相等处的差）-30.9%
+时钟大者胜
+"><circle cx="732.2" cy="320.8" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_29d729:AB
+表格分类 · Adam/AdamW · 时钟比 3.3
+δ2（时钟大者自身的进展）+119.0%
+δ1（时钟相等处的差）-41.9%
+时钟大者胜
+"><circle cx="712.9" cy="327.7" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_fd4fbc:AB
+表格分类 · AdamW/Adagrad · 时钟比 2.5
+δ2（时钟大者自身的进展）+70.3%
+δ1（时钟相等处的差）-11.8%
+时钟大者胜
+已事先核验并作答"><circle cx="689.7" cy="299.8" r="6" class="mk s1"/><circle cx="689.7" cy="299.8" r="9" class="ring"/></g><g class="hit" tabindex="0" data-tip="q_fd4fbc:AC
+表格分类 · AdamW/RMSprop · 时钟比 6.8
+δ2（时钟大者自身的进展）+115.0%
+δ1（时钟相等处的差）-10.9%
+时钟大者胜
+已事先核验并作答"><circle cx="711.4" cy="298.1" r="6" class="mk s1"/><circle cx="711.4" cy="298.1" r="9" class="ring"/></g><g class="hit" tabindex="0" data-tip="q_fd4fbc:BC
+表格分类 · Adagrad/RMSprop · 时钟比 2.7
+δ2（时钟大者自身的进展）+54.1%
+δ1（时钟相等处的差）-0.3%
+时钟大者胜
+已事先核验并作答"><circle cx="678.3" cy="246.5" r="6" class="mk s1"/><circle cx="678.3" cy="246.5" r="9" class="ring"/></g><g class="hit" tabindex="0" data-tip="q_f765e7:AC
+表格分类 · SGD/SGD · 时钟比 9.6
+δ2（时钟大者自身的进展）+7.7%
+δ1（时钟相等处的差）-0.0%
+时钟大者胜
+"><circle cx="596.1" cy="241.6" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_bc1805:AB
+多变量回归 · Adagrad/RMSprop · 时钟比 1.2
+δ2（时钟大者自身的进展）+0.8%
+δ1（时钟相等处的差）-0.8%
+时钟大者胜
+"><circle cx="525.5" cy="254.1" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_bc1805:AC
+多变量回归 · Adam/RMSprop · 时钟比 9.4
+δ2（时钟大者自身的进展）+33.4%
+δ1（时钟相等处的差）-2.5%
+时钟大者胜
+"><circle cx="657.4" cy="269.9" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_bc1805:BC
+多变量回归 · Adam/Adagrad · 时钟比 7.7
+δ2（时钟大者自身的进展）+33.2%
+δ1（时钟相等处的差）-2.3%
+时钟大者胜
+"><circle cx="657.1" cy="268.7" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_4647fd:BC
+表格分类 · AdamW/Adam · 时钟比 100.0
+δ2（时钟大者自身的进展）+127.1%
+δ1（时钟相等处的差）-7.1%
+时钟大者胜
+"><circle cx="715.8" cy="289.2" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_ea5717:BC
+表格分类 · Adam/Adagrad · 时钟比 2.8
+δ2（时钟大者自身的进展）+3.8%
+δ1（时钟相等处的差）+0.0%
+时钟大者胜
+已事先核验并作答"><circle cx="570.1" cy="240.4" r="6" class="mk s1"/><circle cx="570.1" cy="240.4" r="9" class="ring"/></g><g class="hit" tabindex="0" data-tip="q_720906:AB
+多变量回归 · RMSprop/Adam · 时钟比 3.5
+δ2（时钟大者自身的进展）+17.4%
+δ1（时钟相等处的差）+0.8%
+时钟大者胜
+"><circle cx="629.5" cy="226.9" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_720906:AC
+多变量回归 · RMSprop/RMSprop · 时钟比 3.0
+δ2（时钟大者自身的进展）-21.1%
+δ1（时钟相等处的差）-2.1%
+时钟大者输
+"><circle cx="362.4" cy="267.1" r="4.5" class="mk s2"/></g><g class="hit" tabindex="0" data-tip="q_720906:BC
+多变量回归 · RMSprop/Adam · 时钟比 10.6
+δ2（时钟大者自身的进展）+14.2%
+δ1（时钟相等处的差）-19.3%
+时钟大者输
+"><circle cx="621.1" cy="310.4" r="4.5" class="mk s2"/></g><g class="hit" tabindex="0" data-tip="q_61fb92:AB
+表格分类 · Adam/Adagrad · 时钟比 25.1
+δ2（时钟大者自身的进展）+138.9%
+δ1（时钟相等处的差）-3.8%
+时钟大者胜
+"><circle cx="719.7" cy="277.1" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_a36534:BC
+表格分类 · RMSprop/Adagrad · 时钟比 18.3
+δ2（时钟大者自身的进展）+86.7%
+δ1（时钟相等处的差）-6.8%
+时钟大者胜
+"><circle cx="698.9" cy="288.5" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_49d499:AB
+表格分类 · Adam/Adam · 时钟比 3.0
+δ2（时钟大者自身的进展）+113.5%
+δ1（时钟相等处的差）-18.4%
+时钟大者胜
+已事先核验并作答"><circle cx="710.8" cy="309.4" r="6" class="mk s1"/><circle cx="710.8" cy="309.4" r="9" class="ring"/></g><g class="hit" tabindex="0" data-tip="q_49d499:AC
+表格分类 · Adagrad/Adam · 时钟比 1.2
+δ2（时钟大者自身的进展）+23.1%
+δ1（时钟相等处的差）+16.9%
+时钟大者胜
+"><circle cx="641.5" cy="174.5" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_49d499:BC
+表格分类 · Adam/Adagrad · 时钟比 2.5
+δ2（时钟大者自身的进展）+110.5%
+δ1（时钟相等处的差）-49.6%
+时钟大者胜
+"><circle cx="709.6" cy="331.5" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_1132b6:AB
+表格分类 · Adam/Adagrad · 时钟比 116.9
+δ2（时钟大者自身的进展）+77.2%
+δ1（时钟相等处的差）-1.8%
+时钟大者胜
+"><circle cx="693.8" cy="264.4" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_1132b6:BC
+表格分类 · Adam/Adagrad · 时钟比 116.9
+δ2（时钟大者自身的进展）+77.2%
+δ1（时钟相等处的差）-1.8%
+时钟大者胜
+"><circle cx="693.8" cy="264.4" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_f18ec5:AB
+表格分类 · AdamW/Adagrad · 时钟比 83.7
+δ2（时钟大者自身的进展）+171.4%
+δ1（时钟相等处的差）-2.5%
+时钟大者胜
+已事先核验并作答"><circle cx="729.0" cy="270.0" r="6" class="mk s1"/><circle cx="729.0" cy="270.0" r="9" class="ring"/></g><g class="hit" tabindex="0" data-tip="q_f18ec5:AC
+表格分类 · Adagrad/Adagrad · 时钟比 3.3
+δ2（时钟大者自身的进展）+48.8%
+δ1（时钟相等处的差）+0.1%
+时钟大者胜
+"><circle cx="673.7" cy="238.5" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_f18ec5:BC
+表格分类 · AdamW/Adagrad · 时钟比 25.1
+δ2（时钟大者自身的进展）+204.5%
+δ1（时钟相等处的差）-53.3%
+时钟大者胜
+已事先核验并作答"><circle cx="736.8" cy="333.1" r="6" class="mk s1"/><circle cx="736.8" cy="333.1" r="9" class="ring"/></g><g class="hit" tabindex="0" data-tip="q_627536:AB
+表格分类 · SGD/SGD · 时钟比 33.3
+δ2（时钟大者自身的进展）+42.2%
+δ1（时钟相等处的差）-0.0%
+时钟大者胜
+"><circle cx="667.5" cy="241.9" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_aafb37:AB
+表格分类 · Adam/Adagrad · 时钟比 2.5
+δ2（时钟大者自身的进展）+67.0%
+δ1（时钟相等处的差）-10.2%
+时钟大者胜
+"><circle cx="687.6" cy="296.7" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_aafb37:AC
+表格分类 · Adagrad/AdamW · 时钟比 4.0
+δ2（时钟大者自身的进展）+92.5%
+δ1（时钟相等处的差）-1.3%
+时钟大者胜
+"><circle cx="701.8" cy="260.5" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_aafb37:BC
+表格分类 · Adam/AdamW · 时钟比 10.0
+δ2（时钟大者自身的进展）+137.5%
+δ1（时钟相等处的差）-6.4%
+时钟大者胜
+"><circle cx="719.2" cy="287.3" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_b6bfff:AB
+表格分类 · RMSprop/Adagrad · 时钟比 24.4
+δ2（时钟大者自身的进展）+9.8%
+δ1（时钟相等处的差）-0.0%
+时钟大者胜
+"><circle cx="605.7" cy="241.6" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_b6bfff:AC
+表格分类 · AdamW/RMSprop · 时钟比 94.3
+δ2（时钟大者自身的进展）+89.3%
+δ1（时钟相等处的差）-9.4%
+时钟大者胜
+"><circle cx="700.2" cy="294.9" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_b6bfff:BC
+表格分类 · AdamW/Adagrad · 时钟比 2299.6
+δ2（时钟大者自身的进展）+88.6%
+δ1（时钟相等处的差）-0.6%
+时钟大者胜
+"><circle cx="699.9" cy="251.3" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_68e79f:AB
+多变量回归 · Adam/Adagrad · 时钟比 230.0
+δ2（时钟大者自身的进展）+1896.6%
+δ1（时钟相等处的差）-1731.0%
+时钟大者胜
+"><circle cx="835.6" cy="413.0" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_68e79f:AC
+多变量回归 · Adagrad/Adagrad · 时钟比 10.0
+δ2（时钟大者自身的进展）+157.3%
+δ1（时钟相等处的差）-4.8%
+时钟大者胜
+"><circle cx="725.2" cy="281.6" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_68e79f:BC
+多变量回归 · Adam/Adagrad · 时钟比 2299.6
+δ2（时钟大者自身的进展）+999.5%
+δ1（时钟相等处的差）-804.5%
+时钟大者胜
+"><circle cx="807.2" cy="395.3" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_e0f8af:AB
+表格分类 · RMSprop/Adagrad · 时钟比 12.3
+δ2（时钟大者自身的进展）+139.4%
+δ1（时钟相等处的差）-0.6%
+时钟大者胜
+"><circle cx="719.8" cy="252.5" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_29eab4:AB
+表格分类 · Adagrad/Adagrad · 时钟比 3.0
+δ2（时钟大者自身的进展）+115.9%
+δ1（时钟相等处的差）-9.3%
+时钟大者胜
+"><circle cx="711.7" cy="294.7" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_29eab4:AC
+表格分类 · Adagrad/AdamW · 时钟比 1.2
+δ2（时钟大者自身的进展）+22.5%
+δ1（时钟相等处的差）+2.5%
+时钟大者胜
+"><circle cx="640.4" cy="211.8" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_29eab4:BC
+表格分类 · AdamW/Adagrad · 时钟比 2.5
+δ2（时钟大者自身的进展）+113.3%
+δ1（时钟相等处的差）-25.9%
+时钟大者胜
+"><circle cx="710.7" cy="316.9" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_480dac:AB
+表格分类 · SGD/SGD · 时钟比 3.5
+δ2（时钟大者自身的进展）+1.5%
+δ1（时钟相等处的差）-0.0%
+时钟大者胜
+"><circle cx="540.6" cy="241.1" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_7f84fd:AB
+表格分类 · Adam/Adagrad · 时钟比 16.4
+δ2（时钟大者自身的进展）-47.8%
+δ1（时钟相等处的差）-27.8%
+时钟大者输
+"><circle cx="327.1" cy="318.5" r="4.5" class="mk s2"/></g><g class="hit" tabindex="0" data-tip="q_7f84fd:AC
+表格分类 · Adam/Adagrad · 时钟比 1637.0
+δ2（时钟大者自身的进展）+93.5%
+δ1（时钟相等处的差）-10.9%
+时钟大者胜
+"><circle cx="702.3" cy="298.2" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_7f84fd:BC
+表格分类 · Adagrad/Adagrad · 时钟比 100.0
+δ2（时钟大者自身的进展）+149.9%
+δ1（时钟相等处的差）-13.0%
+时钟大者胜
+"><circle cx="723.0" cy="301.8" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_8d4c15:AB
+表格分类 · Adagrad/Adagrad · 时钟比 3.0
+δ2（时钟大者自身的进展）+5.6%
+δ1（时钟相等处的差）+0.0%
+时钟大者胜
+"><circle cx="583.8" cy="240.9" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_8d4c15:AC
+表格分类 · Adam/Adagrad · 时钟比 83.7
+δ2（时钟大者自身的进展）+114.7%
+δ1（时钟相等处的差）-5.3%
+时钟大者胜
+"><circle cx="711.2" cy="283.5" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_8d4c15:BC
+表格分类 · Adam/Adagrad · 时钟比 251.2
+δ2（时钟大者自身的进展）+115.8%
+δ1（时钟相等处的差）-2.5%
+时钟大者胜
+"><circle cx="711.7" cy="270.0" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_2711f0:AB
+表格分类 · Adam/Adagrad · 时钟比 8.4
+δ2（时钟大者自身的进展）+63.8%
+δ1（时钟相等处的差）+0.1%
+时钟大者胜
+"><circle cx="685.5" cy="238.6" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_2711f0:AC
+表格分类 · RMSprop/Adam · 时钟比 4.9
+δ2（时钟大者自身的进展）+129.8%
+δ1（时钟相等处的差）-3.4%
+时钟大者胜
+"><circle cx="716.7" cy="275.1" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_2711f0:BC
+表格分类 · RMSprop/Adagrad · 时钟比 41.0
+δ2（时钟大者自身的进展）+157.7%
+δ1（时钟相等处的差）+0.6%
+时钟大者胜
+"><circle cx="725.3" cy="229.9" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_753b06:AB
+表格分类 · AdamW/Adam · 时钟比 10.0
+δ2（时钟大者自身的进展）+151.6%
+δ1（时钟相等处的差）-15.3%
+时钟大者胜
+"><circle cx="723.6" cy="305.4" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_bddae5:AC
+表格分类 · SGD/SGD · 时钟比 289.5
+δ2（时钟大者自身的进展）+137.0%
+δ1（时钟相等处的差）+0.4%
+时钟大者胜
+"><circle cx="719.1" cy="233.9" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_1e6c77:AC
+表格分类 · RMSprop/Adagrad · 时钟比 36.9
+δ2（时钟大者自身的进展）+55.4%
+δ1（时钟相等处的差）-31.1%
+时钟大者胜
+"><circle cx="679.3" cy="321.0" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_8c59b9:BC
+表格分类 · RMSprop/Adagrad · 时钟比 18.3
+δ2（时钟大者自身的进展）+109.5%
+δ1（时钟相等处的差）-2.4%
+时钟大者胜
+"><circle cx="709.2" cy="269.1" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_e38bfa:BC
+表格分类 · RMSprop/Adagrad · 时钟比 36.9
+δ2（时钟大者自身的进展）+172.7%
+δ1（时钟相等处的差）-11.8%
+时钟大者胜
+"><circle cx="729.3" cy="299.8" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_f4845d:AB
+XOR 分类 · AdamW/Adagrad · 时钟比 837.4
+δ2（时钟大者自身的进展）+151.4%
+δ1（时钟相等处的差）+4.0%
+时钟大者胜
+"><circle cx="723.5" cy="203.9" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_f4845d:AC
+XOR 分类 · AdamW/Adam · 时钟比 30.0
+δ2（时钟大者自身的进展）+205.0%
+δ1（时钟相等处的差）-108.0%
+时钟大者胜
+"><circle cx="736.9" cy="349.2" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_f4845d:BC
+XOR 分类 · Adam/Adagrad · 时钟比 27.9
+δ2（时钟大者自身的进展）+93.7%
+δ1（时钟相等处的差）+0.1%
+时钟大者胜
+"><circle cx="702.4" cy="239.6" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_0f936e:AB
+表格分类 · RMSprop/AdamW · 时钟比 112.1
+δ2（时钟大者自身的进展）+122.5%
+δ1（时钟相等处的差）-53.8%
+时钟大者胜
+"><circle cx="714.1" cy="333.3" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_d8116e:AB
+XOR 分类 · Adagrad/Adam · 时钟比 4.0
+δ2（时钟大者自身的进展）+87.3%
+δ1（时钟相等处的差）-5.6%
+时钟大者胜
+"><circle cx="699.2" cy="284.4" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_d8116e:AC
+XOR 分类 · Adam/Adagrad · 时钟比 2.5
+δ2（时钟大者自身的进展）+20.6%
+δ1（时钟相等处的差）+0.1%
+时钟大者胜
+"><circle cx="636.6" cy="238.6" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_d8116e:BC
+XOR 分类 · Adagrad/Adagrad · 时钟比 10.0
+δ2（时钟大者自身的进展）+105.2%
+δ1（时钟相等处的差）-6.9%
+时钟大者胜
+"><circle cx="707.4" cy="288.7" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_9596dc:BC
+表格分类 · Adagrad/RMSprop · 时钟比 1.2
+δ2（时钟大者自身的进展）+21.3%
+δ1（时钟相等处的差）+16.1%
+时钟大者胜
+"><circle cx="638.1" cy="175.6" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_4e8c54:BC
+表格分类 · Adagrad/Adagrad · 时钟比 3.0
+δ2（时钟大者自身的进展）+6.0%
+δ1（时钟相等处的差）-0.1%
+时钟大者胜
+已事先核验并作答"><circle cx="586.3" cy="243.1" r="6" class="mk s1"/><circle cx="586.3" cy="243.1" r="9" class="ring"/></g><g class="hit" tabindex="0" data-tip="q_eb10e5:AB
+XOR 分类 · AdamW/Adagrad · 时钟比 2.5
+δ2（时钟大者自身的进展）+0.3%
+δ1（时钟相等处的差）+0.0%
+时钟大者胜
+"><circle cx="512.9" cy="240.9" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_eb10e5:AC
+XOR 分类 · Adagrad/AdamW · 时钟比 11.9
+δ2（时钟大者自身的进展）+11.5%
+δ1（时钟相等处的差）+0.0%
+时钟大者胜
+"><circle cx="612.3" cy="240.2" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_eb10e5:BC
+XOR 分类 · Adagrad/Adagrad · 时钟比 30.0
+δ2（时钟大者自身的进展）+11.8%
+δ1（时钟相等处的差）+0.0%
+时钟大者胜
+"><circle cx="613.5" cy="240.2" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_b907eb:AB
+表格分类 · SGD/SGD · 时钟比 2.9
+δ2（时钟大者自身的进展）+16.6%
+δ1（时钟相等处的差）+0.0%
+时钟大者胜
+"><circle cx="627.4" cy="240.1" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_5682a5:BC
+XOR 分类 · Adagrad/Adagrad · 时钟比 10.0
+δ2（时钟大者自身的进展）+15.6%
+δ1（时钟相等处的差）-0.1%
+时钟大者胜
+"><circle cx="625.0" cy="242.3" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_22be03:BC
+XOR 分类 · RMSprop/Adam · 时钟比 4.4
+δ2（时钟大者自身的进展）+68.5%
+δ1（时钟相等处的差）-0.4%
+时钟大者胜
+"><circle cx="688.6" cy="248.8" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_4657c4:AB
+XOR 分类 · AdamW/Adagrad · 时钟比 83.7
+δ2（时钟大者自身的进展）+168.8%
+δ1（时钟相等处的差）+0.3%
+时钟大者胜
+"><circle cx="728.3" cy="234.4" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_4657c4:AC
+XOR 分类 · AdamW/Adagrad · 时钟比 83.7
+δ2（时钟大者自身的进展）+168.8%
+δ1（时钟相等处的差）+0.3%
+时钟大者胜
+"><circle cx="728.3" cy="234.3" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_5fc8f6:AB
+XOR 分类 · Adagrad/Adagrad · 时钟比 33.3
+δ2（时钟大者自身的进展）+13.0%
+δ1（时钟相等处的差）-0.0%
+时钟大者胜
+"><circle cx="617.5" cy="241.7" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_5fc8f6:AC
+XOR 分类 · AdamW/Adagrad · 时钟比 49.1
+δ2（时钟大者自身的进展）+57.9%
+δ1（时钟相等处的差）-13.0%
+时钟大者胜
+"><circle cx="681.2" cy="301.9" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_5fc8f6:BC
+XOR 分类 · AdamW/Adagrad · 时钟比 1637.0
+δ2（时钟大者自身的进展）+57.2%
+δ1（时钟相等处的差）-0.1%
+时钟大者胜
+"><circle cx="680.7" cy="243.7" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_fc0019:AB
+表格分类 · AdamW/Adagrad · 时钟比 49.1
+δ2（时钟大者自身的进展）+136.6%
+δ1（时钟相等处的差）-7.5%
+时钟大者胜
+"><circle cx="719.0" cy="290.3" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_fc0019:AC
+表格分类 · Adam/AdamW · 时钟比 3.3
+δ2（时钟大者自身的进展）-41.8%
+δ1（时钟相等处的差）-33.1%
+时钟大者输
+"><circle cx="333.0" cy="322.4" r="4.5" class="mk s2"/></g><g class="hit" tabindex="0" data-tip="q_fc0019:BC
+表格分类 · Adam/Adagrad · 时钟比 163.7
+δ2（时钟大者自身的进展）+93.9%
+δ1（时钟相等处的差）-22.4%
+时钟大者胜
+"><circle cx="702.4" cy="313.7" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_07d60b:AB
+XOR 分类 · SGD/SGD · 时钟比 96.5
+δ2（时钟大者自身的进展）+0.5%
+δ1（时钟相等处的差）-0.0%
+时钟大者胜
+"><circle cx="519.1" cy="241.2" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_6d9300:BC
+表格分类 · RMSprop/RMSprop · 时钟比 3.0
+δ2（时钟大者自身的进展）-14.2%
+δ1（时钟相等处的差）+56.4%
+时钟大者胜
+"><circle cx="379.1" cy="147.6" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_b036ab:AB
+XOR 分类 · RMSprop/Adam · 时钟比 3.5
+δ2（时钟大者自身的进展）+124.5%
+δ1（时钟相等处的差）-17.6%
+时钟大者胜
+"><circle cx="714.9" cy="308.3" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_db44a3:BC
+XOR 分类 · RMSprop/Adagrad · 时钟比 55.0
+δ2（时钟大者自身的进展）+179.1%
+δ1（时钟相等处的差）-54.3%
+时钟大者胜
+"><circle cx="730.9" cy="333.5" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_4482d2:AB
+XOR 分类 · Adam/RMSprop · 时钟比 89.2
+δ2（时钟大者自身的进展）+124.0%
+δ1（时钟相等处的差）-3.1%
+时钟大者胜
+"><circle cx="714.7" cy="273.7" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_d4dfac:BC
+XOR 分类 · RMSprop/Adam · 时钟比 146.9
+δ2（时钟大者自身的进展）+673.4%
+δ1（时钟相等处的差）-554.7%
+时钟大者胜
+"><circle cx="789.6" cy="386.7" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_ae1eb0:AB
+螺旋分类 · RMSprop/AdamW · 时钟比 4.9
+δ2（时钟大者自身的进展）+23.7%
+δ1（时钟相等处的差）-5.4%
+时钟大者胜
+"><circle cx="642.6" cy="283.8" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_3ffa89:BC
+螺旋分类 · AdamW/Adam · 时钟比 3.0
+δ2（时钟大者自身的进展）+14.1%
+δ1（时钟相等处的差）-1.2%
+时钟大者胜
+"><circle cx="620.6" cy="259.2" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_e0619c:AB
+XOR 分类 · AdamW/RMSprop · 时钟比 3.0
+δ2（时钟大者自身的进展）+53.1%
+δ1（时钟相等处的差）+6.0%
+时钟大者胜
+"><circle cx="677.4" cy="196.2" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_e0619c:AC
+XOR 分类 · AdamW/AdamW · 时钟比 30.0
+δ2（时钟大者自身的进展）+74.6%
+δ1（时钟相等处的差）-123.6%
+时钟大者输
+"><circle cx="692.3" cy="352.3" r="4.5" class="mk s2"/></g><g class="hit" tabindex="0" data-tip="q_e0619c:BC
+XOR 分类 · AdamW/RMSprop · 时钟比 89.2
+δ2（时钟大者自身的进展）+204.5%
+δ1（时钟相等处的差）-193.7%
+时钟大者胜
+"><circle cx="736.8" cy="362.6" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_31d771:AB
+螺旋分类 · AdamW/AdamW · 时钟比 30.0
+δ2（时钟大者自身的进展）+206.0%
+δ1（时钟相等处的差）-8.9%
+时钟大者胜
+"><circle cx="737.1" cy="293.8" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_d96292:AB
+XOR 分类 · SGD/SGD · 时钟比 33.3
+δ2（时钟大者自身的进展）+0.1%
+δ1（时钟相等处的差）+0.0%
+时钟大者胜
+"><circle cx="503.1" cy="241.0" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_769deb:AC
+螺旋分类 · Adagrad/RMSprop · 时钟比 8.1
+δ2（时钟大者自身的进展）+22.6%
+δ1（时钟相等处的差）-0.6%
+时钟大者胜
+"><circle cx="640.6" cy="251.2" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_3b3f30:AC
+螺旋分类 · RMSprop/Adagrad · 时钟比 369.0
+δ2（时钟大者自身的进展）+48.2%
+δ1（时钟相等处的差）-8.6%
+时钟大者胜
+"><circle cx="673.2" cy="293.2" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_a741e4:AB
+螺旋分类 · RMSprop/Adam · 时钟比 4.4
+δ2（时钟大者自身的进展）+20.2%
+δ1（时钟相等处的差）-14.0%
+时钟大者胜
+"><circle cx="635.8" cy="303.4" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_a741e4:AC
+螺旋分类 · AdamW/Adam · 时钟比 10.0
+δ2（时钟大者自身的进展）+43.3%
+δ1（时钟相等处的差）-23.4%
+时钟大者胜
+"><circle cx="668.6" cy="314.6" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_a741e4:BC
+螺旋分类 · AdamW/RMSprop · 时钟比 2.3
+δ2（时钟大者自身的进展）+24.1%
+δ1（时钟相等处的差）-10.3%
+时钟大者胜
+"><circle cx="643.4" cy="296.9" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_f8c966:AB
+螺旋分类 · RMSprop/RMSprop · 时钟比 10.0
+δ2（时钟大者自身的进展）+240.8%
+δ1（时钟相等处的差）-67.0%
+时钟大者胜
+"><circle cx="744.0" cy="338.3" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_a86450:AB
+螺旋分类 · Adam/AdamW · 时钟比 30.0
+δ2（时钟大者自身的进展）+259.6%
+δ1（时钟相等处的差）-60.2%
+时钟大者胜
+"><circle cx="747.3" cy="335.9" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_a86450:AC
+螺旋分类 · Adam/Adagrad · 时钟比 8.4
+δ2（时钟大者自身的进展）+1740.0%
+δ1（时钟相等处的差）-1546.5%
+时钟大者胜
+"><circle cx="831.8" cy="410.4" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_a86450:BC
+螺旋分类 · Adagrad/AdamW · 时钟比 3.6
+δ2（时钟大者自身的进展）+190.2%
+δ1（时钟相等处的差）-24.1%
+时钟大者胜
+"><circle cx="733.6" cy="315.3" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_a06736:AC
+螺旋分类 · SGD/SGD · 时钟比 3.0
+δ2（时钟大者自身的进展）+3.1%
+δ1（时钟相等处的差）-2.4%
+时钟大者胜
+"><circle cx="562.7" cy="269.1" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_d166b7:AB
+螺旋分类 · AdamW/Adagrad · 时钟比 163.7
+δ2（时钟大者自身的进展）+51.4%
+δ1（时钟相等处的差）+0.7%
+时钟大者胜
+"><circle cx="676.1" cy="228.3" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_d166b7:AC
+螺旋分类 · RMSprop/Adagrad · 时钟比 611.7
+δ2（时钟大者自身的进展）+32.8%
+δ1（时钟相等处的差）+24.6%
+时钟大者胜
+"><circle cx="656.5" cy="166.2" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_d166b7:BC
+螺旋分类 · RMSprop/AdamW · 时钟比 3.7
+δ2（时钟大者自身的进展）+7.2%
+δ1（时钟相等处的差）-1.6%
+时钟大者胜
+"><circle cx="593.7" cy="262.7" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_19180f:AB
+螺旋分类 · AdamW/AdamW · 时钟比 30.0
+δ2（时钟大者自身的进展）+76.1%
+δ1（时钟相等处的差）-65.2%
+时钟大者胜
+"><circle cx="693.2" cy="337.7" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_36b7ec:AB
+螺旋分类 · RMSprop/RMSprop · 时钟比 100.0
+δ2（时钟大者自身的进展）+42.2%
+δ1（时钟相等处的差）-19.3%
+时钟大者胜
+"><circle cx="667.4" cy="310.5" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_36b7ec:BC
+螺旋分类 · RMSprop/RMSprop · 时钟比 100.0
+δ2（时钟大者自身的进展）+42.2%
+δ1（时钟相等处的差）-19.3%
+时钟大者胜
+"><circle cx="667.4" cy="310.5" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_acca70:AB
+螺旋分类 · RMSprop/RMSprop · 时钟比 30.0
+δ2（时钟大者自身的进展）+638.9%
+δ1（时钟相等处的差）-568.6%
+时钟大者胜
+"><circle cx="787.3" cy="387.3" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_acca70:AC
+螺旋分类 · RMSprop/Adam · 时钟比 124.1
+δ2（时钟大者自身的进展）+552.9%
+δ1（时钟相等处的差）-459.5%
+时钟大者胜
+"><circle cx="780.9" cy="382.4" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_acca70:BC
+螺旋分类 · RMSprop/Adam · 时钟比 4.1
+δ2（时钟大者自身的进展）+27.6%
+δ1（时钟相等处的差）+0.1%
+时钟大者胜
+"><circle cx="649.1" cy="239.4" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_fd8eb5:AC
+螺旋分类 · RMSprop/Adagrad · 时钟比 36.9
+δ2（时钟大者自身的进展）+290386.5%
+δ1（时钟相等处的差）-290239.2%
+时钟大者胜
+"><circle cx="930.0" cy="464.0" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_b3251c:AB
+螺旋分类 · Adagrad/AdamW · 时钟比 4.0
+δ2（时钟大者自身的进展）+384.2%
+δ1（时钟相等处的差）-196.0%
+时钟大者胜
+"><circle cx="764.7" cy="362.8" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_b3251c:AC
+螺旋分类 · RMSprop/Adagrad · 时钟比 3.7
+δ2（时钟大者自身的进展）+9753.5%
+δ1（时钟相等处的差）-9607.9%
+时钟大者胜
+"><circle cx="908.4" cy="452.5" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_b3251c:BC
+螺旋分类 · RMSprop/AdamW · 时钟比 14.7
+δ2（时钟大者自身的进展）+495.0%
+δ1（时钟相等处的差）-296.9%
+时钟大者胜
+"><circle cx="776.0" cy="372.4" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_050a6f:BC
+螺旋分类 · AdamW/Adagrad · 时钟比 279.1
+δ2（时钟大者自身的进展）+215.7%
+δ1（时钟相等处的差）-15.7%
+时钟大者胜
+"><circle cx="739.1" cy="305.9" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_32c9bb:AB
+螺旋分类 · Adagrad/Adagrad · 时钟比 3.0
+δ2（时钟大者自身的进展）+2.1%
+δ1（时钟相等处的差）-0.4%
+时钟大者胜
+"><circle cx="550.3" cy="248.0" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_32c9bb:AC
+螺旋分类 · Adagrad/Adagrad · 时钟比 10.0
+δ2（时钟大者自身的进展）+57.4%
+δ1（时钟相等处的差）-22.8%
+时钟大者胜
+"><circle cx="680.8" cy="314.1" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_32c9bb:BC
+螺旋分类 · Adagrad/Adagrad · 时钟比 30.0
+δ2（时钟大者自身的进展）+130.7%
+δ1（时钟相等处的差）-94.5%
+时钟大者胜
+"><circle cx="717.0" cy="346.1" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_b13302:AB
+XOR 分类 · AdamW/Adam · 时钟比 100.0
+δ2（时钟大者自身的进展）+159.4%
+δ1（时钟相等处的差）-193.7%
+时钟大者输
+"><circle cx="725.8" cy="362.6" r="4.5" class="mk s2"/></g><g class="hit" tabindex="0" data-tip="q_b13302:AC
+XOR 分类 · AdamW/Adagrad · 时钟比 1637.0
+δ2（时钟大者自身的进展）+164.6%
+δ1（时钟相等处的差）-59.4%
+时钟大者胜
+"><circle cx="727.2" cy="335.6" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_b13302:BC
+XOR 分类 · Adam/Adagrad · 时钟比 16.4
+δ2（时钟大者自身的进展）+128.4%
+δ1（时钟相等处的差）-0.5%
+时钟大者胜
+"><circle cx="716.2" cy="249.6" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_8eeccd:AB
+螺旋分类 · Adagrad/Adagrad · 时钟比 3.0
+δ2（时钟大者自身的进展）+1417.6%
+δ1（时钟相等处的差）-1283.2%
+时钟大者胜
+"><circle cx="822.7" cy="406.1" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_8eeccd:AC
+螺旋分类 · AdamW/Adagrad · 时钟比 8.4
+δ2（时钟大者自身的进展）+3087.7%
+δ1（时钟相等处的差）-2900.3%
+时钟大者胜
+"><circle cx="857.3" cy="424.8" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_8eeccd:BC
+螺旋分类 · AdamW/Adagrad · 时钟比 2.8
+δ2（时钟大者自身的进展）+197.1%
+δ1（时钟相等处的差）-53.8%
+时钟大者胜
+"><circle cx="735.2" cy="333.3" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_cbf911:BC
+Bigram 语言模型 · RMSprop/Adagrad · 时钟比 123.0
+δ2（时钟大者自身的进展）+2.7%
+δ1（时钟相等处的差）+0.0%
+时钟大者胜
+"><circle cx="558.7" cy="240.1" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_091266:BC
+Bigram 语言模型 · Adam/AdamW · 时钟比 100.0
+δ2（时钟大者自身的进展）+10.3%
+δ1（时钟相等处的差）-0.0%
+时钟大者胜
+"><circle cx="607.8" cy="241.8" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_f00d3d:BC
+Bigram 语言模型 · Adagrad/Adagrad · 时钟比 3.0
+δ2（时钟大者自身的进展）+0.4%
+δ1（时钟相等处的差）-0.0%
+时钟大者胜
+"><circle cx="515.2" cy="241.2" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_84392b:BC
+Bigram 语言模型 · AdamW/Adagrad · 时钟比 8.4
+δ2（时钟大者自身的进展）+0.5%
+δ1（时钟相等处的差）+0.0%
+时钟大者胜
+已事先核验并作答"><circle cx="517.9" cy="241.0" r="6" class="mk s1"/><circle cx="517.9" cy="241.0" r="9" class="ring"/></g><g class="hit" tabindex="0" data-tip="q_a4f1f7:AB
+Bigram 语言模型 · Adam/Adam · 时钟比 10.0
+δ2（时钟大者自身的进展）-1.2%
+δ1（时钟相等处的差）-0.0%
+时钟大者输
+"><circle cx="464.6" cy="241.8" r="4.5" class="mk s2"/></g><g class="hit" tabindex="0" data-tip="q_c04dbb:BC
+Bigram 语言模型 · AdamW/Adagrad · 时钟比 25.1
+δ2（时钟大者自身的进展）+5.6%
+δ1（时钟相等处的差）-0.0%
+时钟大者胜
+"><circle cx="584.1" cy="241.7" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_e6d625:AB
+Bigram 语言模型 · Adam/Adagrad · 时钟比 116.9
+δ2（时钟大者自身的进展）+5.1%
+δ1（时钟相等处的差）-0.4%
+时钟大者胜
+"><circle cx="580.4" cy="248.0" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_e6d625:BC
+Bigram 语言模型 · AdamW/Adagrad · 时钟比 116.9
+δ2（时钟大者自身的进展）-18.9%
+δ1（时钟相等处的差）-0.2%
+时钟大者输
+"><circle cx="367.0" cy="245.2" r="4.5" class="mk s2"/></g><g class="hit" tabindex="0" data-tip="q_5fdac6:AB
+Bigram 语言模型 · RMSprop/Adagrad · 时钟比 1.2
+δ2（时钟大者自身的进展）-2.0%
+δ1（时钟相等处的差）+0.3%
+时钟大者输
+"><circle cx="451.9" cy="235.4" r="4.5" class="mk s2"/></g><g class="hit" tabindex="0" data-tip="q_14d21e:AC
+Bigram 语言模型 · Adam/Adagrad · 时钟比 3.9
+δ2（时钟大者自身的进展）+6.1%
+δ1（时钟相等处的差）+0.0%
+时钟大者胜
+已事先核验并作答"><circle cx="587.0" cy="240.9" r="6" class="mk s1"/><circle cx="587.0" cy="240.9" r="9" class="ring"/></g><g class="hit" tabindex="0" data-tip="q_7dfbe3:BC
+Bigram 语言模型 · Adagrad/Adam · 时钟比 2.6
+δ2（时钟大者自身的进展）+2.9%
+δ1（时钟相等处的差）+0.2%
+时钟大者胜
+"><circle cx="560.6" cy="237.8" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_d042a5:AC
+Bigram 语言模型 · Adagrad/Adagrad · 时钟比 33.3
+δ2（时钟大者自身的进展）+9.0%
+δ1（时钟相等处的差）-0.0%
+时钟大者胜
+"><circle cx="602.2" cy="241.6" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_f1b323:AB
+Bigram 语言模型 · RMSprop/Adagrad · 时钟比 55.0
+δ2（时钟大者自身的进展）+5.7%
+δ1（时钟相等处的差）-0.0%
+时钟大者胜
+"><circle cx="584.6" cy="241.9" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_f1b323:AC
+Bigram 语言模型 · RMSprop/RMSprop · 时钟比 3.3
+δ2（时钟大者自身的进展）-9.3%
+δ1（时钟相等处的差）-0.3%
+时钟大者输
+"><circle cx="396.1" cy="246.6" r="4.5" class="mk s2"/></g><g class="hit" tabindex="0" data-tip="q_f1b323:BC
+Bigram 语言模型 · RMSprop/Adagrad · 时钟比 183.5
+δ2（时钟大者自身的进展）-3.9%
+δ1（时钟相等处的差）-0.0%
+时钟大者输
+"><circle cx="429.0" cy="241.5" r="4.5" class="mk s2"/></g><g class="hit" tabindex="0" data-tip="q_4ce335:AB
+Bigram 语言模型 · RMSprop/Adam · 时钟比 1.2
+δ2（时钟大者自身的进展）+0.4%
+δ1（时钟相等处的差）-0.0%
+时钟大者胜
+"><circle cx="516.4" cy="241.8" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_4ce335:AC
+Bigram 语言模型 · RMSprop/Adam · 时钟比 3.7
+δ2（时钟大者自身的进展）+2.0%
+δ1（时钟相等处的差）-0.1%
+时钟大者胜
+"><circle cx="549.4" cy="242.8" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_4ce335:BC
+Bigram 语言模型 · RMSprop/RMSprop · 时钟比 3.0
+δ2（时钟大者自身的进展）+1.6%
+δ1（时钟相等处的差）-0.0%
+时钟大者胜
+"><circle cx="542.3" cy="242.1" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_a26b6c:BC
+Bigram 语言模型 · RMSprop/AdamW · 时钟比 12.4
+δ2（时钟大者自身的进展）+7.0%
+δ1（时钟相等处的差）-1.0%
+时钟大者胜
+"><circle cx="592.3" cy="257.1" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_ac1991:AB
+Bigram 语言模型 · AdamW/Adagrad · 时钟比 39.0
+δ2（时钟大者自身的进展）+3.4%
+δ1（时钟相等处的差）-0.0%
+时钟大者胜
+已事先核验并作答"><circle cx="565.9" cy="241.0" r="6" class="mk s1"/><circle cx="565.9" cy="241.0" r="9" class="ring"/></g><g class="hit" tabindex="0" data-tip="q_ac1991:AC
+Bigram 语言模型 · AdamW/AdamW · 时钟比 30.0
+δ2（时钟大者自身的进展）+19.5%
+δ1（时钟相等处的差）-0.4%
+时钟大者胜
+"><circle cx="634.2" cy="248.9" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_ac1991:BC
+Bigram 语言模型 · AdamW/Adagrad · 时钟比 1168.5
+δ2（时钟大者自身的进展）+22.3%
+δ1（时钟相等处的差）+0.1%
+时钟大者胜
+"><circle cx="640.0" cy="238.3" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_9a8f36:AB
+Bigram 语言模型 · Adam/Adam · 时钟比 3.3
+δ2（时钟大者自身的进展）+3.1%
+δ1（时钟相等处的差）-0.2%
+时钟大者胜
+已事先核验并作答"><circle cx="562.4" cy="245.2" r="6" class="mk s1"/><circle cx="562.4" cy="245.2" r="9" class="ring"/></g><g class="hit" tabindex="0" data-tip="q_f2cc61:AB
+Bigram 语言模型 · AdamW/RMSprop · 时钟比 2.4
+δ2（时钟大者自身的进展）+6.5%
+δ1（时钟相等处的差）-0.2%
+时钟大者胜
+"><circle cx="589.7" cy="246.1" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_f2cc61:AC
+Bigram 语言模型 · RMSprop/RMSprop · 时钟比 30.0
+δ2（时钟大者自身的进展）+16.6%
+δ1（时钟相等处的差）-8.3%
+时钟大者胜
+"><circle cx="627.6" cy="292.5" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_f2cc61:BC
+Bigram 语言模型 · RMSprop/AdamW · 时钟比 12.4
+δ2（时钟大者自身的进展）+8.0%
+δ1（时钟相等处的差）-6.0%
+时钟大者胜
+"><circle cx="597.7" cy="285.9" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_cdaa55:BC
+Bigram 语言模型 · AdamW/Adagrad · 时钟比 3.5
+δ2（时钟大者自身的进展）+3.2%
+δ1（时钟相等处的差）-0.3%
+时钟大者胜
+"><circle cx="563.3" cy="246.9" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_b704b4:AB
+Bigram 语言模型 · AdamW/RMSprop · 时钟比 8.1
+δ2（时钟大者自身的进展）-1.6%
+δ1（时钟相等处的差）-0.7%
+时钟大者输
+"><circle cx="457.5" cy="252.7" r="4.5" class="mk s2"/></g><g class="hit" tabindex="0" data-tip="q_b704b4:AC
+Bigram 语言模型 · AdamW/Adagrad · 时钟比 11.7
+δ2（时钟大者自身的进展）+0.4%
+δ1（时钟相等处的差）-0.8%
+时钟大者输
+"><circle cx="516.3" cy="254.8" r="4.5" class="mk s2"/></g><g class="hit" tabindex="0" data-tip="q_b704b4:BC
+Bigram 语言模型 · RMSprop/Adagrad · 时钟比 1.5
+δ2（时钟大者自身的进展）+2.1%
+δ1（时钟相等处的差）-0.2%
+时钟大者胜
+"><circle cx="549.8" cy="244.8" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_2165d7:AC
+Bigram 语言模型 · Adam/Adagrad · 时钟比 3.9
+δ2（时钟大者自身的进展）+4.3%
+δ1（时钟相等处的差）-0.1%
+时钟大者胜
+"><circle cx="574.0" cy="242.3" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_17c0bb:AB
+Bigram 语言模型 · Adam/RMSprop · 时钟比 8.1
+δ2（时钟大者自身的进展）-14.5%
+δ1（时钟相等处的差）-0.7%
+时钟大者输
+"><circle cx="378.1" cy="253.2" r="4.5" class="mk s2"/></g><g class="hit" tabindex="0" data-tip="q_17c0bb:AC
+Bigram 语言模型 · Adagrad/RMSprop · 时钟比 6.9
+δ2（时钟大者自身的进展）-14.2%
+δ1（时钟相等处的差）-1.7%
+时钟大者输
+"><circle cx="379.0" cy="263.7" r="4.5" class="mk s2"/></g><g class="hit" tabindex="0" data-tip="q_17c0bb:BC
+Bigram 语言模型 · Adam/Adagrad · 时钟比 1.2
+δ2（时钟大者自身的进展）-5.6%
+δ1（时钟相等处的差）+6.2%
+时钟大者胜
+"><circle cx="416.3" cy="195.5" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_cd0614:AB
+Bigram 语言模型 · Adam/Adam · 时钟比 10.0
+δ2（时钟大者自身的进展）+5.6%
+δ1（时钟相等处的差）-0.0%
+时钟大者胜
+"><circle cx="583.7" cy="241.3" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_2d55f4:AC
+Bigram 语言模型 · RMSprop/Adam · 时钟比 1.2
+δ2（时钟大者自身的进展）+0.4%
+δ1（时钟相等处的差）+0.0%
+时钟大者胜
+"><circle cx="515.8" cy="240.3" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_81a1b6:AB
+Bigram 语言模型 · RMSprop/Adagrad · 时钟比 1.8
+δ2（时钟大者自身的进展）-0.2%
+δ1（时钟相等处的差）-0.1%
+时钟大者输
+"><circle cx="493.1" cy="243.9" r="4.5" class="mk s2"/></g><g class="hit" tabindex="0" data-tip="q_81a1b6:BC
+Bigram 语言模型 · Adam/Adagrad · 时钟比 1.6
+δ2（时钟大者自身的进展）+1.1%
+δ1（时钟相等处的差）-0.3%
+时钟大者胜
+"><circle cx="532.8" cy="247.3" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_b1ddb5:AC
+Bigram 语言模型 · AdamW/RMSprop · 时钟比 80.6
+δ2（时钟大者自身的进展）+10.9%
+δ1（时钟相等处的差）-1.9%
+时钟大者胜
+"><circle cx="610.0" cy="265.2" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_391d0c:AB
+Bigram 语言模型 · RMSprop/Adam · 时钟比 1.2
+δ2（时钟大者自身的进展）+0.2%
+δ1（时钟相等处的差）+0.1%
+时钟大者胜
+"><circle cx="507.5" cy="239.5" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_391d0c:AC
+Bigram 语言模型 · AdamW/RMSprop · 时钟比 2.4
+δ2（时钟大者自身的进展）+2.3%
+δ1（时钟相等处的差）+0.0%
+时钟大者胜
+"><circle cx="553.5" cy="240.5" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_391d0c:BC
+Bigram 语言模型 · AdamW/Adam · 时钟比 3.0
+δ2（时钟大者自身的进展）+2.5%
+δ1（时钟相等处的差）+0.1%
+时钟大者胜
+"><circle cx="556.0" cy="239.2" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_fbb543:AB
+Bigram 语言模型 · RMSprop/RMSprop · 时钟比 10.0
+δ2（时钟大者自身的进展）-3.8%
+δ1（时钟相等处的差）-0.9%
+时钟大者输
+"><circle cx="430.5" cy="256.3" r="4.5" class="mk s2"/></g><g class="hit" tabindex="0" data-tip="q_2e4f91:AC
+Bigram 语言模型 · Adagrad/AdamW · 时钟比 11.9
+δ2（时钟大者自身的进展）+3.8%
+δ1（时钟相等处的差）-0.0%
+时钟大者胜
+"><circle cx="569.6" cy="241.9" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_2eb70c:AB
+Bigram 语言模型 · AdamW/Adagrad · 时钟比 8.4
+δ2（时钟大者自身的进展）+0.2%
+δ1（时钟相等处的差）-0.0%
+时钟大者胜
+"><circle cx="508.8" cy="241.0" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_2eb70c:AC
+Bigram 语言模型 · RMSprop/Adagrad · 时钟比 409.9
+δ2（时钟大者自身的进展）+5.3%
+δ1（时钟相等处的差）+0.2%
+时钟大者胜
+"><circle cx="581.5" cy="236.0" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_2eb70c:BC
+Bigram 语言模型 · RMSprop/AdamW · 时钟比 49.0
+δ2（时钟大者自身的进展）+5.3%
+δ1（时钟相等处的差）+0.0%
+时钟大者胜
+"><circle cx="581.6" cy="240.7" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_a0011b:AC
+Bigram 语言模型 · Adam/AdamW · 时钟比 10.0
+δ2（时钟大者自身的进展）+1.4%
+δ1（时钟相等处的差）-0.6%
+时钟大者胜
+"><circle cx="539.7" cy="252.4" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_3328fe:AC
+Bigram 语言模型 · AdamW/AdamW · 时钟比 10.0
+δ2（时钟大者自身的进展）-21.5%
+δ1（时钟相等处的差）-2.2%
+时钟大者输
+"><circle cx="361.6" cy="267.6" r="4.5" class="mk s2"/></g><g class="hit" tabindex="0" data-tip="q_2866a0:AC
+Bigram 语言模型 · RMSprop/RMSprop · 时钟比 3.3
+δ2（时钟大者自身的进展）+0.5%
+δ1（时钟相等处的差）-0.0%
+时钟大者胜
+已事先核验并作答"><circle cx="519.2" cy="241.4" r="6" class="mk s1"/><circle cx="519.2" cy="241.4" r="9" class="ring"/></g><g class="hit" tabindex="0" data-tip="q_133be5:BC
+Bigram 语言模型 · AdamW/RMSprop · 时钟比 2.3
+δ2（时钟大者自身的进展）+3.7%
+δ1（时钟相等处的差）+0.3%
+时钟大者胜
+"><circle cx="568.7" cy="235.6" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_ad98b9:AB
+Bigram 语言模型 · Adam/AdamW · 时钟比 10.0
+δ2（时钟大者自身的进展）+6.6%
+δ1（时钟相等处的差）-0.0%
+时钟大者胜
+"><circle cx="590.2" cy="241.8" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_ad98b9:AC
+Bigram 语言模型 · Adam/Adam · 时钟比 10.0
+δ2（时钟大者自身的进展）+6.6%
+δ1（时钟相等处的差）-0.0%
+时钟大者胜
+"><circle cx="590.2" cy="241.8" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_373644:AC
+Bigram 语言模型 · RMSprop/Adagrad · 时钟比 409.9
+δ2（时钟大者自身的进展）+9.3%
+δ1（时钟相等处的差）+0.5%
+时钟大者胜
+"><circle cx="603.9" cy="231.0" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_3dec18:AC
+Bigram 语言模型 · Adagrad/Adagrad · 时钟比 30.0
+δ2（时钟大者自身的进展）+11.6%
+δ1（时钟相等处的差）-0.0%
+时钟大者胜
+"><circle cx="612.7" cy="242.0" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_bbd854:AB
+Bigram 语言模型 · RMSprop/Adagrad · 时钟比 123.0
+δ2（时钟大者自身的进展）+8.4%
+δ1（时钟相等处的差）+0.8%
+时钟大者胜
+"><circle cx="599.6" cy="227.4" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_bbd854:AC
+Bigram 语言模型 · AdamW/Adagrad · 时钟比 8.4
+δ2（时钟大者自身的进展）+3.0%
+δ1（时钟相等处的差）+0.0%
+时钟大者胜
+"><circle cx="562.1" cy="240.7" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_bbd854:BC
+Bigram 语言模型 · RMSprop/AdamW · 时钟比 14.7
+δ2（时钟大者自身的进展）+6.7%
+δ1（时钟相等处的差）-0.6%
+时钟大者胜
+"><circle cx="591.0" cy="251.8" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_fbbb95:AC
+Bigram 语言模型 · SGD/SGD · 时钟比 30.0
+δ2（时钟大者自身的进展）+0.3%
+δ1（时钟相等处的差）+0.0%
+时钟大者胜
+"><circle cx="510.4" cy="241.0" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_3d3fa1:AB
+Bigram 语言模型 · AdamW/RMSprop · 时钟比 6.8
+δ2（时钟大者自身的进展）-1.3%
+δ1（时钟相等处的差）-4.5%
+时钟大者输
+"><circle cx="463.7" cy="280.3" r="4.5" class="mk s2"/></g><g class="hit" tabindex="0" data-tip="q_3d3fa1:BC
+Bigram 语言模型 · AdamW/RMSprop · 时钟比 6.8
+δ2（时钟大者自身的进展）-1.3%
+δ1（时钟相等处的差）-4.5%
+时钟大者输
+"><circle cx="463.7" cy="280.3" r="4.5" class="mk s2"/></g><g class="hit" tabindex="0" data-tip="q_9d2d28:BC
+Bigram 语言模型 · Adam/Adam · 时钟比 10.0
+δ2（时钟大者自身的进展）+17.9%
+δ1（时钟相等处的差）-0.1%
+时钟大者胜
+"><circle cx="630.7" cy="243.1" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_8f9373:BC
+Bigram 语言模型 · Adam/AdamW · 时钟比 100.0
+δ2（时钟大者自身的进展）+17.8%
+δ1（时钟相等处的差）-3.5%
+时钟大者胜
+"><circle cx="630.5" cy="275.5" r="4.5" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="q_faa361:BC
+Bigram 语言模型 · SGD/SGD · 时钟比 10.0
+δ2（时钟大者自身的进展）+3.8%
+δ1（时钟相等处的差）+0.0%
+时钟大者胜
+"><circle cx="569.8" cy="240.9" r="4.5" class="mk s1"/></g><text x="500.0" y="506.0" class="axl" text-anchor="middle" >δ2：时钟大者从 τ_小 训练到 τ_大 的进展（相对值，对称对数轴）</text><text transform="translate(16,241.0) rotate(-90)" class="axl" text-anchor="middle">δ1：时钟相等处，时钟小者减时钟大者的损失（相对值）</text></svg></figure>
+<p>事先作答时还看不到这一对的曲线，只能用实验室格子里 δ1 与 δ2 的分布做卷积，得到 P(时钟大者胜)，达到 1 − ε 才作答。卷积的校准：</p>
+<figure><figcaption><b>前提给出的概率与实际比例。</b>只有最高一档区分度高：P ≥ 0.9 时实验室 568 对里时钟大者胜 97.9%；中间几档都在 67%–71% 左右，说明粗格子的前提分布不够细。</figcaption><div class="legend"><span><i class="sw dot s1"></i>实验室（点越大对越多）</span><span><i class="sw dot s2"></i>基准</span><span><i class="sw ln front"></i>完全校准</span></div><svg class="chart" viewBox="0 0 960 330" role="img" aria-label="前提给出的 P(时钟大者胜) 与实际比例" preserveAspectRatio="xMinYMin meet"><line x1="70" x2="930" y1="280.0" y2="280.0" class="grid"/><text x="62.0" y="284.0" class="tick" text-anchor="end" >0%</text><line x1="70" x2="930" y1="214.0" y2="214.0" class="grid"/><text x="62.0" y="218.0" class="tick" text-anchor="end" >25%</text><line x1="70" x2="930" y1="148.0" y2="148.0" class="grid"/><text x="62.0" y="152.0" class="tick" text-anchor="end" >50%</text><line x1="70" x2="930" y1="82.0" y2="82.0" class="grid"/><text x="62.0" y="86.0" class="tick" text-anchor="end" >75%</text><line x1="70" x2="930" y1="16.0" y2="16.0" class="grid"/><text x="62.0" y="20.0" class="tick" text-anchor="end" >100%</text><line x1="70.0" x2="70.0" y1="16" y2="280" class="grid"/><text x="70.0" y="296.0" class="tick" text-anchor="middle" >0.0</text><line x1="242.0" x2="242.0" y1="16" y2="280" class="grid"/><text x="242.0" y="296.0" class="tick" text-anchor="middle" >0.2</text><line x1="414.0" x2="414.0" y1="16" y2="280" class="grid"/><text x="414.0" y="296.0" class="tick" text-anchor="middle" >0.4</text><line x1="586.0" x2="586.0" y1="16" y2="280" class="grid"/><text x="586.0" y="296.0" class="tick" text-anchor="middle" >0.6</text><line x1="758.0" x2="758.0" y1="16" y2="280" class="grid"/><text x="758.0" y="296.0" class="tick" text-anchor="middle" >0.8</text><line x1="930.0" x2="930.0" y1="16" y2="280" class="grid"/><text x="930.0" y="296.0" class="tick" text-anchor="middle" >1.0</text><line x1="70.0" y1="280.0" x2="930.0" y2="16.0" class="diag"/><g class="hit" tabindex="0" data-tip="实验室 · P 在 0.3–0.4
+1 对
+时钟大者实际胜 100.0%"><circle cx="365.0" cy="16.0" r="3.3" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="实验室 · P 在 0.4–0.5
+72 对
+时钟大者实际胜 90.3%"><circle cx="451.0" cy="41.7" r="5.6" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="实验室 · P 在 0.5–0.6
+765 对
+时钟大者实际胜 68.0%"><circle cx="537.0" cy="100.5" r="11.6" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="实验室 · P 在 0.6–0.7
+797 对
+时钟大者实际胜 73.0%"><circle cx="623.0" cy="87.2" r="11.8" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="实验室 · P 在 0.7–0.8
+535 对
+时钟大者实际胜 68.8%"><circle cx="709.0" cy="98.4" r="10.2" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="实验室 · P 在 0.8–0.9
+29 对
+时钟大者实际胜 72.4%"><circle cx="795.0" cy="88.8" r="4.7" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="实验室 · P 在 0.9–1.0
+568 对
+时钟大者实际胜 97.9%"><circle cx="881.0" cy="21.6" r="10.4" class="mk s1"/></g><g class="hit" tabindex="0" data-tip="基准 · P 在 0.3–0.4
+1 对
+时钟大者实际胜 100.0%"><circle cx="377.0" cy="16.0" r="3.3" class="mk s2"/></g><g class="hit" tabindex="0" data-tip="基准 · P 在 0.4–0.5
+7 对
+时钟大者实际胜 100.0%"><circle cx="463.0" cy="16.0" r="3.8" class="mk s2"/></g><g class="hit" tabindex="0" data-tip="基准 · P 在 0.5–0.6
+32 对
+时钟大者实际胜 78.1%"><circle cx="549.0" cy="73.8" r="4.8" class="mk s2"/></g><g class="hit" tabindex="0" data-tip="基准 · P 在 0.6–0.7
+26 对
+时钟大者实际胜 92.3%"><circle cx="635.0" cy="36.3" r="4.6" class="mk s2"/></g><g class="hit" tabindex="0" data-tip="基准 · P 在 0.7–0.8
+12 对
+时钟大者实际胜 91.7%"><circle cx="721.0" cy="38.0" r="4.1" class="mk s2"/></g><g class="hit" tabindex="0" data-tip="基准 · P 在 0.8–0.9
+1 对
+时钟大者实际胜 100.0%"><circle cx="807.0" cy="16.0" r="3.3" class="mk s2"/></g><g class="hit" tabindex="0" data-tip="基准 · P 在 0.9–1.0
+20 对
+时钟大者实际胜 100.0%"><circle cx="893.0" cy="16.0" r="4.4" class="mk s2"/></g><text x="500.0" y="318.0" class="axl" text-anchor="middle" >两条前提的卷积给出的 P(时钟大者胜)（按 0.1 分箱）</text><text transform="translate(18,148.0) rotate(-90)" class="axl" text-anchor="middle">实际比例</text></svg></figure>
+<p><b>证据看事先作答。</b>基准上方向判定 13 对全对，单侧 95% 误差上界 20.6%（三分之一法则给 23.1%）；实验室 547 对错 10 对，上界 3.1%。</p>
+<p>反转侧（前提说时钟小者胜）的经过值得记下：第一版 A1 不分 lr 档，实验室上给出 174 个反转判定，实际错 25.9%，超出了前提许诺的 10%；按定义稿的降级规则收窄声明域，并把 A1 改为按 lr 档核验后，反转侧不再有通过核验的格子。</p></section>
+
+<section><h2>新实验：初始化处的梯度测量</h2>
+<p>SGD 沿梯度流走，自适应优化器沿归一化流走，两类时钟要换算才能比较。用户同意做一个新实验来补这条前提：对每个含 SGD 对自适应的（数据集、模型、损失、批量）组，按训练时的方式设种子、建模型、抽批次，在第一次更新之前做一次全批量的反向（得到平均梯度 μ）和训练流的前 32 个小批量（得到二阶矩 ν），种子 0, 1, 2, 3。共 532 组（实验室 422、基准 110），出错 0 组，本机 CPU 半分钟，ArchitectureIQ 下没有写入任何文件。</p>
+<div class="formula">B_k  下降速率桥：k = Σμ² / Σ(μ²/√ν)    初始化处 SGD(lr) 与归一化优化器(lr·k) 一阶下降一样快（事先定为主）
+B_r  位移桥：    r = √(mean ν)            SGD 每个坐标走 lr·|g|，归一化优化器走约 lr（KB 的 |g| 就是它）</div>
+<figure><figcaption><b>测得的换算与 KB 的拟合常数。</b>分类与 Bigram 族里测得的 r 与 KB 拟合的 g 同一量级。</figcaption><div class="tablewrap"><table><tr><th>任务族</th><th>测量组</th><th>k 中位数 [10%, 90%]</th><th>r 中位数</th><th>KB 拟合的 g</th><th>4 个种子间 k 的最大/最小</th></tr><tr><td>单变量回归</td><td class="num">72</td><td class="num">0.0689<br><span class="fine">[0.0185, 0.4674]</span></td><td class="num">0.0277</td><td class="num">0.01（MSE 带动量 0.03）</td><td class="num">×2.65</td></tr><tr><td>多变量回归</td><td class="num">162</td><td class="num">0.2282<br><span class="fine">[0.0317, 0.8666]</span></td><td class="num">0.0908</td><td class="num">0.01（MSE 带动量 0.03）</td><td class="num">×1.47</td></tr><tr><td>表格分类</td><td class="num">63</td><td class="num">0.0172<br><span class="fine">[0.0057, 0.0407]</span></td><td class="num">0.0087</td><td class="num">0.01</td><td class="num">×1.57</td></tr><tr><td>XOR 分类</td><td class="num">51</td><td class="num">0.0138<br><span class="fine">[0.0044, 0.0270]</span></td><td class="num">0.0069</td><td class="num">0.01</td><td class="num">×1.68</td></tr><tr><td>螺旋分类</td><td class="num">72</td><td class="num">0.0216<br><span class="fine">[0.0022, 0.2027]</span></td><td class="num">0.0135</td><td class="num">0.01</td><td class="num">×1.66</td></tr><tr><td>Bigram 语言模型</td><td class="num">112</td><td class="num">0.0048<br><span class="fine">[0.0020, 0.0074]</span></td><td class="num">0.0019</td><td class="num">0.003</td><td class="num">×1.10</td></tr></table></div></figure>
+<p>前提 B 像 A1 一样检验：取实验室里 T 也不同的 SGD 对自适应的对（949 对），换算后时钟相等的应当打平。这些对没有一对是“同 T 比较”的平局点，符合从严的 (b)。</p>
+<figure><figcaption><b>前提 B 的检验。</b>测得的 k、r 让匹配对的差明显小于不匹配对，不换算时匹配对反而差得更多。但匹配对很少，等值检验大多不过。</figcaption><div class="legend"><span><i class="sw dot s1"></i>桥接时钟相等（相差 &lt; 15%）的对</span><span><i class="sw dot s0"></i>桥接时钟相差 2 倍以上的对（对照）</span></div><svg class="chart" viewBox="0 0 960 410" role="img" aria-label="前提 B 的检验：桥接时钟相等的跨类对与不相等的对的损失差" preserveAspectRatio="xMinYMin meet"><line x1="260.0" x2="260.0" y1="20" y2="372" class="grid"/><text x="260.0" y="388.0" class="tick" text-anchor="middle" >0.1%</text><line x1="403.8" x2="403.8" y1="20" y2="372" class="grid"/><text x="403.8" y="388.0" class="tick" text-anchor="middle" >1%</text><line x1="547.6" x2="547.6" y1="20" y2="372" class="grid"/><text x="547.6" y="388.0" class="tick" text-anchor="middle" >10%</text><line x1="691.4" x2="691.4" y1="20" y2="372" class="grid"/><text x="691.4" y="388.0" class="tick" text-anchor="middle" >100%</text><text x="510.0" y="404.0" class="axl" text-anchor="middle" >损失相对差的中位数（对数轴）</text><text x="12.0" y="43.0" class="tl b" text-anchor="start" >Bigram</text><text x="250.0" y="43.0" class="tl" text-anchor="end" >测得 k（下降速率）</text><circle cx="517.9" cy="39.0" r="5" class="mk s0"/><line x1="383.9" x2="517.9" y1="39.0" y2="39.0" class="conn soft"/><g class="hit" tabindex="0" data-tip="Bigram · 测得 k（下降速率）
+桥接时钟相等 4 对：中位差 0.7%，显著 100%
+桥接时钟差 ≥2 倍 389 对：中位差 6.2%"><circle cx="383.9" cy="39.0" r="6" class="mk s1"/></g><text x="768.0" y="43.0" class="dl" text-anchor="start" >匹配 4 对 · 显著 100%</text><text x="250.0" y="69.0" class="tl" text-anchor="end" >测得 r（位移）</text><circle cx="516.3" cy="65.0" r="5" class="mk s0"/><line x1="347.3" x2="516.3" y1="65.0" y2="65.0" class="conn soft"/><g class="hit" tabindex="0" data-tip="Bigram · 测得 r（位移）
+桥接时钟相等 1 对：中位差 0.4%，显著 100%
+桥接时钟差 ≥2 倍 404 对：中位差 6.1%"><circle cx="347.3" cy="65.0" r="6" class="mk s1"/></g><text x="768.0" y="69.0" class="dl" text-anchor="start" >匹配 1 对 · 显著 100%</text><text x="250.0" y="95.0" class="tl" text-anchor="end" >KB 拟合的 g</text><circle cx="516.2" cy="91.0" r="5" class="mk s0"/><text x="768.0" y="95.0" class="note" text-anchor="start" >没有匹配对</text><text x="250.0" y="121.0" class="tl" text-anchor="end" >不换算</text><circle cx="509.7" cy="117.0" r="5" class="mk s0"/><line x1="526.0" x2="509.7" y1="117.0" y2="117.0" class="conn soft"/><g class="hit" tabindex="0" data-tip="Bigram · 不换算
+桥接时钟相等 16 对：中位差 7.1%，显著 100%
+桥接时钟差 ≥2 倍 354 对：中位差 5.4%"><circle cx="526.0" cy="117.0" r="6" class="mk s1"/></g><text x="768.0" y="121.0" class="dl" text-anchor="start" >匹配 16 对 · 显著 100%</text><text x="12.0" y="161.0" class="tl b" text-anchor="start" >多变量回归</text><text x="250.0" y="161.0" class="tl" text-anchor="end" >测得 k（下降速率）</text><circle cx="620.4" cy="157.0" r="5" class="mk s0"/><line x1="578.7" x2="620.4" y1="157.0" y2="157.0" class="conn soft"/><g class="hit" tabindex="0" data-tip="多变量回归 · 测得 k（下降速率）
+桥接时钟相等 13 对：中位差 16.4%，显著 85%
+桥接时钟差 ≥2 倍 200 对：中位差 32.1%"><circle cx="578.7" cy="157.0" r="6" class="mk s1"/></g><text x="768.0" y="161.0" class="dl" text-anchor="start" >匹配 13 对 · 显著 85%</text><text x="250.0" y="187.0" class="tl" text-anchor="end" >测得 r（位移）</text><circle cx="628.3" cy="183.0" r="5" class="mk s0"/><line x1="584.1" x2="628.3" y1="183.0" y2="183.0" class="conn soft"/><g class="hit" tabindex="0" data-tip="多变量回归 · 测得 r（位移）
+桥接时钟相等 9 对：中位差 17.9%，显著 67%
+桥接时钟差 ≥2 倍 193 对：中位差 36.4%"><circle cx="584.1" cy="183.0" r="6" class="mk s1"/></g><text x="768.0" y="187.0" class="dl" text-anchor="start" >匹配 9 对 · 显著 67%</text><text x="250.0" y="213.0" class="tl" text-anchor="end" >KB 拟合的 g</text><circle cx="629.0" cy="209.0" r="5" class="mk s0"/><line x1="603.6" x2="629.0" y1="209.0" y2="209.0" class="conn soft"/><g class="hit" tabindex="0" data-tip="多变量回归 · KB 拟合的 g
+桥接时钟相等 8 对：中位差 24.5%，显著 88%
+桥接时钟差 ≥2 倍 176 对：中位差 36.8%"><circle cx="603.6" cy="209.0" r="6" class="mk s1"/></g><text x="768.0" y="213.0" class="dl" text-anchor="start" >匹配 8 对 · 显著 88%</text><text x="250.0" y="239.0" class="tl" text-anchor="end" >不换算</text><circle cx="608.8" cy="235.0" r="5" class="mk s0"/><line x1="669.7" x2="608.8" y1="235.0" y2="235.0" class="conn soft"/><g class="hit" tabindex="0" data-tip="多变量回归 · 不换算
+桥接时钟相等 4 对：中位差 70.7%，显著 100%
+桥接时钟差 ≥2 倍 232 对：中位差 26.7%"><circle cx="669.7" cy="235.0" r="6" class="mk s1"/></g><text x="768.0" y="239.0" class="dl" text-anchor="start" >匹配 4 对 · 显著 100%</text><text x="12.0" y="279.0" class="tl b" text-anchor="start" >XOR 分类</text><text x="250.0" y="279.0" class="tl" text-anchor="end" >测得 k（下降速率）</text><circle cx="705.7" cy="275.0" r="5" class="mk s0"/><line x1="554.4" x2="705.7" y1="275.0" y2="275.0" class="conn soft"/><g class="hit" tabindex="0" data-tip="XOR 分类 · 测得 k（下降速率）
+桥接时钟相等 16 对：中位差 11.1%，显著 44%
+桥接时钟差 ≥2 倍 225 对：中位差 125.8%"><circle cx="554.4" cy="275.0" r="6" class="mk s1"/></g><text x="768.0" y="279.0" class="dl" text-anchor="start" >匹配 16 对 · 显著 44%</text><text x="250.0" y="305.0" class="tl" text-anchor="end" >测得 r（位移）</text><circle cx="706.0" cy="301.0" r="5" class="mk s0"/><line x1="457.6" x2="706.0" y1="301.0" y2="301.0" class="conn soft"/><g class="hit" tabindex="0" data-tip="XOR 分类 · 测得 r（位移）
+桥接时钟相等 9 对：中位差 2.4%，显著 33%
+桥接时钟差 ≥2 倍 223 对：中位差 126.3%"><circle cx="457.6" cy="301.0" r="6" class="mk s1"/></g><text x="768.0" y="305.0" class="dl" text-anchor="start" >匹配 9 对 · 显著 33%</text><text x="250.0" y="331.0" class="tl" text-anchor="end" >KB 拟合的 g</text><circle cx="704.9" cy="327.0" r="5" class="mk s0"/><line x1="625.6" x2="704.9" y1="327.0" y2="327.0" class="conn soft"/><g class="hit" tabindex="0" data-tip="XOR 分类 · KB 拟合的 g
+桥接时钟相等 12 对：中位差 34.9%，显著 50%
+桥接时钟差 ≥2 倍 229 对：中位差 124.2%"><circle cx="625.6" cy="327.0" r="6" class="mk s1"/></g><text x="768.0" y="331.0" class="dl" text-anchor="start" >匹配 12 对 · 显著 50%</text><text x="250.0" y="357.0" class="tl" text-anchor="end" >不换算</text><circle cx="685.1" cy="353.0" r="5" class="mk s0"/><line x1="720.8" x2="685.1" y1="353.0" y2="353.0" class="conn soft"/><g class="hit" tabindex="0" data-tip="XOR 分类 · 不换算
+桥接时钟相等 4 对：中位差 160.1%，显著 100%
+桥接时钟差 ≥2 倍 292 对：中位差 90.4%"><circle cx="720.8" cy="353.0" r="6" class="mk s1"/></g><text x="768.0" y="357.0" class="dl" text-anchor="start" >匹配 4 对 · 显著 100%</text></svg></figure>
+<h3>七道检验</h3><div class="tablewrap"><table><tr><th>步</th><th>检验</th><th>桥 B（B_k 为主，B_r 并列）</th></tr><tr><td class="nw">0</td><td class="nw">是子系统里的主张</td><td class="tr">是：预测同 T 下 SGD 对自适应谁胜。</td></tr><tr><td class="nw">a</td><td class="nw">前提写明</td><td class="tr">是：B（初始化处测得的换算在整个训练中成立）与 A2（沿时钟进展）。</td></tr><tr><td class="nw">b</td><td class="nw">前提不经被预测关系检验</td><td class="tr">是：k、r 由初始化处的梯度测得，不看任何训练结果；B 在 T 也不同、桥接时钟相等的实验室跨类对上检验，没有一对是同 T 关系的平局点。</td></tr><tr><td class="nw">c</td><td class="nw">结论由前提推出</td><td class="tr">是：一阶展开给出换算（下降速率或位移相等），比较仍用恒等式 D = δ1 + δ2。</td></tr><tr><td class="nw">m</td><td class="nw">前提测过</td><td class="tr">部分：能检验 B 的实验室跨类对只在 Bigram、多变量回归、XOR 三个族里有；桥接时钟相等的对 B_k 33 对、B_r 19 对。</td></tr><tr><td class="nw">v</td><td class="nw">前提在这一格成立</td><td class="tr">ε = 0.1 时否：B_k 的 5 个格子里只有 3 个满 5 对，等值检验显著比例 29%–100%，卷积给出的 P 没有一对达到 0.9。</td></tr><tr><td class="nw">e</td><td class="nw">实际误差守住 ε</td><td class="tr">ε = 0.2 时 B_k 在实验室作答 29 对、错 27.6%，超出许诺的 20%；B_r 作答 17 对、错 5.9%。ε = 0.3 时两者基准上作答 2 对、4 对，全对。</td></tr></table></div>
+<h3>事先作答随 ε 的前沿（只算 SGD 对自适应）</h3><div class="tablewrap"><table><tr><th>ε</th><th>B_k 实验室</th><th>B_k 基准</th><th>B_r 实验室</th><th>B_r 基准</th></tr><tr><td class="num">0.02</td><td class="num">0 对</td><td class="num">0 对</td><td class="num">0 对</td><td class="num">0 对</td></tr><tr><td class="num">0.05</td><td class="num">0 对</td><td class="num">0 对</td><td class="num">0 对</td><td class="num">0 对</td></tr><tr><td class="num">0.1</td><td class="num">0 对</td><td class="num">0 对</td><td class="num">0 对</td><td class="num">0 对</td></tr><tr><td class="num">0.2</td><td class="num">29 对 · 错 27.6%</td><td class="num">1 对 · 错 0.0%</td><td class="num">17 对 · 错 5.9%</td><td class="num">0 对</td></tr><tr><td class="num">0.3</td><td class="num">56 对 · 错 17.9%</td><td class="num">2 对 · 错 0.0%</td><td class="num">87 对 · 错 18.4%</td><td class="num">4 对 · 错 0.0%</td></tr><tr><td class="num">0.4</td><td class="num">199 对 · 错 18.6%</td><td class="num">6 对 · 错 0.0%</td><td class="num">117 对 · 错 15.4%</td><td class="num">4 对 · 错 0.0%</td></tr></table></div>
+<h3>同一批 214 对上的比较</h3>
+<figure><figcaption><b>SGD 对自适应的基准对上各规则的误差。</b>测量一对的代价中位是直接训练这一对的 3.2%（0.5%–7.5%）；同样代价下截断训练错 15.9%。</figcaption><div class="legend"><span><i class="sw bar s1"></i>测量值，不看任何结果（样本外）</span><span><i class="sw bar s2"></i>KB 的规则与拟合常数（见过 498/500 题，样本内）</span><span><i class="sw bar s0"></i>基线</span></div><svg class="chart" viewBox="0 0 960 282" role="img" aria-label="SGD 对自适应的基准对上各规则的误差" preserveAspectRatio="xMinYMin meet"><line x1="300.0" x2="300.0" y1="4" y2="252" class="grid"/><text x="300.0" y="268.0" class="tick" text-anchor="middle" >0%</text><line x1="422.5" x2="422.5" y1="4" y2="252" class="grid"/><text x="422.5" y="268.0" class="tick" text-anchor="middle" >5%</text><line x1="545.0" x2="545.0" y1="4" y2="252" class="grid"/><text x="545.0" y="268.0" class="tick" text-anchor="middle" >10%</text><line x1="667.5" x2="667.5" y1="4" y2="252" class="grid"/><text x="667.5" y="268.0" class="tick" text-anchor="middle" >15%</text><line x1="790.0" x2="790.0" y1="4" y2="252" class="grid"/><text x="790.0" y="268.0" class="tick" text-anchor="middle" >20%</text><text x="290.0" y="27.0" class="tl" text-anchor="end" >S：桥 B_k，事先核验（ε = 0.1）</text><text x="306.0" y="27.0" class="note" text-anchor="start" >不作答（0 对）</text><text x="290.0" y="57.0" class="tl" text-anchor="end" >桥接时钟，测得 r，不核验前提</text><rect x="300.0" y="44" width="186.7" height="18" class="s1 hit" rx="2" tabindex="0" data-tip="桥接时钟，测得 r，不核验前提
+作答 210 对
+误差 7.6%"/><text x="492.7" y="57.0" class="dl" text-anchor="start" >7.6% · 210 对</text><text x="290.0" y="87.0" class="tl" text-anchor="end" >桥接时钟，测得 k，不核验前提</text><rect x="300.0" y="74" width="303.3" height="18" class="s1 hit" rx="2" tabindex="0" data-tip="桥接时钟，测得 k，不核验前提
+作答 210 对
+误差 12.4%"/><text x="609.3" y="87.0" class="dl" text-anchor="start" >12.4% · 210 对</text><text x="290.0" y="117.0" class="tl" text-anchor="end" >截断训练到同样代价（中位 3.2%）</text><rect x="300.0" y="104" width="389.3" height="18" class="s0 hit" rx="2" tabindex="0" data-tip="截断训练到同样代价（中位 3.2%）
+作答 214 对
+误差 15.9%"/><text x="695.3" y="117.0" class="dl" text-anchor="start" >15.9% · 214 对</text><text x="290.0" y="147.0" class="tl" text-anchor="end" >自适应总胜</text><rect x="300.0" y="134" width="446.5" height="18" class="s0 hit" rx="2" tabindex="0" data-tip="自适应总胜
+作答 214 对
+误差 18.2%"/><text x="752.5" y="147.0" class="dl" text-anchor="start" >18.2% · 214 对</text><text x="290.0" y="177.0" class="tl" text-anchor="end" >K1001（KB，样本内）</text><rect x="300.0" y="164" width="247.4" height="18" class="s2 hit" rx="2" tabindex="0" data-tip="K1001（KB，样本内）
+作答 208 对
+误差 10.1%"/><text x="553.4" y="177.0" class="dl" text-anchor="start" >10.1% · 208 对</text><text x="290.0" y="207.0" class="tl" text-anchor="end" >位移族全部成员（KB，样本内）</text><rect x="300.0" y="194" width="148.5" height="18" class="s2 hit" rx="2" tabindex="0" data-tip="位移族全部成员（KB，样本内）
+作答 198 对
+误差 6.1%"/><text x="454.5" y="207.0" class="dl" text-anchor="start" >6.1% · 198 对</text><text x="290.0" y="237.0" class="tl" text-anchor="end" >桥接时钟，KB 拟合的 g（样本内）</text><rect x="300.0" y="224" width="144.1" height="18" class="s2 hit" rx="2" tabindex="0" data-tip="桥接时钟，KB 拟合的 g（样本内）
+作答 204 对
+误差 5.9%"/><text x="450.1" y="237.0" class="dl" text-anchor="start" >5.9% · 204 对</text></svg></figure>
+<p>逐对核验（用基准曲线，要跑完整训练）：桥接时钟不等的 210 对里，B_k 下两条前提都成立的有 163 对，B_r 下 177 对；这些对里桥接时钟大者必胜，同样只是一致性检查。</p></section>
+
+<section><h2>判定结果</h2>
+<h3>全部机制的判定</h3>
+<p>三条路线的候选对齐到机制之后，逐个给出判定：找到的 S、前提没有核验或核验失败的 S，以及排除的候选和理由。</p>
+<div class="tablewrap"><table><tr><th></th><th>机制</th><th>判定</th><th>依据</th></tr><tr class=""><td class="nw">M1</td><td class="rname">时钟与时间重标（lr·T 换算，进展侧）</td><td class="nw"><b>S，已核验</b></td><td class="tr">时钟律的进展侧。A1、A2 在实验室按格子核验；实验室作答 547 对、错 1.8%，基准 13 对全对。KB 有同一机制，但从位移到胜负这座桥只用胜负计数检验（L）；文献唯一的 S（Saxe）要求深线性网络。</td></tr><tr class=""><td class="nw">M7</td><td class="rname">权重衰减：解耦与耦合</td><td class="nw"><b>S，已核验</b></td><td class="tr">解耦衰减（AdamW、SGD）可忽略：102 对里 0 对显著。反面也由更新规则推出并核验：耦合 L2 在除以梯度 RMS 前加入，Adam 即使 λ≤1e-4 也有 24.2% 显著。</td></tr><tr class=""><td class="nw">M10</td><td class="rname">λ=0 时 Adam 与 AdamW 恒等</td><td class="nw"><b>S，已核验</b></td><td class="tr">λ=0 时 Adam 与 AdamW 是同一个更新规则，读代码即可检验；实验室 50 对差异全为 0。</td></tr><tr class="dim"><td class="nw">M3</td><td class="rname">稳态的噪声地板（有效 lr 小者胜）</td><td class="nw"><b>S，前提只在部分族成立</b></td><td class="tr">噪声地板：时钟相等时 lr 小者更好。推导来自稳态 SDE（文献 Mandt、Three Factors）。显著的时钟相等对里 lr 小者更好占 66.9%，单变量与螺旋为 100%，表格分类相反。它是 M1 的 A1 失效的系统部分。</td></tr><tr class="dim"><td class="nw">M4</td><td class="rname">自适应优化器之间的换算（Adagrad √t、RMSprop 初期放大、归一化步长）</td><td class="nw"><b>S，映射证据薄或未检</b></td><td class="tr">RMSprop 的初期放大（T=256 时 ×1.47）与 Adagrad 的 1/√t 时钟由更新规则推出，模拟核对逐位一致；能独立检验的时钟相等对分别只有 13 对和 3 对。KB 的同类推导正确，但桥不独立。</td></tr><tr class="dim"><td class="nw">M5</td><td class="rname">动量即有效学习率</td><td class="nw"><b>S，映射未独立检验</b></td><td class="tr">动量并入时钟。T 也不同的匹配对只有 4 对；同 T 的匹配对是被预测关系的平局点，不算。KB 的三条主张互相矛盾，数据支持“打平”。</td></tr><tr class="dim"><td class="nw">M9</td><td class="rname">稳定阈值（edge of stability、warmup）</td><td class="nw"><b>S，映射未检</b></td><td class="tr">稳定阈值 2/λ_max 要用曲率，数据里没有。KB 只有 2 条 K 级观察，文献的 EoS 给出前提。</td></tr><tr class="dim"><td class="nw">M6</td><td class="rname">SGD 与自适应之间的桥（梯度尺度）</td><td class="nw"><b>S，映射证据不足（ε=0.1 时 0 对）</b></td><td class="tr">SGD 对自适应：初始化处测得换算（B_k 下降速率、B_r 位移），推导成立、前提可测。实验室能检验桥的跨类对只有 33 对、三个族，事先作答在 ε=0.1 时为 0。不核验前提时，测得的 r 在基准上错 7.6%（210 对），K1001 错 10.1%，KB 的拟合 g 错 5.9%（样本内）。</td></tr><tr class="dim"><td class="nw">M2</td><td class="rname">边界：何时更大位移反而输（饱和、过拟合、过冲）</td><td class="nw"><b>S，映射失败，域收窄为空</b></td><td class="tr">反转侧：前提说时钟小者胜。第一版在实验室给出 174 个判定、错 25.9%，超出许诺的 10%；改为按 lr 档核验后没有通过的格子。KB 的饱和门限是拟合出来的（L）。</td></tr><tr class="bad"><td class="nw">M8</td><td class="rname">β2 与梯度统计的平稳性</td><td class="nw"><b>排除：前提被证伪</b></td><td class="tr">β2 可忽略要求梯度统计平稳；只差 β2 的对 50.6% 显著。短训练里 0.95 多胜，与文献 Porian 的“0.999 ≻ 0.95”相反（实验室 83 对里该规则只对 31.3%）。</td></tr><tr class="bad"><td class="nw">M11</td><td class="rname">单步最优步长（要用梯度噪声与曲率）</td><td class="nw"><b>不计入</b></td><td class="tr">单步最优步长要梯度噪声与曲率，数据里没有，也不在子系统里作预测。</td></tr></table></div>
+<h3>理论路线的全部候选</h3>
+<p>理论路线按“每种设置差异能否被搬运”系统地列出候选，共 13 条。</p>
+<div class="tablewrap"><table class="cands"><tr><th>编号</th><th>候选</th><th>前提</th><th>(b) 独立检验</th><th>(c) 推导</th><th>映射（核验）</th><th>判定</th></tr><tr class=""><td class="nw">T1</td><td class="rname"><b>时钟律（进展侧）</b><br><span class="fine">同一流类、同一 T：由更新规则算出的时钟 τ 大者胜。</span></td><td class="tr">A1 时钟充分：同型、时钟相等则损失相等<br>A2 沿时钟进展：同一配置训练更久，损失更低<br>A5 同一归一化流（跨型时用）</td><td class="tr">是：A1 用 lr 与 T 都不同、时钟相等的对；A2 用只差 T 的对；都不含“同 T 比 lr”这一被预测关系</td><td class="tr">恒等式 D = δ1 + δ2：A1 管 δ1，A2 管 δ2，两者都成立则时钟大者胜；时钟公式经合成梯度模拟核对</td><td class="tr">实验室按格子核验：ε=0.1 时实验室 547 对、错 1.8%；基准 13 对、错 0.0%</td><td class="tr"><span class="tag p">S</span>已核验（域 = 前提通过的格子）</td></tr><tr class=""><td class="nw">T2</td><td class="rname"><b>时钟律（反转侧）</b><br><span class="fine">A2 显示“越训越差”（过拟合）或噪声地板主导时，时钟小者胜。</span></td><td class="tr">A1<br>A2 的反向（更久更差）</td><td class="tr">是，同 T1</td><td class="tr">同 T1 的恒等式，取相反符号</td><td class="tr">第一版（A1 不分 lr 档）在实验室给出 174 个反转判定，实际错 25.9%（全在 bigram），超出 ε 承诺的 10%；A1 按 lr 分档后，反转侧在任何 ε≤0.4 下都没有通过核验的格子（0 对）</td><td class="tr"><span class="tag p">S</span>推导成立，映射失败，域收窄为空</td></tr><tr class=""><td class="nw">T3</td><td class="rname"><b>动量并入时钟（SGD）</b><br><span class="fine">SGD(η, m) 与 SGD(η/(1−m), 0) 等价；比较时用 η/(1−m)。</span></td><td class="tr">重球稳态：梯度在 1/(1−m) 步内变化慢</td><td class="tr">只有 4 对 T 也不同的匹配对可作独立检验；同 T 的 127 对匹配对是被预测关系的平局点，不算</td><td class="tr">稳态 v = g/(1−m)；模拟核对（m=0.9）</td><td class="tr">独立证据不足</td><td class="tr"><span class="tag p">S</span>映射未独立检验</td></tr><tr class=""><td class="nw">T4</td><td class="rname"><b>解耦衰减可忽略（AdamW、SGD）</b><br><span class="fine">AdamW 与 SGD 的权重衰减（λ ≤ 1e-3）不改变胜负。</span></td><td class="tr">衰减因子 exp(−ηλT) ≥ 0.994（η ≤ 3e-3，T ≤ 2048）</td><td class="tr">对“lr 与 λ 都不同”的对是独立的；对只差 λ 的对，检验关系就是被预测关系，那是定律本身</td><td class="tr">算术</td><td class="tr">只差 λ 的实验室对 102 对，显著 0.0%</td><td class="tr"><span class="tag p">S</span>已核验（作为搬运前提）</td></tr><tr class=""><td class="nw">T5</td><td class="rname"><b>耦合 L2 被归一化放大（Adam、RMSprop、Adagrad）</b><br><span class="fine">耦合 L2 在除以梯度 RMS 之前加入，梯度小时衰减项被放大，所以不能当作可忽略。</span></td><td class="tr">L2 项 λθ 与梯度 g 一起除以 √v</td><td class="tr">是：只差 λ 的对</td><td class="tr">更新规则直接给出；方向（变好或变差）推不出</td><td class="tr">Adam λ≤1e-4 显著 24.2%；RMSprop、Adagrad λ≤1e-4 为 0/16；λ&gt;1e-4 显著 45.5%–80.0%</td><td class="tr"><span class="tag p">S</span>“不可忽略”已核验；只有 RMSprop、Adagrad 的小 λ 可当作可忽略</td></tr><tr class="bad"><td class="nw">T6</td><td class="rname"><b>β2 可忽略（梯度统计平稳）</b><br><span class="fine">平稳时 β2 只改变二阶矩的平均窗口，不改变流，所以 β2 不同不改变胜负。</span></td><td class="tr">梯度 RMS 在训练中平稳</td><td class="tr">是：只差 β2 的对</td><td class="tr">平稳性下两种窗口估计同一个 E[g²]</td><td class="tr">只差 β2 的对 83 对，显著 50.6%：平稳性前提失败</td><td class="tr"><span class="tag p">S</span>前提被证伪，排除；β2=0.95 在进展区多胜，只是观察（L 候选）</td></tr><tr class=""><td class="nw">T7</td><td class="rname"><b>Adam 与 AdamW 在 λ=0 时恒等</b><br><span class="fine">λ=0 时两者是同一个更新规则，结果相同。</span></td><td class="tr">两个实现在 λ=0 时计算同一更新（读 torch.optim 的定义即可核对）</td><td class="tr">是：前提靠读代码检验，不看训练结果</td><td class="tr">恒等</td><td class="tr">实验室 50 对，差异全为 0</td><td class="tr"><span class="tag p">S</span>已核验</td></tr><tr class=""><td class="nw">T8</td><td class="rname"><b>RMSprop 的初期放大（无偏差校正）</b><br><span class="fine">RMSprop 的 v 从 0 起步、不做偏差校正，前约 100 步步长被放大；T=256 时时钟是 ηT 的 1.47 倍。</span></td><td class="tr">梯度统计平稳</td><td class="tr">是：时钟相等的 RMSprop 对（lr 与 T 都不同）</td><td class="tr">Σ(1−0.99^t)^(−1/2)；模拟核对</td><td class="tr">推导时钟下匹配 13 对，中位偏差 8.6%；朴素时钟下 4 对，62.8%</td><td class="tr"><span class="tag p">S</span>支持推导时钟，但证据薄</td></tr><tr class=""><td class="nw">T9</td><td class="rname"><b>Adagrad 的 1/√t 时钟</b><br><span class="fine">Adagrad 的累加器线性增长，第 t 步的步长是 η/√t，时钟约 2η√T。</span></td><td class="tr">梯度统计平稳</td><td class="tr">是：时钟相等的 Adagrad 对</td><td class="tr">Σt^(−1/2)；模拟核对</td><td class="tr">只有 3 对匹配对</td><td class="tr"><span class="tag p">S</span>映射未检</td></tr><tr class=""><td class="nw">T10</td><td class="rname"><b>SGD 对自适应：下降速率桥 B_k（主）</b><br><span class="fine">初始化处一阶下降速率相等时，SGD 的 lr 相当于归一化优化器的 lr·k；k = Σμ²/Σ(μ²/√ν) 在初始化处测得（只做前向和反向）。SGD 的时钟乘以 k 后与自适应的时钟比较，大者胜。</span></td><td class="tr">B_k：初始化处测得的换算在整个训练中成立<br>A2 沿时钟进展</td><td class="tr">是：k 由初始化处的梯度测得，不看任何训练结果；B_k 在 T 也不同、桥接时钟相等的实验室跨类对上检验，这些对没有一对是同 T 关系的平局点</td><td class="tr">一阶展开：两者下降速率相等；比较仍用恒等式 D = δ1 + δ2</td><td class="tr">桥接时钟相等的实验室对 33 对，只在三个族里有；匹配对的差远小于不匹配对，但等值检验大多不过。ε=0.1 时事先作答 0 对。不核验前提时基准 210 对错 12.4%</td><td class="tr"><span class="tag p">S</span>推导成立，前提可测；映射证据不足以在 ε=0.1 下作答</td></tr><tr class=""><td class="nw">T13</td><td class="rname"><b>SGD 对自适应：位移桥 B_r</b><br><span class="fine">SGD 每步把每个坐标移动 lr·|g|，归一化优化器移动约 lr；位移范数相等要求 lr·r，r 是初始化处测得的逐坐标梯度 RMS（KB 写作 |g|，K1019 用拟合值）。</span></td><td class="tr">B_r：位移相等则进展相等，且 r 在整个训练中成立<br>A2 沿时钟进展</td><td class="tr">是：r 是测量值，不再从被预测关系里拟合；检验方式同 B_k</td><td class="tr">位移范数相等；比较用同一恒等式</td><td class="tr">桥接时钟相等的实验室对 19 对；ε=0.1 时事先作答 0 对。不核验前提时基准 210 对错 7.6%，KB 的拟合 g 在同样规则下错 5.9%（样本内）</td><td class="tr"><span class="tag p">S</span>推导成立，前提可测；映射证据不足以在 ε=0.1 下作答</td></tr><tr class=""><td class="nw">T11</td><td class="rname"><b>稳定性边界</b><br><span class="fine">lr 超过曲率决定的稳定阈值时训练发散，必输。</span></td><td class="tr">最大曲率 λ_max（未测）</td><td class="tr">是，但数据里没有曲率</td><td class="tr">GD 在 η &gt; 2/λ_max 时发散（edge of stability）</td><td class="tr">未检</td><td class="tr"><span class="tag p">S</span>映射未检</td></tr><tr class=""><td class="nw">T12</td><td class="rname"><b>噪声地板：时钟相等时 lr 小者更好</b><br><span class="fine">接近收敛时，随机梯度的稳态波动随 lr 增大，所以时钟相等时 lr 小者损失更低。</span></td><td class="tr">接近收敛<br>稳态方差随 η 增大（SDE）</td><td class="tr">是：时钟相等、lr 与 T 都不同的对</td><td class="tr">SDE 稳态方差 ∝ η</td><td class="tr">显著的匹配对里 lr 小者更好占 66.9%；单变量、螺旋为 100%，表格分类反过来</td><td class="tr"><span class="tag p">S</span>推导成立，前提只在部分族成立；它就是 T1 的 A1 失效的系统部分</td></tr></table></div>
+<h3>基准上事先核验后作答的对</h3>
+<p>ε = 0.1 时，方向判定 13 对、平局判定 5 对、恒等 1 对（另有 9 对只差衰减的平局判定，算 L）。</p>
+<div class="tablewrap"><table><tr><th>对</th><th>任务族</th><th>候选 a</th><th>候选 b</th><th>判定</th><th>P(时钟大者胜)</th><th>实际</th></tr><tr class=""><td class="nw">q_fd4fbc:AB</td><td class="nw">表格分类</td><td class="nw">AdamW lr=0.0003</td><td class="nw">Adagrad lr=0.001 λ=1e-05</td><td class="nw">a 胜</td><td class="num">0.91</td><td class="nw">a 胜</td></tr><tr class=""><td class="nw">q_fd4fbc:AC</td><td class="nw">表格分类</td><td class="nw">AdamW lr=0.0003</td><td class="nw">RMSprop lr=3e-05 λ=0.0001</td><td class="nw">a 胜</td><td class="num">0.91</td><td class="nw">a 胜</td></tr><tr class=""><td class="nw">q_fd4fbc:BC</td><td class="nw">表格分类</td><td class="nw">Adagrad lr=0.001 λ=1e-05</td><td class="nw">RMSprop lr=3e-05 λ=0.0001</td><td class="nw">a 胜</td><td class="num">0.96</td><td class="nw">a 胜</td></tr><tr class=""><td class="nw">q_ea5717:BC</td><td class="nw">表格分类</td><td class="nw">Adagrad lr=0.0003</td><td class="nw">Adam lr=0.0001 β2=0.95</td><td class="nw">b 胜</td><td class="num">0.96</td><td class="nw">b 胜</td></tr><tr class=""><td class="nw">q_49d499:AB</td><td class="nw">表格分类</td><td class="nw">Adam lr=0.0001 λ=1e-05 β2=0.95</td><td class="nw">Adam lr=0.0003 λ=1e-05 β2=0.95</td><td class="nw">b 胜</td><td class="num">0.91</td><td class="nw">b 胜</td></tr><tr class=""><td class="nw">q_f18ec5:AB</td><td class="nw">表格分类</td><td class="nw">Adagrad lr=3e-05 λ=1e-05</td><td class="nw">AdamW lr=0.0003 λ=0.0001 β2=0.95</td><td class="nw">b 胜</td><td class="num">0.91</td><td class="nw">b 胜</td></tr><tr class=""><td class="nw">q_f18ec5:BC</td><td class="nw">表格分类</td><td class="nw">AdamW lr=0.0003 λ=0.0001 β2=0.95</td><td class="nw">Adagrad lr=0.0001 λ=1e-05</td><td class="nw">a 胜</td><td class="num">0.91</td><td class="nw">a 胜</td></tr><tr class=""><td class="nw">q_4e8c54:BC</td><td class="nw">表格分类</td><td class="nw">Adagrad lr=0.0001 λ=0.001</td><td class="nw">Adagrad lr=0.0003 λ=0.001</td><td class="nw">b 胜</td><td class="num">0.91</td><td class="nw">b 胜</td></tr><tr class=""><td class="nw">q_84392b:BC</td><td class="nw">Bigram 语言模型</td><td class="nw">AdamW lr=0.0003 λ=0.0001 β2=0.95</td><td class="nw">Adagrad lr=0.0003</td><td class="nw">a 胜</td><td class="num">0.99</td><td class="nw">a 胜</td></tr><tr class=""><td class="nw">q_14d21e:AC</td><td class="nw">Bigram 语言模型</td><td class="nw">Adagrad lr=0.0003 λ=0.0001</td><td class="nw">Adam lr=0.0001</td><td class="nw">b 胜</td><td class="num">1.00</td><td class="nw">b 胜</td></tr><tr class=""><td class="nw">q_ac1991:AB</td><td class="nw">Bigram 语言模型</td><td class="nw">AdamW lr=0.0001 λ=0.001 β2=0.95</td><td class="nw">Adagrad lr=3e-05 λ=1e-05</td><td class="nw">a 胜</td><td class="num">1.00</td><td class="nw">a 胜</td></tr><tr class=""><td class="nw">q_9a8f36:AB</td><td class="nw">Bigram 语言模型</td><td class="nw">Adam lr=0.0001 β2=0.95</td><td class="nw">Adam lr=3e-05 β2=0.95</td><td class="nw">a 胜</td><td class="num">1.00</td><td class="nw">a 胜</td></tr><tr class=""><td class="nw">q_17797d:BC</td><td class="nw">Bigram 语言模型</td><td class="nw">AdamW lr=0.0003 β2=0.95</td><td class="nw">AdamW lr=0.0003 β2=0.95</td><td class="nw">平局</td><td class="num">—</td><td class="nw">a 胜（不显著）</td></tr><tr class=""><td class="nw">q_2866a0:AC</td><td class="nw">Bigram 语言模型</td><td class="nw">RMSprop lr=3e-05</td><td class="nw">RMSprop lr=0.0001 λ=0.0001</td><td class="nw">b 胜</td><td class="num">1.00</td><td class="nw">b 胜</td></tr><tr class="bad"><td class="nw">q_3b8efc:AB</td><td class="nw">Bigram 语言模型</td><td class="nw">RMSprop lr=0.0003</td><td class="nw">RMSprop lr=0.0003</td><td class="nw">平局</td><td class="num">—</td><td class="nw">a 胜 ✗</td></tr><tr class=""><td class="nw">q_ad98b9:BC</td><td class="nw">Bigram 语言模型</td><td class="nw">AdamW lr=3e-05</td><td class="nw">Adam lr=3e-05</td><td class="nw">平局</td><td class="num">—</td><td class="nw">b 胜（不显著）</td></tr><tr class=""><td class="nw">q_a74038:AB</td><td class="nw">Bigram 语言模型</td><td class="nw">Adagrad lr=0.0001 λ=0.001</td><td class="nw">Adagrad lr=0.0001 λ=0.001</td><td class="nw">平局</td><td class="num">—</td><td class="nw">a 胜（不显著）</td></tr><tr class=""><td class="nw">q_a12ca6:AB</td><td class="nw">Bigram 语言模型</td><td class="nw">SGD lr=0.001 λ=1e-05</td><td class="nw">SGD lr=0.001 λ=1e-05</td><td class="nw">平局</td><td class="num">—</td><td class="nw">a 胜（不显著）</td></tr></table></div>
+<h3>与 KB 的定律在同一批对上比较</h3>
+<figure><figcaption><b>作答数对误差。</b>绿色是 S 随 ε 的前沿；灰、橙、蓝是同一推导不核验前提、K1001 和位移族全部成员。S 的误差在每个 ε 下都低于 ε 本身。</figcaption><div class="legend"><span><i class="sw dot s3"></i>S：时钟律，前提事先核验（ε 从 0.02 到 0.4）</span><span><i class="sw dot s0"></i>同一推导，不核验前提</span><span><i class="sw dot s2"></i>K1001（KB，L）</span><span><i class="sw dot s1"></i>位移族全部成员（KB，L）</span></div><svg class="chart" viewBox="0 0 960 340" role="img" aria-label="S 的前沿（随 ε）与 KB 的 L 规则：作答数对误差" preserveAspectRatio="xMinYMin meet"><text x="70.0" y="22.0" class="ptitle" text-anchor="start" >基准（523 对）</text><line x1="70.0" x2="473.0" y1="290.0" y2="290.0" class="grid"/><text x="62.0" y="294.0" class="tick" text-anchor="end" >0%</text><line x1="70.0" x2="473.0" y1="226.0" y2="226.0" class="grid"/><text x="62.0" y="230.0" class="tick" text-anchor="end" >4%</text><line x1="70.0" x2="473.0" y1="162.0" y2="162.0" class="grid"/><text x="62.0" y="166.0" class="tick" text-anchor="end" >8%</text><line x1="70.0" x2="473.0" y1="98.0" y2="98.0" class="grid"/><text x="62.0" y="102.0" class="tick" text-anchor="end" >12%</text><line x1="70.0" x2="473.0" y1="34.0" y2="34.0" class="grid"/><text x="62.0" y="38.0" class="tick" text-anchor="end" >16%</text><line x1="70.0" x2="70.0" y1="34" y2="290" class="grid"/><text x="70.0" y="306.0" class="tick" text-anchor="middle" >0</text><line x1="147.1" x2="147.1" y1="34" y2="290" class="grid"/><text x="147.1" y="306.0" class="tick" text-anchor="middle" >100</text><line x1="224.1" x2="224.1" y1="34" y2="290" class="grid"/><text x="224.1" y="306.0" class="tick" text-anchor="middle" >200</text><line x1="301.2" x2="301.2" y1="34" y2="290" class="grid"/><text x="301.2" y="306.0" class="tick" text-anchor="middle" >300</text><line x1="378.2" x2="378.2" y1="34" y2="290" class="grid"/><text x="378.2" y="306.0" class="tick" text-anchor="middle" >400</text><line x1="455.3" x2="455.3" y1="34" y2="290" class="grid"/><text x="455.3" y="306.0" class="tick" text-anchor="middle" >500</text><polyline points="73.9,290.0 75.4,290.0 80.0,290.0 80.8,290.0 93.1,236.7 112.4,202.7" class="line s3l"/><g class="hit" tabindex="0" data-tip="S 时钟律 · ε = 0.02
+作答 5 对
+误差 0.0%"><circle cx="73.9" cy="290.0" r="5" class="mk s3"/></g><g class="hit" tabindex="0" data-tip="S 时钟律 · ε = 0.05
+作答 7 对
+误差 0.0%"><circle cx="75.4" cy="290.0" r="5" class="mk s3"/></g><g class="hit" tabindex="0" data-tip="S 时钟律 · ε = 0.1
+作答 13 对
+误差 0.0%"><circle cx="80.0" cy="290.0" r="5" class="mk s3"/></g><g class="hit" tabindex="0" data-tip="S 时钟律 · ε = 0.2
+作答 14 对
+误差 0.0%"><circle cx="80.8" cy="290.0" r="5" class="mk s3"/></g><g class="hit" tabindex="0" data-tip="S 时钟律 · ε = 0.3
+作答 30 对
+误差 3.3%"><circle cx="93.1" cy="236.7" r="5" class="mk s3"/></g><g class="hit" tabindex="0" data-tip="S 时钟律 · ε = 0.4
+作答 55 对
+误差 5.5%"><circle cx="112.4" cy="202.7" r="5" class="mk s3"/></g><text x="88.0" y="282.0" class="dl" text-anchor="start" >ε=0.1</text><text x="120.4" y="194.7" class="dl" text-anchor="start" >ε=0.4</text><g class="hit" tabindex="0" data-tip="同一推导，不核验前提
+作答 285 对
+误差 11.6%"><circle cx="289.6" cy="104.7" r="6" class="mk s0"/></g><text x="281.6" y="94.7" class="dl" text-anchor="end" >不核验前提</text><g class="hit" tabindex="0" data-tip="K1001（KB，L）
+作答 488 对
+误差 10.5%"><circle cx="446.0" cy="122.8" r="6" class="mk s2"/></g><text x="438.0" y="112.8" class="dl" text-anchor="end" >K1001</text><g class="hit" tabindex="0" data-tip="位移族全部成员（KB，L）
+作答 464 对
+误差 8.0%"><circle cx="427.5" cy="162.4" r="6" class="mk s1"/></g><text x="419.5" y="152.4" class="dl" text-anchor="end" >位移族</text><text x="271.5" y="328.0" class="axl" text-anchor="middle" >作答的对数（方向判定）</text><text x="533.0" y="22.0" class="ptitle" text-anchor="start" >实验室（7,901 对）</text><line x1="533.0" x2="936.0" y1="290.0" y2="290.0" class="grid"/><text x="525.0" y="294.0" class="tick" text-anchor="end" >0%</text><line x1="533.0" x2="936.0" y1="226.0" y2="226.0" class="grid"/><text x="525.0" y="230.0" class="tick" text-anchor="end" >8%</text><line x1="533.0" x2="936.0" y1="162.0" y2="162.0" class="grid"/><text x="525.0" y="166.0" class="tick" text-anchor="end" >16%</text><line x1="533.0" x2="936.0" y1="98.0" y2="98.0" class="grid"/><text x="525.0" y="102.0" class="tick" text-anchor="end" >24%</text><line x1="533.0" x2="936.0" y1="34.0" y2="34.0" class="grid"/><text x="525.0" y="38.0" class="tick" text-anchor="end" >32%</text><line x1="533.0" x2="533.0" y1="34" y2="290" class="grid"/><text x="533.0" y="306.0" class="tick" text-anchor="middle" >0</text><line x1="635.0" x2="635.0" y1="34" y2="290" class="grid"/><text x="635.0" y="306.0" class="tick" text-anchor="middle" >2,000</text><line x1="737.0" x2="737.0" y1="34" y2="290" class="grid"/><text x="737.0" y="306.0" class="tick" text-anchor="middle" >4,000</text><line x1="839.0" x2="839.0" y1="34" y2="290" class="grid"/><text x="839.0" y="306.0" class="tick" text-anchor="middle" >6,000</text><line x1="941.0" x2="941.0" y1="34" y2="290" class="grid"/><text x="941.0" y="306.0" class="tick" text-anchor="middle" >8,000</text><polyline points="558.0,288.4 559.7,279.3 560.9,275.4 562.4,265.0 590.1,158.6 630.4,124.1" class="line s3l"/><g class="hit" tabindex="0" data-tip="S 时钟律 · ε = 0.02
+作答 490 对
+误差 0.2%"><circle cx="558.0" cy="288.4" r="5" class="mk s3"/></g><g class="hit" tabindex="0" data-tip="S 时钟律 · ε = 0.05
+作答 524 对
+误差 1.3%"><circle cx="559.7" cy="279.3" r="5" class="mk s3"/></g><g class="hit" tabindex="0" data-tip="S 时钟律 · ε = 0.1
+作答 547 对
+误差 1.8%"><circle cx="560.9" cy="275.4" r="5" class="mk s3"/></g><g class="hit" tabindex="0" data-tip="S 时钟律 · ε = 0.2
+作答 576 对
+误差 3.1%"><circle cx="562.4" cy="265.0" r="5" class="mk s3"/></g><g class="hit" tabindex="0" data-tip="S 时钟律 · ε = 0.3
+作答 1120 对
+误差 16.4%"><circle cx="590.1" cy="158.6" r="5" class="mk s3"/></g><g class="hit" tabindex="0" data-tip="S 时钟律 · ε = 0.4
+作答 1910 对
+误差 20.7%"><circle cx="630.4" cy="124.1" r="5" class="mk s3"/></g><text x="568.9" y="267.4" class="dl" text-anchor="start" >ε=0.1</text><text x="638.4" y="116.1" class="dl" text-anchor="start" >ε=0.4</text><text x="734.5" y="328.0" class="axl" text-anchor="middle" >作答的对数（方向判定）</text><text transform="translate(18,153.0) rotate(-90)" class="axl" text-anchor="middle">误差</text></svg></figure>
+<div class="tablewrap"><table><tr><th>答案规则</th><th>全部 523 对</th><th>同一流类 309 对</th><th>SGD 对自适应 214 对</th></tr><tr><td class="rname">S：时钟律（前提已核验，ε=0.1）</td><td class="num">13 对 · 错 0.0%</td><td class="num">13 对 · 错 0.0%</td><td class="zero">不作答</td></tr><tr><td class="rname">同一推导，不核验前提</td><td class="num">285 对 · 错 11.6%</td><td class="num">285 对 · 错 11.6%</td><td class="zero">不作答</td></tr><tr><td class="rname">桥接时钟（测得 k），不核验前提</td><td class="num">210 对 · 错 12.4%</td><td class="zero">不作答</td><td class="num">210 对 · 错 12.4%</td></tr><tr><td class="rname">桥接时钟（测得 r），不核验前提</td><td class="num">210 对 · 错 7.6%</td><td class="zero">不作答</td><td class="num">210 对 · 错 7.6%</td></tr><tr><td class="rname">桥接时钟（KB 拟合的 g，样本内）</td><td class="num">204 对 · 错 5.9%</td><td class="zero">不作答</td><td class="num">204 对 · 错 5.9%</td></tr><tr><td class="rname">自适应总胜</td><td class="num">214 对 · 错 18.2%</td><td class="zero">不作答</td><td class="num">214 对 · 错 18.2%</td></tr><tr><td class="rname">K1001（KB，L）</td><td class="num">488 对 · 错 10.5%</td><td class="num">280 对 · 错 10.7%</td><td class="num">208 对 · 错 10.1%</td></tr><tr><td class="rname">位移族全部成员（KB，L）</td><td class="num">464 对 · 错 8.0%</td><td class="num">266 对 · 错 9.4%</td><td class="num">198 对 · 错 6.1%</td></tr></table></div></section>
+
+<section><h2>“找全了”是什么意思</h2>
+<p>“全部科学”只能相对于三样东西说：搜索路线、前提库（这里是从更新规则出发的时钟与搬运前提）、推导规则（时钟比较与搬运的组合）。在这个意义上可以检验三件事。</p>
+<h3>1. 闭包：每一对都算过</h3>
+<p>推导引擎对基准的 523 对和实验室的 7,901 对逐一判定：要么给出判定和所用前提，要么给出不作答的原因。没有遗漏，闭包是完全的；剩下的问题是前提库够不够。</p>
+<figure><figcaption><b>基准上的分层覆盖：同一流类。</b>从“理论可达”到“事先核验”，每一层的损失都有归因。</figcaption><svg class="chart" viewBox="0 0 960 250" role="img" aria-label="基准上的分层覆盖" preserveAspectRatio="xMinYMin meet"><text x="210.0" y="37.0" class="tl" text-anchor="end" >全部同模型的对</text><rect x="220.0" y="18" width="440.0" height="30" class="s1 hit" rx="3" tabindex="0" data-tip="全部同模型的对
+523 对
+占 100%"/><text x="668.0" y="37.0" class="dl b" text-anchor="start" >523 对（100%）</text><text x="210.0" y="83.0" class="tl" text-anchor="end" >理论可达：同一流类</text><rect x="220.0" y="64" width="260.0" height="30" class="s1 hit" rx="3" tabindex="0" data-tip="理论可达：同一流类
+309 对
+占 59%"/><text x="488.0" y="83.0" class="dl b" text-anchor="start" >309 对（59%）</text><text x="488.0" y="98.0" class="note" text-anchor="start" >−214：SGD 对自适应，没有推导</text><text x="210.0" y="129.0" class="tl" text-anchor="end" >其中时钟不相等</text><rect x="220.0" y="110" width="239.8" height="30" class="s1 hit" rx="3" tabindex="0" data-tip="其中时钟不相等
+285 对
+占 54%"/><text x="467.8" y="129.0" class="dl b" text-anchor="start" >285 对（54%）</text><text x="467.8" y="144.0" class="note" text-anchor="start" >−24：时钟相等，只能判平局</text><text x="210.0" y="175.0" class="tl" text-anchor="end" >事后看两条前提都成立</text><rect x="220.0" y="156" width="207.8" height="30" class="s1 hit" rx="3" tabindex="0" data-tip="事后看两条前提都成立
+247 对
+占 47%"/><text x="435.8" y="175.0" class="dl b" text-anchor="start" >247 对（47%）</text><text x="435.8" y="190.0" class="note" text-anchor="start" >−38：前提在这一对上失效</text><text x="210.0" y="221.0" class="tl" text-anchor="end" >事先核验并作答</text><rect x="220.0" y="202" width="16.0" height="30" class="s3 hit" rx="3" tabindex="0" data-tip="事先核验并作答
+19 对
+占 4%"/><text x="244.0" y="221.0" class="dl b" text-anchor="start" >19 对（4%）</text><text x="244.0" y="236.0" class="note" text-anchor="start" >方向 13 对、平局 5 对、恒等 1 对</text></svg></figure>
+<figure><figcaption><b>基准上的分层覆盖：SGD 对自适应。</b>有了初始化处的测量，这 214 对都有推导可达；卡在实验室里对桥 B 的核验。</figcaption><svg class="chart" viewBox="0 0 960 250" role="img" aria-label="SGD 对自适应：分层覆盖" preserveAspectRatio="xMinYMin meet"><text x="210.0" y="37.0" class="tl" text-anchor="end" >SGD 对自适应的对</text><rect x="220.0" y="18" width="440.0" height="30" class="s1" rx="3"/><text x="668.0" y="37.0" class="dl b" text-anchor="start" >214 对</text><text x="210.0" y="83.0" class="tl" text-anchor="end" >测得换算（初始化处）</text><rect x="220.0" y="64" width="440.0" height="30" class="s1" rx="3"/><text x="668.0" y="83.0" class="dl b" text-anchor="start" >214 对</text><text x="668.0" y="98.0" class="note" text-anchor="start" >每组 4 个种子，只做前向和反向</text><text x="210.0" y="129.0" class="tl" text-anchor="end" >其中桥接时钟不相等</text><rect x="220.0" y="110" width="431.8" height="30" class="s1" rx="3"/><text x="659.8" y="129.0" class="dl b" text-anchor="start" >210 对</text><text x="210.0" y="175.0" class="tl" text-anchor="end" >事后看两条前提都成立</text><rect x="220.0" y="156" width="335.1" height="30" class="s1" rx="3"/><text x="563.1" y="175.0" class="dl b" text-anchor="start" >163 对</text><text x="563.1" y="190.0" class="note" text-anchor="start" >逐对核验，要跑完整训练</text><text x="210.0" y="221.0" class="tl" text-anchor="end" >事先核验并作答（ε = 0.1）</text><rect x="220.0" y="202" width="2.0" height="30" class="s3" rx="3"/><text x="230.0" y="221.0" class="dl b" text-anchor="start" >0 对</text><text x="230.0" y="236.0" class="note" text-anchor="start" >桥 B 在实验室的格子太薄</text></svg></figure>
+<h3>2. 没覆盖的地方，原因逐类可查</h3>
+<figure><figcaption><b>基准上没有作答的原因（ε = 0.1）。</b>“前提不定”64 对没有列入：它们的前提都测过，但卷积给出的概率不够高。</figcaption><div class="legend"><span><i class="sw bar s0"></i>无推导：缺一个可测前提</span><span><i class="sw bar s2"></i>前提失败：这项设置不可忽略</span><span><i class="sw bar s1"></i>前提未测：实验室这一格实验不足</span></div><svg class="chart" viewBox="0 0 960 300" role="img" aria-label="基准上没有作答的原因" preserveAspectRatio="xMinYMin meet"><text x="320.0" y="26.0" class="tl" text-anchor="end" >前提未测 · 桥 B 的匹配实验不足（跨类）</text><rect x="330.0" y="13" width="500.0" height="18" class="s1" rx="2"/><text x="836.0" y="26.0" class="dl" text-anchor="start" >92 对</text><text x="320.0" y="54.0" class="tl" text-anchor="end" >前提未测 · A2 时钟格子实验不足</text><rect x="330.0" y="41" width="445.7" height="18" class="s1" rx="2"/><text x="781.7" y="54.0" class="dl" text-anchor="start" >82 对</text><text x="320.0" y="82.0" class="tl" text-anchor="end" >前提未测 · A1 时钟匹配实验不足</text><rect x="330.0" y="69" width="380.4" height="18" class="s1" rx="2"/><text x="716.4" y="82.0" class="dl" text-anchor="start" >70 对</text><text x="320.0" y="110.0" class="tl" text-anchor="end" >前提失败 · Adagrad 的 L2（λ=0.001）</text><rect x="330.0" y="97" width="298.9" height="18" class="s2" rx="2"/><text x="634.9" y="110.0" class="dl" text-anchor="start" >55 对</text><text x="320.0" y="138.0" class="tl" text-anchor="end" >前提失败 · Adam 的 L2（λ=1e-05）</text><rect x="330.0" y="125" width="157.6" height="18" class="s2" rx="2"/><text x="493.6" y="138.0" class="dl" text-anchor="start" >29 对</text><text x="320.0" y="166.0" class="tl" text-anchor="end" >前提失败 · RMSprop 的 L2（λ=0.001）</text><rect x="330.0" y="153" width="141.3" height="18" class="s2" rx="2"/><text x="477.3" y="166.0" class="dl" text-anchor="start" >26 对</text><text x="320.0" y="194.0" class="tl" text-anchor="end" >前提失败 · Adam 的 L2（λ=0.0001）</text><rect x="330.0" y="181" width="119.6" height="18" class="s2" rx="2"/><text x="455.6" y="194.0" class="dl" text-anchor="start" >22 对</text><text x="320.0" y="222.0" class="tl" text-anchor="end" >前提失败 · β2 不同</text><rect x="330.0" y="209" width="108.7" height="18" class="s2" rx="2"/><text x="444.7" y="222.0" class="dl" text-anchor="start" >20 对</text><text x="320.0" y="250.0" class="tl" text-anchor="end" >前提失败 · Adam 的 L2（λ=0.001）</text><rect x="330.0" y="237" width="108.7" height="18" class="s2" rx="2"/><text x="444.7" y="250.0" class="dl" text-anchor="start" >20 对</text><text x="320.0" y="278.0" class="tl" text-anchor="end" >前提未测 · 动量不同</text><rect x="330.0" y="265" width="59.8" height="18" class="s1" rx="2"/><text x="395.8" y="278.0" class="dl" text-anchor="start" >11 对</text></svg></figure>
+<h3>3. 残差里还有没有规律</h3>
+<p>如果没覆盖的对里结果本来就不可预测，那么没有科学可找；如果有定律能预测它们，那里就有可以晋升的东西。SGD 对自适应的 214 对：KB 的位移族答 198 对、错 6.1%（样本内）；新测的梯度 RMS 不看结果就排对到错 7.6%。规律存在，前提也已经可测，缺的是实验室里足够多的“T 也不同、桥接时钟相等”的跨类实验来核验桥 B。</p>
+<h3>敏感性分析：放宽 (b)</h3>
+<p>放宽 (b)：允许用同 T 下动量匹配的对（被预测关系的平局点）检验“动量并入时钟”。严格时这条前提只有 4 对可用（显著 25%，实验不足）；放宽后 131 对、显著 2.3%，通过。</p><div class="tablewrap"><table><tr><th></th><th>严格（主结果）方向判定</th><th>放宽后方向判定</th><th>平局判定（严格 / 放宽）</th></tr><tr><td>基准</td><td class="num">13 对 · 错 0.0%</td><td class="num">13 对 · 错 0.0%</td><td class="num">5 / 5</td></tr><tr><td>实验室</td><td class="num">547 对 · 错 1.8%</td><td class="num">554 对 · 错 1.8%</td><td class="num">58 / 58</td></tr></table></div>
+<h3>4. 路线之间的重叠：捕获再捕获</h3>
+<p>三条路线各自独立地找，最后对齐到 11 个机制上。格子里是该路线在这个机制上达到的最高层次和条数。</p>
+<div class="tablewrap"><table><tr><th></th><th>机制</th><th>理论路线</th><th>KB 路线</th><th>文献路线</th><th>合并判定</th></tr><tr class=""><td class="nw">M1</td><td class="rname">时钟与时间重标（lr·T 换算，进展侧）</td><td class="nw"><span class="tag p">S</span>1 条</td><td class="nw"><span class="tag ">L</span>44 条</td><td class="nw"><span class="tag p">S</span>12 条</td><td class="tr"><b>S，已核验</b></td></tr><tr class=""><td class="nw">M2</td><td class="rname">边界：何时更大位移反而输（饱和、过拟合、过冲）</td><td class="nw"><span class="tag p">S</span>1 条</td><td class="nw"><span class="tag ">L</span>76 条</td><td class="nw"><span class="tag ">L</span>1 条</td><td class="tr"><b>S，映射失败，域收窄为空</b></td></tr><tr class=""><td class="nw">M3</td><td class="rname">稳态的噪声地板（有效 lr 小者胜）</td><td class="nw"><span class="tag p">S</span>1 条</td><td class="zero">—</td><td class="nw"><span class="tag p">S</span>2 条</td><td class="tr"><b>S，前提只在部分族成立</b></td></tr><tr class=""><td class="nw">M4</td><td class="rname">自适应优化器之间的换算（Adagrad √t、RMSprop 初期放大、归一化步长）</td><td class="nw"><span class="tag p">S</span>2 条</td><td class="nw"><span class="tag ">L</span>68 条</td><td class="nw"><span class="tag ">K</span>9 条</td><td class="tr"><b>S，映射证据薄或未检</b></td></tr><tr class=""><td class="nw">M5</td><td class="rname">动量即有效学习率</td><td class="nw"><span class="tag p">S</span>1 条</td><td class="nw"><span class="tag ">L</span>22 条</td><td class="nw"><span class="tag ">L</span>1 条</td><td class="tr"><b>S，映射未独立检验</b></td></tr><tr class=""><td class="nw">M6</td><td class="rname">SGD 与自适应之间的桥（梯度尺度）</td><td class="nw"><span class="tag p">S</span>2 条</td><td class="nw"><span class="tag ">L</span>61 条</td><td class="nw"><span class="tag p">S</span>2 条</td><td class="tr"><b>S，映射证据不足（ε=0.1 时 0 对）</b></td></tr><tr class=""><td class="nw">M7</td><td class="rname">权重衰减：解耦与耦合</td><td class="nw"><span class="tag p">S</span>2 条</td><td class="nw"><span class="tag ">L</span>27 条</td><td class="nw"><span class="tag ">K</span>3 条</td><td class="tr"><b>S，已核验</b></td></tr><tr class="bad"><td class="nw">M8</td><td class="rname">β2 与梯度统计的平稳性</td><td class="nw"><span class="tag ">S 被证伪</span>1 条</td><td class="nw"><span class="tag ">K</span>15 条</td><td class="nw"><span class="tag ">L</span>1 条</td><td class="tr"><b>排除：前提被证伪</b></td></tr><tr class=""><td class="nw">M9</td><td class="rname">稳定阈值（edge of stability、warmup）</td><td class="nw"><span class="tag p">S</span>1 条</td><td class="nw"><span class="tag ">K</span>2 条</td><td class="nw"><span class="tag p">S</span>6 条</td><td class="tr"><b>S，映射未检</b></td></tr><tr class=""><td class="nw">M10</td><td class="rname">λ=0 时 Adam 与 AdamW 恒等</td><td class="nw"><span class="tag p">S</span>1 条</td><td class="zero">—</td><td class="zero">—</td><td class="tr"><b>S，已核验</b></td></tr><tr class="bad"><td class="nw">M11</td><td class="rname">单步最优步长（要用梯度噪声与曲率）</td><td class="zero">—</td><td class="zero">—</td><td class="nw"><span class="tag ">前提</span>1 条</td><td class="tr"><b>不计入</b></td></tr></table></div>
+<ul>
+<li><b>机制几乎找全了。</b>理论路线找到 10 个，文献 10 个，重叠 9 个；Chapman 估计总数约 11.1，三条路线合计已找到 11 个。</li>
+<li><b>能到 S 的机制可能还差一两个。</b>理论路线到 S 的 9 个、文献 4 个、重叠 4 个，估计约 9.0 个；合计已找到 9 个。KB 路线一个 S 也没有。</li>
+<li><b>三条路线找到的机制差不多，差在能不能到 S。</b>KB 有数据但检验错了关系；文献有推导但前提在子系统外；理论路线用实验室里另一种关系的实验检验前提，才到 S。</li>
+</ul>
+<p class="fine">捕获再捕获假设两条路线独立。三条路线都从同一套优化器常识出发，正相关会让估计偏低，所以这些数只是下限的量级。</p>
+</section>
+
+<section><h2>定义在哪里不够用</h2>
+<ol>
+<li><b>“检验前提比跑出结果便宜”只对一部分前提成立。</b>在这一对上核验 A1、A2 需要把两份配置都跑到 T，代价约等于直接比较；桥 B 的前提量（k、r）倒是便宜，测一对的代价中位是直接训练的 3.2%。难的是核验“换算在整个训练中成立”本身，这又回到实验室里按格子摊销的实验。</li>
+<li><b>前提的“格子”是建模选择。</b>（任务族、流类、时钟量级、lr 档）是按理论选的，换一种分格，核验结果和覆盖率都会变，ε 和最少实验数 5 也是参数；S 本身因此也是一个族，要报前沿。</li>
+<li><b>独立数据有选择偏差。</b>实验室实验有一部分是为找反例设计的，偏向失败区域，所以核验偏保守：事后前提在 247/285 对上成立，事先只核验出很小一部分。</li>
+<li><b>“找全了”只相对于路线和前提库。</b>完全的闭包只说明前提库推得出的都推了；前提库之外的科学只能通过残差里的规律去发现。梯度测量就是这样补进来的：残差里有规律（KB 的定律能预测），才去找能测的前提。</li>
+<li><b>平局判定依赖噪声口径。</b>训练对种子是确定的（λ=0 时 Adam 与 AdamW 结果逐位相同），所以“显著”很容易达到；时钟相差 15% 的两份配置在 10 个种子下常常显著不同，平局判定只在 A1 的等值检验通过的格子里作出。</li>
+</ol></section>
+
+<section><h2>复现</h2>
+<div class="formula">python3 kb_price/science/scripts/sci_grad.py
+python3 kb_price/science/scripts/sci_compute.py
+python3 kb_price/science/scripts/sci_page.py</div>
+<p class="fine">sci_grad.py 是唯一碰模型的一步：初始化处的前向和反向，不训练，约半分钟。其余只读已有数据，不调用模型。KB 与文献路线的结果由 <code>scripts/sci_kb_route.py</code>、<code>scripts/sci_lit_route.py</code> 生成。</p></section>
+</main><script>
+(function(){
+ var tip=document.getElementById('tip');
+ function show(t,x,y){tip.textContent='';t.split('\n').forEach(function(l,i){var d=document.createElement('div');d.textContent=l;if(i==0)d.className='v';tip.appendChild(d);});
+  tip.style.display='block';var w=tip.offsetWidth,h=tip.offsetHeight;var X=x+14,Y=y+14;if(X+w>innerWidth-8)X=x-w-14;if(Y+h>innerHeight-8)Y=y-h-14;tip.style.left=X+'px';tip.style.top=Y+'px';}
+ function hide(){tip.style.display='none';}
+ document.querySelectorAll('[data-tip]').forEach(function(el){
+  el.addEventListener('pointermove',function(e){show(el.getAttribute('data-tip'),e.clientX,e.clientY);});
+  el.addEventListener('pointerleave',hide);
+  el.addEventListener('focus',function(){var r=el.getBoundingClientRect();show(el.getAttribute('data-tip'),r.right,r.top);});
+  el.addEventListener('blur',hide);});
+ document.querySelectorAll('.xhov').forEach(function(ov){
+  var svg=ov.ownerSVGElement,fig=svg.parentNode,data=JSON.parse(fig.querySelector('.xhdata').textContent),xh=svg.querySelector('.xh');
+  var x0=+ov.dataset.x0,x1=+ov.dataset.x1,d0=+ov.dataset.d0,d1=+ov.dataset.d1,lg=ov.dataset.log==='1';
+  function interp(arr,c){if(c<arr[0][0]||c>arr[arr.length-1][0])return null;for(var i=1;i<arr.length;i++){if(arr[i][0]>=c){var a=arr[i-1],b=arr[i];return a[1]+(b[1]-a[1])*(c-a[0])/(b[0]-a[0]);}}return null;}
+  ov.addEventListener('pointermove',function(e){var p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;var q=p.matrixTransform(svg.getScreenCTM().inverse());
+   var t=d0+(q.x-x0)/(x1-x0)*(d1-d0);var c=lg?Math.pow(10,t):t;var X=q.x;
+   xh.setAttribute('x1',X);xh.setAttribute('x2',X);xh.style.display='';
+   var lines=['c = '+(c*100).toPrecision(2)+'%'];Object.keys(data).forEach(function(k){var v=interp(data[k],c);lines.push(k+'：e = '+(v==null?'（曲线不到此处）':(v*100).toFixed(1)+'%'));});
+   show(lines.join('\n'),e.clientX,e.clientY);});
+  ov.addEventListener('pointerleave',function(){xh.style.display='none';hide();});});
+ var b=document.querySelector('.toggle');if(b){b.addEventListener('click',function(){var r=document.documentElement;var cur=r.getAttribute('data-theme');
+  var dark=cur?cur==='dark':matchMedia('(prefers-color-scheme: dark)').matches;r.setAttribute('data-theme',dark?'light':'dark');});}
+})();
+</script></body></html>
