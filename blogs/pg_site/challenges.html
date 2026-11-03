@@ -1,0 +1,28 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>task-infra challenge 结果</title><style>
+:root{--ink:#1d1d1b;--soft:#6b6a65;--line:#e6e3da;--bg:#f7f5ef;--card:#fff;--acc:#d9653b;--acc2:#2f6f8f;--acc3:#5f7d3a;--tag:#f1ece0}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 -apple-system,"PingFang SC","Hiragino Sans GB","Noto Sans CJK SC",sans-serif}
+a{color:inherit}header{background:#1d1d1b;color:#f7f5ef;padding:28px 20px 22px}
+.wrap{max-width:1120px;margin:0 auto;padding:0 20px}
+header .crumb{font-size:13px;opacity:.7;margin-bottom:6px}header .crumb a{text-decoration:none}
+header h1{margin:0;font-size:28px;line-height:1.3;font-weight:700}header p{margin:8px 0 0;max-width:780px;opacity:.85}
+nav{background:#2a2a27;font-size:14px}nav .wrap{display:flex;gap:4px;flex-wrap:wrap;padding-top:6px;padding-bottom:6px}
+nav a{color:#ddd9cd;text-decoration:none;padding:4px 10px;border-radius:6px}nav a.on,nav a:hover{background:#3d3d39;color:#fff}
+main{padding:24px 0 60px}h2{font-size:19px;margin:30px 0 12px}h2 small{font-weight:400;color:var(--soft);font-size:13px;margin-left:8px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:4px 0 8px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.stat b{display:block;font-size:24px;line-height:1.2;color:var(--acc)}.stat span{font-size:13px;color:var(--soft)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.card h3{margin:0;font-size:15.5px;line-height:1.45}.card p{margin:0;color:#45443f;font-size:13.5px}
+.card .foot{margin-top:auto;display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--soft)}
+.tag{white-space:nowrap;background:var(--tag);border-radius:999px;padding:1px 8px;font-size:12px;color:#5b584f}.tag.ok{background:#e7efdc;color:#40592a}
+.tag.method{background:#e1ecf2;color:#27546b}.tag.maybe{background:#f6e7d5;color:#8a5a20}.tag.no{background:#eee;color:#777}
+.branch{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;text-decoration:none;display:block}
+.branch:hover{border-color:var(--acc)}.branch h3{margin:0 0 4px;font-size:17px}.branch p{margin:0;color:#45443f;font-size:13.5px}
+.branch .n{font-size:12px;color:var(--soft);margin-top:8px}
+table{border-collapse:collapse;width:100%;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;font-size:13.5px}
+th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:left}th{background:#faf8f2;font-weight:600}td.num{font-variant-numeric:tabular-nums}
+code{font:12.5px/1.4 "SF Mono",Menlo,monospace;background:var(--tag);padding:1px 5px;border-radius:4px}
+.note{border-left:3px solid var(--acc);background:#fff8f2;padding:8px 12px;font-size:13.5px;border-radius:0 8px 8px 0}
+footer{color:var(--soft);font-size:12px;padding:20px 0 40px}
+</style></head><body><header><div class="wrap"><div class="crumb"><a href="index.html">PG 小模型结构研究</a></div><h1>task-infra challenge 结果</h1><p>每道题 8 个搜索者：4 个 LLM（簇模式）和 4 个算法基线，同一个评测服务，同样的预算。</p></div></header><nav><div class="wrap"><a href="index.html">总览</a><a href="search.html">大搜索</a><a href="agents.html">Agent 搜索</a><a href="structure.html">结构规律</a><a href="budget.html">预算与迁移</a><a href="method.html">方法与噪声</a><a href="../pg_research_20261028/index.html">全部详细报告</a><a href="../../docs/kb/llm_arch_pg.html">知识库</a></div></nav><main><div class="wrap"><div class="grid"><a class="branch" href="challenge-v1.3.2.html"><h3>v1.3.2：12 个子层，每个子层任选类型，怎么排</h3><p>模型是 12 个子层的堆叠，每个子层要么做序列混合（6 种之一），要么是 MLP。哪种排法分数最低？</p><div class="n">8 个搜索者 · 各 1,000 次</div></a><a class="branch" href="challenge-v1.3.3.html"><h3>v1.3.3：8 层，每层的序列混合选哪种</h3><p>8 层，每层 MLP 相同（SwiGLU ×8），每层的混合器从 6 种里选。哪种组合最好？</p><div class="n">8 个搜索者 · 各 1,000 次</div></a><a class="branch" href="challenge-v1.3.5.html"><h3>v1.3.5：12 层里哪些层可以跳过混合</h3><p>12 层，每层 MLP 相同；每层要么全注意力，要么跳过混合（省下的时间变成更多训练步）。哪些层该保留注意力？</p><div class="n">8 个搜索者 · 各 1,000 次</div></a><a class="branch" href="challenge-v1.3.7.html"><h3>v1.3.7：8 层，每层混合器任选，或者跳过（v1.3.3 + v1.3.5 合并）</h3><p>8 层，每层 MLP 相同；每层的混合器从 6 种里选，或者跳过混合。哪种组合最好？</p><div class="n">8 个搜索者 · 各 1,000 次</div></a></div></div></main><footer><div class="wrap">由 tools/pg_site.py 从知识库、报告数据和搜索状态生成。分数都是本项目协议：单张 RTX PRO 5000 训练 120 秒（或 600 秒），看最后 64 步的训练 loss，1024 词表。</div></footer></body></html>
