@@ -1,0 +1,282 @@
+<meta charset="utf-8">
+<title>视觉架构语法对照</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Noto+Serif+SC:wght@600;700&display=swap">
+<style>
+/* Layout: one model at a time; architecture diagram on the left, its JSON on the right, linked row by row. */
+:root {
+  --bg: #f6f7f4; --panel: #ffffff; --fg: #1d2420; --muted: #5f6b64; --rule: #dde2dc;
+  --conv: #2f6fa8; --conv-bg: #e7f0f8; --pool: #2b8a7e; --pool-bg: #e3f3f0;
+  --res: #c4642b; --res-bg: #fbefe6; --loop: #6a4fb3; --loop-bg: #efebf9;
+  --cat: #4c8a2f; --cat-bg: #ebf4e4; --head: #8a6a1f; --head-bg: #f6f0dc;
+  --chip: #eef0ec; --hot: #fff1b8; --hot-line: #e0b400; --code-bg: #fbfbf9;
+  --f-display: "Noto Serif SC", "Songti SC", serif;
+  --f-body: "IBM Plex Sans", "PingFang SC", "Helvetica Neue", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #131714; --panel: #1b201d; --fg: #e5ebe6; --muted: #98a59d; --rule: #2e3631;
+  --conv: #7fb4e6; --conv-bg: #1d2c3a; --pool: #6fcfc0; --pool-bg: #183330; --res: #f0a06b; --res-bg: #3a2618;
+  --loop: #b8a3f2; --loop-bg: #2a2340; --cat: #9ed27a; --cat-bg: #213220; --head: #e4c56f; --head-bg: #352d17;
+  --chip: #262c28; --hot: #4a3f12; --hot-line: #e0b400; --code-bg: #171b18; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #131714; --panel: #1b201d; --fg: #e5ebe6; --muted: #98a59d; --rule: #2e3631;
+  --conv: #7fb4e6; --conv-bg: #1d2c3a; --pool: #6fcfc0; --pool-bg: #183330; --res: #f0a06b; --res-bg: #3a2618;
+  --loop: #b8a3f2; --loop-bg: #2a2340; --cat: #9ed27a; --cat-bg: #213220; --head: #e4c56f; --head-bg: #352d17;
+  --chip: #262c28; --hot: #4a3f12; --hot-line: #e0b400; --code-bg: #171b18; color-scheme: dark }
+body { background: var(--bg); color: var(--fg); font: 15px/1.6 var(--f-body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.wrap { max-width: 1240px; margin: 0 auto; padding-block: 28px 56px; }
+h1 { font: 700 30px/1.25 var(--f-display); margin: 0 0 8px; text-wrap: balance; }
+h2 { font: 600 21px/1.35 var(--f-display); margin: 40px 0 12px; text-wrap: balance; }
+.lede { max-width: 72ch; color: var(--muted); margin: 0 0 20px; }
+.tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.tabs button { font: 500 14px var(--f-body); border: 1px solid var(--rule); background: var(--panel); color: var(--fg);
+  padding: 6px 12px; border-radius: 999px; cursor: pointer; }
+.tabs button[aria-selected="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.tabs button:focus-visible, .row:focus-visible { outline: 2px solid var(--hot-line); outline-offset: 2px; }
+.facts { display: flex; flex-wrap: wrap; gap: 6px 22px; font-size: 13.5px; color: var(--muted); margin: 0 0 12px; }
+.facts b { color: var(--fg); font-weight: 600; font-variant-numeric: tabular-nums; }
+.facts .ok { color: var(--cat); } .facts .diff { color: var(--res); }
+.split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 16px; align-items: start; }
+@media (max-width: 860px) { .split { grid-template-columns: 1fr; } }
+.pane { background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; min-width: 0; }
+.pane h3 { font: 600 12px var(--f-body); letter-spacing: .06em; text-transform: uppercase; color: var(--muted);
+  margin: 0; padding: 10px 14px; border-bottom: 1px solid var(--rule); }
+.diagram { padding: 12px; max-height: 76vh; overflow: auto; display: grid; gap: 5px; }
+.code { max-height: 76vh; overflow: auto; background: var(--code-bg); border-radius: 0 0 8px 8px; }
+pre { margin: 0; padding: 12px 14px; font: 12.5px/1.55 var(--f-mono); white-space: pre; }
+pre .n { display: block; border-left: 3px solid transparent; margin-left: -14px; padding-left: 11px; cursor: pointer; }
+pre .n.hot { background: var(--hot); border-left-color: var(--hot-line); }
+.row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; border-radius: 6px;
+  padding: 3px 6px; border-left: 3px solid transparent; cursor: pointer; }
+.row.hot { background: var(--hot); border-left-color: var(--hot-line); }
+.shape { font: 11.5px var(--f-mono); color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.seq { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; min-width: 0; }
+.op { font: 12.5px/1.3 var(--f-mono); padding: 3px 7px; border-radius: 4px; background: var(--chip); white-space: nowrap; }
+.op.conv { background: var(--conv-bg); color: var(--conv); } .op.pool { background: var(--pool-bg); color: var(--pool); }
+.op.head { background: var(--head-bg); color: var(--head); } .op.tok { background: var(--loop-bg); color: var(--loop); }
+.op.na { color: var(--muted); }
+.box { border: 1.5px solid; border-radius: 6px; padding: 6px 8px 7px; display: grid; gap: 4px; min-width: 0; }
+.box > .lab { font: 600 11.5px var(--f-body); letter-spacing: .03em; }
+.box.loop { border-color: var(--loop); background: var(--loop-bg); } .box.loop > .lab { color: var(--loop); }
+.box.res { border-color: var(--res); background: var(--res-bg); border-style: solid dashed solid solid; }
+.box.res > .lab { color: var(--res); }
+.box.cat { border-color: var(--cat); background: var(--cat-bg); } .box.cat > .lab { color: var(--cat); }
+.branches { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 5px; }
+.branch { border-left: 2px solid var(--cat); padding-left: 5px; display: grid; gap: 4px; align-content: start; min-width: 0; }
+.branch .op { white-space: normal; overflow-wrap: anywhere; }
+.row > .seq > .box { width: 100%; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12.5px; color: var(--muted); margin: 0 0 10px; }
+.legend span { display: inline-flex; align-items: center; gap: 5px; }
+.sw { width: 12px; height: 12px; border-radius: 3px; border: 1.5px solid; display: inline-block; }
+.issues { display: grid; gap: 12px; }
+.issue { background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; padding: 14px 16px; }
+.issue h4 { font: 600 16px/1.4 var(--f-body); margin: 0 0 6px; }
+.issue p { margin: 4px 0; max-width: 80ch; }
+.issue .ev { font-size: 13.5px; color: var(--muted); }
+.issue code, .lede code { font: 12.5px var(--f-mono); background: var(--chip); padding: 1px 5px; border-radius: 3px; }
+.opt { font-size: 14px; margin-top: 6px; }
+.opt b { color: var(--loop); }
+table { border-collapse: collapse; font-size: 13.5px; width: 100%; }
+.tbl { overflow-x: auto; background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; }
+th, td { text-align: left; padding: 7px 12px; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+th { font-weight: 600; color: var(--muted); font-size: 12.5px; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; font-family: var(--f-mono); font-size: 12.5px; }
+tr:last-child td { border-bottom: 0; }
+footer { margin-top: 36px; font-size: 12.5px; color: var(--muted); }
+@media (prefers-reduced-motion: no-preference) { pre .n, .row { transition: background .12s; } }
+.lab2 { font: 600 12px var(--f-body); color: var(--muted); letter-spacing: .04em; margin-top: 4px; }
+.row > .seq { min-width: 0; }
+.op { white-space: normal; overflow-wrap: anywhere; }
+td code { white-space: normal; }
+td { white-space: normal; }
+</style>
+
+<div class="wrap">
+<h1>视觉语法 v4.1：一种写法覆盖 9 个经典模型</h1>
+<p class="lede">新语法把 CNN、MLP、Transformer 合成一种节点写法。有 torchvision 参考的 6 个模型，参数量全部相等，载入同一份随机权重后输出也一致，其中 ConvNeXt-T 和 EfficientNet-B0 是旧语法写不出的。GoogLeNet 的 JSON 从 238 行降到 45 行。鼠标移到左侧任一行，右侧高亮对应的 JSON。</p>
+
+<div class="tabs" role="tablist" id="tabs"></div>
+<div class="facts" id="facts"></div>
+<div class="legend">
+  <span><i class="sw" style="border-color:var(--conv);background:var(--conv-bg)"></i>卷积</span>
+  <span><i class="sw" style="border-color:var(--pool);background:var(--pool-bg)"></i>池化 / 采样</span>
+  <span><i class="sw" style="border-color:var(--loop);background:var(--loop-bg)"></i>repeat（参数独立）</span>
+  <span><i class="sw" style="border-color:var(--res);background:var(--res-bg)"></i>residual</span>
+  <span><i class="sw" style="border-color:var(--cat);background:var(--cat-bg)"></i>parallel（concat / add / mul）</span>
+  <span><i class="sw" style="border-color:var(--head);background:var(--head-bg)"></i>命名块</span>
+</div>
+<div class="split">
+  <section class="pane"><h3>结构（右侧是该节点的输出形状）</h3><div class="diagram" id="diagram"></div></section>
+  <section class="pane"><h3>JSON</h3><div class="code"><pre id="json"></pre></div></section>
+</div>
+
+<h2>CNN 的节点数和 JSON 行数大幅下降，ViT 多写 4 行换来显式结构</h2>
+<div class="tbl"><table id="sizes"></table></div>
+
+<h2>语法只有一条规则：每个节点都写成 {"操作": 值}</h2>
+<p class="lede">根层写 <code>input_shape</code>、<code>act</code>、<code>norm</code>、<code>bias</code>（默认 false）、<code>blocks</code>、<code>forward</code>。任何深度的节点写法都相同，<code>type</code> 字段取消。值的取值范围不写在语法里，由 challenge 自己声明。</p>
+<div class="tbl"><table>
+<tr><th>操作</th><th>写法</th><th>说明</th></tr>
+<tr><td><code>conv_layers</code></td><td><code>[64, 64, "pool", {"out": 256, "k": 1, "act": false}]</code></td><td>数组里的整数是一层 conv → norm → act，k 默认 3；可以插入池化或任何节点</td></tr>
+<tr><td><code>conv</code></td><td><code>{"out": 96, "k": 4, "s": 4}</code></td><td>单独的卷积，不带 norm 和激活；<code>groups: "dw"</code> 是 depthwise</td></tr>
+<tr><td><code>pool</code></td><td><code>"max"</code>、<code>"global"</code>、<code>{"k": 3, "s": 2, "pad": 1}</code></td><td>默认 max 2×2；<code>{"out": [7, 7]}</code> 是自适应池化</td></tr>
+<tr><td><code>residual</code></td><td><code>[...]</code> 或 <code>{"body": [...], "act": true, "shortcut": "none"}</code></td><td>形状变化时自动用 1×1 投影；<code>act</code> 是相加之后的激活</td></tr>
+<tr><td><code>parallel</code></td><td><code>{"branches": [[], [...]], "merge": "mul"}</code></td><td>merge 是 concat（默认）、add 或 mul；空分支是恒等</td></tr>
+<tr><td><code>repeat</code></td><td><code>{"n": 4, "bottleneck": {...}, "first": {"s": 2}}</code></td><td>每次参数独立；<code>first</code> 只改第一次的块参数</td></tr>
+<tr><td><code>blocks</code> 里的名字</td><td><code>{"inception": {"a": 64, ...}}</code></td><td>定义一次，之后当操作用；块内用 <code>$a</code> 读参数</td></tr>
+<tr><td><code>norm</code>、<code>act</code></td><td><code>{"norm": true}</code>、<code>{"act": "sigmoid"}</code></td><td><code>true</code> 用根层设置，字符串覆盖它</td></tr>
+<tr><td><code>attention</code>、<code>mlp</code></td><td><code>{"attention": 12}</code>、<code>{"mlp": 3072}</code></td><td>图像和 token 都能接，所以 CNN 和 Transformer 可以混用</td></tr>
+<tr><td>其他</td><td colspan="2"><code>patch_embed</code>、<code>upconv</code>、<code>layer_scale</code>、<code>flatten</code>、<code>linear</code>、<code>dropout</code>、<code>head</code>、<code>seq</code></td></tr>
+</table></div>
+
+<h2>还差 2 件事才能出题</h2>
+<div class="issues">
+  <div class="issue"><h4>1. 搜索还接不上</h4><p>challenge 要声明每个字段的取值范围，变异算子也要定义。命名块和 <code>$参数</code> 让一处修改影响多层，这会改变"一步移动"的含义，需要先定规则。</p></div>
+  <div class="issue"><h4>2. 训练细节没有表达</h4><p>stochastic depth、权重初始化和 GoogLeNet 的辅助头都不在语法里。它们不影响参数量，但影响能否复现原始精度。</p></div>
+</div>
+
+<footer>实现见同目录的 grammar.py，测试见 test_grammar.py。torchvision 0.28 参考值由实际构建模型统计。GoogLeNet、U-Net、残差 MLP 没有可比的 torchvision 模型，参数量与 v0.7 的 JSON 核对，三者全部相等。</footer>
+</div>
+
+<script type="application/json" id="data">[{"key": "vgg16", "name": "VGG-16", "blurb": "顺序卷积 + 全连接分类器", "spec": {"input_shape": [3, 224, 224], "act": "relu", "norm": "none", "bias": true, "forward": [{"conv_layers": [64, 64, "pool", 128, 128, "pool", 256, 256, 256, "pool", 512, 512, 512, "pool", 512, 512, 512, "pool"]}, {"pool": {"out": [7, 7]}}, {"flatten": true}, {"repeat": {"n": 2, "body": [{"linear": 4096}, {"act": true}, {"dropout": 0.5}]}}, {"head": 1000}]}, "head": ["\"input_shape\": [3, 224, 224]", "\"act\": \"relu\"", "\"norm\": \"none\"", "\"bias\": true"], "blocks": [], "nodes": ["{\n      \"conv_layers\": [\n        64,\n        64,\n        \"pool\",\n        128,\n        128,\n        \"pool\",\n        256,\n        256,\n        256,\n        \"pool\",\n        512,\n        512,\n        512,\n        \"pool\",\n        512,\n        512,\n        512,\n        \"pool\"\n      ]\n    }", "{\"pool\": {\"out\": [7, 7]}}", "{\"flatten\": true}", "{\"repeat\": {\"n\": 2, \"body\": [{\"linear\": 4096}, {\"act\": true}, {\"dropout\": 0.5}]}}", "{\"head\": 1000}"], "shapes": [[512, 7, 7], [512, 7, 7], [25088], [4096], [1000]], "params": 138357544, "ref": 138357544, "lines": 34, "out": [1000], "old_lines": 52, "old_nodes": 29, "old_params": 138357544}, {"key": "resnet50", "name": "ResNet-50", "blurb": "Bottleneck 残差块，4 个阶段", "spec": {"input_shape": [3, 224, 224], "act": "relu", "norm": "batch_norm", "blocks": {"bottleneck": {"args": {"s": 1}, "body": [{"residual": {"act": true, "body": [{"conv_layers": [{"out": "$mid", "k": 1}, {"out": "$mid", "s": "$s"}, {"out": "$out", "k": 1, "act": false}]}]}}]}}, "forward": [{"conv_layers": [{"out": 64, "k": 7, "s": 2}, {"pool": {"k": 3, "s": 2, "pad": 1}}]}, {"repeat": {"n": 3, "bottleneck": {"mid": 64, "out": 256}}}, {"repeat": {"n": 4, "bottleneck": {"mid": 128, "out": 512}, "first": {"s": 2}}}, {"repeat": {"n": 6, "bottleneck": {"mid": 256, "out": 1024}, "first": {"s": 2}}}, {"repeat": {"n": 3, "bottleneck": {"mid": 512, "out": 2048}, "first": {"s": 2}}}, {"head": 1000}]}, "head": ["\"input_shape\": [3, 224, 224]", "\"act\": \"relu\"", "\"norm\": \"batch_norm\""], "blocks": [["bottleneck", "\"bottleneck\": {\n      \"args\": {\"s\": 1},\n      \"body\": [\n        {\n          \"residual\": {\n            \"act\": true,\n            \"body\": [\n              {\n                \"conv_layers\": [\n                  {\"out\": \"$mid\", \"k\": 1},\n                  {\"out\": \"$mid\", \"s\": \"$s\"},\n                  {\"out\": \"$out\", \"k\": 1, \"act\": false}\n                ]\n              }\n            ]\n          }\n        }\n      ]\n    }"]], "nodes": ["{\"conv_layers\": [{\"out\": 64, \"k\": 7, \"s\": 2}, {\"pool\": {\"k\": 3, \"s\": 2, \"pad\": 1}}]}", "{\"repeat\": {\"n\": 3, \"bottleneck\": {\"mid\": 64, \"out\": 256}}}", "{\"repeat\": {\"n\": 4, \"bottleneck\": {\"mid\": 128, \"out\": 512}, \"first\": {\"s\": 2}}}", "{\"repeat\": {\"n\": 6, \"bottleneck\": {\"mid\": 256, \"out\": 1024}, \"first\": {\"s\": 2}}}", "{\"repeat\": {\"n\": 3, \"bottleneck\": {\"mid\": 512, \"out\": 2048}, \"first\": {\"s\": 2}}}", "{\"head\": 1000}"], "shapes": [[64, 56, 56], [256, 56, 56], [512, 28, 28], [1024, 14, 14], [2048, 7, 7], [1000]], "params": 25557032, "ref": 25557032, "lines": 34, "out": [1000], "old_lines": 157, "old_nodes": 17, "old_params": 25557032}, {"key": "googlenet", "name": "GoogLeNet", "blurb": "9 个四分支 Inception", "spec": {"input_shape": [3, 224, 224], "act": "relu", "norm": "none", "blocks": {"inception": {"body": [{"parallel": [[{"conv_layers": [{"out": "$a", "k": 1}]}], [{"conv_layers": [{"out": "$b1", "k": 1}, "$b2"]}], [{"conv_layers": [{"out": "$c1", "k": 1}, {"out": "$c2", "k": 5}]}], [{"pool": {"k": 3, "s": 1, "pad": 1}}, {"conv_layers": [{"out": "$d", "k": 1}]}]]}]}}, "forward": [{"conv_layers": [{"out": 64, "k": 7, "s": 2}, {"pool": {"k": 3, "s": 2, "ceil": true}}, {"out": 64, "k": 1}, 192, {"pool": {"k": 3, "s": 2, "ceil": true}}]}, {"inception": {"a": 64, "b1": 96, "b2": 128, "c1": 16, "c2": 32, "d": 32}}, {"inception": {"a": 128, "b1": 128, "b2": 192, "c1": 32, "c2": 96, "d": 64}}, {"pool": {"k": 3, "s": 2, "ceil": true}}, {"inception": {"a": 192, "b1": 96, "b2": 208, "c1": 16, "c2": 48, "d": 64}}, {"inception": {"a": 160, "b1": 112, "b2": 224, "c1": 24, "c2": 64, "d": 64}}, {"inception": {"a": 128, "b1": 128, "b2": 256, "c1": 24, "c2": 64, "d": 64}}, {"inception": {"a": 112, "b1": 144, "b2": 288, "c1": 32, "c2": 64, "d": 64}}, {"inception": {"a": 256, "b1": 160, "b2": 320, "c1": 32, "c2": 128, "d": 128}}, {"pool": {"k": 3, "s": 2, "ceil": true}}, {"inception": {"a": 256, "b1": 160, "b2": 320, "c1": 32, "c2": 128, "d": 128}}, {"inception": {"a": 384, "b1": 192, "b2": 384, "c1": 48, "c2": 128, "d": 128}}, {"pool": "global"}, {"flatten": true}, {"dropout": 0.4}, {"head": 1000}]}, "head": ["\"input_shape\": [3, 224, 224]", "\"act\": \"relu\"", "\"norm\": \"none\""], "blocks": [["inception", "\"inception\": {\n      \"body\": [\n        {\n          \"parallel\": [\n            [{\"conv_layers\": [{\"out\": \"$a\", \"k\": 1}]}],\n            [{\"conv_layers\": [{\"out\": \"$b1\", \"k\": 1}, \"$b2\"]}],\n            [{\"conv_layers\": [{\"out\": \"$c1\", \"k\": 1}, {\"out\": \"$c2\", \"k\": 5}]}],\n            [{\"pool\": {\"k\": 3, \"s\": 1, \"pad\": 1}}, {\"conv_layers\": [{\"out\": \"$d\", \"k\": 1}]}]\n          ]\n        }\n      ]\n    }"]], "nodes": ["{\n      \"conv_layers\": [\n        {\"out\": 64, \"k\": 7, \"s\": 2},\n        {\"pool\": {\"k\": 3, \"s\": 2, \"ceil\": true}},\n        {\"out\": 64, \"k\": 1},\n        192,\n        {\"pool\": {\"k\": 3, \"s\": 2, \"ceil\": true}}\n      ]\n    }", "{\"inception\": {\"a\": 64, \"b1\": 96, \"b2\": 128, \"c1\": 16, \"c2\": 32, \"d\": 32}}", "{\"inception\": {\"a\": 128, \"b1\": 128, \"b2\": 192, \"c1\": 32, \"c2\": 96, \"d\": 64}}", "{\"pool\": {\"k\": 3, \"s\": 2, \"ceil\": true}}", "{\"inception\": {\"a\": 192, \"b1\": 96, \"b2\": 208, \"c1\": 16, \"c2\": 48, \"d\": 64}}", "{\"inception\": {\"a\": 160, \"b1\": 112, \"b2\": 224, \"c1\": 24, \"c2\": 64, \"d\": 64}}", "{\"inception\": {\"a\": 128, \"b1\": 128, \"b2\": 256, \"c1\": 24, \"c2\": 64, \"d\": 64}}", "{\"inception\": {\"a\": 112, \"b1\": 144, \"b2\": 288, \"c1\": 32, \"c2\": 64, \"d\": 64}}", "{\"inception\": {\"a\": 256, \"b1\": 160, \"b2\": 320, \"c1\": 32, \"c2\": 128, \"d\": 128}}", "{\"pool\": {\"k\": 3, \"s\": 2, \"ceil\": true}}", "{\"inception\": {\"a\": 256, \"b1\": 160, \"b2\": 320, \"c1\": 32, \"c2\": 128, \"d\": 128}}", "{\"inception\": {\"a\": 384, \"b1\": 192, \"b2\": 384, \"c1\": 48, \"c2\": 128, \"d\": 128}}", "{\"pool\": \"global\"}", "{\"flatten\": true}", "{\"dropout\": 0.4}", "{\"head\": 1000}"], "shapes": [[192, 28, 28], [256, 28, 28], [480, 28, 28], [480, 14, 14], [512, 14, 14], [512, 14, 14], [512, 14, 14], [528, 14, 14], [832, 14, 14], [832, 7, 7], [832, 7, 7], [1024, 7, 7], [1024, 1, 1], [1024], [1024], [1000]], "params": 6991272, "ref": null, "lines": 45, "out": [1000], "old_lines": 238, "old_nodes": 23, "old_params": 6991272}, {"key": "mobilenet_v2", "name": "MobileNetV2", "blurb": "倒残差块 + depthwise 卷积", "spec": {"input_shape": [3, 224, 224], "act": "relu6", "norm": "batch_norm", "blocks": {"inverted": {"args": {"s": 1, "shortcut": "auto"}, "body": [{"residual": {"shortcut": "$shortcut", "body": [{"conv_layers": [{"out": "$hid", "k": 1}, {"groups": "dw", "s": "$s"}, {"out": "$out", "k": 1, "act": false}]}]}}]}}, "forward": [{"conv_layers": [{"out": 32, "s": 2}, {"groups": "dw"}, {"out": 16, "k": 1, "act": false}]}, {"repeat": {"n": 2, "inverted": {"hid": 144, "out": 24}, "first": {"hid": 96, "s": 2, "shortcut": "none"}}}, {"repeat": {"n": 3, "inverted": {"hid": 192, "out": 32}, "first": {"hid": 144, "s": 2, "shortcut": "none"}}}, {"repeat": {"n": 4, "inverted": {"hid": 384, "out": 64}, "first": {"hid": 192, "s": 2, "shortcut": "none"}}}, {"repeat": {"n": 3, "inverted": {"hid": 576, "out": 96}, "first": {"hid": 384, "shortcut": "none"}}}, {"repeat": {"n": 3, "inverted": {"hid": 960, "out": 160}, "first": {"hid": 576, "s": 2, "shortcut": "none"}}}, {"inverted": {"hid": 960, "out": 320, "shortcut": "none"}}, {"conv_layers": [{"out": 1280, "k": 1}]}, {"pool": "global"}, {"flatten": true}, {"dropout": 0.2}, {"head": 1000}]}, "head": ["\"input_shape\": [3, 224, 224]", "\"act\": \"relu6\"", "\"norm\": \"batch_norm\""], "blocks": [["inverted", "\"inverted\": {\n      \"args\": {\"s\": 1, \"shortcut\": \"auto\"},\n      \"body\": [\n        {\n          \"residual\": {\n            \"shortcut\": \"$shortcut\",\n            \"body\": [\n              {\n                \"conv_layers\": [\n                  {\"out\": \"$hid\", \"k\": 1},\n                  {\"groups\": \"dw\", \"s\": \"$s\"},\n                  {\"out\": \"$out\", \"k\": 1, \"act\": false}\n                ]\n              }\n            ]\n          }\n        }\n      ]\n    }"]], "nodes": ["{\"conv_layers\": [{\"out\": 32, \"s\": 2}, {\"groups\": \"dw\"}, {\"out\": 16, \"k\": 1, \"act\": false}]}", "{\n      \"repeat\": {\n        \"n\": 2,\n        \"inverted\": {\"hid\": 144, \"out\": 24},\n        \"first\": {\"hid\": 96, \"s\": 2, \"shortcut\": \"none\"}\n      }\n    }", "{\n      \"repeat\": {\n        \"n\": 3,\n        \"inverted\": {\"hid\": 192, \"out\": 32},\n        \"first\": {\"hid\": 144, \"s\": 2, \"shortcut\": \"none\"}\n      }\n    }", "{\n      \"repeat\": {\n        \"n\": 4,\n        \"inverted\": {\"hid\": 384, \"out\": 64},\n        \"first\": {\"hid\": 192, \"s\": 2, \"shortcut\": \"none\"}\n      }\n    }", "{\n      \"repeat\": {\"n\": 3, \"inverted\": {\"hid\": 576, \"out\": 96}, \"first\": {\"hid\": 384, \"shortcut\": \"none\"}}\n    }", "{\n      \"repeat\": {\n        \"n\": 3,\n        \"inverted\": {\"hid\": 960, \"out\": 160},\n        \"first\": {\"hid\": 576, \"s\": 2, \"shortcut\": \"none\"}\n      }\n    }", "{\"inverted\": {\"hid\": 960, \"out\": 320, \"shortcut\": \"none\"}}", "{\"conv_layers\": [{\"out\": 1280, \"k\": 1}]}", "{\"pool\": \"global\"}", "{\"flatten\": true}", "{\"dropout\": 0.2}", "{\"head\": 1000}"], "shapes": [[16, 112, 112], [24, 56, 56], [32, 28, 28], [64, 14, 14], [96, 14, 14], [160, 7, 7], [320, 7, 7], [1280, 7, 7], [1280, 1, 1], [1280], [1280], [1000]], "params": 3504872, "ref": 3504872, "lines": 66, "out": [1000], "old_lines": 214, "old_nodes": 22, "old_params": 3504872}, {"key": "efficientnet_b0", "name": "EfficientNet-B0", "blurb": "MBConv + SE 门控（v0.7 写不出）", "spec": {"input_shape": [3, 224, 224], "act": "silu", "norm": "batch_norm", "blocks": {"se": {"body": [{"parallel": {"merge": "mul", "branches": [[], [{"pool": "global"}, {"conv": {"out": "$sq", "k": 1, "bias": true}}, {"act": true}, {"conv": {"out": "$hid", "k": 1, "bias": true}}, {"act": "sigmoid"}]]}}]}, "mbconv": {"args": {"s": 1, "k": 3, "shortcut": "auto"}, "body": [{"residual": {"shortcut": "$shortcut", "body": [{"conv_layers": [{"out": "$hid", "k": 1}, {"groups": "dw", "k": "$k", "s": "$s"}]}, {"se": {"sq": "$sq", "hid": "$hid"}}, {"conv_layers": [{"out": "$out", "k": 1, "act": false}]}]}}]}}, "forward": [{"conv_layers": [{"out": 32, "s": 2}, {"groups": "dw"}]}, {"se": {"sq": 8, "hid": 32}}, {"conv_layers": [{"out": 16, "k": 1, "act": false}]}, {"repeat": {"n": 2, "mbconv": {"hid": 144, "sq": 6, "out": 24}, "first": {"hid": 96, "sq": 4, "s": 2, "shortcut": "none"}}}, {"repeat": {"n": 2, "mbconv": {"hid": 240, "sq": 10, "out": 40, "k": 5}, "first": {"hid": 144, "sq": 6, "s": 2, "shortcut": "none"}}}, {"repeat": {"n": 3, "mbconv": {"hid": 480, "sq": 20, "out": 80}, "first": {"hid": 240, "sq": 10, "s": 2, "shortcut": "none"}}}, {"repeat": {"n": 3, "mbconv": {"hid": 672, "sq": 28, "out": 112, "k": 5}, "first": {"hid": 480, "sq": 20, "shortcut": "none"}}}, {"repeat": {"n": 4, "mbconv": {"hid": 1152, "sq": 48, "out": 192, "k": 5}, "first": {"hid": 672, "sq": 28, "s": 2, "shortcut": "none"}}}, {"mbconv": {"hid": 1152, "sq": 48, "out": 320, "shortcut": "none"}}, {"conv_layers": [{"out": 1280, "k": 1}]}, {"pool": "global"}, {"flatten": true}, {"dropout": 0.2}, {"head": 1000}]}, "head": ["\"input_shape\": [3, 224, 224]", "\"act\": \"silu\"", "\"norm\": \"batch_norm\""], "blocks": [["se", "\"se\": {\n      \"body\": [\n        {\n          \"parallel\": {\n            \"merge\": \"mul\",\n            \"branches\": [\n              [],\n              [\n                {\"pool\": \"global\"},\n                {\"conv\": {\"out\": \"$sq\", \"k\": 1, \"bias\": true}},\n                {\"act\": true},\n                {\"conv\": {\"out\": \"$hid\", \"k\": 1, \"bias\": true}},\n                {\"act\": \"sigmoid\"}\n              ]\n            ]\n          }\n        }\n      ]\n    }"], ["mbconv", "\"mbconv\": {\n      \"args\": {\"s\": 1, \"k\": 3, \"shortcut\": \"auto\"},\n      \"body\": [\n        {\n          \"residual\": {\n            \"shortcut\": \"$shortcut\",\n            \"body\": [\n              {\"conv_layers\": [{\"out\": \"$hid\", \"k\": 1}, {\"groups\": \"dw\", \"k\": \"$k\", \"s\": \"$s\"}]},\n              {\"se\": {\"sq\": \"$sq\", \"hid\": \"$hid\"}},\n              {\"conv_layers\": [{\"out\": \"$out\", \"k\": 1, \"act\": false}]}\n            ]\n          }\n        }\n      ]\n    }"]], "nodes": ["{\"conv_layers\": [{\"out\": 32, \"s\": 2}, {\"groups\": \"dw\"}]}", "{\"se\": {\"sq\": 8, \"hid\": 32}}", "{\"conv_layers\": [{\"out\": 16, \"k\": 1, \"act\": false}]}", "{\n      \"repeat\": {\n        \"n\": 2,\n        \"mbconv\": {\"hid\": 144, \"sq\": 6, \"out\": 24},\n        \"first\": {\"hid\": 96, \"sq\": 4, \"s\": 2, \"shortcut\": \"none\"}\n      }\n    }", "{\n      \"repeat\": {\n        \"n\": 2,\n        \"mbconv\": {\"hid\": 240, \"sq\": 10, \"out\": 40, \"k\": 5},\n        \"first\": {\"hid\": 144, \"sq\": 6, \"s\": 2, \"shortcut\": \"none\"}\n      }\n    }", "{\n      \"repeat\": {\n        \"n\": 3,\n        \"mbconv\": {\"hid\": 480, \"sq\": 20, \"out\": 80},\n        \"first\": {\"hid\": 240, \"sq\": 10, \"s\": 2, \"shortcut\": \"none\"}\n      }\n    }", "{\n      \"repeat\": {\n        \"n\": 3,\n        \"mbconv\": {\"hid\": 672, \"sq\": 28, \"out\": 112, \"k\": 5},\n        \"first\": {\"hid\": 480, \"sq\": 20, \"shortcut\": \"none\"}\n      }\n    }", "{\n      \"repeat\": {\n        \"n\": 4,\n        \"mbconv\": {\"hid\": 1152, \"sq\": 48, \"out\": 192, \"k\": 5},\n        \"first\": {\"hid\": 672, \"sq\": 28, \"s\": 2, \"shortcut\": \"none\"}\n      }\n    }", "{\"mbconv\": {\"hid\": 1152, \"sq\": 48, \"out\": 320, \"shortcut\": \"none\"}}", "{\"conv_layers\": [{\"out\": 1280, \"k\": 1}]}", "{\"pool\": \"global\"}", "{\"flatten\": true}", "{\"dropout\": 0.2}", "{\"head\": 1000}"], "shapes": [[32, 112, 112], [32, 112, 112], [16, 112, 112], [24, 56, 56], [40, 28, 28], [80, 14, 14], [112, 14, 14], [192, 7, 7], [320, 7, 7], [1280, 7, 7], [1280, 1, 1], [1280], [1280], [1000]], "params": 5288548, "ref": 5288548, "lines": 87, "out": [1000], "old_lines": null, "old_nodes": null, "old_params": null}, {"key": "convnext_tiny", "name": "ConvNeXt-T", "blurb": "4×4 stem + 7×7 depthwise + layer scale（v0.7 写不出）", "spec": {"input_shape": [3, 224, 224], "act": "gelu", "norm": "layer_norm", "bias": true, "blocks": {"block": {"body": [{"residual": [{"conv": {"k": 7, "groups": "dw"}}, {"norm": true}, {"mlp": "$hid"}, {"layer_scale": 1e-06}]}]}, "down": {"body": [{"norm": true}, {"conv": {"out": "$out", "k": 2, "s": 2}}]}}, "forward": [{"conv": {"out": 96, "k": 4, "s": 4}}, {"norm": true}, {"repeat": {"n": 3, "block": {"hid": 384}}}, {"down": {"out": 192}}, {"repeat": {"n": 3, "block": {"hid": 768}}}, {"down": {"out": 384}}, {"repeat": {"n": 9, "block": {"hid": 1536}}}, {"down": {"out": 768}}, {"repeat": {"n": 3, "block": {"hid": 3072}}}, {"pool": "global"}, {"norm": true}, {"head": 1000}], "eps": 1e-06}, "head": ["\"input_shape\": [3, 224, 224]", "\"act\": \"gelu\"", "\"norm\": \"layer_norm\"", "\"bias\": true", "\"eps\": 1e-06"], "blocks": [["block", "\"block\": {\n      \"body\": [\n        {\n          \"residual\": [\n            {\"conv\": {\"k\": 7, \"groups\": \"dw\"}},\n            {\"norm\": true},\n            {\"mlp\": \"$hid\"},\n            {\"layer_scale\": 1e-06}\n          ]\n        }\n      ]\n    }"], ["down", "\"down\": {\"body\": [{\"norm\": true}, {\"conv\": {\"out\": \"$out\", \"k\": 2, \"s\": 2}}]}"]], "nodes": ["{\"conv\": {\"out\": 96, \"k\": 4, \"s\": 4}}", "{\"norm\": true}", "{\"repeat\": {\"n\": 3, \"block\": {\"hid\": 384}}}", "{\"down\": {\"out\": 192}}", "{\"repeat\": {\"n\": 3, \"block\": {\"hid\": 768}}}", "{\"down\": {\"out\": 384}}", "{\"repeat\": {\"n\": 9, \"block\": {\"hid\": 1536}}}", "{\"down\": {\"out\": 768}}", "{\"repeat\": {\"n\": 3, \"block\": {\"hid\": 3072}}}", "{\"pool\": \"global\"}", "{\"norm\": true}", "{\"head\": 1000}"], "shapes": [[96, 56, 56], [96, 56, 56], [96, 56, 56], [192, 28, 28], [192, 28, 28], [384, 14, 14], [384, 14, 14], [768, 7, 7], [768, 7, 7], [768, 1, 1], [768, 1, 1], [1000]], "params": 28589128, "ref": 28589128, "lines": 36, "out": [1000], "old_lines": null, "old_nodes": null, "old_params": null}, {"key": "unet", "name": "U-Net", "blurb": "编码器-解码器 + 长跳连", "spec": {"input_shape": [1, 256, 256], "act": "relu", "norm": "none", "forward": [{"conv_layers": [64, 64]}, {"parallel": [[], [{"pool": "max"}, {"conv_layers": [128, 128]}, {"parallel": [[], [{"pool": "max"}, {"conv_layers": [256, 256]}, {"parallel": [[], [{"pool": "max"}, {"conv_layers": [512, 512]}, {"parallel": [[], [{"pool": "max"}, {"conv_layers": [1024, 1024]}, {"upconv": {"out": 512}}]]}, {"conv_layers": [512, 512]}, {"upconv": {"out": 256}}]]}, {"conv_layers": [256, 256]}, {"upconv": {"out": 128}}]]}, {"conv_layers": [128, 128]}, {"upconv": {"out": 64}}]]}, {"conv_layers": [64, 64]}, {"conv": {"out": 2, "k": 1, "bias": true}}]}, "head": ["\"input_shape\": [1, 256, 256]", "\"act\": \"relu\"", "\"norm\": \"none\""], "blocks": [], "nodes": ["{\"conv_layers\": [64, 64]}", "{\n      \"parallel\": [\n        [],\n        [\n          {\"pool\": \"max\"},\n          {\"conv_layers\": [128, 128]},\n          {\n            \"parallel\": [\n              [],\n              [\n                {\"pool\": \"max\"},\n                {\"conv_layers\": [256, 256]},\n                {\n                  \"parallel\": [\n                    [],\n                    [\n                      {\"pool\": \"max\"},\n                      {\"conv_layers\": [512, 512]},\n                      {\n                        \"parallel\": [\n                          [],\n                          [\n                            {\"pool\": \"max\"},\n                            {\"conv_layers\": [1024, 1024]},\n                            {\"upconv\": {\"out\": 512}}\n                          ]\n                        ]\n                      },\n                      {\"conv_layers\": [512, 512]},\n                      {\"upconv\": {\"out\": 256}}\n                    ]\n                  ]\n                },\n                {\"conv_layers\": [256, 256]},\n                {\"upconv\": {\"out\": 128}}\n              ]\n            ]\n          },\n          {\"conv_layers\": [128, 128]},\n          {\"upconv\": {\"out\": 64}}\n        ]\n      ]\n    }", "{\"conv_layers\": [64, 64]}", "{\"conv\": {\"out\": 2, \"k\": 1, \"bias\": true}}"], "shapes": [[64, 256, 256], [128, 256, 256], [64, 256, 256], [2, 256, 256]], "params": 31023810, "ref": null, "lines": 53, "out": [2, 256, 256], "old_lines": 101, "old_nodes": 10, "old_params": 31023810}, {"key": "vit_b16", "name": "ViT-B/16", "blurb": "patch 嵌入 + 12 层 Transformer", "spec": {"input_shape": [3, 224, 224], "act": "gelu", "norm": "layer_norm", "bias": true, "forward": [{"patch_embed": {"dim": 768, "patch": 16}}, {"repeat": {"n": 12, "body": [{"residual": [{"norm": true}, {"attention": 12}]}, {"residual": [{"norm": true}, {"mlp": 3072}]}]}}, {"norm": true}, {"head": {"out": 1000, "pool": "cls"}}], "eps": 1e-06}, "head": ["\"input_shape\": [3, 224, 224]", "\"act\": \"gelu\"", "\"norm\": \"layer_norm\"", "\"bias\": true", "\"eps\": 1e-06"], "blocks": [], "nodes": ["{\"patch_embed\": {\"dim\": 768, \"patch\": 16}}", "{\n      \"repeat\": {\n        \"n\": 12,\n        \"body\": [\n          {\"residual\": [{\"norm\": true}, {\"attention\": 12}]},\n          {\"residual\": [{\"norm\": true}, {\"mlp\": 3072}]}\n        ]\n      }\n    }", "{\"norm\": true}", "{\"head\": {\"out\": 1000, \"pool\": \"cls\"}}"], "shapes": [[197, 768], [197, 768], [197, 768], [1000]], "params": 86567656, "ref": 86567656, "lines": 21, "out": [1000], "old_lines": 16, "old_nodes": 3, "old_params": 86482944}, {"key": "mlp", "name": "残差 MLP", "blurb": "展平 + 3 个 MLP 块", "spec": {"input_shape": [3, 32, 32], "act": "gelu", "norm": "rms_norm", "forward": [{"flatten": true}, {"linear": 128}, {"repeat": {"n": 3, "body": [{"residual": [{"norm": true}, {"mlp": 256}]}]}}, {"norm": true}, {"head": {"out": 10, "bias": false}}]}, "head": ["\"input_shape\": [3, 32, 32]", "\"act\": \"gelu\"", "\"norm\": \"rms_norm\""], "blocks": [], "nodes": ["{\"flatten\": true}", "{\"linear\": 128}", "{\"repeat\": {\"n\": 3, \"body\": [{\"residual\": [{\"norm\": true}, {\"mlp\": 256}]}]}}", "{\"norm\": true}", "{\"head\": {\"out\": 10, \"bias\": false}}"], "shapes": [[3072], [128], [128], [128], [10]], "params": 591616, "ref": null, "lines": 12, "out": [10], "old_lines": 12, "old_nodes": 4, "old_params": 591616}]</script>
+<script>
+const MODELS = JSON.parse(document.getElementById('data').textContent);
+const fmtN = n => n == null ? '—' : n.toLocaleString('en-US');
+const esc = s => String(s).replace(/[&<>]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;'}[c]));
+const NORM = {batch_norm: 'BN', layer_norm: 'LN', rms_norm: 'RMS', none: ''};
+const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
+const chip = (cls, txt) => el('span', 'op ' + cls, esc(txt));
+const kv = o => Object.entries(o).map(([k, v]) => `${k}=${typeof v === 'object' ? JSON.stringify(v) : v}`).join(' ');
+
+function convText(v) {
+  const k = v.k ?? 3, s = v.s && v.s !== 1 ? ` /${v.s}` : '';
+  return `conv ${k}×${k}${s}${v.out != null ? ' → ' + v.out : ''}${v.groups === 'dw' ? ' dw' : ''}`;
+}
+function poolText(v) {
+  if (v === 'global') return 'global avgpool';
+  if (typeof v === 'string') return v === 'max' ? 'maxpool 2×2' : 'avgpool 2×2';
+  if (v.out) return `adaptive avgpool → ${v.out.join('×')}`;
+  const k = v.k ?? 2, s = v.s ?? k;
+  return `${v.type === 'avg' ? 'avgpool' : 'maxpool'} ${k}×${k}${s > 1 ? ' /' + s : ''}`;
+}
+function layerChips(item, root) {
+  if (item === 'pool') return [chip('pool', 'maxpool 2×2')];
+  const v = typeof item !== 'object' ? {out: item} : item;
+  if (Object.keys(v).length === 1 && !['out', 'k', 's', 'groups'].includes(Object.keys(v)[0])) return nodes([v], root);
+  const out = [chip('conv', convText(v))];
+  if (v.norm !== false && NORM[root.norm]) out.push(chip('', NORM[root.norm]));
+  if (v.act !== false) out.push(chip('', typeof v.act === 'string' ? v.act : root.act));
+  return out;
+}
+function render(op, v, root) {
+  if (root.blocks && root.blocks[op]) return [chip('head', `${op} ${kv(v)}`)];
+  switch (op) {
+    case 'conv_layers': return v.flatMap(i => layerChips(i, root));
+    case 'conv': return [chip('conv', convText(v))];
+    case 'upconv': return [chip('pool', `upconv ${v.k ?? 2}×${v.k ?? 2} /${v.s ?? 2} → ${v.out}`)];
+    case 'pool': return [chip('pool', poolText(v))];
+    case 'norm': return [chip('', NORM[root.norm] || 'norm')];
+    case 'act': return [chip('', v === true ? root.act : v)];
+    case 'flatten': return [chip('', 'flatten')];
+    case 'dropout': return [chip('', `dropout ${v}`)];
+    case 'linear': return [chip('head', `linear → ${v.out ?? v}`)];
+    case 'head': return [chip('head', `head → ${v.out ?? v}${v.pool ? ' (' + v.pool + ')' : ''}`)];
+    case 'patch_embed': return [chip('tok', `patch ${v.patch}×${v.patch} → ${v.dim}`)];
+    case 'attention': return [chip('tok', `attention ${v.heads ?? v} heads`)];
+    case 'mlp': return [chip('tok', `mlp ${v.hidden ?? v}`)];
+    case 'layer_scale': return [chip('tok', 'layer_scale')];
+    case 'repeat': {
+      const b = el('div', 'box loop');
+      const name = Object.keys(v).find(k => !['n', 'first', 'body'].includes(k));
+      b.append(el('div', 'lab', `repeat × ${v.n}${v.first ? '，第一次 ' + esc(kv(v.first)) : ''}`));
+      b.append(...group(v.body ? nodes(v.body, root) : render(name, v[name], root)));
+      return [b];
+    }
+    case 'residual': {
+      const o = Array.isArray(v) ? {body: v} : v, b = el('div', 'box res');
+      const sc = o.shortcut && !String(o.shortcut).startsWith('$') ? `，shortcut ${o.shortcut}` : '';
+      b.append(el('div', 'lab', `residual${sc}${o.act ? '，相加后 ' + (o.act === true ? root.act : o.act) : ''}`), ...group(nodes(o.body, root)));
+      return [b];
+    }
+    case 'parallel': {
+      const o = Array.isArray(v) ? {branches: v} : v, b = el('div', 'box cat');
+      b.append(el('div', 'lab', `parallel：${o.branches.length} 个分支，${o.merge || 'concat'}`));
+      const g = el('div', 'branches');
+      for (const br of o.branches) {
+        const d = el('div', 'branch');
+        if (br.length) d.append(...group(nodes(br, root))); else d.append(chip('na', 'identity'));
+        g.append(d);
+      }
+      b.append(g);
+      return [b];
+    }
+  }
+  return [chip('na', op)];
+}
+function nodes(list, root) { return list.flatMap(n => { const [op, v] = Object.entries(n)[0]; return render(op, v, root); }); }
+function group(items) {
+  const out = []; let row = null;
+  for (const it of items) {
+    if (it.classList.contains('op')) { if (!row) { row = el('div', 'seq'); out.push(row); } row.append(it); }
+    else { row = null; out.push(it); }
+  }
+  return out;
+}
+function row(id, items, shape) {
+  const r = el('div', 'row'); r.dataset.i = id; r.tabIndex = 0;
+  const b = el('div', 'seq'); b.style.display = 'grid'; b.style.gap = '4px'; b.append(...group(items));
+  r.append(b, el('span', 'shape', shape ? '[' + shape.join(', ') + ']' : ''));
+  return r;
+}
+function show(key) {
+  const m = MODELS.find(x => x.key === key) || MODELS[0];
+  for (const b of document.querySelectorAll('#tabs button')) b.setAttribute('aria-selected', b.dataset.k === m.key);
+  const ref = m.ref == null ? '' : `<span class="${m.ref === m.params ? 'ok' : 'diff'}">torchvision <b>${fmtN(m.ref)}</b>${m.ref === m.params ? '，相等' : '，差 ' + fmtN(m.params - m.ref)}</span>`;
+  document.getElementById('facts').innerHTML = `<span>${esc(m.blurb)}</span><span>参数量 <b>${fmtN(m.params)}</b></span>${ref ? '<span>' + ref + '</span>' : ''}` +
+    `<span>输入 <b>[${m.spec.input_shape.join(', ')}]</b> → 输出 <b>[${m.out.join(', ')}]</b></span><span>JSON <b>${m.lines}</b> 行</span>`;
+  const dg = document.getElementById('diagram'); dg.innerHTML = '';
+  let html = '{\n' + m.head.map(h => '  ' + esc(h) + ',\n').join('');
+  if (m.blocks.length) {
+    dg.append(el('div', 'lab2', '命名块'));
+    html += '  "blocks": {\n';
+    m.blocks.forEach(([name, text], i) => {
+      const body = m.spec.blocks[name].body;
+      const r = row('b' + i, [chip('head', name), ...nodes(body, m.spec)]); dg.append(r);
+      html += `<span class="n" data-i="b${i}">${esc('    ' + text + (i < m.blocks.length - 1 ? ',' : ''))}</span>`;
+    });
+    html += '  },\n';
+    dg.append(el('div', 'lab2', 'forward'));
+  }
+  html += '  "forward": [\n';
+  m.spec.forward.forEach((n, i) => {
+    dg.append(row(String(i), nodes([n], m.spec), m.shapes[i]));
+    html += `<span class="n" data-i="${i}">${esc('    ' + m.nodes[i] + (i < m.nodes.length - 1 ? ',' : ''))}</span>`;
+  });
+  document.getElementById('json').innerHTML = html + '  ]\n}';
+  try { localStorage.setItem('vg2-model', m.key); } catch (e) {}
+}
+function hot(i, from) {
+  for (const e of document.querySelectorAll('.hot')) e.classList.remove('hot');
+  const r = document.querySelector(`.row[data-i="${i}"]`), j = document.querySelector(`pre .n[data-i="${i}"]`);
+  r && r.classList.add('hot'); j && j.classList.add('hot');
+  const t = from === 'json' ? r : j;
+  if (t) {
+    const box = t.closest('.code, .diagram'), a = t.getBoundingClientRect(), b = box.getBoundingClientRect();
+    if (a.top < b.top || a.bottom > b.bottom) box.scrollTop += a.top - b.top - 40;
+  }
+}
+const tabs = document.getElementById('tabs');
+for (const m of MODELS) { const b = el('button', '', esc(m.name)); b.dataset.k = m.key; b.setAttribute('role', 'tab'); b.onclick = () => show(m.key); tabs.append(b); }
+const dgm = document.getElementById('diagram'), js = document.getElementById('json');
+for (const ev of ['mouseover', 'focusin']) dgm.addEventListener(ev, e => { const r = e.target.closest('.row'); if (r) hot(r.dataset.i, 'diagram'); });
+js.addEventListener('mouseover', e => { const r = e.target.closest('.n'); if (r) hot(r.dataset.i, 'json'); });
+const R = 'style="text-align:right"';
+document.getElementById('sizes').innerHTML = `<tr><th>模型</th><th ${R}>v0.7 顶层节点</th><th ${R}>v4.1 顶层节点</th><th ${R}>v0.7 JSON 行</th><th ${R}>v4.1 JSON 行</th><th ${R}>v4.1 参数量</th><th ${R}>参考参数量</th></tr>` +
+  MODELS.map(m => `<tr><td>${esc(m.name)}</td><td class="num">${m.old_nodes ?? '写不出'}</td><td class="num">${m.nodes.length}</td><td class="num">${m.old_lines ?? '写不出'}</td><td class="num">${m.lines}</td><td class="num">${fmtN(m.params)}</td><td class="num">${fmtN(m.ref ?? m.old_params)}</td></tr>`).join('');
+let start = 'resnet50';
+try { start = localStorage.getItem('vg2-model') || start; } catch (e) {}
+const h = location.hash.slice(1); if (MODELS.some(m => m.key === h)) start = h;
+show(start);
+</script>
