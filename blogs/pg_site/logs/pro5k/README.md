@@ -1,7 +1,8 @@
-# 完整实验日志（pro5k 服务，历史全量）
+# 实验曲线和结果摘要（pro5k 服务历史快照）
 
-这里保存 pro5k 集群六台机器 `pg_pro5k_smallw_20261026` 服务**全部 271,496 个历史任务**的日志，
-按 `节点__任务前缀` 分卷，gzip 压缩的 JSONL，每行一个任务。共 651 卷，约 478 MB。
+这里保存 pro5k 集群六台机器 `pg_pro5k_smallw_20261026` 服务于 2026-11-07 21:43–21:44 导出的 271,496 个任务记录，
+按 `节点__任务前缀` 分卷，gzip 压缩的 JSONL，每行一个任务。共 651 卷，约 488 MB（467 MiB）。
+导出包含可用曲线及结果摘要，不包含完整原始 result.json 或 stdout/stderr，也不涵盖导出之后的任务。
 
 ## 每行格式
 
@@ -29,11 +30,11 @@
 ## 下载与读取
 
 ```bash
-# 单卷（在 repo 里直接 zcat）
-zcat runs/logs/pro5k/pro5kvrdma1__ag.jsonl.gz | head -1 | python3 -m json.tool
+# 单卷（在博客 repo 里直接 zcat）
+zcat blogs/pg_site/logs/pro5k/pro5kvrdma1__ag.jsonl.gz | head -1 | python3 -m json.tool
 
 # 网页下载（panel「日志中心」也是这个链接）
-https://raw.githubusercontent.com/MetaCircleAI/task-infra/main/runs/logs/pro5k/<卷名>
+https://guoshaoyang-pku.github.io/blogs/pg_site/logs/pro5k/<卷名>
 ```
 
 ## 前缀含义
@@ -51,3 +52,4 @@ https://raw.githubusercontent.com/MetaCircleAI/task-infra/main/runs/logs/pro5k/<
   `tools/curve_harvest.py --loop 1200` 每 20 分钟增量回收（含逐步日志）。
 - 重新生成全量分卷：在各节点运行 `tools/export_node_logs.py <节点名>`，
   输出到服务目录 `export_logs/`。
+- 此网页是静态快照；搜索头增量回收不会自动更新网页分卷。
